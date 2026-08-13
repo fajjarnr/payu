@@ -101,6 +101,50 @@ class MerchantControllerConcurrencyIdempotencyTest {
                 .addFilters(bodyCachingFilter())
                 .addInterceptors(interceptor)
                 .build();
+     }
+
+    @Test
+    @DisplayName("same key with different payload is a conflict, not a replay")
+    void sameKeyDifferentPayloadIsConflict() throws Exception {
+        ThreadSafeInMemoryRepository repository = new ThreadSafeInMemoryRepository();
+        IdempotencyService service = new IdempotencyService(repository, new ObjectMapper());
+        IdempotencyInterceptor interceptor = new IdempotencyInterceptor(service, new ObjectMapper());
+
+        MerchantService merchantService = mock(MerchantService.class);
+        QrPaymentResponse response = mock(QrPaymentResponse.class);
+        when(merchantService.generateDynamicQr(eq(42L), any())).thenReturn(response);
+
+        AtomicInteger mutations = new AtomicInteger();
+        doAnswer(invocation -> {
+            mutations.incrementAndGet();
+            return response;
+        }).when(merchantService).generateDynamicQr(eq(42L), any());
+
+        MockMvc mockMvc = buildMockMvc(merchantService, interceptor);
+
+        String idempotencyKey = UUID.randomUUID().toString();
+        AtomicInteger firstStatus = new AtomicInteger();
+        AtomicInteger secondStatus = new AtomicInteger();
+        try {
+            firstStatus.set(mockMvc.perform(post("/merchants/{merchantId}/qr", 42L)
+                            .header("X-Idempotency-Key", idempotencyKey)
+                            .contentType("application/json")
+                            .content("{\"amount\":10000,\"currency\":\"IDR\"}"))
+                    .andReturn().getResponse().getStatus());
+            secondStatus.set(mockMvc.perform(post("/merchants/{merchantId}/qr", 42L)
+                            .header("X-Idempotency-Key", idempotencyKey)
+                            .contentType("application/json")
+                            .content("{\"amount\":99999,\"currency\":\"IDR\"}"))
+                    .andReturn().getResponse().getStatus());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        assertThat(firstStatus.get()).isEqualTo(201);
+        assertThat(secondStatus.get())
+                .as("same key with a different payload must be rejected as a conflict, never replayed")
+                .isEqualTo(409);
+        assertThat(mutations.get()).isEqualTo(1);
     }
 
     @Test

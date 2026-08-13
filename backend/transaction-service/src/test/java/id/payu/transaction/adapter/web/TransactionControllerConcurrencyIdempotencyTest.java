@@ -125,6 +125,57 @@ class TransactionControllerConcurrencyIdempotencyTest {
         } finally {
             org.springframework.security.core.context.SecurityContextHolder.clearContext();
         }
+     }
+
+    @Test
+    @DisplayName("same key with different payload is a conflict, not a replay")
+    void sameKeyDifferentPayloadIsConflict() throws Exception {
+        ThreadSafeInMemoryRepository repository = new ThreadSafeInMemoryRepository();
+        IdempotencyService service = new IdempotencyService(repository, new ObjectMapper());
+        IdempotencyInterceptor interceptor = new IdempotencyInterceptor(service, new ObjectMapper());
+
+        TransactionUseCase useCase = mock(TransactionUseCase.class);
+        InitiateTransferCommandResult result = mock(InitiateTransferCommandResult.class);
+        when(result.toResponse()).thenReturn(new InitiateTransferResponse());
+        when(result.transactionId()).thenReturn(UUID.randomUUID());
+        when(useCase.initiateTransfer(any(InitiateTransferCommand.class))).thenReturn(result);
+
+        AtomicInteger mutations = new AtomicInteger();
+        doAnswer(invocation -> {
+            mutations.incrementAndGet();
+            return result;
+        }).when(useCase).initiateTransfer(any(InitiateTransferCommand.class));
+
+        MockMvc mockMvc = buildMockMvc(useCase, interceptor);
+
+        String idempotencyKey = UUID.randomUUID().toString();
+        String bodyA = "{\"senderAccountId\":\"" + UUID.randomUUID() + "\",\"recipientAccountNumber\":\"1234567890\","
+                + "\"amount\":10000,\"currency\":\"IDR\",\"type\":\"INTERNAL_TRANSFER\",\"description\":\"test\"}";
+        String bodyB = "{\"senderAccountId\":\"" + UUID.randomUUID() + "\",\"recipientAccountNumber\":\"1234567890\","
+                + "\"amount\":99999,\"currency\":\"IDR\",\"type\":\"INTERNAL_TRANSFER\",\"description\":\"test\"}";
+
+        AtomicInteger firstStatus = new AtomicInteger();
+        AtomicInteger secondStatus = new AtomicInteger();
+        withAuthenticatedUser(() -> {
+            try {
+                firstStatus.set(mockMvc.perform(post("/api/v1/transactions/transfer")
+                                .header("X-Idempotency-Key", idempotencyKey)
+                                .contentType("application/json").content(bodyA))
+                        .andReturn().getResponse().getStatus());
+                secondStatus.set(mockMvc.perform(post("/api/v1/transactions/transfer")
+                                .header("X-Idempotency-Key", idempotencyKey)
+                                .contentType("application/json").content(bodyB))
+                        .andReturn().getResponse().getStatus());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        assertThat(firstStatus.get()).isEqualTo(201);
+        assertThat(secondStatus.get())
+                .as("same key with a different payload must be rejected as a conflict, never replayed")
+                .isEqualTo(409);
+        assertThat(mutations.get()).isEqualTo(1);
     }
 
     @Test

@@ -123,6 +123,62 @@ class PaymentControllerConcurrencyIdempotencyTest {
         } finally {
             org.springframework.security.core.context.SecurityContextHolder.clearContext();
         }
+     }
+
+    @Test
+    @DisplayName("same key with different payload is a conflict, not a replay")
+    void sameKeyDifferentPayloadIsConflict() throws Exception {
+        ThreadSafeInMemoryRepository repository = new ThreadSafeInMemoryRepository();
+        IdempotencyService service = new IdempotencyService(repository, new ObjectMapper());
+        IdempotencyInterceptor interceptor = new IdempotencyInterceptor(service, new ObjectMapper());
+
+        PaymentService paymentService = mock(PaymentService.class);
+        BillPayment billPayment = mock(BillPayment.class);
+        when(billPayment.getId()).thenReturn(UUID.randomUUID());
+        when(billPayment.getReferenceNumber()).thenReturn("REF-001");
+        when(billPayment.getAccountId()).thenReturn(ACCOUNT_ID);
+        when(billPayment.getBillerType()).thenReturn(BillerType.PLN);
+        when(billPayment.getCustomerId()).thenReturn("CUST-1");
+        when(billPayment.getAmount()).thenReturn(new BigDecimal("10000"));
+        when(billPayment.getAdminFee()).thenReturn(BigDecimal.ZERO);
+        when(billPayment.getTotalAmount()).thenReturn(new BigDecimal("10000"));
+        when(billPayment.getStatus()).thenReturn(PaymentStatus.COMPLETED);
+        when(billPayment.getCreatedAt()).thenReturn(java.time.LocalDateTime.now());
+        when(billPayment.getCompletedAt()).thenReturn(java.time.LocalDateTime.now());
+
+        AtomicInteger mutations = new AtomicInteger();
+        doAnswer(invocation -> {
+            mutations.incrementAndGet();
+            return billPayment;
+        }).when(paymentService).createPayment(any(), anyString());
+
+        MockMvc mockMvc = buildMockMvc(paymentService, interceptor);
+
+        String idempotencyKey = UUID.randomUUID().toString();
+        AtomicInteger firstStatus = new AtomicInteger();
+        AtomicInteger secondStatus = new AtomicInteger();
+        withAuthenticatedUser(() -> {
+            try {
+                firstStatus.set(mockMvc.perform(post("/api/v1/payments")
+                                .header("X-Idempotency-Key", idempotencyKey)
+                                .contentType("application/json")
+                                .content("{\"accountId\":\"" + ACCOUNT_ID + "\",\"billerCode\":\"PLN\",\"customerId\":\"CUST-1\",\"amount\":10000}"))
+                        .andReturn().getResponse().getStatus());
+                secondStatus.set(mockMvc.perform(post("/api/v1/payments")
+                                .header("X-Idempotency-Key", idempotencyKey)
+                                .contentType("application/json")
+                                .content("{\"accountId\":\"" + ACCOUNT_ID + "\",\"billerCode\":\"PLN\",\"customerId\":\"CUST-1\",\"amount\":99999}"))
+                        .andReturn().getResponse().getStatus());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        assertThat(firstStatus.get()).isEqualTo(200);
+        assertThat(secondStatus.get())
+                .as("same key with a different payload must be rejected as a conflict, never replayed")
+                .isEqualTo(409);
+        assertThat(mutations.get()).isEqualTo(1);
     }
 
     @Test
