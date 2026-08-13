@@ -7,6 +7,7 @@ import id.payu.security.multitenancy.TenantEntityListener;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,10 +29,13 @@ import java.util.UUID;
 })
 @TenantAware
 @EntityListeners(TenantEntityListener.class)
-public class EscrowTransactionEntity {
+public class EscrowTransactionEntity implements Persistable<UUID> {
+
+    @Transient
+    private boolean isNew = true;
+
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "buyer_account_id", nullable = false, length = 128)
@@ -88,6 +92,29 @@ public class EscrowTransactionEntity {
 
     @Version
     private Long version;
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    public void setNew(boolean isNew) {
+        this.isNew = isNew;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNew = false;
+    }
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

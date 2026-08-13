@@ -5,6 +5,8 @@ import id.payu.wallet.adapter.persistence.repository.EscrowTransactionRepository
 import id.payu.wallet.domain.model.EscrowTransaction;
 import id.payu.wallet.domain.port.out.EscrowPersistencePort;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -22,6 +24,9 @@ public class EscrowPersistenceAdapter implements EscrowPersistencePort {
 
     private final EscrowTransactionRepository repository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     public EscrowPersistenceAdapter(EscrowTransactionRepository repository) {
         this.repository = repository;
     }
@@ -29,6 +34,16 @@ public class EscrowPersistenceAdapter implements EscrowPersistencePort {
     @Override
     public EscrowTransaction save(EscrowTransaction escrow) {
         EscrowTransactionEntity entity = toEntity(escrow);
+        // Create: persist via isNew=true (id is domain-assigned, no
+        // @GeneratedValue). Update: preserve the DB row's @Version and merge.
+        if (repository.existsById(entity.getId())) {
+            EscrowTransactionEntity existing = repository.findById(entity.getId()).orElseThrow();
+            entity.setVersion(existing.getVersion());
+            entity.setNew(false);
+            EscrowTransactionEntity saved = repository.save(entity);
+            return toDomain(saved);
+        }
+        entity.setNew(true);
         EscrowTransactionEntity saved = repository.save(entity);
         return toDomain(saved);
     }

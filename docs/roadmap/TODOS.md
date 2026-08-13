@@ -64,7 +64,7 @@
 | QAMVP-004 | kyc | Security test (auth/RBAC) + integration test kyc; provider OCR/liveness nyata gate (analog PROD-002) | Test + live evidence |
 | QAMVP-005 | platform | k6 smoke+load di pipeline staging + SLO threshold per service | Laporan k6 di CI |
 | QAMVP-006 | platform | PRD launch criteria tracker: prod deploy OCP, app stores, legal ToS, security hardening (lanjut CB-006) | Checklist PRD §12 hijau |
-| QAMVP-007 | wallet | Escrow test: unit domain + integration + E2E (sekarang 0 test semua layer) | Escrow money journey hijau |
+| QAMVP-007 | wallet | ~~Escrow test: unit domain + integration + E2E (sekarang 0 test semua layer)~~ **unit + integration DONE 2026-08-13** — `EscrowTransactionTest` (8: state machine CREATED→HELD→RELEASED→SETTLED, refund/expiry, illegal transitions, net amount), `EscrowServiceIntegrationTest` (2: hold→release→settle + refund release-reservation, real PG Testcontainers). Bonus fix: `EscrowPersistenceAdapter`/entity `@GeneratedValue`+`@Version` bikin insert crash (PropertyValue/StaleObject) — dipakai `Persistable` + version-preserving update. Sisa: E2E blackbox | Escrow money journey hijau |
 | QAMVP-008 | transaction | Split-bill test: unit + integration + E2E (sekarang 0) + fix topic (ARCH-TXN-002) | Split-bill journey hijau |
 | QAMVP-009 | transaction | BI-FAST transfer integration test (Testcontainers PG+Kafka + simulator) + E2E blackbox | BI-FAST journey hijau |
 | QAMVP-010 | transaction, loan-origination | Disbursement integration + E2E; wajib setelah ARCH-LOAN-001 fix | Disbursement journey hijau |
@@ -222,7 +222,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | Flow | Gap | Sev |
 |:---|:---|:---:|
-| 16 Escrow (wallet) | **0 test semua layer** — money movement tanpa bukti | 🔴 |
+| 16 Escrow (wallet) | unit (8) + integration (2) **ADDED 2026-08-13** (real PG); sisa E2E blackbox | 🟡 |
 | 11 Split Bill (transaction) | **0 test semua layer** | 🔴 |
 | 7 Transfer Interbank BI-FAST | Tanpa E2E + tanpa integration test (fitur flagship MVP) | 🔴 |
 | 10 Disbursement | Tanpa E2E + IT; ditambah ARCH-LOAN-001 (idempotency/ref random) | 🔴 |
