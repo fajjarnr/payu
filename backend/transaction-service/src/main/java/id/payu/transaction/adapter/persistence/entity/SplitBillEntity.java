@@ -48,8 +48,12 @@ public class SplitBillEntity {
     @Column(name = "due_date")
     private Instant dueDate;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "split_bill_id")
+    // QAMVP-008: participants are managed explicitly via the persistence port
+    // (saveParticipant/findParticipantsBySplitBillId). A managed unidirectional
+    // @OneToMany + @JoinColumn here triggers a one-shot FK-null sync on save
+    // ("delete all, re-insert") which violates the NOT NULL split_bill_id and
+    // crashes every update (activate/addParticipant/makePayment).
+    @Transient
     private List<SplitBillParticipantEntity> participants;
 
     @Column(name = "created_at", nullable = false, updatable = false)

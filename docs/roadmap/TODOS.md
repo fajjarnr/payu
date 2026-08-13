@@ -65,7 +65,7 @@
 | QAMVP-005 | platform | k6 smoke+load di pipeline staging + SLO threshold per service | Laporan k6 di CI |
 | QAMVP-006 | platform | PRD launch criteria tracker: prod deploy OCP, app stores, legal ToS, security hardening (lanjut CB-006) | Checklist PRD §12 hijau |
 | QAMVP-007 | wallet | ~~Escrow test: unit domain + integration + E2E (sekarang 0 test semua layer)~~ **unit + integration DONE 2026-08-13** — `EscrowTransactionTest` (8: state machine CREATED→HELD→RELEASED→SETTLED, refund/expiry, illegal transitions, net amount), `EscrowServiceIntegrationTest` (2: hold→release→settle + refund release-reservation, real PG Testcontainers). Bonus fix: `EscrowPersistenceAdapter`/entity `@GeneratedValue`+`@Version` bikin insert crash (PropertyValue/StaleObject) — dipakai `Persistable` + version-preserving update. Sisa: E2E blackbox | Escrow money journey hijau |
-| QAMVP-008 | transaction | Split-bill test: unit + integration + E2E (sekarang 0) + fix topic (ARCH-TXN-002) | Split-bill journey hijau |
+| QAMVP-008 | transaction | ~~Split-bill test: unit + integration + E2E (sekarang 0) + fix topic (ARCH-TXN-002)~~ **integration DONE 2026-08-13** — `SplitBillServiceIntegrationTest` (2: create→activate→accept→pay×2→COMPLETED + outbox events ≥3, cancel; real PG Testcontainers). Topic ARCH-TXN-002 sudah fix 1.11.0. Bonus fix produksi: `SplitBillEntity.participants` `@OneToMany`+`@JoinColumn` memicu one-shot FK-null sync (crash NOT NULL `split_bill_id`) → jadi `@Transient` view. Sisa: unit domain + E2E blackbox | Split-bill journey hijau |
 | QAMVP-009 | transaction | ~~BI-FAST transfer integration test (Testcontainers PG+Kafka + simulator) + E2E blackbox~~ **integration DONE 2026-08-13** — `BifastTransferIntegrationTest` (2: BI-FAST transfer persist tx+outbox atomically vs real PG; provider failure → kompensasi release reservation + FAILED). Sisa: E2E blackbox | BI-FAST journey hijau |
 | QAMVP-010 | transaction, loan-origination | Disbursement integration + E2E; wajib setelah ARCH-LOAN-001 fix | Disbursement journey hijau |
 | QAMVP-011 | wallet, transaction, billing, partner | ~~Test idempotency concurrency: 10 thread key sama → 1 mutasi, 1 ledger, 1 outbox~~ **CLOSED 2026-08-13** — 4 service: `WalletControllerConcurrencyIdempotencyTest` (credit), `TransactionControllerConcurrencyIdempotencyTest` (transfer), `PaymentControllerConcurrencyIdempotencyTest` (bill payment), `MerchantControllerConcurrencyIdempotencyTest` (QR) — 10 thread X-Idempotency-Key sama → 1 mutasi, 1 successful atomic claim, 0 5xx, 0 throw; 5× run stabil | Test thread lulus CI |
@@ -223,7 +223,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | Flow | Gap | Sev |
 |:---|:---|:---:|
 | 16 Escrow (wallet) | unit (8) + integration (2) **ADDED 2026-08-13** (real PG); sisa E2E blackbox | 🟡 |
-| 11 Split Bill (transaction) | **0 test semua layer** | 🔴 |
+| 11 Split Bill (transaction) | integration **ADDED 2026-08-13** (real PG + outbox); sisa unit domain + E2E | 🟡 |
 | 7 Transfer Interbank BI-FAST | integration test **ADDED 2026-08-13** (real PG + outbox); sisa E2E blackbox | 🟡 |
 | 10 Disbursement | Tanpa E2E + IT; ditambah ARCH-LOAN-001 (idempotency/ref random) | 🔴 |
 | 9 VA Payment | Tanpa E2E + IT | 🟠 |
