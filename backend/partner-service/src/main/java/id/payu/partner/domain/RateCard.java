@@ -155,7 +155,7 @@ public class RateCard {
 
             case PERCENTAGE:
                 fee = amount.multiply(percentageFee)
-                        .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_EVEN);
+                        .divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_EVEN);
                 break;
 
             case TIERED:
@@ -188,7 +188,7 @@ public class RateCard {
                 }
                 if (tier.getPercentageFee() != null) {
                     fee = fee.add(amount.multiply(tier.getPercentageFee())
-                            .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_EVEN));
+                            .divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_EVEN));
                 }
                 return fee;
             }
