@@ -96,7 +96,6 @@ spring:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
         interceptor.classes: id.payu.logging.kafka.MdcKafkaConsumerInterceptor
         spring.json.trusted.packages: "*"
-        spring.json.type.mapping: "id.payu.fx.adapter.messaging.FxRatesUpdatedEvent:id.payu.wallet.adapter.messaging.fx.FxRatesUpdatedEvent"
         session.timeout.ms: 30000
         heartbeat.interval.ms: 10000
   security:

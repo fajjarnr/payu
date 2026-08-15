@@ -14,6 +14,18 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: backoffice 8/8 Flyway migrations success with original V6 (checksum intact) + `transactional-lock: false`, `idx_kyc_user_blind` exists, healthy, 0 warn/error; 135/135 backoffice tests; parity guard 22/22.
 
+## L-243: Consumer Deserializer vs Outbox JSON + Topic Drift Detection (2026-08-15)
+
+**Context**: ARCH-TOPIC-003 — wallet's `FxRateEventConsumer` listened on the legacy `fx-rates-updated` while the outbox publisher writes `payu.fx.rates-updated.v1`; even with the topic fixed, the listener failed and records went to DLQ with `SerializationException: Can't convert value of class [B`.
+
+**Lesson**:
+- **Outbox JSON is a plain String on the wire** — the outbox-starter serializes the CE envelope with `KafkaTemplate<String,String>`. A consumer whose global `value-deserializer` is `JacksonJsonDeserializer` (no `__TypeId__` header, no default type) cannot read it; the record arrives as raw bytes → `IllegalStateException` → DLQ. Fix: per-listener `properties = "value.deserializer=org.apache.kafka.common.serialization.StringDeserializer"` + parse the envelope with `ObjectMapper` and read `data` (mirror `RefundRequestedConsumer`/partner's `SubscriptionEventConsumer`).
+- **Topic drift is silent**: consumer on a legacy topic (`fx-rates-updated`, `user.created`, `subscription.events`) with no publisher commits nothing and never logs an error — the feature (FX cache, wallet creation on signup) silently never runs. Detect drift by cross-checking `@KafkaListener` topics against `kafka-topics.sh --list` + grep of publisher constants; a topic in the broker list that no publisher writes is an orphan.
+- **A "proven" sibling pattern can be untested**: `RefundRequestedConsumer` looked like the working reference, but it had never consumed a real outbox record in this stack either (same deserializer bug). Test the wire end-to-end (console-producer → consumer log), not just the unit path.
+- **`spring.json.type.mapping` + typed `@KafkaListener` params are dead config for outbox topics** — outbox sends no `__TypeId__` header, so the mapping never applies; remove it when migrating the listener to String records.
+
+**Applied evidence**: 3 wallet consumers fixed and verified live (fx cache size 1, wallet created for user-created, refund executor invoked); 79/79 wallet tests; 0 ERROR logs.
+
 ## L-241: Boot 4 Servlet Tests + JPA @Version/Tenant Merge Traps + JaCoCo Drools (2026-08-13)
 
 - **Boot 4 service-test tanpa WebTestClient**: Boot 4 tidak lagi auto-config `WebTestClient` untuk servlet app. Untuk servlet: `@AutoConfigureMockMvc` dari `org.springframework.boot.webmvc.test.autoconfigure` (modul `spring-boot-webmvc-test`); controller async (`CompletableFuture`) pakai `request().asyncStarted()` + `asyncDispatch(result)`; `JsonPathResultMatchers` Boot 4 menghapus `isEqualTo` → pakai `.value(...)`.

@@ -7,6 +7,7 @@
 - **BUG fixed**: backoffice `V8 CREATE INDEX CONCURRENTLY` deadlock di fresh DB — `flyway.postgresql.transactional-lock: false` (session-level lock; V6 dipertahankan agar checksum cluster stabil). 8/8 migrasi, healthy.
 - **Parity guard hijau 22/22** (KC_HOSTNAME pin L-116, healthcheck 127.0.0.1, digest-pinned images); `test_verification_logic.py` (dead, class dihapus 6f540c9d) dihapus; `cms-service` baris `image:` hilang di compose dipulihkan; `account-service Containerfile` pin RPM stale di-unpin.
 - Backoffice 135/135 test green; backend full build green.
+- **ARCH-TOPIC-003 wallet leg**: 3 consumer wallet (fx/refund/user-created) disinkronkan ke topic `payu.*.v1` + unwrap CE envelope; deserializer global JacksonJsonDeserializer tidak bisa baca JSON outbox (bug laten) → per-listener StringDeserializer. Verified live: CE event → wallet process (fx cache 1, wallet created, refund executor). Wallet 79/79 green.
 
 ## Final sweep 2026-08-13 (1.11.1)
 
