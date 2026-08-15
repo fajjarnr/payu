@@ -23,7 +23,7 @@ public class SubscriptionEventConsumer {
     private final WebhookDispatcherService webhookDispatcher;
     private final ObjectMapper objectMapper;
 
-    public static final String SUBSCRIPTION_EVENTS_TOPIC = "subscription.events";
+    public static final String SUBSCRIPTION_EVENTS_TOPIC = "payu.billing.subscription-event.v1";
 
     /**
      * Consume subscription events and dispatch webhooks.

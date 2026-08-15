@@ -26,6 +26,18 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: 3 wallet consumers fixed and verified live (fx cache size 1, wallet created for user-created, refund executor invoked); 79/79 wallet tests; 0 ERROR logs.
 
+## L-244: Webhook Double-Dispatch vs Topic Alignment (2026-08-15)
+
+**Context**: ARCH-TOPIC-001 — partner's `FinancialEventConsumer` listened on 19 legacy Kafka topics (`payu.transactions.*` plural, `payment-events`, `wallet.balance.changed`, `escrow.*`) while every publisher now writes `payu.<domain>.<event>.v1` topics, so webhooks silently never fired. But naively aligning ALL consumer topics to publisher topics would have double-fired webhooks for partner's own events.
+
+**Lesson**:
+- **Check for direct dispatch before aligning a consumer topic**: `SnapBiPaymentService`/`PaymentLinkService`/`MerchantService` call `webhookDispatcher.dispatch(...)` directly AND publish the same event to outbox. If `FinancialEventConsumer` also consumed those topics, every event would dispatch twice. The correct topic list excludes topics whose webhooks are already dispatched synchronously by the producer service — only cross-service events (transaction, wallet balance, escrow, investment, settlement) belong in the consumer.
+- **Topic alignment = publisher-topic truth, not naming symmetry**: read the publisher's `outboxService.createEvent(..., TOPIC)` constants to build the consumer topic list. A consumer topic that no publisher writes is a silent dead listener (0 offsets, no errors) — same drift class as L-243.
+- **The `default` branch hides drift**: `deriveEventType`'s `default -> "event." + topic.replace(...)` means an unmapped topic still "works" with a mangled event type — the failure is silent until you compare topic lists end to end.
+- **Per-event topics beat one generic topic**: `payu.investment.event.v1` for created/completed/failed forced consumers to guess the event type; split into `payu.investment.{created,completed,failed}.v1`.
+
+**Applied evidence**: FinancialEventConsumer aligned to 20 real publisher topics (10 new mapping tests), investment per-event topics, subscription consumer → `payu.billing.subscription-event.v1`; live CE events on 3 topics dispatched correct webhooks; partner 317/317, investment 59/59; 0 ERROR logs.
+
 ## L-241: Boot 4 Servlet Tests + JPA @Version/Tenant Merge Traps + JaCoCo Drools (2026-08-13)
 
 - **Boot 4 service-test tanpa WebTestClient**: Boot 4 tidak lagi auto-config `WebTestClient` untuk servlet app. Untuk servlet: `@AutoConfigureMockMvc` dari `org.springframework.boot.webmvc.test.autoconfigure` (modul `spring-boot-webmvc-test`); controller async (`CompletableFuture`) pakai `request().asyncStarted()` + `asyncDispatch(result)`; `JsonPathResultMatchers` Boot 4 menghapus `isEqualTo` → pakai `.value(...)`.

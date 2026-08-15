@@ -146,7 +146,7 @@ class SubscriptionEventConsumerTest {
     void shouldHandleNullEvent() {
         // Given
         ConsumerRecord<String, String> record = new ConsumerRecord<>(
-                "subscription.events", 0, 0, null, null);
+                "payu.billing.subscription-event.v1", 0, 0, null, null);
 
         // When
         consumer.consumeSubscriptionEvent(record);
@@ -160,7 +160,7 @@ class SubscriptionEventConsumerTest {
     void shouldHandleEmptyEvent() {
         // Given
         ConsumerRecord<String, String> record = new ConsumerRecord<>(
-                "subscription.events", 0, 0, null, "");
+                "payu.billing.subscription-event.v1", 0, 0, null, "");
 
         // When
         consumer.consumeSubscriptionEvent(record);
@@ -226,7 +226,7 @@ class SubscriptionEventConsumerTest {
             headers.add(headerPairs[i], headerPairs[i + 1].getBytes(StandardCharsets.UTF_8));
         }
         return new ConsumerRecord<>(
-                "subscription.events", 0, 0,
+                "payu.billing.subscription-event.v1", 0, 0,
                 ConsumerRecord.NO_TIMESTAMP, TimestampType.NO_TIMESTAMP_TYPE,
                 0, 0, null, value, headers, Optional.empty());
     }

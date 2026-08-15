@@ -51,7 +51,7 @@ class FinancialEventConsumerTest {
                 "\"type\":\"wallet.balance.changed\",\"time\":\"2026-03-16T00:00:00Z\"," +
                 "\"data\":{\"amount\":1000,\"currency\":\"IDR\"}}";
 
-        consumer.consumeFinancialEvent(record("wallet.balance.changed", payload));
+        consumer.consumeFinancialEvent(record("payu.wallet.balance-changed.v1", payload));
 
         ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
@@ -79,10 +79,35 @@ class FinancialEventConsumerTest {
     }
 
     @Test
+    @DisplayName("should map standard versioned topics (ARCH-TOPIC-001)")
+    void shouldMapStandardVersionedTopics() {
+        assertEquals("transaction.initiated",
+                consumer.deriveEventType("payu.transaction.initiated.v1", record("payu.transaction.initiated.v1", "{}")));
+        assertEquals("transaction.completed",
+                consumer.deriveEventType("payu.transaction.completed.v1", record("payu.transaction.completed.v1", "{}")));
+        assertEquals("transaction.failed",
+                consumer.deriveEventType("payu.transaction.failed.v1", record("payu.transaction.failed.v1", "{}")));
+        assertEquals("payment.expired",
+                consumer.deriveEventType("payu.transaction.payment-expired.v1", record("payu.transaction.payment-expired.v1", "{}")));
+        assertEquals("wallet.balance.changed",
+                consumer.deriveEventType("payu.wallet.balance-changed.v1", record("payu.wallet.balance-changed.v1", "{}")));
+        assertEquals("investment.updated",
+                consumer.deriveEventType("payu.investment.created.v1", record("payu.investment.created.v1", "{}")));
+        assertEquals("investment.updated",
+                consumer.deriveEventType("payu.investment.completed.v1", record("payu.investment.completed.v1", "{}")));
+        assertEquals("settlement.completed",
+                consumer.deriveEventType("payu.partner.merchant-settlement.v1", record("payu.partner.merchant-settlement.v1", "{}")));
+        assertEquals("escrow.held",
+                consumer.deriveEventType("payu.wallet.escrow-held.v1", record("payu.wallet.escrow-held.v1", "{}")));
+        assertEquals("escrow.expired",
+                consumer.deriveEventType("payu.wallet.escrow-expired.v1", record("payu.wallet.escrow-expired.v1", "{}")));
+    }
+
+    @Test
     @DisplayName("should rethrow on malformed payload so the record reaches the DLQ")
     void shouldRethrowOnMalformedPayload() {
         assertThrows(Exception.class,
-                () -> consumer.consumeFinancialEvent(record("wallet.balance.changed", "{not-json")));
+                () -> consumer.consumeFinancialEvent(record("payu.wallet.balance-changed.v1", "{not-json")));
     }
 
     @Test
@@ -92,7 +117,7 @@ class FinancialEventConsumerTest {
                 .when(webhookDispatcher).dispatch(any(String.class), any(String.class), any(Map.class));
 
         assertThrows(IllegalStateException.class,
-                () -> consumer.consumeFinancialEvent(record("wallet.balance.changed",
+                () -> consumer.consumeFinancialEvent(record("payu.wallet.balance-changed.v1",
                         "{\"specversion\":\"1.0\",\"id\":\"evt-2\",\"type\":\"wallet.balance.changed\","
                                 + "\"time\":\"2026-03-16T00:00:00Z\",\"data\":{}}")));
     }

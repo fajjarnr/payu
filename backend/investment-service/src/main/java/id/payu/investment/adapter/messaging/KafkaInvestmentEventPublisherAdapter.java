@@ -24,7 +24,9 @@ import java.util.Map;
 public class KafkaInvestmentEventPublisherAdapter implements InvestmentEventPublisherPort {
 
     private final OutboxService outboxService;
-    private static final String TOPIC = "payu.investment.event.v1";
+    private static final String TOPIC_CREATED = "payu.investment.created.v1";
+    private static final String TOPIC_COMPLETED = "payu.investment.completed.v1";
+    private static final String TOPIC_FAILED = "payu.investment.failed.v1";
     private static final String AGGREGATE_TYPE = "Investment";
 
     @Override
@@ -36,7 +38,7 @@ public class KafkaInvestmentEventPublisherAdapter implements InvestmentEventPubl
                 "InvestmentCreated",
                 event,
                 null,
-                TOPIC
+                TOPIC_CREATED
         );
     }
 
@@ -49,7 +51,7 @@ public class KafkaInvestmentEventPublisherAdapter implements InvestmentEventPubl
                 "InvestmentCompleted",
                 event,
                 null,
-                TOPIC
+                TOPIC_COMPLETED
         );
     }
 
@@ -62,7 +64,7 @@ public class KafkaInvestmentEventPublisherAdapter implements InvestmentEventPubl
                 "InvestmentFailed",
                 event,
                 null,
-                TOPIC
+                TOPIC_FAILED
         );
     }
 }

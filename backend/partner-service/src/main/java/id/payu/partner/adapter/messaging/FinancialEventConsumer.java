@@ -49,26 +49,26 @@ public class FinancialEventConsumer {
      */
     @KafkaListener(
             topics = {
-                    "payu.transactions.initiated",
-                    "payu.transactions.validated",
-                    "payu.transactions.completed",
-                    "payu.transactions.failed",
-                    "payment-events",
-                    "payment.expired",
-                    "wallet.balance.changed",
-                    "investment-events",
+                    "payu.transaction.initiated.v1",
+                    "payu.transaction.validated.v1",
+                    "payu.transaction.completed.v1",
+                    "payu.transaction.failed.v1",
+                    "payu.transaction.payment-expired.v1",
+                    "payu.wallet.balance-changed.v1",
+                    "payu.investment.created.v1",
+                    "payu.investment.completed.v1",
+                    "payu.investment.failed.v1",
                     "payu.transaction.split-bill-created.v1",
                     "payu.transaction.split-bill-activated.v1",
                     "payu.transaction.split-bill-cancelled.v1",
                     "payu.transaction.payment-made.v1",
                     "payu.transaction.split-bill-completed.v1",
-                    "merchant.settlements",
-                    "payment.link.events",
-                    "escrow.held",
-                    "escrow.released",
-                    "escrow.settled",
-                    "escrow.refunded",
-                    "escrow.expired"
+                    "payu.partner.merchant-settlement.v1",
+                    "payu.wallet.escrow-held.v1",
+                    "payu.wallet.escrow-released.v1",
+                    "payu.wallet.escrow-settled.v1",
+                    "payu.wallet.escrow-refunded.v1",
+                    "payu.wallet.escrow-expired.v1"
             },
             groupId = "partner-service-webhooks",
             containerFactory = "kafkaListenerContainerFactory"
@@ -129,26 +129,24 @@ public class FinancialEventConsumer {
 
         // Map topic to event type
         return switch (topic) {
-            case "payu.transactions.initiated" -> "transaction.initiated";
-            case "payu.transactions.validated" -> "transaction.validated";
-            case "payu.transactions.completed" -> "transaction.completed";
-            case "payu.transactions.failed" -> "transaction.failed";
-            case "payment-events" -> "payment.updated";
-            case "payment.expired" -> "payment.expired";
-            case "wallet.balance.changed" -> "wallet.balance.changed";
-            case "investment-events" -> "investment.updated";
+            case "payu.transaction.initiated.v1" -> "transaction.initiated";
+            case "payu.transaction.validated.v1" -> "transaction.validated";
+            case "payu.transaction.completed.v1" -> "transaction.completed";
+            case "payu.transaction.failed.v1" -> "transaction.failed";
+            case "payu.transaction.payment-expired.v1" -> "payment.expired";
+            case "payu.wallet.balance-changed.v1" -> "wallet.balance.changed";
+            case "payu.investment.created.v1", "payu.investment.completed.v1", "payu.investment.failed.v1" -> "investment.updated";
             case "payu.transaction.split-bill-created.v1" -> "split-bill.created";
             case "payu.transaction.split-bill-activated.v1" -> "split-bill.activated";
             case "payu.transaction.split-bill-cancelled.v1" -> "split-bill.cancelled";
             case "payu.transaction.payment-made.v1" -> "split-bill.payment.made";
             case "payu.transaction.split-bill-completed.v1" -> "split-bill.completed";
-            case "merchant.settlements" -> "settlement.completed";
-            case "payment.link.events" -> "payment-link.updated";
-            case "escrow.held" -> "escrow.held";
-            case "escrow.released" -> "escrow.released";
-            case "escrow.settled" -> "escrow.settled";
-            case "escrow.refunded" -> "escrow.refunded";
-            case "escrow.expired" -> "escrow.expired";
+            case "payu.partner.merchant-settlement.v1" -> "settlement.completed";
+            case "payu.wallet.escrow-held.v1" -> "escrow.held";
+            case "payu.wallet.escrow-released.v1" -> "escrow.released";
+            case "payu.wallet.escrow-settled.v1" -> "escrow.settled";
+            case "payu.wallet.escrow-refunded.v1" -> "escrow.refunded";
+            case "payu.wallet.escrow-expired.v1" -> "escrow.expired";
             default -> "event." + topic.replace(".", "_");
         };
     }
