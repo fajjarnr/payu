@@ -9,6 +9,7 @@
 - Backoffice 135/135 test green; backend full build green.
 - **ARCH-TOPIC-003 wallet leg**: 3 consumer wallet (fx/refund/user-created) disinkronkan ke topic `payu.*.v1` + unwrap CE envelope; deserializer global JacksonJsonDeserializer tidak bisa baca JSON outbox (bug laten) → per-listener StringDeserializer. Verified live: CE event → wallet process (fx cache 1, wallet created, refund executor). Wallet 79/79 green.
 - **ARCH-TOPIC-003 transaction + billing legs**: batch disbursement async flow di-wire (publish outbox `BatchProcessingStarted` ke `payu.transaction.disbursement-batch.v1`; sebelumnya stuck PROCESSING selamanya) + billing subscription-due deserializer fix. Verified live: batch items processed, subscription-due consumed, 0 consumer exception. Transaction 189/189, billing 136/136.
+- **ARCH-CE-002 CLOSED (verified stale)**: outbox-starter `OutboxPublisher.buildRecord` selalu membungkus payload plain Map dalam CloudEventEnvelope CE 1.0.2 + header ce-*; `CloudEventsContractTest` green + 5 consumer unwrap envelope dengan benar secara live.
 
 ## Final sweep 2026-08-13 (1.11.1)
 
