@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-242: Flyway Transactional Lock vs CREATE INDEX CONCURRENTLY + Checksum Discipline (2026-08-15)
+
+**Context**: fresh local stack (1.11.2) — `backoffice-service` hung forever at migration V8 (`CREATE INDEX CONCURRENTLY`), unhealthy; log had a one-off WARN `there is already a transaction in progress` during V6. First attempt (removing V6's explicit `BEGIN;...COMMIT;`) fixed the WARN but NOT the hang — proving the two are unrelated.
+
+**Lesson**:
+- **`CREATE INDEX CONCURRENTLY` + Flyway default transactional advisory lock = self-deadlock**: Flyway takes its schema lock inside a transaction by default; the non-transactional migration (`.conf` `executeInTransaction=false`) then runs on a connection that must wait for Flyway's own still-open transaction (observed: `idle in transaction` probe + V8 waiting on `virtualxid`). Documented fix (Context7 Flyway docs): `spring.flyway.postgresql.transactional-lock: false` → session-level lock. The V6 WARN and the V8 hang were independent bugs — debug them separately, never conflate.
+- **Never edit an already-applied migration to "fix" a fresh-DB problem**: changing V6's content changes its Flyway checksum; on any environment where V6 already applied, `validate` fails with `checksum mismatch` (observed as crash-loop `RestartCount=28`). If the fresh DB is the problem, reset the DB; if the migration is wrong, add a new migration or a runtime config fix — keep applied migrations byte-identical (ARCH-FLYWAY-001 discipline).
+- **Stale-image trap (L-240 again)**: after rebuilding a jar → image → container, verify with `podman inspect <ctr> --format '{{.Image}}'` — compose pinned the old dangling image ID twice in a row; only `podman rm -f` (all dependent containers first, e.g. the stray api-portal dependency) + explicit `compose up` with `PAYU_VERSION=<new>` + `pull_policy: build` reliably replaced it. Also: the compose `build` step tags `:1.11.1` regardless of `PAYU_VERSION` in podman-compose 1.5.0 — tag both versions explicitly.
+- **Containerfile RPM version-pins rot**: `glib2-2.68.4-19.el9_8.2`, `python3-3.9.25-7.el9_8.2` no longer exist in the UBI9 repos → `microdnf install` fails. Unpinned package names resolve current versions; pin only when the image reproducibility contract demands it (and re-verify on every rebuild).
+
+**Applied evidence**: backoffice 8/8 Flyway migrations success with original V6 (checksum intact) + `transactional-lock: false`, `idx_kyc_user_blind` exists, healthy, 0 warn/error; 135/135 backoffice tests; parity guard 22/22.
+
 ## L-241: Boot 4 Servlet Tests + JPA @Version/Tenant Merge Traps + JaCoCo Drools (2026-08-13)
 
 - **Boot 4 service-test tanpa WebTestClient**: Boot 4 tidak lagi auto-config `WebTestClient` untuk servlet app. Untuk servlet: `@AutoConfigureMockMvc` dari `org.springframework.boot.webmvc.test.autoconfigure` (modul `spring-boot-webmvc-test`); controller async (`CompletableFuture`) pakai `request().asyncStarted()` + `asyncDispatch(result)`; `JsonPathResultMatchers` Boot 4 menghapus `isEqualTo` → pakai `.value(...)`.

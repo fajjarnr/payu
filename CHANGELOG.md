@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.2] - 2026-08-15
+
+### Changed
+
+- **ARCH-ADR17-001 (auth, api-portal, CLOSED)**: blok Redis/RESP sisa dihapus — `spring.data.redis` + `management.health.redis` dari `auth-service application-container.yml`, blok `payu.cache.redis` dari `api-portal application-prod.yaml` (cache via Infinispan HotRod, ADR-0017; tidak ada Redis client dependency di POM kedua service). Parity guard `test_podman_compose.py` disinkronkan ke state 1.11.1 (22/22): KC_HOSTNAME pin L-116, healthchecks `127.0.0.1`, digest-pinned Red Hat images dipulihkan (`pull_policy: always`).
+- **BUG backoffice V8 migration deadlock (L-242)**: `CREATE INDEX CONCURRENTLY` V8 hang selamanya di fresh DB karena Flyway memegang transactional advisory lock (open transaction) saat menjalankan migrasi non-transactional — `flyway.postgresql.transactional-lock: false` (session-level lock) di `application-container.yml` sesuai dokumentasi Flyway untuk skenario CONCURRENTLY. V6 (`BEGIN`/`COMMIT` eksplisit di dalam managed transaction) dipertahankan AS-IS agar checksum cluster tidak berubah (anti-pattern ARCH-FLYWAY-001). Diverifikasi: drop+recreate DB → 8/8 migrasi success, `idx_kyc_user_blind` ada, 0 warn/error, healthy.
+- **fix(local)**: `podman-compose.yml` — `cms-service` kehilangan baris `image:` (image ter-tag `podman_cms-service:latest`); `account-service Containerfile` pin RPM stale (`glib2-2.68.4-19.el9_8.2`, `python3-3.9.25-7.el9_8.2` tidak ada di repo UBI9) → tanpa versi-pin. Backend full build green, 135/135 backoffice tests, stack 37/37 healthy, scan log 0 ERROR/WARN (2 menit terakhir).
+- **test(infra)**: `tests/infrastructure/test_verification_logic.py` dihapus — menguji class `TestDockerComposeVerification` yang sudah dihapus (6f540c9d), merujuk arsip `backend/docs/archive/deprecated-docker` dan Redis-native yang tidak ada.
+
 ## [1.11.1] - 2026-08-13
 
 ### Added

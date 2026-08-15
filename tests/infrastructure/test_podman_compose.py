@@ -114,8 +114,9 @@ class PodmanComposeParityTest(unittest.TestCase):
         self.assertNotIn("KC_HOSTNAME_ADMIN_URL:", config)
         self.assertIn("KC_BOOTSTRAP_ADMIN_USERNAME:", config)
         self.assertIn("KC_BOOTSTRAP_ADMIN_PASSWORD:", config)
-        self.assertNotIn("KC_HOSTNAME:", config)
-        self.assertIn('KC_HOSTNAME_STRICT: "false"', config)
+        # L-116: issuer pinned so every token carries the same issuer
+        self.assertIn("KC_HOSTNAME: http://localhost:8099", config)
+        self.assertIn('KC_HOSTNAME_STRICT: "true"', config)
         self.assertIn('LIQUIBASE_ANALYTICS_ENABLED: "false"', config)
 
     def test_host_run_contract_exposes_postgres_and_keycloak(self):
@@ -123,8 +124,9 @@ class PodmanComposeParityTest(unittest.TestCase):
         self.assertRegex(postgres, r"(?ms)^    ports:\n      - 5432:5432$")
 
         keycloak = self.service_config("payu-keycloak-service")
-        self.assertNotIn("KC_HOSTNAME:", keycloak)
-        self.assertIn('KC_HOSTNAME_STRICT: "false"', keycloak)
+        # L-116: issuer pinned so every token carries the same issuer
+        self.assertIn("KC_HOSTNAME: http://localhost:8099", keycloak)
+        self.assertIn('KC_HOSTNAME_STRICT: "true"', keycloak)
 
         profiles = list(BACKEND.glob("*/src/main/resources/application-local.y*"))
         profiles += list(BACKEND.glob("*/src/main/resources/application-dev.y*"))
@@ -210,7 +212,7 @@ class PodmanComposeParityTest(unittest.TestCase):
         self.assertRegex(self.document, r"(?s)\n  web-app:.*?ports:\n      - 3001:8080")
         self.assertRegex(
             self.document,
-            r"(?s)\n  web-app:.*?healthcheck:.*?http://localhost:8080/api/health",
+            r"(?s)\n  web-app:.*?healthcheck:.*?http://127.0.0.1:8080/api/health",
         )
 
     def test_gateway_maps_mandatory_runtime_secrets(self):
@@ -312,7 +314,8 @@ class PodmanComposeParityTest(unittest.TestCase):
             "qris-simulator": "/q/health/live",
         }
         for service, endpoint in expected.items():
-            self.assertIn(f"http://localhost:8080{endpoint}", self.service_config(service), service)
+            # minimal hosts file has no loopback entry for "localhost"; healthchecks target 127.0.0.1
+            self.assertIn(f"http://127.0.0.1:8080{endpoint}", self.service_config(service), service)
 
     def test_services_wait_for_mandatory_infrastructure(self):
         expected = {

@@ -62,7 +62,7 @@ x-app-defaults: &app-defaults
     - apps
 
 x-infra-defaults: &infra-defaults
-  pull_policy: missing  # local dev: use cached images (digest-pinned infra tagged :local, no RH registry creds)
+  pull_policy: always  # digest-pinned Red Hat images; pull to stay in lockstep with payu-dev
   restart: unless-stopped
   networks:
     - payu-network
@@ -116,7 +116,7 @@ services:
 
   payu-kafka-kafka-bootstrap:
     <<: *infra-defaults
-    image: registry.redhat.io/amq-streams/kafka-41-rhel9:local  # local retag of the digest-pinned image (no RH registry creds)
+    image: registry.redhat.io/amq-streams/kafka-41-rhel9@sha256:1be81136da130940742f9836d09dadd6100474d943aad2d607c836811931e29e
     container_name: payu-kafka
     networks:
       - payu-network
@@ -169,7 +169,7 @@ services:
     <<: *infra-defaults
     mem_limit: 1g
     cpus: 1.0
-    image: registry.redhat.io/amq7/amq-broker-rhel9:local  # local retag of the digest-pinned image (no RH registry creds)
+    image: registry.redhat.io/amq7/amq-broker-rhel9@sha256:ec6a178d76a1521ea68ef312b43db6b952802d02431ad81f1b9bd107015c621d
     container_name: payu-artemis
     networks:
       - payu-network
@@ -223,7 +223,7 @@ services:
       start_period: 5s
   payu-keycloak-service:
     <<: *infra-defaults
-    image: registry.redhat.io/rhbk/keycloak-rhel9:local  # local retag of the digest-pinned image (no RH registry creds)
+    image: registry.redhat.io/rhbk/keycloak-rhel9@sha256:4224e2d27ea23af7b50e15ba6df41fc35c2a550ab1e108dd8debed9f7d23fb45
     container_name: payu-keycloak
     networks:
       - payu-network
@@ -1490,6 +1490,7 @@ services:
       context: ../../../backend/cms-service
       dockerfile: Containerfile
     container_name: payu-cms-service
+    image: localhost/payu-cms-service:${PAYU_VERSION:-1.11.1}
     networks:
       - payu-network
     ports:

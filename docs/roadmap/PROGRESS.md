@@ -1,5 +1,13 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.2 (2026-08-15)
+
+- Stack podman dari nol: infra digest-pinned Red Hat dipulihkan (`:local` retag dihapus, `pull_policy: always`), 31 image app di-tag semver `1.11.2`, deploy **37/37 healthy**, scan log 0 ERROR/WARN (2 menit terakhir).
+- **ARCH-ADR17-001 CLOSED**: sisa blok Redis/RESP dihapus (auth `application-container.yml`, api-portal `application-prod.yaml`) — cache via HotRod penuh.
+- **BUG fixed**: backoffice `V8 CREATE INDEX CONCURRENTLY` deadlock di fresh DB — `flyway.postgresql.transactional-lock: false` (session-level lock; V6 dipertahankan agar checksum cluster stabil). 8/8 migrasi, healthy.
+- **Parity guard hijau 22/22** (KC_HOSTNAME pin L-116, healthcheck 127.0.0.1, digest-pinned images); `test_verification_logic.py` (dead, class dihapus 6f540c9d) dihapus; `cms-service` baris `image:` hilang di compose dipulihkan; `account-service Containerfile` pin RPM stale di-unpin.
+- Backoffice 135/135 test green; backend full build green.
+
 ## Final sweep 2026-08-13 (1.11.1)
 
 - 37/37 container sehat, scan log 0 `APPLICATION FAILED` / 0 error loop.

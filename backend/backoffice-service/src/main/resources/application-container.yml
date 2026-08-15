@@ -28,6 +28,10 @@ spring:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: true
+    # Session-level lock (not transactional): V8 runs CREATE INDEX CONCURRENTLY,
+    # which cannot run inside the transaction Flyway's advisory lock holds.
+    postgresql:
+      transactional-lock: false
 
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS:payu-kafka-kafka-bootstrap:9092}

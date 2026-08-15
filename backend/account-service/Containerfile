@@ -8,10 +8,10 @@ LABEL org.opencontainers.image.vendor="PayU Indonesia"
 
 USER root
 RUN microdnf install -y \
-      glib2-2.68.4-19.el9_8.2 \
-      libacl-2.4.0-1.el9_8 \
-      python3-3.9.25-7.el9_8.2 \
-      python3-libs-3.9.25-7.el9_8.2 && \
+      glib2 \
+      libacl \
+      python3 \
+      python3-libs && \
     microdnf clean all && \
     useradd -u 1001 payu && \
     mkdir -p /deployments && \
