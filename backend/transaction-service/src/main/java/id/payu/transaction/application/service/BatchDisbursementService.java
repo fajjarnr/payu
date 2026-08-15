@@ -1,17 +1,21 @@
 package id.payu.transaction.application.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import id.payu.outbox.service.OutboxService;
 import id.payu.transaction.adapter.persistence.entity.BatchDisbursementEntity;
 import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.BatchDisbursementUseCase;
 import id.payu.transaction.domain.port.out.BatchDisbursementRepositoryPort;
 import id.payu.transaction.domain.port.out.DisbursementRepositoryPort;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,18 +41,22 @@ import java.util.UUID;
 public class BatchDisbursementService implements BatchDisbursementUseCase {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BatchDisbursementService.class);
 
-
+    private static final String AGGREGATE_TYPE = "BatchDisbursement";
+    private static final String TOPIC_BATCH = "payu.transaction.disbursement-batch.v1";
 
     private final BatchDisbursementRepositoryPort batchRepository;
     private final DisbursementRepositoryPort disbursementRepository;
     private final DisbursementService disbursementService;
+    private final OutboxService outboxService;
 
     public BatchDisbursementService(BatchDisbursementRepositoryPort batchRepository,
                                      DisbursementRepositoryPort disbursementRepository,
-                                     DisbursementService disbursementService) {
+                                     DisbursementService disbursementService,
+                                     OutboxService outboxService) {
         this.batchRepository = batchRepository;
         this.disbursementRepository = disbursementRepository;
         this.disbursementService = disbursementService;
+        this.outboxService = outboxService;
     }
 
     @Override
@@ -158,7 +166,9 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
         batch.process();
         batchRepository.save(batch);
 
-        // Publish batch processing event to Kafka
+        // Publish batch processing event to Kafka (outbox, same transaction)
+        publishBatchProcessingStarted(id);
+
         // The actual item processing happens asynchronously via Kafka listener
         log.info("Batch {} queued for processing with {} items", id, batch.getItemCount());
 
@@ -166,17 +176,47 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
     }
 
     /**
+     * Publishes a batch-started event to the standard disbursement-batch topic
+     * so {@link #processBatchItems} can process the items asynchronously.
+     * ARCH-TOPIC-003: the original comment claimed this publish existed; it was
+     * never wired — batches stayed in PROCESSING forever.
+     */
+    @Transactional
+    public void publishBatchProcessingStarted(UUID batchId) {
+        Map<String, Object> payload = Map.of("batchId", batchId.toString());
+        outboxService.createEvent(
+                AGGREGATE_TYPE,
+                batchId.toString(),
+                "BatchProcessingStarted",
+                payload,
+                null,
+                TOPIC_BATCH
+        );
+        log.debug("Created outbox event for batch-started: {}", batchId);
+    }
+
+    /**
      * Kafka listener for processing batch items.
      * Processes items sequentially with continue-on-error semantics.
      *
-     * @param batchId the batch ID to process
+     * @param record the CloudEvents envelope carrying the batch ID
      */
-    @KafkaListener(topics = "disbursement-batch", groupId = "transaction-service")
+    @KafkaListener(
+            topics = TOPIC_BATCH,
+            groupId = "transaction-service",
+            // outbox publishes JSON strings; the global JacksonJsonDeserializer
+            // cannot read them without type headers (ARCH-TOPIC-003)
+            properties = "value.deserializer=org.apache.kafka.common.serialization.StringDeserializer")
     @Transactional
-    public void processBatchItems(String batchId) {
+    public void processBatchItems(ConsumerRecord<String, String> record) {
+        UUID batchId = extractBatchId(record);
+        if (batchId == null) {
+            log.warn("Ignoring record without a valid batchId on {}", TOPIC_BATCH);
+            return;
+        }
         log.info("Processing batch items for batch: {}", batchId);
 
-        BatchDisbursementEntity batch = batchRepository.findById(UUID.fromString(batchId))
+        BatchDisbursementEntity batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
 
         List<DisbursementEntity> items = batch.getItems();
@@ -200,6 +240,33 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
 
         log.info("Batch {} processing complete. Success: {}, Failed: {}",
                 batchId, successCount, failCount);
+    }
+
+    /**
+     * Extracts the batch ID from a CloudEvents envelope (or a bare UUID payload).
+     */
+    private UUID extractBatchId(ConsumerRecord<String, String> record) {
+        try {
+            String value = record.value();
+            if (value == null || value.isBlank()) {
+                return null;
+            }
+            String candidate;
+            if (value.startsWith("{")) {
+                JsonNode root = new ObjectMapper().readTree(value);
+                JsonNode data = root.has("data") ? root.get("data") : root;
+                candidate = data.path("batchId").asText();
+                if (candidate.isBlank()) {
+                    candidate = data.asText();
+                }
+            } else {
+                candidate = value;
+            }
+            return candidate == null || candidate.isBlank() ? null : UUID.fromString(candidate);
+        } catch (Exception e) {
+            log.warn("Invalid batch processing event payload: {}", e.getMessage());
+            return null;
+        }
     }
 
     @Override

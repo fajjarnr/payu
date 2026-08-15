@@ -24,7 +24,12 @@ public class SubscriptionDueEventListener {
     private final SubscriptionUseCase subscriptionService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = TOPIC, groupId = "billing-subscription-due")
+    @KafkaListener(
+            topics = TOPIC,
+            groupId = "billing-subscription-due",
+            // outbox publishes JSON strings; the global JacksonJsonDeserializer
+            // cannot read them without type headers (ARCH-TOPIC-003)
+            properties = "value.deserializer=org.apache.kafka.common.serialization.StringDeserializer")
     public void onSubscriptionDue(String payload) {
         log.info("Received subscription-due event");
         try {
