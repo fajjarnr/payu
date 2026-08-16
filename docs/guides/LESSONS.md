@@ -49,6 +49,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-255: Spring Boot 4 Split the Test Modules — `@WebMvcTest` Moved and Optional Starter Deps Bite (2026-08-16)
+
+**Context**: building DEVSECOPS-016 (`scripts/scaffold-service.sh`). The scaffolded service failed test-compile with `package org.springframework.boot.test.autoconfigure.web.servlet does not exist`, then `NoClassDefFoundError: KafkaTemplate`.
+
+**Lesson**:
+- **Spring Boot 4 relocated slice-test annotations**: `@WebMvcTest`/`@AutoConfigureMockMvc` moved out of `spring-boot-test-autoconfigure` into a **new `spring-boot-webmvc-test` module** (verified via Context7 v4.1.0). A test that imported the old package compiled against 3.5.15 (still on the classpath transitively) but not 4.1.0. The repo-wide proven pattern is `@SpringBootTest` + `@AutoConfigureMockMvc` (`org.springframework.boot.webmvc.test.autoconfigure`) with an explicit `spring-boot-webmvc-test` test dependency.
+- **A PayU starter can mark its own transitive deps `<optional>true</optional>`**: `security-starter` sets `outbox-starter` (which brings spring-kafka) as optional — so `SecurityAutoConfiguration.dataMaskingAspect` fails introspection at context startup with `NoClassDefFoundError: KafkaTemplate` unless the consuming service also declares `spring-kafka` (plus `spring-boot-starter-data-jpa`/`postgresql`, since the starter's JPA/persistence deps are also optional-leaning). When a bare `@SpringBootTest` can't start after adding a starter, check the starter's pom for `<optional>` — transitive deps you'd assume are there are not.
+- **Validate a scaffolder by actually scaffolding**: the "template" only becomes real when `mvn test -pl <scaffolded> -am` passes and the generated ArchUnit + health tests run green. That caught the Boot 4 module split and the kafka gap that a dry-run of the script would have missed.
+
+**Applied evidence**: scaffold `scratch-svc` compiled via reactor; `ArchitectureTest` 1/1 + `HealthControllerTest` 1/1 green; module removed after validation.
+
 ## L-254: SNAP-BI Signature Binds the Endpoint Path — Hardcoding It Breaks Any Path Alias (2026-08-16)
 
 **Context**: fixing SNAP-PATH-001 (additive `/v1.0/*` aliases for the SNAP-BI taxonomy). `SnapBiController` validated signatures against hardcoded strings like `/v1/partner/payments`. Adding `/v1.0/transfer-va/payment` would fail every v1.0 request because the server computed the expected HMAC over the legacy path while the caller signed the v1.0 path.
