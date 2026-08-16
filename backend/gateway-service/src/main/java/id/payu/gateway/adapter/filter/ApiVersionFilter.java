@@ -40,6 +40,15 @@ public class ApiVersionFilter implements ContainerRequestFilter {
             return;
         }
 
+        // SNAP-PATH-001: the public SNAP-BI contract paths (/v1/partner/** and
+        // /v1.0/**) are NOT PayU API versions — /v1.0 is the BI-mandated taxonomy
+        // prefix, not a version string. Skip version validation so the contract
+        // entry points route through to partner-service.
+        if (path.equals("/v1/partner") || path.startsWith("/v1/partner/")
+                || path.equals("/v1.0") || path.startsWith("/v1.0/")) {
+            return;
+        }
+
         // Extract version from path or header
         String version = extractVersion(path, requestContext);
 

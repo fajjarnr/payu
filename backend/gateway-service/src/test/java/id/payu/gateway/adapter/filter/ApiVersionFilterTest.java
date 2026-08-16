@@ -59,4 +59,28 @@ public class ApiVersionFilterTest {
             .then()
             .statusCode(anyOf(is(200), is(503)));
     }
+
+    @Test
+    @DisplayName("Should skip version validation for SNAP-BI v1.0 taxonomy (SNAP-PATH-001)")
+    public void testSnapBiV10TaxonomyIsNotTreatedAsApiVersion() {
+        // /v1.0 is the BI-mandated SNAP-BI taxonomy prefix, not a PayU API version.
+        // It must route to partner-service, not be rejected as INVALID_API_VERSION.
+        given()
+            .when()
+            .get("/v1.0/access-token/b2b")
+            .then()
+            .statusCode(not(is(400)))
+            .body(not(containsString("INVALID_API_VERSION")));
+    }
+
+    @Test
+    @DisplayName("Should skip version validation for legacy SNAP-BI /v1/partner contract")
+    public void testLegacySnapBiContractIsNotTreatedAsApiVersion() {
+        given()
+            .when()
+            .get("/v1/partner/auth/token")
+            .then()
+            .statusCode(not(is(400)))
+            .body(not(containsString("INVALID_API_VERSION")));
+    }
 }
