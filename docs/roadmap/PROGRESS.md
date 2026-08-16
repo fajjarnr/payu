@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.12 (2026-08-16)
+
+- **READY-022 (support-service, CLOSED)**: gate-eligible **81.5% line** (jacoco gate 80%, exclude config/dto/entity/domain). `HealthControllerTest` 2 + `AgentTrainingServiceFallbackTest` 4 → 56 test green, `mvn verify` BUILD SUCCESS. **Seluruh READY-022 selesai** — 4 service (lending-rules 89.8%, loan-origination 92.3%, api-portal 82.9%, support 81.5%) semua ≥80% dengan gate terjaga. Deployed live image `1.11.12`.
+
 ## Deploy 1.11.11 (2026-08-16)
 
 - **READY-022 (api-portal-service)**: `quarkus-jacoco` (verified via Context7 — jangan bareng prepare-agent) + jacoco `check`-only 80% (exclude config/dto/`**/quarkus/commons/**` shared-module). Gate-eligible **82.9% line / 83% instruction**, 76 test green, `mvn verify` BUILD SUCCESS. Deployed live image `1.11.11`.

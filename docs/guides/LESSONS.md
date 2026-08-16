@@ -114,6 +114,16 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: api-portal-service gate-eligible coverage 82.9% line / 83% instruction, `mvn verify -pl api-portal-service` BUILD SUCCESS, 76 tests green.
 
+## L-263: Resilience `fallbackMethod`s Are Private — Test Them Via Reflection + Unwrap (2026-08-16)
+
+**Context**: READY-022 (support-service) — the `@CircuitBreaker(fallbackMethod=...)` bodies (`getTrainingsByAgentFallback`, `assignTrainingFallback`, …) were a big uncovered block, impossible to hit through `@SpringBootTest` happy paths. Raising coverage toward 80% needed direct tests.
+
+**Lesson**: private fallback methods take `(args..., Exception)` and rethrow business exceptions (`IllegalArgumentException`, `DataIntegrityViolationException`, `HttpMessageNotReadableException`, `AccessDeniedException`) while wrapping generic failures in `RuntimeException("...temporarily unavailable", ex)`. Test them by `getDeclaredMethod(name, paramTypes)` + `setAccessible(true)`. Two traps:
+- Resolve param types from the actual declared method (`getDeclaredMethods()` scan matching name+arity), not from the runtime arg classes — the `Exception` arg is passed a `RuntimeException` whose `getClass()` ≠ `Exception`, so `getDeclaredMethod` fails with the wrong class.
+- `Method.invoke` wraps the body's thrown exception in `InvocationTargetException`. Unwrap `e.getCause()` and rethrow the `RuntimeException` before asserting — otherwise every test sees `InvocationTargetException` instead of the business exception.
+
+**Applied evidence**: `AgentTrainingServiceFallbackTest` 4/4 green; support-service gate-eligible 81.5% line, `mvn verify` BUILD SUCCESS.
+
 ## L-254: SNAP-BI Signature Binds the Endpoint Path — Hardcoding It Breaks Any Path Alias (2026-08-16)
 
 **Context**: fixing SNAP-PATH-001 (additive `/v1.0/*` aliases for the SNAP-BI taxonomy). `SnapBiController` validated signatures against hardcoded strings like `/v1/partner/payments`. Adding `/v1.0/transfer-va/payment` would fail every v1.0 request because the server computed the expected HMAC over the legacy path while the caller signed the v1.0 path.

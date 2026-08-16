@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.12] - 2026-08-16
+
+### Added
+
+- **READY-022 (qa, support-service)**: coverage gate di-bind — jacoco (prepare-agent/report/`check` LINE ≥ 80%, exclude `config`/`dto`/`entity`/`domain`). Test baru: `HealthControllerTest` 2 (health UP/DOWN path vs DataSource) + `AgentTrainingServiceFallbackTest` 4 (fallback rethrow business vs wrap generic, via reflection-unwrap). Gate-eligible **81.5% line**. 56 test green, `mvn verify -pl support-service` BUILD SUCCESS.
+- **READY-022 (qa, CLOSED)**: keempat service target (lending-rules, loan-origination-process, api-portal-service, support-service) kini ≥80% dengan jacoco gate terjaga di `verify` — item P3 backlog selesai.
+
+### Deploy
+
+- `support-service` di-rebuild image semver **`1.11.12`** dan di-deploy live (podman). Perubahan hanya test + gate coverage — tanpa perubahan production code.
+
 ## [1.11.11] - 2026-08-16
 
 ### Added
