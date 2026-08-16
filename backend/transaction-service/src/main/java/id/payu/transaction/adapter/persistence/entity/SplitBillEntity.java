@@ -333,8 +333,13 @@ public class SplitBillEntity {
         if (participants == null || participants.isEmpty()) {
             return false;
         }
+        // TXN-SPLIT-001: every participant paid their share AND the total
+        // collected covers the bill total. Before this guard, a CUSTOM split
+        // whose shares summed below totalAmount could be settled with money
+        // still missing (all participants "fully paid" their own share).
         return participants.stream()
-                .allMatch(p -> p.getAmountPaid().compareTo(p.getAmountOwed()) >= 0);
+                .allMatch(p -> p.getAmountPaid().compareTo(p.getAmountOwed()) >= 0)
+                && getTotalPaid().compareTo(totalAmount) >= 0;
     }
 
     public BigDecimal getTotalPaid() {

@@ -23,4 +23,11 @@ public interface BillPaymentRepository extends JpaRepository<BillPaymentEntity, 
     Optional<BillPaymentEntity> findByIdempotencyKey(String idempotencyKey);
 
     List<BillPaymentEntity> findByStatusIn(Collection<String> statuses);
+
+    /**
+     * BILL-RECON-001: only payments that have not yet published their event
+     * need reconciliation — completed/failed rows with event_published=true
+     * are terminal and must not be re-scanned every 60s.
+     */
+    List<BillPaymentEntity> findByStatusInAndEventPublishedFalse(Collection<String> statuses);
 }

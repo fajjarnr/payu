@@ -230,22 +230,31 @@ public class InstallmentService implements InstallmentUseCase {
     private void generateRepaymentSchedule(Loan loan, BigDecimal monthlyPayment, BigDecimal annualRate) {
         BigDecimal monthlyRate = annualRate.divide(BigDecimal.valueOf(12), 8, RoundingMode.HALF_EVEN);
         BigDecimal outstanding = loan.getPrincipalAmount();
+        int tenor = loan.getTenureMonths();
+        // LEND-REPAY-001: principal must use the same money scale (4) as
+        // calculateOption so option figures match the persisted schedule.
         BigDecimal monthlyPrincipal = loan.getPrincipalAmount()
-                .divide(BigDecimal.valueOf(loan.getTenureMonths()), 2, RoundingMode.HALF_EVEN);
+                .divide(BigDecimal.valueOf(tenor), 4, RoundingMode.HALF_EVEN);
 
-        for (int i = 1; i <= loan.getTenureMonths(); i++) {
+        for (int i = 1; i <= tenor; i++) {
             BigDecimal interest = loan.getPrincipalAmount().multiply(monthlyRate)
                     .setScale(4, RoundingMode.HALF_EVEN);
-            outstanding = outstanding.subtract(monthlyPrincipal);
-            if (outstanding.compareTo(BigDecimal.ZERO) < 0) {
-                outstanding = BigDecimal.ZERO;
+
+            // LEND-REPAY-001: the last installment absorbs the rounding
+            // residual so sum(principal) == loan principal exactly (no
+            // permanently unamortized balance). Clamp intermediate ones too.
+            boolean isLast = (i == tenor);
+            BigDecimal principalAmount = outstanding.min(monthlyPrincipal);
+            if (isLast) {
+                principalAmount = outstanding;
             }
+            outstanding = outstanding.subtract(principalAmount);
 
             RepaymentSchedule schedule = new RepaymentSchedule();
             schedule.setLoanId(loan.getId());
             schedule.setInstallmentNumber(i);
             schedule.setInstallmentAmount(monthlyPayment);
-            schedule.setPrincipalAmount(monthlyPrincipal);
+            schedule.setPrincipalAmount(principalAmount);
             schedule.setInterestAmount(interest);
             schedule.setOutstandingPrincipal(outstanding);
             schedule.setDueDate(LocalDate.now().plusMonths(i));

@@ -164,8 +164,15 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
     @SchedulerLock(name = "PaymentService_reconcile", lockAtMostFor = "PT30S")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void reconcilePayments() {
-        persistencePort.findByStatusIn(List.of(PaymentStatus.PENDING, PaymentStatus.PROCESSING,
-                        PaymentStatus.COMPLETED, PaymentStatus.FAILED))
+        // BILL-RECON-001: only scan payments that still need reconciliation —
+        // PENDING/PROCESSING are in-flight, and COMPLETED/FAILED rows are only
+        // re-checked when their event was never published. Fully published
+        // historical rows are terminal and no longer touched (no full scan).
+        List<BillPayment> inflight = persistencePort.findReconcilableIn(
+                List.of(PaymentStatus.PENDING, PaymentStatus.PROCESSING));
+        List<BillPayment> terminalUnpublished = persistencePort.findReconcilableIn(
+                List.of(PaymentStatus.COMPLETED, PaymentStatus.FAILED));
+        java.util.stream.Stream.concat(inflight.stream(), terminalUnpublished.stream())
                 .forEach(this::reconcilePayment);
     }
 

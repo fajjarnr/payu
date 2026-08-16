@@ -38,8 +38,21 @@ public class SavingsGoalService implements SavingsGoalUseCase {
         return pocket;
     }
 
-    private SavingsGoal verifyGoalExists(UUID goalId, UUID pocketId) {
-        SavingsGoal goal = savingsGoalPersistencePort.findById(goalId)
+    /**
+     * SAVINGS-UUID-001: the wallet accountId is a PayU string identifier
+     * (e.g. ACC-12345678, sender-...) which is not a valid UUID. The
+     * savings_goals.user_id column is UUID NOT NULL, so map non-UUID account
+     * ids to a deterministic UUID (stable per account, no crash).
+     */
+    private UUID resolveUserId(String accountId) {
+        try {
+            return UUID.fromString(accountId);
+        } catch (IllegalArgumentException e) {
+            return UUID.nameUUIDFromBytes(accountId.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+    }
+
+    private SavingsGoal verifyGoalExists(UUID goalId, UUID pocketId) {        SavingsGoal goal = savingsGoalPersistencePort.findById(goalId)
                 .orElseThrow(() -> new SavingsGoalNotFoundException("Savings goal not found"));
 
         if (!Objects.equals(goal.getPocketId(), pocketId)) {
@@ -67,7 +80,7 @@ public class SavingsGoalService implements SavingsGoalUseCase {
         SavingsGoal goal = SavingsGoal.builder()
                 .id(UUID.randomUUID())
                 .pocketId(walletId)
-                .userId(UUID.fromString(pocket.getAccountId()))
+                .userId(resolveUserId(pocket.getAccountId()))
                 .name(name)
                 .description(description)
                 .targetAmount(targetAmount)

@@ -49,6 +49,12 @@ public class BillPaymentPersistenceAdapter implements BillPaymentPersistencePort
                 .stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public List<BillPayment> findReconcilableIn(Collection<PaymentStatus> statuses) {
+        return billPaymentRepository.findByStatusInAndEventPublishedFalse(statuses.stream().map(Enum::name).toList())
+                .stream().map(this::toDomain).toList();
+    }
+
     private BillPaymentEntity toEntity(BillPayment payment) {
         BillPaymentEntity entity = payment.getId() == null
                 ? new BillPaymentEntity()

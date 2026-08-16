@@ -6,6 +6,7 @@ import id.payu.lending.domain.model.InstallmentOption;
 import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.PayLater;
 import id.payu.lending.domain.model.PayLaterStatus;
+import id.payu.lending.domain.model.RepaymentSchedule;
 import id.payu.lending.domain.port.out.InstallmentCheckoutPersistencePort;
 import id.payu.lending.domain.port.out.LoanPersistencePort;
 import id.payu.lending.domain.port.out.PayLaterPersistencePort;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -242,6 +244,39 @@ class InstallmentServiceTest {
 
             assertEquals(new BigDecimal("1000000"), activePayLater.getUsedCredit());
             assertEquals(new BigDecimal("4000000"), activePayLater.getAvailableCredit());
+        }
+
+        @Test
+        @DisplayName("LEND-REPAY-001: repayment schedule fully amortizes principal (sum == loan principal)")
+        void repaymentScheduleFullyAmortizesPrincipal() {
+            when(payLaterPersistencePort.findByUserId(userId))
+                    .thenReturn(Optional.of(activePayLater));
+            when(checkoutPersistencePort.findByExternalOrderId(any()))
+                    .thenReturn(Optional.empty());
+
+            // Principal not divisible by tenor to force rounding residual
+            BigDecimal amount = new BigDecimal("1000001.0000");
+            installmentService.checkout(userId, "partner-1", "ORD-LENDREPAY", amount, 3);
+
+            ArgumentCaptor<RepaymentSchedule> captor = ArgumentCaptor.forClass(RepaymentSchedule.class);
+            verify(repaymentSchedulePersistencePort, times(3)).save(captor.capture());
+            List<RepaymentSchedule> schedules = captor.getAllValues();
+
+            // 1. Sum of principal across installments must equal the loan principal
+            BigDecimal sumPrincipal = schedules.stream()
+                    .map(RepaymentSchedule::getPrincipalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            assertEquals(0, sumPrincipal.compareTo(amount), "sum(principal) must equal loan principal, got " + sumPrincipal);
+
+            // 2. Principal must use the money scale (4), consistent with calculateOption
+            for (RepaymentSchedule s : schedules) {
+                assertEquals(4, s.getPrincipalAmount().scale(), "principal must use scale 4");
+                assertEquals(4, s.getInterestAmount().scale(), "interest must use scale 4");
+            }
+
+            // 3. Last installment must absorb the rounding residual (outstanding ends at 0)
+            assertEquals(0, schedules.get(2).getOutstandingPrincipal().compareTo(BigDecimal.ZERO),
+                    "outstanding after last installment must be zero");
         }
     }
 

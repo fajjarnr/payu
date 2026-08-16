@@ -316,4 +316,65 @@ class PaymentServiceTest {
             assertEquals(new BigDecimal("77000"), payment.getTotalAmount());
         }
     }
+
+    @Nested
+    @DisplayName("BILL-RECON-001: reconcilePayments")
+    class ReconcilePaymentsTests {
+
+        @Test
+        @DisplayName("scans only reconcilable payments (not every historical completed row)")
+        void shouldQueryOnlyReconcilablePayments() {
+            when(persistencePort.findReconcilableIn(java.util.List.of(
+                    PaymentStatus.PENDING, PaymentStatus.PROCESSING))).thenReturn(java.util.List.of());
+            when(persistencePort.findReconcilableIn(java.util.List.of(
+                    PaymentStatus.COMPLETED, PaymentStatus.FAILED))).thenReturn(java.util.List.of());
+
+            paymentService.reconcilePayments();
+
+            verify(persistencePort).findReconcilableIn(java.util.List.of(
+                    PaymentStatus.PENDING, PaymentStatus.PROCESSING));
+            verify(persistencePort).findReconcilableIn(java.util.List.of(
+                    PaymentStatus.COMPLETED, PaymentStatus.FAILED));
+            // Must NOT scan all four statuses in one unbounded query
+            verify(persistencePort, never()).findByStatusIn(any());
+        }
+
+        @Test
+        @DisplayName("reconciles in-flight and unpublished-terminal payments")
+        void shouldReconcileInflightAndUnpublishedTerminal() {
+            BillPayment inflight = new BillPayment();
+            inflight.setId(UUID.randomUUID());
+            inflight.setAccountId("account-1");
+            inflight.setBillerType(BillerType.PLN);
+            inflight.setCustomerId("cust-1");
+            inflight.setAmount(new BigDecimal("100000"));
+            inflight.setAdminFee(new BigDecimal("2500"));
+            inflight.setTotalAmount(new BigDecimal("102500"));
+            inflight.setStatus(PaymentStatus.PROCESSING);
+            inflight.setReferenceNumber("BILL-REC-001");
+
+            BillPayment unpublishedCompleted = new BillPayment();
+            unpublishedCompleted.setId(UUID.randomUUID());
+            unpublishedCompleted.setAccountId("account-2");
+            unpublishedCompleted.setBillerType(BillerType.PLN);
+            unpublishedCompleted.setCustomerId("cust-2");
+            unpublishedCompleted.setAmount(new BigDecimal("50000"));
+            unpublishedCompleted.setAdminFee(new BigDecimal("2500"));
+            unpublishedCompleted.setTotalAmount(new BigDecimal("52500"));
+            unpublishedCompleted.setStatus(PaymentStatus.COMPLETED);
+            unpublishedCompleted.setReferenceNumber("BILL-REC-002");
+
+            when(persistencePort.findReconcilableIn(java.util.List.of(
+                    PaymentStatus.PENDING, PaymentStatus.PROCESSING)))
+                    .thenReturn(java.util.List.of(inflight));
+            when(persistencePort.findReconcilableIn(java.util.List.of(
+                    PaymentStatus.COMPLETED, PaymentStatus.FAILED)))
+                    .thenReturn(java.util.List.of(unpublishedCompleted));
+
+            paymentService.reconcilePayments();
+
+            // COMPLETED + unpublished event -> publishPaymentEvent called
+            verify(eventPort).publishPaymentEvent(unpublishedCompleted);
+        }
+    }
 }

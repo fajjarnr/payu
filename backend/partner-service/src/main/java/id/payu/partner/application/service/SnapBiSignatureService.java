@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class SnapBiSignatureService {
 
-    private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+    // SNAP-HMAC-001: SNAP-BI mandates HMAC-SHA512 for symmetric transaction
+    // signatures; SHA-256 causes 4012504 for every standard BI integration.
+    private static final String HMAC_ALGORITHM = "HmacSHA512";
     private static final DateTimeFormatter ISO_UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     // Standard Java security/crypto implementation - already Spring Service compatible
@@ -26,8 +28,8 @@ public class SnapBiSignatureService {
             byte[] secretKeyBytes = clientSecret.getBytes(StandardCharsets.UTF_8);
             byte[] stringToSignBytes = stringToSign.getBytes(StandardCharsets.UTF_8);
             
-            javax.crypto.Mac mac = javax.crypto.Mac.getInstance(HMAC_SHA256_ALGORITHM);
-            javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(secretKeyBytes, HMAC_SHA256_ALGORITHM);
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance(HMAC_ALGORITHM);
+            javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(secretKeyBytes, HMAC_ALGORITHM);
             mac.init(secretKeySpec);
             byte[] signatureBytes = mac.doFinal(stringToSignBytes);
             
@@ -46,8 +48,8 @@ public class SnapBiSignatureService {
             byte[] secretKeyBytes = clientSecret.getBytes(StandardCharsets.UTF_8);
             byte[] stringToSignBytes = stringToSign.getBytes(StandardCharsets.UTF_8);
             
-            javax.crypto.Mac mac = javax.crypto.Mac.getInstance(HMAC_SHA256_ALGORITHM);
-            javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(secretKeyBytes, HMAC_SHA256_ALGORITHM);
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance(HMAC_ALGORITHM);
+            javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(secretKeyBytes, HMAC_ALGORITHM);
             mac.init(secretKeySpec);
             byte[] signatureBytes = mac.doFinal(stringToSignBytes);
             

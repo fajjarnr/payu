@@ -341,6 +341,20 @@ public class SplitBillService implements SplitBillUseCase {
 
     private List<SplitBillParticipantEntity> buildParticipants(CreateSplitBillRequest request, Instant now) {
         int participantCount = request.getParticipants().size();
+
+        // TXN-SPLIT-001: for non-EQUAL splits the sum of participant obligations
+        // must equal the bill total, otherwise the bill can never collect the
+        // full amount (isFullyPaid would otherwise settle a short-funded bill).
+        if (request.getSplitType() != SplitType.EQUAL) {
+            BigDecimal sumOwed = request.getParticipants().stream()
+                    .map(p -> p.getAmountOwed() != null ? p.getAmountOwed() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (sumOwed.compareTo(request.getTotalAmount()) != 0) {
+                throw new IllegalArgumentException(
+                        "Sum of participant amounts (" + sumOwed + ") must equal total amount (" + request.getTotalAmount() + ")");
+            }
+        }
+
         // BUG-BE-124: Fix EQUAL split rounding error
         // Calculate base amount per person, then assign remainder to last participant
         BigDecimal amountPerPerson = request.getTotalAmount()

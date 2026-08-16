@@ -207,6 +207,11 @@ public class StatementService {
             if (statement.getStoragePath() == null) {
                 throw new StatementException("STATEMENT_005", "StatementEntity has no storage path");
             }
+            // STMT-S3-001: an s3:// storage path is a remote object, not a local file —
+            // reading it with Paths.get() throws NoSuchFileException in Kubernetes/production.
+            if (s3StorageAdapter.isEnabled() || statement.getStoragePath().startsWith("s3://")) {
+                return s3StorageAdapter.downloadPdf(statement.getStoragePath());
+            }
             Path filePath = Paths.get(statement.getStoragePath());
             return Files.readAllBytes(filePath);
         } catch (IOException e) {

@@ -310,6 +310,42 @@ class StatementServiceTest {
                     .isInstanceOf(StatementException.class)
                     .hasMessageContaining("storage path");
         }
+
+        @Test
+        @DisplayName("STMT-S3-001: should download PDF from S3 adapter when storage path is an s3:// URI")
+        void shouldDownloadFromS3WhenStoragePathIsS3Uri() throws Exception {
+            testStatement.setStatus(StatementStatus.COMPLETED);
+            testStatement.setStoragePath("s3://payu-statements/statements/statement_" + testStatementId + ".pdf");
+            when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
+                    .thenReturn(Optional.of(testStatement));
+            when(s3StorageAdapter.isEnabled()).thenReturn(true);
+            byte[] pdfBytes = "PDF-S3-CONTENT".getBytes();
+            when(s3StorageAdapter.downloadPdf(anyString())).thenReturn(pdfBytes);
+
+            byte[] result = statementService.getStatementPdf(testStatementId, testUserId.toString());
+
+            assertThat(result).isEqualTo(pdfBytes);
+            verify(s3StorageAdapter).downloadPdf("s3://payu-statements/statements/statement_" + testStatementId + ".pdf");
+            verify(s3StorageAdapter, never()).uploadPdf(any(), any());
+        }
+
+        @Test
+        @DisplayName("STMT-S3-001: should fall back to local file read when S3 is disabled")
+        void shouldReadLocalFileWhenS3Disabled() throws Exception {
+            testStatement.setStatus(StatementStatus.COMPLETED);
+            java.nio.file.Path localPath = java.nio.file.Files.createTempFile("stmt-s3-test", ".pdf");
+            java.nio.file.Files.write(localPath, "PDF-LOCAL-CONTENT".getBytes());
+            testStatement.setStoragePath(localPath.toString());
+            when(statementRepository.findByIdAndCustomerId(testStatementId, testUserId.toString()))
+                    .thenReturn(Optional.of(testStatement));
+            when(s3StorageAdapter.isEnabled()).thenReturn(false);
+
+            byte[] result = statementService.getStatementPdf(testStatementId, testUserId.toString());
+
+            assertThat(new String(result)).isEqualTo("PDF-LOCAL-CONTENT");
+            verify(s3StorageAdapter, never()).downloadPdf(anyString());
+            localPath.toFile().deleteOnExit();
+        }
     }
 
     @Nested

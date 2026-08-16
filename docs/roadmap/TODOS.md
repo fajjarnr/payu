@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.11.0` (2026-08-13) |
+| **Last Release** | `1.11.4` (2026-08-16) |
 | **Core Banking MVP** | 🟡 Mendekati MVP — blocker tersisa: ACCOUNT-007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
-| **Backlog Aktif** | 2 tickets + 32 action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-14) |
-| **Last Updated** | 2026-08-15 (deploy 1.11.2: ARCH-ADR17-001 auth/api-portal closed, backoffice V8 deadlock fixed, stack 37/37 healthy 0 ERROR/WARN) |
+| **Backlog Aktif** | 2 tickets + action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-16) |
+| **Last Updated** | 2026-08-16 (deploy 1.11.4: audit 2026-08-16 5 finding money/PII/integrity CLOSED — TXN-SPLIT-001, LEND-REPAY-001, SNAP-HMAC-001, STMT-S3-001, SAVINGS-UUID-001, BILL-RECON-001) |
 
 ---
 
@@ -168,10 +168,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| TXN-SPLIT-001 | 🔴 | transaction | `SplitBillService` tidak memvalidasi `sum(participants.amountOwed) == totalAmount` pada custom split (`splitType != EQUAL`). `isFullyPaid()` return `true` bila setiap peserta bayar tagihannya meskipun `remainingAmount > 0`, menyebabkan split bill settled sebelum seluruh dana terkumpul | SplitBillService.java:363-365; SplitBillEntity.java:337 |
-| LEND-REPAY-001 | 🔴 | lending | `InstallmentService` menggunakan scale 4 di `calculateOption` vs scale 2 di `generateRepaymentSchedule`. Terlebih lagi `generateRepaymentSchedule` tidak menyerap sisa rounding pokok pada angsuran terakhir (`principalAmount = outstandingPrincipal`), menyisakan sisa saldo tidak terlunasi permanen | InstallmentService.java:220-258 |
-| STMT-S3-001 | 🔴 | statement | `StatementService.getStatementPdf` membaca file via `Files.readAllBytes(Paths.get(statement.getStoragePath()))`. Saat S3 aktif, `storagePath` berisi URI `s3://...`, mengabaikan `s3StorageAdapter.downloadPdf()`. Semua download PDF e-statement di Kubernetes/production crash (`NoSuchFileException`) | StatementService.java:210-212; S3StorageAdapter.java:120 |
-| SNAP-HMAC-001 | 🔴 | partner | `SnapBiSignatureService` memakai `HmacSHA256` untuk service endpoint signature. Standar resmi Bank Indonesia (SNAP-BI) mewajibkan **`HMAC-SHA512`** untuk symmetric transaction signatures. Integrasi standar SNAP-BI (TokoBapak/Nobar) selalu gagal 401 (`4012504: Invalid Signature`) | SnapBiSignatureService.java:15,29; SnapBiController.java:194 |
 | SDK-TS-001 | 🔴 | sdk | `sdk/typescript` getters `client.payments/transfers/wallets/transactions` memanggil `require('./generated/api')`. Direktori `src/generated` tidak ada, sehingga setiap pemanggilan resource SDK crash dengan runtime `Cannot find module './generated/api'` | sdk/typescript/src/client.ts:180,190,200,210 |
 | SDK-JAVA-001 | 🔴 | sdk | `sdk/java` `PayUClient.java` mengimpor `id.payu.sdk.auth.*`, `config.*`, `error.*`, `resource.*` yang belum dibuat sama sekali. `mvn -f sdk/java/pom.xml compile` gagal total dengan 34 error kompilasi | sdk/java/src/main/java/id/payu/sdk/PayUClient.java |
 
@@ -179,8 +175,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| BILL-RECON-001 | 🟠 | billing | Scheduled cron 60 detik `PaymentService.reconcilePayments` mengeksekusi `findByStatusIn(PENDING, PROCESSING, COMPLETED, FAILED)` tanpa paginasi/limit/date range. Data historis `COMPLETED`/`FAILED` menumpuk menyebabkan full table scan, connection exhaustion, dan JVM OutOfMemoryError | PaymentService.java:163-170 |
-| SAVINGS-UUID-001 | 🟠 | wallet | `SavingsGoalService.createSavingsGoal` memanggil `UUID.fromString(pocket.getAccountId())`. Format `accountId` di PayU adalah String identifier (contoh `ACC-12345678`), bukan UUID murni, sehingga crash dengan `IllegalArgumentException` | SavingsGoalService.java:70 |
 | SNAP-PATH-001 | 🟠 | partner | `SnapBiController` menggunakan path non-standar `/v1/partner/auth/token` dan `/v1/partner/payments` alih-alih taksonomi standar SNAP-BI v1.0 (`/v1.0/access-token/b2b`, `/v1.0/transfer-va/payment`, dll) | SnapBiController.java:71,149 |
 | SCRIPT-TEST-001 | 🟠 | platform | `scripts/test-single-service.sh` berpindah direktori `cd backend/<service>` lalu `mvn test`. Gagal pada semua Quarkus & modular services (`gateway-service`, `notification-service`, `api-portal-service`) karena child POM kehilangan konteks reactor `quarkus-api-commons`. Wajib menggunakan `mvn -f backend/pom.xml test -pl ...` | scripts/test-single-service.sh:72-86 |
 | FX-SCALE-001 | 🟠 | fx | `FxConversionService` mengalikan `fromAmount.multiply(rate)` tanpa scale control dan rounding mode `HALF_EVEN`, menghasilkan nilai scale tidak standar sebelum persistensi `DECIMAL(19,4)` dan mutasi wallet | FxConversionService.java:51,94 |
