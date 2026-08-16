@@ -69,21 +69,27 @@ echo "Testing: $SERVICE_NAME"
 echo "=========================================="
 echo ""
 
-cd "$SERVICE_PATH"
+# Resolve backend services through the reactor so shared starter modules
+# (e.g. quarkus-api-commons) are built from source instead of requiring them
+# to be pre-installed in the local repository. Running `cd backend/<service> &&
+# mvn test` breaks the reactor context for modular/Quarkus services
+# (SCRIPT-TEST-001).
+cd "$(dirname "$0")/.."
+PROJECT_ROOT=$(pwd)
 
 # Detect service type and run appropriate tests
-if [ -f "pom.xml" ]; then
+if [ -f "$SERVICE_PATH/pom.xml" ]; then
     # Java/Maven service
     print_info "Detected Maven service"
 
-    if [ -f "mvnw" ]; then
-        MVN_CMD="./mvnw"
+    if [ -f "$SERVICE_PATH/mvnw" ]; then
+        MVN_CMD="$SERVICE_PATH/mvnw"
     else
         MVN_CMD="mvn"
     fi
 
-    print_info "Running unit tests..."
-    if $MVN_CMD test -q; then
+    print_info "Running unit tests via backend reactor (-pl $SERVICE_NAME -am)..."
+    if $MVN_CMD -f backend/pom.xml test -pl "$SERVICE_NAME" -am -q; then
         print_status 0 "Unit tests passed"
     else
         print_status 1 "Unit tests failed"
@@ -91,16 +97,17 @@ if [ -f "pom.xml" ]; then
     fi
 
     print_info "Generating coverage report..."
-    if $MVN_CMD jacoco:report -q > /dev/null 2>&1; then
-        print_status 0 "Coverage report generated at target/site/jacoco/index.html"
+    if $MVN_CMD -f backend/pom.xml org.jacoco:jacoco-maven-plugin:report -pl "$SERVICE_NAME" -am -q > /dev/null 2>&1; then
+        print_status 0 "Coverage report generated at backend/$SERVICE_NAME/target/site/jacoco/index.html"
     else
         print_warning "Could not generate coverage report"
     fi
 
-elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+elif [ -f "$SERVICE_PATH/requirements.txt" ] || [ -f "$SERVICE_PATH/pyproject.toml" ]; then
     # Python service
     print_info "Detected Python service"
 
+    cd "$SERVICE_PATH"
     print_info "Running unit tests..."
     if pytest -v; then
         print_status 0 "Unit tests passed"
@@ -116,10 +123,11 @@ elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
         print_warning "Could not generate coverage report"
     fi
 
-elif [ -f "package.json" ]; then
+elif [ -f "$SERVICE_PATH/package.json" ]; then
     # Node.js service
     print_info "Detected Node.js service"
 
+    cd "$SERVICE_PATH"
     print_info "Running unit tests..."
     if npm run test; then
         print_status 0 "Unit tests passed"
@@ -146,7 +154,7 @@ else
     exit 1
 fi
 
-cd ../..
+cd "$PROJECT_ROOT"
 
 echo ""
 echo "=========================================="

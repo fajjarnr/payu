@@ -2,10 +2,11 @@
 
 ## Deploy 1.11.6 (2026-08-16)
 
+- **SCRIPT-TEST-001 CLOSED**: `scripts/test-single-service.sh` gagal untuk Quarkus/modular services (child POM kehilangan reactor `quarkus-api-commons`). Script kini `mvn -f backend/pom.xml test -pl <service> -am` dari aggregator root; jacoco via goal fully-qualified `org.jacoco:jacoco-maven-plugin:report`. Verified: notification-service (Quarkus) + account-service (Spring) reactor resolve + tests green + coverage; web-app branch green. Gateway 469 tests jalan (79 failure pre-existing butuh stack hidup).
 - **SDK-TS-001 + SDK-JAVA-001 CLOSED**: kedua SDK yang tadinya scaffold rusak kini build + test green.
   - TS: `src/generated/api.ts` + `models.ts` dibuat (resource Payments/Transfers/Wallets/Transactions → endpoint nyata `/api/v1/*`, `X-Idempotency-Key` di create); typing axios lama difix (`InternalAxiosRequestConfig`, `headers.set`). `npm run build` OK + jest 3/3.
   - Java: package `config`/`auth`/`interceptor`/`error`/`resource` dibuat (PayUConfig, AuthInterceptor HMAC-SHA256, RetryInterceptor, PayUError/Exception, 3 resource); dependency `logging-interceptor` (nama benar) ditambahkan. `mvn compile` OK + `mvn test` 8/8 (MockWebServer).
-  - Lesson: `okhttp-logging-interceptor` bukan artifact Maven Central — nama group `com.squareup.okhttp3` yang benar adalah `logging-interceptor` (L-246).
+  - Lesson: `okhttp-logging-interceptor` bukan artifact Maven Central — nama group `com.squareup.okhttp3` yang benar adalah `logging-interceptor` (L-249).
 
 ## Deploy 1.11.2 (2026-08-15)
 

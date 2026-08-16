@@ -49,6 +49,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-250: Modular Reactor Services Need `-pl -am` from the Aggregator, Not `cd <service> && mvn` (2026-08-16)
+
+**Context**: fixing SCRIPT-TEST-001. `scripts/test-single-service.sh` did `cd backend/gateway-service && mvn test` — failed with `Could not find artifact id.payu.shared:quarkus-api-commons` because the child POM has no reactor context and the starter was never `mvn install`-ed into the local repo. Even `mvn -f backend/pom.xml test -pl gateway-service` (without `-am`) failed the same way — `-pl` alone only selects the module, it does not build its reactor dependencies.
+
+**Lesson**:
+- **`-pl <module>` selects; `-am` (also-make) builds dependencies.** For a single-module test of a modular/Quarkus service, the reliable invocation from the aggregator root is `mvn -f backend/pom.xml test -pl <service> -am`. This builds required shared starters (`quarkus-api-commons`, `security-starter`, etc.) from source in the same reactor instead of requiring them pre-installed.
+- **Goal prefix vs fully-qualified goal**: from the aggregator root, `mvn jacoco:report` fails with `No plugin found for prefix 'jacoco'` when the plugin only lives in per-module `pluginManagement`. Use `org.jacoco:jacoco-maven-plugin:report` (fully-qualified coordinates) to bypass prefix resolution.
+- **Spring Boot services mask the problem**: `account-service`/`wallet-service` work standalone because the parent installs their deps first or their shared deps are already in `.m2`. Quarkus services with `quarkus-api-commons` (a sibling module, not an external artifact) are the canary. When a script "works for most services but not one", suspect reactor context, not the one service.
+
+**Applied evidence**: `./scripts/test-single-service.sh notification-service` (Quarkus modular) + `account-service` (Spring) both green via reactor with coverage report; `web-app` npm branch untouched and green.
+
 ## L-249: Maven Artifact Names Are Not Intuitive — Verify via Central Metadata (2026-08-16)
 
 **Context**: fixing SDK-JAVA-001 (broken `sdk/java` scaffold). `PayUClient` used `okhttp3.logging.HttpLoggingInterceptor`; I added `<artifactId>okhttp-logging-interceptor</artifactId>` and Maven failed with `Could not find artifact`. Even `curl` of `repo.maven.apache.org/maven2/com/squareup/okhttp3/okhttp-logging-interceptor/` returned 404.
