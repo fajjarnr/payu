@@ -1,5 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.8 (2026-08-16)
+
+- **ARCH-SECRET-001 CLOSED**: sisa dev-only secrets di-hardening — semua profile non-dev (prod/sit/uat/preprod) pakai `${KEYCLOAK_CLIENT_SECRET}` tanpa default (fail-closed, verified repo-wide); dev/local hanya `d3v-0nly` defaults yang env-overridable; gateway `application-local.yaml` literal → `${VAR:dev-default}` (env-overridable, YAML valid).
+- **Deploy live**: gateway + web-app di-rebuild image semver `1.11.8`, 37/37 healthy, `/q/health` 200, scan log 0 ERROR/WARN.
+
 ## Deploy 1.11.7 (2026-08-16)
 
 - **8 finding Python (kyc/analytics) CLOSED dalam satu sesi** — seluruhnya di-deploy live ke stack podman (image semver `1.11.7`, 37/37 healthy):

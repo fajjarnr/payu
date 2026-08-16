@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.8] - 2026-08-16
+
+### Fixed
+
+- **ARCH-SECRET-001 (security, CLOSED)**: sisa dev-only secrets di-hardening. Semua profile non-dev (prod/sit/uat/preprod) untuk Keycloak client-secret/web-client-secret sudah `{}` placeholder **tanpa default** (fail-closed, verified repo-wide — api-portal/auth/compliance). Dev/local hanya memakai default bertanda `d3v-0nly` yang env-overridable. Gateway `application-local.yaml` diubah dari literal (`payu_secret`, `payu-web-local-client-secret`, `dev_jwt_secret...`, `dummy_secret_for_dev_only`) menjadi `${VAR:dev-default}` env-overridable — konsisten dengan pola service lain. YAML valid.
+
+### Deploy
+
+- Gateway + web-app di-rebuild ke image semver **`1.11.8`** dan di-deploy live (podman, 37/37 healthy). Gateway `/q/health` 200, scan log 0 ERROR/WARN. Container gateway memakai env-override (bukan profile `local`), sehingga perubahan config hanya memengaruhi dev-run lokal — non-breaking.
+
 ## [1.11.7] - 2026-08-16
 
 ### Fixed

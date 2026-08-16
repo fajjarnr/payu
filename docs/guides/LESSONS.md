@@ -96,6 +96,14 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Lesson**: an e2e workflow test is a contract on the API envelope and the service wiring — when the API changes (auth added, outbox replaces producer, bytes columns), update the e2e test in the same change or CI silently goes red. Patch lazy imports at their module (`app.ml.ocr_service.OcrService`), override `require_auth` for workflow tests (auth coverage lives in `test_security.py`), and assert `json()["data"][...]`. Also: pin `opencv-python-headless` to 4.x in test envs — OpenCV 5 removed `cv2.CascadeClassifier`, breaking face/liveness tests that CI's 4.x install never hit.
 
+## L-261: Fail-Closed Secrets Live in the Placeholder, Not in the Profile Name (2026-08-16)
+
+**Context**: ARCH-SECRET-001 remainder — dev-only Keycloak client-secrets and gateway `payu_secret`. The audit's worry was hardcoded credentials, but a repo-wide grep showed `application-prod/sit/uat/preprod.yml` already use `${KEYCLOAK_CLIENT_SECRET}` with **no default** (fail-closed), while only `application-dev.yml`/`application-local.yml` carry `d3v-0nly` defaults.
+
+**Lesson**: a dev-only profile file with a dev-only default is acceptable ONLY if (a) the default is clearly marked dev-only, (b) the value is `${VAR:dev-default}` env-overridable, and (c) every non-dev profile omits the default so production fails to start without the secret. The real bug to hunt is a **bare literal** — e.g. gateway's `application-local.yaml` had `password: payu_secret`, `secret: payu-web-local-client-secret`, `jwt-secret: dev_jwt_secret_...` with no `${}` wrapper at all (not even env-overridable). Wrap those. Verify with one grep across all services' non-dev profiles that no line looks like `password:|secret:|client-secret:` followed by a literal.
+
+**Applied evidence**: gateway `application-local.yaml` now `${DB_PASSWORD:...}`/`${KEYCLOAK_WEB_CLIENT_SECRET:...}`/`${GATEWAY_JWT_SECRET:...}`/`${GATEWAY_PARTNER_KEY_PARTNER_1:...}`; YAML valid; gateway 1.11.8 deployed healthy (container uses env-overrides, not the local profile).
+
 ## L-254: SNAP-BI Signature Binds the Endpoint Path — Hardcoding It Breaks Any Path Alias (2026-08-16)
 
 **Context**: fixing SNAP-PATH-001 (additive `/v1.0/*` aliases for the SNAP-BI taxonomy). `SnapBiController` validated signatures against hardcoded strings like `/v1/partner/payments`. Adding `/v1.0/transfer-va/payment` would fail every v1.0 request because the server computed the expected HMAC over the legacy path while the caller signed the v1.0 path.

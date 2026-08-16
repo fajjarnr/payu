@@ -2,14 +2,14 @@ quarkus:
   devservices:
     enabled: false
   datasource:
-    username: payu
-    password: payu_secret
+    username: ${DB_USERNAME:payu}
+    password: ${DB_PASSWORD:payu_secret}
     jdbc:
       url: jdbc:postgresql://localhost:5432/payu_gateway
   oidc:
     auth-server-url: http://localhost:8099/realms/payu
     credentials:
-      secret: payu-web-local-client-secret
+      secret: ${KEYCLOAK_WEB_CLIENT_SECRET:payu-web-local-client-secret}
     token:
       issuer: http://localhost:8099/realms/payu
   log:
@@ -19,7 +19,7 @@ quarkus:
 
 gateway:
   authorization:
-    jwt-secret: dev_jwt_secret_must_be_long_enough_for_dev_only_usage
+    jwt-secret: ${GATEWAY_JWT_SECRET:dev_jwt_secret_must_be_long_enough_for_dev_only_usage}
   request-signing:
     partner-keys:
-      partner-1: dummy_secret_for_dev_only
+      partner-1: ${GATEWAY_PARTNER_KEY_PARTNER_1:dummy_secret_for_dev_only}
