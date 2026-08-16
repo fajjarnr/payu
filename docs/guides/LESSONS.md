@@ -49,6 +49,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-253: A Classpath Glob That Matches Nothing Compiles Fine — and the Endpoint Returns Zeros (2026-08-16)
+
+**Context**: fixing LEND-RULES-001 (0 tests). Writing a `@SpringBootTest` for the Drools rules: all 5 assertions failed with score `0`, and startup log showed `Found 0 DRL file(s)` while the DRL clearly existed at `src/main/resources/id/payu/lendingrules/rules/credit_scoring.drl`.
+
+**Lesson**:
+- **`PathMatchingResourcePatternResolver.getResources("classpath*:rules/**/*.drl")` silently returns an empty array when nothing matches** — no exception, no warning. The DRL was under `id/payu/lendingrules/rules/` (package-mirrored path), not a root `rules/` dir, so the glob never matched. `DroolsConfig` still built a (empty) KieContainer and the controller returned `score=0` for every input.
+- **Assert observable behavior, not just "the container exists"**: had a test checked `kieContainer.newKieSession().fireAllRules()` scored correctly (or asserted `Found N DRL`), the always-0 bug would have surfaced immediately. "KieContainer initialized" in logs is not proof rules loaded — check the `Found N` count.
+- **A TDD test on a "no tests" module is how silent infra bugs get found**: LEND-RULES-001's stated scope was just "add tests", but the tests exposed a real production defect (scoring endpoint returning 0 for every applicant). Write the behavioral test, let it fail, then fix the load path.
+
+**Applied evidence**: scan pattern fixed to `classpath*:id/payu/lendingrules/rules/**/*.drl`; 5/5 `CreditScoringRulesTest` green (excellent→150, weak→15, tenure bands→70, missing→20, rate<90%→-20).
+
 ## L-252: Test Config Precedence — `application.yaml` Beats `application.yml`, and Both Load (2026-08-16)
 
 **Context**: fixing SIM-TESTS-001. Adding `src/test/resources/application.yml` (H2 datasource) to Quarkus simulators did nothing — tests still connected to Postgres (`SCRAM-based authentication`), because the main config `application.yaml` (Postgres) silently won over the test `application.yml` (H2).

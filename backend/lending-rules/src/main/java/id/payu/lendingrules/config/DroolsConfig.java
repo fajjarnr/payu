@@ -25,7 +25,7 @@ public class DroolsConfig {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 
         try {
-            Resource[] resources = resolver.getResources("classpath*:rules/**/*.drl");
+            Resource[] resources = resolver.getResources("classpath*:id/payu/lendingrules/rules/**/*.drl");
             log.info("Found {} DRL file(s)", resources.length);
             for (Resource res : resources) {
                 log.info("Loading: {}", res.getFilename());
