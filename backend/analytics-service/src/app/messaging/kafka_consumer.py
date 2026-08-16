@@ -173,12 +173,12 @@ class KafkaConsumerService:
                 )
                 return
 
-            if topic == "payu.transactions.completed":
+            if topic == "payu.transaction.completed.v1":
                 await self._handle_transaction_completed(session, payload, event_id)
-            elif topic == "payu.transactions.initiated":
+            elif topic == "payu.transaction.initiated.v1":
                 await self._handle_transaction_initiated(session, payload, event_id)
                 await self._handle_fraud_detection(session, payload)
-            elif topic == "payu.wallet.balance.changed":
+            elif topic == "payu.wallet.balance-changed.v1":
                 await self._handle_wallet_balance_changed(session, payload, event_id)
             elif topic == "payu.kyc.verified.v1":
                 await self._handle_kyc_verified(session, payload)
@@ -453,11 +453,19 @@ class KafkaConsumerService:
             )
             recent_transactions = recent_txns.scalars().all()
 
+            # ANA-HISTORY-001: derive account age from the user's earliest known
+            # transaction instead of a hardcoded date that always reads "old".
+            first_txn_at = await session.scalar(
+                select(func.min(TransactionAnalyticsEntity.timestamp)).where(
+                    TransactionAnalyticsEntity.user_id == user_id
+                )
+            )
+
             user_history = {
                 "total_transactions": user_metrics.total_transactions if user_metrics else 0,
                 "total_amount": user_metrics.total_amount if user_metrics else Decimal("0.0000"),
                 "average_transaction": user_metrics.average_transaction if user_metrics else Decimal("0.0000"),
-                "account_created_at": "2025-01-01T00:00:00",
+                "account_created_at": first_txn_at.isoformat() if first_txn_at else None,
                 "recent_transactions": [
                     {
                         "transaction_id": txn.transaction_id,

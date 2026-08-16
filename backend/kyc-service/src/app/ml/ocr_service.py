@@ -1,3 +1,4 @@
+import asyncio
 import numpy as np
 import cv2
 from paddleocr import PaddleOCR
@@ -22,6 +23,10 @@ class OcrService:
         logger.info("PaddleOCR initialized")
 
     async def extract_ktp_data(self, image_data: bytes) -> KtpOcrResult:
+        # KYC-ASYNC-001: PaddleOCR inference is CPU-heavy — run off the event loop.
+        return await asyncio.to_thread(self._extract_sync, image_data)
+
+    def _extract_sync(self, image_data: bytes) -> KtpOcrResult:
         try:
             nparr = np.frombuffer(image_data, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)

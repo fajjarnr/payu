@@ -9,8 +9,22 @@ os.environ.setdefault(
     "KYC_NIK_ENCRYPTION_KEY",
     "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
 )
+os.environ.setdefault("KEYCLOAK_URL", "http://keycloak:8080")
+os.environ.setdefault("ARTEMIS_USERNAME", "test-user")
+os.environ.setdefault("ARTEMIS_PASSWORD", "test-password")
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/kyc-service/src")  # noqa: E402
+
+from unittest.mock import MagicMock  # noqa: E402
+
+# Heavy/optional ML modules are not needed for unit/e2e runs — stub them so
+# app.main can be imported without the full paddle/torch stack (mirrors the
+# per-file stubs in test_security.py / test_kyc_service.py).
+for mod in ("paddle", "paddleocr", "paddle2onnx", "torch", "torchvision"):
+    if mod not in sys.modules:
+        sys.modules[mod] = MagicMock()
+sys.modules.setdefault("paddle.ocr", MagicMock())
+sys.modules.setdefault("paddleocr.ocr", MagicMock())
 
 from unittest.mock import Mock, AsyncMock, patch  # noqa: E402
 from sqlalchemy.ext.asyncio import (

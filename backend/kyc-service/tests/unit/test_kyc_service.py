@@ -115,7 +115,7 @@ class TestKycService:
         assert await service.get_verification("missing") is None
 
         with pytest.raises(ValueError, match="Verification not found"):
-            await service.process_ktp_upload("missing", base64_image())
+            await service.process_ktp_upload("missing", base64_image(), user_id="u-1")
 
     async def test_ktp_upload_success(self, mock_session):
         from app.services.kyc_service import KycService
@@ -128,11 +128,12 @@ class TestKycService:
         service = KycService(mock_session)
         with patch("app.ml.ocr_service.OcrService") as ocr_cls:
             ocr_cls.return_value.extract_ktp_data = AsyncMock(return_value=make_ocr())
-            outcome = await service.process_ktp_upload("v-1", base64_image())
+            outcome = await service.process_ktp_upload("v-1", base64_image(), user_id="u-1")
 
         assert outcome["status"] == KycStatus.PROCESSING.value
         assert verification.status == KycStatus.PROCESSING.value
         assert verification.ktp_image_url == "/uploads/ktp/v-1.jpg"
+        assert verification.ktp_image_data == base64.b64decode(base64_image())
         mock_session.commit.assert_awaited()
 
     async def test_ktp_upload_wrong_status(self, mock_session):
@@ -145,7 +146,7 @@ class TestKycService:
 
         service = KycService(mock_session)
         with pytest.raises(ValueError, match="Invalid status"):
-            await service.process_ktp_upload("v-1", base64_image())
+            await service.process_ktp_upload("v-1", base64_image(), user_id="u-1")
 
     async def test_ktp_upload_low_confidence_rejects(self, mock_session):
         from app.services.kyc_service import KycService
@@ -159,10 +160,22 @@ class TestKycService:
         with patch("app.ml.ocr_service.OcrService") as ocr_cls:
             ocr_cls.return_value.extract_ktp_data = AsyncMock(return_value=make_ocr(confidence=0.5))
             with pytest.raises(ValueError, match="too low"):
-                await service.process_ktp_upload("v-1", base64_image())
+                await service.process_ktp_upload("v-1", base64_image(), user_id="u-1")
 
         assert verification.status == KycStatus.REJECTED.value
         assert verification.rejection_reason == "KTP OCR confidence too low"
+
+    async def test_upload_wrong_owner_rejected(self, mock_session):
+        from app.services.kyc_service import KycService
+
+        verification = make_verification(status=KycStatus.PENDING.value)
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = verification
+        mock_session.execute.return_value = result
+
+        service = KycService(mock_session)
+        with pytest.raises(PermissionError, match="another user"):
+            await service.process_ktp_upload("v-1", base64_image(), user_id="attacker")
 
     async def test_selfie_requires_processing_state(self, mock_session):
         from app.services.kyc_service import KycService
@@ -174,7 +187,7 @@ class TestKycService:
 
         service = KycService(mock_session)
         with pytest.raises(ValueError, match="Invalid status"):
-            await service.process_selfie_upload("v-1", base64_image())
+            await service.process_selfie_upload("v-1", base64_image(), user_id="u-1")
 
     async def test_selfie_requires_ktp_first(self, mock_session):
         from app.services.kyc_service import KycService
@@ -186,7 +199,7 @@ class TestKycService:
 
         service = KycService(mock_session)
         with pytest.raises(ValueError, match="KTP not processed"):
-            await service.process_selfie_upload("v-1", base64_image())
+            await service.process_selfie_upload("v-1", base64_image(), user_id="u-1")
 
     async def test_selfie_liveness_fail_rejects(self, mock_session):
         from app.services.kyc_service import KycService
@@ -205,7 +218,7 @@ class TestKycService:
                     face_quality_score=0.2, details={},
                 )
             )
-            outcome = await service.process_selfie_upload("v-1", base64_image())
+            outcome = await service.process_selfie_upload("v-1", base64_image(), user_id="u-1")
 
         assert outcome["status"] == KycStatus.REJECTED.value
         assert verification.rejection_reason == "Liveness check failed"
@@ -230,7 +243,7 @@ class TestKycService:
                     ktp_face_found=True, selfie_face_found=True,
                 )
             )
-            outcome = await service.process_selfie_upload("v-1", base64_image())
+            outcome = await service.process_selfie_upload("v-1", base64_image(), user_id="u-1")
 
         assert outcome["status"] == KycStatus.REJECTED.value
         assert verification.rejection_reason == "Face matching failed"
@@ -257,7 +270,7 @@ class TestKycService:
                     birth_date="01-01-1990", gender="LAKI-LAKI", status="INVALID",
                 )
             )
-            outcome = await service.process_selfie_upload("v-1", base64_image())
+            outcome = await service.process_selfie_upload("v-1", base64_image(), user_id="u-1")
 
         assert outcome["status"] == KycStatus.REJECTED.value
         assert verification.rejection_reason == "NIK verification failed with Dukcapil"
@@ -268,6 +281,7 @@ class TestKycService:
 
         verification = make_verification(status=KycStatus.PROCESSING.value)
         verification.ktp_ocr_result = encrypt_json_nik(make_ocr().model_dump())
+        verification.ktp_image_data = b"ktp-bytes"
         result = MagicMock()
         result.scalar_one_or_none.return_value = verification
         mock_session.execute.return_value = result
@@ -279,12 +293,29 @@ class TestKycService:
             live_mock.check_liveness = AsyncMock(return_value=make_live())
             face_mock.match_face = AsyncMock(return_value=make_face())
             dukcapil_mock.verify_nik = AsyncMock(return_value=make_dukcapil())
-            outcome = await service.process_selfie_upload("v-1", base64_image())
+            outcome = await service.process_selfie_upload("v-1", base64_image(), user_id="u-1")
 
+        face_mock.match_face.assert_awaited_once_with(
+            ktp_image_data=b"ktp-bytes",
+            selfie_image_data=base64.b64decode(base64_image()),
+        )
         assert outcome["status"] == KycStatus.VERIFIED.value
         assert verification.status == KycStatus.VERIFIED.value
         assert verification.completed_at is not None
         mock_session.commit.assert_awaited()
+
+    async def test_selfie_wrong_owner_rejected(self, mock_session):
+        from app.services.kyc_service import KycService
+
+        verification = make_verification(status=KycStatus.PROCESSING.value)
+        verification.ktp_ocr_result = {"enc": "stub-ktp"}
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = verification
+        mock_session.execute.return_value = result
+
+        service = KycService(mock_session)
+        with pytest.raises(PermissionError, match="another user"):
+            await service.process_selfie_upload("v-1", base64_image(), user_id="attacker")
 
     async def test_get_user_verifications_ordered(self, mock_session):
         from app.services.kyc_service import KycService

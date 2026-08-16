@@ -21,6 +21,7 @@ from app.ml.fraud_detection import FraudDetectionEngine
 from app.api.responses import ApiResponse
 from app.api.idempotency import get_cached_result, cache_result
 from app.api.auth import require_auth
+from app.rate_limit import limiter
 
 logger = get_logger(__name__)
 analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
@@ -251,6 +252,7 @@ async def get_robo_advisory(
 
 
 @analytics_router.post("/fraud/score")
+@limiter.limit("100/minute")
 async def calculate_fraud_score(
     request: Request,
     request_data: GetFraudScoreRequest,
@@ -260,7 +262,7 @@ async def calculate_fraud_score(
     """
     BUG-SECURITY-016/017 FIX: Calculate fraud score with Auth & IDOR check.
     Supports idempotency for safe retries.
-    Rate limit: 100 requests per minute per IP.
+    Rate limit: 100 requests per minute per IP (ANA-RATE-001: @limiter.limit).
     """
     # Validate ownership
     user_id = request_data.user_id
@@ -273,17 +275,6 @@ async def calculate_fraud_score(
         idempotency_key=idempotency_key,
     )
     log.info("Calculating fraud score")
-
-    # Apply rate limiting manually since we're using APIRouter
-    limiter = request.app.state.limiter
-    try:
-        await limiter.check(request, get_remote_address(request), "100/minute")
-    except Exception:
-        return ApiResponse.create_error(
-            code="ANA_RAT_001",
-            message="Rate limit exceeded. Please try again later.",
-            request_id=getattr(request.state, "request_id", None),
-        ).model_dump()
 
     # Check idempotency cache
     if idempotency_key:

@@ -172,7 +172,7 @@ class FraudDetectionEngine:
             txn.get("recipient_id") for txn in recent_transactions
         ]
 
-        if new_recipient and amount > 10000000.0:
+        if new_recipient and amount > Decimal("10000000.0000"):
             return 20.0
 
         return 0.0

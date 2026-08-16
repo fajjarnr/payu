@@ -60,6 +60,42 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: scaffold `scratch-svc` compiled via reactor; `ArchitectureTest` 1/1 + `HealthControllerTest` 1/1 green; module removed after validation.
 
+## L-256: Base64-Decoding a JWT Is Not Authentication — Verify Against Keycloak JWKS (2026-08-16)
+
+**Context**: AI-AUTH-001 — kyc & analytics `require_auth` did `token.split('.')` + base64url-decode the payload and trusted `sub` with no signature check. An attacker could mint a JWT with any `sub` and bypass every authz/IDOR check when calling the service directly. The gateway validates Keycloak **RS256** tokens via JWKS and forwards them unchanged — so an HS256 shared-secret check (the "obvious" fix) would 401 ALL live traffic.
+
+**Lesson**:
+- **Match the signer, not the format**: Keycloak issues RS256 tokens; verifying with `jwt.decode(token, secret, algorithms=["HS256"])` breaks every live request. The correct, lazy fix mirrors the gateway: fetch `{KEYCLOAK_URL}/realms/{realm}/protocol/openid-connect/certs`, select the key by `kid`, `jwt.decode(token, jwk, algorithms=["RS256"])`. Fail closed: no URL configured / unknown kid / bad signature / missing `sub` → 401.
+- **Keep the JWKS cached but rotation-aware**: cache `{keys, fetched_at}` with a TTL (300s); on unknown `kid`, refetch once before rejecting. python-jose `jwt.decode` accepts a JWK **dict** directly — no manual `jwk.construct` needed.
+- **Test with real crypto, not `alg:none`**: the regression test must sign with a real RSA key (`cryptography` lib → JWK dict) and mock the JWKS fetch; assert `alg:none` forged tokens are rejected 401 (the old code accepted them). `jwk.RSAKey.generate()` does NOT exist on python-jose's `CryptographyRSAKey` — build the JWK from `rsa.generate_private_key(...)` numbers instead.
+- **Compose must pass the auth dependencies**: after the fix, kyc/analytics containers got `KEYCLOAK_URL: http://localhost:8099` + `KEYCLOAK_REALM: payu` (same issuer pin as the rest of the stack).
+
+**Applied evidence**: live podman stack (1.11.7) — real Keycloak token passes auth (kyc `/verify/start` 200; analytics 403 at the IDOR gate = auth passed), tampered token 401, `alg:none` 401.
+
+## L-257: CPU-Bound Inference Must Not Run On The Asyncio Event Loop (2026-08-16)
+
+**Context**: KYC-ASYNC-001 — PaddleOCR / OpenCV Haar cascade / Sobel liveness all ran synchronously inside `async def` handlers. During OCR (hundreds of ms), every other request, `/health`, and Prometheus scrape froze.
+
+**Lesson**: wrap the whole sync body in a private `def _sync(self, ...)` and `return await asyncio.to_thread(self._sync, ...)`. `unittest.mock.patch` on module attributes (e.g. `cv2.imdecode`) still works inside threads, so existing tests keep passing with zero churn. Do the same for any ML/inference/CPU path in an async FastAPI service.
+
+## L-258: Python `Decimal > float` Raises `TypeError` — Compare Money With Decimal Literals (2026-08-16)
+
+**Context**: ANA-TYPE-001 — `FraudDetectionEngine` computed `amount` as `Decimal` (money) then compared `amount > 10000000.0`. Any transaction to a new recipient crashed with `TypeError: '>' not supported between instances of 'decimal.Decimal' and 'float'`.
+
+**Lesson**: never mix `Decimal` and `float` in comparisons/arithmetic; use `Decimal("10000000.0000")`. Money amounts are `Decimal`/`NUMERIC(19,4)` everywhere (AGENTS.md rule 1); the fraud engine's amount path had drifted to a float literal. Add a regression test that feeds a string amount > threshold with a new recipient and asserts the branch returns 20.0 (no TypeError).
+
+## L-259: slowapi `@limiter.limit` Rejects Non-`Request` Objects (2026-08-16)
+
+**Context**: ANA-RATE-001 — the fraud endpoint manually `await limiter.check(request, get_remote_address(request), "100/minute")`. `Limiter.check()` is sync and not awaitable (same bug kyc had); the fix is `@limiter.limit("100/minute")` from a shared module-level `Limiter`.
+
+**Lesson**: with the decorator in place, unit tests that invoke the endpoint function directly with a `MagicMock()` request now fail (`parameter 'request' must be an instance of starlette.requests.Request`). Build a real `starlette.requests.Request` with `scope["app"]` carrying `app.state.limiter` as a mock — the endpoint body (`request.state.request_id`, `request.url.path`, `await request.body()`) all work on a real Request.
+
+## L-260: Stale E2E Tests Rot Faster Than Unit Tests — Fix Them With the Change (2026-08-16)
+
+**Context**: kyc e2e `test_kyc_workflow.py` was silently broken: patched `app.services.kyc_service.OcrService`/`KafkaProducerService` that no longer exist (OCR is lazily imported; the producer was replaced by the outbox), sent no `Authorization` header (401 after auth was added), asserted top-level fields the API never returned (`{data: {...}}` envelope), and expected unmasked NIKs.
+
+**Lesson**: an e2e workflow test is a contract on the API envelope and the service wiring — when the API changes (auth added, outbox replaces producer, bytes columns), update the e2e test in the same change or CI silently goes red. Patch lazy imports at their module (`app.ml.ocr_service.OcrService`), override `require_auth` for workflow tests (auth coverage lives in `test_security.py`), and assert `json()["data"][...]`. Also: pin `opencv-python-headless` to 4.x in test envs — OpenCV 5 removed `cv2.CascadeClassifier`, breaking face/liveness tests that CI's 4.x install never hit.
+
 ## L-254: SNAP-BI Signature Binds the Endpoint Path — Hardcoding It Breaks Any Path Alias (2026-08-16)
 
 **Context**: fixing SNAP-PATH-001 (additive `/v1.0/*` aliases for the SNAP-BI taxonomy). `SnapBiController` validated signatures against hardcoded strings like `/v1/partner/payments`. Adding `/v1.0/transfer-va/payment` would fail every v1.0 request because the server computed the expected HMAC over the legacy path while the caller signed the v1.0 path.

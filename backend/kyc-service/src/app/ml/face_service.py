@@ -1,3 +1,4 @@
+import asyncio
 import numpy as np
 import cv2
 from structlog import get_logger
@@ -17,79 +18,97 @@ class FaceService:
 
     async def match_face(
         self,
-        ktp_image_path: str,
+        ktp_image_data: bytes,
         selfie_image_data: bytes
     ) -> FaceMatchResult:
+        # KYC-ASYNC-001: CPU-bound inference stays out of the event loop.
         try:
-            nparr = np.frombuffer(selfie_image_data, np.uint8)
-            selfie_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            return await asyncio.to_thread(
+                self._match_face_sync, ktp_image_data, selfie_image_data
+            )
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error("Face matching failed", exc_info=e)
+            raise ValueError(f"Face matching failed: {str(e)}")
 
-            if selfie_img is None:
-                raise ValueError("Invalid selfie image data")
+    def _match_face_sync(
+        self, ktp_image_data: bytes, selfie_image_data: bytes
+    ) -> FaceMatchResult:
+        nparr = np.frombuffer(selfie_image_data, np.uint8)
+        selfie_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-            ktp_img = cv2.imread(ktp_image_path)
+        if selfie_img is None:
+            raise ValueError("Invalid selfie image data")
 
-            if ktp_img is None:
-                logger.warning(f"KTP image not found at {ktp_image_path}, using selfie face detection only")
-                ktp_img = selfie_img
+        ktp_nparr = np.frombuffer(ktp_image_data, np.uint8)
+        ktp_img = cv2.imdecode(ktp_nparr, cv2.IMREAD_COLOR)
 
-            ktp_face_detected, ktp_face_box = self._detect_face(ktp_img)
-            selfie_face_detected, selfie_face_box = self._detect_face(selfie_img)
-
-            if not ktp_face_detected:
-                logger.warning("No face detected on KTP")
-                return FaceMatchResult(
-                    is_match=False,
-                    similarity_score=0.0,
-                    threshold=self.threshold,
-                    ktp_face_found=False,
-                    selfie_face_found=selfie_face_detected
-                )
-
-            if not selfie_face_detected:
-                logger.warning("No face detected on selfie")
-                return FaceMatchResult(
-                    is_match=False,
-                    similarity_score=0.0,
-                    threshold=self.threshold,
-                    ktp_face_found=True,
-                    selfie_face_found=False
-                )
-
-            ktp_face_encoding = self._encode_face(ktp_img, ktp_face_box)
-            selfie_face_encoding = self._encode_face(selfie_img, selfie_face_box)
-
-            if ktp_face_encoding is None or selfie_face_encoding is None:
-                logger.error("Failed to encode faces")
-                return FaceMatchResult(
-                    is_match=False,
-                    similarity_score=0.0,
-                    threshold=self.threshold,
-                    ktp_face_found=ktp_face_detected,
-                    selfie_face_found=selfie_face_detected
-                )
-
-            similarity = self._calculate_similarity(ktp_face_encoding, selfie_face_encoding)
-            is_match = similarity >= self.threshold
-
-            logger.info(
-                "Face matching completed",
-                is_match=is_match,
-                similarity=similarity,
-                threshold=self.threshold
+        if ktp_img is None:
+            # KYC-FACE-001: never compare the selfie with itself. Missing KTP
+            # image data fails the match closed — a rejected verification.
+            logger.warning("KTP image data unavailable, rejecting face match")
+            return FaceMatchResult(
+                is_match=False,
+                similarity_score=0.0,
+                threshold=self.threshold,
+                ktp_face_found=False,
+                selfie_face_found=True,
             )
 
+        ktp_face_detected, ktp_face_box = self._detect_face(ktp_img)
+        selfie_face_detected, selfie_face_box = self._detect_face(selfie_img)
+
+        if not ktp_face_detected:
+            logger.warning("No face detected on KTP")
             return FaceMatchResult(
-                is_match=is_match,
-                similarity_score=similarity,
+                is_match=False,
+                similarity_score=0.0,
+                threshold=self.threshold,
+                ktp_face_found=False,
+                selfie_face_found=selfie_face_detected
+            )
+
+        if not selfie_face_detected:
+            logger.warning("No face detected on selfie")
+            return FaceMatchResult(
+                is_match=False,
+                similarity_score=0.0,
+                threshold=self.threshold,
+                ktp_face_found=True,
+                selfie_face_found=False
+            )
+
+        ktp_face_encoding = self._encode_face(ktp_img, ktp_face_box)
+        selfie_face_encoding = self._encode_face(selfie_img, selfie_face_box)
+
+        if ktp_face_encoding is None or selfie_face_encoding is None:
+            logger.error("Failed to encode faces")
+            return FaceMatchResult(
+                is_match=False,
+                similarity_score=0.0,
                 threshold=self.threshold,
                 ktp_face_found=ktp_face_detected,
                 selfie_face_found=selfie_face_detected
             )
 
-        except Exception as e:
-            logger.error("Face matching failed", exc_info=e)
-            raise ValueError(f"Face matching failed: {str(e)}")
+        similarity = self._calculate_similarity(ktp_face_encoding, selfie_face_encoding)
+        is_match = similarity >= self.threshold
+
+        logger.info(
+            "Face matching completed",
+            is_match=is_match,
+            similarity=similarity,
+            threshold=self.threshold
+        )
+
+        return FaceMatchResult(
+            is_match=is_match,
+            similarity_score=similarity,
+            threshold=self.threshold,
+            ktp_face_found=ktp_face_detected,
+            selfie_face_found=selfie_face_detected
+        )
 
     def _detect_face(self, img: np.ndarray) -> tuple[bool, Optional[tuple]]:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

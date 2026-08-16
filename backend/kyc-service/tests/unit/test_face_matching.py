@@ -53,142 +53,132 @@ class TestFaceService:
         self, face_service, ktp_image_with_face, selfie_image_with_face
     ):
         """Test face matching when both faces are detected"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
         # Mock face detection to return faces for both images
         mock_faces_ktp = np.array([[100, 50, 100, 100]])
         mock_faces_selfie = np.array([[200, 100, 200, 200]])
 
-        with patch("cv2.imread", return_value=ktp_image_with_face):
-            with patch("cv2.imdecode", return_value=selfie_image_with_face):
-                with patch("cv2.CascadeClassifier") as mock_cascade:
-                    mock_instance = MagicMock()
-                    # First call for KTP, second for selfie
-                    mock_instance.detectMultiScale.side_effect = [
-                        mock_faces_ktp,
-                        mock_faces_selfie,
-                    ]
-                    mock_cascade.return_value = mock_instance
+        with patch("cv2.imdecode", side_effect=[selfie_image_with_face, ktp_image_with_face]):
+            with patch("cv2.CascadeClassifier") as mock_cascade:
+                mock_instance = MagicMock()
+                # First call for KTP, second for selfie
+                mock_instance.detectMultiScale.side_effect = [
+                    mock_faces_ktp,
+                    mock_faces_selfie,
+                ]
+                mock_cascade.return_value = mock_instance
 
-                    result = await face_service.match_face(ktp_path, selfie_data)
+                result = await face_service.match_face(ktp_data, selfie_data)
 
-                    assert isinstance(result, FaceMatchResult)
-                    assert result.ktp_face_found is True
-                    assert result.selfie_face_found is True
+                assert isinstance(result, FaceMatchResult)
+                assert result.ktp_face_found is True
+                assert result.selfie_face_found is True
 
     @pytest.mark.asyncio
     async def test_match_face_no_ktp_face(self, face_service, selfie_image_with_face):
         """Test face matching when no face detected on KTP"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
         blank_ktp = np.zeros((300, 400, 3), dtype=np.uint8)
 
-        with patch("cv2.imread", return_value=blank_ktp):
-            with patch("cv2.imdecode", return_value=selfie_image_with_face):
-                with patch("cv2.CascadeClassifier") as mock_cascade:
-                    mock_instance = MagicMock()
-                    # KTP returns empty, selfie returns face
-                    mock_instance.detectMultiScale.side_effect = [
-                        np.array([]),  # No face on KTP
-                        np.array([[200, 100, 200, 200]]),
-                    ]
-                    mock_cascade.return_value = mock_instance
+        with patch("cv2.imdecode", side_effect=[selfie_image_with_face, blank_ktp]):
+            with patch("cv2.CascadeClassifier") as mock_cascade:
+                mock_instance = MagicMock()
+                # KTP returns empty, selfie returns face
+                mock_instance.detectMultiScale.side_effect = [
+                    np.array([]),  # No face on KTP
+                    np.array([[200, 100, 200, 200]]),
+                ]
+                mock_cascade.return_value = mock_instance
 
-                    result = await face_service.match_face(ktp_path, selfie_data)
+                result = await face_service.match_face(ktp_data, selfie_data)
 
-                    assert result.is_match is False
-                    assert result.ktp_face_found is False
-                    assert result.selfie_face_found is True
+                assert result.is_match is False
+                assert result.ktp_face_found is False
+                assert result.selfie_face_found is True
 
     @pytest.mark.asyncio
     async def test_match_face_no_selfie_face(self, face_service, ktp_image_with_face):
         """Test face matching when no face detected on selfie"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
         blank_selfie = np.zeros((480, 640, 3), dtype=np.uint8)
 
-        with patch("cv2.imread", return_value=ktp_image_with_face):
-            with patch("cv2.imdecode", return_value=blank_selfie):
-                with patch("cv2.CascadeClassifier") as mock_cascade:
-                    mock_instance = MagicMock()
-                    # KTP returns face, selfie returns empty
-                    mock_instance.detectMultiScale.side_effect = [
-                        np.array([[100, 50, 100, 100]]),
-                        np.array([]),  # No face on selfie
-                    ]
-                    mock_cascade.return_value = mock_instance
+        with patch("cv2.imdecode", side_effect=[blank_selfie, ktp_image_with_face]):
+            with patch("cv2.CascadeClassifier") as mock_cascade:
+                mock_instance = MagicMock()
+                # KTP returns face, selfie returns empty
+                mock_instance.detectMultiScale.side_effect = [
+                    np.array([[100, 50, 100, 100]]),
+                    np.array([]),  # No face on selfie
+                ]
+                mock_cascade.return_value = mock_instance
 
-                    result = await face_service.match_face(ktp_path, selfie_data)
+                result = await face_service.match_face(ktp_data, selfie_data)
 
-                    assert result.is_match is False
-                    assert result.ktp_face_found is True
-                    assert result.selfie_face_found is False
+                assert result.is_match is False
+                assert result.ktp_face_found is True
+                assert result.selfie_face_found is False
 
     @pytest.mark.asyncio
     async def test_match_face_no_faces_detected(self, face_service):
         """Test face matching when no faces detected on either image"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
         blank_img = np.zeros((300, 400, 3), dtype=np.uint8)
 
-        with patch("cv2.imread", return_value=blank_img):
-            with patch("cv2.imdecode", return_value=blank_img):
-                with patch("cv2.CascadeClassifier") as mock_cascade:
-                    mock_instance = MagicMock()
-                    mock_instance.detectMultiScale.return_value = np.array([])
-                    mock_cascade.return_value = mock_instance
+        with patch("cv2.imdecode", side_effect=[blank_img, blank_img]):
+            with patch("cv2.CascadeClassifier") as mock_cascade:
+                mock_instance = MagicMock()
+                mock_instance.detectMultiScale.return_value = np.array([])
+                mock_cascade.return_value = mock_instance
 
-                    result = await face_service.match_face(ktp_path, selfie_data)
+                result = await face_service.match_face(ktp_data, selfie_data)
 
-                    assert result.is_match is False
-                    assert result.ktp_face_found is False
-                    assert result.selfie_face_found is False
+                assert result.is_match is False
+                assert result.ktp_face_found is False
+                assert result.selfie_face_found is False
 
     @pytest.mark.asyncio
     async def test_match_face_invalid_selfie_image(self, face_service):
         """Test face matching with invalid selfie image"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"invalid_image"
 
         with patch("cv2.imdecode", return_value=None):
             with pytest.raises(ValueError, match="Invalid selfie image data"):
-                await face_service.match_face(ktp_path, selfie_data)
+                await face_service.match_face(ktp_data, selfie_data)
 
     @pytest.mark.asyncio
-    async def test_match_face_ktp_image_not_found(
+    async def test_match_face_ktp_image_missing_rejects_closed(
         self, face_service, selfie_image_with_face
     ):
-        """Test face matching when KTP image file doesn't exist"""
-        ktp_path = "/tmp/nonexistent_ktp.jpg"
+        """KYC-FACE-001: missing/unreadable KTP image must reject, not compare
+        the selfie with itself (which previously always passed eKYC)."""
+        ktp_data = b"missing_or_corrupt_ktp"
         selfie_data = b"selfie_image_bytes"
 
-        with patch("cv2.imread", return_value=None):
-            with patch("cv2.imdecode", return_value=selfie_image_with_face):
-                with patch("cv2.CascadeClassifier") as mock_cascade:
-                    mock_instance = MagicMock()
-                    mock_faces = np.array([[200, 100, 200, 200]])
-                    mock_instance.detectMultiScale.return_value = mock_faces
-                    mock_cascade.return_value = mock_instance
+        with patch("cv2.imdecode", side_effect=[selfie_image_with_face, None]):
+            result = await face_service.match_face(ktp_data, selfie_data)
 
-                    # Should use selfie face detection only (selfie compared to itself)
-                    result = await face_service.match_face(ktp_path, selfie_data)
-
-                    # With same image, should have high similarity
-                    assert result.selfie_face_found is True
+            assert result.is_match is False
+            assert result.ktp_face_found is False
+            assert result.selfie_face_found is True
 
     @pytest.mark.asyncio
     async def test_match_face_exception_handling(self, face_service):
         """Test exception handling in face matching"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"test_image"
 
         with patch("cv2.imdecode", side_effect=Exception("Processing error")):
             with pytest.raises(ValueError, match="Face matching failed"):
-                await face_service.match_face(ktp_path, selfie_data)
+                await face_service.match_face(ktp_data, selfie_data)
 
     def test_detect_face_success(self, face_service, ktp_image_with_face):
         """Test successful face detection"""
@@ -296,53 +286,51 @@ class TestFaceService:
         self, face_service, ktp_image_with_face
     ):
         """Test face matching when similarity is above threshold"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
         # Use same image for both to get high similarity
-        with patch("cv2.imread", return_value=ktp_image_with_face):
-            with patch("cv2.imdecode", return_value=ktp_image_with_face):
-                with patch("cv2.CascadeClassifier") as mock_cascade:
-                    mock_instance = MagicMock()
-                    mock_faces = np.array([[100, 50, 100, 100]])
-                    mock_instance.detectMultiScale.return_value = mock_faces
-                    mock_cascade.return_value = mock_instance
+        with patch("cv2.imdecode", side_effect=[ktp_image_with_face, ktp_image_with_face]):
+            with patch("cv2.CascadeClassifier") as mock_cascade:
+                mock_instance = MagicMock()
+                mock_faces = np.array([[100, 50, 100, 100]])
+                mock_instance.detectMultiScale.return_value = mock_faces
+                mock_cascade.return_value = mock_instance
 
-                    result = await face_service.match_face(ktp_path, selfie_data)
+                result = await face_service.match_face(ktp_data, selfie_data)
 
-                    # Same image should match
-                    assert result.is_match is True
-                    assert result.similarity_score >= face_service.threshold
+                # Same image should match
+                assert result.is_match is True
+                assert result.similarity_score >= face_service.threshold
 
     @pytest.mark.asyncio
     async def test_match_face_similarity_below_threshold(self, face_service):
         """Test face matching when similarity is below threshold"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
         # Create different images
         ktp_img = np.random.randint(0, 100, (300, 400, 3), dtype=np.uint8)
         selfie_img = np.random.randint(100, 255, (480, 640, 3), dtype=np.uint8)
 
-        with patch("cv2.imread", return_value=ktp_img):
-            with patch("cv2.imdecode", return_value=selfie_img):
-                with patch("cv2.CascadeClassifier") as mock_cascade:
-                    mock_instance = MagicMock()
-                    mock_faces_ktp = np.array([[100, 50, 100, 100]])
-                    mock_faces_selfie = np.array([[200, 100, 200, 200]])
-                    mock_instance.detectMultiScale.side_effect = [
-                        mock_faces_ktp,
-                        mock_faces_selfie,
-                    ]
-                    mock_cascade.return_value = mock_instance
+        with patch("cv2.imdecode", side_effect=[selfie_img, ktp_img]):
+            with patch("cv2.CascadeClassifier") as mock_cascade:
+                mock_instance = MagicMock()
+                mock_faces_ktp = np.array([[100, 50, 100, 100]])
+                mock_faces_selfie = np.array([[200, 100, 200, 200]])
+                mock_instance.detectMultiScale.side_effect = [
+                    mock_faces_ktp,
+                    mock_faces_selfie,
+                ]
+                mock_cascade.return_value = mock_instance
 
-                    result = await face_service.match_face(ktp_path, selfie_data)
+                result = await face_service.match_face(ktp_data, selfie_data)
 
-                    # Different random images likely won't match
-                    # But we just check the structure
-                    assert result.ktp_face_found is True
-                    assert result.selfie_face_found is True
-                    assert hasattr(result, "similarity_score")
+                # Different random images likely won't match
+                # But we just check the structure
+                assert result.ktp_face_found is True
+                assert result.selfie_face_found is True
+                assert hasattr(result, "similarity_score")
 
     def test_match_face_returns_threshold(self, face_service, ktp_image_with_face):
         """Test that match result includes the threshold used"""
@@ -352,22 +340,21 @@ class TestFaceService:
     @pytest.mark.asyncio
     async def test_match_face_encoding_failure(self, face_service):
         """Test handling of face encoding failure"""
-        ktp_path = "/tmp/test_ktp.jpg"
+        ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
         # Tiny image that will cause issues
         tiny_img = np.zeros((10, 10, 3), dtype=np.uint8)
 
-        with patch("cv2.imread", return_value=tiny_img):
-            with patch("cv2.imdecode", return_value=tiny_img):
-                with patch("cv2.CascadeClassifier") as mock_cascade:
-                    mock_instance = MagicMock()
-                    mock_faces = np.array([[0, 0, 10, 10]])
-                    mock_instance.detectMultiScale.return_value = mock_faces
-                    mock_cascade.return_value = mock_instance
+        with patch("cv2.imdecode", side_effect=[tiny_img, tiny_img]):
+            with patch("cv2.CascadeClassifier") as mock_cascade:
+                mock_instance = MagicMock()
+                mock_faces = np.array([[0, 0, 10, 10]])
+                mock_instance.detectMultiScale.return_value = mock_faces
+                mock_cascade.return_value = mock_instance
 
-                    result = await face_service.match_face(ktp_path, selfie_data)
+                result = await face_service.match_face(ktp_data, selfie_data)
 
-                    # Should handle gracefully
-                    assert result.ktp_face_found is True
-                    assert result.selfie_face_found is True
+                # Should handle gracefully
+                assert result.ktp_face_found is True
+                assert result.selfie_face_found is True

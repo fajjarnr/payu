@@ -100,7 +100,7 @@ async def test_process_transaction_completed_message(kafka_consumer, mock_sessio
 
 def test_unpack_cloud_event_preserves_identity_and_payload():
     payload, source, event_id, event_type = _unpack_event(
-        "payu.transactions.completed",
+        "payu.transaction.completed.v1",
         {
             "specversion": "1.0.2",
             "id": "evt-123",
@@ -136,14 +136,52 @@ async def test_replayed_cloud_event_is_processed_once(kafka_consumer, mock_sessi
         with patch.object(
             kafka_consumer, "_handle_transaction_completed", new_callable=AsyncMock
         ) as handler:
-            await kafka_consumer._process_message("payu.transactions.completed", event)
-            await kafka_consumer._process_message("payu.transactions.completed", event)
+            await kafka_consumer._process_message("payu.transaction.completed.v1", event)
+            await kafka_consumer._process_message("payu.transaction.completed.v1", event)
 
     handler.assert_awaited_once_with(
         mock_session,
         {"transactionId": "txn-456"},
         "evt-replay-1",
     )
+
+
+@pytest.mark.asyncio
+async def test_get_user_history_derives_account_created_at(kafka_consumer, mock_session):
+    """ANA-HISTORY-001: account age derives from earliest transaction, not a hardcoded date."""
+    from datetime import datetime
+    from app.database import UserMetricsEntity, TransactionAnalyticsEntity
+
+    metrics = UserMetricsEntity(
+        user_id="u-1",
+        total_transactions=5,
+        total_amount=1000,
+        average_transaction=200,
+    )
+    txn_entity = TransactionAnalyticsEntity(
+        event_id="e-1",
+        user_id="u-1",
+        transaction_id="t-1",
+        amount=200,
+        transaction_type="TRANSFER",
+        status="COMPLETED",
+        timestamp=datetime(2026, 1, 1, 0, 0, 0),
+    )
+
+    metrics_result = AsyncMock()
+    metrics_result.scalar_one_or_none = Mock(return_value=metrics)
+    txn_result = MagicMock()
+    scalars = MagicMock()
+    scalars.all = Mock(return_value=[txn_entity])
+    txn_result.scalars = Mock(return_value=scalars)
+
+    mock_session.execute.side_effect = [metrics_result, txn_result]
+    mock_session.scalar = AsyncMock(return_value=datetime(2026, 1, 1, 0, 0, 0))
+
+    history = await kafka_consumer._get_user_history(mock_session, "u-1")
+
+    assert history["account_created_at"] == "2026-01-01T00:00:00"
+    assert history["recent_transactions"][0]["transaction_id"] == "t-1"
 
 
 @pytest.mark.asyncio

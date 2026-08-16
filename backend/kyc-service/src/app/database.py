@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, String, DateTime, JSON, Float, Boolean, Text
+from sqlalchemy import Column, String, DateTime, JSON, Float, Boolean, Text, LargeBinary, text as sa_text
 from datetime import datetime
 from typing import Optional
 
@@ -26,6 +26,7 @@ class KycVerificationEntity(Base):
 
     ktp_image_url = Column(String, nullable=True)
     selfie_image_url = Column(String, nullable=True)
+    ktp_image_data = Column(LargeBinary, nullable=True)
 
     ktp_ocr_result = Column(JSON, nullable=True)
     liveness_result = Column(JSON, nullable=True)
@@ -55,6 +56,17 @@ async def init_db():
     )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # KYC-FACE-001: ktp_image_data column added later; ALTER existing tables
+        # (Postgres) idempotently, skip unsupported (SQLite) without failing.
+        try:
+            await conn.execute(
+                sa_text(
+                    "ALTER TABLE kyc_verifications "
+                    "ADD COLUMN IF NOT EXISTS ktp_image_data BYTEA"
+                )
+            )
+        except Exception as exc:  # SQLite has no ADD COLUMN IF NOT EXISTS
+            logger.info("ktp_image_data migration skipped", error=str(exc))
     logger.info("Database connection pool created")
 
 

@@ -1,3 +1,4 @@
+import asyncio
 import numpy as np
 import cv2
 from structlog import get_logger
@@ -17,6 +18,10 @@ class LivenessService:
         logger.info("Liveness detection service initialized")
 
     async def check_liveness(self, image_data: bytes) -> LivenessCheckResult:
+        # KYC-ASYNC-001: Haar cascade + Sobel are CPU-heavy — run off the event loop.
+        return await asyncio.to_thread(self._check_sync, image_data)
+
+    def _check_sync(self, image_data: bytes) -> LivenessCheckResult:
         try:
             nparr = np.frombuffer(image_data, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)

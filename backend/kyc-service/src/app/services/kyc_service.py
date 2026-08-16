@@ -59,9 +59,11 @@ class KycService:
     async def process_ktp_upload(
         self,
         verification_id: str,
-        ktp_image_base64: str
+        ktp_image_base64: str,
+        user_id: str,
     ) -> dict:
         verification = await self._get_verification(verification_id)
+        self._assert_owner(verification, user_id)
 
         if verification.status != KycStatus.PENDING.value:
             raise ValueError(f"Invalid status: {verification.status}")
@@ -78,6 +80,7 @@ class KycService:
             raise ValueError("KTP image quality too low. Please upload a clearer image.")
 
         verification.ktp_image_url = f"/uploads/ktp/{verification_id}.jpg"
+        verification.ktp_image_data = image_data
         verification.ktp_ocr_result = encrypt_json_nik(ocr_result.model_dump())
         verification.status = KycStatus.PROCESSING.value
         verification.updated_at = datetime.utcnow()
@@ -104,9 +107,11 @@ class KycService:
     async def process_selfie_upload(
         self,
         verification_id: str,
-        selfie_image_base64: str
+        selfie_image_base64: str,
+        user_id: str,
     ) -> dict:
         verification = await self._get_verification(verification_id)
+        self._assert_owner(verification, user_id)
 
         if verification.status != KycStatus.PROCESSING.value:
             raise ValueError(f"Invalid status: {verification.status}")
@@ -132,7 +137,7 @@ class KycService:
         ocr_data = KtpOcrResult(**decrypt_json_nik(verification.ktp_ocr_result))
 
         face_match_result = await self.face_service.match_face(
-            ktp_image_path=verification.ktp_image_url,
+            ktp_image_data=verification.ktp_image_data,
             selfie_image_data=selfie_image_data
         )
 
@@ -220,6 +225,11 @@ class KycService:
         if not verification:
             raise ValueError("Verification not found")
         return verification
+
+    @staticmethod
+    def _assert_owner(verification: KycVerificationEntity, user_id: str) -> None:
+        if verification.user_id != user_id:
+            raise PermissionError("Forbidden: verification belongs to another user")
 
     async def _reject_verification(self, verification_id: str, reason: str):
         verification = await self._get_verification(verification_id)

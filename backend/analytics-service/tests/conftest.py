@@ -1,8 +1,12 @@
 import pytest
 import sys
+import os
 from typing import Optional
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+os.environ.setdefault("SECRET_KEY", "test-secret-key-0123456789abcdef")
+os.environ.setdefault("KEYCLOAK_URL", "http://keycloak:8080")
 
 sys.path.insert(0, "/home/ubuntu/payu/backend/analytics-service/src")  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402

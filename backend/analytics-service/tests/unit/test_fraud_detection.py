@@ -320,8 +320,39 @@ class TestFraudDetectionEngine:
         assert result.fraud_score.risk_factors is not None
         assert len(result.fraud_score.risk_factors) > 0
 
+    async def test_new_recipient_high_amount_no_type_error(self, fraud_engine):
+        """ANA-TYPE-001: Decimal amount vs float threshold must not raise TypeError."""
+        user_history = {
+            "account_created_at": (datetime.utcnow() - timedelta(days=200)).isoformat(),
+            "recent_transactions": [
+                {
+                    "transaction_id": "txn-1",
+                    "amount": "100000.0000",
+                    "type": "TRANSFER",
+                    "timestamp": (datetime.utcnow() - timedelta(minutes=10)).isoformat(),
+                    "recipient_id": "recipient-known",
+                }
+            ],
+        }
+        transaction_data = {
+            "transaction_id": "txn-new",
+            "user_id": "user-123",
+            "amount": "25000000.0000",
+            "type": "TRANSFER",
+            "currency": "IDR",
+            "recipient_id": "recipient-new",
+        }
+
+        result = await fraud_engine.calculate_fraud_score(
+            transaction_data, user_history
+        )
+
+        assert isinstance(result, FraudDetectionResult)
+        assert result.fraud_score.risk_factors["behavioral_pattern"] >= 20.0
+
     async def test_fraud_score_boundary_values(self, fraud_engine):
         """Test fraud score at boundary values"""
+
         transaction_data = {
             "transaction_id": "txn-boundary",
             "user_id": "user-123",

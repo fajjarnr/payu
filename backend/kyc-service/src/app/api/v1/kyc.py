@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from structlog import get_logger
 from typing import Optional
+from jose.exceptions import JWTError
 
 from app.database import get_db_session
 from app.models.schemas import (
@@ -16,6 +17,7 @@ from app.api.responses import ApiResponse
 from app.api.idempotency import get_cached_result, cache_result
 from app.config import get_settings
 from app.rate_limit import limiter
+from app.jwt_auth import verify_jwt
 
 logger = get_logger(__name__)
 kyc_router = APIRouter(prefix="/kyc", tags=["KYC Verification"])
@@ -41,35 +43,16 @@ async def require_auth(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
 ) -> dict:
     """
-    BUG-AUTH-022: Validate JWT token from Authorization header.
-    All KYC endpoints require authentication.
+    AI-AUTH-001: cryptographically verify the JWT signature against Keycloak
+    JWKS before trusting any claim. Base64-decoding a payload is NOT auth.
     """
-    import base64
-    import json
-    import time
-
     if credentials is None:
         raise HTTPException(status_code=401, detail="Authentication required")
 
     try:
-        token = credentials.credentials
-        parts = token.split('.')
-        if len(parts) != 3:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        # Base64url decode the payload
-        payload_b64 = parts[1]
-        payload_b64 += '=' * (4 - len(payload_b64) % 4)
-        payload_json = base64.urlsafe_b64decode(payload_b64.encode('utf-8')).decode('utf-8')
-        payload = json.loads(payload_json)
-
-        # Validate expiration if present
-        if "exp" in payload and payload["exp"] < time.time():
-            raise HTTPException(status_code=401, detail="Token expired")
-
-        return payload
-    except HTTPException:
-        raise
+        return await verify_jwt(credentials.credentials)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -190,6 +173,7 @@ async def upload_ktp(
         result = await service.process_ktp_upload(
             verification_id=request_data.verification_id,
             ktp_image_base64=request_data.ktp_image,
+            user_id=auth.get("sub"),
         )
 
         log.info("KTP OCR completed", status=result.get("status"))
@@ -212,6 +196,8 @@ async def upload_ktp(
         return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Forbidden: You can only upload for your own verification")
     except ValueError as e:
         log.warning("KTP validation failed", error=str(e))
         return ApiResponse.create_error(
@@ -268,6 +254,7 @@ async def upload_selfie(
         result = await service.process_selfie_upload(
             verification_id=request_data.verification_id,
             selfie_image_base64=request_data.selfie_image,
+            user_id=auth.get("sub"),
         )
 
         log.info("KYC verification completed", status=result.get("status"))
@@ -291,6 +278,8 @@ async def upload_selfie(
         return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Forbidden: You can only upload for your own verification")
     except ValueError as e:
         log.warning("Selfie validation failed", error=str(e))
         return ApiResponse.create_error(

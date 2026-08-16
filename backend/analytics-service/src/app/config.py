@@ -24,10 +24,11 @@ class Settings(BaseSettings):
     kafka_bootstrap_servers: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
     kafka_consumer_group: str = "analytics-service-group"
     kafka_topics: list[str] = [
-        "payu.wallet.balance.changed",
-        "payu.transactions.initiated",
-        "payu.transactions.completed",
-        "payu.transactions.failed",
+        # ANA-TOPIC-001: standard payu.<domain>.<event-type>.v<n> names.
+        "payu.wallet.balance-changed.v1",
+        "payu.transaction.initiated.v1",
+        "payu.transaction.completed.v1",
+        "payu.transaction.failed.v1",
         "payu.kyc.verified.v1"
     ]
 

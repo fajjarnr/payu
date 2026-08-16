@@ -93,20 +93,19 @@ class TestFaceService:
     @pytest.mark.asyncio
     async def test_match_face_success(self, face_service):
         """Test successful face matching"""
-        ktp_path = "/tmp/ktp.jpg"
+        ktp_data = b"fake_ktp"
         selfie_data = b"fake_selfie"
 
-        # Mock cv2.imdecode and cv2.imread to return valid image arrays
+        # Mock cv2.imdecode to return valid image arrays
         mock_img = np.zeros((100, 100, 3), dtype=np.uint8)
 
-        with patch("cv2.imdecode", return_value=mock_img):
-            with patch("cv2.imread", return_value=mock_img):
-                result = await face_service.match_face(ktp_path, selfie_data)
+        with patch("cv2.imdecode", side_effect=[mock_img, mock_img]):
+            result = await face_service.match_face(ktp_data, selfie_data)
 
-                # Test that the service returns a result
-                assert result is not None
-                assert hasattr(result, "ktp_face_found")
-                assert hasattr(result, "selfie_face_found")
+            # Test that the service returns a result
+            assert result is not None
+            assert hasattr(result, "ktp_face_found")
+            assert hasattr(result, "selfie_face_found")
 
 
 @pytest.mark.unit

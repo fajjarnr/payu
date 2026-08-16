@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.7] - 2026-08-16
+
+### Fixed
+
+- **AI-AUTH-001 (security, kyc + analytics, CLOSED)**: `require_auth` hanya base64-decode payload JWT tanpa verifikasi signature — attacker bisa forge token `alg:none` dengan `sub` sembarang dan bypass seluruh authz/IDOR. Kini verifikasi **RS256 terhadap Keycloak JWKS** (baru `app/jwt_auth.py`, mirror gateway `AuthorizationFilter`): fetch `{KEYCLOAK_URL}/realms/{realm}/protocol/openid-connect/certs` (cache TTL 300s + refetch saat key rotation), `jwt.decode(token, jwk, algorithms=["RS256"])`, fail-closed (tanpa URL / unknown kid / signature invalid / missing sub → 401). Compose: `KEYCLOAK_URL: http://localhost:8099` + `KEYCLOAK_REALM: payu` untuk kyc + analytics. Tests: `test_security.py` kedua service sign RS256 real + mock JWKS — 401 (missing/invalid/expired/alg:none) + 403 (IDOR). **Deployed live** (podman, image `1.11.7`): token Keycloak asli → kyc `/verify/start` 200, analytics 403 di IDOR (auth pass); token tamper → 401; `alg:none` → 401.
+- **KYC-FACE-001 (security, kyc, CLOSED)**: binary KTP image tidak pernah disimpan; `FaceService.match_face` gagal baca `cv2.imread` dan fallback membandingkan **selfie dengan dirinya sendiri** (semua selfie lolos eKYC). Kini bytes gambar disimpan di kolom baru `kyc_verifications.ktp_image_data BYTEA` (guard `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` untuk DB existing, SQLite skip); `match_face(ktp_image_data: bytes, ...)` decode dari bytes, fallback dihapus — KTP tidak tersedia → reject fail-closed. Tests: e2e workflow 4/4, unit 155.
+- **KYC-IDOR-001 (security, kyc, CLOSED)**: `POST /verify/ktp` & `/verify/selfie` tidak memvalidasi kepemilikan `verification_id`. `process_ktp_upload`/`process_selfie_upload` kini menerima `user_id` dan `_assert_owner()` → `PermissionError` → API 403 (sebelum status mutation/reject event). Tests: `test_upload_wrong_owner_rejected` + `test_selfie_wrong_owner_rejected`.
+- **KYC-ASYNC-001 (perf, kyc, CLOSED)**: OCR/liveness/face inference CPU-bound memblokir event loop asyncio (health check & request lain freeze). Semua `await asyncio.to_thread(...)`.
+- **ANA-TYPE-001 (bug, analytics, CLOSED)**: `Decimal > 10000000.0` melempar `TypeError` di `_calculate_behavioral_risk` (transaksi recipient baru crash 500). Threshold jadi `Decimal("10000000.0000")`. Regression test `test_new_recipient_high_amount_no_type_error`. **Verified live**: `POST /analytics/fraud/score` 25M → 200.
+- **ANA-RATE-001 (bug, analytics, CLOSED)**: `await limiter.check(...)` (bukan async, selalu error) diganti decorator `@limiter.limit("100/minute")` dengan shared limiter (`app/rate_limit.py`, mirror kyc). Tests: fraud direct-call pakai real `starlette.Request`.
+- **ANA-TOPIC-001 (integration, analytics, CLOSED)**: consumer subscribe topic legacy (`payu.transactions.completed` dkk) → standar `payu.transaction.completed.v1` / `payu.transaction.initiated.v1` / `payu.transaction.failed.v1` / `payu.wallet.balance-changed.v1`. **Verified live**: consumer connected ke 5 topic standar.
+- **ANA-HISTORY-001 (data, analytics, CLOSED)**: `account_created_at` hardcoded `"2025-01-01"` (umur akun selalu bias "lama") → derive dari `MIN(transaction_analytics.timestamp)`; `None` bila kosong (account-age risk 50.0, fail-safe). Test `test_get_user_history_derives_account_created_at`.
+- **kyc e2e (tests, kyc)**: `test_kyc_workflow.py` diperbaiki — patch target stale (`OcrService` → `app.ml.ocr_service.OcrService`, hapus `KafkaProducerService` yang tidak ada), auth override untuk workflow test, assert envelope `data[...]`, NIK masked. 4/4 green.
+
+### Deploy
+
+- Stack podman local di-rebuild ke image semver **`1.11.7`** (PAYU_VERSION di `podman-compose.yml`), 37/37 containers healthy. KYC unit 155 passed coverage 80.8%, analytics 198 passed coverage 87.7% (keduanya ≥ 80% gate). Scan log 0 error real.
+
 ## [1.11.6] - 2026-08-16
 
 ### Fixed

@@ -4,10 +4,24 @@ import sys
 sys.path.insert(0, "/home/ubuntu/payu/backend/kyc-service/src")  # noqa: E402
 from unittest.mock import AsyncMock, patch, MagicMock  # noqa: E402
 
+from app.main import app  # noqa: E402
+
 
 @pytest.mark.e2e
 class TestKycWorkflowE2E:
     """End-to-end tests for KYC verification workflow"""
+
+    @pytest.fixture(autouse=True)
+    def override_auth(self):
+        """Auth added in BUG-AUTH-022; workflow tests supply a fixed subject."""
+        from app.api.v1.kyc import require_auth
+
+        async def fake_auth():
+            return {"sub": "user_123456789"}
+
+        app.dependency_overrides[require_auth] = fake_auth
+        yield
+        app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
     async def test_complete_kyc_workflow_success(
@@ -28,6 +42,17 @@ class TestKycWorkflowE2E:
         mock_ocr_result.district = "TEBET"
         mock_ocr_result.model_dump.return_value = {
             "nik": "3201234567890001",
+            "name": "JOHN DOE",
+            "confidence": 0.95,
+            "birth_date": "1990-01-01",
+            "gender": "LAKI-LAKI",
+            "address": "Jl. Test No. 123",
+            "province": "DKI JAKARTA",
+            "city": "JAKARTA SELATAN",
+            "district": "TEBET",
+        }
+        mock_ocr_result.safe_dump.return_value = {
+            "nik": "320101010101****",
             "name": "JOHN DOE",
             "confidence": 0.95,
             "birth_date": "1990-01-01",
@@ -85,17 +110,24 @@ class TestKycWorkflowE2E:
             "status": "VALID",
             "match_score": 0.95,
         }
+        mock_dukcapil_result.safe_dump.return_value = {
+            "nik": "320101010101****",
+            "is_valid": True,
+            "name": "JOHN DOE",
+            "birth_date": "1990-01-01",
+            "gender": "LAKI-LAKI",
+            "status": "VALID",
+            "match_score": 0.95,
+        }
 
         # Patch at the location where the services are imported/used
-        with patch("app.services.kyc_service.OcrService") as MockOCR, patch(
+        with patch("app.ml.ocr_service.OcrService") as MockOCR, patch(
             "app.services.kyc_service.LivenessService"
         ) as MockLiveness, patch(
             "app.services.kyc_service.FaceService"
         ) as MockFace, patch(
             "app.services.kyc_service.DukcapilClient"
-        ) as MockDukcapil, patch(
-            "app.services.kyc_service.KafkaProducerService"
-        ) as MockKafka:
+        ) as MockDukcapil:
 
             # Setup mock instances
             mock_ocr_instance = AsyncMock()
@@ -118,10 +150,6 @@ class TestKycWorkflowE2E:
             )
             MockDukcapil.return_value = mock_dukcapil_instance
 
-            mock_kafka_instance = AsyncMock()
-            mock_kafka_instance.publish_event = AsyncMock()
-            MockKafka.return_value = mock_kafka_instance
-
             # Step 1: Start KYC verification
             start_response = await async_test_client.post(
                 "/api/v1/kyc/verify/start",
@@ -129,7 +157,7 @@ class TestKycWorkflowE2E:
             )
 
             assert start_response.status_code == 200
-            start_data = start_response.json()
+            start_data = start_response.json()["data"]
             assert "verification_id" in start_data
             assert start_data["status"] == "PENDING"
             assert start_data["message"] == "Please upload KTP image"
@@ -146,10 +174,10 @@ class TestKycWorkflowE2E:
             )
 
             assert ktp_response.status_code == 200
-            ktp_data = ktp_response.json()
+            ktp_data = ktp_response.json()["data"]
             assert ktp_data["status"] == "PROCESSING"
             assert "ocr_result" in ktp_data
-            assert ktp_data["ocr_result"]["nik"] == "3201234567890001"
+            assert ktp_data["ocr_result"]["nik"] == "320101010101****"
 
             # Step 3: Upload selfie image
             selfie_response = await async_test_client.post(
@@ -161,7 +189,7 @@ class TestKycWorkflowE2E:
             )
 
             assert selfie_response.status_code == 200
-            selfie_data = selfie_response.json()
+            selfie_data = selfie_response.json()["data"]
             assert selfie_data["status"] == "VERIFIED"
             assert selfie_data["liveness_result"]["is_live"] is True
             assert selfie_data["face_match_result"]["is_match"] is True
@@ -197,11 +225,11 @@ class TestKycWorkflowE2E:
         }
 
         # Patch at the location where the services are imported/used
-        with patch("app.services.kyc_service.OcrService") as MockOCR, patch(
+        with patch("app.ml.ocr_service.OcrService") as MockOCR, patch(
             "app.services.kyc_service.LivenessService"
         ) as MockLiveness, patch(
-            "app.services.kyc_service.KafkaProducerService"
-        ) as MockKafka:
+            "app.services.kyc_service.FaceService"
+        ) as MockFace:
 
             mock_ocr_result = MagicMock()
             mock_ocr_result.nik = "3201234567890001"
@@ -224,6 +252,11 @@ class TestKycWorkflowE2E:
                 "city": "JAKARTA SELATAN",
                 "district": "TEBET",
             }
+            mock_ocr_result.safe_dump.return_value = {
+                "nik": "320101010101****",
+                "name": "JOHN DOE",
+                "confidence": 0.95,
+            }
 
             mock_ocr_instance = AsyncMock()
             mock_ocr_instance.extract_ktp_data = AsyncMock(return_value=mock_ocr_result)
@@ -235,9 +268,9 @@ class TestKycWorkflowE2E:
             )
             MockLiveness.return_value = mock_liveness_instance
 
-            mock_kafka_instance = AsyncMock()
-            mock_kafka_instance.publish_event = AsyncMock()
-            MockKafka.return_value = mock_kafka_instance
+            mock_face_instance = AsyncMock()
+            mock_face_instance.match_face = AsyncMock()
+            MockFace.return_value = mock_face_instance
 
             # Start verification
             start_response = await async_test_client.post(
@@ -245,7 +278,7 @@ class TestKycWorkflowE2E:
                 json={"user_id": sample_user_id, "verification_type": "FULL_KYC"},
             )
             assert start_response.status_code == 200
-            verification_id = start_response.json()["verification_id"]
+            verification_id = start_response.json()["data"]["verification_id"]
 
             # Upload KTP first
             ktp_response = await async_test_client.post(
@@ -267,7 +300,7 @@ class TestKycWorkflowE2E:
             )
 
             assert selfie_response.status_code == 200
-            data = selfie_response.json()
+            data = selfie_response.json()["data"]
             assert data["status"] == "REJECTED"
             # rejection_reason is not returned in the API response
             # assert data["rejection_reason"] == "Liveness check failed"
@@ -305,13 +338,11 @@ class TestKycWorkflowE2E:
         }
 
         # Patch at the location where the services are imported/used
-        with patch("app.services.kyc_service.OcrService") as MockOCR, patch(
+        with patch("app.ml.ocr_service.OcrService") as MockOCR, patch(
             "app.services.kyc_service.LivenessService"
         ) as MockLiveness, patch(
             "app.services.kyc_service.FaceService"
-        ) as MockFace, patch(
-            "app.services.kyc_service.KafkaProducerService"
-        ) as MockKafka:
+        ) as MockFace:
 
             mock_ocr_result = MagicMock()
             mock_ocr_result.nik = "3201234567890001"
@@ -334,6 +365,11 @@ class TestKycWorkflowE2E:
                 "city": "JAKARTA SELATAN",
                 "district": "TEBET",
             }
+            mock_ocr_result.safe_dump.return_value = {
+                "nik": "320101010101****",
+                "name": "JOHN DOE",
+                "confidence": 0.95,
+            }
 
             mock_ocr_instance = AsyncMock()
             mock_ocr_instance.extract_ktp_data = AsyncMock(return_value=mock_ocr_result)
@@ -349,17 +385,13 @@ class TestKycWorkflowE2E:
             mock_face_instance.match_face = AsyncMock(return_value=mock_face_result)
             MockFace.return_value = mock_face_instance
 
-            mock_kafka_instance = AsyncMock()
-            mock_kafka_instance.publish_event = AsyncMock()
-            MockKafka.return_value = mock_kafka_instance
-
             # Start verification
             start_response = await async_test_client.post(
                 "/api/v1/kyc/verify/start",
                 json={"user_id": sample_user_id, "verification_type": "FULL_KYC"},
             )
             assert start_response.status_code == 200
-            verification_id = start_response.json()["verification_id"]
+            verification_id = start_response.json()["data"]["verification_id"]
 
             # Upload KTP first
             ktp_response = await async_test_client.post(
@@ -381,7 +413,7 @@ class TestKycWorkflowE2E:
             )
 
             assert selfie_response.status_code == 200
-            data = selfie_response.json()
+            data = selfie_response.json()["data"]
             assert data["status"] == "REJECTED"
             # rejection_reason is not returned in the API response
             # assert data["rejection_reason"] == "Face matching failed"

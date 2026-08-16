@@ -37,27 +37,35 @@ from app.models.schemas import (
 )
 
 
-def _make_mock_request(*, with_limiter: bool = False) -> MagicMock:
-    """Create a lightweight mock ``Request`` suitable for endpoint calls.
+def _make_mock_request(*, with_limiter: bool = False):
+    """Create a lightweight ``Request`` suitable for endpoint calls.
 
-    The mock satisfies the attributes accessed by the analytics handlers:
+    A real starlette Request is required because @limiter.limit (slowapi)
+    rejects non-Request instances. The request satisfies the attributes the
+    analytics handlers access:
     - ``request.state.request_id``
     - ``request.url.path``
     - ``request.app.state.limiter`` (when *with_limiter* is True)
     - ``request.body()`` (async, for idempotency cache)
     """
-    mock_request = MagicMock()
-    mock_request.app = MagicMock()
-    mock_request.app.state = MagicMock()
-    mock_request.state = MagicMock()
-    mock_request.state.request_id = "test-request-id"
-    mock_request.url = MagicMock()
-    mock_request.url.path = "/test"
-    mock_request.body = AsyncMock(return_value=b"")
+    from starlette.requests import Request
+
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/test",
+        "headers": [],
+        "client": ("127.0.0.1", 1234),
+        "server": ("test", 80),
+    }
+    request = Request(scope)
+    request.state.request_id = "test-request-id"
     if with_limiter:
-        mock_request.app.state.limiter = MagicMock()
-        mock_request.app.state.limiter.check = AsyncMock(return_value=True)
-    return mock_request
+        app_mock = MagicMock()
+        app_mock.state.limiter = MagicMock()
+        app_mock.state.limiter.check = MagicMock(return_value=True)
+        request.scope["app"] = app_mock
+    return request
 
 
 def _auth_claims(user_id: str) -> dict:

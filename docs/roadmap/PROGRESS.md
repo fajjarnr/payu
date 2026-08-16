@@ -1,5 +1,20 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.7 (2026-08-16)
+
+- **8 finding Python (kyc/analytics) CLOSED dalam satu sesi** — seluruhnya di-deploy live ke stack podman (image semver `1.11.7`, 37/37 healthy):
+  - **AI-AUTH-001 (🔴, kyc + analytics)**: `require_auth` base64-decode JWT tanpa verifikasi signature diganti verifikasi **RS256 vs Keycloak JWKS** (`app/jwt_auth.py`, TTL 300s + refetch on rotation, fail-closed). Compose: `KEYCLOAK_URL`/`KEYCLOAK_REALM` ditambah ke kyc + analytics. **Verified live**: token Keycloak asli → kyc `/verify/start` 200 (auth pass), analytics 403 di IDOR (auth pass, benar); token tamper → 401; `alg:none` forged → 401. Tests: security 5/5 per service (incl. alg:none regression).
+  - **KYC-FACE-001 (🔴)**: KTP image bytes disimpan di kolom `ktp_image_data BYTEA` (guard `ALTER TABLE ADD COLUMN IF NOT EXISTS` utk DB existing); `match_face(ktp_image_data: bytes, ...)` — fallback selfie-vs-selfie dihapus, KTP unavailable → reject fail-closed. Tests: e2e workflow 4/4 + unit 155.
+  - **KYC-IDOR-001 (🟠)**: `process_ktp_upload`/`process_selfie_upload` + param `user_id`, `_assert_owner` → `PermissionError` → API 403.
+  - **KYC-ASYNC-001 (🟠)**: OCR/liveness/face inference off event loop via `asyncio.to_thread`.
+  - **ANA-TYPE-001 (🟠)**: `Decimal("10000000.0000")` menggantikan `float` literal di fraud behavioral risk (TypeError fixed). **Verified live**: `POST /analytics/fraud/score` amount 25M → 200, behavioral_pattern 20.0.
+  - **ANA-RATE-001 (🟠)**: `@limiter.limit("100/minute")` menggantikan `await limiter.check(...)` yang broken (shared `rate_limit.py`); fraud endpoint live 200.
+  - **ANA-TOPIC-001 (🟡)**: consumer subscribe topic standard `payu.transaction.completed.v1` dkk; **verified live** consumer connected ke 5 topic.
+  - **ANA-HISTORY-001 (🟡)**: `account_created_at` di-derive dari `MIN(transaction_analytics.timestamp)`.
+- **Kualitas**: kyc unit 155 passed coverage **80.8% ≥ 80%** (gate green), e2e 4/4; analytics `-m "not infrastructure"` **198 passed** coverage **87.7% ≥ 80%**. Gate CI `kyc-tests.yml` + `analytics-tests.yml` coverage threshold tetap 80%.
+- **Deploy live**: stack podman **37/37 healthy** pada image `1.11.7` (seluruh service di-rebuild tag semver dari compose `PAYU_VERSION`). Scan log 0 error/warning real (kecuali SpringDoc api-docs WARN pre-existing di integration-service).
+- Sisa backlog: mayoritas butuh credential eksternal (OCP cluster, provider OCR/FX, staging k6, GitHub admin) atau refactor besar — tercatat di TODOS.md.
+
 ## Deploy 1.11.6 (2026-08-16)
 
 - **SCRIPT-TEST-001 CLOSED**: `scripts/test-single-service.sh` gagal untuk Quarkus/modular services (child POM kehilangan reactor `quarkus-api-commons`). Script kini `mvn -f backend/pom.xml test -pl <service> -am` dari aggregator root; jacoco via goal fully-qualified `org.jacoco:jacoco-maven-plugin:report`. Verified: notification-service (Quarkus) + account-service (Spring) reactor resolve + tests green + coverage; web-app branch green. Gateway 469 tests jalan (79 failure pre-existing butuh stack hidup).
