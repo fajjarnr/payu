@@ -3,7 +3,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from structlog import get_logger
 from typing import Optional
-from slowapi.util import get_remote_address
 
 from app.database import get_db_session
 from app.models.schemas import (
@@ -16,6 +15,7 @@ from app.services.kyc_service import KycService
 from app.api.responses import ApiResponse
 from app.api.idempotency import get_cached_result, cache_result
 from app.config import get_settings
+from app.rate_limit import limiter
 
 logger = get_logger(__name__)
 kyc_router = APIRouter(prefix="/kyc", tags=["KYC Verification"])
@@ -75,6 +75,7 @@ async def require_auth(
 
 
 @kyc_router.post("/verify/start")
+@limiter.limit("10/minute")
 async def start_kyc_verification(
     request: Request,
     request_data: StartKycVerificationRequest,
@@ -96,17 +97,6 @@ async def start_kyc_verification(
         idempotency_key=idempotency_key,
     )
     log.info("Starting KYC verification")
-
-    # Apply rate limiting
-    limiter = request.app.state.limiter
-    try:
-        await limiter.check(request, get_remote_address(request), "10/minute")
-    except Exception:
-        return ApiResponse.create_error(
-            code="KYC_RAT_001",
-            message="Rate limit exceeded. Please try again later.",
-            request_id=getattr(request.state, "request_id", None),
-        ).model_dump()
 
     # Check idempotency cache
     if idempotency_key:
@@ -148,7 +138,7 @@ async def start_kyc_verification(
                 result=response_data,
             )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except Exception as e:
@@ -161,6 +151,7 @@ async def start_kyc_verification(
 
 
 @kyc_router.post("/verify/ktp")
+@limiter.limit("5/minute")
 async def upload_ktp(
     request: Request,
     request_data: UploadKtpRequest,
@@ -179,17 +170,6 @@ async def upload_ktp(
         idempotency_key=idempotency_key,
     )
     log.info("Processing KTP image upload")
-
-    # Apply rate limiting
-    limiter = request.app.state.limiter
-    try:
-        await limiter.check(request, get_remote_address(request), "5/minute")
-    except Exception:
-        return ApiResponse.create_error(
-            code="KYC_RAT_001",
-            message="Rate limit exceeded. Please try again later.",
-            request_id=getattr(request.state, "request_id", None),
-        ).model_dump()
 
     # Check idempotency cache
     if idempotency_key:
@@ -229,7 +209,7 @@ async def upload_ktp(
                 result=response_data,
             )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except ValueError as e:
@@ -249,6 +229,7 @@ async def upload_ktp(
 
 
 @kyc_router.post("/verify/selfie")
+@limiter.limit("5/minute")
 async def upload_selfie(
     request: Request,
     request_data: UploadSelfieRequest,
@@ -267,17 +248,6 @@ async def upload_selfie(
         idempotency_key=idempotency_key,
     )
     log.info("Processing selfie image upload")
-
-    # Apply rate limiting
-    limiter = request.app.state.limiter
-    try:
-        await limiter.check(request, get_remote_address(request), "5/minute")
-    except Exception:
-        return ApiResponse.create_error(
-            code="KYC_RAT_001",
-            message="Rate limit exceeded. Please try again later.",
-            request_id=getattr(request.state, "request_id", None),
-        ).model_dump()
 
     # Check idempotency cache
     if idempotency_key:
@@ -318,7 +288,7 @@ async def upload_selfie(
                 result=response_data,
             )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except ValueError as e:
@@ -378,7 +348,7 @@ async def get_kyc_status(
             completed_at=verification.completed_at,
         )
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data.safe_dump(),
             request_id=getattr(request.state, "request_id", None),
         ).model_dump()
@@ -425,7 +395,7 @@ async def get_user_kyc_history(
             for v in verifications
         ]
 
-        return ApiResponse.success(
+        return ApiResponse.create_success(
             data=response_data, request_id=getattr(request.state, "request_id", None)
         ).model_dump()
     except Exception as e:

@@ -15,6 +15,7 @@ from app.api.v1 import kyc_router
 from app.api.responses import ApiResponse
 from app.database import init_db, close_db
 from app.messaging.artemis_consumer import ArtemisConsumerService
+from app.rate_limit import limiter
 
 configure_logging()
 logger = get_logger(__name__)
@@ -75,8 +76,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Initialize rate limiter
-    limiter = Limiter(key_func=get_remote_address)
+    # Initialize rate limiter (shared instance — kyc.py uses the same)
     app.state.limiter = limiter
 
     # BUG-BE-048: CORS origins based on ENVIRONMENT env var

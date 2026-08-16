@@ -14,6 +14,29 @@ from app.models.schemas import KycStatus
 from app.database import KycVerificationEntity
 
 
+@pytest.fixture(autouse=True)
+def override_auth():
+    """Auth added in BUG-AUTH-022; tests predate it — supply a valid subject."""
+    from app.api.v1.kyc import require_auth
+
+    async def fake_auth():
+        return {"sub": "user_123"}
+
+    app.dependency_overrides[require_auth] = fake_auth
+    yield
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Shared slowapi Limiter keeps in-memory state across tests — reset per test."""
+    from app.rate_limit import limiter
+
+    limiter.reset()
+    yield
+    limiter.reset()
+
+
 @pytest.mark.unit
 class TestKycApi:
     """Unit tests for KYC API endpoints"""
@@ -145,7 +168,11 @@ class TestKycApi:
         ) as client:
             response = await client.get("/api/v1/kyc/verify/nonexistent_id")
 
-            assert response.status_code in [404, 422]  # Not found or validation error
+            # RFC 9457-style business error: 200 + error body (KYC_VAL_003)
+            assert response.status_code == 200
+            body = response.json()
+            assert body.get("success") is False
+            assert body.get("error", {}).get("code") == "KYC_VAL_003"
 
         app.dependency_overrides.clear()
 
@@ -171,8 +198,11 @@ class TestKycApi:
                 },
             )
 
-            # Invalid base64 should return 422 validation error
-            assert response.status_code in [422]
+            # Invalid base64 -> rejected as RFC 9457-style business error
+            assert response.status_code == 200
+            body = response.json()
+            assert body.get("success") is False
+            assert body.get("error", {}).get("code") is not None
 
         app.dependency_overrides.clear()
 
@@ -271,8 +301,11 @@ class TestKycApi:
                 json={"verification_id": "verify_123", "ktp_image": ""},
             )
 
-            # Empty string should fail processing with validation error
-            assert response.status_code in [422]
+            # Empty string -> rejected as RFC 9457-style business error
+            assert response.status_code == 200
+            body = response.json()
+            assert body.get("success") is False
+            assert body.get("error", {}).get("code") is not None
 
         app.dependency_overrides.clear()
 
@@ -295,7 +328,10 @@ class TestKycApi:
                 json={"verification_id": "verify_123", "selfie_image": ""},
             )
 
-            # Empty string should fail processing with validation error
-            assert response.status_code in [422]
+            # Empty string -> rejected as RFC 9457-style business error
+            assert response.status_code == 200
+            body = response.json()
+            assert body.get("success") is False
+            assert body.get("error", {}).get("code") is not None
 
         app.dependency_overrides.clear()

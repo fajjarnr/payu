@@ -160,6 +160,48 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 ---
 
+## 📋 Open Findings — Audit 2026-08-16 (Deep Quality, Business Invariants & Platform Audit)
+
+> Verifikasi mendalam berbasis source code aktif (bukan docs/asumsi). Mencakup mathematical rounding, financial invariant, container file persistence, SNAP-BI compliance, memory leaks, dan test runners.
+
+### 🔴 Kritis (Financial Invariants, Persistence & Compliance)
+
+| Key | Sev | Domain | Ringkasan | Bukti |
+|:---|:---:|:---|:---|:---|
+| TXN-SPLIT-001 | 🔴 | transaction | `SplitBillService` tidak memvalidasi `sum(participants.amountOwed) == totalAmount` pada custom split (`splitType != EQUAL`). `isFullyPaid()` return `true` bila setiap peserta bayar tagihannya meskipun `remainingAmount > 0`, menyebabkan split bill settled sebelum seluruh dana terkumpul | SplitBillService.java:363-365; SplitBillEntity.java:337 |
+| LEND-REPAY-001 | 🔴 | lending | `InstallmentService` menggunakan scale 4 di `calculateOption` vs scale 2 di `generateRepaymentSchedule`. Terlebih lagi `generateRepaymentSchedule` tidak menyerap sisa rounding pokok pada angsuran terakhir (`principalAmount = outstandingPrincipal`), menyisakan sisa saldo tidak terlunasi permanen | InstallmentService.java:220-258 |
+| STMT-S3-001 | 🔴 | statement | `StatementService.getStatementPdf` membaca file via `Files.readAllBytes(Paths.get(statement.getStoragePath()))`. Saat S3 aktif, `storagePath` berisi URI `s3://...`, mengabaikan `s3StorageAdapter.downloadPdf()`. Semua download PDF e-statement di Kubernetes/production crash (`NoSuchFileException`) | StatementService.java:210-212; S3StorageAdapter.java:120 |
+| SNAP-HMAC-001 | 🔴 | partner | `SnapBiSignatureService` memakai `HmacSHA256` untuk service endpoint signature. Standar resmi Bank Indonesia (SNAP-BI) mewajibkan **`HMAC-SHA512`** untuk symmetric transaction signatures. Integrasi standar SNAP-BI (TokoBapak/Nobar) selalu gagal 401 (`4012504: Invalid Signature`) | SnapBiSignatureService.java:15,29; SnapBiController.java:194 |
+| PROMO-DOUBLE-001 | 🔴 | promotion | `CashbackProcessorService` mengeksekusi transfer uang `walletServicePort.creditWallet` SEBELUM menyimpan record DB `cashbackRecordRepository.save(record)`. Jika DB error/timeout setelah uang dikreditkan, record tidak tersimpan; saat event di-retry/replay, wallet dikreditkan kedua kalinya (double-credit money leak) | CashbackProcessorService.java:124-147 |
+| SDK-TS-001 | 🔴 | sdk | `sdk/typescript` getters `client.payments/transfers/wallets/transactions` memanggil `require('./generated/api')`. Direktori `src/generated` tidak ada, sehingga setiap pemanggilan resource SDK crash dengan runtime `Cannot find module './generated/api'` | sdk/typescript/src/client.ts:180,190,200,210 |
+| SDK-JAVA-001 | 🔴 | sdk | `sdk/java` `PayUClient.java` mengimpor `id.payu.sdk.auth.*`, `config.*`, `error.*`, `resource.*` yang belum dibuat sama sekali. `mvn -f sdk/java/pom.xml compile` gagal total dengan 34 error kompilasi | sdk/java/src/main/java/id/payu/sdk/PayUClient.java |
+
+### 🟠 Sistematis (Performance, Data Integrity & Tooling)
+
+| Key | Sev | Domain | Ringkasan | Bukti |
+|:---|:---:|:---|:---|:---|
+| BILL-RECON-001 | 🟠 | billing | Scheduled cron 60 detik `PaymentService.reconcilePayments` mengeksekusi `findByStatusIn(PENDING, PROCESSING, COMPLETED, FAILED)` tanpa paginasi/limit/date range. Data historis `COMPLETED`/`FAILED` menumpuk menyebabkan full table scan, connection exhaustion, dan JVM OutOfMemoryError | PaymentService.java:163-170 |
+| SAVINGS-UUID-001 | 🟠 | wallet | `SavingsGoalService.createSavingsGoal` memanggil `UUID.fromString(pocket.getAccountId())`. Format `accountId` di PayU adalah String identifier (contoh `ACC-12345678`), bukan UUID murni, sehingga crash dengan `IllegalArgumentException` | SavingsGoalService.java:70 |
+| SNAP-PATH-001 | 🟠 | partner | `SnapBiController` menggunakan path non-standar `/v1/partner/auth/token` dan `/v1/partner/payments` alih-alih taksonomi standar SNAP-BI v1.0 (`/v1.0/access-token/b2b`, `/v1.0/transfer-va/payment`, dll) | SnapBiController.java:71,149 |
+| SCRIPT-TEST-001 | 🟠 | platform | `scripts/test-single-service.sh` berpindah direktori `cd backend/<service>` lalu `mvn test`. Gagal pada semua Quarkus & modular services (`gateway-service`, `notification-service`, `api-portal-service`) karena child POM kehilangan konteks reactor `quarkus-api-commons`. Wajib menggunakan `mvn -f backend/pom.xml test -pl ...` | scripts/test-single-service.sh:72-86 |
+| FX-SCALE-001 | 🟠 | fx | `FxConversionService` mengalikan `fromAmount.multiply(rate)` tanpa scale control dan rounding mode `HALF_EVEN`, menghasilkan nilai scale tidak standar sebelum persistensi `DECIMAL(19,4)` dan mutasi wallet | FxConversionService.java:51,94 |
+| MOBILE-JSX-001 | 🟠 | mobile | `useTransactionQuery.test.ts` dan `useWalletQuery.test.ts` menggunakan sintaks JSX `<QueryClientProvider>` di dalam file berekstensi `.ts` alih-alih `.tsx`. Babel parser gagal dengan syntax parse error | src/__tests__/hooks/useTransactionQuery.test.ts:84; useWalletQuery.test.ts:72 |
+
+### 🟡 Minor & Simulator Gaps
+
+| Key | Sev | Domain | Ringkasan | Bukti |
+|:---|:---:|:---|:---|:---|
+| BUDGET-DIRTY-001 | 🟡 | account | `BudgetService.getAllBudgetStatus` dianotasi `@Transactional(readOnly = true)` tetapi memanggil mutating method `budget.resetIfNeeded()`. Hibernate mengabaikan dirty checking pada transaksi read-only sehingga reset spending tidak ter-flush ke database sebelum batch midnight berjalan | BudgetService.java:231-250 |
+| SIM-TESTS-001 | 🟡 | simulators | `qris-simulator`, `dukcapil-simulator`, dan `biller-simulator` memiliki 0 unit test (`No tests to run`), dan `va-simulator` melempar `IllegalStateException` pada callback signature secret yang belum terkonfigurasi saat test | simulators/*/pom.xml; VaSimulatorService.java:259 |
+| LEND-RULES-001 | 🟡 | lending-rules | Modul `backend/lending-rules` berisi Drools decision tables dan aturan kredit tetapi memiliki 0 unit test (`src/test` tidak ada) | backend/lending-rules/src |
+| RULES-COLLISION-001 | 🟡 | rules-starter | `RulesEngineService` menulis resource DRL ke `KieFileSystem` hanya menggunakan `resource.getFilename()`. File DRL dengan nama sama di subfolder berbeda (misal `rules.drl`) saling overwrite di classpath virtual KIE | RulesEngineService.java:36 |
+| CONTRACT-PATH-001 | 🟡 | contract-tests | Spring Cloud Contract DSL `snapBiPaymentExpiredTimestamp.groovy` terikat pada path legacy `/v1/partner/payments`, perlu sinkronisasi saat taksonomi endpoint `/v1.0/*` distandarisasi | snapBiPaymentExpiredTimestamp.groovy:9 |
+| RESTCLIENT-TESTS-001 | 🟡 | rest-client-starter | `backend/shared/rest-client-starter` berisi `PayuRestClient` dan `RestClientErrorHandler` tetapi memiliki 0 unit test (`src/test` kosong) | backend/shared/rest-client-starter/src |
+| WEB-TSX-001 | 🟡 | web-app | Script `npm run a11y:audit` memanggil `tsx scripts/a11y-audit.ts`, tetapi `tsx` tidak tercantum di `devDependencies` `package.json`, menyebabkan error `sh: 1: tsx: not found` saat audit mandiri dijalankan | frontend/web-app/package.json:18 |
+| MOBILE-MOCK-001 | 🟡 | mobile | Test `accessibility.test.tsx` me-mock `react-native` tanpa menyertakan stub `NativeSettingsManager` / `SettingsManager`, melanggar invariant TurboModule Registry di React Native 0.76 | frontend/mobile/src/testing/accessibility.test.tsx:58-63 |
+
+---
+
 ## 📋 MVP Feature Readiness — Audit QA 2026-08-13 (PRD Phase 1 vs bukti test)
 
 > PRD Phase 1 MVP: account opening + eKYC, transfer (internal/BI-FAST), bill payment, single pocket, virtual debit card, integrasi TokoBapak (SNAP-BI). Verdict: **belum MVP production ready** — bukti test layer tidak lengkap di jalur uang + CI tidak ada.
@@ -217,7 +259,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | QAMVP-013 | Outbox atomicity: **FIXED 2026-08-13** — 4 service (wallet/transaction/billing/partner) commit+rollback vs real PG | 🟢 |
 | QAMVP-014 | Security test: **FIXED 2026-08-13** — 7 service (wallet/billing/transaction/backoffice/cms/kyc/analytics); api-portal public-by-design | 🟢 |
 | QAMVP-015 | Contract test: **FIXED 2026-08-13** — 3 error case RFC 9457 (transaction 400, wallet 404, auth 400) + CI workflow + README akurat; verifier jalan di CI via `-Pcontract-test` | 🟢 |
-| QAMVP-016 | Coverage: jacoco `check` TER-BIND — account **GATE GREEN**; CI workflow account/backend/kyc ada. Sisa: kyc coverage gate (65% < 80% — butuh run CI ML stack; test tambahan `test_config_fail_closed` 3 ditambah), Makefile `clean-test` hapus jacoco.exec (wajar) | 🟡 |
+| QAMVP-016 | Coverage: jacoco `check` TER-BIND — account **GATE GREEN**; CI workflow account/backend/kyc ada. **kyc gate GREEN 2026-08-16** — 80.82% ≥ 80% (152 unit tests): fix `limiter.check()` → `@limiter.limit` shared limiter (semua KYC upload selalu return KYC_RAT_001 — bug produksi nyata), fix `ApiResponse.success()` → `create_success()` (regresi, semua success path 500), `KycServiceTest` 12 test baru, API test stale di-update (auth override + rate-limit reset). Sisa: Makefile `clean-test` hapus jacoco.exec (wajar) | 🟡 |
 | QAMVP-017 | Pitest **ALIVE 2026-08-13** — 1.15.0 → 1.25.9 (1.15 gagal baca class Java 25, major 69) + junit5 plugin 1.2.3; `-Pmutation-testing org.pitest:pitest-maven:mutationCoverage` jalan (wallet domain: 627 mutasi, score 9%). Sisa: score < 60% threshold (butuh domain tests) — gate opt-in, tidak pecahkan CI | 🟠 |
 | QAMVP-018 | ZAP + Schemathesis **CI WIRED 2026-08-13** — `.github/workflows/security-tests.yml` (ZAP baseline `zaproxy/action-baseline` + Schemathesis `--checks all` vs OpenAPI, workflow_dispatch + cron mingguan, URL env). Catatan: api-docs springdoc di-prod nonaktif (`SPRINGDOC_API_DOCS_ENABLED:false`) → target scan butuh docs enabled (dev/staging). Fix: `NoResourceFoundException` di-map 500→404 di `Rfc9457GlobalExceptionHandler` | 🟡 |
 | QAMVP-019 | Frontend: statement page, forgot-password page + 3 test, not-found page + 2 test, E2E `forgot-password.spec.ts` + `not-found.spec.ts` HIJAU (2 passed) — 2026-08-13. a11y color-contrast/button-name di-test (49/49), refresh-token expiry di-test, full suite 94 files/1210 test green. Sisa minor: budget E2E spec, WCAG-strict tuning | 🟡 |

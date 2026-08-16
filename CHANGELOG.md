@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `KafkaInvestmentEventPublisherAdapter`: `payu.investment.event.v1` generik → per-event topic (`created`/`completed`/`failed`).
   - `SubscriptionEventConsumer` (partner): `subscription.events` → `payu.billing.subscription-event.v1` (topic nyata publisher billing).
   - Verified live: publish CE ke `payu.transaction.completed.v1`/`payu.wallet.escrow-settled.v1`/`payu.investment.completed.v1` → webhook dispatch benar; partner 317/317, investment 59/59 green.
+- **QAMVP-016 (kyc, gate GREEN)**: coverage gate kyc 65% → **80.82% ≥ 80%** (152 unit tests). Fix produksi nyata: (1) `limiter.check()` tidak ada di slowapi 0.1.9 → semua KYC upload/start SELALU return `KYC_RAT_001`; diganti shared `app/rate_limit.py` + `@limiter.limit` (pola main.py health); (2) regresi `ApiResponse.success()` (method sudah dihapus) → `create_success()` di 5 call-site — semua success path KYC return `KYC_SYS_001`. `KycServiceTest` 12 test (state machine ktp/selfie/liveness/face/dukcapil/reject/verified). API tests stale di-update: auth override (BUG-AUTH-022 predates test), rate-limit reset per-test, assertion RFC 9457-style error body. e2e tetap pre-existing broken (4 fail — hang paddle di luar scope QAMVP-016).
 
 ## [1.11.1] - 2026-08-13
 

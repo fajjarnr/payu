@@ -30,6 +30,59 @@ from tests.factories import (
 )
 
 
+@pytest.fixture(autouse=True)
+def override_auth():
+    """Auth added in BUG-AUTH-022; tests predate it — echo the requested user."""
+    from app.api.v1.kyc import require_auth
+    from fastapi import Request
+
+    async def fake_auth(request: Request):
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+        user_id = body.get("user_id")
+        if not user_id:
+            user_id = request.path_params.get("user_id", "user_123")
+        return {"sub": user_id}
+
+    app.dependency_overrides[require_auth] = fake_auth
+    yield
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Shared slowapi Limiter keeps in-memory state across tests — reset per test."""
+    from app.rate_limit import limiter
+
+    limiter.reset()
+    yield
+    limiter.reset()
+
+
+def clear_overrides():
+    """Tests call dependency_overrides.clear() mid-test; re-apply the auth stub."""
+    from app.api.v1.kyc import require_auth
+    from fastapi import Request
+
+    async def fake_auth(request: Request):
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+        user_id = body.get("user_id")
+        if not user_id:
+            user_id = request.path_params.get("user_id", "user_123")
+        return {"sub": user_id}
+
+    app.dependency_overrides.clear()
+    app.dependency_overrides[require_auth] = fake_auth
+
+
+
 @pytest.mark.unit
 class TestKycApiWithFactories:
     """Unit tests for KYC API endpoints using factory patterns"""
@@ -79,7 +132,7 @@ class TestKycApiWithFactories:
 
             assert response.status_code in [200, 201, 422, 429, 503]
 
-        app.dependency_overrides.clear()
+        clear_overrides()
 
     @pytest.mark.asyncio
     async def test_upload_ktp_with_factory_images(self, mock_db_session):
@@ -109,7 +162,7 @@ class TestKycApiWithFactories:
 
             assert response.status_code in [200, 201, 422, 429, 503]
 
-        app.dependency_overrides.clear()
+        clear_overrides()
 
     @pytest.mark.asyncio
     async def test_upload_selfie_with_factory_images(self, mock_db_session):
@@ -138,7 +191,7 @@ class TestKycApiWithFactories:
 
             assert response.status_code in [200, 201, 422, 429, 503]
 
-        app.dependency_overrides.clear()
+        clear_overrides()
 
     @pytest.mark.asyncio
     async def test_get_status_with_factory_verification(self, mock_db_session):
@@ -175,7 +228,7 @@ class TestKycApiWithFactories:
 
                 assert response.status_code in [200, 404, 422]
 
-            app.dependency_overrides.clear()
+            clear_overrides()
 
     @pytest.mark.asyncio
     async def test_multiple_verifications_with_factories(self, mock_db_session):
@@ -209,7 +262,7 @@ class TestKycApiWithFactories:
 
                 assert response.status_code in [200, 422]
 
-            app.dependency_overrides.clear()
+            clear_overrides()
 
     @pytest.mark.asyncio
     async def test_edge_case_new_user_verification(self, mock_db_session):
@@ -238,7 +291,7 @@ class TestKycApiWithFactories:
 
             assert response.status_code in [200, 422]
 
-        app.dependency_overrides.clear()
+        clear_overrides()
 
     @pytest.mark.asyncio
     async def test_batch_test_generation_with_factories(self, mock_db_session):

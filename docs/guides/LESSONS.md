@@ -38,6 +38,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: FinancialEventConsumer aligned to 20 real publisher topics (10 new mapping tests), investment per-event topics, subscription consumer → `payu.billing.subscription-event.v1`; live CE events on 3 topics dispatched correct webhooks; partner 317/317, investment 59/59; 0 ERROR logs.
 
+## L-245: Dead SlowAPI `check()` + Pydantic Class-Attribute Traps (2026-08-16)
+
+**Context**: QAMVP-016 kyc coverage gate was 65% < 80%. While fixing tests, two silent production bugs surfaced that made every KYC success path fail.
+
+**Lesson**:
+- **Never call a library method you haven't verified against the resolved version**: slowapi 0.1.9 `Limiter` has NO `check()` method (only `@limiter.limit` decorator + `async_check_limits` helper). The code `await limiter.check(...)` raised `AttributeError` on EVERY request, caught by a broad `except Exception` → every KYC upload/start returned `KYC_RAT_001` "rate limit exceeded" while appearing to "work" (200 + error body). The broad catch masked the bug — a wrong method name looked like a rate-limit trip. Fix: shared module-level `Limiter` (`app/rate_limit.py`) + `@limiter.limit` decorator, matching main.py's health endpoints. Context7 confirmed the API.
+- **Pydantic v2 field names shadow classmethods**: `ApiResponse` has a `success: bool` field; someone wrote `ApiResponse.success(...)` — but `success` is a field, not a method, so the call raised `AttributeError` and every success path returned `KYC_SYS_001` (again masked by the generic exception handler). Regression introduced when the `success()` classmethod was renamed to `create_success()` but call sites weren't updated. Check classmethod existence against the class, not the field list.
+- **Broad `except Exception` + RFC 9457-style 200-error-body returns hide real bugs**: both bugs produced 200-with-error responses, so health/status checks and even unit tests that asserted "status in [200,...]" stayed green. Assert specific error codes, not just status ranges.
+
+**Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
+
 ## L-241: Boot 4 Servlet Tests + JPA @Version/Tenant Merge Traps + JaCoCo Drools (2026-08-13)
 
 - **Boot 4 service-test tanpa WebTestClient**: Boot 4 tidak lagi auto-config `WebTestClient` untuk servlet app. Untuk servlet: `@AutoConfigureMockMvc` dari `org.springframework.boot.webmvc.test.autoconfigure` (modul `spring-boot-webmvc-test`); controller async (`CompletableFuture`) pakai `request().asyncStarted()` + `asyncDispatch(result)`; `JsonPathResultMatchers` Boot 4 menghapus `isEqualTo` → pakai `.value(...)`.

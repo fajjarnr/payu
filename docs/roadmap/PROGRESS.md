@@ -11,6 +11,7 @@
 - **ARCH-TOPIC-003 transaction + billing legs**: batch disbursement async flow di-wire (publish outbox `BatchProcessingStarted` ke `payu.transaction.disbursement-batch.v1`; sebelumnya stuck PROCESSING selamanya) + billing subscription-due deserializer fix. Verified live: batch items processed, subscription-due consumed, 0 consumer exception. Transaction 189/189, billing 136/136.
 - **ARCH-CE-002 CLOSED (verified stale)**: outbox-starter `OutboxPublisher.buildRecord` selalu membungkus payload plain Map dalam CloudEventEnvelope CE 1.0.2 + header ce-*; `CloudEventsContractTest` green + 5 consumer unwrap envelope dengan benar secara live.
 - **ARCH-TOPIC-001 CLOSED (partner, investment)**: FinancialEventConsumer 19 topic legacy → topic publisher nyata (payu.*.v1); investment per-event topics; SubscriptionEventConsumer → payu.billing.subscription-event.v1; drop payment-events/payment.link.events (anti double-dispatch). Verified live: transaction-completed/escrow-settled/investment-completed → webhook dispatch. Partner 317/317, investment 59/59.
+- **QAMVP-016 kyc gate GREEN**: coverage 80.82% ≥ 80% (152 unit tests). 2 bug produksi nyata difix: `limiter.check()` (slowapi tak punya method → semua KYC upload KYC_RAT_001) diganti shared `app/rate_limit.py` + `@limiter.limit`; `ApiResponse.success()` (regresi) → `create_success()`. `KycServiceTest` 12 test baru. e2e pre-existing broken tetap.
 
 ## Final sweep 2026-08-13 (1.11.1)
 
