@@ -49,6 +49,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-248: Money-Audit Finding "Stale" — Verify at the Setter Before Writing Any Production Code (2026-08-16)
+
+**Context**: FX-SCALE-001 (audit 2026-08-16) claimed `FxConversionService.createConversion/estimateConversion` multiply `fromAmount.multiply(rate)` without scale control + `HALF_EVEN`, producing non-standard scale before `DECIMAL(19,4)` persistence and wallet mutation. TDD-first, the regression test `conversionShouldRoundToScale4HalfEven` (rate `2.50005` → must equal `2.5000`, NOT `2.5001`) passed on the first run with zero production changes.
+
+**Lesson**:
+- **A money finding is stale when the domain setter already normalizes**: `FxConversion.setToAmount()` (`FxConversion.java:72-74`) always applies `setScale(4, HALF_EVEN)`, so every path through `setToAmount` (estimate AND create, both persistence and wallet mutation) already yields scale-4 `HALF_EVEN` values. An audit claim about the multiply expression alone misses the normalization boundary. Check the setter/entrance of the money value before assuming the call-site multiply leaks raw scale.
+- **Write the failing-then-passing test anyway**: even for a "stale" finding, the regression test is cheap, pins the invariant for future refactors, and converts an audit claim into verifiable evidence. Mark the finding CLOSED — VERIFIED STALE with the regression test as proof (same pattern as ARCH-CE-002).
+- **Test the value that actually distinguishes rounding modes**: `2.50005` differentiates `HALF_EVEN` (→`2.5000`) from PG's numeric half-away-from-zero (→`2.5001`); asserting `scale() == 4` + `isEqualByComparingTo("2.5000")` is the discriminating pair.
+
+**Applied evidence**: `FxConversionServiceTest` 3/3 green (new rounding test) + 73/73 fx-service tests green; no production code changed; finding closed in TODOS.md; release `1.11.5`.
+
 ## L-246: Money-Ordering: Persist Intent Before Credit + Never Swallow + Verify Audit Claims (2026-08-16)
 
 **Context**: PROMO-DOUBLE-001 — audit reported `CashbackProcessorService` double-credits the wallet when the DB save fails after the credit. Code inspection disproved the "double-credit" half but confirmed a real, subtler money-integrity bug.

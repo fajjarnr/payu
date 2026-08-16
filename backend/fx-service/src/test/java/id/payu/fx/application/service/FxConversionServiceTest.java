@@ -90,4 +90,22 @@ class FxConversionServiceTest {
         verify(walletServicePort, never()).debit(any(), any(), any(), any());
         verify(walletServicePort, never()).credit(any(), any(), any(), any());
     }
+
+    @Test
+    @DisplayName("converted amount is rounded to DECIMAL(19,4) scale with HALF_EVEN")
+    void conversionShouldRoundToScale4HalfEven() {
+        when(fxRateUseCase.getCurrentRate("USD", "IDR"))
+                .thenReturn(new FxRate(UUID.randomUUID(), "USD", "IDR", new BigDecimal("2.50005"),
+                        null, LocalDateTime.now().minusMinutes(1),
+                        LocalDateTime.now().plusMinutes(5), 0L, LocalDateTime.now()));
+
+        FxConversion estimate = fxConversionService.estimateConversion(
+                FxConversion.builder()
+                        .fromCurrency("USD").toCurrency("IDR")
+                        .fromAmount(new BigDecimal("1.0000"))
+                        .build());
+
+        assertThat(estimate.getToAmount().scale()).isEqualTo(4);
+        assertThat(estimate.getToAmount()).isEqualByComparingTo("2.5000");
+    }
 }

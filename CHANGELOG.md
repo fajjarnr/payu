@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.5] - 2026-08-16
+
+### Fixed
+
+- **FX-SCALE-001 (fx, CLOSED — VERIFIED STALE)**: audit 2026-08-16 claimed `FxConversionService.createConversion/estimateConversion` (`fromAmount.multiply(rate)`) produces non-standard BigDecimal scale before `DECIMAL(19,4)` persistence and wallet mutation. Verified: `FxConversion.setToAmount()` selalu menormalkan ke scale 4 `RoundingMode.HALF_EVEN` (`FxConversion.java:72-74`), jadi seluruh path (estimate/create, persist & wallet) sudah menerima nilai scale-4 yang benar. Regression test `conversionShouldRoundToScale4HalfEven` (rate `2.50005` → `2.5000`, bukan `2.5001`; `scale()==4`) ditambahkan sebagai bukti; 73/73 fx-service tests green. Tidak ada perubahan production code.
+- **deploy**: image stack lokal di-rebuild ke tag semver `1.11.5` (default `PAYU_VERSION` di `podman-compose.yml` dinaikkan `1.11.1` → `1.11.5`); prune image dangling/unused.
+
 ## [1.11.4] - 2026-08-16
 
 ### Fixed
