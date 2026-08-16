@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.6] - 2026-08-16
+
+### Fixed
+
+- **SDK-TS-001 (sdk, CLOSED)**: `sdk/typescript` getters `client.payments/transfers/wallets/transactions` memanggil `require('./generated/api')` — direktori `src/generated` tidak ada → setiap akses resource SDK crash `Cannot find module './generated/api'`. Fix: `src/generated/api.ts` (PaymentsApi/TransfersApi/WalletsApi/TransactionsApi terhadap endpoint nyata `/api/v1/*`, signature `(config?, basePath, httpClient)` cocok dengan getter; `X-Idempotency-Key` di create payments/transfers) + `src/generated/models.ts` (ApiResponse, Payment/Transfer/Balance DTO). Typing axios lama (AxiosRequestConfig vs InternalAxiosRequestConfig + assignment `headers` seluruh objek) difix dengan `InternalAxiosRequestConfig` + `headers.set(...)`. Verified: `npm run build` (tsc) OK; jest 3/3 (resources tanpa crash, instance di-cache, validasi config) — `jest.config.js` ditambahkan.
+- **SDK-JAVA-001 (sdk, CLOSED)**: `sdk/java` `PayUClient.java` mengimpor package yang tidak ada → `mvn compile` 34 error. Fix: package `config` (PayUConfig immutable builder + getters), `auth` (AuthInterceptor HMAC-SHA256 `METHOD|PATH|TIMESTAMP|BODY_HASH`, mirror TS SDK), `interceptor` (RetryInterceptor bounded, retry hanya 5xx/network), `error` (PayUException unchecked + PayUError.fromResponse), `resource` (Payments/Transfers/WalletsResource → `/api/v1/payments`, `/api/v1/transactions/transfer`, `/api/v1/wallets/{accountId}/balance`; `X-Idempotency-Key` di create). Dependency logging: `okhttp-logging-interceptor` bukan artifact nyata — nama benar `com.squareup.okhttp3:logging-interceptor:4.12.0` (verified via repo.maven.apache.org metadata). Verified: `mvn compile` OK; `mvn test` 8/8 (PayUConfig defaults + MockWebServer: path/idempotency/api-key header benar, 401 → PayUError statusCode 401).
+
 ## [1.11.5] - 2026-08-16
 
 ### Fixed

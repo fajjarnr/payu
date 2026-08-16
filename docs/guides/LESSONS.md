@@ -49,6 +49,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-249: Maven Artifact Names Are Not Intuitive — Verify via Central Metadata (2026-08-16)
+
+**Context**: fixing SDK-JAVA-001 (broken `sdk/java` scaffold). `PayUClient` used `okhttp3.logging.HttpLoggingInterceptor`; I added `<artifactId>okhttp-logging-interceptor</artifactId>` and Maven failed with `Could not find artifact`. Even `curl` of `repo.maven.apache.org/maven2/com/squareup/okhttp3/okhttp-logging-interceptor/` returned 404.
+
+**Lesson**:
+- **Don't trust the intuitive artifact name.** The real artifact under `com.squareup.okhttp3` for OkHttp 4.x logging is **`logging-interceptor`** (verified via `repo1.maven.org/maven2/com/squareup/okhttp3/` directory listing), not `okhttp-logging-interceptor` (that was the old 2.x/3.x name). Maven Central caches the 404 in `*.lastUpdated` — subsequent builds fail immediately until `-U` forces re-resolution or the pom is fixed.
+- **Context7 gate also applies to coordinates**: resolving the library gave the API shape; confirming the exact artifactId required checking Central's own directory listing. When a dependency can't resolve, `curl -I` the presumed path first — a 404 there means wrong name, not a network flake.
+- **Scaffold debt shows up as "generated code never generated"**: both TS (`require('./generated/api')`) and Java (`id.payu.sdk.{config,auth,error,resource}` imports) SDKs referenced code that was never created and no OpenAPI spec existed to regenerate from. Hand-writing minimal resource classes against the real `/api/v1/*` endpoints (with `X-Idempotency-Key` on create) is the honest fix; the finder's "can't find module" is a build/runtime signal, not a doc.
+
+**Applied evidence**: `sdk/java` `mvn compile` + `mvn test` 8/8 green (MockWebServer); `sdk/typescript` `npm run build` + jest 3/3 green.
+
 ## L-248: Money-Audit Finding "Stale" — Verify at the Setter Before Writing Any Production Code (2026-08-16)
 
 **Context**: FX-SCALE-001 (audit 2026-08-16) claimed `FxConversionService.createConversion/estimateConversion` multiply `fromAmount.multiply(rate)` without scale control + `HALF_EVEN`, producing non-standard scale before `DECIMAL(19,4)` persistence and wallet mutation. TDD-first, the regression test `conversionShouldRoundToScale4HalfEven` (rate `2.50005` → must equal `2.5000`, NOT `2.5001`) passed on the first run with zero production changes.

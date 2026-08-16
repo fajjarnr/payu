@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.6 (2026-08-16)
+
+- **SDK-TS-001 + SDK-JAVA-001 CLOSED**: kedua SDK yang tadinya scaffold rusak kini build + test green.
+  - TS: `src/generated/api.ts` + `models.ts` dibuat (resource Payments/Transfers/Wallets/Transactions → endpoint nyata `/api/v1/*`, `X-Idempotency-Key` di create); typing axios lama difix (`InternalAxiosRequestConfig`, `headers.set`). `npm run build` OK + jest 3/3.
+  - Java: package `config`/`auth`/`interceptor`/`error`/`resource` dibuat (PayUConfig, AuthInterceptor HMAC-SHA256, RetryInterceptor, PayUError/Exception, 3 resource); dependency `logging-interceptor` (nama benar) ditambahkan. `mvn compile` OK + `mvn test` 8/8 (MockWebServer).
+  - Lesson: `okhttp-logging-interceptor` bukan artifact Maven Central — nama group `com.squareup.okhttp3` yang benar adalah `logging-interceptor` (L-246).
+
 ## Deploy 1.11.2 (2026-08-15)
 
 - Stack podman dari nol: infra digest-pinned Red Hat dipulihkan (`:local` retag dihapus, `pull_policy: always`), 31 image app di-tag semver `1.11.2`, deploy **37/37 healthy**, scan log 0 ERROR/WARN (2 menit terakhir).

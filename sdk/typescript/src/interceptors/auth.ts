@@ -1,4 +1,4 @@
-import { AxiosRequestConfig } from 'axios';
+import { InternalAxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
 
 /**
@@ -27,16 +27,13 @@ export class AuthInterceptor {
   /**
    * Intercept and modify the request to add auth headers.
    */
-  intercept(requestConfig: AxiosRequestConfig): AxiosRequestConfig {
+  intercept(requestConfig: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
     const timestamp = Date.now().toString();
     const signature = this.generateSignature(requestConfig, timestamp);
 
-    requestConfig.headers = {
-      ...requestConfig.headers,
-      'X-API-Key': this.config.apiKey,
-      'X-Timestamp': timestamp,
-      'X-Signature': signature
-    };
+    requestConfig.headers.set('X-API-Key', this.config.apiKey);
+    requestConfig.headers.set('X-Timestamp', timestamp);
+    requestConfig.headers.set('X-Signature', signature);
 
     return requestConfig;
   }
@@ -44,7 +41,7 @@ export class AuthInterceptor {
   /**
    * Generate HMAC-SHA256 signature for the request.
    */
-  private generateSignature(requestConfig: AxiosRequestConfig, timestamp: string): string {
+  private generateSignature(requestConfig: InternalAxiosRequestConfig, timestamp: string): string {
     const method = (requestConfig.method || 'GET').toUpperCase();
     const path = requestConfig.url || '/';
     const body = requestConfig.data ? JSON.stringify(requestConfig.data) : '';
