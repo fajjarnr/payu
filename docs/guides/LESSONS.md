@@ -49,6 +49,18 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-254: SNAP-BI Signature Binds the Endpoint Path — Hardcoding It Breaks Any Path Alias (2026-08-16)
+
+**Context**: fixing SNAP-PATH-001 (additive `/v1.0/*` aliases for the SNAP-BI taxonomy). `SnapBiController` validated signatures against hardcoded strings like `/v1/partner/payments`. Adding `/v1.0/transfer-va/payment` would fail every v1.0 request because the server computed the expected HMAC over the legacy path while the caller signed the v1.0 path.
+
+**Lesson**:
+- **SNAP-BI's string-to-sign includes the endpoint path** (`method + ":" + endpoint + ":" + accessToken + ":" + sha256(body) + ":" + timestamp`). The endpoint is the path the caller actually hit. Any server-side hardcoded path diverges the moment a second path variant exists. Derive the signed endpoint from `HttpServletRequest.getRequestURI()` (minus context path) instead of a constant.
+- **Additive alias is the safe way to add a standard taxonomy**: keep `/v1/partner/*` (existing integrators) and add `/v1.0/*` (standard) side by side. The signature fix is the same for both; the extra work is gateway routes, auth-whitelist arrays, idempotency exclusions, and a second contract test — mechanical, grep-driven.
+- **A taxonomy change is a public-contract decision, not a code shortcut**: `/v1.0/` is Bank Indonesia's mandated prefix, not our API version. It can't be `/v2/`. And since it's additive here, it stays a PATCH (non-breaking), not a MAJOR.
+- **SNAP-BI refund differs structurally from the legacy path-scoped refund**: the standard `POST /v1.0/transfer-va/refund` carries `originalReferenceNo` in the body, while `/v1/partner/payments/{id}/refund` takes it in the path. They share `SnapBiPaymentService.createRefund` via a small body→legacy mapper.
+
+**Applied evidence**: `signedEndpoint(HttpServletRequest)` used in all 4 endpoints; `SnapBiV10ContractTest` 3/3; partner 322/322 green (Testcontainers via podman socket); `ContractVerifierTest` 4/4 incl. `snapBiV10PaymentExpiredTimestamp.groovy`.
+
 ## L-253: A Classpath Glob That Matches Nothing Compiles Fine — and the Endpoint Returns Zeros (2026-08-16)
 
 **Context**: fixing LEND-RULES-001 (0 tests). Writing a `@SpringBootTest` for the Drools rules: all 5 assertions failed with score `0`, and startup log showed `Found 0 DRL file(s)` while the DRL clearly existed at `src/main/resources/id/payu/lendingrules/rules/credit_scoring.drl`.

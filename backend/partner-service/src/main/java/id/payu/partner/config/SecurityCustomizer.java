@@ -20,7 +20,10 @@ public class SecurityCustomizer {
     public SecurityConfigurerCustomizer partnerSecurityCustomizer() {
         return auth -> auth
                 // SNAP-BI validates client-key HMAC and SNAP access tokens in SnapBiController.
+                // Both the legacy /v1/partner and the standard /v1.0 taxonomy are public
+                // contract paths (SNAP-PATH-001).
                 .requestMatchers("/v1/partner/**").permitAll()
+                .requestMatchers("/v1.0/**").permitAll()
                 .requestMatchers("/api/v1/partners/callback/**").permitAll()
                 // PARTNER-004: public health probe is intentionally unauthenticated.
                 .requestMatchers("/partners/public/health").permitAll()
@@ -31,6 +34,8 @@ public class SecurityCustomizer {
         String uri = request.getRequestURI();
         return uri.equals("/v1/partner")
                 || uri.startsWith("/v1/partner/")
+                || uri.equals("/v1.0")
+                || uri.startsWith("/v1.0/")
                 || uri.equals("/api/v1/v1/partner")
                 || uri.startsWith("/api/v1/v1/partner/");
     }

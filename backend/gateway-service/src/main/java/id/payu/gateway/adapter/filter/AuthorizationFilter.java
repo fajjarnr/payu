@@ -78,7 +78,8 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         // SNAP-BI authenticates at partner-service with client-key HMAC and its own bearer token.
         // Do not force the platform Keycloak JWT flow onto this external contract.
         "/api/v1/v1/partner",
-        "/v1/partner"
+        "/v1/partner",
+        "/v1.0"
     };
 
     // Exact match public endpoints (must match exactly)

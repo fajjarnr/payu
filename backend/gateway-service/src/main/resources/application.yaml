@@ -530,6 +530,10 @@ gateway:
       service: "partner-service"
       target-prefix: "/v1/partner"
       methods: ["GET", "POST"]
+    "v1.0":
+      service: "partner-service"
+      target-prefix: "/v1.0"
+      methods: ["GET", "POST"]
     promotions:
       service: "promotion-service"
       target-prefix: "/api/v1/promotions"
@@ -669,3 +673,4 @@ gateway:
       - "/api/v1/partners"
       - "/api/v1/v1/partner"
       - "/v1/partner"
+      - "/v1.0"

@@ -407,7 +407,7 @@ public interface GatewayConfig {
         long toleranceSeconds();
 
         @WithName("required-paths")
-        @WithDefault("/v1/partner/*,/api/v1/partners/*")
+        @WithDefault("/v1/partner/*,/v1.0/*,/api/v1/partners/*")
         List<String> requiredPaths();
 
         @WithName("partner-keys")
@@ -566,7 +566,7 @@ public interface GatewayConfig {
          * Path patterns that trigger response masking.
          */
         @WithName("masked-paths")
-        @WithDefault("/api/v1/partners,/api/v1/v1/partner,/v1/partner")
+        @WithDefault("/api/v1/partners,/api/v1/v1/partner,/v1/partner,/v1.0")
         List<String> maskedPaths();
     }
 }

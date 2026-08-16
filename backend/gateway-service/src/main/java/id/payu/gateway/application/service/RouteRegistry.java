@@ -154,6 +154,7 @@ public class RouteRegistry {
         // Partner Service
         registerDefault("partners", "partner-service", "/partners");
         registerDefault("v1/partner", "partner-service", "/v1/partner");
+        registerDefault("v1.0", "partner-service", "/v1.0");
 
         // Promotion Service
         registerDefault("promotions", "promotion-service", "/api/v1/promotions");

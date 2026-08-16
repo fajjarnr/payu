@@ -36,13 +36,16 @@ class RouteRegistryTest {
                 "disabled-service", "/api/v1/disabled", List.of("GET"), false);
         GatewayConfig.RouteConfig publicContentRoute = mockRouteConfig(
                 "cms-service", "/api/v1/public/contents", List.of("GET"), true);
+        GatewayConfig.RouteConfig v10Route = mockRouteConfig(
+                "partner-service", "/v1.0", List.of("GET", "POST"), true);
 
         when(config.routes()).thenReturn(Map.of(
                 "accounts", accountRoute,
                 "partners", partnerRoute,
                 "wallets", walletRoute,
                 "disabled", disabledRoute,
-                "public/contents", publicContentRoute
+                "public/contents", publicContentRoute,
+                "v1.0", v10Route
         ));
 
         registry = new RouteRegistry();
@@ -98,6 +101,15 @@ class RouteRegistryTest {
         }
 
         @Test
+        @DisplayName("should resolve SNAP-BI v1.0 taxonomy to partner-service (SNAP-PATH-001)")
+        void shouldResolveSnapBiV10Taxonomy() {
+            Optional<RouteRegistry.ResolvedRoute> resolved = registry.resolve("v1.0/access-token/b2b");
+            assertTrue(resolved.isPresent());
+            assertEquals("partner-service", resolved.get().serviceName());
+            assertEquals("/v1.0/access-token/b2b", resolved.get().targetPath());
+        }
+
+        @Test
         @DisplayName("should return empty for unknown path")
         void shouldReturnEmptyForUnknown() {
             Optional<RouteRegistry.ResolvedRoute> resolved = registry.resolve("unknown/path");
@@ -141,15 +153,16 @@ class RouteRegistryTest {
         @DisplayName("should return all routes")
         void shouldReturnAllRoutes() {
             Map<String, RouteRegistry.RouteDefinition> allRoutes = registry.getAllRoutes();
-            assertEquals(5, allRoutes.size());
+            assertEquals(6, allRoutes.size());
             assertTrue(allRoutes.containsKey("accounts"));
             assertTrue(allRoutes.containsKey("partners"));
+            assertTrue(allRoutes.containsKey("v1.0"));
         }
 
         @Test
         @DisplayName("should return route count")
         void shouldReturnRouteCount() {
-            assertEquals(5, registry.getRouteCount());
+            assertEquals(6, registry.getRouteCount());
         }
     }
 

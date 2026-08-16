@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -35,11 +36,17 @@ import java.time.format.DateTimeParseException;
  * REST controller for SNAP BI (BI-FAST) payment integration.
  * Implements the SNAP BI API specification for payment processing.
  *
+ * <p>SNAP-PATH-001: endpoints are exposed under BOTH the SNAP-BI v1.0
+ * taxonomy ({@code /v1.0/access-token/b2b}, {@code /v1.0/transfer-va/payment},
+ * {@code /v1.0/transfer-va/refund}) and the legacy PayU paths
+ * ({@code /v1/partner/...}) so existing integrators keep working while new
+ * ones use the standard. Signature validation always uses the actual request
+ * path, matching what the caller signed.
+ *
  * BUG-BE-138 FIX: Uses PartnerService instead of direct PartnerRepository access.
  * BUG-BE-139 FIX: Uses raw request body for signature validation instead of re-serialization.
  */
 @RestController
-@RequestMapping("/v1/partner")
 @Tag(name = OpenApiConstants.TAG_SNAP_BI, description = "SNAP BI payment integration operations")
 @RequiredArgsConstructor
 public class SnapBiController {
@@ -68,7 +75,21 @@ public class SnapBiController {
         }
     }
 
-    @PostMapping("/auth/token")
+    /**
+     * Returns the request URI path (without context path) as the endpoint the
+     * caller signed. SNAP-BI signatures bind the endpoint path, so the value
+     * validated must be the actual path hit — both the standard {@code /v1.0/...}
+     * taxonomy and the legacy {@code /v1/partner/...} aliases work (SNAP-PATH-001).
+     */
+    private String signedEndpoint(HttpServletRequest servletRequest) {
+        String uri = servletRequest.getRequestURI();
+        String context = servletRequest.getContextPath();
+        return (context != null && !context.isEmpty() && uri.startsWith(context))
+                ? uri.substring(context.length())
+                : uri;
+    }
+
+    @PostMapping(value = {"/v1/partner/auth/token", "/v1.0/access-token/b2b"})
     @Operation(
         summary = "Get access token",
         description = "Obtains an OAuth2 access token for SNAP BI API authentication."
@@ -91,7 +112,8 @@ public class SnapBiController {
         @Parameter(description = "PartnerEntity client key", required = true) @RequestHeader("X-CLIENT-KEY") String clientKey,
         @Parameter(description = "Request timestamp", required = true) @RequestHeader("X-TIMESTAMP") String timestamp,
         @Parameter(description = "HMAC signature", required = true) @RequestHeader("X-SIGNATURE") String signature,
-        @Valid @RequestBody String rawBody) {
+        @Valid @RequestBody String rawBody,
+        HttpServletRequest servletRequest) {
 
         // BUG-BE-134: Validate timestamp window to prevent replay attacks
         if (!isTimestampValid(timestamp)) {
@@ -114,7 +136,7 @@ public class SnapBiController {
             boolean signatureValid = signatureService.validateSignatureWithClientKey(
                 partner.getClientSecret(),
                 "POST",
-                "/v1/partner/auth/token",
+                signedEndpoint(servletRequest),
                 timestamp,
                 rawBody,
                 signature
@@ -146,7 +168,7 @@ public class SnapBiController {
         return ResponseEntity.ok(new TokenResponse(accessToken, "Bearer", "900"));
     }
 
-    @PostMapping("/payments")
+    @PostMapping(value = {"/v1/partner/payments", "/v1.0/transfer-va/payment"})
     @Idempotent(required = true)
     @Operation(
         summary = "Create payment",
@@ -165,7 +187,8 @@ public class SnapBiController {
         @RequestHeader("X-EXTERNAL-ID") String externalId,
         @RequestHeader("X-TIMESTAMP") String timestamp,
         @RequestHeader("X-SIGNATURE") String signature,
-        @RequestBody String rawBody) {
+        @RequestBody String rawBody,
+        HttpServletRequest servletRequest) {
 
         // BUG-BE-134: Validate timestamp window to prevent replay attacks
         if (!isTimestampValid(timestamp)) {
@@ -194,7 +217,7 @@ public class SnapBiController {
             boolean signatureValid = signatureService.validateSignature(
                 partner.getClientSecret(),
                 "POST",
-                "/v1/partner/payments",
+                signedEndpoint(servletRequest),
                 token,
                 rawBody,
                 timestamp,
@@ -221,13 +244,14 @@ public class SnapBiController {
         return ResponseEntity.ok(paymentService.createPayment(partner.getId().toString(), request));
     }
 
-    @GetMapping("/payments/{id}")
+    @GetMapping(value = {"/v1/partner/payments/{id}", "/v1.0/transfer-va/payment/{id}"})
     @Operation(summary = "Get payment status")
     public ResponseEntity<?> getPaymentStatus(
         @RequestHeader("Authorization") String authorization,
         @RequestHeader("X-TIMESTAMP") String timestamp,
         @RequestHeader("X-SIGNATURE") String signature,
-        @PathVariable("id") String referenceNo) {
+        @PathVariable("id") String referenceNo,
+        HttpServletRequest servletRequest) {
 
         // BUG-BE-134: Validate timestamp window
         if (!isTimestampValid(timestamp)) {
@@ -256,7 +280,7 @@ public class SnapBiController {
             boolean signatureValid = signatureService.validateSignature(
                 partner.getClientSecret(),
                 "GET",
-                "/v1/partner/payments/" + referenceNo,
+                signedEndpoint(servletRequest),
                 token,
                 requestBody,
                 timestamp,
@@ -274,7 +298,7 @@ public class SnapBiController {
         return ResponseEntity.ok(paymentService.getPaymentStatus(partner.getId().toString(), referenceNo));
     }
 
-    @PostMapping("/payments/{id}/refund")
+    @PostMapping("/v1/partner/payments/{id}/refund")
     @Idempotent(required = true)
     @Operation(summary = "Create refund")
     public ResponseEntity<?> createRefund(
@@ -282,7 +306,8 @@ public class SnapBiController {
         @RequestHeader("X-TIMESTAMP") String timestamp,
         @RequestHeader("X-SIGNATURE") String signature,
         @PathVariable("id") String referenceNo,
-        @RequestBody String rawBody) {
+        @RequestBody String rawBody,
+        HttpServletRequest servletRequest) {
 
         // BUG-BE-134: Validate timestamp window
         if (!isTimestampValid(timestamp)) {
@@ -311,7 +336,7 @@ public class SnapBiController {
             boolean signatureValid = signatureService.validateSignature(
                 partner.getClientSecret(),
                 "POST",
-                "/v1/partner/payments/" + referenceNo + "/refund",
+                signedEndpoint(servletRequest),
                 token,
                 rawBody,
                 timestamp,
@@ -336,6 +361,72 @@ public class SnapBiController {
         }
 
         return ResponseEntity.ok(paymentService.createRefund(partner.getId().toString(), referenceNo, request));
+    }
+
+    /**
+     * SNAP-BI v1.0 refund: {@code POST /v1.0/transfer-va/refund}. The original
+     * payment reference is carried in the body ({@code originalReferenceNo}),
+     * unlike the legacy path-scoped {@code /v1/partner/payments/{id}/refund}.
+     */
+    @PostMapping("/v1.0/transfer-va/refund")
+    @Idempotent(required = true)
+    @Operation(summary = "Create refund (SNAP-BI v1.0)")
+    public ResponseEntity<?> createRefundV10(
+        @RequestHeader("Authorization") String authorization,
+        @RequestHeader("X-TIMESTAMP") String timestamp,
+        @RequestHeader("X-SIGNATURE") String signature,
+        @RequestBody String rawBody,
+        HttpServletRequest servletRequest) {
+
+        if (!isTimestampValid(timestamp)) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002508", "Invalid or expired timestamp");
+        }
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return errorResponse(HttpStatus.UNAUTHORIZED, "4012505", "Missing or Invalid Authorization Header");
+        }
+
+        String token = authorization.substring(7);
+        String clientId = tokenService.getClientIdFromToken(token);
+        if (clientId == null) {
+            return errorResponse(HttpStatus.UNAUTHORIZED, "4012506", "Invalid or Expired Token");
+        }
+
+        PartnerEntity partner = partnerService.findByClientId(clientId).orElse(null);
+        if (partner == null || !partner.isActive()) {
+            return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "PartnerEntity not found or inactive");
+        }
+
+        try {
+            boolean signatureValid = signatureService.validateSignature(
+                partner.getClientSecret(),
+                "POST",
+                signedEndpoint(servletRequest),
+                token,
+                rawBody,
+                timestamp,
+                signature
+            );
+            if (!signatureValid) {
+                return errorResponse(HttpStatus.UNAUTHORIZED, "4012504", "Invalid Signature");
+            }
+        } catch (Exception e) {
+            log.error("Signature validation failed for refund request", e);
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
+        }
+
+        RefundRequestV10 request;
+        try {
+            request = objectMapper.readValue(rawBody, RefundRequestV10.class);
+        } catch (Exception e) {
+            log.error("Failed to parse refund request body", e);
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
+        }
+        if (request.originalReferenceNo == null || request.originalReferenceNo.isBlank()) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "originalReferenceNo is required");
+        }
+
+        return ResponseEntity.ok(paymentService.createRefund(
+                partner.getId().toString(), request.originalReferenceNo, request.toLegacy()));
     }
 
     private ResponseEntity<SnapErrorResponse> errorResponse(HttpStatus status, String code, String message) {
