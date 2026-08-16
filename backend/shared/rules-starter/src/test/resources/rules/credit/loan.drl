@@ -1,0 +1,6 @@
+package id.payu.rules.test.rules.credit
+
+rule "credit loan ok"
+when
+then
+end

@@ -1,0 +1,6 @@
+package id.payu.rules.test.rules.fraud.risk
+
+rule "fraud risk low"
+when
+then
+end

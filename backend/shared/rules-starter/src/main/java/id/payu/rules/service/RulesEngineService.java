@@ -13,6 +13,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.IOException;
+import java.net.URL;
 
 /**
  * Thread-safe service to execute Drools rules compiled from the classpath.
@@ -32,8 +33,9 @@ public class RulesEngineService {
             Resource[] resources = resolver.getResources("classpath*:rules/**/*.drl");
             log.info("Found {} rule file(s) in classpath*:rules/", resources.length);
             for (Resource resource : resources) {
-                log.info("Loading DRL rule file: {}", resource.getFilename());
-                kieFileSystem.write("src/main/resources/rules/" + resource.getFilename(),
+                String relativePath = relativePath(resource);
+                log.info("Loading DRL rule file: {}", relativePath);
+                kieFileSystem.write("src/main/resources/rules/" + relativePath,
                         ResourceFactory.newInputStreamResource(resource.getInputStream()));
             }
         } catch (IOException e) {
@@ -72,5 +74,27 @@ public class RulesEngineService {
         } finally {
             kieSession.dispose();
         }
+    }
+
+    /**
+     * Derives the path of a DRL relative to the {@code rules/} root from its
+     * URL (e.g. {@code file:.../classes/rules/credit/loan.drl} →
+     * {@code credit/loan.drl}), preserving subfolder structure so resources
+     * with the same basename in different folders do not overwrite each other
+     * in the KIE virtual classpath (RULES-COLLISION-001).
+     *
+     * <p>Works for both {@code file:} and {@code jar:} URLs; falls back to the
+     * plain filename when no {@code /rules/} segment can be located.</p>
+     */
+    static String relativePath(Resource resource) throws IOException {
+        URL url = resource.getURL();
+        String token = url.toString();
+        int marker = token.indexOf("/rules/");
+        if (marker < 0) {
+            return resource.getFilename();
+        }
+        String path = token.substring(marker + "/rules/".length());
+        int query = path.indexOf('!');
+        return query >= 0 ? path.substring(0, query) : path;
     }
 }

@@ -1,0 +1,6 @@
+package id.payu.rules.test.rules.only
+
+rule "rules only"
+when
+then
+end
