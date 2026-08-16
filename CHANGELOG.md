@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.3] - 2026-08-16
+
+### Fixed
+
+- **PROMO-DOUBLE-001 (promotion, CLOSED)**: `CashbackProcessorService.processCashbackForRule` sebelumnya mengkredit wallet (`walletServicePort.creditWallet`) SEBELUM menyimpan record cashback, dan men-swallow semua exception (catch → return false → consumer ack). Akibatnya record bisa hilang permanen meski uang sudah pindah (reconciliation gap). Audit mengklaim "double-credit" — terverifikasi TIDAK akurat: `WalletService.credit` sudah idempotent by `referenceId` (`validateCreditReplay`, WalletService.java:493, throw pada wallet/amount mismatch). Root cause nyata = ordering + swallow. Fix: (1) record di-persist sebagai `PENDING` sebelum credit (intent durable), di-update `CREDITED` setelah sukses / `FAILED` bila wallet tolak; (2) exception di-rethrow (bukan swallow) agar Kafka consumer retry + DLQ; (3) `hasProcessedTransaction` kini CREDITED-aware (`existsByTransactionIdAndStatus`) supaya PENDING/FAILED sisa tidak memblokir retry; (4) upsert by `(transaction_id, rule_id)` (constraint `uq_cashback_records_transaction_rule`) dengan mapper copy-id agar save kedua jadi UPDATE. Tests (TDD): `shouldPersistRecordBeforeCreditingWallet` (InOrder save→credit), `shouldRethrowWhenRecordSaveFailsAfterCredit`, `shouldMarkRecordCreditedAfterWalletCredit`, `shouldMarkRecordFailedWhenWalletRejects` + durable persistence disinkronkan. 264/264 promotion-service tests green.
+
 ## [1.11.2] - 2026-08-15
 
 ### Changed

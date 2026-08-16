@@ -13,10 +13,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.InOrder;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,7 +56,8 @@ class CashbackProcessorServiceTest {
 
     @BeforeEach
     void setUp() {
-        // MockitoExtension handles initialization
+        lenient().when(cashbackRecordRepository.findByTransactionIdAndRuleId(anyString(), anyString()))
+                .thenReturn(java.util.Optional.empty());
     }
 
     @Test
@@ -202,28 +205,88 @@ class CashbackProcessorServiceTest {
     }
 
     @Test
-    @DisplayName("should handle wallet credit failure gracefully")
-    void shouldHandleWalletCreditFailure() {
+    @DisplayName("should persist cashback record before crediting wallet")
+    void shouldPersistRecordBeforeCreditingWallet() {
         // Given
         TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("100000"));
+        CashbackRule rule = createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED);
 
-        CashbackRule rule = createCashbackRule("RULE004", new BigDecimal("5000"), CashbackType.FIXED);
-
-        when(cashbackRuleRepository.findActiveRules())
-                .thenReturn(List.of(rule));
-        when(cashbackRecordRepository.hasProcessedTransaction(TRANSACTION_ID))
-                .thenReturn(false);
-        when(walletServicePort.creditWallet(any(), any(), any(), any()))
-                .thenReturn(false);
+        when(cashbackRuleRepository.findActiveRules()).thenReturn(List.of(rule));
+        when(cashbackRecordRepository.hasProcessedTransaction(TRANSACTION_ID)).thenReturn(false);
+        when(walletServicePort.creditWallet(any(), any(), any(), any())).thenReturn(true);
+        when(cashbackRecordRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        CashbackResult result = cashbackProcessorService.process(event);
+        cashbackProcessorService.process(event);
 
-        // Then
+        // Then - record must be persisted BEFORE money moves (PROMO-DOUBLE-001)
+        InOrder inOrder = inOrder(cashbackRecordRepository, walletServicePort);
+        inOrder.verify(cashbackRecordRepository).save(any());
+        inOrder.verify(walletServicePort).creditWallet(any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("should not swallow record save failure after wallet credit (rethrow for retry/DLQ)")
+    void shouldRethrowWhenRecordSaveFailsAfterCredit() {
+        // Given - wallet credit succeeds, but persisting the CREDITED record fails
+        TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("100000"));
+        CashbackRule rule = createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED);
+
+        when(cashbackRuleRepository.findActiveRules()).thenReturn(List.of(rule));
+        when(cashbackRecordRepository.hasProcessedTransaction(TRANSACTION_ID)).thenReturn(false);
+        when(walletServicePort.creditWallet(any(), any(), any(), any())).thenReturn(true);
+        when(cashbackRecordRepository.save(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0))
+                .thenThrow(new RuntimeException("DB unavailable"));
+
+        // When/Then - exception must propagate so the consumer retries instead of acking
+        assertThrows(RuntimeException.class, () -> cashbackProcessorService.process(event));
+        verify(notificationPort, never()).sendCashbackNotification(any());
+    }
+
+    @Test
+    @DisplayName("should mark record CREDITED only after wallet credit succeeds")
+    void shouldMarkRecordCreditedAfterWalletCredit() {
+        // Given - record status is captured at each save invocation
+        List<CashbackStatus> savedStatuses = new ArrayList<>();
+        when(cashbackRuleRepository.findActiveRules()).thenReturn(List.of(
+                createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED)));
+        when(cashbackRecordRepository.hasProcessedTransaction(TRANSACTION_ID)).thenReturn(false);
+        when(walletServicePort.creditWallet(any(), any(), any(), any())).thenReturn(true);
+        when(cashbackRecordRepository.save(any())).thenAnswer(invocation -> {
+            CashbackRecord record = invocation.getArgument(0);
+            savedStatuses.add(record.getStatus());
+            return record;
+        });
+
+        // When
+        cashbackProcessorService.process(createTransactionEvent(new BigDecimal("100000")));
+
+        // Then - intent persisted as PENDING, finalized as CREDITED
+        assertEquals(List.of(CashbackStatus.PENDING, CashbackStatus.CREDITED), savedStatuses);
+    }
+
+    @Test
+    @DisplayName("should mark record FAILED when wallet rejects the credit")
+    void shouldMarkRecordFailedWhenWalletRejects() {
+        // Given - wallet rejects the credit
+        List<CashbackStatus> savedStatuses = new ArrayList<>();
+        when(cashbackRuleRepository.findActiveRules()).thenReturn(List.of(
+                createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED)));
+        when(cashbackRecordRepository.hasProcessedTransaction(TRANSACTION_ID)).thenReturn(false);
+        when(walletServicePort.creditWallet(any(), any(), any(), any())).thenReturn(false);
+        when(cashbackRecordRepository.save(any())).thenAnswer(invocation -> {
+            CashbackRecord record = invocation.getArgument(0);
+            savedStatuses.add(record.getStatus());
+            return record;
+        });
+
+        // When
+        CashbackResult result = cashbackProcessorService.process(createTransactionEvent(new BigDecimal("100000")));
+
+        // Then - no money moved, record FAILED, no notification, failure returned
+        assertEquals(List.of(CashbackStatus.PENDING, CashbackStatus.FAILED), savedStatuses);
         assertFalse(result.isSuccess());
-        assertEquals(0, result.getProcessedCount());
-
-        // Should not send notification on failure
         verify(notificationPort, never()).sendCashbackNotification(any());
     }
 

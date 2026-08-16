@@ -22,6 +22,9 @@ public class CashbackRecordPersistenceMapper {
 
     public CashbackRecordEntity toEntity(CashbackRecord record) {
         CashbackRecordEntity entity = new CashbackRecordEntity();
+        if (record.getId() != null) {
+            entity.setId(java.util.UUID.fromString(record.getId()));
+        }
         entity.setTransactionId(record.getTransactionId());
         entity.setAccountId(record.getAccountId());
         entity.setRuleId(record.getRuleId());

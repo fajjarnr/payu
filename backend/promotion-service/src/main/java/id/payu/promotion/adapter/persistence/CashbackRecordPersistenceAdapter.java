@@ -2,9 +2,12 @@ package id.payu.promotion.adapter.persistence;
 
 import id.payu.promotion.adapter.persistence.repository.CashbackRecordRepository;
 import id.payu.promotion.domain.model.CashbackRecord;
+import id.payu.promotion.domain.model.CashbackStatus;
 import id.payu.promotion.domain.port.out.CashbackRecordRepositoryPort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Component
 public class CashbackRecordPersistenceAdapter implements CashbackRecordRepositoryPort {
@@ -19,7 +22,13 @@ public class CashbackRecordPersistenceAdapter implements CashbackRecordRepositor
 
     @Override
     public boolean hasProcessedTransaction(String transactionId) {
-        return repository.existsByTransactionId(transactionId);
+        return repository.existsByTransactionIdAndStatus(transactionId, CashbackStatus.CREDITED);
+    }
+
+    @Override
+    public Optional<CashbackRecord> findByTransactionIdAndRuleId(String transactionId, String ruleId) {
+        return repository.findByTransactionIdAndRuleId(transactionId, ruleId)
+                .map(mapper::toDomain);
     }
 
     @Override

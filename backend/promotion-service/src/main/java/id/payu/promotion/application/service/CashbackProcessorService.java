@@ -110,6 +110,13 @@ public class CashbackProcessorService implements id.payu.promotion.application.p
 
     /**
      * Processes cashback for a specific rule.
+     * <p>
+     * PROMO-DOUBLE-001: the cashback record is persisted BEFORE the wallet credit
+     * so a failure mid-flow leaves a durable intent (PENDING) that the retry path
+     * can resume instead of silently losing the record. The wallet credit is
+     * idempotent by referenceId (WalletService.validateCreditReplay), so re-processing
+     * the same event can never double-credit. Exceptions are rethrown so the Kafka
+     * consumer retries and forwards to DLQ rather than acking a lost record.
      *
      * @param event the transaction event
      * @param rule the cashback rule
@@ -119,51 +126,47 @@ public class CashbackProcessorService implements id.payu.promotion.application.p
     private boolean processCashbackForRule(TransactionCompletedEvent event, CashbackRule rule, BigDecimal amount) {
         String referenceId = event.transactionId() + "-" + rule.getRuleId();
 
-        try {
-            // Credit wallet
-            boolean credited = walletServicePort.creditWallet(
-                    event.accountId(),
-                    amount,
-                    referenceId,
-                    "CashbackEntity for transaction " + event.transactionId() + " via rule " + rule.getRuleId()
-            );
+        CashbackRecord record = cashbackRecordRepository.findByTransactionIdAndRuleId(
+                        event.transactionId(), rule.getRuleId())
+                .orElseGet(CashbackRecord::new);
+        record.setTransactionId(event.transactionId());
+        record.setAccountId(event.accountId());
+        record.setRuleId(rule.getRuleId());
+        record.setCashbackAmount(amount);
+        record.setWalletReferenceId(referenceId);
+        record.setStatus(CashbackStatus.PENDING);
+        record = cashbackRecordRepository.save(record);
 
-            if (!credited) {
-                LOG.error("Failed to credit wallet for transaction: {}, rule: {}",
-                        event.transactionId(), rule.getRuleId());
-                return false;
-            }
+        boolean credited = walletServicePort.creditWallet(
+                event.accountId(),
+                amount,
+                referenceId,
+                "CashbackEntity for transaction " + event.transactionId() + " via rule " + rule.getRuleId()
+        );
 
-            // Record cashback
-            CashbackRecord record = new CashbackRecord();
-            record.setId(UUID.randomUUID().toString());
-            record.setTransactionId(event.transactionId());
-            record.setAccountId(event.accountId());
-            record.setRuleId(rule.getRuleId());
-            record.setCashbackAmount(amount);
-            record.setStatus(CashbackStatus.CREDITED);
-            record.setWalletReferenceId(referenceId);
-
+        if (!credited) {
+            record.setStatus(CashbackStatus.FAILED);
             cashbackRecordRepository.save(record);
-
-            // Send notification
-            CashbackNotification notification = new CashbackNotification(
-                    event.accountId(),
-                    event.transactionId(),
-                    amount,
-                    "You received " + amount + " cashback for your transaction!"
-            );
-            notificationPort.sendCashbackNotification(notification);
-
-            LOG.info("CashbackEntity credited: transaction={}, rule={}, amount={}",
-                    event.transactionId(), rule.getRuleId(), amount);
-
-            return true;
-
-        } catch (Exception e) {
-            LOG.error("Exception processing cashback for transaction: {}, rule: {}",
-                    event.transactionId(), rule.getRuleId(), e);
+            LOG.error("Failed to credit wallet for transaction: {}, rule: {}",
+                    event.transactionId(), rule.getRuleId());
             return false;
         }
+
+        record.setStatus(CashbackStatus.CREDITED);
+        cashbackRecordRepository.save(record);
+
+        // Send notification
+        CashbackNotification notification = new CashbackNotification(
+                event.accountId(),
+                event.transactionId(),
+                amount,
+                "You received " + amount + " cashback for your transaction!"
+        );
+        notificationPort.sendCashbackNotification(notification);
+
+        LOG.info("CashbackEntity credited: transaction={}, rule={}, amount={}",
+                event.transactionId(), rule.getRuleId(), amount);
+
+        return true;
     }
 }

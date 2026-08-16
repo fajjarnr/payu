@@ -7,6 +7,7 @@ import id.payu.promotion.domain.model.CashbackRecord;
 import id.payu.promotion.domain.model.CashbackRule;
 import id.payu.promotion.domain.model.PromoCode;
 import id.payu.promotion.domain.model.PromoUsage;
+import id.payu.promotion.domain.model.CashbackStatus;
 import id.payu.promotion.adapter.persistence.repository.CashbackRecordRepository;
 import id.payu.promotion.adapter.persistence.repository.CashbackRuleRepository;
 import id.payu.promotion.adapter.persistence.repository.PromoCodeRepository;
@@ -109,11 +110,11 @@ class PromotionDurablePersistenceTest {
         assertEquals("RULE-DURABLE", secondRuleAdapter.findActiveRules().getFirst().getRuleId());
 
         CashbackRecord record = new CashbackRecord();
-        record.setId(UUID.randomUUID().toString());
         record.setTransactionId("txn-durable");
         record.setAccountId("account-1");
         record.setRuleId("RULE-DURABLE");
         record.setCashbackAmount(new BigDecimal("100"));
+        record.setStatus(CashbackStatus.CREDITED);
         cashbackRecordAdapter.save(record);
 
         CashbackRecordPersistenceAdapter secondRecordAdapter =

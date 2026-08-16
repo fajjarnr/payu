@@ -49,6 +49,18 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-246: Money-Ordering: Persist Intent Before Credit + Never Swallow + Verify Audit Claims (2026-08-16)
+
+**Context**: PROMO-DOUBLE-001 — audit reported `CashbackProcessorService` double-credits the wallet when the DB save fails after the credit. Code inspection disproved the "double-credit" half but confirmed a real, subtler money-integrity bug.
+
+**Lesson**:
+- **Idempotency may already exist at the downstream boundary**: `WalletService.credit` dedups by `referenceId` (`validateCreditReplay` — same wallet/amount returns the same txId, mismatch throws), so a replayed cashback event can NEVER double-credit the wallet. Audit titles can be wrong; the real defect was ordering + exception-swallowing: credit ran BEFORE the `cashback_records` INSERT, and the broad `catch` turned any post-credit DB failure into `return false`, which the Kafka consumer treated as success and ACKed → record permanently lost with money already moved (reconciliation gap). Verify the claim end-to-end before fixing the described symptom.
+- **Money moves require a durable intent first**: persist the record as `PENDING` (with the natural key `(transaction_id, rule_id)`, unique-constrained) BEFORE calling the wallet, then transition to `CREDITED` (success) / `FAILED` (wallet rejected). On any exception, rethrow so the consumer retries / DLQs — never swallow and return a boolean where the caller commits an offset.
+- **A processed-guard must be status-aware**: after introducing PENDING intents, `hasProcessedTransaction` = `existsByTransactionId(...)` would block legitimate retries (a PENDING/FAILED row looks "processed"). Gate on `existsByTransactionIdAndStatus(..., CREDITED)` so only fully-credited rows short-circuit; a FAILED row leaves the event retryable.
+- **JPA `save()` + explicit id = merge, not insert**: making the persistence mapper copy `id` (so the second save becomes an UPDATE) changes a fresh `save()` into a merge — on H2/Hibernate 7.4 a manually-assigned id on a never-persisted entity throws `StaleObjectStateException` (test that built its own record with `setId` broke). Let the DB generate the id on first insert; only carry the id for the status-update save. Also: Mockito mocks that return the same instance for every `save()` make an "expected PENDING then CREDITED" assertion pass trivially (same object mutated) — capture status at each invocation instead.
+
+**Applied evidence**: PROMO-DOUBLE-001 closed with persist-then-credit + rethrow; 4 new unit tests (persist-before-credit InOrder, rethrow-on-save-failure, CREDITED-after-success, FAILED-on-reject) + durable persistence synced; 264/264 promotion-service tests green.
+
 ## L-241: Boot 4 Servlet Tests + JPA @Version/Tenant Merge Traps + JaCoCo Drools (2026-08-13)
 
 - **Boot 4 service-test tanpa WebTestClient**: Boot 4 tidak lagi auto-config `WebTestClient` untuk servlet app. Untuk servlet: `@AutoConfigureMockMvc` dari `org.springframework.boot.webmvc.test.autoconfigure` (modul `spring-boot-webmvc-test`); controller async (`CompletableFuture`) pakai `request().asyncStarted()` + `asyncDispatch(result)`; `JsonPathResultMatchers` Boot 4 menghapus `isEqualTo` → pakai `.value(...)`.
