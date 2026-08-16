@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.10 (2026-08-16)
+
+- **READY-022 (loan-origination-process)**: coverage 4-22% → **92.3% instruction / 88% line / 86.8% branch** (jacoco gate 80% di-bind di pom, exclude config/Application). Test 28/28 (process service 11, credit scoring 5, controller 10, disbursement 2), `mvn verify` BUILD SUCCESS. Deployed live image `1.11.10`.
+
 ## Deploy 1.11.9 (2026-08-16)
 
 - **READY-022 (lending-rules)**: coverage 4-22% → **89.8% instruction** (jacoco gate 80% di-bind di pom, exclude config/Application). `CreditScoringControllerTest` 3 (MockMvc + `spring-boot-webmvc-test`, pola L-255) + `CreditScoringFactTest` 5 + rules 5 = 13/13, `mvn verify` BUILD SUCCESS. Deployed live image `1.11.9`.

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.10] - 2026-08-16
+
+### Added
+
+- **READY-022 (qa, loan-origination-process)**: coverage dinaikkan ke **92.3% instruction / 88% line / 86.8% branch** (sebelumnya masuk cluster 4-22%). Jacoco plugin di-bind ke `loan-origination-process/pom.xml` (prepare-agent + report + `check` gate LINE ≥ 80%, exclude `config`/`Application`). Test baru/diperluas: `LoanOriginationProcessServiceTest` 11 (startProcess validasi blank-user/non-positive-principal/low-score/default-loan-type, getProcess, listProcessIds, approve not-found/completed-different-outcome/reject/approve+disburse), `CreditScoringServiceTest` 5 (evaluate BigDecimal/Number/String/no-score/call-fail → ZERO), `LoanOriginationControllerTest` 10 (start 200/400/null-Jwt, get 200/404, approve 200/404/409, list, userId account_id-vs-subject). Total 28/28 green, `mvn verify -pl loan-origination-process` BUILD SUCCESS dengan jacoco gate.
+
+### Deploy
+
+- `loan-origination-process` di-rebuild image semver **`1.11.10`** dan di-deploy live (podman). Perubahan hanya test + gate jacoco — tanpa perubahan production code.
+
 ## [1.11.9] - 2026-08-16
 
 ### Added
