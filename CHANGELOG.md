@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.9] - 2026-08-16
+
+### Added
+
+- **READY-022 (qa, lending-rules)**: coverage `lending-rules` dinaikkan ke **instruction 89.8%** (sebelumnya masuk cluster 4-22%). Jacoco plugin di-bind ke `lending-rules/pom.xml` (prepare-agent + report + `check` gate LINE ≥ 80%, exclude `config`/`Application`). Test baru: `CreditScoringControllerTest` (3 — HTTP rules endpoint via MockMvc `@SpringBootTest` + `@AutoConfigureMockMvc` dari `spring-boot-webmvc-test`, pola L-255; valid score 150, empty fact 0, malformed body 400) + `CreditScoringFactTest` (5 — getters/setters, score default 0, add/subtract). Total 13/13 green, `mvn verify -pl lending-rules` BUILD SUCCESS dengan jacoco gate.
+
+### Deploy
+
+- `lending-rules` di-rebuild image semver **`1.11.9`** dan di-deploy live (podman). Perubahan hanya test + gate jacoco — tanpa perubahan production code (runtime image identik).
+
 ## [1.11.8] - 2026-08-16
 
 ### Fixed

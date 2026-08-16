@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.9 (2026-08-16)
+
+- **READY-022 (lending-rules)**: coverage 4-22% → **89.8% instruction** (jacoco gate 80% di-bind di pom, exclude config/Application). `CreditScoringControllerTest` 3 (MockMvc + `spring-boot-webmvc-test`, pola L-255) + `CreditScoringFactTest` 5 + rules 5 = 13/13, `mvn verify` BUILD SUCCESS. Deployed live image `1.11.9`.
+
 ## Deploy 1.11.8 (2026-08-16)
 
 - **ARCH-SECRET-001 CLOSED**: sisa dev-only secrets di-hardening — semua profile non-dev (prod/sit/uat/preprod) pakai `${KEYCLOAK_CLIENT_SECRET}` tanpa default (fail-closed, verified repo-wide); dev/local hanya `d3v-0nly` defaults yang env-overridable; gateway `application-local.yaml` literal → `${VAR:dev-default}` (env-overridable, YAML valid).

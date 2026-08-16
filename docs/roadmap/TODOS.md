@@ -18,7 +18,7 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.11.8` (2026-08-16) |
+| **Last Release** | `1.11.9` (2026-08-16) |
 | **Core Banking MVP** | 🟡 Mendekati MVP — blocker tersisa: ACCOUNT-007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
 | **Backlog Aktif** | 2 tickets + action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-16) |
 | **Last Updated** | 2026-08-16 (deploy 1.11.7: 8 finding Python AI/kyc/analytics CLOSED — AI-AUTH-001, KYC-FACE-001, KYC-IDOR-001, KYC-ASYNC-001, ANA-TYPE-001, ANA-RATE-001, ANA-TOPIC-001, ANA-HISTORY-001) |
@@ -66,7 +66,7 @@
 
 | Key | Domain | Item |
 |:---|:---|:---|
-| READY-022 | qa | 80% coverage audited 4-22% (4 service) |
+| READY-022 | qa | 80% coverage audited 4-22% (4 service) — **lending-rules DONE 2026-08-16** (instruction 89.8%, jacoco `check` gate 80% bound di pom, `CreditScoringControllerTest` 3 + `CreditScoringFactTest` 5 + rules 5 = 13/13, BUILD SUCCESS). Sisa 3 service belum diaudit ulang |
 | READY-060 | card | Card tokenization + 3DS |
 | READY-062 | ml | ONNX fraud detection model |
 | DEVSECOPS-015 | devsecops | ~~Security Findings Dashboard Grafana~~ **CLOSED 2026-08-16** — `infrastructure/platform/observability/grafana/dashboard-security.yaml` (ConfigMap `grafana-dashboard-payu-security`, label `grafana_dashboard: "true"`, namespace `openshift-monitoring`) — panel: violations by severity (RHACS `rox_severity`), violations by category, CVEs by severity, compliance state (OpenShift Compliance Operator), top failing controls table, high-risk rate 1h; templating namespace. Pola identik dashboard-cost; JSON divalidasi. Sisa: apply ke cluster + verify RHACS metric names live (butuh cluster creds) |
