@@ -156,7 +156,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | ARCH-DEDUP-001 | 🟠 | partner, promotion | Migrasi dedup DELETE baris finansial pre-constraint (`snap_bi_payments`/`refunds`/`cashbacks`/`rewards`) — legal hanya jika belum pernah jalan di prod; perlu bukti env + policy | partner V16/V17; promotion V11/V12 |
 | ARCH-FLYWAY-001 | 🟠 | account | Destruktif historis `DROP COLUMN` + `RENAME COLUMN` di migrasi ter-aplikasi — anti-pattern, risiko fresh-restore; jangan diulang | account V10:16-27 |
 | ARCH-PAGE-001 | 🟠 | transaction, wallet | Pagination Pageable = OFFSET default; history finansial besar butuh keyset cursor `(created_at, id)` | TransactionJpaRepository.java:53 |
-| ARCH-PROJ-001 | 🟠 | wallet | Materialized views (V5) tanpa dokumentasi refresh lag; butuh reconcile job terjadwal vs ledger | wallet V5__Create_materialized_views.sql |
+| ARCH-PROJ-001 | 🟠 | wallet | ~~Materialized views (V5) tanpa dokumentasi refresh lag; butuh reconcile job terjadwal vs ledger~~ **CLOSED 2026-08-16 — VERIFIED STALE** — repo-wide grep membuktikan 0 consumer: tidak ada Java, SQL, analytics-service, frontend, atau test yang membaca `mv_wallet_balance_summary`/`mv_transaction_daily_summary`/`mv_wallet_active_users`; fungsi `refresh_wallet_analytics_views()` didefinisikan di V5 tetapi tidak pernah dipanggil. Tanpa read path, refresh lag tidak berdampak ke fungsi apa pun — menambah scheduled refresh/reconcile job adalah speculative (YAGNI). Catatan di `DATABASE_CACHE_OPTIMIZATION.md` §6 ditambahkan: views bersifat deklaratif/belum dikonsumsi; kalau reporting consumer ditambahkan nanti, wajib wire scheduled `REFRESH MATERIALIZED VIEW CONCURRENTLY` + reconcile vs ledger saat itu | wallet V5__Create_materialized_views.sql |
 
 ---
 

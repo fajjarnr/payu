@@ -420,6 +420,14 @@ Views created:
 
 **Refresh function:** `refresh_wallet_analytics_views()`
 
+> **Status (2026-08-16, ARCH-PROJ-001 CLOSED — VERIFIED STALE)**: materialized views
+> wallet (V5), account (V3), dan transaction (V6) **belum dikonsumsi** oleh kode apa pun —
+> repo-wide grep: tidak ada Java/SQL/analytics/frontend yang membaca `mv_*`, dan fungsi
+> refresh-nya tidak pernah dipanggil. Karena tidak ada read path, refresh lag tidak berdampak
+> fungsional. Jika reporting/analytics consumer ditambahkan nanti, **wajib** wire scheduled
+> `REFRESH MATERIALIZED VIEW CONCURRENTLY` (lewat `@Scheduled` atau pg_cron) + reconcile
+> terhadap ledger pada saat itu; jangan menambahkan refresh job untuk view yang belum dibaca.
+
 ### Scheduling Refresh
 
 **Cron Job Example:**
