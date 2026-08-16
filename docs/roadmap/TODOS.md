@@ -69,7 +69,7 @@
 | READY-022 | qa | 80% coverage audited 4-22% (4 service) |
 | READY-060 | card | Card tokenization + 3DS |
 | READY-062 | ml | ONNX fraud detection model |
-| DEVSECOPS-015 | devsecops | Security Findings Dashboard Grafana |
+| DEVSECOPS-015 | devsecops | ~~Security Findings Dashboard Grafana~~ **CLOSED 2026-08-16** — `infrastructure/platform/observability/grafana/dashboard-security.yaml` (ConfigMap `grafana-dashboard-payu-security`, label `grafana_dashboard: "true"`, namespace `openshift-monitoring`) — panel: violations by severity (RHACS `rox_severity`), violations by category, CVEs by severity, compliance state (OpenShift Compliance Operator), top failing controls table, high-risk rate 1h; templating namespace. Pola identik dashboard-cost; JSON divalidasi. Sisa: apply ke cluster + verify RHACS metric names live (butuh cluster creds) |
 | DEVSECOPS-016 | devsecops | Service template scaffolder |
 
 ---

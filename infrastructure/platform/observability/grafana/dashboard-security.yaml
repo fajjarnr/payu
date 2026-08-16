@@ -1,0 +1,114 @@
+# Grafana Dashboard: PayU Security Findings
+# ConfigMap containing dashboard JSON for security observability (RHACS + compliance)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-payu-security
+  namespace: openshift-monitoring
+  labels:
+    grafana_dashboard: "true"
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: security
+data:
+  payu-security-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "PayU - Security Findings",
+        "tags": ["payu", "security", "rhacs", "compliance"],
+        "timezone": "Asia/Jakarta",
+        "refresh": "5m",
+        "schemaVersion": 36,
+        "panels": [
+          {
+            "id": 1,
+            "title": "Open Security Violations by Severity",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum(rox_severity{severity=~\"CRITICAL|HIGH|MEDIUM|LOW\"}) by (severity)",
+                "legendFormat": "{{severity}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Violations by Category",
+            "type": "barchart",
+            "targets": [
+              {
+                "expr": "sum(rox_violations) by (category)",
+                "legendFormat": "{{category}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "CVEs by Severity (Images)",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rox_cves_total) by (severity)",
+                "legendFormat": "{{severity}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short"
+              }
+            },
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0}
+          },
+          {
+            "id": 4,
+            "title": "Compliance Check Results",
+            "type": "barchart",
+            "targets": [
+              {
+                "expr": "sum(compliance_operator_compliance_state) by (state)",
+                "legendFormat": "{{state}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Failing Compliance Controls by Profile",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "topk(10, compliance_operator_compliance_check_total{status=\"FAIL\"}) by (profile, check)",
+                "legendFormat": "{{profile}}/{{check}}",
+                "format": "table"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 6,
+            "title": "High-Risk Violations (last 1h)",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "sum(rate(rox_violations_total[1h])) by (severity)",
+                "legendFormat": "{{severity}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ],
+        "templating": {
+          "list": [
+            {
+              "name": "namespace",
+              "label": "Namespace",
+              "type": "query",
+              "datasource": "Prometheus",
+              "query": "label_values(rox_violations, namespace)"
+            }
+          ]
+        }
+      }
+    }
