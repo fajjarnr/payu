@@ -49,6 +49,18 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-252: Test Config Precedence — `application.yaml` Beats `application.yml`, and Both Load (2026-08-16)
+
+**Context**: fixing SIM-TESTS-001. Adding `src/test/resources/application.yml` (H2 datasource) to Quarkus simulators did nothing — tests still connected to Postgres (`SCRAM-based authentication`), because the main config `application.yaml` (Postgres) silently won over the test `application.yml` (H2).
+
+**Lesson**:
+- **SmallRye loads `application.yaml` AND `application.yml` as separate sources with the same ordinal, and `.yaml` sorts after `.yml` and wins** per-key. A test config in `application.yml` is not an override of a main `application.yaml` — both merge, main wins. Fix: name the test file the SAME as main (`application.yaml`), so the test-classes copy (earlier on the classpath) fully replaces it. (va-simulator works with `.yml` only because its main config is also `.yml`.)
+- **After renaming config files, always `mvn clean`** — a stale `target/test-classes/application.yml` survives incremental builds and keeps failing with `SRCFG00050 ... does not map to any root` from the OLD file.
+- **`Random.nextInt(bound)` throws `bound must be positive` when `max - min == 0`** — a test config `latency.min: 0 max: 0` crashes the simulator's `simulateLatency` with 500s. Keep a small valid range (min 1, max 2).
+- **Config-placeholder expansion happens even if the feature is disabled** — `quarkus.otel.exporter.otlp.endpoint: ${OTEL_ENDPOINT}` fails startup in tests that lack the env var; `otel.sdk.disabled: true` does NOT stop the expansion. Provide a literal endpoint in test config.
+
+**Applied evidence**: 13 new simulator tests green (qris 4, dukcapil 5, biller 4); va-simulator signature secret configured, `IllegalStateException` gone.
+
 ## L-251: A Read-Only Tx Warning Can Hide a Bigger Trap — Detached Domain Copies Never Persist (2026-08-16)
 
 **Context**: fixing BUDGET-DIRTY-001. The finding said `getAllBudgetStatus` annotated `@Transactional(readOnly = true)` calls the mutating `budget.resetIfNeeded()` so the reset never flushes. While true, flipping to `@Transactional` alone would NOT have fixed it: `BudgetRepositoryAdapter.findByUserId` maps every entity through `toDomain` into a **detached copy**, so Hibernate has no managed entity to dirty-check — the mutation would be silently lost even in a write transaction.

@@ -1,8 +1,4 @@
 # Disable DevServices for tests (no container runtime required)
-payu:
-  callback:
-    signature:
-      secret: test-callback-signature-secret
 quarkus:
   datasource:
     devservices:
@@ -19,3 +15,8 @@ quarkus:
       strategy: drop-and-create
     log:
       sql: false
+  simulator:
+    failure-rate: 0
+    latency:
+      min: 1
+      max: 2

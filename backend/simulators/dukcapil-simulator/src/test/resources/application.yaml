@@ -1,8 +1,4 @@
 # Disable DevServices for tests (no container runtime required)
-payu:
-  callback:
-    signature:
-      secret: test-callback-signature-secret
 quarkus:
   datasource:
     devservices:
@@ -12,6 +8,12 @@ quarkus:
       url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
     username: sa
     password: ""
+  otel:
+    sdk:
+      disabled: true
+    exporter:
+      otlp:
+        endpoint: http://localhost:4317
   http:
     test-port: 0
   hibernate-orm:
@@ -19,3 +21,11 @@ quarkus:
       strategy: drop-and-create
     log:
       sql: false
+simulator:
+  failure-rate: 0
+  latency:
+    min: 1
+    max: 2
+  face-match:
+    threshold: 0
+    variance: 0
