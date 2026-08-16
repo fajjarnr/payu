@@ -8,6 +8,24 @@
   - Java: package `config`/`auth`/`interceptor`/`error`/`resource` dibuat (PayUConfig, AuthInterceptor HMAC-SHA256, RetryInterceptor, PayUError/Exception, 3 resource); dependency `logging-interceptor` (nama benar) ditambahkan. `mvn compile` OK + `mvn test` 8/8 (MockWebServer).
   - Lesson: `okhttp-logging-interceptor` bukan artifact Maven Central — nama group `com.squareup.okhttp3` yang benar adalah `logging-interceptor` (L-249).
 
+## Deploy 1.11.6 (2026-08-16)
+
+- **18 findings CLOSED dalam satu sesi** (semua pushed + deployed live ke stack podman image semver `1.11.6`):
+  - **SDK-TS-001 + SDK-JAVA-001**: kedua SDK (scaffold rusak, referensi `./generated/api` & `id.payu.sdk.*` yang tak pernah ada) kini build + test green. TS: `generated/api.ts`+`models.ts` (resource Payments/Transfers/Wallets/Transactions → `/api/v1/*`, idempotency di create), typing axios difix; jest 3/3 + build OK. Java: package `config`/`auth`/`interceptor`/`error`/`resource` (PayUConfig, AuthInterceptor HMAC, RetryInterceptor, PayUError/Exception, 3 resource); dep `logging-interceptor` (nama benar, L-249); 8/8 test.
+  - **SCRIPT-TEST-001**: `test-single-service.sh` kini `mvn -f backend/pom.xml test -pl <svc> -am` (reactor resolve shared starters; `-pl` saja gagal, L-250); jacoco fully-qualified. Verified gateway/notification/account + web-app.
+  - **WEB-TSX-001**: `tsx` ditambah devDependencies → `npm run a11y:audit` jalan.
+  - **RULES-COLLISION-001**: `RulesEngineService.relativePath()` pertahankan subfolder DRL di KieFileSystem; 5/5 green; lending load 2 DRL + 116/116.
+  - **BUDGET-DIRTY-001**: `resetIfNeeded()` → boolean; getAllBudgetStatus + checkBudget write-tx + save kondisional (adapter return detached copy — L-251); 14/14.
+  - **RESTCLIENT-TESTS-001**: 10 test `PayuRestClient` + `RestClientErrorHandler` (MockRestServiceServer retry + CB OPEN).
+  - **SIM-TESTS-001**: 13 test simulator (qris TLV 4, dukcapil 5, biller 4) + va-simulator signature secret; trap config `.yaml` vs `.yml` (L-252).
+  - **LEND-RULES-001**: 5 test Drools — **TDD ungkap bug produksi** `classpath*:rules/**` tak match DRL (`id/payu/lendingrules/rules/`) → skor selalu 0 (L-253); fix scan path, 5/5.
+  - **SNAP-PATH-001 + CONTRACT-PATH-001**: SNAP-BI v1.0 taxonomy alias non-breaking (`/v1.0/access-token/b2b`, `/v1.0/transfer-va/payment` dll) + signature actual-path (`signedEndpoint`) + refund body-style + gateway route/filters/`ApiVersionFilter` skip; **deployed live** (partner 322/322, gateway proxy v1.0 → partner, idempotency GAT_IDM_001 live, legacy 4002508 masih jalan).
+  - **ARCH-PROJ-001**: materialized views verified stale (0 consumer repo-wide) — YAGNI, no refresh job.
+  - **DEVSECOPS-015**: Security Findings Grafana dashboard (RHACS + compliance).
+  - **DEVSECOPS-016**: `scripts/scaffold-service.sh` (hexagonal Spring Boot, UBI9, ArchUnit; handles Boot 4 test-module split + security-starter optional kafka — L-255); validated by scaffolding scratch-svc (tests green).
+- **Deploy live**: stack podman 37/37 healthy pada image `1.11.6` (2 service di-rebuild: gateway + partner; 29 retag dari `1.11.5` yang sudah ada). Parity guard `test_podman_compose.py` 22/22. Scan log 0 real error.
+- Sisa backlog: mayoritas butuh credential eksternal (OCP cluster, provider OCR/FX, staging k6, GitHub admin) atau refactor besar (ARCH-DTO-001/HEX-001/PAGE-001) — tercatat di TODOS.md.
+
 ## Deploy 1.11.2 (2026-08-15)
 
 - Stack podman dari nol: infra digest-pinned Red Hat dipulihkan (`:local` retag dihapus, `pull_policy: always`), 31 image app di-tag semver `1.11.2`, deploy **37/37 healthy**, scan log 0 ERROR/WARN (2 menit terakhir).
