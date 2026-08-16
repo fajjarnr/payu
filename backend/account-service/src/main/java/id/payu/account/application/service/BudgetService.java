@@ -165,7 +165,7 @@ public class BudgetService {
      * @param amount the transaction amount
      * @return BudgetCheckResult indicating if transaction is allowed
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public BudgetCheckResult checkBudget(UUID userId, String category, BigDecimal amount) {
         List<Budget> budgets = budgetRepository.findByUserIdAndCategory(userId, category);
 
@@ -175,7 +175,9 @@ public class BudgetService {
         }
 
         for (Budget budget : budgets) {
-            budget.resetIfNeeded();
+            if (budget.resetIfNeeded()) {
+                budgetRepository.save(budget);
+            }
             BudgetStatus status = budget.getStatus();
 
             if (status == BudgetStatus.PAUSED) {
@@ -228,13 +230,15 @@ public class BudgetService {
      * @param userId the user ID
      * @return list of budget status information
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<BudgetStatusInfo> getAllBudgetStatus(UUID userId) {
         List<Budget> budgets = budgetRepository.findByUserId(userId);
 
         return budgets.stream()
                 .map(budget -> {
-                    budget.resetIfNeeded();
+                    if (budget.resetIfNeeded()) {
+                        budgetRepository.save(budget);
+                    }
                     return new BudgetStatusInfo(
                             budget.getId(),
                             budget.getCategory(),

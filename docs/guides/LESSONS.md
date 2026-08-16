@@ -49,6 +49,17 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: `limiter.check()` removed (3 call sites) + shared limiter; `ApiResponse.success(` → `create_success(` (5 sites); `KycServiceTest` 12 tests; coverage 80.82% ≥ 80%; 152 unit tests green. E2E suite was already broken pre-existing (4 fail) — out of QAMVP-016 scope.
 
+## L-251: A Read-Only Tx Warning Can Hide a Bigger Trap — Detached Domain Copies Never Persist (2026-08-16)
+
+**Context**: fixing BUDGET-DIRTY-001. The finding said `getAllBudgetStatus` annotated `@Transactional(readOnly = true)` calls the mutating `budget.resetIfNeeded()` so the reset never flushes. While true, flipping to `@Transactional` alone would NOT have fixed it: `BudgetRepositoryAdapter.findByUserId` maps every entity through `toDomain` into a **detached copy**, so Hibernate has no managed entity to dirty-check — the mutation would be silently lost even in a write transaction.
+
+**Lesson**:
+- **An audit finding about transaction mode is often a symptom of a persistence-boundary bug.** Reproduce the fix in two steps: (1) make the mutation explicit — `resetIfNeeded()` now returns `boolean` so the caller knows whether a state change happened; (2) persist conditionally — `budgetRepository.save(budget)` only when the reset occurred. Conditional save also avoids N gratuitous UPDATEs per read.
+- **Check the adapter's mapping before trusting `@Transactional` to flush.** If the port implementation returns a freshly-built domain object (`toDomain`), there is no dirty tracking at all. The write must be explicit (`save`) in every path that mutates.
+- **Same-pattern callers share the bug**: `checkBudget` had the identical readOnly+mutate-without-save defect. Fix the root cause in both callers, not just the method the ticket names — the audit finding listed `getAllBudgetStatus` only.
+
+**Applied evidence**: `Budget.resetIfNeeded()` → boolean; `getAllBudgetStatus` + `checkBudget` write-tx + conditional save; 4 new tests; 14/14 BudgetServiceTest green; account-service BUILD SUCCESS.
+
 ## L-250: Modular Reactor Services Need `-pl -am` from the Aggregator, Not `cd <service> && mvn` (2026-08-16)
 
 **Context**: fixing SCRIPT-TEST-001. `scripts/test-single-service.sh` did `cd backend/gateway-service && mvn test` — failed with `Could not find artifact id.payu.shared:quarkus-api-commons` because the child POM has no reactor context and the starter was never `mvn install`-ed into the local repo. Even `mvn -f backend/pom.xml test -pl gateway-service` (without `-am`) failed the same way — `-pl` alone only selects the module, it does not build its reactor dependencies.

@@ -205,4 +205,45 @@ class BudgetServiceTest {
         assertThat(b.getCurrentSpent()).isEqualByComparingTo(BigDecimal.ZERO);
         verify(repo).save(b);
     }
+
+    @Test
+    void getAllBudgetStatusPersistsResetWhenPeriodElapsed() {
+        UUID userId = UUID.randomUUID();
+        Budget b = budget(userId, new BigDecimal("100.0000"));
+        b.setResetDate(LocalDate.now().minusDays(1));
+        b.recordSpending(new BigDecimal("50.0000"));
+        when(repo.findByUserId(userId)).thenReturn(List.of(b));
+
+        List<BudgetService.BudgetStatusInfo> infos = service.getAllBudgetStatus(userId);
+
+        assertThat(infos.get(0).currentSpent()).isEqualByComparingTo(BigDecimal.ZERO);
+        verify(repo).save(b);
+    }
+
+    @Test
+    void getAllBudgetStatusDoesNotSaveWhenNoResetNeeded() {
+        UUID userId = UUID.randomUUID();
+        Budget b = budget(userId, new BigDecimal("100.0000"));
+        b.setResetDate(LocalDate.now().plusDays(1));
+        when(repo.findByUserId(userId)).thenReturn(List.of(b));
+
+        service.getAllBudgetStatus(userId);
+
+        verify(repo, org.mockito.Mockito.never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void checkBudgetPersistsResetWhenPeriodElapsed() {
+        UUID userId = UUID.randomUUID();
+        Budget b = budget(userId, new BigDecimal("100.0000"));
+        b.setResetDate(LocalDate.now().minusDays(1));
+        b.recordSpending(new BigDecimal("90.0000"));
+        when(repo.findByUserIdAndCategory(userId, "FOOD")).thenReturn(List.of(b));
+
+        BudgetService.BudgetCheckResult result = service.checkBudget(userId, "FOOD", BigDecimal.ONE);
+
+        assertThat(result.status()).isEqualTo(BudgetCheckStatus.ALLOWED);
+        assertThat(b.getCurrentSpent()).isEqualByComparingTo(BigDecimal.ZERO);
+        verify(repo).save(b);
+    }
 }

@@ -110,12 +110,14 @@ public class Budget {
     /**
      * Resets the budget spending if the period has elapsed.
      * Should be called before checking budget status.
+     *
+     * @return true if the spending was reset, false otherwise
      */
-    public void resetIfNeeded() {
+    public boolean resetIfNeeded() {
         if (resetDate == null) {
             // First time setup
             this.resetDate = calculateNextResetDate();
-            return;
+            return false;
         }
 
         LocalDate today = LocalDate.now();
@@ -124,7 +126,9 @@ public class Budget {
             this.currentSpent = BigDecimal.ZERO;
             this.resetDate = calculateNextResetDate();
             this.updatedAt = LocalDateTime.now();
+            return true;
         }
+        return false;
     }
 
     /**
