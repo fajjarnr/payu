@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.11] - 2026-08-16
+
+### Added
+
+- **READY-022 (qa, api-portal-service)**: coverage gate di-bind — `quarkus-jacoco` test dep (agent+report otomatis, verified via Context7; jangan dipakai bareng plugin prepare-agent — konflik instrumentasi) + jacoco `check`-only gate LINE ≥ 80% (exclude `config`/`dto` + `**/quarkus/commons/**` milik shared module quarkus-api-commons yang di-test di modulnya sendiri). Gate-eligible coverage **82.9% line / 83% instruction** (ApiPortalService 70%, SandboxService 98.5%, SandboxResource 56.6% — path error-handling `.onFailure()` sulit dijangkau via REST, ApiPortalResource 88.9%, SwaggerUiResource 100%). 76 test green, `mvn verify -pl api-portal-service` BUILD SUCCESS.
+
+### Deploy
+
+- `api-portal-service` di-rebuild image semver **`1.11.11`** dan di-deploy live (podman). Perubahan hanya test + gate coverage — runtime image tidak berubah isinya (quarkus-jacoco test-scoped).
+
 ## [1.11.10] - 2026-08-16
 
 ### Added

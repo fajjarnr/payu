@@ -18,7 +18,7 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.11.10` (2026-08-16) |
+| **Last Release** | `1.11.11` (2026-08-16) |
 | **Core Banking MVP** | 🟡 Mendekati MVP — blocker tersisa: ACCOUNT-007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
 | **Backlog Aktif** | 2 tickets + action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-16) |
 | **Last Updated** | 2026-08-16 (deploy 1.11.7: 8 finding Python AI/kyc/analytics CLOSED — AI-AUTH-001, KYC-FACE-001, KYC-IDOR-001, KYC-ASYNC-001, ANA-TYPE-001, ANA-RATE-001, ANA-TOPIC-001, ANA-HISTORY-001) |
@@ -66,7 +66,7 @@
 
 | Key | Domain | Item |
 |:---|:---|:---|
-| READY-022 | qa | 80% coverage audited 4-22% (4 service) — **lending-rules DONE 2026-08-16** (89.8% instruction, jacoco gate, 13/13). **loan-origination-process DONE 2026-08-16** (92.3% instruction / 88% line / 86.8% branch, jacoco gate 80% di pom; `LoanOriginationProcessServiceTest` 11 + `CreditScoringServiceTest` 5 + `LoanOriginationControllerTest` 10 + `DisbursementServiceTest` 2 = 28/28, `mvn verify` BUILD SUCCESS). Sisa 2 service belum diaudit ulang |
+| READY-022 | qa | 80% coverage audited 4-22% (4 service) — **lending-rules DONE 2026-08-16** (89.8% instruction, jacoco gate, 13/13). **loan-origination-process DONE 2026-08-16** (92.3% instruction / 88% line / 86.8% branch, jacoco gate 80% di pom; `LoanOriginationProcessServiceTest` 11 + `CreditScoringServiceTest` 5 + `LoanOriginationControllerTest` 10 + `DisbursementServiceTest` 2 = 28/28, `mvn verify` BUILD SUCCESS). **api-portal-service DONE 2026-08-16** (gate-eligible 82.9% line / 83% instruction exclude config/dto/shared-commons; `quarkus-jacoco` test dep + jacoco `check`-only gate 80%; 76 test green, `mvn verify -pl api-portal-service` BUILD SUCCESS). Sisa 1 service belum diaudit ulang |
 | READY-060 | card | Card tokenization + 3DS |
 | READY-062 | ml | ONNX fraud detection model |
 | DEVSECOPS-015 | devsecops | ~~Security Findings Dashboard Grafana~~ **CLOSED 2026-08-16** — `infrastructure/platform/observability/grafana/dashboard-security.yaml` (ConfigMap `grafana-dashboard-payu-security`, label `grafana_dashboard: "true"`, namespace `openshift-monitoring`) — panel: violations by severity (RHACS `rox_severity`), violations by category, CVEs by severity, compliance state (OpenShift Compliance Operator), top failing controls table, high-risk rate 1h; templating namespace. Pola identik dashboard-cost; JSON divalidasi. Sisa: apply ke cluster + verify RHACS metric names live (butuh cluster creds) |

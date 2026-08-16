@@ -104,6 +104,16 @@ This document serves as a chronological log of "Lessons Learned" and critical ar
 
 **Applied evidence**: gateway `application-local.yaml` now `${DB_PASSWORD:...}`/`${KEYCLOAK_WEB_CLIENT_SECRET:...}`/`${GATEWAY_JWT_SECRET:...}`/`${GATEWAY_PARTNER_KEY_PARTNER_1:...}`; YAML valid; gateway 1.11.8 deployed healthy (container uses env-overrides, not the local profile).
 
+## L-262: Quarkus Coverage Needs `quarkus-jacoco`, Not the Plain JaCoCo Plugin (2026-08-16)
+
+**Context**: READY-022 — adding a coverage gate to api-portal-service (Quarkus). The standard `jacoco-maven-plugin` prepare-agent doesn't capture Quarkus test coverage reliably (custom classloader), and Quarkus docs (verified via Context7) explicitly warn against using the extension AND the plugin's agent together (class instrumentation conflict).
+
+**Lesson**: for Quarkus modules add `<dependency>io.quarkus:quarkus-jacoco</dependency>` (test scope) — it wires the agent + report automatically. For a threshold gate, add a jacoco `check`-ONLY execution bound to `verify` (no prepare-agent/report goals). Two more traps:
+- Quarkus tests pull in the shared module's classes (`id/payu/quarkus/commons/*` from quarkus-api-commons) into the jacoco report, dragging coverage below 80%. Exclude `**/quarkus/commons/**` (that code is measured in its own module), plus the usual `**/config/**` and `**/dto/**`.
+- Error-handling branches (`.onFailure().recoverWithItem`) in REST resources are unreachable via black-box `@QuarkusTest` happy paths — accept the residual uncovered paths instead of contorting tests to force service failures.
+
+**Applied evidence**: api-portal-service gate-eligible coverage 82.9% line / 83% instruction, `mvn verify -pl api-portal-service` BUILD SUCCESS, 76 tests green.
+
 ## L-254: SNAP-BI Signature Binds the Endpoint Path — Hardcoding It Breaks Any Path Alias (2026-08-16)
 
 **Context**: fixing SNAP-PATH-001 (additive `/v1.0/*` aliases for the SNAP-BI taxonomy). `SnapBiController` validated signatures against hardcoded strings like `/v1/partner/payments`. Adding `/v1.0/transfer-va/payment` would fail every v1.0 request because the server computed the expected HMAC over the legacy path while the caller signed the v1.0 path.

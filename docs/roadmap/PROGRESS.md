@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.11 (2026-08-16)
+
+- **READY-022 (api-portal-service)**: `quarkus-jacoco` (verified via Context7 — jangan bareng prepare-agent) + jacoco `check`-only 80% (exclude config/dto/`**/quarkus/commons/**` shared-module). Gate-eligible **82.9% line / 83% instruction**, 76 test green, `mvn verify` BUILD SUCCESS. Deployed live image `1.11.11`.
+
 ## Deploy 1.11.10 (2026-08-16)
 
 - **READY-022 (loan-origination-process)**: coverage 4-22% → **92.3% instruction / 88% line / 86.8% branch** (jacoco gate 80% di-bind di pom, exclude config/Application). Test 28/28 (process service 11, credit scoring 5, controller 10, disbursement 2), `mvn verify` BUILD SUCCESS. Deployed live image `1.11.10`.
