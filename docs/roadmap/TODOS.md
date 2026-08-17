@@ -21,7 +21,7 @@
 | **Last Release** | `1.11.14` (2026-08-17) |
 | **Core Banking MVP** | 🟡 Mendekati MVP — blocker tersisa: ACCOUNT-007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
 | **Backlog Aktif** | 2 tickets + action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-17) |
-| **Last Updated** | 2026-08-17 — ARCH-DTO-001 selesai (standardisasi DTO placement ke id.payu.<service>.interfaces.dto di seluruh 21 microservice); release `1.11.14` deployed |
+| **Last Updated** | 2026-08-17 — ARCH-DTO-001 selesai (standardisasi DTO placement ke `id.payu.<service>.interfaces.dto` di seluruh 21 microservice + 5 simulator); release `1.11.14` deployed |
 
 ---
 
