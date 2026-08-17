@@ -29,7 +29,7 @@ import id.payu.security.annotation.AuditOperation;
  * Provides CRUD operations for partner management including key regeneration.
  */
 @RestController
-@RequestMapping("/partners")
+@RequestMapping({"/v1/partners", "/partners"})
 @Tag(name = OpenApiConstants.TAG_PARTNER, description = "PartnerEntity management operations")
 // BUG-BE-164: Allow authenticated users (USER/ADMIN) to view partners; mutations require ADMIN
 public class PartnerController extends BaseController {

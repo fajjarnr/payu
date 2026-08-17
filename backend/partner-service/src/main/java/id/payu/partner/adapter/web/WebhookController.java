@@ -31,7 +31,7 @@ import id.payu.security.annotation.AuditOperation;
  * <p>All endpoints are scoped to a specific partner and require ADMIN role.</p>
  */
 @RestController
-@RequestMapping("/partners/{partnerId}/webhooks")
+@RequestMapping({"/v1/partners/{partnerId}/webhooks", "/partners/{partnerId}/webhooks"})
 @Tag(name = "Webhooks", description = "Outbound webhook subscription management")
 @PreAuthorize("hasRole('ADMIN')")
 public class WebhookController extends BaseController {

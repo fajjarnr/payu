@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.15] - 2026-08-17
+
+### Added
+
+- **ARCH-PAGE-001 (persistence, transaction-service, wallet-service)**: implemented keyset cursor pagination (`(created_at, id)`) on transaction history repositories to replace $O(N)$ table scans with $O(1)$ index seeks. Added port methods, JPA repository queries, and unit tests with 100% pass rate.
+- **ARCH-PARTNER-001 (api, partner-service)**: standardized versioned `/v1/...` API routes across partner management controllers (`MerchantController`, `PartnerController`, `WebhookController`, `PaymentLinkController`, `CertificateController`, `ApiKeyController`, and `PublicPaymentLinkController`) using dual RequestMapping for full backward compatibility.
+
+### Deploy
+
+- Stack rebuilt and deployed live via Podman with image SemVer tag **`1.11.15`**. All 37 containers healthy with 200 OK health responses.
+
 ## [1.11.14] - 2026-08-17
 
 ### Refactored

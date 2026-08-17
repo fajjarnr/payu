@@ -28,7 +28,7 @@ import id.payu.security.annotation.AuditOperation;
  * REST controller for merchant management and dynamic QR generation.
  */
 @RestController
-@RequestMapping("/merchants")
+@RequestMapping({"/v1/merchants", "/merchants"})
 @Tag(name = "Merchants", description = "MerchantEntity onboarding and dynamic QR payment operations")
 @PreAuthorize("hasRole('ADMIN')")
 public class MerchantController extends BaseController {

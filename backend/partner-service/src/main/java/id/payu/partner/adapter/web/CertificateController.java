@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * Provides operations for certificate lifecycle management including rotation and validation.
  */
 @RestController
-@RequestMapping("/partners/{partnerId}/certificates")
+@RequestMapping({"/v1/partners/{partnerId}/certificates", "/partners/{partnerId}/certificates"})
 @Tag(name = OpenApiConstants.TAG_CERTIFICATE, description = "Certificate management operations")
 @RequiredArgsConstructor
 public class CertificateController extends BaseController {

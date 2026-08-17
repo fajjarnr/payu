@@ -2,6 +2,20 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-266: Keyset Cursor Pagination & Dual-Route API Versioning (2026-08-17)
+
+**Context**: ARCH-PAGE-001 (keyset cursor pagination for high-volume financial transactions in `transaction-service` and `wallet-service`) and ARCH-PARTNER-001 (versioned `/v1/...` REST API mapping in `partner-service`).
+
+**Lesson**:
+- **Keyset vs Offset Pagination**: High-frequency financial ledgers experience $O(N)$ scanning degradation and page-drift anomalies under standard `LIMIT ... OFFSET`. Implementing composite tuple comparison `(created_at, id) < (:lastCreatedAt, :lastId)` leverages existing `(account_id, created_at DESC)` compound B-tree indexes for strict $O(1)$ seeks regardless of dataset size.
+- **Dual-Route RequestMapping for Safe Versioning**: When migrating unversioned REST controllers to versioned paths (`/v1/...`) per API standards, providing dual array mappings `@RequestMapping({"/v1/resource", "/resource"})` ensures 100% backward compatibility for existing external partners and internal gateways while immediately adopting RFC/standards compliance.
+- **Podman Compose Service Profiles**: When services inherit `profiles: [apps]` under `x-app-defaults`, starting the full stack requires running with `--profile apps` (e.g. `podman compose --profile apps up -d`), ensuring both infra and app layers are orchestrated properly.
+
+**Applied evidence**:
+- `TransactionPersistenceAdapterKeysetTest` & `WalletPersistenceAdapterKeysetTest` passing 100%.
+- Rebuilt all backend modules with `mvn clean package -DskipTests -T 1C` (44/44 SUCCESS).
+- Rebuilt and deployed all 37 containers with SemVer `1.11.15`, achieving 100% healthy status.
+
 ## L-265: Standardized DTO Package Placement in Hexagonal Microservices (2026-08-17)
 
 **Context**: ARCH-DTO-001 standardized DTO placement across all 21 microservices from fragmented packages (`dto/`, `domain.dto`, `adapter.web.dto`, `application.service.dto`) into `interfaces.dto` (Rule 5: Hexagonal Architecture standard).

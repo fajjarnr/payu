@@ -25,7 +25,7 @@ import id.payu.security.annotation.AuditOperation;
  * and rate plan assignment.
  */
 @RestController
-@RequestMapping("/partners/{partnerId}/api-keys")
+@RequestMapping({"/v1/partners/{partnerId}/api-keys", "/partners/{partnerId}/api-keys"})
 @Tag(name = "API Keys", description = "API key management — generation, rotation, revocation")
 @PreAuthorize("hasRole('ADMIN')")
 public class ApiKeyController extends BaseController {

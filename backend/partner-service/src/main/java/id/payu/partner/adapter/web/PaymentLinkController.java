@@ -27,7 +27,7 @@ import id.payu.security.annotation.AuditOperation;
  * Partners generate shareable payment URLs.
  */
 @RestController
-@RequestMapping("/partners/{partnerId}/payment-links")
+@RequestMapping({"/v1/partners/{partnerId}/payment-links", "/partners/{partnerId}/payment-links"})
 @Tag(name = "Payment Links", description = "Payment link / invoice management")
 @PreAuthorize("hasRole('ADMIN')")
 public class PaymentLinkController extends BaseController {

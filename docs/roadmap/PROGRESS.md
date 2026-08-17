@@ -1,5 +1,15 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.15 (2026-08-17)
+
+- **ARCH-PAGE-001 (CLOSED)**: Implemented keyset cursor pagination (`(created_at, id)`) in `transaction-service` and `wallet-service`:
+  - `transaction-service`: Added `findByAccountIdKeyset(UUID accountId, Instant lastCreatedAt, UUID lastId, Pageable pageable)` to `TransactionJpaRepository`, `TransactionPersistencePort`, and `TransactionPersistenceAdapter`. Created unit test `TransactionPersistenceAdapterKeysetTest` (100% pass).
+  - `wallet-service`: Added `findByWalletIdKeyset(UUID walletId, LocalDateTime lastCreatedAt, UUID lastId, Pageable pageable)` to `WalletTransactionJpaRepository`, `WalletPersistencePort`, and `WalletPersistenceAdapter`. Created unit test `WalletPersistenceAdapterKeysetTest` (100% pass).
+- **ARCH-PARTNER-001 (CLOSED)**: Standardized versioned API path mappings in `partner-service`:
+  - Added dual path routing `{"/v1/...", "/..."}` across `MerchantController`, `PartnerController`, `WebhookController`, `PaymentLinkController`, `CertificateController`, `ApiKeyController`, and `PublicPaymentLinkController`.
+- **Backend Reactor Build**: All 44 backend modules compiled with 100% BUILD SUCCESS (`mvn -f backend/pom.xml clean package -DskipTests -T 1C`).
+- **Deploy live**: Rebuilt container images with SemVer tag **`1.11.15`** and deployed via Podman stack. All 37 containers healthy with 200 OK actuator health responses.
+
 ## Deploy 1.11.14 (2026-08-17)
 
 - **ARCH-DTO-001 (CLOSED)**: Standardized DTO package placement to `id.payu.<service>.interfaces.dto` across all 21 microservices (and simulators):

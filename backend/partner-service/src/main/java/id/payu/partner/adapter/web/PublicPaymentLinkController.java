@@ -16,7 +16,7 @@ import id.payu.security.annotation.AuditOperation;
  * No authentication required — payers access via shareable URL.
  */
 @RestController
-@RequestMapping("/pay")
+@RequestMapping({"/v1/pay", "/pay"})
 @Tag(name = "Payment Links (Public)", description = "Public payment link endpoints for payers")
 public class PublicPaymentLinkController extends BaseController {
 
