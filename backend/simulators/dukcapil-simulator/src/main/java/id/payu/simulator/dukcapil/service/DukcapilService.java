@@ -1,7 +1,7 @@
 package id.payu.simulator.dukcapil.service;
 
 import id.payu.simulator.dukcapil.config.SimulatorConfig;
-import id.payu.simulator.dukcapil.dto.*;
+import id.payu.simulator.dukcapil.interfaces.dto.*;
 import id.payu.simulator.dukcapil.entity.Citizen;
 import id.payu.simulator.dukcapil.entity.VerificationLog;
 import io.quarkus.logging.Log;

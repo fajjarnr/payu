@@ -1,6 +1,6 @@
 package id.payu.simulator.biller.resource;
 
-import id.payu.simulator.biller.dto.*;
+import id.payu.simulator.biller.interfaces.dto.*;
 import id.payu.simulator.biller.service.BillerService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;

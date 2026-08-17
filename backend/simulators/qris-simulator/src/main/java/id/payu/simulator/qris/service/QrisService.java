@@ -1,11 +1,11 @@
 package id.payu.simulator.qris.service;
 
 import id.payu.simulator.qris.config.SimulatorConfig;
-import id.payu.simulator.qris.dto.GenerateQrRequest;
-import id.payu.simulator.qris.dto.GenerateQrResponse;
-import id.payu.simulator.qris.dto.PayQrRequest;
-import id.payu.simulator.qris.dto.PaymentResponse;
-import id.payu.simulator.qris.dto.PaymentStatusResponse;
+import id.payu.simulator.qris.interfaces.dto.GenerateQrRequest;
+import id.payu.simulator.qris.interfaces.dto.GenerateQrResponse;
+import id.payu.simulator.qris.interfaces.dto.PayQrRequest;
+import id.payu.simulator.qris.interfaces.dto.PaymentResponse;
+import id.payu.simulator.qris.interfaces.dto.PaymentStatusResponse;
 import id.payu.simulator.qris.entity.Merchant;
 import id.payu.simulator.qris.entity.QrisPayment;
 import io.quarkus.logging.Log;

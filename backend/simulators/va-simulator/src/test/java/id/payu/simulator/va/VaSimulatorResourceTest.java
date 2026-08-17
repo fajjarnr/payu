@@ -1,8 +1,8 @@
 package id.payu.simulator.va;
 
-import id.payu.simulator.va.dto.VaInquiryRequest;
-import id.payu.simulator.va.dto.VaPaymentRequest;
-import id.payu.simulator.va.dto.VaRegistrationRequest;
+import id.payu.simulator.va.interfaces.dto.VaInquiryRequest;
+import id.payu.simulator.va.interfaces.dto.VaPaymentRequest;
+import id.payu.simulator.va.interfaces.dto.VaRegistrationRequest;
 import id.payu.simulator.va.entity.VirtualAccount;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;

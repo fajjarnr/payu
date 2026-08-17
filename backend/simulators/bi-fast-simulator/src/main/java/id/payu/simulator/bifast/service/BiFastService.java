@@ -1,7 +1,7 @@
 package id.payu.simulator.bifast.service;
 
 import id.payu.simulator.bifast.config.SimulatorConfig;
-import id.payu.simulator.bifast.dto.*;
+import id.payu.simulator.bifast.interfaces.dto.*;
 import id.payu.simulator.bifast.entity.BankAccount;
 import id.payu.simulator.bifast.entity.Transfer;
 import io.quarkus.logging.Log;

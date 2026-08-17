@@ -1,6 +1,6 @@
 package id.payu.simulator.bifast.resource;
 
-import id.payu.simulator.bifast.dto.*;
+import id.payu.simulator.bifast.interfaces.dto.*;
 import id.payu.simulator.bifast.service.BiFastService;
 import io.quarkus.logging.Log;
 import jakarta.inject.Inject;

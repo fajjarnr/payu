@@ -1,7 +1,7 @@
 package id.payu.simulator.biller.service;
 
 import id.payu.simulator.biller.config.SimulatorConfig;
-import id.payu.simulator.biller.dto.*;
+import id.payu.simulator.biller.interfaces.dto.*;
 import id.payu.simulator.biller.entity.BillerAccount;
 import id.payu.simulator.biller.entity.BillerTransaction;
 import io.quarkus.logging.Log;

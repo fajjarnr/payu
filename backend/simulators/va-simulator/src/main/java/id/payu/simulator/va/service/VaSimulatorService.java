@@ -1,9 +1,9 @@
 package id.payu.simulator.va.service;
 
-import id.payu.simulator.va.dto.VaInquiryRequest;
-import id.payu.simulator.va.dto.VaInquiryResponse;
-import id.payu.simulator.va.dto.VaPaymentRequest;
-import id.payu.simulator.va.dto.VaPaymentResponse;
+import id.payu.simulator.va.interfaces.dto.VaInquiryRequest;
+import id.payu.simulator.va.interfaces.dto.VaInquiryResponse;
+import id.payu.simulator.va.interfaces.dto.VaPaymentRequest;
+import id.payu.simulator.va.interfaces.dto.VaPaymentResponse;
 import id.payu.simulator.va.entity.VirtualAccount;
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;

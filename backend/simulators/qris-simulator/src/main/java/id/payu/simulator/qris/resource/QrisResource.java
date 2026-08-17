@@ -1,6 +1,6 @@
 package id.payu.simulator.qris.resource;
 
-import id.payu.simulator.qris.dto.*;
+import id.payu.simulator.qris.interfaces.dto.*;
 import id.payu.simulator.qris.service.QrisService;
 import io.quarkus.logging.Log;
 import jakarta.inject.Inject;

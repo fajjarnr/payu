@@ -1,6 +1,6 @@
 package id.payu.simulator.dukcapil.resource;
 
-import id.payu.simulator.dukcapil.dto.*;
+import id.payu.simulator.dukcapil.interfaces.dto.*;
 import id.payu.simulator.dukcapil.service.DukcapilService;
 import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
