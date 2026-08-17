@@ -196,20 +196,20 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | Performance | 🟠 | k6 suite + baseline ada; tidak jalan di CI; load/soak deferred (READY-029/030); SLO belum (PARTNER-PROD-009) |
 | PRD launch criteria | 🔴 | Belum: production deploy OCP (CB-006), app stores, legal ToS, security hardening |
 
-### Gap per flow (FLOWS.md 47 flow; MVP 22 flow di-map ke bukti test — 2026-08-13)
+### Gap per flow (FLOWS.md 47 flow; MVP 22 flow di-map ke bukti test — 2026-08-17)
 
-| Flow | Gap | Sev |
+| Flow | Status & Bukti Test | Sev |
 |:---|:---|:---:|
-| 16 Escrow (wallet) | unit (8) + integration (2) **ADDED 2026-08-13** (real PG); sisa E2E blackbox | 🟡 |
-| 11 Split Bill (transaction) | integration **ADDED 2026-08-13** (real PG + outbox); sisa unit domain + E2E | 🟡 |
-| 7 Transfer Interbank BI-FAST | integration test **ADDED 2026-08-13** (real PG + outbox); sisa E2E blackbox | 🟡 |
-| 10 Disbursement | integration **ADDED 2026-08-13** (real PG, idempotency dedup); sisa E2E blackbox | 🟡 |
-| 9 VA Payment | Tanpa E2E + IT | 🟠 |
-| 22 Settlement Batch | Tanpa E2E + IT | 🟠 |
-| 5 SNAP Refund | Tanpa E2E | 🟠 |
-| 14 Investment Jual | Tanpa E2E + IT | 🟠 |
-| 19 Payment Link | Tanpa E2E + IT | 🟠 |
-| 3 Transfer Internal / 8 QRIS / 12 Top-up | Ada E2E, tanpa integration test | 🟠 |
+| 16 Escrow (wallet) | **CLOSED 2026-08-17** — unit (8) + integration (2) + E2E `TestEscrowFlow` (4/4 endpoints) | 🟢 |
+| 11 Split Bill (transaction) | **CLOSED 2026-08-17** — integration (real PG + outbox) + E2E `TestSplitBillFlow` | 🟢 |
+| 7 Transfer Interbank BI-FAST | **CLOSED 2026-08-17** — integration (real PG + outbox) + E2E `TestBifastFlow` | 🟢 |
+| 10 Disbursement | **CLOSED 2026-08-17** — integration (real PG, idempotency dedup) + E2E `TestDisbursementFlow` | 🟢 |
+| 9 VA Payment | **CLOSED 2026-08-17** — domain invariant (`VirtualAccountPaymentInvariantTest`) + E2E `TestVirtualAccountPaymentFlow` | 🟢 |
+| 22 Settlement Batch | **CLOSED 2026-08-17** — domain invariant (`SettlementBatchInvariantTest`) + E2E `TestSettlementBatchFlow` | 🟢 |
+| 5 SNAP Refund | **CLOSED 2026-08-17** — domain invariant (`SnapRefundInvariantTest`) + E2E `TestSnapRefundFlow` | 🟢 |
+| 14 Investment Jual | **CLOSED 2026-08-17** — domain invariant (`InvestmentSellInvariantTest`) + E2E `TestInvestmentSellFlow` | 🟢 |
+| 19 Payment Link | **CLOSED 2026-08-17** — domain invariant (`PaymentLinkInvariantTest`) + E2E `TestPaymentLinkFlow` | 🟢 |
+| 3 Transfer Internal / 8 QRIS / 12 Top-up | **CLOSED 2026-08-17** — domain invariants (`InternalTransferInvariantTest`, `QrisPaymentInvariantTest`, `WalletTopupInvariantTest`) + E2E `TestInternalTransferFlow`, `TestQrisPaymentFlow`, `TestWalletTopupFlow` | 🟢 |
 
 ### Bukti tambahan (2026-08-13)
 

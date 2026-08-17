@@ -2,6 +2,23 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-267: Money Flow Test Harness & Domain Financial Invariants (2026-08-17)
+
+**Context**: Closing test gaps across all MVP core money journeys (Jalur Uang: Flows 3, 5, 7, 8, 9, 10, 11, 12, 14, 16, 19, 22).
+
+**Lesson**:
+- **Layered Financial Invariant Testing**: Critical financial guarantees (e.g. double-entry balance, zero-loss HALF_EVEN rounding at scale 4, partial refund limits $\le$ total, redemption proceeds = units $\times$ NAV - fee, two-phase reservation/commit/release) should be tested at the pure domain model layer without database/HTTP dependencies for microsecond execution and invariant guarantee.
+- **Spring Cloud Contract DSL Producer/Consumer Matching**: When writing Groovy contract definitions for Spring Cloud Contract, numeric fields (like `amount` mapped to `BigDecimal`) must provide valid concrete numeric values on the consumer/producer test side (e.g., `$(c(50000.00), p(anyNumber()))`), avoiding ambiguous regex generators that produce unparseable character strings during automated contract test synthesis.
+- **Resilient Blackbox E2E Harness**: Blackbox E2E suites should maintain fallback mechanisms (e.g. standard library `uuid`/`random` fallbacks) so that testing runs smoothly in minimalist/isolated CI or container environments without extraneous external pip packages.
+
+**Applied evidence**:
+- `tests/e2e_blackbox/test_money_journeys.py`: 12/12 E2E test suites green.
+- `InternalTransferInvariantTest`, `VirtualAccountPaymentInvariantTest`, `QrisPaymentInvariantTest` in `transaction-service` (199/199 green).
+- `SnapRefundInvariantTest`, `PaymentLinkInvariantTest`, `SettlementBatchInvariantTest` in `partner-service` (322/322 green).
+- `InvestmentSellInvariantTest` in `investment-service` (61/61 green).
+- `WalletTopupInvariantTest`, `LedgerInvariantTest` in `wallet-service` (80/80 green).
+- Full reactor build: 44/44 modules SUCCESS (`mvn -f backend/pom.xml clean package -DskipTests -T 1C`).
+
 ## L-266: Keyset Cursor Pagination & Dual-Route API Versioning (2026-08-17)
 
 **Context**: ARCH-PAGE-001 (keyset cursor pagination for high-volume financial transactions in `transaction-service` and `wallet-service`) and ARCH-PARTNER-001 (versioned `/v1/...` REST API mapping in `partner-service`).

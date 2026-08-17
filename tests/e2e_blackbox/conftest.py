@@ -2,13 +2,39 @@ import pytest
 import os
 import sys
 import requests
-from faker import Faker
+try:
+    from faker import Faker
+except ImportError:
+    import random
+    import uuid
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    class Faker:
+        def uuid4(self):
+            return str(uuid.uuid4())
 
-from client import PayUClient
+        def random_number(self, digits=4):
+            return random.randint(10**(digits - 1), 10**digits - 1)
+
+        def name(self):
+            return "Test User"
+
+        def email(self):
+            return f"user_{uuid.uuid4().hex[:8]}@payu.fajjjar.my.id"
+
+        def address(self):
+            return "Jl. Sudirman No. 123, Jakarta"
+
+        def phone_number(self):
+            return "+6281234567890"
+
+        def paragraph(self):
+            return "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+
 
 fake = Faker()
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from client import PayUClient
 
 
 def pytest_configure(config):

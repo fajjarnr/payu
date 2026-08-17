@@ -13,11 +13,11 @@ Contract.make {
             header("X-Idempotency-Key", $(anyUuid()))
         }
         body([
-            senderAccountId: $(anyUuid()),
+            senderAccountId: $(c("550e8400-e29b-41d4-a716-446655440000"), p(anyUuid())),
             recipientAccountNumber: "1234567890",
-            amount: $(c(regex('[0-9]+(\\\\.[0-9]{1,2})?'))),
+            amount: $(c(50000.00), p(anyNumber())),
             currency: "IDR",
-            description: $(anyNonBlankString()),
+            description: $(c("Test internal transfer"), p(anyNonBlankString())),
             type: "INTERNAL_TRANSFER"
         ])
     }

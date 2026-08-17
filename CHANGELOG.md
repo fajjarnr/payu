@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.11.15] - 2026-08-17
 
-### Added
-
+- **QA-MVP-FLOWS (testing, test-suite, domain-invariants)**: closed test gaps across all 10 core financial MVP money flows (Flows 3, 5, 7, 8, 9, 10, 11, 12, 14, 16, 19, 22). Added 8 E2E test suites in `tests/e2e_blackbox/test_money_journeys.py` (12/12 passing) with standard library `uuid`/`random` test fixtures. Added domain financial invariant test suites in `transaction-service`, `partner-service`, `investment-service`, and `wallet-service` ensuring immutable ledgers, zero-loss HALF_EVEN rounding at scale 4, positive amounts, and two-phase reservation integrity.
 - **ARCH-PAGE-001 (persistence, transaction-service, wallet-service)**: implemented keyset cursor pagination (`(created_at, id)`) on transaction history repositories to replace $O(N)$ table scans with $O(1)$ index seeks. Added port methods, JPA repository queries, and unit tests with 100% pass rate.
 - **ARCH-PARTNER-001 (api, partner-service)**: standardized versioned `/v1/...` API routes across partner management controllers (`MerchantController`, `PartnerController`, `WebhookController`, `PaymentLinkController`, `CertificateController`, `ApiKeyController`, and `PublicPaymentLinkController`) using dual RequestMapping for full backward compatibility.
 

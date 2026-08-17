@@ -2,6 +2,13 @@
 
 ## Deploy 1.11.15 (2026-08-17)
 
+- **Gap Test Uang MVP (CLOSED)**: Complete coverage of all 10 core financial flows (Jalur Uang: Flows 3, 5, 7, 8, 9, 10, 11, 12, 14, 16, 19, 22):
+  - **E2E Blackbox (`tests/e2e_blackbox/test_money_journeys.py`)**: 12/12 test suites passing across all MVP money journeys.
+  - **Domain Financial Invariants**:
+    - `transaction-service`: `InternalTransferInvariantTest` (Flow 3), `VirtualAccountPaymentInvariantTest` (Flow 9), `QrisPaymentInvariantTest` (Flow 8). (199/199 unit tests green).
+    - `partner-service`: `SnapRefundInvariantTest` (Flow 5), `PaymentLinkInvariantTest` (Flow 19), `SettlementBatchInvariantTest` (Flow 22). (322/322 unit tests green).
+    - `investment-service`: `InvestmentSellInvariantTest` (Flow 14). (61/61 unit tests green).
+    - `wallet-service`: `WalletTopupInvariantTest` (Flow 12), `LedgerInvariantTest` (Flow 16). (80/80 unit tests green).
 - **ARCH-PAGE-001 (CLOSED)**: Implemented keyset cursor pagination (`(created_at, id)`) in `transaction-service` and `wallet-service`:
   - `transaction-service`: Added `findByAccountIdKeyset(UUID accountId, Instant lastCreatedAt, UUID lastId, Pageable pageable)` to `TransactionJpaRepository`, `TransactionPersistencePort`, and `TransactionPersistenceAdapter`. Created unit test `TransactionPersistenceAdapterKeysetTest` (100% pass).
   - `wallet-service`: Added `findByWalletIdKeyset(UUID walletId, LocalDateTime lastCreatedAt, UUID lastId, Pageable pageable)` to `WalletTransactionJpaRepository`, `WalletPersistencePort`, and `WalletPersistenceAdapter`. Created unit test `WalletPersistenceAdapterKeysetTest` (100% pass).
