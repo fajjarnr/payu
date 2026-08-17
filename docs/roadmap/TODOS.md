@@ -21,7 +21,7 @@
 | **Last Release** | `1.11.14` (2026-08-17) |
 | **Core Banking MVP** | 🟡 Mendekati MVP — blocker tersisa: ACCOUNT-007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
 | **Backlog Aktif** | 2 tickets + action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-17) |
-| **Last Updated** | 2026-08-17 — ARCH-DTO-001 selesai (standardisasi DTO placement ke `id.payu.<service>.interfaces.dto` di seluruh 21 microservice + 5 simulator); release `1.11.14` deployed |
+| **Last Updated** | 2026-08-17 — ARCH-GLOBAL-001 selesai diverifikasi; local stack `1.11.16` deployed 37/37 healthy; ARCH-GLOBAL-002..004 blockers documented |
 
 ---
 
@@ -57,10 +57,9 @@
 | QAMVP-004 | kyc | ~~Security test (auth/RBAC) + integration test kyc; provider OCR/liveness nyata gate (analog PROD-002)~~ **security DONE 2026-08-13** (QAMVP-014 `test_security.py` 401/403 IDOR); e2e workflow test ADA (`tests/e2e/test_kyc_workflow.py`, provider di-mock); CI `.github/workflows/kyc-tests.yml` (unit+e2e, cov gate 80%). Sisa: provider OCR/liveness nyata gate (butuh credential eksternal) | Test + live evidence |
 | QAMVP-005 | platform | ~~k6 smoke+load di pipeline staging + SLO threshold per service~~ **CI WIRED 2026-08-13** — `.github/workflows/k6-tests.yml` (grafana/k6-action, smoke/load/stress via workflow_dispatch + cron 02:00, `GATEWAY_URL`/`KEYCLOAK_URL` env, SLO threshold `p95<500ms`/`p99<1s`/`avg<300ms`/`rate<0.01`, summary artifact). Verified terhadap local stack: gateway `/q/health` 200 + keycloak OIDC 200; token acquisition butuh credential client (TEST_USERS) — external. Sisa: green run dengan kredensial staging | Laporan k6 di CI |
 | QAMVP-006 | platform | ~~PRD launch criteria tracker: prod deploy OCP, app stores, legal ToS, security hardening (lanjut CB-006)~~ **TRACKER DONE 2026-08-13** — `docs/roadmap/PRD_LAUNCH_CRITERIA.md`: 15 kriteria PRD §12.1 → evidence/status (7 🟢, 7 🟡, 2 🔴 + 1 ⏸️ deferred). CI/CD hardening evidence (7 workflow) tercatat. Sisa hijau penuh: prod deploy OCP (CB-006), app stores (deferred), legal ToS, re-pentest | Checklist PRD §12 hijau |
-| ARCH-GLOBAL-001 | idempotency | IMP-7: Idempotency payload fingerprinting (SHA-256 body hash match, 409 pada payload mismatch) di `idempotency-starter` & gateway | Test 409 mismatch + replay 200 pass |
-| ARCH-GLOBAL-002 | security | IMP-8: Step-Up Auth & Dynamic Linking (PSD2 RTS Art 5 / `X-Transaction-PIN` verification) di mutasi dana transfer & QRIS | Test PIN challenge valid/invalid pass |
-| ARCH-GLOBAL-003 | core-banking | IMP-9: ISO 20022 Interbank Clearing / Suspense Account routing (`SYSTEM_BI_FAST_CLEARING`) di `wallet-service` | Double-entry ledger clearing audit match |
-| ARCH-GLOBAL-004 | risk-aml | IMP-10: Real-time velocity counter & AML risk scoring filter sebelum reserve balance | Test velocity limit breach & hold review pass |
+| ARCH-GLOBAL-002 | security | IMP-8: Step-Up Auth & Dynamic Linking (PSD2 RTS Art 5 / `X-Transaction-PIN` verification) di mutasi dana transfer & QRIS | Test PIN challenge valid/invalid pass; **BLOCKED**: belum ada PIN/step-up credential store, challenge model, atau auth-service verification port |
+| ARCH-GLOBAL-003 | core-banking | IMP-9: ISO 20022 Interbank Clearing / Suspense Account routing (`SYSTEM_BI_FAST_CLEARING`) di `wallet-service` | Double-entry ledger clearing audit match; **BLOCKED**: belum ada mapping CoA/settlement rail dan ownership kontrak clearing |
+| ARCH-GLOBAL-004 | risk-aml | IMP-10: Real-time velocity counter & AML risk scoring filter sebelum reserve balance | Test velocity limit breach & hold review pass; **BLOCKED**: belum ada risk provider/model, velocity store, atau hold/review contract |
 
 ### P2 — Defer (Out-of-Scope MVP, ADR-0023)
 

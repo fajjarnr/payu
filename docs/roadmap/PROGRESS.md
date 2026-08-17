@@ -1,5 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.16 (2026-08-17)
+
+- **ARCH-GLOBAL-001 (VERIFIED)**: shared idempotency and gateway fingerprints bind canonical request bodies to request identity; different payloads return `409`, canonical-equivalent replay returns the cached response. Evidence: api-commons `29/29`, gateway filter `5/5`.
+- **Build**: backend reactor `44/44` BUILD SUCCESS with the serial release command; stale gateway gRPC configuration was removed and the api-portal JaCoCo plugin version was pinned to the parent-managed `0.8.13`.
+- **Compose**: default local app image tag advanced to SemVer `1.11.16`; deprecated Quarkus Hibernate environment keys were replaced with `QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY`; parity test `22/22` and `apps` profile render (37 services) green.
+- **Deploy live**: `BUILDAH_FORMAT=docker podman compose ... build` completed; Podman stack deployed with **37/37 containers healthy** and gateway, account, wallet, web, API portal, and Keycloak smoke health checks returning `200`.
+- **Runtime evidence**: after dependency startup settled, the final 30-second log window contained no WARN/ERROR records. Initial recreation emitted transient dependency churn (Kafka topic metadata and database connection resets), so the startup window is not represented as zero-noise.
+- **Backlog blockers**: ARCH-GLOBAL-002 lacks a PIN/step-up credential and verification contract; ARCH-GLOBAL-003 lacks clearing CoA/settlement ownership; ARCH-GLOBAL-004 lacks a risk provider/model and velocity-store contract. External OCP, provider, SIEM, and GitHub-admin blockers remain in `TODOS.md`.
+
 ## Deploy 1.11.15 (2026-08-17)
 
 - **Gap Test Uang MVP (CLOSED)**: Complete coverage of all 10 core financial flows (Jalur Uang: Flows 3, 5, 7, 8, 9, 10, 11, 12, 14, 16, 19, 22):

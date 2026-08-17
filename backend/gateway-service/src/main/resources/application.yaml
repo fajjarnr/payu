@@ -62,12 +62,6 @@ quarkus:
   swagger-ui:
     always-include: true
     path: /q/swagger-ui
-  # gRPC Client Configuration (IMP-033: REST-to-gRPC Bridge)
-  grpc:
-    clients:
-      wallet-service:
-        host: ${WALLET_GRPC_HOST:wallet-service}
-        port: ${WALLET_GRPC_PORT:9090}
   # Logging
   log:
     level: INFO

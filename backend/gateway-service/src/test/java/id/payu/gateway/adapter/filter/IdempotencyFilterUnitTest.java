@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -60,6 +61,37 @@ class IdempotencyFilterUnitTest {
 
         assertNotNull(aborted.get());
         assertEquals(409, aborted.get().getStatus());
+    }
+
+    @Test
+    void shouldReplaySameKeyForCanonicalEquivalentBody() {
+        ContainerRequestContext original = request(
+                "/api/v1/payments", "{\"amount\":200,\"currency\":\"IDR\"}", "user-1");
+        AtomicReference<String> fingerprint = new AtomicReference<>();
+        doAnswer(invocation -> {
+            if ("idempotency-fingerprint".equals(invocation.getArgument(0))) {
+                fingerprint.set((String) invocation.getArgument(1));
+            }
+            return null;
+        }).when(original).setProperty(anyString(), any());
+        when(cache.get("idempotency:" + KEY)).thenReturn(Uni.<String>createFrom().nullItem());
+
+        filter.filter(original);
+
+        assertNotNull(fingerprint.get());
+
+        ContainerRequestContext replay = request(
+                "/api/v1/payments", "{\"currency\":\"IDR\",\"amount\":200}", "user-1");
+        when(cache.get("idempotency:" + KEY)).thenReturn(Uni.createFrom().item(
+                "{\"status\":201,\"fingerprint\":\"" + fingerprint.get()
+                        + "\",\"body\":\"cached\"}"));
+        AtomicReference<Response> aborted = abortResponse(replay);
+
+        filter.filter(replay);
+
+        assertNotNull(aborted.get());
+        assertEquals(201, aborted.get().getStatus());
+        assertEquals("true", aborted.get().getHeaderString("Idempotency-Replayed"));
     }
 
     @Test
