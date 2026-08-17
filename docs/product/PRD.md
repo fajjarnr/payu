@@ -429,7 +429,22 @@ TokoBapak payment-service ───► PayU API Gateway ───► PayU Transa
 
 ---
 
-**Document Version**: 1.2  
-**Last Updated**: March 22, 2026  
+## 16. Global Banking & Tier-1 FinTech Standards Alignment
+
+Untuk memastikan interoperabilitas dan kepatuhan terhadap standar industri perbankan serta e-wallet internasional, PayU mengadopsi prinsip global:
+
+1. **Idempotency Fingerprint Guard (Stripe Standard)**:
+   - Validasi SHA-256 hash dari payload request pada `X-Idempotency-Key` untuk mencegah eksploitasi parameter tampering pada key replay.
+2. **Step-Up Authentication & Dynamic Linking (PSD2 RTS Article 5 / SCA)**:
+   - Otorisasi transaksi mutasi dana wajib memverifikasi Transaction PIN / Biometric Signature yang mengikat nominal dan rekening penerima secara kriptografis.
+3. **ISO 20022 Clearing & Suspense Account Ledgering**:
+   - Pemisahan pembukuan dana nasabah (liabilitas) dengan pos perantara kliring perbankan (`SYSTEM_BI_FAST_CLEARING`, `SYSTEM_QRIS_CLEARING`) untuk kepatuhan audit trail perbankan sentral.
+4. **Real-time Velocity & AML Monitoring (FATF Standard)**:
+   - Pengecekan frekuensi pergerakan dana (*velocity counter*) dan scoring anomali risiko transaksi secara real-time sebelum reservasi dana.
+
+---
+
+**Document Version**: 1.3  
+**Last Updated**: August 17, 2026  
 **Owner**: Product Team PayU  
 **Status**: Approved

@@ -1796,6 +1796,139 @@ sequenceDiagram
 |:---|:---|:---:|:---|
 | Idempotency cache-only (TTL 24h, fail-open) → **DB natural key + replay check di handler** (pola transfer, CB-017) | Replay pasca-TTL/down tidak double-charge; fail-closed (ADR-0022) |
 
+## IMP-7. Idempotency Payload Fingerprint Validation (flow #3, #4, #7, #8)
+
+> **Pola Global**: Stripe / Adyen Idempotency Standard. Mencegah parameter tampering pada replay idempotency key yang sama dengan payload berbeda.
+
+```mermaid
+sequenceDiagram
+    participant C as Client / Partner
+    participant G as Gateway
+    participant TX as "transaction-service / partner-service"
+    participant DB as PostgreSQL
+
+    C->>G: POST /transfers (X-Idempotency-Key: K, Body: {amount, recipient, ...})
+    G->>TX: forward
+    TX->>TX: compute payload_hash = SHA-256(canonical(Body))
+    TX->>DB: SELECT status, request_hash, response_body FROM idempotency_keys WHERE key = K
+    alt Key found
+        alt request_hash == payload_hash
+            TX-->>C: replay cached response (200/201)
+        else request_hash != payload_hash (Parameter Tampering Detected)
+            TX-->>C: 409 Conflict (IDEMPOTENCY_PAYLOAD_MISMATCH)
+        end
+    else Key not found
+        TX->>DB: INSERT idempotency_keys (key=K, request_hash=payload_hash, status='IN_PROGRESS')
+        TX->>TX: Lanjutkan eksekusi transaksi normal...
+        TX->>DB: UPDATE idempotency_keys SET status='COMPLETED', response_body=...
+        TX-->>C: 201 Created (Success)
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| Replay hanya mencocokkan string `X-Idempotency-Key` → **Validasi kecocokan SHA-256 Request Body** | Menjamin jika client/attacker me-reuse key dengan nominal atau tujuan berbeda, request langsung ditolak 409 |
+
+## IMP-8. Step-Up Authentication & Dynamic Linking (flow #3, #7, #8, #30)
+
+> **Pola Global**: PSD2 RTS Article 5 (Strong Customer Authentication) / FAPI Standard. Otorisasi spesifik per transaksi mutasi dana keluar.
+
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant App as "Web / Mobile Client"
+    participant G as Gateway
+    participant TX as "transaction-service"
+    participant AS as "auth-service"
+    participant WL as "wallet-service"
+
+    U->>App: Input Transfer (Rp 5.000.000 -> Rekening B)
+    App->>App: Prompt Transaction PIN / Biometric (FaceID/Fingerprint)
+    App->>G: POST /v1/transfers (Payload + X-Transaction-PIN / X-Challenge-Token)
+    G->>TX: forward
+    TX->>AS: verifyTransactionAuth(userId, amount, recipient, token/PIN)
+    alt Auth Gagal (Wrong PIN / Invalid Challenge)
+        AS-->>TX: 401 / 403 (INVALID_TRANSACTION_PIN / CHALLENGE_EXPIRED)
+        TX-->>App: 403 (AUTH_PIN_INVALID, sisa attempt)
+    else Auth Sukses (Dynamic Linking Valid)
+        AS-->>TX: 200 OK (Auth Verified)
+        TX->>WL: Eksekusi Reserve / Commit Ledger...
+        TX-->>App: 201 Transfer Success
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| Transaksi transfer hanya mengandalkan Bearer JWT login biasa → **Step-Up Authentication (Transaction PIN / Biometric Signing)** yang mengikat nominal & tujuan | Akun tidak bisa disalahgunakan saat session hijacking atau HP tertinggal dalam keadaan login |
+
+## IMP-9. Interbank Clearing & Suspense Account Ledgering (flow #7, #8, #22)
+
+> **Pola Global**: ISO 20022 / Core Banking General Ledger Chart of Accounts (COA). Pemisahan liabilitas nasabah dan pos kliring bank.
+
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant TX as "transaction-service"
+    participant WL as "wallet-service"
+    participant BF as "BI-FAST / Central Rail"
+    participant DB as "PostgreSQL (ledger)"
+
+    U->>TX: Transfer Interbank ke Bank Lain
+    TX->>WL: reserveAndClear(userWallet, SYSTEM_BI_FAST_CLEARING, amount)
+    WL->>DB: Ledger: DEBIT User Wallet (Liabilitas) + CREDIT System Clearing Account
+    TX->>BF: Kirim transfer ke Network BI-FAST
+    alt Settlement Sukses
+        BF-->>TX: Settlement OK (RRN)
+        TX->>WL: settleClearing(SYSTEM_BI_FAST_CLEARING, CENTRAL_BANK_SETTLEMENT, amount)
+        WL->>DB: Ledger: DEBIT System Clearing Account + CREDIT Kas BI
+        TX-->>U: 200 Transfer Sukses
+    else Settlement Gagal / Timeout
+        BF-->>TX: Error / Rejected
+        TX->>WL: reverseClearing(SYSTEM_BI_FAST_CLEARING, userWallet, amount)
+        WL->>DB: Ledger Reversal: DEBIT System Clearing + CREDIT User Wallet
+        TX-->>U: 400 Transfer Gagal (Saldo Dikembalikan)
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| Uang keluar langsung dipotong tanpa pos penampung kliring → **Pencatatan akun perantara `SYSTEM_BI_FAST_CLEARING`** | Laporan keuangan & rekonsiliasi audit trail dengan Bank Sentral 100% akurat tanpa selisih pembukuan internal |
+
+## IMP-10. Real-Time Transaction Velocity & Fraud Risk Pre-Check (flow #3, #7, #8, #10)
+
+> **Pola Global**: FATF / AML Risk-Based Approach & Real-time Transaction Monitoring.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant TX as "transaction-service"
+    participant CA as "Cache / Data Grid (Velocity Counter)"
+    participant AN as "analytics-service (Risk Rules)"
+    participant WL as "wallet-service"
+
+    C->>TX: Initiate Outbound Fund Transfer
+    TX->>CA: evaluateVelocity(userId, amount, timestamp)
+    alt Velocity Limit Exceeded (> 5 tx / 10 min atau > Daily Limit)
+        CA-->>TX: VELOCITY_BREACH
+        TX-->>C: 429 / 400 (LIMIT_EXCEEDED: Daily/Hourly velocity reached)
+    else Velocity Safe
+        TX->>AN: evaluateRiskScore(userId, recipient, amount, deviceId)
+        alt High Risk (Score > 85 / Suspicious Pattern)
+            AN-->>TX: HIGH_RISK (Action: HOLD_FOR_REVIEW)
+            TX->>TX: Status = PENDING_COMPLIANCE_REVIEW
+            TX-->>C: 202 Accepted (Transaction under manual compliance review)
+        else Normal Risk
+            AN-->>TX: LOW_RISK
+            TX->>WL: Lanjutkan Reserve & Settle...
+        end
+    end
+```
+
+| Perubahan vs aktual | Efek |
+|:---|:---|
+| Filter risiko hanya di registrasi (eKYC) → **Pengecekan velocity in-memory & risk scoring per mutasi dana** | Mencegah pembobolan akun via brute-force draining dan deteksi transaksi anomali pencucian uang secara real-time |
+
 ---
 
-*Last updated: 2026-08-12. Verifikasi code: release 1.10.53 (flow 1-45 = aktual; IMP-1, IMP-2 & IMP-5 = DONE; IMP-3, IMP-4, IMP-6 = TARGET belum diimplementasi). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52); MFA di-defer per keputusan 2026-08-11.*
+*Last updated: 2026-08-17. Verifikasi code: release 1.11.14 (flow 1-47 = aktual; IMP-1, IMP-2 & IMP-5 = DONE; IMP-3, IMP-4, IMP-6, IMP-7, IMP-8, IMP-9, IMP-10 = TARGET standard global bank/e-wallet). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52).*
+
