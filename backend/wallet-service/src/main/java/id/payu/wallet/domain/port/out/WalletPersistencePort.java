@@ -31,6 +31,10 @@ public interface WalletPersistencePort {
     Optional<WalletTransaction> findTransactionByReference(String referenceId);
     
     List<WalletTransaction> findTransactionsByWalletId(UUID walletId, int page, int size);
+    
+    default List<WalletTransaction> findTransactionsByWalletIdKeyset(UUID walletId, java.time.LocalDateTime lastCreatedAt, UUID lastId, int limit) {
+        return findTransactionsByWalletId(walletId, 0, limit);
+    }
 
     LedgerEntry saveLedgerEntry(LedgerEntry entry);
 

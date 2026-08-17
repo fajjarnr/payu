@@ -109,6 +109,17 @@ public class WalletPersistenceAdapter implements WalletPersistencePort {
     }
 
     @Override
+    public java.util.List<WalletTransaction> findTransactionsByWalletIdKeyset(UUID walletId, java.time.LocalDateTime lastCreatedAt, UUID lastId, int limit) {
+        if (lastCreatedAt == null || lastId == null) {
+            return findTransactionsByWalletId(walletId, 0, limit);
+        }
+        return transactionRepository.findByWalletIdKeyset(walletId, lastCreatedAt, lastId, org.springframework.data.domain.PageRequest.of(0, limit))
+                .stream()
+                .map(this::toTransactionDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public LedgerEntry saveLedgerEntry(LedgerEntry entry) {
         LedgerEntryEntity savedEntity = ledgerEntryRepository.save(ledgerEntryMapper.toEntity(entry));
         return ledgerEntryMapper.toDomain(savedEntity);

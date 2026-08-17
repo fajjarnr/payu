@@ -55,6 +55,17 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
     }
 
     @Override
+    public List<TransactionEntity> findByAccountIdKeyset(UUID accountId, Instant lastCreatedAt, UUID lastId, int limit) {
+        if (shardingConfig.isEnabled()) {
+            log.debug("Finding transactions keyset for account {} (sender+recipient lookup)", accountId);
+        }
+        if (lastCreatedAt == null || lastId == null) {
+            return transactionJpaRepository.findByAccountId(accountId, PageRequest.of(0, limit));
+        }
+        return transactionJpaRepository.findByAccountIdKeyset(accountId, lastCreatedAt, lastId, PageRequest.of(0, limit));
+    }
+
+    @Override
     public long countByAccountId(UUID accountId) {
         if (shardingConfig.isEnabled()) {
             log.debug("Counting transactions for account {}", accountId);

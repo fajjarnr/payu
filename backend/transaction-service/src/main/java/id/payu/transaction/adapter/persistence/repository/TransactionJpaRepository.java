@@ -52,6 +52,19 @@ public interface TransactionJpaRepository extends JpaRepository<TransactionEntit
     List<TransactionEntity> findByAccountId(@Param("accountId") UUID accountId,
                                        org.springframework.data.domain.Pageable pageable);
 
+    /**
+     * Keyset cursor pagination for account transactions (ARCH-PAGE-001).
+     * Avoids O(N) offset scan overhead on large transaction history datasets.
+     */
+    @Query("SELECT t FROM TransactionEntity t WHERE (t.senderAccountId = :accountId OR t.recipientAccountId = :accountId) " +
+           "AND (t.createdAt < :lastCreatedAt OR (t.createdAt = :lastCreatedAt AND t.id < :lastId)) " +
+           "ORDER BY t.createdAt DESC, t.id DESC")
+    List<TransactionEntity> findByAccountIdKeyset(
+            @Param("accountId") UUID accountId,
+            @Param("lastCreatedAt") java.time.Instant lastCreatedAt,
+            @Param("lastId") UUID lastId,
+            org.springframework.data.domain.Pageable pageable);
+
     @Query("SELECT COUNT(t) FROM TransactionEntity t WHERE t.senderAccountId = :accountId OR t.recipientAccountId = :accountId")
     long countByAccountId(@Param("accountId") UUID accountId);
 

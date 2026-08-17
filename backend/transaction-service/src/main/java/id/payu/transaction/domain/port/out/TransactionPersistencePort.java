@@ -11,6 +11,9 @@ public interface TransactionPersistencePort {
     TransactionEntity save(TransactionEntity transaction);
     Optional<TransactionEntity> findById(UUID transactionId);
     List<TransactionEntity> findByAccountId(UUID accountId, int page, int size);
+    default List<TransactionEntity> findByAccountIdKeyset(UUID accountId, Instant lastCreatedAt, UUID lastId, int limit) {
+        return findByAccountId(accountId, 0, limit);
+    }
     long countByAccountId(UUID accountId);
     List<TransactionEntity> findByReferenceNumber(String referenceNumber);
 

@@ -17,5 +17,18 @@ public interface WalletTransactionJpaRepository extends JpaRepository<WalletTran
 
     List<WalletTransactionEntity> findByWalletIdOrderByCreatedAtDesc(UUID walletId, Pageable pageable);
 
+    /**
+     * Keyset cursor pagination for wallet transactions (ARCH-PAGE-001).
+     * Avoids O(N) offset scan overhead on large transaction history datasets.
+     */
+    @org.springframework.data.jpa.repository.Query("SELECT wt FROM WalletTransactionEntity wt WHERE wt.walletId = :walletId " +
+           "AND (wt.createdAt < :lastCreatedAt OR (wt.createdAt = :lastCreatedAt AND wt.id < :lastId)) " +
+           "ORDER BY wt.createdAt DESC, wt.id DESC")
+    List<WalletTransactionEntity> findByWalletIdKeyset(
+            @org.springframework.data.repository.query.Param("walletId") UUID walletId,
+            @org.springframework.data.repository.query.Param("lastCreatedAt") java.time.LocalDateTime lastCreatedAt,
+            @org.springframework.data.repository.query.Param("lastId") UUID lastId,
+            Pageable pageable);
+
     Optional<WalletTransactionEntity> findByReferenceId(String referenceId);
 }
