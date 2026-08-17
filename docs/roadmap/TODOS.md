@@ -19,8 +19,8 @@
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.11.14` (2026-08-17) |
-| **Core Banking MVP** | 🟡 Mendekati MVP — blocker tersisa: ACCOUNT-007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
-| **Backlog Aktif** | 2 tickets + action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-17) |
+| **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka dan audit 2026-08-17 menemukan critical/high defects pada wallet, payment, ownership, idempotency, dan web journeys; **login web live** (LOGIN-001..006 closed), money-flow test evidence ada tetapi belum menutup finding baru. |
+| **Backlog Aktif** | 2 tickets + 40 new backend/web audit findings + action items and partner/platform gates (2026-08-17) |
 | **Last Updated** | 2026-08-17 — ARCH-GLOBAL-001 selesai diverifikasi; local stack `1.11.16` deployed 37/37 healthy; ARCH-GLOBAL-002..004 blockers documented |
 
 ---
@@ -240,6 +240,53 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 - kyc: `test_nik_crypto.py` (enc:v1 prefix, nonce unik), liveness threshold, OCR parse, outbox envelope CE.
 - analytics: fraud score deterministik (==50.0), consumer replay dedup (`rowcount=0`), money Decimal 1 test.
 - frontend: `currency.test.ts` 423 baris (format IDR, decimal-string arithmetic), axe-core real di 4 halaman + keyboard/SR, login E2E PKCE+CSRF+httpOnly cookie.
+
+## 📋 Open Findings - Audit 2026-08-17 (Backend + Web App)
+
+> Audit source-backed terhadap flow `docs/product/FLOWS.md`. Tidak ada production code atau test yang diubah. Selected unit/controller tests pass, tetapi full wallet suite membutuhkan Docker/Testcontainers.
+
+| Key | Sev | Domain | Ringkasan | Bukti |
+|:---|:---:|:---|:---|:---|
+| SEC-WALLET-001 | 🔴 | wallet | Customer bearer dapat memanggil `POST /wallets/{accountId}/credit` untuk menambah saldo sendiri tanpa inbound payment atau service identity. | `WalletController.java:246-276`; `WalletService.java:335-364` |
+| SEC-WALLET-002 | 🟠 | wallet/identity | Trusted-service bypass hanya memeriksa claim `azp`; client `payu-backend` juga mengaktifkan direct access grant, sehingga token user dari client tersebut dapat melewati ownership check. | `WalletController.java:80-96`; `payu-realm-export.json:257-273` |
+| PAY-LINK-001 | 🔴 | partner | Public payment-link confirm menerima `paymentMethod` dan `paymentReference` arbitrer, lalu menandai link PAID tanpa verifikasi settlement/provider. | `PublicPaymentLinkController.java:37-47`; `PaymentLinkService.java:145-171` |
+| PAY-SETTLE-001 | 🔴 | wallet | Settlement batch dapat menjadi COMPLETED hanya dengan perubahan status; tidak ada per-item merchant credit/journal seperti flow target. | `SettlementService.java:103-126,357-381`; FLOWS `782-792` |
+| TXN-TRANSFER-001 | 🟠 | transaction | Internal transfer sudah memindahkan uang, tetapi kegagalan membuat completed outbox masuk catch yang mengubah transaksi menjadi FAILED tanpa reversal. | `InitiateTransferCommandHandler.java:273-292`; `TransactionEventPublisherAdapter.java:114-121` |
+| SEC-AUTH-001 | 🔴 | auth | `DELETE /api/v1/auth/users/{userId}` hanya memerlukan bearer authenticated; tidak ada role atau service-account authorization untuk operasi IAM destruktif. | `AuthController.java:421-438`; `SecurityConfig.java:120-127` |
+| SEC-ACCOUNT-001 | 🔴 | account | Endpoint inter-service user profile/account IDs terbuka untuk bearer biasa dan mengembalikan email, phone, full name, serta NIK tanpa ownership/service boundary. | `UserAccountController.java:25-86`; `UserProfileResponse.java:13-36` |
+| SEC-NOTIF-002 | 🔴 | notification | List, detail, list-by-user, send, dan mark-read tidak memeriksa subject pemanggil; user dapat membaca atau mengubah notifikasi user lain. Response juga mengembalikan recipient/body mentah. | `NotificationResource.java:130-179,238-318,375-383`; `NotificationResponse.java:75-86` |
+| SEC-VA-001 | 🔴 | transaction | VA dibuat dengan `partnerId` dan `settlementAccountId` dari request tanpa ownership/partner authorization; callback kemudian mengkredit account tersebut. | `VirtualAccountController.java:44-68`; `VirtualAccountService.java:51-77,159-165` |
+| SEC-DISB-001 | 🟠 | transaction | GET disbursement by UUID atau idempotency key tidak melakukan ownership check dan response memuat source account, idempotency key, bank, account number, dan amount. | `DisbursementController.java:86-107`; `DisbursementResponse.java:65-81` |
+| PAY-DISB-001 | 🟠 | transaction | Disbursement melakukan remote wallet reserve sebelum `persistNew`; kegagalan insert dapat meninggalkan reservation orphan tanpa compensation. | `DisbursementService.java:101-117` |
+| SEC-STATEMENT-001 | 🟠 | statement | Partner statement menerima `customerId` arbitrer dan hanya mengecek role PARTNER/ADMIN, sehingga partner dapat meminta statement customer lain. | `PartnerStatementController.java:46-74` |
+| SEC-KYC-001 | 🟠 | account/kyc | Cache Dukcapil memakai NIK saja, padahal hasil verifikasi juga bergantung pada full name dan data matching lain; response verified dapat terbawa ke nama berbeda. | `KycVerificationAdapter.java:30-55`; `VerifyNikRequest.java:10-21` |
+| SEC-PROMO-001 | 🟠 | promotion | Promo apply mempercayai `request.userId` dari client dan menyimpan usage/reward atas ID tersebut tanpa subject binding. | `PromoRedemptionController.java:63-79`; `PromoRedemptionService.java:90-99` |
+| SEC-REFERRAL-001 | 🟠 | promotion | Create/complete referral tidak memiliki `@PreAuthorize` dan menyimpan referrer/referee IDs dari request, sehingga reward dapat diarahkan ke account arbitrer. | `ReferralResource.java:22-75`; `ReferralService.java:52-68,96-99` |
+| PROMO-REPLAY-001 | 🟠 | promotion | `transactionId` claim boleh null dan dedup index mengecualikan null; claim promo yang sama dapat membuat reward berulang. | `ClaimPromotionRequest.java:5-11`; `PromotionService.java:152-185`; `V12__dedup_reward_claim_and_loyalty_redeem.sql:15-17` |
+| SNAP-IDM-001 | 🟠 | partner | `partnerReferenceNo` tidak divalidasi wajib dan kolom nullable; natural-key dedup gagal sehingga request tanpa reference dapat membuat payment baru berulang. | `PaymentRequest.java:6-23`; `SnapBiPaymentService.java:85-123`; `SnapBiPaymentEntity.java:33-34` |
+| SNAP-TIME-001 | 🟡 | partner | Validasi timestamp memakai `Duration.toMinutes() <= 5`; request berumur 359 detik masih diterima walau window ditetapkan 300 detik. | `SnapBiController.java:64-72` |
+| FX-IDOR-001 | 🟠 | fx | GET conversion by UUID tidak memeriksa account ownership, berbeda dari endpoint reverse yang sudah melakukan check. | `FxController.java:179-190,230-239`; `FxConversionService.java:101-109` |
+| FX-IDM-001 | 🟠 | fx | `@Retry` membungkus seluruh conversion termasuk debit/credit wallet, sementara conversion tidak memiliki durable idempotency key; timeout setelah debit dapat mengulang mutation. | `FxConversionService.java:45-88`; `FxConversion.java:9-19` |
+| STATEMENT-PDF-001 | 🟡 | statement | PDF selalu dibuat satu halaman; renderer berhenti saat ruang habis dan hanya menulis pesan continued, sehingga transaksi tidak tampil walau totals/count mencakup semuanya. | `StatementService.java:391-441,572-617` |
+| SPLITBILL-SEC-001 | 🟠 | transaction | Create split bill menyimpan `creatorAccountId` dari request tanpa membandingkan JWT account. | `SplitBillController.java:58-68`; `SplitBillService.java:42-63` |
+| PAY-LINK-002 | 🟡 | partner | Expiry scheduler mengubah row ke EXPIRED tetapi mengirim entity stale; webhook dapat melaporkan status ACTIVE. | `PaymentLinkService.java:199-206,255-265` |
+| API-CONTRACT-001 | 🟡 | account/web | FLOWS mendokumentasikan register sebagai 201, tetapi controller mengembalikan 200; regression test juga mengunci 200. | `OnboardingController.java:47-64`; FLOWS `20,36` |
+| WEB-BILL-001 | 🔴 | web/billing | Bills page memanggil `/api/v1/billing/payments`, sedangkan gateway/backend mendaftarkan `/api/v1/payments`; mutation juga tidak mengirim `X-Idempotency-Key`. | `frontend/web-app/src/app/[locale]/bills/page.tsx:38-50`; `RouteRegistry.java:144-147` |
+| WEB-TRANSFER-001 | 🔴 | web/transaction | Manual recipient hanya mengisi `toAccountId`; schema mewajibkan `fromAccountId`, yang hanya diisi saat memilih favorite contact, sehingga confirm gagal validasi tanpa error source yang terlihat. | `transfer/page.tsx:86-117,181-197,519-529`; `types/index.ts:87-100` |
+| WEB-QRIS-001 | 🔴 | web/qris | QRIS page memiliki scanner state tetapi tidak pernah mengubahnya; tombol kamera/upload/personal QR/history tidak memiliki handler atau API mutation. | `frontend/web-app/src/app/[locale]/qris/page.tsx:7-10,50-78,120-145`; E2E `qris-flow.spec.ts:123-149` hanya memeriksa tombol tetap terlihat |
+| WEB-KYC-001 | 🔴 | web/kyc | KTP hanya disimpan dalam state dan tidak dikirim ke registration/KYC API; upload base64 KYC juga melebihi BFF limit 1 MiB untuk ukuran yang diizinkan service. | `onboarding/page.tsx:40-57,157-204`; `KYCService.ts:91-114`; BFF `route.ts:5-68` |
+| WEB-IDM-001 | 🔴 | web/financial | Axios me-retry semua 429 termasuk POST financial, key helper membuat key baru tiap invocation, dan beberapa mutation FX/scheduled/split tidak mengirim header idempotency. | `lib/api.ts:150-177`; `lib/utils.ts:25-32`; `FxService.ts:150-174`; `TransactionService.ts:109-153` |
+| WEB-AUTH-001 | 🟠 | web/account | Settings mengirim PUT ke `/accounts/users/{id}` sementara account controller hanya memiliki GET; jika response sukses tersedia, `useUpdateUser` juga mengganti `accountId` dengan `user.id`. | `UserService.ts:28-35`; `UserAccountController.java:45-86`; `useUser.ts:25-36`; `settings/page.tsx:61-67` |
+| WEB-LOG-001 | 🟠 | web/security | Registration dan financial handlers menulis Axios error object penuh ke browser console; error config dapat membawa password, NIK, PII, atau payload finansial. | `onboarding/page.tsx:52-64`; `useTransactions.ts:39-72`; `bills/page.tsx:47-60` |
+| WEB-INVEST-001 | 🟠 | web/investment | Investment page hanya menampilkan balance dan placeholder unavailable; tidak ada aksi buy/sell walau flow I1-I5 tersedia di catalog. | `investments/page.tsx:9-72`; `FEATURES.md:83-87` |
+| WEB-LEND-001 | 🟠 | web/lending | Tombol aktivasi PayLater, apply loan, dan bayar tidak memiliki handler; transaction ID juga dipaksa ke `number`, merusak UUID/string ID. | `lending/page.tsx:89-95,167-201,254-258`; `lending/page.tsx:56-62` |
+| WEB-STATEMENT-002 | 🟡 | web/statement | Selector monthly/quarterly/annual tidak dikirim ke request; load more selalu memanggil page 0, sehingga period dan pagination UI tidak sesuai hasil. | `statement-downloader.tsx:31-35,64-76,414-424`; `StatementService.ts:33-40,115-119` |
+| WEB-NOTIF-001 | 🟡 | web/notification | Mark-all/delete-all/item delete tidak punya handler; detail diarahkan ke route yang tidak ada dan filter UI memakai PROMO/SECURITY sementara backend mengirim channel PUSH/EMAIL/SMS/IN_APP. | `notifications/page.tsx:73-79,97-109,158-176`; `NotificationService.ts:7-18,32-33` |
+| WEB-MONEY-001 | 🟡 | web/transaction | Edit scheduled transfer memakai `number` dan `parseInt`, sehingga nilai decimal seperti `1000.50` terkirim sebagai `1000`. | `scheduled-transfers/page.tsx:68-84,358-366`; `TransactionService.ts:194-234` |
+| WEB-WALLET-001 | 🟡 | web/wallet | Saving goals dan shared pockets dirender dari data hard-coded termasuk balance dan member names; reserve progress juga hard-coded 15%. | `pockets/page.tsx:211-266,338-345` |
+| WEB-TXN-001 | 🟡 | web/transaction | Ringkasan transaksi menganggap hanya TOP_UP sebagai credit; internal transfer masuk akan dihitung sebagai Total Keluar. | `transactions/page.tsx:61-89`; `types/index.ts:128-143` |
+| WEB-QA-001 | 🟡 | web/qa | Playwright E2E tidak dapat memberi evidence karena config memaksa Chrome system channel yang tidak tersedia; run QRIS gagal sebelum aplikasi dijalankan. | `playwright.config.ts:36-45`; run `npm run test:e2e -- e2e/qris-flow.spec.ts --project=chromium` |
+| WEB-DEP-001 | 🟠 | web/security | `npm audit --omit=dev --audit-level=high` menemukan high vulnerability pada `nanoid <3.3.18` di lockfile; upgrade harus diverifikasi dengan build/test. | `frontend/web-app/package-lock.json`; audit run 2026-08-17 |
 
 ---
 
