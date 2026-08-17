@@ -1,10 +1,8 @@
 package id.payu.auth.application.service;
 
 import id.payu.auth.domain.model.LoginContext;
-import id.payu.auth.adapter.persistence.entity.UserRiskProfileEntity;
-import id.payu.auth.adapter.persistence.entity.UserKnownDeviceEntity;
-import id.payu.auth.adapter.persistence.entity.UserKnownIpEntity;
-import id.payu.auth.adapter.persistence.repository.UserRiskProfileRepository;
+import id.payu.auth.domain.model.UserRiskProfile;
+import id.payu.auth.domain.port.out.RiskProfileRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +19,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class RiskEvaluationService {
 
-    private final UserRiskProfileRepository riskProfileRepository;
+    private final RiskProfileRepositoryPort riskProfileRepository;
 
     @Value("${payu.security.risk.mfa-threshold:50}")
     private int mfaThreshold;
@@ -53,37 +51,37 @@ public class RiskEvaluationService {
     private int unusualHoursEnd;
 
     public RiskEvaluationResult evaluateRisk(LoginContext context) {
-        UserRiskProfileEntity profile = getUserRiskProfile(context.username());
-        
+        UserRiskProfile profile = getUserRiskProfile(context.username());
+
         int riskScore = 0;
         List<String> riskFactors = new ArrayList<>();
-        
+
         if (isNewDevice(profile, context.deviceId())) {
             riskScore += newDeviceRisk;
             riskFactors.add("new_device");
         }
-        
+
         if (isNewIpAddress(profile, context.ipAddress())) {
             riskScore += newIpRisk;
             riskFactors.add("new_ip_address");
         }
-        
+
         if (profile.getFailedAttempts() > 0) {
             riskScore += profile.getFailedAttempts() * failedAttemptsRisk;
             riskFactors.add("failed_attempts:" + profile.getFailedAttempts());
         }
-        
+
         if (isUnusualLoginTime(context.timestamp())) {
             riskScore += unusualTimeRisk;
             riskFactors.add("unusual_time");
         }
-        
+
         // BUG-BE-120: MFA enabled/disabled via configuration property
         boolean mfaRequired = mfaEnabled && riskScore >= mfaThreshold;
-        
+
         log.info("Risk evaluation for user {}: score={}, mfa_required={}, factors={}",
                 context.username(), riskScore, mfaRequired, riskFactors);
-        
+
         return new RiskEvaluationResult(
                 riskScore,
                 mfaRequired,
@@ -94,46 +92,44 @@ public class RiskEvaluationService {
 
     @Transactional
     public void recordSuccessfulLogin(String username, LoginContext context) {
-        UserRiskProfileEntity profile = getUserRiskProfile(username);
-        
+        UserRiskProfile profile = getUserRiskProfile(username);
+
         // Add Device if new
         if (context.deviceId() != null && isNewDevice(profile, context.deviceId())) {
             // profile.addKnownDevice(context.deviceId());
         }
-        
+
         // Add IP if new
         if (context.ipAddress() != null && isNewIpAddress(profile, context.ipAddress())) {
             profile.addKnownIp(context.ipAddress());
         }
-        
+
         profile.setFailedAttempts(0);
         riskProfileRepository.save(profile);
     }
 
     @Transactional
     public void recordFailedAttempt(String username) {
-        UserRiskProfileEntity profile = getUserRiskProfile(username);
+        UserRiskProfile profile = getUserRiskProfile(username);
         profile.setFailedAttempts(profile.getFailedAttempts() + 1);
         riskProfileRepository.save(profile);
     }
 
     @Transactional
     public void clearFailedAttempts(String username) {
-        riskProfileRepository.findById(username).ifPresent(profile -> {
+        riskProfileRepository.findByUsername(username).ifPresent(profile -> {
             profile.setFailedAttempts(0);
             riskProfileRepository.save(profile);
         });
     }
 
-    private UserRiskProfileEntity getUserRiskProfile(String username) {
-        return riskProfileRepository.findById(username)
+    private UserRiskProfile getUserRiskProfile(String username) {
+        return riskProfileRepository.findByUsername(username)
                 .orElseGet(() -> {
-                     UserRiskProfileEntity newProfile = new UserRiskProfileEntity();
-                     newProfile.setUsername(username);
-                     newProfile.setFailedAttempts(0);
-                     // Persist immediately so child entities (known IPs, devices)
-                     // can reference a managed entity with valid PK
-                     return riskProfileRepository.save(newProfile);
+                    UserRiskProfile newProfile = new UserRiskProfile();
+                    newProfile.setUsername(username);
+                    newProfile.setFailedAttempts(0);
+                    return riskProfileRepository.save(newProfile);
                 });
     }
 
@@ -145,7 +141,7 @@ public class RiskEvaluationService {
     private static final java.util.regex.Pattern DEVICE_ID_PATTERN =
             java.util.regex.Pattern.compile("^[a-zA-Z0-9\\-]{16,128}$");
 
-    private boolean isNewDevice(UserRiskProfileEntity profile, String deviceId) {
+    private boolean isNewDevice(UserRiskProfile profile, String deviceId) {
         if (deviceId == null || deviceId.isBlank()) return false;
         // BUG-BE-178: Validate deviceId format — reject untrusted/malformed values
         if (!DEVICE_ID_PATTERN.matcher(deviceId).matches()) {
@@ -154,17 +150,17 @@ public class RiskEvaluationService {
             return true; // Treat invalid deviceId as unknown → triggers new_device risk
         }
         if (profile.getKnownDevices() == null) return true;
-        
+
         return profile.getKnownDevices().stream()
-                .noneMatch(d -> Objects.equals(d.getDeviceId(), deviceId));
+                .noneMatch(d -> Objects.equals(d, deviceId));
     }
 
-    private boolean isNewIpAddress(UserRiskProfileEntity profile, String ipAddress) {
+    private boolean isNewIpAddress(UserRiskProfile profile, String ipAddress) {
         if (ipAddress == null) return false;
         if (profile.getKnownIps() == null) return true;
-        
+
         return profile.getKnownIps().stream()
-                .noneMatch(ip -> Objects.equals(ip.getIpAddress(), ipAddress));
+                .noneMatch(ip -> Objects.equals(ip, ipAddress));
     }
 
     private boolean isUnusualLoginTime(Long timestamp) {
@@ -185,7 +181,7 @@ public class RiskEvaluationService {
      * @return true if account is active, false if locked
      */
     public boolean isAccountActive(String userId) {
-        return riskProfileRepository.findById(userId)
+        return riskProfileRepository.findByUsername(userId)
                 .map(profile -> {
                     // BUG-BE-121: Use dedicated lockout threshold (default 5) instead of mfaThreshold (50)
                     boolean isActive = profile.getFailedAttempts() < lockoutThreshold;
@@ -204,7 +200,7 @@ public class RiskEvaluationService {
         private final List<String> riskFactors;
         private final String message;
 
-        public RiskEvaluationResult(int riskScore, boolean mfaRequired, 
+        public RiskEvaluationResult(int riskScore, boolean mfaRequired,
                                    List<String> riskFactors, String message) {
             this.riskScore = riskScore;
             this.mfaRequired = mfaRequired;

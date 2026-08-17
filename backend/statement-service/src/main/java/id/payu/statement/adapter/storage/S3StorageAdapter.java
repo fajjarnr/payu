@@ -1,5 +1,6 @@
 package id.payu.statement.adapter.storage;
 
+import id.payu.statement.domain.port.out.StatementStoragePort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -32,7 +33,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
-public class S3StorageAdapter {
+public class S3StorageAdapter implements StatementStoragePort {
 
     @Value("${statement.storage.type:s3}")
     private String storageType;

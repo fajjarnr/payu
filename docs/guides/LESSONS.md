@@ -2,7 +2,24 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
-## L-242: Flyway Transactional Lock vs CREATE INDEX CONCURRENTLY + Checksum Discipline (2026-08-15)
+## L-264: Hexagonal Boundary Enforcement & ArchUnit Isolation for Microservices (2026-08-17)
+
+**Context**: ARCH-HEX-001 remediation across 5 core services (`statement-service`, `support-service`, `auth-service`, `loan-origination-process`, `lending-rules`). Application layers leaked direct imports to JPA entities and external clients, violating hexagonal architecture boundaries.
+
+**Lesson**:
+- **Application & Domain Isolation**: Application services (`application.service`) and domain models (`domain.model`) must never import `adapter.*` persistence entities or clients directly. All external communication must pass through outbound ports (`domain.port.out.*`) and inbound use-case ports (`domain.port.in.*`), implemented by persistence adapters (`adapter.persistence.*`).
+- **ArchUnit Configuration**: Always configure `@AnalyzeClasses(..., importOptions = ImportOption.DoNotIncludeTests.class)`. Without this import option, test mocks, fixtures, and slice configurations in `src/test` are analyzed against production layer rules, causing false positive architectural violations.
+- **Lombok Fallback Stability (Rule 7)**: When Lombok annotations cause annotation processing or compilation anomalies in pure domain classes, fallback to explicit Java POJOs (with manual getters/setters/builders) ensures deterministic builds across all Java versions (Java 25).
+- **Service Verification**: Verify every refactored service with both its unit/integration tests and an ArchUnit layered architecture test suite before rebuilding container images.
+
+**Applied evidence**:
+- `statement-service`: 65/65 tests pass, ArchUnit layered architecture compliant with storage port isolation.
+- `support-service`: 53/53 tests pass, ArchUnit layered architecture compliant with repository port adapters.
+- `auth-service`: 82/82 tests pass, ArchUnit layered architecture compliant; `RefreshTokenService` moved to application service layer.
+- `loan-origination-process`: 29/29 tests pass, ArchUnit layered architecture compliant; `LoanOriginationProcess` domain model decoupled from JPA entity.
+- `lending-rules`: 14/14 tests pass, ArchUnit layered architecture compliant.
+- Full backend build (`mvn clean package -DskipTests -T 1C`) 44/44 modules SUCCESS.
+- Podman deployment `1.11.13`: all containers healthy, live health checks 200 OK.
 
 **Context**: fresh local stack (1.11.2) — `backoffice-service` hung forever at migration V8 (`CREATE INDEX CONCURRENTLY`), unhealthy; log had a one-off WARN `there is already a transaction in progress` during V6. First attempt (removing V6's explicit `BEGIN;...COMMIT;`) fixed the WARN but NOT the hang — proving the two are unrelated.
 

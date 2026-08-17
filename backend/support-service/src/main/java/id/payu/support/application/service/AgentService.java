@@ -1,10 +1,10 @@
 package id.payu.support.application.service;
 
-import id.payu.support.adapter.persistence.entity.AgentTrainingEntity;
-import id.payu.support.adapter.persistence.entity.SupportAgentEntity;
+import id.payu.support.domain.AgentLevel;
+import id.payu.support.domain.model.SupportAgent;
+import id.payu.support.domain.port.out.SupportAgentRepositoryPort;
 import id.payu.support.dto.AgentResponse;
 import id.payu.support.dto.CreateAgentRequest;
-import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -14,14 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import id.payu.support.domain.AgentLevel;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AgentService {
 
-    private final SupportAgentRepository agentRepository;
+    private final SupportAgentRepositoryPort agentRepository;
 
     @CircuitBreaker(name = "support", fallbackMethod = "getAllAgentsFallback")
     @Retry(name = "support")
@@ -52,7 +51,7 @@ public class AgentService {
     public AgentResponse createAgent(CreateAgentRequest request) {
         log.info("Creating new agent: {} ({})", request.name(), request.employeeId());
 
-        SupportAgentEntity agent = SupportAgentEntity.builder()
+        SupportAgent agent = SupportAgent.builder()
                 .employeeId(request.employeeId())
                 .name(request.name())
                 .email(request.email())
@@ -73,7 +72,7 @@ public class AgentService {
         return agentRepository.findById(id)
                 .map(agent -> {
                     agent.setActive(active);
-                    SupportAgentEntity updated = agentRepository.save(agent);
+                    SupportAgent updated = agentRepository.save(agent);
                     log.info("Agent {} status updated: active={}", id, active);
                     return toResponse(updated);
                 })
@@ -88,7 +87,7 @@ public class AgentService {
         return agentRepository.countTrainedAgents();
     }
 
-    private AgentResponse toResponse(SupportAgentEntity agent) {
+    private AgentResponse toResponse(SupportAgent agent) {
         return new AgentResponse(
                 agent.getId(),
                 agent.getEmployeeId(),

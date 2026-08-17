@@ -1,6 +1,6 @@
 package id.payu.statement.application.service;
 
-import id.payu.statement.adapter.client.TransactionServiceClient;
+import id.payu.statement.domain.port.out.TransactionServicePort;
 import id.payu.statement.domain.port.out.ReceiptRepositoryPort;
 import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
 import id.payu.statement.application.service.dto.ReceiptResponse;
@@ -37,7 +37,7 @@ class ReceiptServiceTest {
     private ReceiptRepositoryPort receiptRepository;
 
     @Mock
-    private TransactionServiceClient transactionServiceClient;
+    private TransactionServicePort transactionServiceClient;
 
     @InjectMocks
     private ReceiptService receiptService;

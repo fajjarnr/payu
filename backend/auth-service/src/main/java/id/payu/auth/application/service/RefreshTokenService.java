@@ -1,10 +1,10 @@
-package id.payu.auth.adapter.persistence;
+package id.payu.auth.application.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import id.payu.cache.service.DistributedCache;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -25,7 +25,7 @@ import java.util.UUID;
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc6819#section-4.7.1">OAuth 2.0 Threat Model - Refresh Token Rotation</a>
  */
 @Slf4j
-@Component
+@Service
 public class RefreshTokenService {
 
     private final DistributedCache distributedCache;

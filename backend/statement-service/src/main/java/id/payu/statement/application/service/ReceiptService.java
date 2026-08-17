@@ -1,6 +1,6 @@
 package id.payu.statement.application.service;
 
-import id.payu.statement.adapter.client.TransactionServiceClient;
+import id.payu.statement.domain.port.out.TransactionServicePort;
 import id.payu.statement.dto.TransactionRecord;
 import id.payu.statement.domain.port.out.ReceiptRepositoryPort;
 import id.payu.statement.domain.model.Receipt;
@@ -49,7 +49,7 @@ import java.util.UUID;
 public class ReceiptService {
 
     private final ReceiptRepositoryPort receiptRepository;
-    private final TransactionServiceClient transactionServiceClient;
+    private final TransactionServicePort transactionServiceClient;
 
     @Value("${receipt.company.name:PayU Digital Banking}")
     private String companyName;

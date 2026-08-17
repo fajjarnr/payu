@@ -1,6 +1,6 @@
 package id.payu.auth.config;
 
-import id.payu.auth.adapter.persistence.RefreshTokenService;
+import id.payu.auth.application.service.RefreshTokenService;
 import id.payu.auth.adapter.security.KeycloakService;
 import id.payu.auth.adapter.web.AuthController;
 import id.payu.auth.application.service.RiskEvaluationService;

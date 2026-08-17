@@ -1,9 +1,10 @@
 package id.payu.support.application.service;
 
-import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
+import id.payu.support.domain.TrainingStatus;
+import id.payu.support.domain.model.TrainingModule;
+import id.payu.support.domain.port.out.TrainingModuleRepositoryPort;
 import id.payu.support.dto.CreateTrainingModuleRequest;
 import id.payu.support.dto.TrainingModuleResponse;
-import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.validation.ConstraintViolationException;
@@ -16,14 +17,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import id.payu.support.domain.TrainingStatus;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TrainingModuleService {
 
-    private final TrainingModuleRepository moduleRepository;
+    private final TrainingModuleRepositoryPort moduleRepository;
 
     @CircuitBreaker(name = "support", fallbackMethod = "getAllTrainingModulesFallback")
     @Retry(name = "support")
@@ -48,7 +48,7 @@ public class TrainingModuleService {
     public TrainingModuleResponse createModule(CreateTrainingModuleRequest request) {
         log.info("Creating new training module: {} ({})", request.title(), request.code());
 
-        TrainingModuleEntity module = TrainingModuleEntity.builder()
+        TrainingModule module = TrainingModule.builder()
                 .code(request.code())
                 .title(request.title())
                 .description(request.description())
@@ -71,7 +71,7 @@ public class TrainingModuleService {
         return moduleRepository.findById(id)
                 .map(module -> {
                     module.setStatus(status);
-                    TrainingModuleEntity updated = moduleRepository.save(module);
+                    TrainingModule updated = moduleRepository.save(module);
                     log.info("Training module {} status updated: {}", id, status);
                     return toResponse(updated);
                 })
@@ -85,7 +85,7 @@ public class TrainingModuleService {
                 .toList();
     }
 
-    private TrainingModuleResponse toResponse(TrainingModuleEntity module) {
+    private TrainingModuleResponse toResponse(TrainingModule module) {
         return new TrainingModuleResponse(
                 module.getId(),
                 module.getCode(),

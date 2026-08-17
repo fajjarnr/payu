@@ -32,16 +32,18 @@ public class ArchitectureTest {
             .layer("Adapter.Web").definedBy("..adapter.web..")
             .layer("Adapter.Client").definedBy("..adapter.client..")
             .layer("Adapter.Persistence").definedBy("..adapter.persistence..")
+            .layer("Adapter.Storage").definedBy("..adapter.storage..")
             .layer("Application").definedBy("..application..")
             .layer("Domain").definedBy("..domain..")
             .layer("Config").definedBy("..config..")
 
             .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
-            .whereLayer("Adapter.Client").mayOnlyBeAccessedByLayers("Application")
-            .whereLayer("Adapter.Persistence").mayOnlyBeAccessedByLayers("Application")
+            .whereLayer("Adapter.Client").mayNotBeAccessedByAnyLayer()
+            .whereLayer("Adapter.Persistence").mayNotBeAccessedByAnyLayer()
+            .whereLayer("Adapter.Storage").mayNotBeAccessedByAnyLayer()
             .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter.Web")
             .whereLayer("Domain").mayOnlyBeAccessedByLayers(
-                    "Adapter.Web", "Adapter.Client", "Adapter.Persistence", "Application")
+                    "Adapter.Web", "Adapter.Client", "Adapter.Persistence", "Adapter.Storage", "Application")
             .allowEmptyShould(true);
 
     // Epic E-19: Receipt Domain Architecture Tests

@@ -112,8 +112,8 @@ class LoanOriginationProcessServiceTest {
         when(repository.findById(process.getId())).thenReturn(java.util.Optional.of(process));
         when(repository.findAll()).thenReturn(java.util.List.of(process));
         var service = new LoanOriginationProcessService(creditScoring, disbursement, repository);
-
-        assertThat(service.getProcess(process.getId())).contains(process);
+        assertThat(service.getProcess(process.getId())).isPresent();
+        assertThat(service.getProcess(process.getId()).get().getId()).isEqualTo(process.getId());
         assertThat(service.listProcessIds()).containsExactly(process.getId());
     }
 

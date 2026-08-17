@@ -1,6 +1,6 @@
 package id.payu.loanorigination.adapter.web;
 
-import id.payu.loanorigination.adapter.persistence.LoanOriginationProcessEntity;
+import id.payu.loanorigination.domain.LoanOriginationProcess;
 import id.payu.loanorigination.domain.LoanOriginationRequest;
 import id.payu.loanorigination.service.LoanOriginationProcessService;
 import org.junit.jupiter.api.Test;
@@ -35,15 +35,15 @@ class LoanOriginationControllerTest {
         return new LoanOriginationController(processService);
     }
 
-    private LoanOriginationProcessEntity entity(UUID id) {
-        var e = new LoanOriginationProcessEntity();
-        e.setId(id);
-        e.setUserId("u-1");
-        e.setPrincipalAmount(new BigDecimal("100000"));
-        e.setLoanType("PERSONAL_LOAN");
-        e.setTenureMonths(12);
-        e.setStatus("PENDING_APPROVAL");
-        return e;
+    private LoanOriginationProcess entity(UUID id) {
+        return LoanOriginationProcess.builder()
+                .id(id)
+                .userId("u-1")
+                .principalAmount(new BigDecimal("100000"))
+                .loanType("PERSONAL_LOAN")
+                .tenureMonths(12)
+                .status("PENDING_APPROVAL")
+                .build();
     }
 
     @Test

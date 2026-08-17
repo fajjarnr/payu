@@ -1,8 +1,8 @@
 package id.payu.support.application.service;
 
-import id.payu.support.adapter.persistence.repository.AgentTrainingRepository;
-import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
-import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
+import id.payu.support.domain.port.out.AgentTrainingRepositoryPort;
+import id.payu.support.domain.port.out.SupportAgentRepositoryPort;
+import id.payu.support.domain.port.out.TrainingModuleRepositoryPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,11 +21,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class AgentTrainingServiceFallbackTest {
 
     @Mock
-    private AgentTrainingRepository agentTrainingRepository;
+    private AgentTrainingRepositoryPort agentTrainingRepository;
     @Mock
-    private SupportAgentRepository agentRepository;
+    private SupportAgentRepositoryPort agentRepository;
     @Mock
-    private TrainingModuleRepository moduleRepository;
+    private TrainingModuleRepositoryPort moduleRepository;
 
     private AgentTrainingService service() {
         return new AgentTrainingService(agentTrainingRepository, agentRepository, moduleRepository);

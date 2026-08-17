@@ -1,6 +1,6 @@
 package id.payu.statement.application.service.dto;
 
-import id.payu.statement.adapter.persistence.entity.StatementEntity;
+import id.payu.statement.domain.model.Statement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -43,9 +43,9 @@ public class StatementResponse {
     private String downloadUrl;
 
     /**
-     * Create formatted response from entity
+     * Create formatted response from domain model
      */
-    public static StatementResponse fromEntity(StatementEntity entity, String baseUrl) {
+    public static StatementResponse fromDomain(Statement entity, String baseUrl) {
         StatementResponse response = StatementResponse.builder()
             .id(entity.getId())
             .customerId(entity.getCustomerId())

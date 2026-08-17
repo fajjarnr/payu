@@ -2,6 +2,7 @@ package id.payu.loanorigination.service;
 
 import id.payu.loanorigination.adapter.persistence.LoanOriginationProcessEntity;
 import id.payu.loanorigination.adapter.persistence.LoanOriginationProcessRepository;
+import id.payu.loanorigination.domain.LoanOriginationProcess;
 import id.payu.loanorigination.domain.LoanOriginationRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,7 @@ public class LoanOriginationProcessService {
     }
 
     @Transactional
-    public LoanOriginationProcessEntity startProcess(LoanOriginationRequest request, String authenticatedUserId) {
+    public LoanOriginationProcess startProcess(LoanOriginationRequest request, String authenticatedUserId) {
         if (authenticatedUserId == null || authenticatedUserId.isBlank()) {
             throw new IllegalArgumentException("Authenticated user is required");
         }
@@ -49,12 +50,12 @@ public class LoanOriginationProcessService {
         process.setCreditScore(score);
         process.setApproved(score.compareTo(MINIMUM_SCORE) < 0 ? false : null);
         process.setStatus(score.compareTo(MINIMUM_SCORE) < 0 ? "REJECTED_LOW_SCORE" : "PENDING_APPROVAL");
-        return repository.save(process);
+        return toDomain(repository.save(process));
     }
 
     @Transactional(readOnly = true)
-    public Optional<LoanOriginationProcessEntity> getProcess(UUID id) {
-        return repository.findById(id);
+    public Optional<LoanOriginationProcess> getProcess(UUID id) {
+        return repository.findById(id).map(this::toDomain);
     }
 
     @Transactional(readOnly = true)
@@ -63,13 +64,13 @@ public class LoanOriginationProcessService {
     }
 
     @Transactional
-    public LoanOriginationProcessEntity approve(UUID id, boolean approved, String comment, String approverId) {
+    public LoanOriginationProcess approve(UUID id, boolean approved, String comment, String approverId) {
         var process = repository.findByIdForUpdate(id)
                 .orElseThrow(() -> new java.util.NoSuchElementException("Loan process not found: " + id));
 
         if (!"PENDING_APPROVAL".equals(process.getStatus())) {
             if (Objects.equals(process.getApproved(), approved)) {
-                return process;
+                return toDomain(process);
             }
             throw new IllegalStateException("Loan process is already completed");
         }
@@ -90,6 +91,26 @@ public class LoanOriginationProcessService {
         } else {
             process.setStatus("REJECTED");
         }
-        return repository.save(process);
+        return toDomain(repository.save(process));
+    }
+
+    private LoanOriginationProcess toDomain(LoanOriginationProcessEntity entity) {
+        if (entity == null) return null;
+        return LoanOriginationProcess.builder()
+                .id(entity.getId())
+                .userId(entity.getUserId())
+                .principalAmount(entity.getPrincipalAmount())
+                .tenureMonths(entity.getTenureMonths())
+                .purpose(entity.getPurpose())
+                .loanType(entity.getLoanType())
+                .creditScore(entity.getCreditScore())
+                .status(entity.getStatus())
+                .approved(entity.getApproved())
+                .comment(entity.getComment())
+                .approvedBy(entity.getApprovedBy())
+                .disbursementReference(entity.getDisbursementReference())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
     }
 }

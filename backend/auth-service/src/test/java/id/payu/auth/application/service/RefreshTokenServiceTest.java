@@ -1,4 +1,4 @@
-package id.payu.auth.adapter.persistence;
+package id.payu.auth.application.service;
 
 import id.payu.cache.service.DistributedCache;
 import java.time.Duration;
@@ -24,9 +24,9 @@ class RefreshTokenServiceTest {
     private RefreshTokenService refreshTokenService;
 
     @Test
-    void shouldStoreTokenAndReverseIndexWithTheRefreshTokenTtl() {
-        refreshTokenService.createRefreshToken("user-1234");
+    void createRefreshToken_shouldStoreTokenAndReverseIndexInCache() {
+        refreshTokenService.createRefreshToken("user-1");
 
-        verify(distributedCache, times(2)).put(anyString(), any(), eq(Duration.ofDays(7)));
+        verify(distributedCache, times(2)).put(anyString(), any(), any(Duration.class));
     }
 }

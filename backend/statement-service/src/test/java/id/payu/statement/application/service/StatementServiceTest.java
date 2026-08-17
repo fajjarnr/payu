@@ -1,11 +1,12 @@
 package id.payu.statement.application.service;
 
-import id.payu.statement.adapter.client.TransactionServiceClient;
+import id.payu.statement.domain.port.out.StatementRepositoryPort;
+import id.payu.statement.domain.port.out.StatementStoragePort;
+import id.payu.statement.domain.port.out.TransactionServicePort;
+import id.payu.statement.domain.port.out.WalletServicePort;
 import id.payu.statement.dto.TransactionRecord;
 import id.payu.statement.dto.TransactionType;
-import id.payu.statement.adapter.client.WalletServiceClient;
-import id.payu.statement.adapter.persistence.entity.StatementEntity;
-import id.payu.statement.adapter.persistence.repository.StatementRepository;
+import id.payu.statement.domain.model.Statement;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.application.service.dto.StatementResponse;
 import id.payu.statement.application.service.exception.StatementException;
@@ -43,19 +44,19 @@ import static org.mockito.Mockito.*;
 class StatementServiceTest {
 
     @Mock
-    private StatementRepository statementRepository;
+    private StatementRepositoryPort statementRepository;
 
     @Mock
     private OutboxService outboxService;
 
     @Mock
-    private WalletServiceClient walletServiceClient;
+    private WalletServicePort walletServiceClient;
 
     @Mock
-    private TransactionServiceClient transactionServiceClient;
+    private TransactionServicePort transactionServiceClient;
 
     @Mock
-    private id.payu.statement.adapter.storage.S3StorageAdapter s3StorageAdapter;
+    private StatementStoragePort s3StorageAdapter;
 
     @InjectMocks
     private StatementService statementService;
@@ -63,7 +64,7 @@ class StatementServiceTest {
     private UUID testUserId;
     private String testAccountNumber;
     private UUID testStatementId;
-    private StatementEntity testStatement;
+    private Statement testStatement;
 
     @BeforeEach
     void setUp() {
@@ -71,7 +72,7 @@ class StatementServiceTest {
         testAccountNumber = "1234567890";
         testStatementId = UUID.randomUUID();
 
-        testStatement = StatementEntity.builder()
+        testStatement = Statement.builder()
                 .id(testStatementId)
                 .customerId(testUserId.toString())
                 .accountNumber(testAccountNumber)
@@ -107,7 +108,7 @@ class StatementServiceTest {
             assertThat(result.getId()).isEqualTo(testStatementId);
             assertThat(result.getCustomerId()).isEqualTo(testUserId.toString());
             assertThat(result.getStatus()).isEqualTo(StatementStatus.COMPLETED);
-            verify(statementRepository).save(any(StatementEntity.class));
+            verify(statementRepository).save(any(Statement.class));
         }
 
         @Test
@@ -129,7 +130,7 @@ class StatementServiceTest {
 
             statementService.getStatement(testStatementId, testUserId.toString());
 
-            ArgumentCaptor<StatementEntity> captor = ArgumentCaptor.forClass(StatementEntity.class);
+            ArgumentCaptor<Statement> captor = ArgumentCaptor.forClass(Statement.class);
             verify(statementRepository).save(captor.capture());
             assertThat(captor.getValue().getLastAccessedAt()).isNotNull();
         }
@@ -143,7 +144,7 @@ class StatementServiceTest {
         @DisplayName("should list statements for user")
         void shouldListStatementsForUser() {
             Pageable pageable = PageRequest.of(0, 20);
-            Page<StatementEntity> statementPage = new PageImpl<>(List.of(testStatement), pageable, 1);
+            Page<Statement> statementPage = new PageImpl<>(List.of(testStatement), pageable, 1);
 
             when(statementRepository.findAllByCustomerId(testUserId.toString(), pageable))
                     .thenReturn(statementPage);
@@ -159,7 +160,7 @@ class StatementServiceTest {
         @DisplayName("should return empty page when no statements found")
         void shouldReturnEmptyPageWhenNoStatementsFound() {
             Pageable pageable = PageRequest.of(0, 20);
-            Page<StatementEntity> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+            Page<Statement> emptyPage = new PageImpl<>(List.of(), pageable, 0);
 
             when(statementRepository.findAllByCustomerId(testUserId.toString(), pageable))
                     .thenReturn(emptyPage);
@@ -184,7 +185,7 @@ class StatementServiceTest {
             request = new StatementGenerationRequest(testUserId.toString(), testAccountNumber, 2024, 1);
             when(statementRepository.existsByCustomerIdAndStatementPeriod(testUserId.toString(), LocalDate.of(2024, 1, 1)))
                     .thenReturn(false);
-            when(statementRepository.save(any(StatementEntity.class)))
+            when(statementRepository.save(any(Statement.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
             when(s3StorageAdapter.isEnabled()).thenReturn(true);
             when(s3StorageAdapter.uploadPdf(any(), any())).thenReturn("/s3/statement.pdf");
@@ -206,9 +207,9 @@ class StatementServiceTest {
 
             statementService.generateStatement(request);
 
-            ArgumentCaptor<StatementEntity> captor = ArgumentCaptor.forClass(StatementEntity.class);
+            ArgumentCaptor<Statement> captor = ArgumentCaptor.forClass(Statement.class);
             verify(statementRepository, atLeast(2)).save(captor.capture());
-            StatementEntity saved = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            Statement saved = captor.getAllValues().get(captor.getAllValues().size() - 1);
             assertThat(saved.getClosingBalance()).isEqualByComparingTo("15000000");
             assertThat(saved.getOpeningBalance()).isEqualByComparingTo("10000000");
             verify(transactionServiceClient, never()).getTransactions(
@@ -235,9 +236,9 @@ class StatementServiceTest {
 
             statementService.generateStatement(request);
 
-            ArgumentCaptor<StatementEntity> captor = ArgumentCaptor.forClass(StatementEntity.class);
+            ArgumentCaptor<Statement> captor = ArgumentCaptor.forClass(Statement.class);
             verify(statementRepository, atLeast(2)).save(captor.capture());
-            StatementEntity saved = captor.getAllValues().get(captor.getAllValues().size() - 1);
+            Statement saved = captor.getAllValues().get(captor.getAllValues().size() - 1);
             assertThat(saved.getClosingBalance()).isEqualByComparingTo("20000000");
             assertThat(saved.getOpeningBalance()).isEqualByComparingTo("18000000");
         }
@@ -368,18 +369,18 @@ class StatementServiceTest {
         void shouldResetStatusToGenerating() {
             when(statementRepository.findById(testStatementId))
                     .thenReturn(Optional.of(testStatement));
-            when(statementRepository.save(any(StatementEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(statementRepository.save(any(Statement.class))).thenAnswer(inv -> inv.getArgument(0));
             // Mock the exists check to return true so generateStatement doesn't run
             when(statementRepository.existsByCustomerIdAndStatementPeriod(any(), any()))
                     .thenReturn(true);
 
             statementService.regenerateStatement(testStatementId);
 
-            ArgumentCaptor<StatementEntity> captor = ArgumentCaptor.forClass(StatementEntity.class);
+            ArgumentCaptor<Statement> captor = ArgumentCaptor.forClass(Statement.class);
             verify(statementRepository, atLeast(1)).save(captor.capture());
 
             // One of the saved statements should have GENERATING status
-            List<StatementEntity> savedStatements = captor.getAllValues();
+            List<Statement> savedStatements = captor.getAllValues();
             assertThat(savedStatements).anyMatch(s -> s.getStatus() == StatementStatus.GENERATING);
         }
     }

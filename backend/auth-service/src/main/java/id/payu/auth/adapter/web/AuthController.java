@@ -15,7 +15,7 @@ import id.payu.auth.dto.RefreshTokenResponse;
 import id.payu.auth.dto.SessionValidationResponse;
 import id.payu.auth.exception.AuthDomainException;
 import id.payu.auth.adapter.security.KeycloakService;
-import id.payu.auth.adapter.persistence.RefreshTokenService;
+import id.payu.auth.application.service.RefreshTokenService;
 import id.payu.auth.application.service.RiskEvaluationService;
 import id.payu.auth.application.service.SessionValidationService;
 import id.payu.security.annotation.Audited;

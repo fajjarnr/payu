@@ -99,4 +99,8 @@ public class LoanOriginationProcessEntity {
     public String getDisbursementReference() { return disbursementReference; }
     public void setDisbursementReference(String disbursementReference) { this.disbursementReference = disbursementReference; }
     public long getVersion() { return version; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -1,13 +1,15 @@
 package id.payu.support.application.service;
 
-import id.payu.support.adapter.persistence.entity.AgentTrainingEntity;
-import id.payu.support.adapter.persistence.entity.SupportAgentEntity;
-import id.payu.support.adapter.persistence.entity.TrainingModuleEntity;
+import id.payu.support.domain.CompletionStatus;
+import id.payu.support.domain.TrainingStatus;
+import id.payu.support.domain.model.AgentTraining;
+import id.payu.support.domain.model.SupportAgent;
+import id.payu.support.domain.model.TrainingModule;
+import id.payu.support.domain.port.out.AgentTrainingRepositoryPort;
+import id.payu.support.domain.port.out.SupportAgentRepositoryPort;
+import id.payu.support.domain.port.out.TrainingModuleRepositoryPort;
 import id.payu.support.dto.AgentTrainingResponse;
 import id.payu.support.dto.AssignTrainingRequest;
-import id.payu.support.adapter.persistence.repository.AgentTrainingRepository;
-import id.payu.support.adapter.persistence.repository.SupportAgentRepository;
-import id.payu.support.adapter.persistence.repository.TrainingModuleRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.validation.ConstraintViolationException;
@@ -21,17 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import id.payu.support.domain.CompletionStatus;
-import id.payu.support.domain.TrainingStatus;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AgentTrainingService {
 
-    private final AgentTrainingRepository agentTrainingRepository;
-    private final SupportAgentRepository agentRepository;
-    private final TrainingModuleRepository moduleRepository;
+    private final AgentTrainingRepositoryPort agentTrainingRepository;
+    private final SupportAgentRepositoryPort agentRepository;
+    private final TrainingModuleRepositoryPort moduleRepository;
 
     @CircuitBreaker(name = "support", fallbackMethod = "getAllAgentTrainingsFallback")
     @Retry(name = "support")
@@ -76,17 +76,20 @@ public class AgentTrainingService {
     public AgentTrainingResponse assignTraining(AssignTrainingRequest request) {
         log.info("Assigning training: agent={}, module={}", request.agentId(), request.moduleId());
 
-        SupportAgentEntity agent = agentRepository.findById(request.agentId())
+        SupportAgent agent = agentRepository.findById(request.agentId())
                 .orElseThrow(() -> new IllegalArgumentException("Agent not found"));
 
-        TrainingModuleEntity module = moduleRepository.findById(request.moduleId())
+        TrainingModule module = moduleRepository.findById(request.moduleId())
                 .orElseThrow(() -> new IllegalArgumentException("Training module not found"));
 
-        AgentTrainingEntity agentTraining = agentTrainingRepository
-                .findByAgentAndTrainingModule(agent, module)
-                .orElseGet(() -> AgentTrainingEntity.builder()
-                        .agent(agent)
-                        .trainingModule(module)
+        AgentTraining agentTraining = agentTrainingRepository
+                .findByAgentIdAndTrainingModuleId(request.agentId(), request.moduleId())
+                .orElseGet(() -> AgentTraining.builder()
+                        .agentId(agent.getId())
+                        .agentName(agent.getName())
+                        .trainingModuleId(module.getId())
+                        .moduleCode(module.getCode())
+                        .moduleTitle(module.getTitle())
                         .build());
 
         if (request.status() != null) {
@@ -102,7 +105,7 @@ public class AgentTrainingService {
         agentTraining.setScore(request.score());
         agentTraining.setNotes(request.notes());
 
-        AgentTrainingEntity saved = agentTrainingRepository.save(agentTraining);
+        AgentTraining saved = agentTrainingRepository.save(agentTraining);
         log.info("Training assigned/updated: id={}", saved.getId());
 
         return toResponse(saved);
@@ -127,13 +130,15 @@ public class AgentTrainingService {
 
         // Count agents who have completed all mandatory modules
         return agentRepository.findAll().stream()
-                .filter(SupportAgentEntity::isActive)
+                .filter(SupportAgent::isActive)
                 .filter(agent -> {
                     long completedCount = agentTrainingRepository
-                            .findByAgent(agent)
+                            .findByAgentId(agent.getId())
                             .stream()
-                            .filter(at -> at.getTrainingModule().isMandatory())
-                            .filter(at -> at.getTrainingModule().getStatus() == TrainingStatus.ACTIVE)
+                            .filter(at -> {
+                                var mod = moduleRepository.findById(at.getTrainingModuleId());
+                                return mod.map(m -> m.isMandatory() && m.getStatus() == TrainingStatus.ACTIVE).orElse(false);
+                            })
                             .filter(at -> at.getStatus() == CompletionStatus.PASSED)
                             .count();
                     return completedCount >= mandatoryModules;
@@ -141,13 +146,13 @@ public class AgentTrainingService {
                 .count();
     }
 
-    private AgentTrainingResponse toResponse(AgentTrainingEntity training) {
+    private AgentTrainingResponse toResponse(AgentTraining training) {
         return new AgentTrainingResponse(
                 training.getId(),
-                training.getAgent().getId(),
-                training.getAgent().getName(),
-                training.getTrainingModule().getId(),
-                training.getTrainingModule().getTitle(),
+                training.getAgentId(),
+                training.getAgentName(),
+                training.getTrainingModuleId(),
+                training.getModuleTitle(),
                 training.getStatus(),
                 training.getScore(),
                 training.getStartedAt(),

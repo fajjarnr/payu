@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.13] - 2026-08-17
+
+### Fixed
+
+- **ARCH-HEX-001 (architecture, statement-service)**: decoupled `StatementService` and `ReceiptService` from direct `adapter.persistence.StatementEntity` and client imports. Added pure `Statement` domain model, outbound ports (`StatementRepositoryPort`, `TransactionServicePort`, `StatementStoragePort`), and `StatementRepositoryAdapter`. Updated ArchUnit suite (65/65 tests pass).
+- **ARCH-HEX-001 (architecture, support-service)**: decoupled `AgentService`, `TrainingModuleService`, `AgentTrainingService` from JPA repositories and entities. Added domain models (`SupportAgent`, `TrainingModule`, `AgentTraining`), outbound repository ports, and persistence adapters. Updated ArchUnit suite (53/53 tests pass).
+- **ARCH-HEX-001 (architecture, auth-service)**: introduced `UserRiskProfile` domain model, `RiskProfileRepositoryPort`, and `RiskProfileRepositoryAdapter`. Relocated `RefreshTokenService` from `adapter.persistence` to `application.service`. Enforced layered architecture in ArchUnit (82/82 tests pass).
+- **ARCH-HEX-001 (architecture, loan-origination-process)**: introduced `LoanOriginationProcess` domain model without Lombok dependency for build stability. Decoupled `LoanOriginationProcessService` and `LoanOriginationController` from `LoanOriginationProcessEntity`. Added ArchUnit layered architecture test suite (29/29 tests pass).
+- **ARCH-HEX-001 (architecture, lending-rules)**: added ArchUnit layered architecture test suite (14/14 tests pass).
+
+### Deploy
+
+- Services `statement-service`, `support-service`, `auth-service`, `loan-origination-process`, `lending-rules` rebuilt with image SemVer tag **`1.11.13`** and deployed live via Podman stack. All services healthy with 200 OK actuator health responses.
+
 ## [1.11.12] - 2026-08-16
 
 ### Added

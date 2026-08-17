@@ -11,6 +11,7 @@ import id.payu.transaction.grpc.TransactionResponse;
 import id.payu.transaction.grpc.TransactionServiceGrpc;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import id.payu.statement.domain.port.out.TransactionServicePort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +27,7 @@ import java.util.List;
  * is live; statement no longer does synchronous REST lookups.
  */
 @Component
-public class TransactionServiceClient {
+public class TransactionServiceClient implements TransactionServicePort {
 
     private ManagedChannel channel;
     private TransactionServiceGrpc.TransactionServiceBlockingStub stub;

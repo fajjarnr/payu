@@ -1,6 +1,6 @@
 package id.payu.loanorigination.adapter.web;
 
-import id.payu.loanorigination.adapter.persistence.LoanOriginationProcessEntity;
+import id.payu.loanorigination.domain.LoanOriginationProcess;
 import id.payu.loanorigination.domain.LoanOriginationRequest;
 import id.payu.loanorigination.service.LoanOriginationProcessService;
 import org.springframework.http.ResponseEntity;
@@ -87,7 +87,7 @@ public class LoanOriginationController {
         return jwt.getSubject();
     }
 
-    private static Map<String, Object> toResponse(LoanOriginationProcessEntity process) {
+    private static Map<String, Object> toResponse(LoanOriginationProcess process) {
         var response = new LinkedHashMap<String, Object>();
         response.put("processId", process.getId());
         response.put("userId", process.getUserId());

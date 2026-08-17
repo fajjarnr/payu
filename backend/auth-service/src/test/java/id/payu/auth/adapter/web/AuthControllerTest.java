@@ -1,7 +1,7 @@
 package id.payu.auth.adapter.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.payu.auth.adapter.persistence.RefreshTokenService;
+import id.payu.auth.application.service.RefreshTokenService;
 import id.payu.auth.adapter.security.KeycloakService;
 import id.payu.auth.application.service.RiskEvaluationService;
 import id.payu.auth.application.service.SessionValidationService;

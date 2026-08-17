@@ -1,9 +1,10 @@
 package id.payu.statement.application.service;
 
-import id.payu.statement.adapter.client.TransactionServiceClient;
-import id.payu.statement.adapter.client.WalletServiceClient;
-import id.payu.statement.adapter.persistence.entity.StatementEntity;
-import id.payu.statement.adapter.persistence.repository.StatementRepository;
+import id.payu.statement.domain.model.Statement;
+import id.payu.statement.domain.port.out.StatementRepositoryPort;
+import id.payu.statement.domain.port.out.StatementStoragePort;
+import id.payu.statement.domain.port.out.TransactionServicePort;
+import id.payu.statement.domain.port.out.WalletServicePort;
 import id.payu.statement.application.service.dto.StatementGenerationRequest;
 import id.payu.statement.dto.TransactionRecord;
 import id.payu.statement.dto.TransactionType;
@@ -57,11 +58,11 @@ import id.payu.statement.domain.entity.StatementStatus;
 @RequiredArgsConstructor
 public class StatementService {
 
-    private final StatementRepository statementRepository;
+    private final StatementRepositoryPort statementRepository;
     private final OutboxService outboxService;
-    private final WalletServiceClient walletServiceClient;
-    private final TransactionServiceClient transactionServiceClient;
-    private final id.payu.statement.adapter.storage.S3StorageAdapter s3StorageAdapter;
+    private final WalletServicePort walletServiceClient;
+    private final TransactionServicePort transactionServiceClient;
+    private final StatementStoragePort s3StorageAdapter;
 
     @Value("${statement.storage.path:/tmp/statements}")
     private String storagePath;
@@ -89,13 +90,13 @@ public class StatementService {
 
         // Check if statement already exists
         if (statementRepository.existsByCustomerIdAndStatementPeriod(request.getCustomerId(), statementPeriod)) {
-            log.info("StatementEntity already exists for customer {} and period {}", request.getCustomerId(), statementPeriod);
+            log.info("Statement already exists for customer {} and period {}", request.getCustomerId(), statementPeriod);
             return;
         }
 
         try {
             // Create statement entity
-            StatementEntity statement = StatementEntity.builder()
+            Statement statement = Statement.builder()
                 .id(UUID.randomUUID())
                 .customerId(request.getCustomerId())
                 .accountNumber(request.getAccountNumber())
@@ -134,7 +135,7 @@ public class StatementService {
                 request.getCustomerId(), statementPeriod, e);
 
             // Mark as failed
-            Optional<StatementEntity> failedStatement = statementRepository.findByCustomerIdAndStatementPeriod(
+            Optional<Statement> failedStatement = statementRepository.findByCustomerIdAndStatementPeriod(
                 request.getCustomerId(), statementPeriod);
             failedStatement.ifPresent(s -> {
                 s.markFailed();
@@ -153,7 +154,7 @@ public class StatementService {
     @Retry(name = "statement")
     @Transactional
     public StatementResponse getStatement(UUID statementId, String customerId) {
-        StatementEntity statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
+        Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "StatementEntity not found"));
 
         statement.recordAccess();
@@ -169,7 +170,7 @@ public class StatementService {
     @Retry(name = "statement")
     @Transactional(readOnly = true)
     public Page<StatementResponse> listStatements(String customerId, Pageable pageable) {
-        Page<StatementEntity> statements = statementRepository.findAllByCustomerId(customerId, pageable);
+        Page<Statement> statements = statementRepository.findAllByCustomerId(customerId, pageable);
         return new PageImpl<>(
             statements.stream().map(this::mapToResponse).toList(),
             statements.getPageable(),
@@ -194,7 +195,7 @@ public class StatementService {
     @CircuitBreaker(name = "statement", fallbackMethod = "getStatementPdfFallback")
     @Retry(name = "statement")
     public byte[] getStatementPdf(UUID statementId, String customerId) {
-        StatementEntity statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
+        Statement statement = statementRepository.findByIdAndCustomerId(statementId, customerId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "StatementEntity not found"));
 
         if (statement.getStatus() != StatementStatus.COMPLETED) {
@@ -229,7 +230,7 @@ public class StatementService {
      */
     @Async
     public void regenerateStatement(UUID statementId) {
-        StatementEntity statement = statementRepository.findById(statementId)
+        Statement statement = statementRepository.findById(statementId)
             .orElseThrow(() -> new StatementException("STATEMENT_002", "StatementEntity not found"));
 
         StatementGenerationRequest request = StatementGenerationRequest.builder()
@@ -676,7 +677,7 @@ public class StatementService {
         return filePath.toString();
     }
 
-    private void publishStatementGeneratedEvent(StatementEntity statement) {
+    private void publishStatementGeneratedEvent(Statement statement) {
         StatementGeneratedEvent event = StatementGeneratedEvent.builder()
             .statementId(statement.getId())
             .customerId(statement.getCustomerId())
@@ -696,7 +697,7 @@ public class StatementService {
         );
     }
 
-    private StatementResponse mapToResponse(StatementEntity statement) {
+    private StatementResponse mapToResponse(Statement statement) {
         return StatementResponse.builder()
             .id(statement.getId())
             .customerId(statement.getCustomerId())

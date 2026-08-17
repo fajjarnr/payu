@@ -1,5 +1,16 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.13 (2026-08-17)
+
+- **ARCH-HEX-001 (CLOSED)**: remediated hexagonal architecture across 5 target services:
+  - `statement-service`: introduced pure domain model `Statement`, outbound ports `StatementRepositoryPort`, `TransactionServicePort`, `StatementStoragePort`, persistence adapter `StatementRepositoryAdapter`. Application services decoupled from JPA entities and Feign/S3 clients. ArchUnit layered test passing (65/65 tests green).
+  - `support-service`: introduced domain models `SupportAgent`, `TrainingModule`, `AgentTraining`, outbound ports `SupportAgentRepositoryPort`, `TrainingModuleRepositoryPort`, `AgentTrainingRepositoryPort`, and persistence adapters. Application services and use cases fully decoupled from JPA repositories. ArchUnit layered test passing (53/53 tests green).
+  - `auth-service`: introduced `UserRiskProfile` domain model, `RiskProfileRepositoryPort`, `RiskProfileRepositoryAdapter`. Relocated `RefreshTokenService` from `adapter.persistence` to `application.service`. ArchUnit layered test passing (82/82 tests green).
+  - `loan-origination-process`: introduced pure domain model `LoanOriginationProcess` (without Lombok dependencies), updated `LoanOriginationProcessService` and `LoanOriginationController` to consume domain model. Added ArchUnit suite (29/29 tests green).
+  - `lending-rules`: added ArchUnit layered architecture test suite (14/14 tests green).
+- **Backend Build & Verification**: `mvn -f backend/pom.xml clean package -DskipTests -T 1C` built 44/44 reactor modules with 100% SUCCESS.
+- **Deploy live**: rebuilt images with SemVer tag `1.11.13` and deployed via Podman stack. All services healthy with 200 OK actuator health responses.
+
 ## Deploy 1.11.12 (2026-08-16)
 
 - **READY-022 (support-service, CLOSED)**: gate-eligible **81.5% line** (jacoco gate 80%, exclude config/dto/entity/domain). `HealthControllerTest` 2 + `AgentTrainingServiceFallbackTest` 4 → 56 test green, `mvn verify` BUILD SUCCESS. **Seluruh READY-022 selesai** — 4 service (lending-rules 89.8%, loan-origination 92.3%, api-portal 82.9%, support 81.5%) semua ≥80% dengan gate terjaga. Deployed live image `1.11.12`.

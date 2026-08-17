@@ -55,6 +55,7 @@ class ArchitectureTest {
                     .layer("Exception").definedBy("..exception..")
 
                     .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
+                    .whereLayer("Adapter.Persistence").mayNotBeAccessedByAnyLayer()
                     .whereLayer("Application").mayOnlyBeAccessedByLayers(
                             "Adapter.Web", "Adapter.Security")
                     .whereLayer("Domain").mayOnlyBeAccessedByLayers(
