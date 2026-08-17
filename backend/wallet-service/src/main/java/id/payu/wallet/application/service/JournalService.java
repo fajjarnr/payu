@@ -5,8 +5,8 @@ import id.payu.wallet.domain.model.LedgerEntry;
 import id.payu.wallet.domain.model.ChartOfAccount;
 import id.payu.wallet.domain.port.in.JournalUseCase;
 import id.payu.wallet.domain.port.out.JournalPersistencePort;
-import id.payu.wallet.dto.TrialBalanceResponse;
-import id.payu.wallet.dto.TrialBalanceResponse.TrialBalanceEntry;
+import id.payu.wallet.interfaces.dto.TrialBalanceResponse;
+import id.payu.wallet.interfaces.dto.TrialBalanceResponse.TrialBalanceEntry;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

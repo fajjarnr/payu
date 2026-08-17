@@ -2,7 +2,7 @@ package id.payu.dispute.adapter.web;
 
 import id.payu.dispute.domain.model.Dispute;
 import id.payu.dispute.domain.port.in.DisputeUseCase;
-import id.payu.dispute.dto.OpenDisputeRequest;
+import id.payu.dispute.interfaces.dto.OpenDisputeRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;

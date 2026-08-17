@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
-import id.payu.partner.dto.snap.*;
+import id.payu.partner.interfaces.dto.snap.*;
 import id.payu.partner.application.service.PartnerService;
 import id.payu.partner.application.service.SnapBiPaymentService;
 import id.payu.partner.application.service.SnapBiSignatureService;
@@ -433,5 +433,5 @@ public class SnapBiController {
         return ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(new SnapErrorResponse(code, message));
     }
 
-    // BUG-BE-146: SnapErrorResponse extracted to id.payu.partner.dto.snap.SnapErrorResponse
+    // BUG-BE-146: SnapErrorResponse extracted to id.payu.partner.interfaces.dto.snap.SnapErrorResponse
 }

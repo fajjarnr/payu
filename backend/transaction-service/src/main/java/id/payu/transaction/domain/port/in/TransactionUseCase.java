@@ -6,7 +6,7 @@ import id.payu.transaction.application.cqrs.command.ProcessQrisPaymentCommand;
 import id.payu.transaction.application.cqrs.query.GetAccountTransactionsQuery;
 import id.payu.transaction.application.cqrs.query.GetTransactionQuery;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
-import id.payu.transaction.dto.TransactionRefundDetailsResponse;
+import id.payu.transaction.interfaces.dto.TransactionRefundDetailsResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -86,7 +86,7 @@ public interface TransactionUseCase {
      */
     @Deprecated
     default InitiateTransferCommandResult initiateTransfer(
-            id.payu.transaction.dto.InitiateTransferRequest request, String userId) {
+            id.payu.transaction.interfaces.dto.InitiateTransferRequest request, String userId) {
         InitiateTransferCommand command = InitiateTransferCommand.from(request, userId);
         return initiateTransfer(command);
     }
@@ -96,7 +96,7 @@ public interface TransactionUseCase {
      */
     @Deprecated
     default void processQrisPayment(
-            id.payu.transaction.dto.ProcessQrisPaymentRequest request, String userId) {
+            id.payu.transaction.interfaces.dto.ProcessQrisPaymentRequest request, String userId) {
         ProcessQrisPaymentCommand command = ProcessQrisPaymentCommand.from(request, userId);
         processQrisPayment(command);
     }
@@ -105,7 +105,7 @@ public interface TransactionUseCase {
      * Process a QRIS payment with the Idempotency-Key header for DB-backed dedupe.
      */
     default void processQrisPayment(
-            id.payu.transaction.dto.ProcessQrisPaymentRequest request, String userId, String idempotencyKey) {
+            id.payu.transaction.interfaces.dto.ProcessQrisPaymentRequest request, String userId, String idempotencyKey) {
         ProcessQrisPaymentCommand command = ProcessQrisPaymentCommand.from(request, userId, idempotencyKey);
         processQrisPayment(command);
     }

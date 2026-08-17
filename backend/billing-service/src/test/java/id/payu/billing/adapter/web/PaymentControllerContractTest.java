@@ -1,6 +1,6 @@
 package id.payu.billing.adapter.web;
 
-import id.payu.billing.dto.CreatePaymentRequest;
+import id.payu.billing.interfaces.dto.CreatePaymentRequest;
 import id.payu.security.annotation.Audited;
 import org.junit.jupiter.api.Test;
 

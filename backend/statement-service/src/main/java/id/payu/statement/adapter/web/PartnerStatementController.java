@@ -2,8 +2,8 @@ package id.payu.statement.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.statement.application.service.StatementService;
-import id.payu.statement.application.service.dto.StatementGenerationRequest;
-import id.payu.statement.application.service.dto.StatementResponse;
+import id.payu.statement.interfaces.dto.StatementGenerationRequest;
+import id.payu.statement.interfaces.dto.StatementResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

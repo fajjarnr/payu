@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.11.14] - 2026-08-17
+
+### Refactored
+
+- **ARCH-DTO-001 (architecture, all-services)**: standardized DTO placement across all 21 microservices from fragmented packages (`dto/`, `domain.dto`, `adapter.web.dto`, `application.service.dto`) into `id.payu.<service>.interfaces.dto` (and `interfaces.dto.snap`).
+- **Tests & ArchUnit**: aligned ArchUnit layered architecture boundary rules across all microservices (including `statement-service` and `billing-service`) to recognize the `Dto` layer. Resolved Testcontainers container lifecycle compatibility issues under Podman socket.
+- **Backend Reactor Build**: all 44 backend modules compiled with 100% BUILD SUCCESS.
+
+### Deploy
+
+- All 23 microservices rebuilt with container image SemVer tag **`1.11.14`** and deployed live via Podman stack. All 37 containers healthy with 200 OK health responses.
+
 ## [1.11.13] - 2026-08-17
 
 ### Fixed

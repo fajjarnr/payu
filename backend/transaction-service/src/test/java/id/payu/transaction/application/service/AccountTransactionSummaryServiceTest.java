@@ -3,7 +3,7 @@ package id.payu.transaction.application.service;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.model.TransactionStatus;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
-import id.payu.transaction.dto.TransactionSummaryResponse;
+import id.payu.transaction.interfaces.dto.TransactionSummaryResponse;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

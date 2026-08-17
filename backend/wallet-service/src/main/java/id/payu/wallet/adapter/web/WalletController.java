@@ -7,7 +7,7 @@ import id.payu.wallet.domain.model.LedgerEntry;
 import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.model.WalletTransaction;
 import id.payu.wallet.domain.port.in.WalletUseCase;
-import id.payu.wallet.dto.*;
+import id.payu.wallet.interfaces.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

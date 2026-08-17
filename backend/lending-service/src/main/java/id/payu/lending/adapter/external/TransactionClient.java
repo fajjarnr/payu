@@ -1,7 +1,7 @@
 package id.payu.lending.adapter.external;
 
 import id.payu.api.common.response.ApiResponse;
-import id.payu.lending.dto.TransactionSummaryResponse;
+import id.payu.lending.interfaces.dto.TransactionSummaryResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

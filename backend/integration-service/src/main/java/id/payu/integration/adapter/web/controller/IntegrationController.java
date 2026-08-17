@@ -1,6 +1,6 @@
 package id.payu.integration.adapter.web.controller;
 
-import id.payu.integration.adapter.web.dto.*;
+import id.payu.integration.interfaces.dto.*;
 import id.payu.integration.application.port.in.IntegrationUseCase;
 import id.payu.integration.domain.model.IntegrationMessage;
 import id.payu.integration.domain.model.MessageStatus;

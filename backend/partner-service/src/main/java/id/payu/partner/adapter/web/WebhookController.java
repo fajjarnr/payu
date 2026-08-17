@@ -1,8 +1,8 @@
 package id.payu.partner.adapter.web;
 
 import id.payu.partner.application.service.WebhookService;
-import id.payu.partner.dto.WebhookSubscriptionDTO;
-import id.payu.partner.dto.WebhookDeliveryDTO;
+import id.payu.partner.interfaces.dto.WebhookSubscriptionDTO;
+import id.payu.partner.interfaces.dto.WebhookDeliveryDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -1,6 +1,6 @@
 package id.payu.partner;
 
-import id.payu.partner.dto.PartnerDTO;
+import id.payu.partner.interfaces.dto.PartnerDTO;
 import id.payu.partner.adapter.web.PartnerController;
 import id.payu.partner.adapter.web.filter.SandboxFilter;
 import id.payu.partner.application.service.PartnerService;

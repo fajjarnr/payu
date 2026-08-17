@@ -212,7 +212,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
 
     @Override
     public id.payu.promotion.domain.model.CashbackSagaOutcome execute(id.payu.promotion.domain.model.CashbackCommand command) {
-        var request = new id.payu.promotion.dto.CreateCashbackRequest(command.accountId(), command.transactionId(), command.transactionAmount(), command.merchantCode(), command.categoryCode(), command.cashbackCode());
+        var request = new id.payu.promotion.interfaces.dto.CreateCashbackRequest(command.accountId(), command.transactionId(), command.transactionAmount(), command.merchantCode(), command.categoryCode(), command.cashbackCode());
         SagaResult<CashbackSagaContext> result = executeCashbackSaga(new CashbackSagaContext(request));
         Cashback cashback = result.getData() == null ? null : result.getData().getCashback();
         return new id.payu.promotion.domain.model.CashbackSagaOutcome(result.isSuccess(), result.isCompensated(), cashback,

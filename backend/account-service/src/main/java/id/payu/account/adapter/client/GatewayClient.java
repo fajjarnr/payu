@@ -1,7 +1,7 @@
 package id.payu.account.adapter.client;
 
-import id.payu.account.dto.VerifyNikRequest;
-import id.payu.account.dto.VerifyNikResponse;
+import id.payu.account.interfaces.dto.VerifyNikRequest;
+import id.payu.account.interfaces.dto.VerifyNikResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;

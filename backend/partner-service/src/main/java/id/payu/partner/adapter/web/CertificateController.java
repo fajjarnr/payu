@@ -1,8 +1,8 @@
 package id.payu.partner.adapter.web;
 
 import id.payu.partner.adapter.persistence.entity.PartnerCertificateEntity;
-import id.payu.partner.dto.CertificateRequest;
-import id.payu.partner.dto.PartnerCertificateDTO;
+import id.payu.partner.interfaces.dto.CertificateRequest;
+import id.payu.partner.interfaces.dto.PartnerCertificateDTO;
 import id.payu.partner.application.service.CertificateRotationService;
 import id.payu.partner.application.service.CertificateService;
 import id.payu.partner.adapter.web.ApiResponse;

@@ -2,7 +2,7 @@ package id.payu.wallet.domain.port.in;
 
 import id.payu.wallet.domain.model.JournalEntry;
 import id.payu.wallet.domain.model.LedgerEntry;
-import id.payu.wallet.dto.TrialBalanceResponse;
+import id.payu.wallet.interfaces.dto.TrialBalanceResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

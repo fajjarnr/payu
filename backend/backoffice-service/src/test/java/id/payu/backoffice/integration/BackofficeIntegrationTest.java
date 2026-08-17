@@ -9,10 +9,10 @@ import id.payu.backoffice.domain.FraudCaseStatus;
 import id.payu.backoffice.domain.KycStatus;
 import id.payu.backoffice.domain.Priority;
 import id.payu.backoffice.domain.RiskLevel;
-import id.payu.backoffice.dto.CustomerCaseRequest;
-import id.payu.backoffice.dto.FraudCaseDecisionRequest;
-import id.payu.backoffice.dto.KycReviewDecisionRequest;
-import id.payu.backoffice.dto.KycReviewRequest;
+import id.payu.backoffice.interfaces.dto.CustomerCaseRequest;
+import id.payu.backoffice.interfaces.dto.FraudCaseDecisionRequest;
+import id.payu.backoffice.interfaces.dto.KycReviewDecisionRequest;
+import id.payu.backoffice.interfaces.dto.KycReviewRequest;
 import id.payu.backoffice.application.service.CustomerCaseService;
 import id.payu.backoffice.application.service.FraudCaseService;
 import id.payu.backoffice.application.service.KycReviewService;
@@ -121,7 +121,7 @@ class BackofficeIntegrationTest {
 
         KycReview review = kycReviewService.create(request);
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-            id.payu.backoffice.dto.KycReviewStatus.APPROVED,
+            id.payu.backoffice.interfaces.dto.KycReviewStatus.APPROVED,
             "Documents verified, identity confirmed"
         );
 
@@ -161,7 +161,7 @@ class BackofficeIntegrationTest {
 
         KycReview review = kycReviewService.create(request);
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-            id.payu.backoffice.dto.KycReviewStatus.REJECTED,
+            id.payu.backoffice.interfaces.dto.KycReviewStatus.REJECTED,
             "Document expired, please submit valid ID"
         );
 
@@ -301,7 +301,7 @@ class BackofficeIntegrationTest {
         fraudCaseService.assign(fraudCase.getId(), "investigator2");
 
         FraudCaseDecisionRequest decisionRequest = new FraudCaseDecisionRequest(
-            id.payu.backoffice.dto.FraudCaseStatus.RESOLVED,
+            id.payu.backoffice.interfaces.dto.FraudCaseStatus.RESOLVED,
             "Confirmed phishing attack. Account credentials compromised. Action taken."
         );
 
@@ -444,7 +444,7 @@ class BackofficeIntegrationTest {
         // When
         CustomerCase updatedCase = customerCaseService.update(
             customerCase.getId(),
-            new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
+            new id.payu.backoffice.interfaces.dto.CustomerCaseUpdateRequest(
                 CustomerCaseStatus.RESOLVED,
                 "Fixed in version 2.1. Please update app"
             ),
@@ -514,7 +514,7 @@ class BackofficeIntegrationTest {
 
         // When
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-            id.payu.backoffice.dto.KycReviewStatus.APPROVED,
+            id.payu.backoffice.interfaces.dto.KycReviewStatus.APPROVED,
             "Approved after verification"
         );
         KycReview updatedReview = kycReviewService.review(review.getId(), decisionRequest, "admin_audit");
@@ -546,7 +546,7 @@ class BackofficeIntegrationTest {
         fraudCaseService.assign(fraudCase.getId(), "investigator_audit");
 
         FraudCaseDecisionRequest decisionRequest = new FraudCaseDecisionRequest(
-            id.payu.backoffice.dto.FraudCaseStatus.CLOSED,
+            id.payu.backoffice.interfaces.dto.FraudCaseStatus.CLOSED,
             "Case closed after investigation"
         );
         FraudCase resolvedCase = fraudCaseService.resolve(fraudCase.getId(), decisionRequest, "investigator_audit");
@@ -580,7 +580,7 @@ class BackofficeIntegrationTest {
         customerCaseService.assign(customerCase.getId(), "agent_audit");
         CustomerCase updatedCase = customerCaseService.update(
             customerCase.getId(),
-            new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
+            new id.payu.backoffice.interfaces.dto.CustomerCaseUpdateRequest(
                 CustomerCaseStatus.RESOLVED,
                 "Issue resolved"
             ),
@@ -604,7 +604,7 @@ class BackofficeIntegrationTest {
     void shouldThrowExceptionWhenReviewingNonExistentKyc() {
         // Given
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-            id.payu.backoffice.dto.KycReviewStatus.APPROVED,
+            id.payu.backoffice.interfaces.dto.KycReviewStatus.APPROVED,
             "Test"
         );
 
@@ -627,8 +627,8 @@ class BackofficeIntegrationTest {
     @DisplayName("Should throw exception when updating non-existent customer case")
     void shouldThrowExceptionWhenUpdatingNonExistentCustomerCase() {
         // Given
-        id.payu.backoffice.dto.CustomerCaseUpdateRequest updateRequest =
-            new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
+        id.payu.backoffice.interfaces.dto.CustomerCaseUpdateRequest updateRequest =
+            new id.payu.backoffice.interfaces.dto.CustomerCaseUpdateRequest(
                 CustomerCaseStatus.IN_PROGRESS,
                 "Test update"
             );
@@ -661,7 +661,7 @@ class BackofficeIntegrationTest {
 
         // When - Request additional info
         KycReviewDecisionRequest infoRequest = new KycReviewDecisionRequest(
-            id.payu.backoffice.dto.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
+            id.payu.backoffice.interfaces.dto.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
             "Please provide proof of address"
         );
         review = kycReviewService.review(review.getId(), infoRequest, "admin1");
@@ -669,7 +669,7 @@ class BackofficeIntegrationTest {
 
         // When - Final approval
         KycReviewDecisionRequest approvalRequest = new KycReviewDecisionRequest(
-            id.payu.backoffice.dto.KycReviewStatus.APPROVED,
+            id.payu.backoffice.interfaces.dto.KycReviewStatus.APPROVED,
             "All documents verified and approved"
         );
         review = kycReviewService.review(review.getId(), approvalRequest, "admin2");
@@ -707,7 +707,7 @@ class BackofficeIntegrationTest {
 
         // When - Escalate for further review
         FraudCaseDecisionRequest escalateRequest = new FraudCaseDecisionRequest(
-            id.payu.backoffice.dto.FraudCaseStatus.ESCALATED,
+            id.payu.backoffice.interfaces.dto.FraudCaseStatus.ESCALATED,
             "Complex case requiring compliance team review"
         );
         fraudCase = fraudCaseService.resolve(fraudCase.getId(), escalateRequest, "senior_investigator");
@@ -715,7 +715,7 @@ class BackofficeIntegrationTest {
 
         // When - Final resolution
         FraudCaseDecisionRequest resolveRequest = new FraudCaseDecisionRequest(
-            id.payu.backoffice.dto.FraudCaseStatus.CLOSED,
+            id.payu.backoffice.interfaces.dto.FraudCaseStatus.CLOSED,
             "Case reviewed and closed. SAR filed."
         );
         fraudCase = fraudCaseService.resolve(fraudCase.getId(), resolveRequest, "compliance_officer");
@@ -756,7 +756,7 @@ class BackofficeIntegrationTest {
         // When - Update with findings
         customerCase = customerCaseService.update(
             customerCase.getId(),
-            new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
+            new id.payu.backoffice.interfaces.dto.CustomerCaseUpdateRequest(
                 CustomerCaseStatus.IN_PROGRESS,
                 "Investigating with payment processor. Evidence gathered."
             ),
@@ -766,7 +766,7 @@ class BackofficeIntegrationTest {
         // When - Resolve case
         customerCase = customerCaseService.update(
             customerCase.getId(),
-            new id.payu.backoffice.dto.CustomerCaseUpdateRequest(
+            new id.payu.backoffice.interfaces.dto.CustomerCaseUpdateRequest(
                 CustomerCaseStatus.RESOLVED,
                 "Confirmed unauthorized. Refund processed. Case closed."
             ),

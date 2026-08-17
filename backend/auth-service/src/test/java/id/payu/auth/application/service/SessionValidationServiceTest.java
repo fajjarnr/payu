@@ -1,6 +1,6 @@
 package id.payu.auth.application.service;
 
-import id.payu.auth.dto.SessionValidationResponse;
+import id.payu.auth.interfaces.dto.SessionValidationResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

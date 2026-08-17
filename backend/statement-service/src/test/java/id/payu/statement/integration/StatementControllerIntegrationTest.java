@@ -1,7 +1,7 @@
 package id.payu.statement.integration;
 
-import id.payu.statement.application.service.dto.StatementGenerationRequest;
-import id.payu.statement.application.service.dto.StatementResponse;
+import id.payu.statement.interfaces.dto.StatementGenerationRequest;
+import id.payu.statement.interfaces.dto.StatementResponse;
 import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import id.payu.statement.adapter.persistence.repository.StatementRepository;
 import id.payu.statement.domain.entity.StatementStatus;

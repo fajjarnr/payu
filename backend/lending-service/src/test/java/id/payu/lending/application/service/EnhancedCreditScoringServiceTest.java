@@ -1,8 +1,8 @@
 package id.payu.lending.application.service;
 
 import id.payu.lending.adapter.external.TransactionClient;
-import id.payu.lending.dto.TransactionSummaryResponse;
-import id.payu.lending.dto.UserResponse;
+import id.payu.lending.interfaces.dto.TransactionSummaryResponse;
+import id.payu.lending.interfaces.dto.UserResponse;
 import id.payu.rules.service.RulesEngineService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,0 +1,32 @@
+package id.payu.promotion.interfaces.dto;
+
+import id.payu.promotion.domain.model.LoyaltyPoints;
+import java.time.LocalDateTime;
+import java.util.UUID;
+import id.payu.promotion.domain.TransactionType;
+
+public record LoyaltyPointsResponse(
+    UUID id,
+    String accountId,
+    String transactionId,
+    TransactionType transactionType,
+    Integer points,
+    Integer balanceAfter,
+    LocalDateTime expiryDate,
+    LocalDateTime redeemedAt,
+    LocalDateTime createdAt
+) {
+    public static LoyaltyPointsResponse from(LoyaltyPoints loyaltyPoints) {
+        return new LoyaltyPointsResponse(
+            loyaltyPoints.getId(),
+            loyaltyPoints.getAccountId(),
+            loyaltyPoints.getTransactionId(),
+            loyaltyPoints.getTransactionType(),
+            loyaltyPoints.getPoints(),
+            loyaltyPoints.getBalanceAfter(),
+            loyaltyPoints.getExpiryDate(),
+            loyaltyPoints.getRedeemedAt(),
+            loyaltyPoints.getCreatedAt()
+        );
+    }
+}

@@ -11,7 +11,7 @@ import id.payu.promotion.domain.PromotionType;
 import id.payu.promotion.domain.ReferralRewardType;
 import id.payu.promotion.domain.RewardType;
 import id.payu.promotion.domain.TransactionType;
-import id.payu.promotion.dto.*;
+import id.payu.promotion.interfaces.dto.*;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,9 +1,9 @@
 package id.payu.lending.adapter.messaging;
 
 import id.payu.lending.domain.port.out.LoanEventPublisherPort;
-import id.payu.lending.dto.LoanApprovedEvent;
-import id.payu.lending.dto.LoanRepaymentProcessedEvent;
-import id.payu.lending.dto.LoanRejectedEvent;
+import id.payu.lending.interfaces.dto.LoanApprovedEvent;
+import id.payu.lending.interfaces.dto.LoanRepaymentProcessedEvent;
+import id.payu.lending.interfaces.dto.LoanRejectedEvent;
 import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

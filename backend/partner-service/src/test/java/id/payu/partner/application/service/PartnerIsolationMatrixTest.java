@@ -15,9 +15,9 @@ import id.payu.partner.adapter.persistence.repository.WebhookSubscriptionReposit
 import id.payu.partner.domain.KeyEnvironment;
 import id.payu.partner.domain.KeyStatus;
 import id.payu.partner.domain.MerchantCategory;
-import id.payu.partner.dto.ApiKeyDTO;
-import id.payu.partner.dto.PaymentLinkResponse;
-import id.payu.partner.dto.WebhookSubscriptionDTO;
+import id.payu.partner.interfaces.dto.ApiKeyDTO;
+import id.payu.partner.interfaces.dto.PaymentLinkResponse;
+import id.payu.partner.interfaces.dto.WebhookSubscriptionDTO;
 import id.payu.outbox.service.OutboxService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;

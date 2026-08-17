@@ -2,8 +2,8 @@ package id.payu.notification.adapter.web;
 
 import id.payu.notification.domain.Notification;
 import id.payu.notification.domain.RecipientMasker;
-import id.payu.notification.dto.NotificationResponse;
-import id.payu.notification.dto.SendNotificationRequest;
+import id.payu.notification.interfaces.dto.NotificationResponse;
+import id.payu.notification.interfaces.dto.SendNotificationRequest;
 import id.payu.notification.application.service.NotificationService;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;

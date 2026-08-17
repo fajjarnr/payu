@@ -11,7 +11,7 @@ import id.payu.lending.domain.port.out.LoanPersistencePort;
 import id.payu.lending.domain.port.out.RepaymentPaymentPersistencePort;
 import id.payu.lending.domain.port.out.RepaymentSchedulePersistencePort;
 import id.payu.lending.domain.port.out.WalletPaymentPort;
-import id.payu.lending.dto.LoanRepaymentProcessedEvent;
+import id.payu.lending.interfaces.dto.LoanRepaymentProcessedEvent;
 import id.payu.lending.exception.RepaymentProcessingException;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;

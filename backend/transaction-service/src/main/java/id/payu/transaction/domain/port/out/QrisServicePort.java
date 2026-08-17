@@ -1,7 +1,7 @@
 package id.payu.transaction.domain.port.out;
 
-import id.payu.transaction.dto.QrisPaymentRequest;
-import id.payu.transaction.dto.QrisPaymentResponse;
+import id.payu.transaction.interfaces.dto.QrisPaymentRequest;
+import id.payu.transaction.interfaces.dto.QrisPaymentResponse;
 
 public interface QrisServicePort {
     QrisPaymentResponse processPayment(QrisPaymentRequest request);

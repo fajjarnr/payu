@@ -45,7 +45,7 @@ class ReferralServiceCompleteReferralLockTest {
         when(referralRepository.save(referral)).thenReturn(referral);
 
         Referral completed = service.completeReferral(
-                new id.payu.promotion.dto.CompleteReferralRequest("ABC12345", "REFEREE-1"));
+                new id.payu.promotion.interfaces.dto.CompleteReferralRequest("ABC12345", "REFEREE-1"));
 
         assertNotNull(completed.getCompletedAt());
         verify(referralRepository).findByReferralCodeForUpdate("ABC12345");

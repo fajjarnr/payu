@@ -6,7 +6,7 @@ import id.payu.compliance.domain.model.AuditReport;
 import id.payu.compliance.domain.model.ComplianceCheck;
 import id.payu.compliance.domain.model.ComplianceCheckResult;
 import id.payu.compliance.domain.model.ComplianceStandard;
-import id.payu.compliance.dto.AuditReportRequest;
+import id.payu.compliance.interfaces.dto.AuditReportRequest;
 import id.payu.compliance.exception.ComplianceDomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

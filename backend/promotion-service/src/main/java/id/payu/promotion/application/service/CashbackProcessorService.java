@@ -5,7 +5,7 @@ import id.payu.promotion.domain.port.out.CashbackRuleRepositoryPort;
 import id.payu.promotion.domain.port.out.CashbackRecordRepositoryPort;
 import id.payu.promotion.domain.port.out.WalletServicePort;
 import id.payu.promotion.domain.port.out.NotificationPort;
-import id.payu.promotion.dto.TransactionCompletedEvent;
+import id.payu.promotion.interfaces.dto.TransactionCompletedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

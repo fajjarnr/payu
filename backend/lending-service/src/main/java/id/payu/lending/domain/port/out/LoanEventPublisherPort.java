@@ -1,8 +1,8 @@
 package id.payu.lending.domain.port.out;
 
-import id.payu.lending.dto.LoanApprovedEvent;
-import id.payu.lending.dto.LoanRepaymentProcessedEvent;
-import id.payu.lending.dto.LoanRejectedEvent;
+import id.payu.lending.interfaces.dto.LoanApprovedEvent;
+import id.payu.lending.interfaces.dto.LoanRepaymentProcessedEvent;
+import id.payu.lending.interfaces.dto.LoanRejectedEvent;
 
 /**
  * Output port for publishing loan-related events.

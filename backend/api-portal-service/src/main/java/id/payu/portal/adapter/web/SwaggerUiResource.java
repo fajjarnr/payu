@@ -1,7 +1,7 @@
 package id.payu.portal.adapter.web;
 
-import id.payu.portal.dto.ServiceInfo;
-import id.payu.portal.dto.ServiceListResponse;
+import id.payu.portal.interfaces.dto.ServiceInfo;
+import id.payu.portal.interfaces.dto.ServiceListResponse;
 import id.payu.portal.application.service.ApiPortalService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;

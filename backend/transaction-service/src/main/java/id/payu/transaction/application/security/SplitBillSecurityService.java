@@ -2,7 +2,7 @@ package id.payu.transaction.application.security;
 
 import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
 import id.payu.transaction.domain.port.in.SplitBillUseCase;
-import id.payu.transaction.dto.SplitBillResponse;
+import id.payu.transaction.interfaces.dto.SplitBillResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

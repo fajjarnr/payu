@@ -1,6 +1,6 @@
 package id.payu.account.domain.port.in;
 
-import id.payu.account.dto.VerifyNikResponse;
+import id.payu.account.interfaces.dto.VerifyNikResponse;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -17,5 +17,5 @@ public interface VerifyNikUseCase {
      * @param request the verification request containing NIK and personal data
      * @return CompletableFuture with verification result
      */
-    CompletableFuture<VerifyNikResponse> verifyNik(id.payu.account.dto.VerifyNikRequest request);
+    CompletableFuture<VerifyNikResponse> verifyNik(id.payu.account.interfaces.dto.VerifyNikRequest request);
 }

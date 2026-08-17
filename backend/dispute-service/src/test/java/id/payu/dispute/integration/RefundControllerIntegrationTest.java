@@ -6,7 +6,7 @@ import id.payu.dispute.domain.model.RefundStatus;
 import id.payu.dispute.domain.model.TransactionDetails;
 import id.payu.dispute.domain.port.out.RefundPersistencePort;
 import id.payu.dispute.domain.port.out.TransactionLookupPort;
-import id.payu.dispute.dto.*;
+import id.payu.dispute.interfaces.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

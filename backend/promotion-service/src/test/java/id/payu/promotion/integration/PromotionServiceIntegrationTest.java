@@ -7,7 +7,7 @@ import id.payu.promotion.domain.PromotionStatus;
 import id.payu.promotion.domain.PromotionType;
 import id.payu.promotion.domain.RewardStatus;
 import id.payu.promotion.domain.RewardType;
-import id.payu.promotion.dto.*;
+import id.payu.promotion.interfaces.dto.*;
 import id.payu.promotion.application.service.PromotionService;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;

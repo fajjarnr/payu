@@ -1,6 +1,6 @@
 package id.payu.statement.domain.port.out;
 
-import id.payu.statement.dto.TransactionRecord;
+import id.payu.statement.interfaces.dto.TransactionRecord;
 
 import java.time.LocalDate;
 import java.util.List;

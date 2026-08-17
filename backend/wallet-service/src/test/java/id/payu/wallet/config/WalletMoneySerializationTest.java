@@ -5,7 +5,7 @@ import id.payu.wallet.domain.model.EntryType;
 import id.payu.wallet.domain.model.LedgerEntry;
 import id.payu.wallet.domain.model.TransactionType;
 import id.payu.wallet.domain.model.WalletTransaction;
-import id.payu.wallet.dto.BalanceResponse;
+import id.payu.wallet.interfaces.dto.BalanceResponse;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

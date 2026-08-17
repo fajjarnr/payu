@@ -3,7 +3,7 @@ package id.payu.lending.integration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.lending.adapter.external.TransactionClient;
-import id.payu.lending.dto.PayLaterLimitRequest;
+import id.payu.lending.interfaces.dto.PayLaterLimitRequest;
 import id.payu.lending.interfaces.dto.PayLaterPaymentRequest;
 import id.payu.lending.interfaces.dto.PayLaterPurchaseRequest;
 import id.payu.outbox.service.OutboxService;

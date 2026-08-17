@@ -6,7 +6,7 @@ import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.adapter.persistence.entity.DisbursementEntity;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.port.in.DisbursementUseCase;
-import id.payu.transaction.dto.*;
+import id.payu.transaction.interfaces.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

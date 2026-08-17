@@ -1,8 +1,8 @@
 package id.payu.account.application.service;
 
 import id.payu.account.domain.port.out.KycVerificationPort;
-import id.payu.account.dto.VerifyNikRequest;
-import id.payu.account.dto.VerifyNikResponse;
+import id.payu.account.interfaces.dto.VerifyNikRequest;
+import id.payu.account.interfaces.dto.VerifyNikResponse;
 import id.payu.account.exception.AccountDomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

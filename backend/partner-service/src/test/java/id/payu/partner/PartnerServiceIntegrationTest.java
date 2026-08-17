@@ -3,7 +3,7 @@ package id.payu.partner;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.application.service.PartnerService;
-import id.payu.partner.dto.PartnerDTO;
+import id.payu.partner.interfaces.dto.PartnerDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

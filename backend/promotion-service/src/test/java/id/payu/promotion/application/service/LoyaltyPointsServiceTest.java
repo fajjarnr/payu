@@ -2,8 +2,8 @@ package id.payu.promotion.application.service;
 
 import id.payu.promotion.domain.model.LoyaltyPoints;
 import id.payu.promotion.domain.TransactionType;
-import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
-import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
+import id.payu.promotion.interfaces.dto.CreateLoyaltyPointsRequest;
+import id.payu.promotion.interfaces.dto.RedeemLoyaltyPointsRequest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
 package id.payu.cms.adapter.web.rest;
 
-import id.payu.cms.domain.dto.ContentResponse;
+import id.payu.cms.interfaces.dto.ContentResponse;
 import id.payu.cms.application.service.ContentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

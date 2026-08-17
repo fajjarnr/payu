@@ -1,6 +1,6 @@
 package id.payu.auth.application.service;
 
-import id.payu.auth.dto.SessionValidationResponse;
+import id.payu.auth.interfaces.dto.SessionValidationResponse;
 import id.payu.auth.exception.AuthDomainException;
 import id.payu.api.common.constant.ErrorCode;
 import lombok.RequiredArgsConstructor;

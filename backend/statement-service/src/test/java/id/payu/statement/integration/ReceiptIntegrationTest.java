@@ -2,8 +2,8 @@ package id.payu.statement.integration;
 
 import id.payu.statement.adapter.persistence.entity.ReceiptEntity;
 import id.payu.statement.adapter.persistence.repository.ReceiptJpaRepository;
-import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
-import id.payu.statement.application.service.dto.ReceiptResponse;
+import id.payu.statement.interfaces.dto.ReceiptGenerationRequest;
+import id.payu.statement.interfaces.dto.ReceiptResponse;
 import id.payu.statement.domain.model.ReceiptStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

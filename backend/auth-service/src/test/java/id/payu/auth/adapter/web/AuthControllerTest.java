@@ -5,9 +5,9 @@ import id.payu.auth.application.service.RefreshTokenService;
 import id.payu.auth.adapter.security.KeycloakService;
 import id.payu.auth.application.service.RiskEvaluationService;
 import id.payu.auth.application.service.SessionValidationService;
-import id.payu.auth.dto.LoginRequest;
-import id.payu.auth.dto.LoginResponse;
-import id.payu.auth.dto.LogoutRequest;
+import id.payu.auth.interfaces.dto.LoginRequest;
+import id.payu.auth.interfaces.dto.LoginResponse;
+import id.payu.auth.interfaces.dto.LogoutRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -144,7 +144,7 @@ class AuthControllerTest {
 
             mockMvc.perform(post("/api/v1/auth/refresh")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new id.payu.auth.dto.RefreshTokenRequest("revoked-token"))))
+                            .content(objectMapper.writeValueAsString(new id.payu.auth.interfaces.dto.RefreshTokenRequest("revoked-token"))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error.code").value("AUTH_BUS_006"));
         }

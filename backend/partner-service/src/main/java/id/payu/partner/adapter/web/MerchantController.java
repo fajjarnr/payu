@@ -2,10 +2,10 @@ package id.payu.partner.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.partner.application.service.MerchantService;
-import id.payu.partner.dto.CreateMerchantRequest;
-import id.payu.partner.dto.CreateQrPaymentRequest;
-import id.payu.partner.dto.MerchantResponse;
-import id.payu.partner.dto.QrPaymentResponse;
+import id.payu.partner.interfaces.dto.CreateMerchantRequest;
+import id.payu.partner.interfaces.dto.CreateQrPaymentRequest;
+import id.payu.partner.interfaces.dto.MerchantResponse;
+import id.payu.partner.interfaces.dto.QrPaymentResponse;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;

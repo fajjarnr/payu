@@ -1,8 +1,8 @@
 package id.payu.promotion.adapter.web;
 
 import id.payu.promotion.application.service.PromoRedemptionService;
-import id.payu.promotion.dto.ApplyPromoRequest;
-import id.payu.promotion.dto.ApplyPromoResponse;
+import id.payu.promotion.interfaces.dto.ApplyPromoRequest;
+import id.payu.promotion.interfaces.dto.ApplyPromoResponse;
 import id.payu.commons.idempotency.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

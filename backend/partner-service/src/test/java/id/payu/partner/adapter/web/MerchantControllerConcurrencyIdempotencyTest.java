@@ -7,7 +7,7 @@ import id.payu.commons.idempotency.IdempotencyKey;
 import id.payu.commons.idempotency.IdempotencyRepository;
 import id.payu.commons.idempotency.IdempotencyService;
 import id.payu.partner.application.service.MerchantService;
-import id.payu.partner.dto.QrPaymentResponse;
+import id.payu.partner.interfaces.dto.QrPaymentResponse;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

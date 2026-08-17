@@ -2,8 +2,8 @@ package id.payu.account.adapter.web;
 
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
-import id.payu.account.dto.RegisterUserRequest;
-import id.payu.account.dto.RegisterUserResponse;
+import id.payu.account.interfaces.dto.RegisterUserRequest;
+import id.payu.account.interfaces.dto.RegisterUserResponse;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;

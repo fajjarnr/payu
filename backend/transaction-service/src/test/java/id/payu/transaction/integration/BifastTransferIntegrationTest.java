@@ -14,7 +14,7 @@ import id.payu.transaction.domain.port.out.BifastServicePort;
 import id.payu.transaction.domain.port.out.RgsServicePort;
 import id.payu.transaction.domain.port.out.SknServicePort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
-import id.payu.transaction.dto.TransactionType;
+import id.payu.transaction.interfaces.dto.TransactionType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,10 +74,10 @@ class BifastTransferIntegrationTest {
     @DisplayName("BI-FAST transfer persists transaction + outbox event atomically")
     void bifastTransferPersistsTransactionAndOutbox() throws Exception {
         when(walletServicePort.reserveBalance(any(), any(), any()))
-                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                .thenReturn(id.payu.transaction.interfaces.dto.ReserveBalanceResponse.builder()
                         .reservationId("res-bi-fast").status("RESERVED").build());
         when(bifastServicePort.initiateTransfer(any()))
-                .thenReturn(id.payu.transaction.dto.BifastTransferResponse.builder()
+                .thenReturn(id.payu.transaction.interfaces.dto.BifastTransferResponse.builder()
                         .referenceNumber("BIFAST-1").status("RESERVED").build());
 
         InitiateTransferCommandResult result = handler.handle(command());
@@ -96,7 +96,7 @@ class BifastTransferIntegrationTest {
     @DisplayName("BI-FAST provider failure compensates reservation and marks failed")
     void bifastFailureCompensatesAndMarksFailed() throws Exception {
         when(walletServicePort.reserveBalance(any(), any(), any()))
-                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                .thenReturn(id.payu.transaction.interfaces.dto.ReserveBalanceResponse.builder()
                         .reservationId("res-fail").status("RESERVED").build());
         when(bifastServicePort.initiateTransfer(any()))
                 .thenThrow(new RuntimeException("BI-FAST network down"));

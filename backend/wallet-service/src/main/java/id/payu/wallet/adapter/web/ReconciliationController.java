@@ -2,8 +2,8 @@ package id.payu.wallet.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.wallet.domain.port.out.JournalPersistencePort;
-import id.payu.wallet.dto.LedgerMovementRequest;
-import id.payu.wallet.dto.LedgerMovementResponse;
+import id.payu.wallet.interfaces.dto.LedgerMovementRequest;
+import id.payu.wallet.interfaces.dto.LedgerMovementResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

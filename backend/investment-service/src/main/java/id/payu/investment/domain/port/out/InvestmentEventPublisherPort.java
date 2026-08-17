@@ -1,6 +1,6 @@
 package id.payu.investment.domain.port.out;
 
-import id.payu.investment.dto.InvestmentEvent;
+import id.payu.investment.interfaces.dto.InvestmentEvent;
 
 /**
  * Output port for publishing investment-related events.

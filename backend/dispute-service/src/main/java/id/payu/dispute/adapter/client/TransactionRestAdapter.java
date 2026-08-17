@@ -2,7 +2,7 @@ package id.payu.dispute.adapter.client;
 
 import id.payu.dispute.domain.model.TransactionDetails;
 import id.payu.dispute.domain.port.out.TransactionLookupPort;
-import id.payu.dispute.dto.TransactionRefundDetailsResponse;
+import id.payu.dispute.interfaces.dto.TransactionRefundDetailsResponse;
 import id.payu.shared.restclient.PayuRestClient;
 import id.payu.shared.restclient.RestClientErrorHandler;
 import lombok.RequiredArgsConstructor;

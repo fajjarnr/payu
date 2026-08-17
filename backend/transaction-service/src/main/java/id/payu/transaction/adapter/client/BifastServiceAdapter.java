@@ -1,8 +1,8 @@
 package id.payu.transaction.adapter.client;
 
 import id.payu.transaction.domain.port.out.BifastServicePort;
-import id.payu.transaction.dto.BifastTransferRequest;
-import id.payu.transaction.dto.BifastTransferResponse;
+import id.payu.transaction.interfaces.dto.BifastTransferRequest;
+import id.payu.transaction.interfaces.dto.BifastTransferResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

@@ -3,7 +3,7 @@ package id.payu.promotion.adapter.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.promotion.adapter.persistence.repository.CashbackRepository;
 import id.payu.security.config.WebSecurityAutoConfiguration;
-import id.payu.promotion.dto.CreateCashbackRequest;
+import id.payu.promotion.interfaces.dto.CreateCashbackRequest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

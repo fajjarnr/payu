@@ -3,7 +3,7 @@ package id.payu.dispute.adapter.web;
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.dispute.domain.model.Refund;
 import id.payu.dispute.domain.port.in.RefundUseCase;
-import id.payu.dispute.dto.*;
+import id.payu.dispute.interfaces.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

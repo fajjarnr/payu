@@ -2,7 +2,7 @@ package id.payu.wallet.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.wallet.domain.port.in.WalletUseCase;
-import id.payu.wallet.dto.TransferRequest;
+import id.payu.wallet.interfaces.dto.TransferRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;

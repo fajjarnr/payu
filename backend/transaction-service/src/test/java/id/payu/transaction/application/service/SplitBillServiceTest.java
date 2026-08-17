@@ -8,7 +8,7 @@ import id.payu.transaction.domain.model.SplitType;
 import id.payu.transaction.domain.port.in.SplitBillUseCase;
 import id.payu.transaction.domain.port.out.SplitBillEventPublisherPort;
 import id.payu.transaction.domain.port.out.SplitBillPersistencePort;
-import id.payu.transaction.dto.CreateSplitBillRequest;
+import id.payu.transaction.interfaces.dto.CreateSplitBillRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

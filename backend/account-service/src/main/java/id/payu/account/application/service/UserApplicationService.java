@@ -5,8 +5,8 @@ import id.payu.account.domain.port.in.RegisterUserUseCase;
 import id.payu.account.domain.port.out.IdentityProviderPort;
 import id.payu.account.domain.port.out.KycVerificationPort;
 import id.payu.account.domain.port.out.UserPersistencePort;
-import id.payu.account.dto.DukcapilResponse;
-import id.payu.account.dto.RegisterUserRequest;
+import id.payu.account.interfaces.dto.DukcapilResponse;
+import id.payu.account.interfaces.dto.RegisterUserRequest;
 import id.payu.security.annotation.Audited;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -105,7 +105,7 @@ public class UserApplicationService implements RegisterUserUseCase {
         try {
             savedUser = userPersistencePort.save(user);
             // Publish event (PII-minimized, ACCOUNT-004)
-            userEventPublisherPort.publishUserCreated(new id.payu.account.dto.UserCreatedEvent(
+            userEventPublisherPort.publishUserCreated(new id.payu.account.interfaces.dto.UserCreatedEvent(
                     savedUser.getId(),
                     savedUser.getExternalId(),
                     savedUser.getCreatedAt()));

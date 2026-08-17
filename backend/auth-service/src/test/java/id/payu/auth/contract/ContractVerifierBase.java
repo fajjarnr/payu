@@ -1,7 +1,7 @@
 package id.payu.auth.contract;
 
 import id.payu.auth.adapter.security.KeycloakService;
-import id.payu.auth.dto.LoginResponse;
+import id.payu.auth.interfaces.dto.LoginResponse;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;

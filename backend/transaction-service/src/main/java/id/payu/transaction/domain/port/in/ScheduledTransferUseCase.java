@@ -1,8 +1,8 @@
 package id.payu.transaction.domain.port.in;
 
 import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
-import id.payu.transaction.dto.CreateScheduledTransferRequest;
-import id.payu.transaction.dto.ScheduledTransferResponse;
+import id.payu.transaction.interfaces.dto.CreateScheduledTransferRequest;
+import id.payu.transaction.interfaces.dto.ScheduledTransferResponse;
 
 import java.util.List;
 import java.util.UUID;

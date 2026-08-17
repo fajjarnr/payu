@@ -1,7 +1,7 @@
 package id.payu.statement.adapter.web;
 
 import id.payu.statement.application.service.StatementService;
-import id.payu.statement.application.service.dto.StatementResponse;
+import id.payu.statement.interfaces.dto.StatementResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;

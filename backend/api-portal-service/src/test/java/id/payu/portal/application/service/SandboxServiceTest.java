@@ -1,10 +1,10 @@
 package id.payu.portal.application.service;
 
-import id.payu.portal.dto.SandboxPaymentRequest;
-import id.payu.portal.dto.SandboxPaymentResponse;
-import id.payu.portal.dto.SandboxPaymentStatusResponse;
-import id.payu.portal.dto.SandboxRefundRequest;
-import id.payu.portal.dto.SandboxRefundResponse;
+import id.payu.portal.interfaces.dto.SandboxPaymentRequest;
+import id.payu.portal.interfaces.dto.SandboxPaymentResponse;
+import id.payu.portal.interfaces.dto.SandboxPaymentStatusResponse;
+import id.payu.portal.interfaces.dto.SandboxRefundRequest;
+import id.payu.portal.interfaces.dto.SandboxRefundResponse;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;

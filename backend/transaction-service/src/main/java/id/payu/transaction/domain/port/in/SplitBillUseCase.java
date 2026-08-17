@@ -1,10 +1,10 @@
 package id.payu.transaction.domain.port.in;
 
 import id.payu.transaction.adapter.persistence.entity.SplitBillEntity;
-import id.payu.transaction.dto.CreateSplitBillRequest;
-import id.payu.transaction.dto.SplitBillResponse;
-import id.payu.transaction.dto.AddParticipantRequest;
-import id.payu.transaction.dto.MakePaymentRequest;
+import id.payu.transaction.interfaces.dto.CreateSplitBillRequest;
+import id.payu.transaction.interfaces.dto.SplitBillResponse;
+import id.payu.transaction.interfaces.dto.AddParticipantRequest;
+import id.payu.transaction.interfaces.dto.MakePaymentRequest;
 
 import java.math.BigDecimal;
 import java.util.List;

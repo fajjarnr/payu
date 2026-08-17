@@ -5,7 +5,7 @@ import id.payu.promotion.domain.port.out.CashbackPersistencePort;
 import id.payu.promotion.domain.model.Cashback;
 import id.payu.promotion.domain.CashbackStatus;
 import id.payu.promotion.domain.port.out.WalletServicePort;
-import id.payu.promotion.dto.CreateCashbackRequest;
+import id.payu.promotion.interfaces.dto.CreateCashbackRequest;
 import id.payu.saga.model.SagaResult;
 import id.payu.saga.model.SagaState;
 import id.payu.saga.repository.SagaRepository;

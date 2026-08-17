@@ -8,7 +8,7 @@ import id.payu.promotion.domain.model.Reward;
 import id.payu.promotion.domain.port.out.PromotionEventPublisher;
 import id.payu.promotion.domain.port.out.PromotionPersistencePort;
 import id.payu.promotion.domain.port.out.RewardPersistencePort;
-import id.payu.promotion.dto.ClaimPromotionRequest;
+import id.payu.promotion.interfaces.dto.ClaimPromotionRequest;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

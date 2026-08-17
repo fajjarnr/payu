@@ -15,10 +15,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import id.payu.portal.config.PortalConfig;
-import id.payu.portal.dto.AggregatedOpenApiResponse;
-import id.payu.portal.dto.OpenApiSpec;
-import id.payu.portal.dto.ServiceInfo;
-import id.payu.portal.dto.ServiceListResponse;
+import id.payu.portal.interfaces.dto.AggregatedOpenApiResponse;
+import id.payu.portal.interfaces.dto.OpenApiSpec;
+import id.payu.portal.interfaces.dto.ServiceInfo;
+import id.payu.portal.interfaces.dto.ServiceListResponse;
 import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;

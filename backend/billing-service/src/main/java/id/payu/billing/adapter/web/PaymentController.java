@@ -2,8 +2,8 @@ package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.billing.domain.model.BillPayment;
-import id.payu.billing.dto.CreatePaymentRequest;
-import id.payu.billing.dto.PaymentResponse;
+import id.payu.billing.interfaces.dto.CreatePaymentRequest;
+import id.payu.billing.interfaces.dto.PaymentResponse;
 import id.payu.billing.application.service.PaymentService;
 import id.payu.commons.idempotency.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;

@@ -1,8 +1,8 @@
 package id.payu.transaction.adapter.client;
 
 import id.payu.transaction.domain.port.out.SknServicePort;
-import id.payu.transaction.dto.SknTransferRequest;
-import id.payu.transaction.dto.SknTransferResponse;
+import id.payu.transaction.interfaces.dto.SknTransferRequest;
+import id.payu.transaction.interfaces.dto.SknTransferResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

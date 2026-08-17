@@ -1,7 +1,7 @@
 package id.payu.account.adapter.messaging;
 
 import id.payu.account.domain.port.out.UserEventPublisherPort;
-import id.payu.account.dto.UserCreatedEvent;
+import id.payu.account.interfaces.dto.UserCreatedEvent;
 import id.payu.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

@@ -1,8 +1,8 @@
 package id.payu.account.adapter.web;
 
 import id.payu.account.domain.port.in.VerifyNikUseCase;
-import id.payu.account.dto.VerifyNikRequest;
-import id.payu.account.dto.VerifyNikResponse;
+import id.payu.account.interfaces.dto.VerifyNikRequest;
+import id.payu.account.interfaces.dto.VerifyNikResponse;
 import id.payu.security.annotation.Audited;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

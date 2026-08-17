@@ -1,6 +1,6 @@
 package id.payu.account.domain.port.out;
 
-import id.payu.account.dto.VerifyNikResponse;
+import id.payu.account.interfaces.dto.VerifyNikResponse;
 
 /**
  * Port for KYC verification operations with external services (Dukcapil).
@@ -14,10 +14,10 @@ public interface KycVerificationPort {
      * @param nik the 16-digit NIK
      * @param fullName the full name to match
      * @return verification response with minimal data
-     * @deprecated Use {@link #verifyNik(id.payu.account.dto.VerifyNikRequest)} instead
+     * @deprecated Use {@link #verifyNik(id.payu.account.interfaces.dto.VerifyNikRequest)} instead
      */
     @Deprecated
-    id.payu.account.dto.DukcapilResponse verifyNik(String nik, String fullName);
+    id.payu.account.interfaces.dto.DukcapilResponse verifyNik(String nik, String fullName);
 
     /**
      * Verify NIK with Dukcapil using full request data.
@@ -26,5 +26,5 @@ public interface KycVerificationPort {
      * @param request the verification request with NIK and personal data
      * @return detailed verification response
      */
-    VerifyNikResponse verifyNik(id.payu.account.dto.VerifyNikRequest request);
+    VerifyNikResponse verifyNik(id.payu.account.interfaces.dto.VerifyNikRequest request);
 }

@@ -2,7 +2,7 @@ package id.payu.backoffice.adapter.web;
 
 import id.payu.backoffice.domain.CaseType;
 import id.payu.backoffice.domain.Priority;
-import id.payu.backoffice.dto.*;
+import id.payu.backoffice.interfaces.dto.*;
 import id.payu.backoffice.testutil.IntegrationTest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;

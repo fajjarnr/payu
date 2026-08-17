@@ -1,8 +1,8 @@
 package id.payu.cms.application.service;
 
-import id.payu.cms.domain.dto.ContentRequest;
-import id.payu.cms.domain.dto.ContentResponse;
-import id.payu.cms.domain.dto.ContentListResponse;
+import id.payu.cms.interfaces.dto.ContentRequest;
+import id.payu.cms.interfaces.dto.ContentResponse;
+import id.payu.cms.interfaces.dto.ContentListResponse;
 import id.payu.cms.adapter.persistence.entity.ContentEntity;
 import id.payu.cms.domain.entity.ContentStatus;
 import id.payu.cms.domain.port.out.ContentPersistencePort;

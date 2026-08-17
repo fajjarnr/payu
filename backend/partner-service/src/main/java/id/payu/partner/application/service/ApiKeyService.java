@@ -6,7 +6,7 @@ import id.payu.partner.adapter.persistence.entity.ApiKeyEntity;
 import id.payu.partner.domain.KeyEnvironment;
 import id.payu.partner.domain.KeyStatus;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
-import id.payu.partner.dto.ApiKeyDTO;
+import id.payu.partner.interfaces.dto.ApiKeyDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;

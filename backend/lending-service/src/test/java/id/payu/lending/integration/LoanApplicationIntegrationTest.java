@@ -2,7 +2,7 @@ package id.payu.lending.integration;
 
 import id.payu.lending.adapter.external.TransactionClient;
 import id.payu.lending.domain.model.LoanType;
-import id.payu.lending.dto.LoanApplicationRequest;
+import id.payu.lending.interfaces.dto.LoanApplicationRequest;
 import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -193,15 +193,15 @@ class LoanApplicationIntegrationTest {
     }
 
     private void seedCreditScore(UUID userId) throws Exception {
-        id.payu.lending.dto.UserResponse user = new id.payu.lending.dto.UserResponse(
+        id.payu.lending.interfaces.dto.UserResponse user = new id.payu.lending.interfaces.dto.UserResponse(
                 userId, "EXT-USER", "user", "u@test.dev", "+62812", "Test User", "1234567890123456",
                 "ACTIVE", "APPROVED", LocalDateTime.now().minusYears(2));
         UUID accountId = UUID.randomUUID();
         when(accountClient.getUserProfile(userId.toString())).thenReturn(user);
         when(accountClient.getAccountIdsByUserId(userId.toString())).thenReturn(List.of(accountId));
 
-        id.payu.lending.dto.TransactionSummaryResponse summary =
-                new id.payu.lending.dto.TransactionSummaryResponse(
+        id.payu.lending.interfaces.dto.TransactionSummaryResponse summary =
+                new id.payu.lending.interfaces.dto.TransactionSummaryResponse(
                         accountId, 200L, new BigDecimal("20000000.00"),
                         new BigDecimal("15000000.00"), new BigDecimal("5000000.00"),
                         198L, 2L, null, null);

@@ -1,7 +1,7 @@
 package id.payu.lending.domain.port.in;
 
 import id.payu.lending.domain.model.PayLater;
-import id.payu.lending.dto.PayLaterLimitRequest;
+import id.payu.lending.interfaces.dto.PayLaterLimitRequest;
 import java.util.Optional;
 import java.util.UUID;
 

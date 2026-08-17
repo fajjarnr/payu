@@ -1,6 +1,6 @@
 package id.payu.transaction.application.service;
 
-import id.payu.transaction.application.service.dto.ArchivalResult;
+import id.payu.transaction.interfaces.dto.ArchivalResult;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.adapter.persistence.entity.TransactionArchiveEntity;
 import id.payu.transaction.domain.port.out.TransactionArchivalPersistencePort;

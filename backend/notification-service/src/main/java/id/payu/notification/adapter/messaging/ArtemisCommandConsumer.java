@@ -1,6 +1,6 @@
 package id.payu.notification.adapter.messaging;
 
-import id.payu.notification.dto.SendNotificationRequest;
+import id.payu.notification.interfaces.dto.SendNotificationRequest;
 import id.payu.notification.application.service.NotificationService;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;

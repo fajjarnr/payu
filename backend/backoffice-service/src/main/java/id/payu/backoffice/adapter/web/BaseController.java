@@ -1,6 +1,6 @@
 package id.payu.backoffice.adapter.web;
 
-import id.payu.backoffice.dto.ApiResponse;
+import id.payu.backoffice.interfaces.dto.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

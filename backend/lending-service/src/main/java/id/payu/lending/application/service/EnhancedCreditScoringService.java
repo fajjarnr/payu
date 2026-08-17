@@ -2,8 +2,8 @@ package id.payu.lending.application.service;
 
 import id.payu.lending.adapter.external.TransactionClient;
 import id.payu.lending.domain.model.CreditScoringFact;
-import id.payu.lending.dto.TransactionSummaryResponse;
-import id.payu.lending.dto.UserResponse;
+import id.payu.lending.interfaces.dto.TransactionSummaryResponse;
+import id.payu.lending.interfaces.dto.UserResponse;
 import id.payu.rules.service.RulesEngineService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

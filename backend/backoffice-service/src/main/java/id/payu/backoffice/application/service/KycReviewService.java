@@ -1,8 +1,8 @@
 package id.payu.backoffice.application.service;
 
 import id.payu.backoffice.domain.KycReview;
-import id.payu.backoffice.dto.KycReviewDecisionRequest;
-import id.payu.backoffice.dto.KycReviewRequest;
+import id.payu.backoffice.interfaces.dto.KycReviewDecisionRequest;
+import id.payu.backoffice.interfaces.dto.KycReviewRequest;
 import id.payu.backoffice.domain.port.outbound.KycReviewRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

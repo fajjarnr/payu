@@ -2,7 +2,7 @@ package id.payu.partner.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.partner.application.service.PaymentLinkService;
-import id.payu.partner.dto.PaymentLinkResponse;
+import id.payu.partner.interfaces.dto.PaymentLinkResponse;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;

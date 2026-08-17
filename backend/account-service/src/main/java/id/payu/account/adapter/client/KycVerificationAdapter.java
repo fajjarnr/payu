@@ -1,9 +1,9 @@
 package id.payu.account.adapter.client;
 
 import id.payu.account.domain.port.out.KycVerificationPort;
-import id.payu.account.dto.DukcapilResponse;
-import id.payu.account.dto.VerifyNikRequest;
-import id.payu.account.dto.VerifyNikResponse;
+import id.payu.account.interfaces.dto.DukcapilResponse;
+import id.payu.account.interfaces.dto.VerifyNikRequest;
+import id.payu.account.interfaces.dto.VerifyNikResponse;
 import id.payu.account.exception.AccountDomainException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;

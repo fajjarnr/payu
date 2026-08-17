@@ -1,7 +1,7 @@
 package id.payu.lending.adapter.messaging;
 
-import id.payu.lending.dto.LoanApprovedEvent;
-import id.payu.lending.dto.LoanRejectedEvent;
+import id.payu.lending.interfaces.dto.LoanApprovedEvent;
+import id.payu.lending.interfaces.dto.LoanRejectedEvent;
 import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.Test;
 

@@ -3,7 +3,7 @@ package id.payu.auth.adapter.security;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.auth.config.KeycloakConfig;
-import id.payu.auth.dto.LoginResponse;
+import id.payu.auth.interfaces.dto.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;

@@ -76,7 +76,7 @@ class AgentTrainingServiceFallbackTest {
                 new RuntimeException("root"),
                 org.mockito.Mockito.mock(org.springframework.http.HttpInputMessage.class));
         assertThatThrownBy(() -> invokeFallback("assignTrainingFallback",
-                new id.payu.support.dto.AssignTrainingRequest(1L, 1L, null, null, null), ex))
+                new id.payu.support.interfaces.dto.AssignTrainingRequest(1L, 1L, null, null, null), ex))
                 .isInstanceOf(HttpMessageNotReadableException.class);
     }
 

@@ -1,8 +1,8 @@
 package id.payu.cms.domain.port.in;
 
-import id.payu.cms.domain.dto.ContentListResponse;
-import id.payu.cms.domain.dto.ContentRequest;
-import id.payu.cms.domain.dto.ContentResponse;
+import id.payu.cms.interfaces.dto.ContentListResponse;
+import id.payu.cms.interfaces.dto.ContentRequest;
+import id.payu.cms.interfaces.dto.ContentResponse;
 
 import java.util.List;
 import java.util.UUID;

@@ -4,13 +4,13 @@ import id.payu.transaction.application.cqrs.CommandHandler;
 import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
-import id.payu.transaction.dto.BifastTransferRequest;
-import id.payu.transaction.dto.InitiateTransferRequest;
-import id.payu.transaction.dto.QrisPaymentRequest;
-import id.payu.transaction.dto.QrisPaymentResponse;
-import id.payu.transaction.dto.RgsTransferRequest;
-import id.payu.transaction.dto.ReserveBalanceResponse;
-import id.payu.transaction.dto.SknTransferRequest;
+import id.payu.transaction.interfaces.dto.BifastTransferRequest;
+import id.payu.transaction.interfaces.dto.InitiateTransferRequest;
+import id.payu.transaction.interfaces.dto.QrisPaymentRequest;
+import id.payu.transaction.interfaces.dto.QrisPaymentResponse;
+import id.payu.transaction.interfaces.dto.RgsTransferRequest;
+import id.payu.transaction.interfaces.dto.ReserveBalanceResponse;
+import id.payu.transaction.interfaces.dto.SknTransferRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,7 +80,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
         // IMP-1: internal transfers are atomic 1-hop on the wallet side (debit+credit in one
         // transaction, idempotent by reference) — no reservation and no saga compensation needed.
-        if (command.type() == id.payu.transaction.dto.TransactionType.INTERNAL_TRANSFER) {
+        if (command.type() == id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER) {
             processInternalTransfer(transaction, command);
             log.info("Transfer initiated successfully: {}", transaction.getId());
             return buildResult(transaction);
@@ -298,7 +298,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
      */
     private void processInterBankTransfer(TransactionEntity transaction, InitiateTransferCommand command, String reservationId) {
         try {
-            if (command.type() == id.payu.transaction.dto.TransactionType.SKN_TRANSFER) {
+            if (command.type() == id.payu.transaction.interfaces.dto.TransactionType.SKN_TRANSFER) {
                 sknServicePort.initiateTransfer(SknTransferRequest.builder()
                         .referenceNumber(transaction.getReferenceNumber())
                         .amount(command.amount().getAmount())

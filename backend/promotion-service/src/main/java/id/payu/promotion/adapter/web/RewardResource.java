@@ -1,8 +1,8 @@
 package id.payu.promotion.adapter.web;
 
 import id.payu.promotion.domain.model.Reward;
-import id.payu.promotion.dto.RewardResponse;
-import id.payu.promotion.dto.RewardSummaryResponse;
+import id.payu.promotion.interfaces.dto.RewardResponse;
+import id.payu.promotion.interfaces.dto.RewardSummaryResponse;
 import id.payu.promotion.application.service.RewardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -9,7 +9,7 @@ import id.payu.notification.domain.NotificationStatus;
 import id.payu.notification.domain.RecipientMasker;
 import id.payu.notification.domain.port.in.NotificationUseCase;
 import id.payu.notification.domain.port.out.NotificationRepositoryPort;
-import id.payu.notification.dto.SendNotificationRequest;
+import id.payu.notification.interfaces.dto.SendNotificationRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;

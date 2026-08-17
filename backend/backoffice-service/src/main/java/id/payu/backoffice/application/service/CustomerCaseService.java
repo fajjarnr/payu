@@ -1,7 +1,7 @@
 package id.payu.backoffice.application.service;
 
-import id.payu.backoffice.dto.CustomerCaseRequest;
-import id.payu.backoffice.dto.CustomerCaseUpdateRequest;
+import id.payu.backoffice.interfaces.dto.CustomerCaseRequest;
+import id.payu.backoffice.interfaces.dto.CustomerCaseUpdateRequest;
 import id.payu.backoffice.domain.CustomerCase;
 import id.payu.backoffice.domain.port.outbound.CustomerCaseRepositoryPort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;

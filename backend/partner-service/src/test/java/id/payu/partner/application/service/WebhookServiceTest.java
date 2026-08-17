@@ -6,8 +6,8 @@ import id.payu.partner.adapter.persistence.repository.WebhookSubscriptionReposit
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.adapter.persistence.entity.WebhookDeliveryEntity;
 import id.payu.partner.adapter.persistence.entity.WebhookSubscriptionEntity;
-import id.payu.partner.dto.WebhookDeliveryDTO;
-import id.payu.partner.dto.WebhookSubscriptionDTO;
+import id.payu.partner.interfaces.dto.WebhookDeliveryDTO;
+import id.payu.partner.interfaces.dto.WebhookSubscriptionDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -1,7 +1,7 @@
 package id.payu.promotion.application.saga;
 
 import id.payu.promotion.domain.model.Cashback;
-import id.payu.promotion.dto.CreateCashbackRequest;
+import id.payu.promotion.interfaces.dto.CreateCashbackRequest;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

@@ -3,7 +3,7 @@ package id.payu.backoffice.application.service;
 import id.payu.backoffice.domain.FraudCase;
 import id.payu.backoffice.domain.FraudCaseStatus;
 import id.payu.backoffice.domain.RiskLevel;
-import id.payu.backoffice.dto.FraudCaseDecisionRequest;
+import id.payu.backoffice.interfaces.dto.FraudCaseDecisionRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -250,7 +250,7 @@ class FraudCaseServiceTest {
         );
 
         FraudCaseDecisionRequest request = new FraudCaseDecisionRequest(
-                id.payu.backoffice.dto.FraudCaseStatus.RESOLVED,
+                id.payu.backoffice.interfaces.dto.FraudCaseStatus.RESOLVED,
                 "Case resolved - confirmed fraud"
         );
 
@@ -279,7 +279,7 @@ class FraudCaseServiceTest {
         );
 
         FraudCaseDecisionRequest request = new FraudCaseDecisionRequest(
-                id.payu.backoffice.dto.FraudCaseStatus.CLOSED,
+                id.payu.backoffice.interfaces.dto.FraudCaseStatus.CLOSED,
                 "False positive"
         );
 
@@ -305,7 +305,7 @@ class FraudCaseServiceTest {
         );
 
         FraudCaseDecisionRequest request = new FraudCaseDecisionRequest(
-                id.payu.backoffice.dto.FraudCaseStatus.ESCALATED,
+                id.payu.backoffice.interfaces.dto.FraudCaseStatus.ESCALATED,
                 "Escalating to legal team"
         );
 
@@ -331,7 +331,7 @@ class FraudCaseServiceTest {
         );
 
         FraudCaseDecisionRequest request = new FraudCaseDecisionRequest(
-                id.payu.backoffice.dto.FraudCaseStatus.UNDER_INVESTIGATION,
+                id.payu.backoffice.interfaces.dto.FraudCaseStatus.UNDER_INVESTIGATION,
                 "Need more evidence"
         );
 
@@ -344,7 +344,7 @@ class FraudCaseServiceTest {
     @Transactional
     void testResolve_NotFound() {
         FraudCaseDecisionRequest request = new FraudCaseDecisionRequest(
-                id.payu.backoffice.dto.FraudCaseStatus.RESOLVED,
+                id.payu.backoffice.interfaces.dto.FraudCaseStatus.RESOLVED,
                 "Test"
         );
 

@@ -2,7 +2,7 @@ package id.payu.promotion.application.service;
 
 import id.payu.promotion.domain.model.Promotion;
 import id.payu.promotion.domain.model.Reward;
-import id.payu.promotion.dto.*;
+import id.payu.promotion.interfaces.dto.*;
 import id.payu.promotion.domain.port.out.PromotionPersistencePort;
 import id.payu.promotion.domain.port.out.RewardPersistencePort;
 import id.payu.promotion.domain.port.out.PromotionEventPublisher;

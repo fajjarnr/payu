@@ -3,7 +3,7 @@ package id.payu.auth.adapter.security;
 import id.payu.auth.application.service.RiskEvaluationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.auth.config.KeycloakConfig;
-import id.payu.auth.dto.LoginResponse;
+import id.payu.auth.interfaces.dto.LoginResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

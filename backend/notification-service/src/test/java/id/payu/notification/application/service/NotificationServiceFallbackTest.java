@@ -7,7 +7,7 @@ import id.payu.notification.domain.Notification;
 import id.payu.notification.domain.NotificationChannel;
 import id.payu.notification.domain.NotificationStatus;
 import id.payu.notification.domain.port.out.NotificationRepositoryPort;
-import id.payu.notification.dto.SendNotificationRequest;
+import id.payu.notification.interfaces.dto.SendNotificationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

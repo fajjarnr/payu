@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.11.13` (2026-08-17) |
+| **Last Release** | `1.11.14` (2026-08-17) |
 | **Core Banking MVP** | 🟡 Mendekati MVP — blocker tersisa: ACCOUNT-007 (P1) + PROD-044 (P1); **login web live** (LOGIN-001..006 closed: PKCE + gate CI + browser E2E), money-flow live (PROD-043/045/047, CB-014/016/020/021/023 closed). Belum ada service production ready. |
 | **Backlog Aktif** | 2 tickets + action items (CB-*/PROD-*/READY-*/DEVSECOPS-*/ARCH-*/QAMVP-*) + gates partner/platform (2026-08-17) |
-| **Last Updated** | 2026-08-17 — ARCH-HEX-001 selesai (statement, support, auth, loan-origination, lending-rules hexagonal decoupling & ArchUnit test suite); release `1.11.13` deployed |
+| **Last Updated** | 2026-08-17 — ARCH-DTO-001 selesai (standardisasi DTO placement ke id.payu.<service>.interfaces.dto di seluruh 21 microservice); release `1.11.14` deployed |
 
 ---
 
@@ -139,7 +139,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| ARCH-DTO-001 | 🟠 | semua | 20+ service menaruh DTO di `dto/` root / `domain.dto` / `adapter.web.dto`, bukan `interfaces.dto` | dto/QrisPaymentRequest.java, dto/TopUpRequest.java, dsb. |
 | ARCH-DLQ-001 | 🟠 | promotion, cms, dispute, statement, platform | ~~Tanpa `.dlq` wiring; outbox event gagal-permanen cuma di-archive/log, tidak pernah ke `.dlq`~~ **PLATFORM DONE 2026-08-13** — outbox-starter: event gagal permanen (> maxRetries) kini di-copy best-effort ke `destinationTopic + .dlq` (`sendToDlq`, guard test); **DELIBERATELY DEFERRED 2026-08-16** — sisa "consumer per service yang konsumsi `.dlq`" menunggu alert destination (Slack/PagerDuty via Vault, DEVSECOPS-017); sampai itu ada, `OutboxCleanupScheduler` sudah log `OUTBOX-001 ALERT` untuk failed archived (retention), sehingga event tak pernah hilang tanpa jejak. Consumer DLQ log-only akan duplikat alert ini (YAGNI); tambah saat destination nyata tersedia | OutboxCleanupScheduler.java:77-85 |
 | ARCH-PARTNER-001 | 🟡 | partner | ~~PaymentWebhookHandler tidak di-wire~~ **WIRED 2026-08-13** — `WebhookDispatcherService.dispatch` kini memanggil handler yang `supportedEventTypes` match (processWebhook/onSuccess/onError; null-guard; sebelum early-return subscription). Sisa: API unversioned (`/merchants`, `/partners`, `/webhooks`, `/payment-links`) | WebhookDispatcherService |
 | ARCH-CONS-001 | 🟡 | platform | ~~wallet `RefundRequestedConsumer` tanpa claim/dedup~~ **VERIFIED 2026-08-13** — dedup via natural key `refund_id` (PRIMARY KEY) + COMPLETED guard + reconcile; `RefundReversalExecutorTest` replay+invalid-event tests ditambah (3/3). Sisa: manual ack seragam lintas consumer | RefundRequestedConsumer + RefundReversalExecutor |

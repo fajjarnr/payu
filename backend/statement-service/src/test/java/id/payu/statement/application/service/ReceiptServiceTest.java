@@ -2,8 +2,8 @@ package id.payu.statement.application.service;
 
 import id.payu.statement.domain.port.out.TransactionServicePort;
 import id.payu.statement.domain.port.out.ReceiptRepositoryPort;
-import id.payu.statement.application.service.dto.ReceiptGenerationRequest;
-import id.payu.statement.application.service.dto.ReceiptResponse;
+import id.payu.statement.interfaces.dto.ReceiptGenerationRequest;
+import id.payu.statement.interfaces.dto.ReceiptResponse;
 import id.payu.statement.domain.model.ReceiptException;
 import id.payu.statement.domain.model.Receipt;
 import id.payu.statement.domain.model.ReceiptStatus;

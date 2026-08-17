@@ -3,7 +3,7 @@ package id.payu.transaction.adapter.web;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
-import id.payu.transaction.dto.InitiateTransferResponse;
+import id.payu.transaction.interfaces.dto.InitiateTransferResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

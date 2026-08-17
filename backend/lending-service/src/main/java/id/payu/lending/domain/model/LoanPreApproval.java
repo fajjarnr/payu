@@ -2,7 +2,7 @@ package id.payu.lending.domain.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import id.payu.lending.dto.LoanPreApprovalResponse;
+import id.payu.lending.interfaces.dto.LoanPreApprovalResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

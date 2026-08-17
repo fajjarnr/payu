@@ -1,7 +1,7 @@
 package id.payu.transaction.adapter.client;
 
 import id.payu.transaction.domain.port.out.WalletServicePort;
-import id.payu.transaction.dto.ReserveBalanceResponse;
+import id.payu.transaction.interfaces.dto.ReserveBalanceResponse;
 import id.payu.grpc.common.Money;
 import id.payu.wallet.grpc.CommitReservationRequest;
 import id.payu.wallet.grpc.CreditRequest;
@@ -105,7 +105,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
 
             if (response.getSuccess()) {
                 log.info("gRPC balance reserved: reservationId={}", response.getReservationId());
-                return id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                return id.payu.transaction.interfaces.dto.ReserveBalanceResponse.builder()
                         .reservationId(response.getReservationId())
                         .accountId(accountId.toString())
                         .referenceId(transactionId)
@@ -113,7 +113,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                         .build();
             } else {
                 log.warn("gRPC reserveBalance failed: error={}", response.getError().getMessage());
-                return id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                return id.payu.transaction.interfaces.dto.ReserveBalanceResponse.builder()
                         .status("FAILED")
                         .referenceId(transactionId)
                         .build();

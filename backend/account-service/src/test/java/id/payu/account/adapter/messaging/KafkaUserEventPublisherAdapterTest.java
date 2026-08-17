@@ -1,6 +1,6 @@
 package id.payu.account.adapter.messaging;
 
-import id.payu.account.dto.UserCreatedEvent;
+import id.payu.account.interfaces.dto.UserCreatedEvent;
 import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

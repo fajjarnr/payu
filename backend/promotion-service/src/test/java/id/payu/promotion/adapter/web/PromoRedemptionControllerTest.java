@@ -2,8 +2,8 @@ package id.payu.promotion.adapter.web;
 
 import id.payu.commons.idempotency.Idempotent;
 import id.payu.promotion.application.service.PromoRedemptionService;
-import id.payu.promotion.dto.ApplyPromoRequest;
-import id.payu.promotion.dto.ApplyPromoResponse;
+import id.payu.promotion.interfaces.dto.ApplyPromoRequest;
+import id.payu.promotion.interfaces.dto.ApplyPromoResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.RequestHeader;
 

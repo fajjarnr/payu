@@ -10,14 +10,14 @@ import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.PayLater;
 import id.payu.lending.domain.model.PayLaterTransaction;
 import id.payu.lending.domain.model.RepaymentSchedule;
-import id.payu.lending.dto.LoanApplicationCommand;
-import id.payu.lending.dto.LoanApplicationRequest;
-import id.payu.lending.dto.LoanPreApprovalResponse;
-import id.payu.lending.dto.PayLaterLimitRequest;
-import id.payu.lending.dto.InstallmentCheckoutRequest;
-import id.payu.lending.dto.InstallmentCheckoutResponse;
-import id.payu.lending.dto.TenorOptionResponse;
-import id.payu.lending.dto.TenorOptionsRequest;
+import id.payu.lending.interfaces.dto.LoanApplicationCommand;
+import id.payu.lending.interfaces.dto.LoanApplicationRequest;
+import id.payu.lending.interfaces.dto.LoanPreApprovalResponse;
+import id.payu.lending.interfaces.dto.PayLaterLimitRequest;
+import id.payu.lending.interfaces.dto.InstallmentCheckoutRequest;
+import id.payu.lending.interfaces.dto.InstallmentCheckoutResponse;
+import id.payu.lending.interfaces.dto.TenorOptionResponse;
+import id.payu.lending.interfaces.dto.TenorOptionsRequest;
 import id.payu.lending.interfaces.dto.RepaymentRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -385,12 +385,12 @@ public class LendingController extends BaseController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<LoanPreApprovalResponse>> checkPreApproval(
-            @Valid @RequestBody id.payu.lending.dto.LoanPreApprovalRequest request,
+            @Valid @RequestBody id.payu.lending.interfaces.dto.LoanPreApprovalRequest request,
             java.security.Principal principal) {
         // BUG-BE-193 FIX: Extract authenticated userId from JWT and override request's userId.
         // LoanPreApprovalRequest is an immutable record, so create a new instance.
         UUID authenticatedUserId = UUID.fromString(principal.getName());
-        id.payu.lending.dto.LoanPreApprovalRequest securedRequest = new id.payu.lending.dto.LoanPreApprovalRequest(
+        id.payu.lending.interfaces.dto.LoanPreApprovalRequest securedRequest = new id.payu.lending.interfaces.dto.LoanPreApprovalRequest(
                 authenticatedUserId,
                 request.loanType(),
                 request.principalAmount(),

@@ -3,7 +3,7 @@ package id.payu.productcatalog.adapter.web.publics;
 import id.payu.productcatalog.adapter.web.BaseController;
 import id.payu.productcatalog.domain.model.ProductDefinition;
 import id.payu.productcatalog.domain.port.in.ProductCatalogUseCase;
-import id.payu.productcatalog.dto.ProductResponse;
+import id.payu.productcatalog.interfaces.dto.ProductResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

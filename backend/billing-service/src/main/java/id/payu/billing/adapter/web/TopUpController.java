@@ -2,8 +2,8 @@ package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.billing.domain.model.BillPayment;
-import id.payu.billing.dto.TopUpRequest;
-import id.payu.billing.dto.TopUpResponse;
+import id.payu.billing.interfaces.dto.TopUpRequest;
+import id.payu.billing.interfaces.dto.TopUpResponse;
 import id.payu.billing.application.service.PaymentService;
 import id.payu.commons.idempotency.Idempotent;
 import io.swagger.v3.oas.annotations.Operation;

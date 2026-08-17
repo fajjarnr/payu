@@ -1,7 +1,7 @@
 package id.payu.notification.adapter.web;
 
 import id.payu.notification.domain.NotificationChannel;
-import id.payu.notification.dto.SendNotificationRequest;
+import id.payu.notification.interfaces.dto.SendNotificationRequest;
 import id.payu.notification.adapter.sender.EmailSender;
 import id.payu.notification.adapter.sender.PushSender;
 import id.payu.notification.adapter.sender.SmsSender;

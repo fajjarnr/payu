@@ -1,7 +1,7 @@
 package id.payu.transaction.application.cqrs.command;
 
 import id.payu.transaction.application.cqrs.Command;
-import id.payu.transaction.dto.InitiateTransferRequest;
+import id.payu.transaction.interfaces.dto.InitiateTransferRequest;
 import id.payu.transaction.domain.model.Money;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.Objects;
-import id.payu.transaction.dto.TransactionType;
+import id.payu.transaction.interfaces.dto.TransactionType;
 
 /**
  * Command to initiate a fund transfer.

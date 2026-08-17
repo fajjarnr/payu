@@ -1,10 +1,10 @@
 package id.payu.portal.adapter.web;
 
-import id.payu.portal.dto.SandboxPaymentRequest;
-import id.payu.portal.dto.SandboxPaymentResponse;
-import id.payu.portal.dto.SandboxPaymentStatusResponse;
-import id.payu.portal.dto.SandboxRefundRequest;
-import id.payu.portal.dto.SandboxRefundResponse;
+import id.payu.portal.interfaces.dto.SandboxPaymentRequest;
+import id.payu.portal.interfaces.dto.SandboxPaymentResponse;
+import id.payu.portal.interfaces.dto.SandboxPaymentStatusResponse;
+import id.payu.portal.interfaces.dto.SandboxRefundRequest;
+import id.payu.portal.interfaces.dto.SandboxRefundResponse;
 import id.payu.portal.application.service.SandboxService;
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;

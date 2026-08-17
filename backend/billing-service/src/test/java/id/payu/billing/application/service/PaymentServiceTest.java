@@ -7,7 +7,7 @@ import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
 import id.payu.billing.domain.port.out.BillerPort;
 import id.payu.billing.domain.port.out.PaymentEventPort;
 import id.payu.billing.domain.port.out.WalletPort;
-import id.payu.billing.dto.CreatePaymentRequest;
+import id.payu.billing.interfaces.dto.CreatePaymentRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

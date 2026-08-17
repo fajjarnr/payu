@@ -5,7 +5,7 @@ import id.payu.promotion.domain.port.out.CashbackRuleRepositoryPort;
 import id.payu.promotion.domain.port.out.WalletServicePort;
 import id.payu.promotion.domain.port.out.NotificationPort;
 import id.payu.promotion.domain.port.out.CashbackRecordRepositoryPort;
-import id.payu.promotion.dto.TransactionCompletedEvent;
+import id.payu.promotion.interfaces.dto.TransactionCompletedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

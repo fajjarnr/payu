@@ -4,7 +4,7 @@ import id.payu.promotion.domain.TransactionType;
 import id.payu.promotion.domain.model.LoyaltyPoints;
 import id.payu.promotion.domain.port.out.DomainEventPublisher;
 import id.payu.promotion.domain.port.out.LoyaltyPointsRepositoryPort;
-import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
+import id.payu.promotion.interfaces.dto.RedeemLoyaltyPointsRequest;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

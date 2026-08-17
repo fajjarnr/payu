@@ -1,7 +1,7 @@
 package id.payu.promotion.adapter.messaging;
 
 import id.payu.promotion.application.port.in.ProcessCashbackUseCase;
-import id.payu.promotion.dto.TransactionCompletedEvent;
+import id.payu.promotion.interfaces.dto.TransactionCompletedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;

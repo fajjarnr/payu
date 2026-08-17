@@ -1,7 +1,7 @@
 package id.payu.backoffice.adapter.web;
 
-import id.payu.backoffice.dto.TaskInstanceResponse;
-import id.payu.backoffice.dto.TaskTransitionRequest;
+import id.payu.backoffice.interfaces.dto.TaskInstanceResponse;
+import id.payu.backoffice.interfaces.dto.TaskTransitionRequest;
 import id.payu.shared.restclient.PayuRestClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -49,11 +49,11 @@ public class TaskInboxController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "List of pending tasks"),
             @ApiResponse(responseCode = "401", description = "Unauthorized",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))),
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))),
             @ApiResponse(responseCode = "502", description = "Kogito service unavailable",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class)))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<List<Map<String, Object>>>> getPendingTasks(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<List<Map<String, Object>>>> getPendingTasks(
             @Parameter(description = "Filter by user (defaults to authenticated user)", example = "john")
             @RequestParam(required = false) String user) {
 
@@ -72,7 +72,7 @@ public class TaskInboxController extends BaseController {
         } catch (Exception e) {
             log.error("Failed to fetch tasks from Kogito: {}", e.getMessage(), e);
             return ResponseEntity.status(502)
-                    .body(id.payu.backoffice.dto.ApiResponse.error("KOGITO_UNAVAILABLE", "Kogito task API unavailable: " + e.getMessage()));
+                    .body(id.payu.backoffice.interfaces.dto.ApiResponse.error("KOGITO_UNAVAILABLE", "Kogito task API unavailable: " + e.getMessage()));
         }
     }
 
@@ -85,13 +85,13 @@ public class TaskInboxController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Task transitioned successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid transition",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))),
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))),
             @ApiResponse(responseCode = "404", description = "Task not found",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))),
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))),
             @ApiResponse(responseCode = "502", description = "Kogito service unavailable",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class)))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<Map<String, Object>>> transitionTask(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<Map<String, Object>>> transitionTask(
             @PathVariable String taskId,
             @Valid @RequestBody TaskTransitionRequest request,
             @Parameter(description = "User performing the transition (defaults to authenticated user)", example = "john")
@@ -114,7 +114,7 @@ public class TaskInboxController extends BaseController {
         } catch (Exception e) {
             log.error("Failed to transition task {}: {}", taskId, e.getMessage(), e);
             return ResponseEntity.status(502)
-                    .body(id.payu.backoffice.dto.ApiResponse.error("KOGITO_UNAVAILABLE", "Kogito task API unavailable: " + e.getMessage()));
+                    .body(id.payu.backoffice.interfaces.dto.ApiResponse.error("KOGITO_UNAVAILABLE", "Kogito task API unavailable: " + e.getMessage()));
         }
     }
 

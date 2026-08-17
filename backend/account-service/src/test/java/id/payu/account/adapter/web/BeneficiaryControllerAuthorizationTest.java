@@ -6,7 +6,7 @@ import id.payu.account.domain.model.BeneficiaryStatus;
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.out.BeneficiaryPersistencePort;
 import id.payu.account.domain.port.out.UserPersistencePort;
-import id.payu.account.dto.BeneficiaryRequest;
+import id.payu.account.interfaces.dto.BeneficiaryRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

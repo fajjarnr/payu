@@ -4,7 +4,7 @@ import id.payu.commons.idempotency.Idempotent;
 import id.payu.dispute.domain.model.Dispute;
 import id.payu.dispute.domain.model.DisputeResolutionType;
 import id.payu.dispute.domain.port.in.DisputeUseCase;
-import id.payu.dispute.dto.*;
+import id.payu.dispute.interfaces.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

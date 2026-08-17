@@ -5,7 +5,7 @@ import id.payu.account.domain.model.KycStatus;
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.model.UserStatus;
 import id.payu.account.domain.port.in.RegisterUserUseCase;
-import id.payu.account.dto.RegisterUserRequest;
+import id.payu.account.interfaces.dto.RegisterUserRequest;
 import id.payu.account.config.Rfc9457AccountExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

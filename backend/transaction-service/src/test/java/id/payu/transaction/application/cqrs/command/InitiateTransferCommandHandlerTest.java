@@ -11,7 +11,7 @@ import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.application.service.AuthorizationService;
-import id.payu.transaction.dto.ReserveBalanceResponse;
+import id.payu.transaction.interfaces.dto.ReserveBalanceResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -141,7 +141,7 @@ class InitiateTransferCommandHandlerTest {
                 "1234567890",
                 Money.idr("100000"),
                 "test transfer",
-                id.payu.transaction.dto.TransactionType.SKN_TRANSFER,
+                id.payu.transaction.interfaces.dto.TransactionType.SKN_TRANSFER,
                 null,
                 null,
                 "idem-skn-001",
@@ -149,7 +149,7 @@ class InitiateTransferCommandHandlerTest {
                 null);
         when(walletServicePort.reserveBalance(
                 eq(command.senderAccountId()), eq(transactionId.toString()), eq(command.amount().getAmount())))
-                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                .thenReturn(id.payu.transaction.interfaces.dto.ReserveBalanceResponse.builder()
                         .reservationId("reservation-skn-001")
                         .status("RESERVED")
                         .build());
@@ -177,7 +177,7 @@ class InitiateTransferCommandHandlerTest {
                 "1234567890",
                 Money.idr("100000"),
                 "test transfer",
-                id.payu.transaction.dto.TransactionType.BIFAST_TRANSFER,
+                id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER,
                 null,
                 null,
                 "idem-bifast-bankcode-001",
@@ -185,7 +185,7 @@ class InitiateTransferCommandHandlerTest {
                 "002");
         when(walletServicePort.reserveBalance(
                 eq(senderAccountId), eq(transactionId.toString()), eq(Money.idr("100000").getAmount())))
-                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                .thenReturn(id.payu.transaction.interfaces.dto.ReserveBalanceResponse.builder()
                         .reservationId("reservation-bifast-002")
                         .status("RESERVED")
                         .build());
@@ -200,7 +200,7 @@ class InitiateTransferCommandHandlerTest {
 
         handler.handle(command);
 
-        var captured = org.mockito.ArgumentCaptor.forClass(id.payu.transaction.dto.BifastTransferRequest.class);
+        var captured = org.mockito.ArgumentCaptor.forClass(id.payu.transaction.interfaces.dto.BifastTransferRequest.class);
         verify(bifastServicePort).initiateTransfer(captured.capture());
         assertThat(captured.getValue().getBeneficiaryBankCode()).isEqualTo("002");
     }
@@ -214,7 +214,7 @@ class InitiateTransferCommandHandlerTest {
                 "1234567890",
                 Money.idr("100000"),
                 "test transfer",
-                id.payu.transaction.dto.TransactionType.BIFAST_TRANSFER,
+                id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER,
                 null,
                 null,
                 "idem-bifast-default-001",
@@ -222,7 +222,7 @@ class InitiateTransferCommandHandlerTest {
                 null);
         when(walletServicePort.reserveBalance(
                 eq(senderAccountId), eq(transactionId.toString()), eq(Money.idr("100000").getAmount())))
-                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                .thenReturn(id.payu.transaction.interfaces.dto.ReserveBalanceResponse.builder()
                         .reservationId("reservation-bifast-014")
                         .status("RESERVED")
                         .build());
@@ -237,7 +237,7 @@ class InitiateTransferCommandHandlerTest {
 
         handler.handle(command);
 
-        var captured = org.mockito.ArgumentCaptor.forClass(id.payu.transaction.dto.BifastTransferRequest.class);
+        var captured = org.mockito.ArgumentCaptor.forClass(id.payu.transaction.interfaces.dto.BifastTransferRequest.class);
         verify(bifastServicePort).initiateTransfer(captured.capture());
         assertThat(captured.getValue().getBeneficiaryBankCode()).isEqualTo("014");
     }
@@ -251,7 +251,7 @@ class InitiateTransferCommandHandlerTest {
                 "1234567890",
                 Money.idr("100000"),
                 "test transfer",
-                id.payu.transaction.dto.TransactionType.BIFAST_TRANSFER,
+                id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER,
                 null,
                 null,
                 "idem-bifast-fee-001",
@@ -259,7 +259,7 @@ class InitiateTransferCommandHandlerTest {
                 "014");
         when(walletServicePort.reserveBalance(
                 eq(senderAccountId), eq(transactionId.toString()), eq(Money.idr("100000").getAmount())))
-                .thenReturn(id.payu.transaction.dto.ReserveBalanceResponse.builder()
+                .thenReturn(id.payu.transaction.interfaces.dto.ReserveBalanceResponse.builder()
                         .reservationId("reservation-bifast-fee-001")
                         .status("RESERVED")
                         .build());
@@ -287,7 +287,7 @@ class InitiateTransferCommandHandlerTest {
                 recipientAccountNumber,
                 Money.idr("100"),
                 "internal transfer",
-                id.payu.transaction.dto.TransactionType.INTERNAL_TRANSFER,
+                id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER,
                 null,
                 null,
                 "idem-internal-atomic-001",
@@ -323,7 +323,7 @@ class InitiateTransferCommandHandlerTest {
                 "1234567890",
                 Money.idr("100"),
                 "internal transfer",
-                id.payu.transaction.dto.TransactionType.INTERNAL_TRANSFER,
+                id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER,
                 null,
                 null,
                 "idem-internal-atomic-fail-001",
@@ -359,7 +359,7 @@ class InitiateTransferCommandHandlerTest {
                 recipientAccountNumber,
                 Money.idr("100"),
                 "internal transfer",
-                id.payu.transaction.dto.TransactionType.INTERNAL_TRANSFER,
+                id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER,
                 null,
                 null,
                 "idem-internal-refund-001",

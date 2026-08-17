@@ -12,7 +12,7 @@ import id.payu.investment.domain.port.in.*;
 import id.payu.investment.domain.port.out.InvestmentEventPublisherPort;
 import id.payu.investment.domain.port.out.InvestmentPersistencePort;
 import id.payu.investment.domain.port.out.WalletServicePort;
-import id.payu.investment.dto.InvestmentEvent;
+import id.payu.investment.interfaces.dto.InvestmentEvent;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;

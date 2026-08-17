@@ -1,7 +1,7 @@
 package id.payu.support.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
-import id.payu.support.dto.*;
+import id.payu.support.interfaces.dto.*;
 import id.payu.support.application.service.AgentService;
 import id.payu.support.application.service.AgentTrainingService;
 import id.payu.support.application.service.TrainingModuleService;

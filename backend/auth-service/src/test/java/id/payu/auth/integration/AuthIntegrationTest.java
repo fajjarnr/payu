@@ -1,7 +1,7 @@
 package id.payu.auth.integration;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import id.payu.auth.dto.LoginRequest;
+import id.payu.auth.interfaces.dto.LoginRequest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;

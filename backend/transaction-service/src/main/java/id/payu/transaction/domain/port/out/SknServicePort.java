@@ -1,7 +1,7 @@
 package id.payu.transaction.domain.port.out;
 
-import id.payu.transaction.dto.SknTransferRequest;
-import id.payu.transaction.dto.SknTransferResponse;
+import id.payu.transaction.interfaces.dto.SknTransferRequest;
+import id.payu.transaction.interfaces.dto.SknTransferResponse;
 
 public interface SknServicePort {
     SknTransferResponse initiateTransfer(SknTransferRequest request);

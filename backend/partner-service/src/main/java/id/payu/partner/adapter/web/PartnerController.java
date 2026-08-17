@@ -1,6 +1,6 @@
 package id.payu.partner.adapter.web;
 
-import id.payu.partner.dto.PartnerDTO;
+import id.payu.partner.interfaces.dto.PartnerDTO;
 import id.payu.partner.application.service.PartnerService;
 import id.payu.partner.adapter.web.ApiResponse;
 import id.payu.partner.adapter.web.BaseController;

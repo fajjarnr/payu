@@ -17,7 +17,7 @@ import id.payu.investment.domain.model.TransactionType;
 import id.payu.investment.domain.port.out.InvestmentEventPublisherPort;
 import id.payu.investment.domain.port.out.InvestmentPersistencePort;
 import id.payu.investment.domain.port.out.WalletServicePort;
-import id.payu.investment.dto.InvestmentEvent;
+import id.payu.investment.interfaces.dto.InvestmentEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

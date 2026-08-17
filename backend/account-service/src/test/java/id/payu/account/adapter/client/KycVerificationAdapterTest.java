@@ -1,7 +1,7 @@
 package id.payu.account.adapter.client;
 
-import id.payu.account.dto.VerifyNikRequest;
-import id.payu.account.dto.VerifyNikResponse;
+import id.payu.account.interfaces.dto.VerifyNikRequest;
+import id.payu.account.interfaces.dto.VerifyNikResponse;
 import id.payu.account.exception.AccountDomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -190,7 +190,7 @@ class KycVerificationAdapterTest {
         @DisplayName("should call gateway with default values for deprecated method")
         void shouldCallGatewayWithDefaultValues() {
             // Given
-            id.payu.account.dto.DukcapilResponse expectedResponse = new id.payu.account.dto.DukcapilResponse(
+            id.payu.account.interfaces.dto.DukcapilResponse expectedResponse = new id.payu.account.interfaces.dto.DukcapilResponse(
                 UUID.randomUUID().toString(),
                 "3201234567890001",
                 true,
@@ -213,7 +213,7 @@ class KycVerificationAdapterTest {
                 ));
 
             // When
-            id.payu.account.dto.DukcapilResponse result = kycVerificationAdapter.verifyNik(
+            id.payu.account.interfaces.dto.DukcapilResponse result = kycVerificationAdapter.verifyNik(
                 "3201234567890001",
                 "John Doe"
             );

@@ -1,7 +1,7 @@
 package id.payu.gateway.adapter.web;
 
 import id.payu.gateway.application.service.PaymentMethodService;
-import id.payu.gateway.dto.ApiResponse;
+import id.payu.gateway.interfaces.dto.ApiResponse;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

@@ -5,12 +5,12 @@ import id.payu.wallet.domain.model.JournalEntry;
 import id.payu.wallet.domain.model.LedgerEntry;
 import id.payu.wallet.domain.port.in.GeneralLedgerUseCase;
 import id.payu.wallet.domain.port.out.JournalPersistencePort;
-import id.payu.wallet.dto.BalanceSheetResponse;
-import id.payu.wallet.dto.BalanceSheetResponse.BalanceSheetEntry;
-import id.payu.wallet.dto.DailySettlementResponse;
-import id.payu.wallet.dto.DailySettlementResponse.SettlementEntry;
-import id.payu.wallet.dto.IncomeStatementResponse;
-import id.payu.wallet.dto.IncomeStatementResponse.IncomeStatementEntry;
+import id.payu.wallet.interfaces.dto.BalanceSheetResponse;
+import id.payu.wallet.interfaces.dto.BalanceSheetResponse.BalanceSheetEntry;
+import id.payu.wallet.interfaces.dto.DailySettlementResponse;
+import id.payu.wallet.interfaces.dto.DailySettlementResponse.SettlementEntry;
+import id.payu.wallet.interfaces.dto.IncomeStatementResponse;
+import id.payu.wallet.interfaces.dto.IncomeStatementResponse.IncomeStatementEntry;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

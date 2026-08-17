@@ -1,5 +1,15 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.11.14 (2026-08-17)
+
+- **ARCH-DTO-001 (CLOSED)**: Standardized DTO package placement to `id.payu.<service>.interfaces.dto` across all 21 microservices (and simulators):
+  - Migrated over 200 DTOs from root `dto/`, `domain.dto`, `adapter.web.dto`, and `application.service.dto` to `interfaces.dto` (and `interfaces.dto.snap`).
+  - Updated all controller contracts, application services, domain ports, and unit/integration tests.
+  - Aligned ArchUnit layered architecture rules across all microservices (including `statement-service` and `billing-service`).
+  - Fixed testcontainers configuration (`.withReuse(true)` removal for Podman socket compatibility) in `transaction-service`, `wallet-service`, `billing-service`, and `partner-service`.
+- **Backend Build & Verification**: `mvn -f backend/pom.xml clean package -DskipTests -T 1C` built 44/44 reactor modules with 100% BUILD SUCCESS.
+- **Deploy live**: Rebuilt container images with SemVer tag `1.11.14` and deployed via Podman compose stack. All 37 containers healthy with 200 OK actuator health responses.
+
 ## Deploy 1.11.13 (2026-08-17)
 
 - **ARCH-HEX-001 (CLOSED)**: remediated hexagonal architecture across 5 target services:

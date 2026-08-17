@@ -1,7 +1,7 @@
 package id.payu.billing.integration;
 
 import id.payu.billing.domain.port.out.WalletPort;
-import id.payu.billing.dto.CreatePaymentRequest;
+import id.payu.billing.interfaces.dto.CreatePaymentRequest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Assertions;

@@ -2,6 +2,21 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-265: Standardized DTO Package Placement in Hexagonal Microservices (2026-08-17)
+
+**Context**: ARCH-DTO-001 standardized DTO placement across all 21 microservices from fragmented packages (`dto/`, `domain.dto`, `adapter.web.dto`, `application.service.dto`) into `interfaces.dto` (Rule 5: Hexagonal Architecture standard).
+
+**Lesson**:
+- **Package Uniformity**: Placing external Request/Response DTOs in `id.payu.<service>.interfaces.dto` provides a single, predictable boundary for API and messaging contracts across the entire platform.
+- **ArchUnit Layer Integration**: When using ArchUnit layered architectures (`layeredArchitecture()`), explicitly declare `.layer("Dto").definedBy("..dto..")` and define allowable inward/outward access to avoid breaking boundary checks when DTOs are extracted from web adapters.
+- **Testcontainers on Podman Socket**: With rootless Podman (`unix:///run/user/1000/podman/podman.sock`), avoid `.withReuse(true)` on `PostgreSQLContainer` unless reuse properties and lifecycle daemon are strictly provisioned; unconfigured reuse causes `Broken pipe` socket disconnection during container teardown/reconnection cycles.
+
+**Applied evidence**:
+- Relocated ~200 DTOs across all 21 backend microservices to `interfaces.dto`.
+- Full reactor build: 44/44 modules SUCCESS (`mvn clean package -DskipTests -T 1C`).
+- ArchUnit rules verified across all services.
+- Rebuilt all 23 backend container images with SemVer `1.11.14` and deployed live via Podman stack with 37/37 containers healthy.
+
 ## L-264: Hexagonal Boundary Enforcement & ArchUnit Isolation for Microservices (2026-08-17)
 
 **Context**: ARCH-HEX-001 remediation across 5 core services (`statement-service`, `support-service`, `auth-service`, `loan-origination-process`, `lending-rules`). Application layers leaked direct imports to JPA entities and external clients, violating hexagonal architecture boundaries.

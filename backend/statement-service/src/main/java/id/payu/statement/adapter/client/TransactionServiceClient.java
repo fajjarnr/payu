@@ -1,8 +1,8 @@
 package id.payu.statement.adapter.client;
 
 import id.payu.grpc.starter.config.GrpcChannelSupport;
-import id.payu.statement.dto.TransactionRecord;
-import id.payu.statement.dto.TransactionType;
+import id.payu.statement.interfaces.dto.TransactionRecord;
+import id.payu.statement.interfaces.dto.TransactionType;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import id.payu.transaction.grpc.GetHistoryRequest;

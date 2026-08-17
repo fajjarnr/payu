@@ -2,9 +2,9 @@ package id.payu.compliance.adapter.web;
 
 import id.payu.compliance.domain.model.DataAccessAudit;
 import id.payu.compliance.domain.port.in.DataAccessAuditUseCase;
-import id.payu.compliance.dto.DataAccessAuditRequest;
-import id.payu.compliance.dto.DataAccessAuditResponse;
-import id.payu.compliance.dto.DataAccessAuditSearchRequest;
+import id.payu.compliance.interfaces.dto.DataAccessAuditRequest;
+import id.payu.compliance.interfaces.dto.DataAccessAuditResponse;
+import id.payu.compliance.interfaces.dto.DataAccessAuditSearchRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

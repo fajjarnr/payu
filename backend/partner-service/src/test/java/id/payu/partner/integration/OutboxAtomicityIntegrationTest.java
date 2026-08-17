@@ -81,8 +81,7 @@ class OutboxAtomicityIntegrationTest {
             return new PostgreSQLContainer<>("postgres:16-alpine")
                     .withDatabaseName("partner_test")
                     .withUsername("test")
-                    .withPassword("test")
-                    .withReuse(true);
+                    .withPassword("test");
         }
     }
 

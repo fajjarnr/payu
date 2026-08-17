@@ -7,8 +7,8 @@ import id.payu.account.domain.port.out.IdentityProviderPort;
 import id.payu.account.domain.port.out.KycVerificationPort;
 import id.payu.account.domain.port.out.UserEventPublisherPort;
 import id.payu.account.domain.port.out.UserPersistencePort;
-import id.payu.account.dto.DukcapilResponse;
-import id.payu.account.dto.RegisterUserRequest;
+import id.payu.account.interfaces.dto.DukcapilResponse;
+import id.payu.account.interfaces.dto.RegisterUserRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -127,7 +127,7 @@ class UserApplicationServiceTest {
             ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
             verify(userPersistencePort).save(userCaptor.capture());
             assertThat(userCaptor.getValue().getExternalId()).isEqualTo(iamUserId);
-            verify(userEventPublisherPort).publishUserCreated(any(id.payu.account.dto.UserCreatedEvent.class));
+            verify(userEventPublisherPort).publishUserCreated(any(id.payu.account.interfaces.dto.UserCreatedEvent.class));
         }
 
         @Test
@@ -285,7 +285,7 @@ class UserApplicationServiceTest {
             userApplicationService.registerUser(validRequest).get();
 
             // Then
-            verify(userEventPublisherPort, times(1)).publishUserCreated(any(id.payu.account.dto.UserCreatedEvent.class));
+            verify(userEventPublisherPort, times(1)).publishUserCreated(any(id.payu.account.interfaces.dto.UserCreatedEvent.class));
         }
 
         @Test

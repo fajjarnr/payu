@@ -1,8 +1,8 @@
 package id.payu.wallet.domain.port.in;
 
-import id.payu.wallet.dto.BalanceSheetResponse;
-import id.payu.wallet.dto.DailySettlementResponse;
-import id.payu.wallet.dto.IncomeStatementResponse;
+import id.payu.wallet.interfaces.dto.BalanceSheetResponse;
+import id.payu.wallet.interfaces.dto.DailySettlementResponse;
+import id.payu.wallet.interfaces.dto.IncomeStatementResponse;
 
 import java.time.LocalDate;
 

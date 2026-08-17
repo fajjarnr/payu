@@ -61,7 +61,7 @@ class ArchitectureTest {
                         "id.payu.compliance.domain.port..",
                         "id.payu.compliance.application..",
                         "id.payu.compliance.adapter..",
-                        "id.payu.compliance.dto..",
+                        "id.payu.compliance.interfaces.dto..",
                         "id.payu.compliance.exception..",
                         "id.payu.api.common..",
                         "id.payu.security..",

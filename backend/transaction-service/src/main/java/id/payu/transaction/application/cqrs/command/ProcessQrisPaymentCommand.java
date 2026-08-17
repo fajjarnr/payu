@@ -1,7 +1,7 @@
 package id.payu.transaction.application.cqrs.command;
 
 import id.payu.transaction.application.cqrs.Command;
-import id.payu.transaction.dto.ProcessQrisPaymentRequest;
+import id.payu.transaction.interfaces.dto.ProcessQrisPaymentRequest;
 import id.payu.transaction.domain.model.Money;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

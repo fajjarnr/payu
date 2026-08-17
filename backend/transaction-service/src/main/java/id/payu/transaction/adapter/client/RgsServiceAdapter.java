@@ -1,8 +1,8 @@
 package id.payu.transaction.adapter.client;
 
 import id.payu.transaction.domain.port.out.RgsServicePort;
-import id.payu.transaction.dto.RgsTransferRequest;
-import id.payu.transaction.dto.RgsTransferResponse;
+import id.payu.transaction.interfaces.dto.RgsTransferRequest;
+import id.payu.transaction.interfaces.dto.RgsTransferResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

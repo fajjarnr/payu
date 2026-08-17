@@ -5,7 +5,7 @@ import id.payu.dispute.domain.model.Dispute;
 import id.payu.dispute.domain.model.DisputeResolutionType;
 import id.payu.dispute.domain.model.DisputeStatus;
 import id.payu.dispute.domain.port.out.DisputePersistencePort;
-import id.payu.dispute.dto.*;
+import id.payu.dispute.interfaces.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

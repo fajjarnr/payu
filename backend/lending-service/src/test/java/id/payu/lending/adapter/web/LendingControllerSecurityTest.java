@@ -9,7 +9,7 @@ import id.payu.lending.application.service.PayLaterTransactionService;
 import id.payu.lending.domain.model.Loan;
 import id.payu.lending.domain.model.LoanStatus;
 import id.payu.lending.domain.model.LoanType;
-import id.payu.lending.dto.LoanApplicationCommand;
+import id.payu.lending.interfaces.dto.LoanApplicationCommand;
 import id.payu.lending.interfaces.dto.PayLaterPaymentRequest;
 import id.payu.lending.interfaces.dto.PayLaterPurchaseRequest;
 import jakarta.validation.Validation;

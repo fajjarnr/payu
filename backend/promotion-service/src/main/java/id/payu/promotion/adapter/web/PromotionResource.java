@@ -2,11 +2,11 @@ package id.payu.promotion.adapter.web;
 
 import id.payu.promotion.domain.model.Promotion;
 import id.payu.promotion.domain.model.Reward;
-import id.payu.promotion.dto.CreatePromotionRequest;
-import id.payu.promotion.dto.UpdatePromotionRequest;
-import id.payu.promotion.dto.ClaimPromotionRequest;
-import id.payu.promotion.dto.PromotionResponse;
-import id.payu.promotion.dto.RewardResponse;
+import id.payu.promotion.interfaces.dto.CreatePromotionRequest;
+import id.payu.promotion.interfaces.dto.UpdatePromotionRequest;
+import id.payu.promotion.interfaces.dto.ClaimPromotionRequest;
+import id.payu.promotion.interfaces.dto.PromotionResponse;
+import id.payu.promotion.interfaces.dto.RewardResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;

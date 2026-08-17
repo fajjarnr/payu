@@ -1,6 +1,6 @@
 package id.payu.transaction.application.scheduler;
 
-import id.payu.transaction.application.service.dto.ArchivalResult;
+import id.payu.transaction.interfaces.dto.ArchivalResult;
 import id.payu.transaction.application.service.TransactionArchivalService;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;

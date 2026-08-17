@@ -1,8 +1,8 @@
 package id.payu.transaction.adapter.client;
 
 import id.payu.transaction.domain.port.out.WalletServicePort;
-import id.payu.transaction.dto.ReserveBalanceRequest;
-import id.payu.transaction.dto.ReserveBalanceResponse;
+import id.payu.transaction.interfaces.dto.ReserveBalanceRequest;
+import id.payu.transaction.interfaces.dto.ReserveBalanceResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;

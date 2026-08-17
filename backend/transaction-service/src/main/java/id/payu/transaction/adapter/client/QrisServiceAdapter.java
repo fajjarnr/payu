@@ -1,8 +1,8 @@
 package id.payu.transaction.adapter.client;
 
 import id.payu.transaction.domain.port.out.QrisServicePort;
-import id.payu.transaction.dto.QrisPaymentRequest;
-import id.payu.transaction.dto.QrisPaymentResponse;
+import id.payu.transaction.interfaces.dto.QrisPaymentRequest;
+import id.payu.transaction.interfaces.dto.QrisPaymentResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

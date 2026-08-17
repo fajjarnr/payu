@@ -1,6 +1,6 @@
 package id.payu.backoffice.adapter.web;
 
-import id.payu.backoffice.dto.*;
+import id.payu.backoffice.interfaces.dto.*;
 import id.payu.backoffice.application.service.CustomerCaseService;
 import id.payu.backoffice.application.service.FraudCaseService;
 import id.payu.backoffice.application.service.KycReviewService;
@@ -54,8 +54,8 @@ public class BackofficeController extends BaseController {
 
     @GetMapping
     @Operation(summary = "Backoffice service status", description = "Returns backoffice service health and available endpoints")
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<Map<String, Object>>> getBackofficeStatus() {
-        return ResponseEntity.ok(id.payu.backoffice.dto.ApiResponse.success(Map.of(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<Map<String, Object>>> getBackofficeStatus() {
+        return ResponseEntity.ok(id.payu.backoffice.interfaces.dto.ApiResponse.success(Map.of(
                 "service", "backoffice-service",
                 "status", "UP",
                 "version", "1.0.0"
@@ -101,25 +101,25 @@ public class BackofficeController extends BaseController {
             @ApiResponse(
                     responseCode = "400",
                     description = "Invalid request data",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             ),
             @ApiResponse(
                     responseCode = "401",
                     description = "Unauthorized - authentication required",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Forbidden - insufficient permissions",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Internal server error",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             )
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<KycReviewResponse>> createKycReview(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<KycReviewResponse>> createKycReview(
             @Valid @RequestBody
             @Parameter(
                     description = "KYC review request details",
@@ -147,20 +147,20 @@ public class BackofficeController extends BaseController {
             @ApiResponse(
                     responseCode = "401",
                     description = "Unauthorized - authentication required",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             ),
             @ApiResponse(
                     responseCode = "403",
                     description = "Forbidden - insufficient permissions",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "KYC review not found",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             )
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<KycReviewResponse>> getKycReview(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<KycReviewResponse>> getKycReview(
             @Parameter(
                     description = "KYC review ID",
                     required = true,
@@ -187,10 +187,10 @@ public class BackofficeController extends BaseController {
             @ApiResponse(
                     responseCode = "500",
                     description = "Internal server error",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             )
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<List<KycReviewResponse>>> listKycReviews(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<List<KycReviewResponse>>> listKycReviews(
             @Parameter(
                     description = "Filter by status (PENDING, UNDER_REVIEW, APPROVED, REJECTED, REQUIRES_ADDITIONAL_INFO)",
                     example = "PENDING"
@@ -242,10 +242,10 @@ public class BackofficeController extends BaseController {
             @ApiResponse(
                     responseCode = "404",
                     description = "KYC review not found",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             )
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<KycReviewResponse>> reviewKyc(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<KycReviewResponse>> reviewKyc(
             @Parameter(
                     description = "KYC review ID",
                     required = true,
@@ -284,7 +284,7 @@ public class BackofficeController extends BaseController {
             @ApiResponse(
                     responseCode = "404",
                     description = "KYC review not found",
-                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class))
+                    content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class))
             )
     })
     public ResponseEntity<Void> deleteKycReview(
@@ -320,7 +320,7 @@ public class BackofficeController extends BaseController {
                     )
             )
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<FraudCaseResponse>> createFraudCase(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<FraudCaseResponse>> createFraudCase(
             @Valid @RequestBody CreateFraudCaseRequest request) {
         var risk = request.riskLevel() != null ?
                 RiskLevel.valueOf(request.riskLevel().toUpperCase()) : RiskLevel.MEDIUM;
@@ -335,9 +335,9 @@ public class BackofficeController extends BaseController {
     @Operation(summary = "Get fraud case by ID", description = "Retrieves details of a specific fraud case.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class))),
-            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class)))
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<FraudCaseResponse>> getFraudCase(@PathVariable("id") UUID id) {
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<FraudCaseResponse>> getFraudCase(@PathVariable("id") UUID id) {
         return fraudCaseService.getById(id)
                 .map(fraudCase -> ok(FraudCaseResponse.from(fraudCase)))
                 .orElse(notFound("Fraud case"));
@@ -349,7 +349,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<List<FraudCaseResponse>>> listFraudCases(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<List<FraudCaseResponse>>> listFraudCases(
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "riskLevel", required = false) String riskLevel,
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -378,7 +378,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<FraudCaseResponse>> assignFraudCase(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<FraudCaseResponse>> assignFraudCase(
             @PathVariable("id") UUID id,
             @RequestParam("assignedTo") String assignedTo) {
         var fraudCase = fraudCaseService.assign(id, assignedTo);
@@ -392,7 +392,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<FraudCaseResponse>> resolveFraudCase(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<FraudCaseResponse>> resolveFraudCase(
             @PathVariable("id") UUID id,
             @Valid @RequestBody FraudCaseDecisionRequest request,
             @RequestHeader(value = "X-Admin-User", required = false) String adminUser) {
@@ -422,7 +422,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<CustomerCaseResponse>> createCustomerCase(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<CustomerCaseResponse>> createCustomerCase(
             @Valid @RequestBody CustomerCaseRequest request) {
         var customerCase = customerCaseService.create(request);
         return created(CustomerCaseResponse.from(customerCase), "/api/v1/backoffice/customer-cases/" + customerCase.getId());
@@ -433,9 +433,9 @@ public class BackofficeController extends BaseController {
     @Operation(summary = "Get customer case by ID", description = "Retrieves details of a specific customer support case.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class))),
-            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = id.payu.backoffice.dto.ApiResponse.class)))
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = id.payu.backoffice.interfaces.dto.ApiResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<CustomerCaseResponse>> getCustomerCase(@PathVariable("id") UUID id) {
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<CustomerCaseResponse>> getCustomerCase(@PathVariable("id") UUID id) {
         return customerCaseService.getById(id)
                 .map(customerCase -> ok(CustomerCaseResponse.from(customerCase)))
                 .orElse(notFound("Customer case"));
@@ -447,7 +447,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<List<CustomerCaseResponse>>> listCustomerCases(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<List<CustomerCaseResponse>>> listCustomerCases(
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "priority", required = false) String priority,
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -476,7 +476,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<CustomerCaseResponse>> assignCustomerCase(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<CustomerCaseResponse>> assignCustomerCase(
             @PathVariable("id") UUID id,
             @RequestParam("assignedTo") String assignedTo) {
         var customerCase = customerCaseService.assign(id, assignedTo);
@@ -490,7 +490,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<CustomerCaseResponse>> updateCustomerCase(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<CustomerCaseResponse>> updateCustomerCase(
             @PathVariable("id") UUID id,
             @Valid @RequestBody CustomerCaseUpdateRequest request,
             @RequestHeader(value = "X-Admin-User", required = false) String adminUser) {
@@ -519,7 +519,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = UniversalSearchResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<UniversalSearchResponse>> search(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<UniversalSearchResponse>> search(
             @Valid @RequestBody UniversalSearchRequest request) {
         LOG.info("Universal search request: queryPresent={}, entityType={}",
                 request.query() != null && !request.query().isBlank(), request.entityType());
@@ -538,7 +538,7 @@ public class BackofficeController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = UniversalSearchResponse.class)))
     })
-    public ResponseEntity<id.payu.backoffice.dto.ApiResponse<UniversalSearchResponse>> searchGet(
+    public ResponseEntity<id.payu.backoffice.interfaces.dto.ApiResponse<UniversalSearchResponse>> searchGet(
             @RequestParam("q") String query,
             @RequestParam(value = "type", required = false) String entityType,
             @RequestParam(value = "page", defaultValue = "0") int page,

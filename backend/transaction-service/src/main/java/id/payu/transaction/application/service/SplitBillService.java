@@ -5,10 +5,10 @@ import id.payu.transaction.adapter.persistence.entity.SplitBillParticipantEntity
 import id.payu.transaction.domain.port.in.SplitBillUseCase;
 import id.payu.transaction.domain.port.out.SplitBillPersistencePort;
 import id.payu.transaction.domain.port.out.SplitBillEventPublisherPort;
-import id.payu.transaction.dto.AddParticipantRequest;
-import id.payu.transaction.dto.CreateSplitBillRequest;
-import id.payu.transaction.dto.MakePaymentRequest;
-import id.payu.transaction.dto.SplitBillResponse;
+import id.payu.transaction.interfaces.dto.AddParticipantRequest;
+import id.payu.transaction.interfaces.dto.CreateSplitBillRequest;
+import id.payu.transaction.interfaces.dto.MakePaymentRequest;
+import id.payu.transaction.interfaces.dto.SplitBillResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

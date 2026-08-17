@@ -1,9 +1,9 @@
 package id.payu.promotion.application.service;
 
 import id.payu.promotion.domain.model.Referral;
-import id.payu.promotion.dto.CreateReferralRequest;
-import id.payu.promotion.dto.CompleteReferralRequest;
-import id.payu.promotion.dto.ReferralSummaryResponse;
+import id.payu.promotion.interfaces.dto.CreateReferralRequest;
+import id.payu.promotion.interfaces.dto.CompleteReferralRequest;
+import id.payu.promotion.interfaces.dto.ReferralSummaryResponse;
 import id.payu.promotion.domain.port.out.ReferralRepositoryPort;
 import id.payu.promotion.domain.port.out.ReferralRewardPort;
 import org.slf4j.Logger;

@@ -2,7 +2,7 @@ package id.payu.gateway.adapter.web;
 
 import id.payu.gateway.application.service.CheckoutService;
 import id.payu.gateway.application.service.PaymentMethodService;
-import id.payu.gateway.dto.ApiResponse;
+import id.payu.gateway.interfaces.dto.ApiResponse;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -84,7 +84,7 @@ public class CheckoutResource {
         if (paymentMethod == null || paymentMethod.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(ApiResponse.error(
-                            new id.payu.gateway.dto.ApiError("BAD_REQUEST",
+                            new id.payu.gateway.interfaces.dto.ApiError("BAD_REQUEST",
                                     "paymentMethod is required", null, 400, null, null, null)))
                     .build();
         }

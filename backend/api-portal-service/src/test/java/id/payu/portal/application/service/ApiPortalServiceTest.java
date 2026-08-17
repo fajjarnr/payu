@@ -1,9 +1,9 @@
 package id.payu.portal.application.service;
 
-import id.payu.portal.dto.AggregatedOpenApiResponse;
-import id.payu.portal.dto.OpenApiSpec;
-import id.payu.portal.dto.ServiceInfo;
-import id.payu.portal.dto.ServiceListResponse;
+import id.payu.portal.interfaces.dto.AggregatedOpenApiResponse;
+import id.payu.portal.interfaces.dto.OpenApiSpec;
+import id.payu.portal.interfaces.dto.ServiceInfo;
+import id.payu.portal.interfaces.dto.ServiceListResponse;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.DisplayName;

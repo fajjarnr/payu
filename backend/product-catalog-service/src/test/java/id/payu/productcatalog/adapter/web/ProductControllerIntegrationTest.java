@@ -2,8 +2,8 @@ package id.payu.productcatalog.adapter.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.productcatalog.domain.model.ProductType;
-import id.payu.productcatalog.dto.CreateProductRequest;
-import id.payu.productcatalog.dto.UpdateProductRequest;
+import id.payu.productcatalog.interfaces.dto.CreateProductRequest;
+import id.payu.productcatalog.interfaces.dto.UpdateProductRequest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,7 @@
 package id.payu.backoffice.application.service;
 
 import id.payu.backoffice.domain.FraudCase;
-import id.payu.backoffice.dto.FraudCaseDecisionRequest;
+import id.payu.backoffice.interfaces.dto.FraudCaseDecisionRequest;
 import id.payu.backoffice.domain.port.outbound.FraudCaseRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

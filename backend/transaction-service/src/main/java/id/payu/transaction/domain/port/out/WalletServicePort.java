@@ -1,7 +1,7 @@
 package id.payu.transaction.domain.port.out;
 
-import id.payu.transaction.dto.ReserveBalanceRequest;
-import id.payu.transaction.dto.ReserveBalanceResponse;
+import id.payu.transaction.interfaces.dto.ReserveBalanceRequest;
+import id.payu.transaction.interfaces.dto.ReserveBalanceResponse;
 
 import java.util.UUID;
 

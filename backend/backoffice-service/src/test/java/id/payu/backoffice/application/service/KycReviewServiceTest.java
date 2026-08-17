@@ -2,8 +2,8 @@ package id.payu.backoffice.application.service;
 
 import id.payu.backoffice.domain.KycReview;
 import id.payu.backoffice.domain.KycStatus;
-import id.payu.backoffice.dto.KycReviewDecisionRequest;
-import id.payu.backoffice.dto.KycReviewRequest;
+import id.payu.backoffice.interfaces.dto.KycReviewDecisionRequest;
+import id.payu.backoffice.interfaces.dto.KycReviewRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -217,7 +217,7 @@ class KycReviewServiceTest {
         KycReview review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-                id.payu.backoffice.dto.KycReviewStatus.APPROVED,
+                id.payu.backoffice.interfaces.dto.KycReviewStatus.APPROVED,
                 "Documents verified, KYC approved"
         );
 
@@ -248,7 +248,7 @@ class KycReviewServiceTest {
         KycReview review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-                id.payu.backoffice.dto.KycReviewStatus.REJECTED,
+                id.payu.backoffice.interfaces.dto.KycReviewStatus.REJECTED,
                 "Document blurry, please resubmit"
         );
 
@@ -277,7 +277,7 @@ class KycReviewServiceTest {
         KycReview review = kycReviewService.create(request);
 
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-                id.payu.backoffice.dto.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
+                id.payu.backoffice.interfaces.dto.KycReviewStatus.REQUIRES_ADDITIONAL_INFO,
                 "Please provide proof of address"
         );
 
@@ -291,7 +291,7 @@ class KycReviewServiceTest {
     @Transactional
     void testReview_NotFound() {
         KycReviewDecisionRequest decisionRequest = new KycReviewDecisionRequest(
-                id.payu.backoffice.dto.KycReviewStatus.APPROVED,
+                id.payu.backoffice.interfaces.dto.KycReviewStatus.APPROVED,
                 "Test"
         );
 

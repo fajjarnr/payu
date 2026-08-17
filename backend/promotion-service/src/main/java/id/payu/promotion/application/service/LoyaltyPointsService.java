@@ -1,9 +1,9 @@
 package id.payu.promotion.application.service;
 
 import id.payu.promotion.domain.model.LoyaltyPoints;
-import id.payu.promotion.dto.CreateLoyaltyPointsRequest;
-import id.payu.promotion.dto.RedeemLoyaltyPointsRequest;
-import id.payu.promotion.dto.LoyaltyBalanceResponse;
+import id.payu.promotion.interfaces.dto.CreateLoyaltyPointsRequest;
+import id.payu.promotion.interfaces.dto.RedeemLoyaltyPointsRequest;
+import id.payu.promotion.interfaces.dto.LoyaltyBalanceResponse;
 import id.payu.promotion.domain.port.out.LoyaltyPointsRepositoryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

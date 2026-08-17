@@ -8,7 +8,7 @@ import id.payu.investment.domain.model.Deposit;
 import id.payu.investment.domain.model.Gold;
 import id.payu.investment.domain.model.InvestmentAccount;
 import id.payu.investment.domain.model.InvestmentTransaction;
-import id.payu.investment.dto.*;
+import id.payu.investment.interfaces.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

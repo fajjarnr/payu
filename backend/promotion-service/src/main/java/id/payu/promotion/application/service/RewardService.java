@@ -2,7 +2,7 @@ package id.payu.promotion.application.service;
 
 import id.payu.promotion.domain.model.Reward;
 import id.payu.promotion.domain.port.out.RewardPersistencePort;
-import id.payu.promotion.dto.RewardSummaryResponse;
+import id.payu.promotion.interfaces.dto.RewardSummaryResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

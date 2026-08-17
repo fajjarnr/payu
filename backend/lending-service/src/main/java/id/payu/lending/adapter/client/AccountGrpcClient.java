@@ -46,11 +46,11 @@ public class AccountGrpcClient {
     /**
      * User profile for credit scoring (kycStatus, createdAt tenure).
      */
-    public id.payu.lending.dto.UserResponse getUserProfile(String userId) {
+    public id.payu.lending.interfaces.dto.UserResponse getUserProfile(String userId) {
         try {
             id.payu.account.grpc.UserProfileResponse profile = stub.getUserProfile(
                     GetUserProfileRequest.newBuilder().setUserId(userId).build());
-            return new id.payu.lending.dto.UserResponse(
+            return new id.payu.lending.interfaces.dto.UserResponse(
                     java.util.UUID.fromString(profile.getUserId()),
                     profile.getExternalId(),
                     profile.getUsername(),

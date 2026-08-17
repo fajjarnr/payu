@@ -9,7 +9,7 @@ import id.payu.support.domain.AgentLevel;
 import id.payu.support.domain.CompletionStatus;
 import id.payu.support.domain.TrainingCategory;
 import id.payu.support.domain.TrainingStatus;
-import id.payu.support.dto.*;
+import id.payu.support.interfaces.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

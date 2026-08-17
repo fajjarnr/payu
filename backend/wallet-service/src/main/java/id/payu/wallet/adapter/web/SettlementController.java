@@ -6,7 +6,7 @@ import id.payu.wallet.domain.model.CalculatedSplit;
 import id.payu.wallet.domain.model.RevenueSplit;
 import id.payu.wallet.domain.model.SettlementBatch;
 import id.payu.wallet.domain.port.in.SettlementUseCase;
-import id.payu.wallet.dto.*;
+import id.payu.wallet.interfaces.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

@@ -1,6 +1,6 @@
 package id.payu.account.domain.port.out;
 
-import id.payu.account.dto.UserCreatedEvent;
+import id.payu.account.interfaces.dto.UserCreatedEvent;
 
 public interface UserEventPublisherPort {
     void publishUserCreated(UserCreatedEvent event);

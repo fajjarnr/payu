@@ -1,7 +1,7 @@
 package id.payu.partner.adapter.web;
 
 import id.payu.partner.application.service.ApiKeyService;
-import id.payu.partner.dto.ApiKeyDTO;
+import id.payu.partner.interfaces.dto.ApiKeyDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -6,9 +6,9 @@ import id.payu.transaction.adapter.persistence.entity.ScheduledTransferEntity;
 import id.payu.transaction.domain.port.in.ScheduledTransferUseCase;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
 import id.payu.transaction.domain.port.out.ScheduledTransferPersistencePort;
-import id.payu.transaction.dto.CreateScheduledTransferRequest;
-import id.payu.transaction.dto.InitiateTransferRequest;
-import id.payu.transaction.dto.ScheduledTransferResponse;
+import id.payu.transaction.interfaces.dto.CreateScheduledTransferRequest;
+import id.payu.transaction.interfaces.dto.InitiateTransferRequest;
+import id.payu.transaction.interfaces.dto.ScheduledTransferResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.UUID;
 import id.payu.transaction.domain.model.ScheduleType;
 import id.payu.transaction.domain.model.ScheduledStatus;
-import id.payu.transaction.dto.TransactionType;
+import id.payu.transaction.interfaces.dto.TransactionType;
 
 @Service
 public class ScheduledTransferService implements ScheduledTransferUseCase {
@@ -182,7 +182,7 @@ public class ScheduledTransferService implements ScheduledTransferUseCase {
                     .amount(scheduledTransfer.getAmount())
                     .currency(scheduledTransfer.getCurrency())
                     .description(scheduledTransfer.getDescription())
-                    .type(id.payu.transaction.dto.TransactionType.valueOf(scheduledTransfer.getTransferType().name()))
+                    .type(id.payu.transaction.interfaces.dto.TransactionType.valueOf(scheduledTransfer.getTransferType().name()))
                     .idempotencyKey("SCH-" + scheduledTransfer.getId() + "-" + scheduledTransfer.getExecutedCount())
                     .build();
 

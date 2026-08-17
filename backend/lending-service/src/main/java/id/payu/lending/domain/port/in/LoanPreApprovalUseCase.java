@@ -1,7 +1,7 @@
 package id.payu.lending.domain.port.in;
 
-import id.payu.lending.dto.LoanPreApprovalRequest;
-import id.payu.lending.dto.LoanPreApprovalResponse;
+import id.payu.lending.interfaces.dto.LoanPreApprovalRequest;
+import id.payu.lending.interfaces.dto.LoanPreApprovalResponse;
 import id.payu.lending.domain.model.LoanPreApproval;
 
 import java.util.Optional;

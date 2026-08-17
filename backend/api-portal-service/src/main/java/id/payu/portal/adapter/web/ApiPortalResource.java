@@ -1,8 +1,8 @@
 package id.payu.portal.adapter.web;
 
-import id.payu.portal.dto.AggregatedOpenApiResponse;
-import id.payu.portal.dto.OpenApiSpec;
-import id.payu.portal.dto.ServiceListResponse;
+import id.payu.portal.interfaces.dto.AggregatedOpenApiResponse;
+import id.payu.portal.interfaces.dto.OpenApiSpec;
+import id.payu.portal.interfaces.dto.ServiceListResponse;
 import id.payu.portal.application.service.ApiPortalService;
 import io.quarkus.logging.Log;
 import io.quarkus.security.Authenticated;

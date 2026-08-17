@@ -36,6 +36,7 @@ public class ArchitectureTest {
             .layer("Application").definedBy("..application..")
             .layer("Domain").definedBy("..domain..")
             .layer("Config").definedBy("..config..")
+            .layer("Dto").definedBy("..dto..")
 
             .whereLayer("Adapter.Web").mayNotBeAccessedByAnyLayer()
             .whereLayer("Adapter.Client").mayNotBeAccessedByAnyLayer()
@@ -43,7 +44,7 @@ public class ArchitectureTest {
             .whereLayer("Adapter.Storage").mayNotBeAccessedByAnyLayer()
             .whereLayer("Application").mayOnlyBeAccessedByLayers("Adapter.Web")
             .whereLayer("Domain").mayOnlyBeAccessedByLayers(
-                    "Adapter.Web", "Adapter.Client", "Adapter.Persistence", "Adapter.Storage", "Application")
+                    "Adapter.Web", "Adapter.Client", "Adapter.Persistence", "Adapter.Storage", "Application", "Dto")
             .allowEmptyShould(true);
 
     // Epic E-19: Receipt Domain Architecture Tests

@@ -1,6 +1,6 @@
 package id.payu.transaction.adapter.client;
 
-import id.payu.transaction.dto.BifastTransferRequest;
+import id.payu.transaction.interfaces.dto.BifastTransferRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;

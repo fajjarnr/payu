@@ -2,7 +2,7 @@ package id.payu.account.adapter.web;
 
 import id.payu.account.domain.model.User;
 import id.payu.account.domain.port.out.UserPersistencePort;
-import id.payu.account.dto.UserProfileResponse;
+import id.payu.account.interfaces.dto.UserProfileResponse;
 import id.payu.api.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

@@ -2,9 +2,9 @@ package id.payu.wallet.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.wallet.domain.port.in.GeneralLedgerUseCase;
-import id.payu.wallet.dto.BalanceSheetResponse;
-import id.payu.wallet.dto.DailySettlementResponse;
-import id.payu.wallet.dto.IncomeStatementResponse;
+import id.payu.wallet.interfaces.dto.BalanceSheetResponse;
+import id.payu.wallet.interfaces.dto.DailySettlementResponse;
+import id.payu.wallet.interfaces.dto.IncomeStatementResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

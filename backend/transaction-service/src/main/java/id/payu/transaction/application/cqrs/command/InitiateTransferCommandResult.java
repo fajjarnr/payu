@@ -1,6 +1,6 @@
 package id.payu.transaction.application.cqrs.command;
 
-import id.payu.transaction.dto.InitiateTransferResponse;
+import id.payu.transaction.interfaces.dto.InitiateTransferResponse;
 
 import java.math.BigDecimal;
 import java.util.UUID;

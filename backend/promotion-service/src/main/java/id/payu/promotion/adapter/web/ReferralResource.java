@@ -1,7 +1,7 @@
 package id.payu.promotion.adapter.web;
 
 import id.payu.promotion.domain.model.Referral;
-import id.payu.promotion.dto.*;
+import id.payu.promotion.interfaces.dto.*;
 import id.payu.promotion.application.service.ReferralService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

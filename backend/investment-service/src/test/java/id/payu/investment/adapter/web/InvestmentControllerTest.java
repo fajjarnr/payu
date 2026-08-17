@@ -11,7 +11,7 @@ import id.payu.investment.domain.model.InvestmentTransaction;
 import id.payu.investment.domain.model.InvestmentType;
 import id.payu.investment.domain.model.TransactionStatus;
 import id.payu.investment.domain.model.TransactionType;
-import id.payu.investment.dto.*;
+import id.payu.investment.interfaces.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
