@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-284: Keep the Backstage Catalog in Lockstep With the Service Inventory (2026-08-18)
+
+**Context**: DX-CATALOG-001 — `catalog-info.yaml` drifted: a ghost `ab-testing-service` that doesn't exist in `backend/`, 5 real services + 5 simulators missing, and only 3 of 17 shared starters registered.
+
+**Lesson**: The Backstage catalog must reflect the actual service inventory, or it misleads operators and breaks `techdocs-ref` builds. Reconcile it against `backend/`, `backend/simulators/`, and `backend/shared/` (as with L-281 for docs). Remove ghost entries, add real services/simulators/starters with the correct `type`/`owner`/`lifecycle`, and validate with a YAML parse that also checks for duplicate component names.
+
+**Applied evidence**: `catalog-info.yaml` now parses as valid YAML with 50 components and no duplicate names; `ab-testing-service` gone; the 5 services, 5 simulators, and 14 starters present.
+
 ## L-283: Collect Required Request Fields in the UI Before Submit (2026-08-18)
 
 **Context**: FE-SPLIT-001 — the split-bill create modal only collected title/amount and always sent `participants: []`, while the backend `CreateSplitBillRequest` requires `@NotEmpty participants`. Every create failed validation with 400.

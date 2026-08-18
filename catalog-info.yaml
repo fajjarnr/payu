@@ -366,18 +366,90 @@ spec:
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: ab-testing-service
-  title: A/B Testing Service
-  description: UI/Feature experimentation — CANDIDATE FOR REMOVAL (SIMP-001)
+  name: dispute-service
+  title: Dispute Service
+  description: Dispute, refund and chargeback management
   annotations:
-    backstage.io/techdocs-ref: dir:backend/ab-testing-service
-    backstage.io/kubernetes-id: ab-testing-service
-  tags: [java, spring-boot, deprecated]
+    backstage.io/techdocs-ref: dir:backend/dispute-service
+    backstage.io/kubernetes-id: dispute-service
+  tags: [java, spring-boot, operations]
 spec:
   type: service
-  lifecycle: deprecated
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: product-catalog-service
+  title: Product Catalog Service
+  description: Product and catalog management
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/product-catalog-service
+    backstage.io/kubernetes-id: product-catalog-service
+  tags: [java, spring-boot, platform]
+spec:
+  type: service
+  lifecycle: production
   owner: group:platform-team
   system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: integration-service
+  title: Integration Service
+  description: External integrator onboarding and SNAP-BI integration management
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/integration-service
+    backstage.io/kubernetes-id: integration-service
+  tags: [java, spring-boot, integration]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: loan-origination-process
+  title: Loan Origination Process
+  description: Lending loan origination workflow orchestration
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/loan-origination-process
+    backstage.io/kubernetes-id: loan-origination-process
+  tags: [java, spring-boot, lending]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  dependsOn:
+    - component:lending-service
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: lending-rules
+  title: Lending Rules
+  description: Lending decision and eligibility rules engine
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/lending-rules
+    backstage.io/kubernetes-id: lending-rules
+  tags: [java, spring-boot, lending, rules]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+  dependsOn:
+    - component:lending-service
 
 # ============================================================
 # NATIVE SERVICES (Red Hat Build of Quarkus 3.x)
@@ -576,6 +648,90 @@ spec:
     - component:gateway-service
 
 # ============================================================
+# EXTERNAL SERVICE SIMULATORS
+# ============================================================
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: bi-fast-simulator
+  title: BI-FAST Simulator
+  description: BI-FAST transfer simulation for development/testing
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/simulators/bi-fast-simulator
+  tags: [java, quarkus, simulator]
+spec:
+  type: service
+  lifecycle: development
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: biller-simulator
+  title: Biller Simulator
+  description: Bill payment / billing provider simulation for development/testing
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/simulators/biller-simulator
+  tags: [java, quarkus, simulator]
+spec:
+  type: service
+  lifecycle: development
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: dukcapil-simulator
+  title: Dukcapil Simulator
+  description: Dukcapil identity verification simulation for development/testing
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/simulators/dukcapil-simulator
+  tags: [java, quarkus, simulator]
+spec:
+  type: service
+  lifecycle: development
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: qris-simulator
+  title: QRIS Simulator
+  description: QRIS payment simulation for development/testing
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/simulators/qris-simulator
+  tags: [java, quarkus, simulator]
+spec:
+  type: service
+  lifecycle: development
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: va-simulator
+  title: VA Simulator
+  description: Virtual Account (VA) payment simulation for development/testing
+  annotations:
+    backstage.io/techdocs-ref: dir:backend/simulators/va-simulator
+  tags: [java, quarkus, simulator]
+spec:
+  type: service
+  lifecycle: development
+  owner: group:platform-team
+  system: payu
+
+# ============================================================
 # SHARED LIBRARIES
 # ============================================================
 
@@ -615,6 +771,202 @@ metadata:
   title: Cache Starter
   description: Multi-layer caching (Redis + Caffeine)
   tags: [java, spring-boot, shared-library, caching]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: api-commons
+  title: API Commons
+  description: Shared API/Money value objects and conventions
+  tags: [java, spring-boot, shared-library]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: archunit-starter
+  title: ArchUnit Starter
+  description: Hexagonal architecture enforcement tests
+  tags: [java, spring-boot, shared-library, testing]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: datasource-starter
+  title: Datasource Starter
+  description: Shared datasource / persistence configuration
+  tags: [java, spring-boot, shared-library, persistence]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: events-starter
+  title: Events Starter
+  description: Shared CloudEvents and messaging helpers
+  tags: [java, spring-boot, shared-library, events]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: flyway
+  title: Flyway Migrations
+  description: Shared Flyway migration tooling and conventions
+  tags: [java, shared-library, database]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: grpc-starter
+  title: gRPC Starter
+  description: Shared gRPC service configuration
+  tags: [java, spring-boot, shared-library, grpc]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: jms-starter
+  title: JMS Starter
+  description: Shared JMS / AMQ messaging configuration
+  tags: [java, spring-boot, shared-library, messaging]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: logging-starter
+  title: Logging Starter
+  description: Shared structured logging configuration
+  tags: [java, spring-boot, shared-library, logging]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: outbox-starter
+  title: Outbox Starter
+  description: Transactional outbox for reliable event publishing
+  tags: [java, spring-boot, shared-library, events]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: python-logging
+  title: Python Logging
+  description: Shared structured logging for Python services
+  tags: [python, shared-library, logging]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:data-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: quarkus-api-commons
+  title: Quarkus API Commons
+  description: Shared API/Money conventions for Quarkus services
+  tags: [java, quarkus, shared-library]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:platform-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: rest-client-starter
+  title: REST Client Starter
+  description: Shared outbound REST client configuration
+  tags: [java, spring-boot, shared-library, rest]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: rules-starter
+  title: Rules Starter
+  description: Shared business rules engine integration
+  tags: [java, spring-boot, shared-library, rules]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:core-banking-team
+  system: payu
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: saga-starter
+  title: Saga Starter
+  description: Shared saga orchestration support
+  tags: [java, spring-boot, shared-library, saga]
 spec:
   type: library
   lifecycle: production

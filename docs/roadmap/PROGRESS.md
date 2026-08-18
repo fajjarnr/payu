@@ -11,6 +11,7 @@
   - **DX/Docs**: reconciled architecture doc drift (DX-DOCS-DRIFT-001) — `SERVICE_CATALOG.md`, `ARCHITECTURE.md`, and `catalog-info.yaml` now reflect Java 25 / Spring Boot 4.1 / Quarkus 3.x and 5 simulators incl. `biller-simulator`.
   - **DX/Docs**: added `docs/guides/CONTEXT7_WORKFLOW.md` developer guide for the mandated Context7 library-verification workflow (DX-CONTEXT7-001).
   - **Frontend**: split-bill create modal now collects at least one participant and auto-computes per-head `amountOwed` instead of always sending `participants: []` (FE-SPLIT-001), with regression test.
+  - **DX/Backstage**: reconciled `catalog-info.yaml` drift (DX-CATALOG-001) — removed ghost `ab-testing-service`, added 5 services + 5 simulators + 14 shared starters (50 components, no duplicates). `rtk` CLI installed on PATH (DX-RTK-ENV-001 resolved).
 - **Build & Verification**:
   - Full Backend Reactor (`44/44` modules): **BUILD SUCCESS**.
   - Next.js: `tsc --noEmit` clean, ESLint clean, Vitest `1212 passed`.

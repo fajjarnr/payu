@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DX-CODEGRAPH-001**: added `scripts/refresh-codegraph.sh` + `make codegraph-refresh` (sync/full/status modes) to re-index/validate the CodeGraph index after large refactors; verified against the live index (4051 files, 73,375 nodes).
 - **DX-DOCS-DRIFT-001**: reconciled architecture documentation drift — `SERVICE_CATALOG.md`, `ARCHITECTURE.md`, and `catalog-info.yaml` now reflect the actual stack (Java 25, Spring Boot 4.1, Quarkus 3.x) and inventory (5 simulators incl. `biller-simulator`) instead of the stale Java 21 / Spring Boot 3.4 / 4-simulator references.
 - **DX-CONTEXT7-001**: added `docs/guides/CONTEXT7_WORKFLOW.md` — a concise developer guide (resolve → query → cross-check version → implement → verify) with a quick-reference table for the Context7 library paths mandated in `AGENTS.md` / the DX skill.
+- **DX-CATALOG-001**: reconciled `catalog-info.yaml` Backstage catalog drift — removed the ghost `ab-testing-service`; added the missing `dispute-service`, `product-catalog-service`, `integration-service`, `loan-origination-process`, `lending-rules`, all 5 simulators, and 14 shared starters; 50 components with no duplicates.
+- **DX-RTK-ENV-001**: the `rtk` CLI is now installed (`/home/ubuntu/.local/bin/rtk`, v0.45.0) and available on PATH, resolving the missing-tool gap noted in the backlog.
 
 ### Verification
 - Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
