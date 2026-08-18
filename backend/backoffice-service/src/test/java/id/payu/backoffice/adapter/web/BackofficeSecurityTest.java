@@ -59,7 +59,7 @@ class BackofficeSecurityTest {
         when(kycReviewService.getById(any(UUID.class))).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/backoffice/kyc-reviews/{id}", UUID.randomUUID())
-                        .with(jwt().authorities(() -> "backoffice")))
+                        .with(jwt().authorities(() -> "ROLE_BACKOFFICE")))
                 .andExpect(status().isNotFound());
     }
 }

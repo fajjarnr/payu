@@ -76,7 +76,7 @@ export default function CardsPage() {
       const card = cardsData[0];
       setSelectedCard(card);
       setLimitForm({
-        dailyLimit: card.dailyLimit || 25000000,
+        dailyLimit: card.dailyLimit ? Number(card.dailyLimit) : 25000000,
         monthlyLimit: (card as ExtendedCardData).monthlyLimit || 100000000,
       });
       setIsLimitModalOpen(true);
@@ -96,7 +96,7 @@ export default function CardsPage() {
     await updateCard.mutateAsync({
       cardId: selectedCard.id,
       data: {
-        dailyLimit: limitForm.dailyLimit,
+        dailyLimit: String(limitForm.dailyLimit),
       },
     });
 
@@ -128,7 +128,7 @@ export default function CardsPage() {
                     onClick={() => createCard.mutate({
                       accountId: authAccountId ?? '',
                       cardHolderName: cardOwner,
-                      dailyLimit: 25000000,
+                      dailyLimit: '25000000.0000',
                     })}
                     disabled={createCard.isPending}
                   >

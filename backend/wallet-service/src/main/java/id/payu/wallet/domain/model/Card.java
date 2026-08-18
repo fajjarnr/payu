@@ -55,6 +55,22 @@ public class Card {
         }
     }
 
+    public void updateDailyLimit(BigDecimal dailyLimit) {
+        if (dailyLimit != null && dailyLimit.signum() < 0) {
+            throw new IllegalArgumentException("Daily limit cannot be negative");
+        }
+        this.dailyLimit = dailyLimit;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void close() {
+        if (this.status == CardStatus.CANCELLED) {
+            return;
+        }
+        this.status = CardStatus.CANCELLED;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public static CardBuilder builder() {
         return new CardBuilder();
     }

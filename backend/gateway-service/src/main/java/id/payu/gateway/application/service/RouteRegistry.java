@@ -197,6 +197,22 @@ public class RouteRegistry {
 
         // TopUp - add explicit topup route
         registerDefault("topup", "billing-service", "/api/v1/topup");
+
+        // KYC Service
+        registerDefault("kyc", "kyc-service", "/api/v1/kyc");
+
+        // Compliance Service - GDPR audit
+        registerDefault("gdpr-audit", "compliance-service", "/api/v1/gdpr-audit");
+
+        // Dispute Service
+        registerDefault("disputes", "dispute-service", "/api/v1/disputes");
+        registerDefault("refunds", "dispute-service", "/api/v1/refunds");
+
+        // Promotion Service - segments
+        registerDefault("segments", "promotion-service", "/api/v1/segments");
+
+        // Partner Service - SNAP-BI contract via singular /partner (BFF-ROUTING-001)
+        registerDefault("partner", "partner-service", "/v1/partner");
     }
 
     private void registerDefault(String prefix, String service, String targetPrefix) {

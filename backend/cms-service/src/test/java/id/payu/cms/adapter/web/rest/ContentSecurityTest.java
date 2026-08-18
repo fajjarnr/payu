@@ -71,7 +71,7 @@ class ContentSecurityTest {
         when(contentService.createContent(any(), anyString())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/contents")
-                        .with(jwt().authorities(() -> "cms_editor"))
+                        .with(jwt().authorities(() -> "ROLE_CMS_EDITOR"))
                         .contentType("application/json")
                         .content(BODY))
                 .andExpect(status().isCreated());

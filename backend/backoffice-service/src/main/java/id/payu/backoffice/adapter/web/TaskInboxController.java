@@ -41,7 +41,7 @@ public class TaskInboxController extends BaseController {
     private String kogitoTaskApiUrl;
 
     @GetMapping("/pending")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'loan-officer', 'risk-manager')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'LOAN_OFFICER', 'RISK_MANAGER')")
     @Operation(
             summary = "Get pending tasks for current user",
             description = "Proxies Kogito user task query to retrieve tasks awaiting action for the authenticated user"
@@ -77,7 +77,7 @@ public class TaskInboxController extends BaseController {
     }
 
     @PostMapping("/{taskId}/transition")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice', 'loan-officer', 'risk-manager')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE', 'LOAN_OFFICER', 'RISK_MANAGER')")
     @Operation(
             summary = "Transition a task (claim, complete, release, skip)",
             description = "Executes a lifecycle transition on a Kogito user task"

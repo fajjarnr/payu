@@ -47,6 +47,7 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import type { ScheduledTransfer } from '@/services/TransactionService';
+import type { Money } from '@/types';
 
 export default function ScheduledTransfersPage() {
   const { accountId: storeAccountId } = useAuthStore();
@@ -66,11 +67,11 @@ export default function ScheduledTransfersPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const [editForm, setEditForm] = useState<{
-    amount: number;
+    amount: Money;
     description: string;
     scheduleType: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
   }>({
-    amount: 0,
+    amount: '0.0000',
     description: '',
     scheduleType: 'ONE_TIME',
   });
@@ -254,7 +255,7 @@ export default function ScheduledTransfersPage() {
                               <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <ArrowRightLeft className="h-3 w-3" />
-                                  Rp {transfer.amount.toLocaleString(bcp47Locale)}
+                                  Rp {Number(transfer.amount).toLocaleString(bcp47Locale)}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
@@ -362,7 +363,7 @@ export default function ScheduledTransfersPage() {
                 type="number"
                 step="any"
                 value={editForm.amount}
-                onChange={(e) => setEditForm((prev) => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, amount: e.target.value }))}
                 placeholder="100000"
               />
             </div>

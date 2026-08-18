@@ -4,10 +4,12 @@ import id.payu.billing.adapter.persistence.repository.BillPaymentRepository;
 import id.payu.billing.infrastructure.persistence.entity.BillPaymentEntity;
 import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.model.PaymentStatus;
+import id.payu.billing.domain.port.in.PaymentQueryUseCase;
 import id.payu.billing.domain.port.out.BillPaymentPersistencePort;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -53,6 +55,15 @@ public class BillPaymentPersistenceAdapter implements BillPaymentPersistencePort
     public List<BillPayment> findReconcilableIn(Collection<PaymentStatus> statuses) {
         return billPaymentRepository.findByStatusInAndEventPublishedFalse(statuses.stream().map(Enum::name).toList())
                 .stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public PaymentQueryUseCase.PaymentPage findByAccountId(String accountId, int page, int size) {
+        org.springframework.data.domain.Page<BillPaymentEntity> result =
+                billPaymentRepository.findByAccountIdOrderByCreatedAtDesc(accountId, PageRequest.of(page, size));
+        return new PaymentQueryUseCase.PaymentPage(
+                result.getContent().stream().map(this::toDomain).toList(),
+                result.getTotalElements());
     }
 
     private BillPaymentEntity toEntity(BillPayment payment) {

@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import { getFinancialMutationHeaders } from '@/lib/utils';
+import { getFinancialMutationHeaders, idempotencyKeyFor } from '@/lib/utils';
 import { assertUUID } from '@/lib/validation';
 import type { TransactionType, TransactionStatus, TransferType, Transaction, TransactionFilters, Money } from '@/types';
 
@@ -108,28 +108,28 @@ export class TransactionService {
 
   async updateScheduledTransfer(id: string, request: Partial<CreateScheduledTransferRequest>): Promise<ScheduledTransfer> {
     const response = await api.put<ScheduledTransfer>(`/scheduled-transfers/${id}`, request, {
-      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('scheduled-transfer:update', id) }
     });
     return response.data;
   }
 
   async cancelScheduledTransfer(id: string): Promise<ScheduledTransfer> {
     const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/cancel`, {}, {
-      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('scheduled-transfer:cancel', id) }
     });
     return response.data;
   }
 
   async pauseScheduledTransfer(id: string): Promise<ScheduledTransfer> {
     const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/pause`, {}, {
-      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('scheduled-transfer:pause', id) }
     });
     return response.data;
   }
 
   async resumeScheduledTransfer(id: string): Promise<ScheduledTransfer> {
     const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/resume`, {}, {
-      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('scheduled-transfer:resume', id) }
     });
     return response.data;
   }
@@ -138,7 +138,7 @@ export class TransactionService {
 
   async createSplitBill(request: CreateSplitBillRequest): Promise<SplitBill> {
     const response = await api.post<SplitBill>('/split-bills', request, {
-      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('split-bill:create', request.creatorAccountId ?? '') }
     });
     return response.data;
   }
@@ -155,21 +155,21 @@ export class TransactionService {
 
   async updateSplitBill(id: string, request: Partial<CreateSplitBillRequest>): Promise<SplitBill> {
     const response = await api.put<SplitBill>(`/split-bills/${id}`, request, {
-      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('split-bill:update', id) }
     });
     return response.data;
   }
 
   async cancelSplitBill(id: string): Promise<SplitBill> {
     const response = await api.post<SplitBill>(`/split-bills/${id}/cancel`, {}, {
-      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('split-bill:cancel', id) }
     });
     return response.data;
   }
 
   async activateSplitBill(id: string): Promise<SplitBill> {
     const response = await api.post<SplitBill>(`/split-bills/${id}/activate`, {}, {
-      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('split-bill:activate', id) }
     });
     return response.data;
   }
@@ -189,7 +189,7 @@ export class TransactionService {
     return response.data;
   }
 
-  async makeParticipantPayment(splitBillId: string, participantId: string, amount: number): Promise<SplitBill> {
+  async makeParticipantPayment(splitBillId: string, participantId: string, amount: Money): Promise<SplitBill> {
     // BUG-FE-021: Add idempotency key for financial mutation
     const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/payment`, { amount }, {
       headers: getFinancialMutationHeaders(),
@@ -215,7 +215,7 @@ export interface ScheduledTransfer {
   recipientAccountNumber: string;
   recipientAccountId?: string;
   transferType: 'INTERNAL_TRANSFER' | 'BANK_TRANSFER' | 'BI_FAST' | 'RTGS' | 'SKN';
-  amount: number;
+  amount: Money;
   currency: string;
   description: string;
   scheduleType: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
@@ -237,7 +237,7 @@ export interface ScheduledTransfer {
 export interface CreateScheduledTransferRequest {
   senderAccountId: string;
   recipientAccountNumber: string;
-  amount: number;
+  amount: Money;
   currency?: string;
   description: string;
   transferType: 'INTERNAL_TRANSFER' | 'BANK_TRANSFER' | 'BI_FAST' | 'RTGS' | 'SKN';

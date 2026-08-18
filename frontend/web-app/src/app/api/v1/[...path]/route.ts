@@ -109,6 +109,7 @@ const ALLOWED_PATH_PREFIXES = [
   '/api/v1/loyalty-points',
   '/api/v1/notifications',
   '/api/v1/partners',
+  '/api/v1/partner',
   '/api/v1/payments',
   '/api/v1/pockets',
   '/api/v1/products',
@@ -130,7 +131,6 @@ const ALLOWED_PATH_PREFIXES = [
   '/api/v1/kyc',
   '/api/v1/backoffice',
   '/api/v1/health',
-  '/v1/partner',
 ];
 
 /**

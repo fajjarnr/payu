@@ -6,6 +6,7 @@ import id.payu.wallet.domain.port.in.CardUseCase;
 import id.payu.wallet.domain.port.in.WalletUseCase;
 import id.payu.wallet.interfaces.dto.CardResponse;
 import id.payu.wallet.interfaces.dto.CreateCardRequest;
+import id.payu.wallet.interfaces.dto.UpdateCardRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -165,6 +166,50 @@ public class CardController extends BaseController {
 
         cardUseCase.unfreezeCard(cardId);
         return ok(null);
+    }
+
+    @PutMapping("/{cardId}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update card daily limit", description = "Updates the daily transaction limit of a card")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Card updated successfully",
+            content = @Content(schema = @Schema(implementation = CardResponse.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Card not found")
+    public ResponseEntity<ApiResponse<CardResponse>> updateCard(
+            @Parameter(description = "Card ID", required = true) @PathVariable String cardId,
+            @Valid @RequestBody UpdateCardRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = extractAccountId(jwt);
+        Card card = cardUseCase.getCardById(cardId)
+                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
+        if (!Objects.equals(authenticatedAccountId, getCardOwnerAccountId(card))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("CARD_403", "Not authorized to update this card"));
+        }
+
+        Card updated = cardUseCase.updateCardLimit(cardId, request.dailyLimit());
+        return ok(toCardResponse(updated));
+    }
+
+    @DeleteMapping("/{cardId}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Delete/close card", description = "Closes and deactivates a virtual card")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Card closed successfully")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Card not found")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> deleteCard(
+            @Parameter(description = "Card ID", required = true) @PathVariable String cardId,
+            @AuthenticationPrincipal Jwt jwt) {
+        String authenticatedAccountId = extractAccountId(jwt);
+        Card card = cardUseCase.getCardById(cardId)
+                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
+        if (!Objects.equals(authenticatedAccountId, getCardOwnerAccountId(card))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("CARD_403", "Not authorized to delete this card"));
+        }
+
+        cardUseCase.closeCard(cardId);
+        return ok(java.util.Map.of("status", "CLOSED", "cardId", cardId));
     }
 
     /**

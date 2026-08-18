@@ -193,6 +193,16 @@ describe('BFF Proxy SSRF Prevention', () => {
       expect(mockFetch).toHaveBeenCalled();
     });
 
+    it('should allow SNAP-BI path: /api/v1/partner/payments (BFF-ROUTING-001)', async () => {
+      const request = createMockRequest('/api/v1/partner/payments');
+      const params = createParams(['partner', 'payments']);
+
+      const response = await GET(request, { params });
+
+      expect(response.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
     it('should block non-whitelisted path: /api/v1/internal/secrets', async () => {
       const request = createMockRequest('/api/v1/internal/secrets');
       const params = createParams(['internal', 'secrets']);
@@ -314,7 +324,7 @@ describe('BFF Proxy SSRF Prevention', () => {
     it('rejects oversized request bodies before calling the gateway', async () => {
       const request = new NextRequest('http://localhost:3000/api/v1/wallets', {
         method: 'POST',
-        headers: { 'Content-Length': String(1_048_577) },
+        headers: { 'Content-Length': String(10_485_761) },
         body: 'x',
       });
 

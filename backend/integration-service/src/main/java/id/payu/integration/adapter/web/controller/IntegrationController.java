@@ -66,7 +66,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/swift/process")
-    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INTEGRATION_OPERATOR', 'SYSTEM')")
     @Operation(summary = "Process SWIFT message",
             description = "Process an incoming SWIFT MT message (MT103, MT202, MT940)")
     @ApiResponses(value = {
@@ -92,7 +92,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/ojk/generate-report")
-    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'compliance_officer')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INTEGRATION_OPERATOR', 'COMPLIANCE_OFFICER')")
     @Operation(summary = "Generate OJK regulatory report",
             description = "Generate and submit OJK regulatory report (CSV or XML format)")
     @ApiResponses(value = {
@@ -118,7 +118,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/soap/send")
-    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INTEGRATION_OPERATOR', 'SYSTEM')")
     @Operation(summary = "Send SOAP request",
             description = "Send SOAP request to legacy system endpoint")
     @ApiResponses(value = {
@@ -144,7 +144,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/http/send")
-    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INTEGRATION_OPERATOR', 'SYSTEM')")
     @Operation(summary = "Send HTTP request",
             description = "Send generic HTTP request to external system")
     @ApiResponses(value = {
@@ -187,7 +187,7 @@ public class IntegrationController {
     }
 
     @GetMapping("/messages/{messageId}/status")
-    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INTEGRATION_OPERATOR', 'SYSTEM')")
     @Operation(summary = "Get message processing status",
             description = "Retrieve the current status of an integration message")
     @ApiResponses(value = {
@@ -204,7 +204,7 @@ public class IntegrationController {
     }
 
     @GetMapping("/messages")
-    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator', 'system')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INTEGRATION_OPERATOR', 'SYSTEM')")
     @Operation(summary = "Get messages by status",
             description = "List integration messages filtered by status")
     @ApiResponses(value = {
@@ -224,7 +224,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/messages/{messageId}/retry")
-    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INTEGRATION_OPERATOR')")
     @Operation(summary = "Retry failed message",
             description = "Queue a failed message for retry processing")
     @ApiResponses(value = {
@@ -255,7 +255,7 @@ public class IntegrationController {
     }
 
     @PostMapping("/messages/{messageId}/cancel")
-    @PreAuthorize("hasAnyAuthority('admin', 'integration_operator')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'INTEGRATION_OPERATOR')")
     @Operation(summary = "Cancel pending message",
             description = "Cancel a message that has not been processed yet")
     @ApiResponses(value = {

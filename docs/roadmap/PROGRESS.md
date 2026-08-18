@@ -1,5 +1,18 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.0 (2026-08-18)
+
+- **Cross-layer audit remediation (2026-08-18)** — fixed gateway/BFF routing, backend, and frontend findings:
+  - **Gateway/BFF routing**: registered missing `kyc`, `gdpr-audit`, `disputes`, `refunds`, `segments`, and singular `partner` routes in `gateway.routes` + `RouteRegistry` defaults (GW-ROUTING-001/002/004, BFF-ROUTING-001); removed dead `/v1/partner` whitelist entry and added regression test (BFF-ROUTING-002). Verified live: these now return `401` (routed, auth-gated) instead of `404 No Route Found`.
+  - **Backend**: `GET /api/v1/payments` returns paginated history (BE-BILL-001); idempotency key no longer falls back to a random UUID (BE-BILL-002); backoffice/cms/integration `@PreAuthorize` migrated from `hasAnyAuthority('admin'...)` to `hasRole('ADMIN')`/`hasAnyRole(...)` to match the Keycloak `ROLE_` prefix (SEC-AUTH-001); added card `PUT`/`DELETE` endpoints (BE-CARD-001); added `/api/v1/segments` controller (BE-PROMO-001); enabled ShedLock for lending repayment reconciliation (LEND-SCHED-001).
+  - **Frontend**: deterministic idempotency keys for retries (FE-IDM-002); `Money` (string) across `TransactionService`, `StatementService`, `WalletService` and removal of `parseInt`/`parseFloat` in `scheduled-transfers`/`cards` pages (FE-MONEY-002/003).
+- **Build & Verification**:
+  - Full Backend Reactor (`44/44` modules): **BUILD SUCCESS**.
+  - Next.js: `tsc --noEmit` clean, ESLint clean, Vitest `1211 passed`.
+  - Billing, promotion, lending, backoffice, integration, gateway, wallet test suites green (Docker-gated Testcontainers excluded — no Docker in env).
+- **Deploy live**: Podman stack rebuilt and deployed as SemVer **`1.13.0`** (`${PAYU_VERSION:-1.13.0}` across 31 app images); **37/37 containers healthy**; smoke tests `3/3`; new gateway routes verified.
+- **Backlog blockers**: OCP credentials, external providers (notifications/FX), SIEM sink, GitHub-admin branch protection, and PIN/clearing/risk contracts remain in `TODOS.md`.
+
 ## Deploy 1.12.0 (2026-08-18)
 
 - **Platform Audit Remediation (30/30 Findings CLOSED)**: Complete remediation of all findings across backend services and Next.js web application:

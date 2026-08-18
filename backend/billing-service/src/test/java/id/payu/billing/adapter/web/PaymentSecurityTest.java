@@ -4,11 +4,16 @@ import id.payu.billing.application.service.PaymentService;
 import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.model.BillerType;
 import id.payu.billing.domain.model.PaymentStatus;
+import id.payu.commons.idempotency.IdempotencyEntry;
+import id.payu.commons.idempotency.IdempotencyKey;
+import id.payu.commons.idempotency.IdempotencyRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,6 +40,54 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @DisplayName("QAMVP-014 — billing security: 401 + ownership")
 class PaymentSecurityTest {
+
+    @TestConfiguration
+    static class InMemoryIdempotencyConfig {
+        @Bean
+        IdempotencyRepository idempotencyRepository() {
+            return new ThreadSafeInMemoryRepository();
+        }
+    }
+
+    static final class ThreadSafeInMemoryRepository implements IdempotencyRepository {
+        private final ConcurrentHashMap<String, IdempotencyEntry> store = new ConcurrentHashMap<>();
+
+        @Override
+        public Optional<IdempotencyEntry> findByKey(IdempotencyKey key) {
+            return Optional.ofNullable(store.get(key.value()));
+        }
+
+        @Override
+        public boolean save(IdempotencyKey key, IdempotencyEntry entry, long ttlSeconds) {
+            store.put(key.value(), entry);
+            return true;
+        }
+
+        @Override
+        public boolean saveIfAbsent(IdempotencyKey key, IdempotencyEntry entry, long ttlSeconds) {
+            return store.putIfAbsent(key.value(), entry) == null;
+        }
+
+        @Override
+        public void update(IdempotencyKey key, IdempotencyEntry entry, long ttlSeconds) {
+            store.put(key.value(), entry);
+        }
+
+        @Override
+        public void delete(IdempotencyKey key) {
+            store.remove(key.value());
+        }
+
+        @Override
+        public boolean exists(IdempotencyKey key) {
+            return store.containsKey(key.value());
+        }
+
+        @Override
+        public long getTtl(IdempotencyKey key) {
+            return store.containsKey(key.value()) ? 86400 : -1;
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;

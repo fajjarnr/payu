@@ -16,4 +16,8 @@ public interface CardUseCase {
     void freezeCard(String cardId);
 
     void unfreezeCard(String cardId);
+
+    Card updateCardLimit(String cardId, BigDecimal dailyLimit);
+
+    Card closeCard(String cardId);
 }

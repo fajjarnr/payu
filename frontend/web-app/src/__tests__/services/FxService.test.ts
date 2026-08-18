@@ -100,7 +100,11 @@ describe('FxService', () => {
 
       const result = await service.createConversion(request);
 
-      expect(api.post).toHaveBeenCalledWith('/fx/conversions', request);
+      expect(api.post).toHaveBeenCalledWith(
+        '/fx/conversions',
+        request,
+        expect.objectContaining({ headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }),
+      );
       expect(result.status).toBe('COMPLETED');
     });
   });
@@ -134,7 +138,11 @@ describe('FxService', () => {
 
       const result = await service.reverseConversion('conv_001');
 
-      expect(api.post).toHaveBeenCalledWith('/fx/conversions/conv_001/reverse');
+      expect(api.post).toHaveBeenCalledWith(
+        '/fx/conversions/conv_001/reverse',
+        {},
+        expect.objectContaining({ headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }),
+      );
       expect(result.status).toBe('REVERSED');
     });
   });

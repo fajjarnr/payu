@@ -80,7 +80,7 @@ public class BackofficeController extends BaseController {
     // ==================== KYC Review Endpoints ====================
 
     @PostMapping("/kyc-reviews")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Audited(operation = AuditOperation.CREATE, entityType = "KycReviewEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(
             summary = "Create KYC review",
@@ -133,7 +133,7 @@ public class BackofficeController extends BaseController {
     }
 
     @GetMapping("/kyc-reviews/{id}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Operation(
             summary = "Get KYC review by ID",
             description = "Retrieves details of a specific KYC review including current status and review history."
@@ -173,7 +173,7 @@ public class BackofficeController extends BaseController {
     }
 
     @GetMapping("/kyc-reviews")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Operation(
             summary = "List KYC reviews",
             description = "Retrieves a paginated list of KYC reviews. Can be filtered by status."
@@ -227,7 +227,7 @@ public class BackofficeController extends BaseController {
     }
 
     @PostMapping("/kyc-reviews/{id}/review")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Audited(operation = AuditOperation.UPDATE, entityType = "KycReviewEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(
             summary = "Submit KYC review decision",
@@ -270,7 +270,7 @@ public class BackofficeController extends BaseController {
     }
 
     @DeleteMapping("/kyc-reviews/{id}")
-    @PreAuthorize("hasAnyAuthority('admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Audited(operation = AuditOperation.DELETE, entityType = "KycReviewEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(
             summary = "Delete KYC review",
@@ -302,7 +302,7 @@ public class BackofficeController extends BaseController {
 
     // BUG-BE-158 FIX: Changed from form-encoded @RequestParam to JSON @RequestBody
     @PostMapping(value = "/fraud-cases")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Audited(operation = AuditOperation.CREATE, entityType = "FraudCaseEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(
             summary = "Create fraud case",
@@ -331,7 +331,7 @@ public class BackofficeController extends BaseController {
     }
 
     @GetMapping("/fraud-cases/{id}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Operation(summary = "Get fraud case by ID", description = "Retrieves details of a specific fraud case.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class))),
@@ -344,7 +344,7 @@ public class BackofficeController extends BaseController {
     }
 
     @GetMapping("/fraud-cases")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Operation(summary = "List fraud cases", description = "Retrieves a paginated list of fraud cases.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = FraudCaseResponse.class)))
@@ -372,7 +372,7 @@ public class BackofficeController extends BaseController {
     }
 
     @PostMapping(value = "/fraud-cases/{id}/assign", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Audited(operation = AuditOperation.UPDATE, entityType = "FraudCaseEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(summary = "Assign fraud case", description = "Assigns a fraud case to a specific investigator.")
     @ApiResponses(value = {
@@ -386,7 +386,7 @@ public class BackofficeController extends BaseController {
     }
 
     @PostMapping("/fraud-cases/{id}/resolve")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Audited(operation = AuditOperation.UPDATE, entityType = "FraudCaseEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(summary = "Resolve fraud case", description = "Resolves a fraud case with a final decision.")
     @ApiResponses(value = {
@@ -402,7 +402,7 @@ public class BackofficeController extends BaseController {
     }
 
     @DeleteMapping("/fraud-cases/{id}")
-    @PreAuthorize("hasAnyAuthority('admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Audited(operation = AuditOperation.DELETE, entityType = "FraudCaseEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(summary = "Delete fraud case", description = "Deletes a fraud case.")
     @ApiResponses(value = {
@@ -416,7 +416,7 @@ public class BackofficeController extends BaseController {
     // ==================== Customer Case Endpoints ====================
 
     @PostMapping("/customer-cases")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Audited(operation = AuditOperation.CREATE, entityType = "CustomerCaseEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(summary = "Create customer case", description = "Creates a new customer support case.")
     @ApiResponses(value = {
@@ -429,7 +429,7 @@ public class BackofficeController extends BaseController {
     }
 
     @GetMapping("/customer-cases/{id}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Operation(summary = "Get customer case by ID", description = "Retrieves details of a specific customer support case.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class))),
@@ -442,7 +442,7 @@ public class BackofficeController extends BaseController {
     }
 
     @GetMapping("/customer-cases")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Operation(summary = "List customer cases", description = "Retrieves a paginated list of customer support cases.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = CustomerCaseResponse.class)))
@@ -470,7 +470,7 @@ public class BackofficeController extends BaseController {
     }
 
     @PostMapping(value = "/customer-cases/{id}/assign", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Audited(operation = AuditOperation.UPDATE, entityType = "CustomerCaseEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(summary = "Assign customer case", description = "Assigns a customer support case to a specific agent.")
     @ApiResponses(value = {
@@ -484,7 +484,7 @@ public class BackofficeController extends BaseController {
     }
 
     @PutMapping("/customer-cases/{id}")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Audited(operation = AuditOperation.UPDATE, entityType = "CustomerCaseEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(summary = "Update customer case", description = "Updates a customer support case with new status and notes.")
     @ApiResponses(value = {
@@ -500,7 +500,7 @@ public class BackofficeController extends BaseController {
     }
 
     @DeleteMapping("/customer-cases/{id}")
-    @PreAuthorize("hasAnyAuthority('admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Audited(operation = AuditOperation.DELETE, entityType = "CustomerCaseEntity", maskData = true, level = AuditLevel.INFO)
     @Operation(summary = "Delete customer case", description = "Deletes a customer support case.")
     @ApiResponses(value = {
@@ -514,7 +514,7 @@ public class BackofficeController extends BaseController {
     // ==================== Universal Search Endpoints ====================
 
     @PostMapping("/search")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Operation(summary = "Universal search (POST)", description = "Performs a universal search across multiple entities.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = UniversalSearchResponse.class)))
@@ -533,7 +533,7 @@ public class BackofficeController extends BaseController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyAuthority('admin', 'backoffice')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
     @Operation(summary = "Universal search (GET)", description = "Performs a universal search across multiple entities using query parameters.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = UniversalSearchResponse.class)))

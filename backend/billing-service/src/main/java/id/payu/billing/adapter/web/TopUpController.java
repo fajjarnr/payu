@@ -107,7 +107,9 @@ public class TopUpController {
                 return key;
             }
         }
-        return UUID.randomUUID().toString();
+        // BE-BILL-002: never silently mint a key — the caller violated the
+        // idempotency contract and must be told (400), not hidden.
+        throw new IllegalArgumentException("X-Idempotency-Key header is required");
     }
 
     @GetMapping("/{id}")

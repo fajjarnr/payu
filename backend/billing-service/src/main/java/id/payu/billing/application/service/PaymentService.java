@@ -201,6 +201,12 @@ public class PaymentService implements PayBillUseCase, TopUpUseCase, PaymentQuer
         return persistencePort.findByReferenceNumber(referenceNumber);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PaymentQueryUseCase.PaymentPage getPaymentHistory(String accountId, int page, int size) {
+        return persistencePort.findByAccountId(accountId, page, size);
+    }
+
     private Optional<BillerType> getBillerType(String code) {
         for (BillerType type : BillerType.values()) {
             if (type.getCode().equalsIgnoreCase(code)) {

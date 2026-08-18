@@ -1,4 +1,5 @@
 import api, { isAxiosError } from '@/lib/api';
+import type { Money } from '@/types';
 
 /**
  * Statement Service Types
@@ -14,10 +15,10 @@ export interface Statement {
   customerId: string;
   accountNumber: string;
   statementPeriod: string;
-  openingBalance: number;
-  closingBalance: number;
-  totalCredits: number;
-  totalDebits: number;
+  openingBalance: Money;
+  closingBalance: Money;
+  totalCredits: Money;
+  totalDebits: Money;
   transactionCount: number;
   status: StatementStatus;
   generatedAt: string;

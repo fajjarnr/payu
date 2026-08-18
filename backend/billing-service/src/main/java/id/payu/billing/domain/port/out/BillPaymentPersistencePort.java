@@ -2,6 +2,7 @@ package id.payu.billing.domain.port.out;
 
 import id.payu.billing.domain.model.BillPayment;
 import id.payu.billing.domain.model.PaymentStatus;
+import id.payu.billing.domain.port.in.PaymentQueryUseCase;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,6 +15,11 @@ public interface BillPaymentPersistencePort {
     Optional<BillPayment> findByReferenceNumber(String referenceNumber);
     Optional<BillPayment> findByIdempotencyKey(String idempotencyKey);
     List<BillPayment> findByStatusIn(Collection<PaymentStatus> statuses);
+
+    /**
+     * BE-BILL-001: paginated payment history for an account (newest first).
+     */
+    PaymentQueryUseCase.PaymentPage findByAccountId(String accountId, int page, int size);
 
     /**
      * BILL-RECON-001: find payments in the given statuses that still need

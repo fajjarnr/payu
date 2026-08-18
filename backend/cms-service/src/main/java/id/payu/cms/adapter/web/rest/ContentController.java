@@ -39,7 +39,7 @@ public class ContentController {
     private final ContentService contentService;
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('admin', 'cms_editor', 'cms_admin')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CMS_EDITOR', 'CMS_ADMIN')")
     @Operation(
         summary = "Create new content",
         description = "Create a new content (banner, promo, alert, or popup)"
@@ -65,7 +65,7 @@ public class ContentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('admin', 'cms_editor', 'cms_admin')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CMS_EDITOR', 'CMS_ADMIN')")
     @Operation(
         summary = "Update content",
         description = "Update an existing content by ID"
@@ -190,7 +190,7 @@ public class ContentController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyAuthority('admin', 'cms_editor', 'cms_admin')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CMS_EDITOR', 'CMS_ADMIN')")
     @Operation(
         summary = "Update content status",
         description = "Update the status of a content (e.g., DRAFT -> ACTIVE)"
@@ -221,7 +221,7 @@ public class ContentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('admin', 'cms_admin')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CMS_ADMIN')")
     @Operation(
         summary = "Delete content",
         description = "Permanently delete a content by ID"

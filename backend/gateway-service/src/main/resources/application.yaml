@@ -648,6 +648,36 @@ gateway:
       service: "transaction-service"
       target-prefix: "/api/v1/split-bills"
       methods: ["GET", "POST", "PUT"]
+    # GW-ROUTING-001: kyc-service eKYC routes missing from gateway
+    kyc:
+      service: "kyc-service"
+      target-prefix: "/api/v1/kyc"
+      methods: ["GET", "POST"]
+    # GW-ROUTING-002: compliance-service GDPR audit routes missing from gateway
+    gdpr-audit:
+      service: "compliance-service"
+      target-prefix: "/api/v1/gdpr-audit"
+      methods: ["GET", "POST", "DELETE"]
+    # GW-ROUTING-004: dispute-service refund dispute / chargeback routes missing from gateway
+    disputes:
+      service: "dispute-service"
+      target-prefix: "/api/v1/disputes"
+      methods: ["GET", "POST", "PUT", "DELETE"]
+    refunds:
+      service: "dispute-service"
+      target-prefix: "/api/v1/refunds"
+      methods: ["GET", "POST"]
+    # BE-PROMO-001: promotion-service segments routes missing from gateway
+    segments:
+      service: "promotion-service"
+      target-prefix: "/api/v1/segments"
+      methods: ["GET", "POST"]
+    # BFF-ROUTING-001: SNAP-BI payment via web-app uses singular /partner/*
+    # Route to partner-service SNAP-BI contract endpoints (/v1/partner/...)
+    partner:
+      service: "partner-service"
+      target-prefix: "/v1/partner"
+      methods: ["GET", "POST", "PUT", "DELETE"]
 
   # Response Masking (IMP-009)
   response-masking:

@@ -2,6 +2,48 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-271: Hexagonal Domain Ports Must Not Leak Spring Data `Page` (2026-08-18)
+
+**Context**: BE-BILL-001 added a paginated payment-history query to `billing-service`.
+
+**Lesson**:
+- A domain `port/in` must not depend on `org.springframework.data.domain.Page`/`Pageable` — ArchUnit rejects it (domain must be framework-independent). Return a plain domain record slice (e.g. `record PaymentPage(List<BillPayment> content, long totalElements)`) and map to `Page` only inside the adapter.
+- `@RequiredArgsConstructor` on an application service whose constructor references only domain ports still trips ArchUnit's "application services depend only on domain" rule when it inspects the `lombok.Generated` constructor. An explicit constructor sidesteps the false positive.
+
+**Applied evidence**: billing ArchUnit `18/18`, promotion ArchUnit green after the fix.
+
+## L-272: Unreachable Idempotency Cache Misreports As 409, Masking 400 (2026-08-18)
+
+**Context**: `PaymentSecurityTest.validationFailureIsRfc9457` expected 400 but got 409.
+
+**Lesson**:
+- When the distributed idempotency cache (Hot Rod/Infinispan) is unreachable in a test, `DistributedCacheIdempotencyRepository.saveIfAbsent` returns `false`, which `IdempotencyInterceptor` misreads as a "concurrent request" 409 — masking the real validation 400. Provide an in-memory `IdempotencyRepository` in the test context (`@TestConfiguration`) when the controller registers the real interceptor (as billing's `WebConfig` does).
+
+**Applied evidence**: `PaymentSecurityTest` 3/3 green after adding in-memory repo.
+
+## L-273: Gateway Route Regression Is a 401-vs-404 Probe, Not a Login (2026-08-18)
+
+**Context**: Verifying GW-ROUTING-001/002/004 + BFF-ROUTING-001 after adding routes.
+
+**Lesson**:
+- A route registered in `gateway.routes` + `RouteRegistry` that reaches a backend requiring auth returns `401` (auth filter rejects), whereas a missing route returns `404 No Route Found`. Probing `curl -o /dev/null -w "%{http_code}"` is a zero-credential way to confirm a route exists. The resulting gateway `WARN Missing or invalid Authorization header` is the auth filter doing its job, not a defect.
+
+## L-274: `hasAnyAuthority` vs Keycloak `ROLE_` Prefix (2026-08-18)
+
+**Context**: SEC-AUTH-001 — backoffice/cms/integration controllers used `hasAnyAuthority('admin'...)` while `KeycloakJwtAuthoritiesConverter` emits `ROLE_`-prefixed authorities, locking out all admin/operator requests with 403.
+
+**Lesson**: Spring's `hasRole('X')` requires the authority to carry a `ROLE_` prefix, but `hasAuthority('x')` matches the exact string. When authorities come from a converter that prefixes `ROLE_`, controllers must use `hasRole`/`hasAnyRole`, not `hasAuthority('admin')`. Prefer uppercase realm roles (`ADMIN`, `BACKOFFICE`) that match the realm export.
+
+**Applied evidence**: backoffice 135 tests green after migration; CMS test was already DB-gated (needs live Postgres).
+
+## L-275: Frontend Money Fields Are Strings, Not Numbers (2026-08-18)
+
+**Context**: FE-MONEY-002/003 — frontend service types used `number` for `Money` fields (scheduled-transfer amount, statement balances, card dailyLimit) and pages used `parseInt`/`parseFloat`.
+
+**Lesson**: Represent all money as `Money = string` in service interfaces and form state; keep numeric parsing only at the input boundary for display, and re-serialize to string for mutation payloads. This preserves decimal precision per the non-negotiable money rule.
+
+**Applied evidence**: `tsc --noEmit` clean, Vitest `1211` passed after the money-type migration.
+
 ## L-270: Systemic Security Boundaries, Outbox Isolation, and Decimal-Safe UI Flow (2026-08-18)
 
 **Context**: Full remediation of 30 audit findings across backend services and frontend Next.js application.

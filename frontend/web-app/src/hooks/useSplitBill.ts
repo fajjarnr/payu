@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import TransactionService from '@/services/TransactionService';
 import type { CreateSplitBillRequest, SplitBillParticipant } from '@/services/TransactionService';
+import type { Money } from '@/types';
 
 export function useSplitBills(accountId: string) {
   return useQuery({
@@ -94,7 +95,7 @@ export function useDeclineSplitBill() {
 export function useSplitBillPayment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, participantId, amount }: { id: string; participantId: string; amount: number }) =>
+    mutationFn: ({ id, participantId, amount }: { id: string; participantId: string; amount: Money }) =>
       TransactionService.makeParticipantPayment(id, participantId, amount),
     ...MutationPresets.financial,
     onSuccess: (_, vars) => { 

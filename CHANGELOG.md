@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.0] - 2026-08-18
+
+### Fixed (Gateway / BFF routing)
+- **GW-ROUTING-001/002/004**: registered missing gateway routes for `kyc-service` (`/api/v1/kyc`), `compliance-service` (`/api/v1/gdpr-audit`), and `dispute-service` (`/api/v1/disputes`, `/api/v1/refunds`) in `application.yaml` and `RouteRegistry` defaults. These previously returned `404 No Route Found`; now they reach the backend (verified live, `401` until authenticated).
+- **BFF-ROUTING-001**: fixed SNAP-BI payment via web-app by registering the singular `/api/v1/partner` gateway route and adding `/api/v1/partner` to the BFF SSRF whitelist (previously `400 Bad Request`).
+- **BFF-ROUTING-002**: removed the dead `/v1/partner` whitelist entry (could never match a `/api/v1/`-prefixed path) and added a regression test for `/api/v1/partner/payments`.
+
+### Fixed (Backend)
+- **BE-BILL-001**: `GET /api/v1/payments` now returns paginated bill-payment history for the authenticated account instead of a static health map (aligns with `BillingService.getPaymentHistory`).
+- **BE-BILL-002**: `extractIdempotencyKey` no longer mints a random UUID fallback — missing `X-Idempotency-Key` now fails with 400 instead of silently hiding the contract violation.
+- **SEC-AUTH-001**: fixed `ROLE_` prefix mismatch — `backoffice`, `cms`, and `integration` controllers used `hasAnyAuthority('admin'...)` while the Keycloak converter emits `ROLE_`-prefixed authorities. Migrated to `hasRole('ADMIN')`/`hasAnyRole('ADMIN', ...)`, restoring admin/operator access (was 403).
+- **BE-CARD-001**: implemented missing `PUT /api/v1/cards/{cardId}` (update daily limit) and `DELETE /api/v1/cards/{cardId}` (close card) endpoints with ownership checks, domain methods, and unit tests.
+- **BE-PROMO-001**: added missing `/api/v1/segments` REST controller + hexagonal service/ports for customer segmentation (entity + migration existed but no API was exposed).
+- **LEND-SCHED-001**: added `@EnableSchedulerLock`, ShedLock config, and `V11__add_shedlock_table.sql` so repayment reconciliation runs exactly once across replicas.
+
+### Frontend & BFF
+- **FE-IDM-002**: replaced per-invocation `crypto.randomUUID()` idempotency keys with deterministic keys (`idempotencyKeyFor(operation, resourceId)`) for scheduled-transfer and split-bill mutations so safe retries reuse the same key.
+- **FE-MONEY-002/003**: converted money fields to `Money` (string decimal) across `TransactionService` (`makeParticipantPayment`, scheduled-transfer `amount`), `StatementService` (opening/closing/credits/debits), and `WalletService` (card `dailyLimit`); removed `parseFloat`/`parseInt` from `scheduled-transfers` and `cards` pages.
+
+### Verification
+- Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
+- Next.js production build clean; `tsc --noEmit` no errors; ESLint clean; Vitest `1211 passed`.
+- Billing, promotion, lending, backoffice, integration, gateway, wallet test suites green (only Docker-gated Testcontainers tests excluded — no Docker in this env).
+- Podman stack rebuilt and deployed as SemVer `1.13.0`; all `37/37` containers healthy; smoke tests `3/3`; new gateway routes verified (`401` instead of `404`).
+
 ## [1.12.0] - 2026-08-18
 
 ### Security & Financial Remediation

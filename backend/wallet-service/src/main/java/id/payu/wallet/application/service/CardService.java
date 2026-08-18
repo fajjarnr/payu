@@ -121,6 +121,30 @@ public class CardService implements CardUseCase {
         log.info("Card unfrozen: {}", cardId);
     }
 
+    @Override
+    @Transactional
+    public Card updateCardLimit(String cardId, BigDecimal dailyLimit) {
+        Card card = cardPersistencePort.findById(UUID.fromString(cardId))
+                .orElseThrow(() -> new IllegalArgumentException("Card not found"));
+        validateCardNotExpired(card);
+        card.updateDailyLimit(dailyLimit);
+        Card saved = cardPersistencePort.save(card);
+        log.info("Card daily limit updated: {} → {}", cardId, dailyLimit);
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public Card closeCard(String cardId) {
+        Card card = cardPersistencePort.findById(UUID.fromString(cardId))
+                .orElseThrow(() -> new IllegalArgumentException("Card not found"));
+        validateCardNotExpired(card);
+        card.close();
+        Card saved = cardPersistencePort.save(card);
+        log.info("Card closed: {}", cardId);
+        return saved;
+    }
+
     /**
      * BUG-BE-125: Validates that a card has not expired.
      * Parses the MM/yy expiry date and compares against current date.

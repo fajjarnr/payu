@@ -203,7 +203,7 @@ export interface VirtualCard {
   expiryDate: string;
   cardHolderName: string;
   status: 'ACTIVE' | 'FROZEN' | 'CANCELLED';
-  dailyLimit: number;
+  dailyLimit: Money;
   createdAt: string;
 }
 
@@ -211,11 +211,11 @@ export interface VirtualCard {
 export interface CreateCardRequest {
   accountId: string;
   cardHolderName: string;
-  dailyLimit?: number;
+  dailyLimit?: Money;
 }
 
 export interface UpdateCardRequest {
-  dailyLimit?: number;
+  dailyLimit?: Money;
 }
 
 // === Pocket Types ===

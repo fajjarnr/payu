@@ -2,6 +2,7 @@ package id.payu.billing.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
 import id.payu.billing.domain.model.BillPayment;
+import id.payu.billing.domain.port.in.PaymentQueryUseCase;
 import id.payu.billing.interfaces.dto.CreatePaymentRequest;
 import id.payu.billing.interfaces.dto.PaymentResponse;
 import id.payu.billing.application.service.PaymentService;
@@ -26,10 +27,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Objects;
-
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import id.payu.security.annotation.AuditOperation;
 
@@ -71,19 +70,19 @@ public class PaymentController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Get payment service status", description = "Retrieve operational status and available payment endpoints")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Service status retrieved")
-    public ApiResponse<Map<String, Object>> getPaymentStatus() {
+    @Operation(summary = "Get payment history", description = "Retrieve paginated bill payment history for the authenticated user's account")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Payment history retrieved")
+    public ApiResponse<Map<String, Object>> getPaymentHistory(
+            @Parameter(description = "Page index (zero-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+        String userId = extractUserId();
+        if (userId == null) {
+            throw new PaymentNotFoundException("Payment not found");
+        }
+        PaymentQueryUseCase.PaymentPage history = paymentService.getPaymentHistory(userId, page, size);
         return ApiResponse.success(Map.of(
-                "status", "operational",
-                "service", "billing-service",
-                "version", "1.0.0",
-                "endpoints", List.of(
-                        "POST /api/v1/payments",
-                        "GET /api/v1/payments/{id}",
-                        "GET /api/v1/payments/reference/{referenceNumber}"
-                )
-        ));
+                "content", history.content().stream().map(PaymentResponse::from).toList(),
+                "totalElements", history.totalElements()));
     }
 
     @PostMapping
@@ -125,7 +124,9 @@ public class PaymentController {
                 return key;
             }
         }
-        return UUID.randomUUID().toString();
+        // BE-BILL-002: never silently mint a key — the caller violated the
+        // idempotency contract and must be told (400), not hidden.
+        throw new IllegalArgumentException("X-Idempotency-Key header is required");
     }
 
     @GetMapping("/{id}")

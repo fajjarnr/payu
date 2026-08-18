@@ -322,7 +322,7 @@ describe('useInitiateTransfer hook', () => {
     }
 
     expect(transferError).toBeTruthy();
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Transfer failed:', error);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Transfer failed:', 'Insufficient balance');
 
     consoleErrorSpy.mockRestore();
   });
@@ -440,7 +440,7 @@ describe('useProcessQrisPayment hook', () => {
     }
 
     expect(qrisError).toBeTruthy();
-    expect(consoleErrorSpy).toHaveBeenCalledWith('QRIS payment failed:', error);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('QRIS payment failed:', 'Invalid QR code');
 
     consoleErrorSpy.mockRestore();
   });
