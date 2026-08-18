@@ -6,7 +6,8 @@
         test-account test-auth test-transaction test-wallet \
         clean clean-test build-test-deps \
         seed-test-data cleanup-test-db \
-        test-health-check podman-test-up podman-test-down
+        test-health-check podman-test-up podman-test-down \
+        codegraph-refresh
 
 # Default target
 .DEFAULT_GOAL := help
@@ -166,6 +167,13 @@ build-test-deps: ## Install shared dependencies
 	@cd backend/shared/events-starter && mvn clean install -DskipTests -q
 	@cd backend/shared/archunit-starter && mvn clean install -DskipTests -q
 	@echo "Shared dependencies installed"
+
+# ============================================
+# CodeGraph (DX-CODEGRAPH-001)
+# ============================================
+
+codegraph-refresh: ## Re-sync / rebuild the CodeGraph index
+	@./scripts/refresh-codegraph.sh
 
 # ============================================
 # Cleanup

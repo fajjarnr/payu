@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-280: Automate CodeGraph Re-indexing After Large Refactors (2026-08-18)
+
+**Context**: DX-CODEGRAPH-001 — the repo ships a CodeGraph index but had no helper to re-sync/validate it, so after large refactors the index drifted and codegraph reads went stale.
+
+**Lesson**: Provide a thin `scripts/refresh-codegraph.sh` (default `sync`, plus `--status` and `--full`) and a `make codegraph-refresh` target so anyone can re-index/validate in one command. Prefer running the script directly for verification when `make` isn't installed in the environment.
+
+**Applied evidence**: `scripts/refresh-codegraph.sh --status` and default `sync` both run against the live index (4051 files, 73,375 nodes); `Makefile` `codegraph-refresh` target defined and `.PHONY`-listed.
+
 ## L-279: CI Gates Need No Root `package.json` to Enforce Conventional Commits (2026-08-18)
 
 **Context**: DX-CI-COMMITS-001 — the repo had no PR gate for Conventional Commits, risking broken automated semver/changelog generation.

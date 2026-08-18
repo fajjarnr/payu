@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Developer Experience & CI
 - **DX-CI-FE-001**: added `.github/workflows/frontend-tests.yml` — automatic lint, `tsc --noEmit` type-check, i18n coverage, and Vitest unit/component tests for `frontend/web-app` on push/PR (previously web-app tests were never CI-gated).
 - **DX-CI-COMMITS-001**: added `commitlint.config.js` + `.github/workflows/commitlint.yml` using `wagoid/commitlint-github-action` to enforce Conventional Commits on PR commits/titles, protecting automated semver + changelog generation. Config validated locally (valid commit passes, invalid fails exit 1).
+- **DX-CODEGRAPH-001**: added `scripts/refresh-codegraph.sh` + `make codegraph-refresh` (sync/full/status modes) to re-index/validate the CodeGraph index after large refactors; verified against the live index (4051 files, 73,375 nodes).
 
 ### Verification
 - Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
