@@ -51,7 +51,9 @@ function isProtectedPath(pathname: string): boolean {
   );
 }
 
-async function validateAccessToken(token: string): Promise<boolean> {
+type ValidationResult = { valid: boolean; transient: boolean };
+
+async function validateAccessToken(token: string): Promise<ValidationResult> {
   const gatewayUrl = process.env.GATEWAY_URL || 'http://gateway-service:8080';
   try {
     const response = await fetch(new URL('/api/v1/auth/validate', gatewayUrl), {
@@ -59,13 +61,19 @@ async function validateAccessToken(token: string): Promise<boolean> {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });
-    return response.ok;
+    // A definitive 401/403 means the token is rejected. Any other response
+    // (200, or even 5xx from the gateway) is not a conclusive rejection.
+    if (response.status === 401 || response.status === 403) {
+      return { valid: false, transient: false };
+    }
+    return { valid: response.ok, transient: !response.ok };
   } catch (error) {
-    edgeLogger.warn('Session validation request failed', {
+    // Transient network/timeout failure — do NOT force-logout an active user.
+    edgeLogger.warn('Session validation request failed (transient)', {
       action: 'middleware',
       error: error instanceof Error ? error.message : String(error),
     });
-    return false;
+    return { valid: true, transient: true };
   }
 }
 
@@ -80,9 +88,14 @@ export async function proxy(request: NextRequest) {
     isProtectedPath(pathWithoutLocale) || pathWithoutLocale === '/' || pathWithoutLocale === '/login';
   const accessToken = request.cookies.get('accessToken')?.value;
   const hasRefreshToken = request.cookies.has('refreshToken');
-  const hasAccessToken = needsSessionValidation && accessToken
-    ? await validateAccessToken(accessToken)
-    : false;
+  const validation = needsSessionValidation && accessToken ? await validateAccessToken(accessToken) : null;
+
+  // FE-PROXY-AUTH-001: a transient validation failure (network timeout to the
+  // gateway) must not force-logout an active user. Only a definitive 401/403
+  // counts as an invalid token. On transient failure we proceed and let the BFF
+  // refresh the token client-side, preserving the user's form state.
+  const hasAccessToken = needsSessionValidation && accessToken ? validation!.valid : false;
+  const transientAuthFailure = validation?.transient === true;
 
   // AUDIT-064: CSP nonce — generate per-request nonce for script-src.
   // WEB-001: Next.js injects the nonce into inline scripts only when it can
@@ -157,7 +170,7 @@ export async function proxy(request: NextRequest) {
 
   // Re-evaluate session status after potential rehydration
   const hasSession = // BUG-AUTH-014 FIX: Recalculate session after potential refresh failure
-    hasAccessToken || (hasRefreshToken && refreshSucceeded);
+    hasAccessToken || (hasRefreshToken && refreshSucceeded) || (accessToken && transientAuthFailure);
 
   // 1. Auto-redirect from Landing to Dashboard if already logged in
   if (pathWithoutLocale === '/' && hasSession) {

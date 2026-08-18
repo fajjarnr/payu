@@ -73,18 +73,6 @@ export {
   useClaimPromotion
 } from './useRewards';
 
-// ── Gamification ──
-export {
-  useGamificationSummary,
-  useGamificationLevel,
-  useGamificationBadges,
-  useGamificationBadgeProgress,
-  useGamificationStreak,
-  useTodayCheckin,
-  useCheckin,
-  useRecordTransaction
-} from './useGamification';
-
 // ── Cards ──
 export {
   useCards,

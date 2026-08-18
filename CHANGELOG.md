@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **FE-IDM-003**: bills page now derives a deterministic `X-Idempotency-Key` per bill payment and drops the unused client `referenceNumber`, so safe retries reuse the same key (no duplicate mutation on timeout/retry).
 - **FE-MONEY-002/003**: converted money fields to `Money` (string decimal) across `TransactionService` (`makeParticipantPayment`, scheduled-transfer `amount`), `StatementService` (opening/closing/credits/debits), and `WalletService` (card `dailyLimit`); removed `parseFloat`/`parseInt` from `scheduled-transfers` and `cards` pages.
 - **FE-LEND-001**: aligned `PreApprovalCheckRequest` to the backend `LoanPreApprovalRequest` contract (`loanType`, `principalAmount`, `tenureMonths`, `purpose`) instead of the wrong `requestedAmount` shape that failed validation 400.
+- **FE-PROXY-AUTH-001**: Next.js middleware no longer force-logs-out an active user on a transient gateway validation timeout — only a definitive `401`/`403` counts as invalid; transient failures proceed and the BFF refreshes client-side, preserving form state. Added regression test.
+- **BE-PROMO-002**: removed dead frontend gamification code (`PromotionService` methods/types, `useGamification` hook, exports) and the gateway `gamification` route + BFF whitelist prefix, since the backend dropped gamification (`V5__drop_gamification_tables.sql`, SIMP-002).
 
 ### Verification
 - Full Maven reactor build (`44/44` modules) BUILD SUCCESS.

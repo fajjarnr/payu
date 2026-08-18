@@ -58,18 +58,6 @@ vi.mock('@/hooks/usePromotions', () => ({
     data: [],
     isLoading: false,
   }),
-  useGamificationSummary: () => ({
-    data: { level: 5, xp: 2500 },
-    isLoading: false,
-  }),
-  useGamificationStreak: () => ({
-    data: { currentStreak: 7 },
-    isLoading: false,
-  }),
-  useCheckin: () => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
-  }),
 }));
 
 describe('RewardsPage', () => {

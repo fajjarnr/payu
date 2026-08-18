@@ -598,11 +598,6 @@ gateway:
       service: "wallet-service"
       target-prefix: "/wallet-api/v1/pockets"
       methods: ["GET", "POST"]
-    # BUG-CROSS-063: Add missing gamification route
-    gamification:
-      service: "promotion-service"
-      target-prefix: "/api/v1/gamification"
-      methods: ["GET", "POST"]
     # READY-066: Add missing escrow + settlements routes
     escrow:
       service: "wallet-service"

@@ -2,6 +2,22 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-277: Distinguish Definitive Auth Rejection From Transient Network Failure (2026-08-18)
+
+**Context**: FE-PROXY-AUTH-001 — the Next.js middleware treated any failed `/auth/validate` fetch (including a gateway timeout) as "invalid token" and force-redirected active users to `/login`, destroying form state.
+
+**Lesson**: In auth-validation middleware, only a definitive `401`/`403` should force a logout/redirect. A network error or 5xx is transient and must be treated as "allow through" so the BFF/client refresh path can recover without disrupting the user. Return a tri-state (`{valid, transient}`) from the validator instead of a boolean.
+
+**Applied evidence**: `proxy-auth.test.ts` 3/3 green, including a new transient-timeout regression test that asserts no redirect to `/login`.
+
+## L-278: Delete Frontend Code Pointing at a Dropped Backend Feature (2026-08-18)
+
+**Context**: BE-PROMO-002 — the backend dropped gamification (`V5__drop_gamification_tables.sql`, SIMP-002) but the frontend still shipped 8 dead `PromotionService` methods, a whole `useGamification` hook, exports, and a gateway route to `/api/v1/gamification`.
+
+**Lesson**: When a feature is deliberately removed server-side, remove the matching dead client code, its gateway route, and the BFF whitelist prefix in the same change — otherwise the client keeps 404ing. Check `services/index.ts` re-exports and test mocks for stale references.
+
+**Applied evidence**: `tsc --noEmit` clean, Vitest `1212` passed after the removal.
+
 ## L-276: Deterministic Idempotency Keys Beat `crypto.randomUUID()` (2026-08-18)
 
 **Context**: FE-IDM-002/003 — frontend mutations generated a fresh idempotency key per invocation, defeating safe retry (timeout/retry → new key → duplicate mutation).

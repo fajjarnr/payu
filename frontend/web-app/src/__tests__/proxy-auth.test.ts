@@ -49,4 +49,16 @@ describe('proxy authentication boundary', () => {
     });
     expect(response.headers.get('cache-control')).toBe('private, no-store');
   });
+
+  it('does not force-logout on a transient validation failure (FE-PROXY-AUTH-001)', async () => {
+    // Network timeout to the gateway — the active user must NOT be redirected to login.
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('gateway timeout')));
+
+    const response = await proxy(new NextRequest('http://localhost/id/dashboard', {
+      headers: { cookie: 'accessToken=valid' },
+    }));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('location')).toBeNull();
+  });
 });

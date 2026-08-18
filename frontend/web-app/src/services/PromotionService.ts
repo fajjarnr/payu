@@ -253,57 +253,6 @@ export class PromotionService {
     return response.data;
   }
 
-  // === Gamification (FE-GAP-012) ===
-
-  /** POST /gamification/checkin — Daily check-in */
-  async checkin(accountId: string): Promise<GamificationCheckin> {
-    const response = await api.post<GamificationCheckin>('/gamification/checkin', { accountId });
-    return response.data;
-  }
-
-  // XBUG-014: Gamification endpoints now include userId for proper backend routing
-
-  /** GET /gamification/checkin/today — Get today's check-in status */
-  async getTodayCheckin(userId: string): Promise<GamificationCheckin | null> {
-    const response = await api.get<GamificationCheckin | null>(`/gamification/${userId}/checkin/today`);
-    return response.data;
-  }
-
-  /** GET /gamification/checkin/streak — Get current streak */
-  async getStreak(userId: string): Promise<GamificationStreak> {
-    const response = await api.get<GamificationStreak>(`/gamification/${userId}/checkin/streak`);
-    return response.data;
-  }
-
-  /** POST /gamification/transaction — Record transaction for gamification */
-  async recordGamificationTransaction(transactionId: string, amount: number): Promise<void> {
-    await api.post('/gamification/transaction', { transactionId, amount });
-  }
-
-  /** GET /gamification/level — Get user level */
-  async getGamificationLevel(userId: string): Promise<GamificationLevel> {
-    const response = await api.get<GamificationLevel>(`/gamification/${userId}/level`);
-    return response.data;
-  }
-
-  /** GET /gamification/badges — Get all badges */
-  async getBadges(userId: string): Promise<GamificationBadge[]> {
-    const response = await api.get<GamificationBadge[]>(`/gamification/${userId}/badges`);
-    return response.data;
-  }
-
-  /** GET /gamification/badges/progress — Get badge progress */
-  async getBadgeProgress(userId: string): Promise<GamificationBadge[]> {
-    const response = await api.get<GamificationBadge[]>(`/gamification/${userId}/badges/progress`);
-    return response.data;
-  }
-
-  /** GET /gamification/summary — Get gamification summary */
-  async getGamificationSummary(userId: string): Promise<GamificationSummary> {
-    const response = await api.get<GamificationSummary>(`/gamification/${userId}/summary`);
-    return response.data;
-  }
-
   // === Rewards (FE-GAP-012) ===
 
   /** GET /rewards/{id} — Get specific reward */
@@ -326,50 +275,6 @@ export class PromotionService {
 }
 
 // === Gamification Types ===
-
-export interface GamificationCheckin {
-  id: string;
-  accountId: string;
-  checkinDate: string;
-  pointsEarned: number;
-  streakDay: number;
-}
-
-export interface GamificationStreak {
-  accountId: string;
-  currentStreak: number;
-  longestStreak: number;
-  lastCheckin: string;
-}
-
-export interface GamificationLevel {
-  accountId: string;
-  level: number;
-  currentXp: number;
-  nextLevelXp: number;
-  title: string;
-}
-
-export interface GamificationBadge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  earned: boolean;
-  earnedAt?: string;
-  progress: number;
-  target: number;
-}
-
-export interface GamificationSummary {
-  accountId: string;
-  level: GamificationLevel;
-  streak: GamificationStreak;
-  totalBadges: number;
-  earnedBadges: number;
-  todayCheckedIn: boolean;
-  totalPointsEarned: number;
-}
 
 export interface RewardsSummary {
   accountId: string;
