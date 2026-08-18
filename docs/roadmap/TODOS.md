@@ -80,16 +80,16 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 
 | Gate | Pri | Status | Sisa |
 |:---|:---:|:---|:---|
-| PARTNER-PROD-001 | P0 | 🟢 Public edge APIcast LIVE (sandbox): E2E luar cluster 200, quota 429, failover OK, bypass route dihapus | WAF Coraza (DEPLOY-006), mTLS APIcast→gateway, rate-limit per-IP, runbook restart apicast |
+| PARTNER-PROD-001 | P0 | 🟢 Public edge APIcast LIVE (sandbox): E2E luar cluster 200, quota 429, failover OK, bypass route dihapus ([ADR-0025](../adr/0025-snap-bi-and-partner-gateway-security-standard.md)) | WAF Coraza (DEPLOY-006), mTLS APIcast→gateway, rate-limit per-IP, runbook restart apicast |
 | PARTNER-PROD-002 | P0 | 🟢 Enkripsi at-rest + rotation + backfill LIVE (V18, 0 plaintext) | Vault key management production |
-| PARTNER-PROD-003 | P0 | 🟢 Webhook trust boundary LIVE (URL validator, SSRF block, DNS-rebind guard, 64KiB limit) | Egress policy eksplisit, response-body scan endpoint penerima |
-| PARTNER-PROD-004 | P0 | 🟢 Delivery durability LIVE (retry 3× + DLQ + replay, `uq_webhook_delivery_event`) | DLQ consumer/alert otomatis, double-dispatch race window non-atomik |
+| PARTNER-PROD-003 | P0 | 🟢 Webhook trust boundary LIVE (URL validator, SSRF block, DNS-rebind guard, 64KiB limit — [ADR-0025](../adr/0025-snap-bi-and-partner-gateway-security-standard.md)) | Egress policy eksplisit, response-body scan endpoint penerima |
+| PARTNER-PROD-004 | P0 | 🟢 Delivery durability LIVE (retry 3× + DLQ + replay, `uq_webhook_delivery_event` — [ADR-0025](../adr/0025-snap-bi-and-partner-gateway-security-standard.md)) | DLQ consumer/alert otomatis, double-dispatch race window non-atomik |
 | PARTNER-PROD-005 | P0 | 🟢 Reconciliation LIVE (`SnapBiReconciliationService` + V19 cases, 0 unmatched) | Reconcile outbox, auto-resolve workflow, alert destination |
 | PARTNER-PROD-006 | P0 | 🟢 Tenant isolation LIVE (ownership semua resource, isolation matrix 295/295, audit) | PostgreSQL RLS, partner-scoped Keycloak roles, audit list query |
 | PARTNER-PROD-007 | P1 | ⏸️ Belum | HPA≥3, PDB minAvailable 2, topology spread, bounded timeout |
-| PARTNER-PROD-008 | P0 | ⏸️ Belum | PG HA+PITR, restore drill, RPO/RTO, retention/archive |
+| PARTNER-PROD-008 | P0 | ⏸️ Belum | PG HA+PITR via CNPG Barman Cloud in-cluster & AWS RDS Multi-AZ target ([ADR-0006](../adr/0006-postgresql-primary-database.md)), restore drill, RPO=0 / RTO<5m, retention/archive |
 | PARTNER-PROD-009 | P1 | ⏸️ Belum | SLI/SLO, dashboard+alert, traces end-to-end |
-| PARTNER-PROD-010 | P0 | ⏸️ Belum | Contract/conformance, k6 load/soak, chaos, pentest, partner sign-off |
+| PARTNER-PROD-010 | P0 | ⏸️ Belum | Contract/conformance, k6 load/soak, chaos ([ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md): Litmus `pod-delete` + Microcks/WireMock 3.x di SIT, Istio fault injection di UAT, Kraken+Cerberus di preprod), pentest, partner sign-off |
 | PARTNER-PROD-011 | P1 | ⏸️ Belum | Dual-control onboarding, SLA/escalation, runbook, on-call |
 
 > Local APIcast (profile `api-management`) tidak bisa authless (verified via Context7) — public edge butuh APIManager (cluster-level).
@@ -101,11 +101,11 @@ Status `partner-service` hanya Production Ready setelah seluruh gate berikut mem
 | Key | Pri | Category | Summary |
 |:---|:---:|:---|:---|
 | DEPLOY-006 | P1 | Security | Coraza WAF (INFRA-015) + Wazuh SIEM (INFRA-011) + sisa CIS `audit-log-forwarding-enabled` sink |
-| DEPLOY-011 | P1 | Promotion | SIT/UAT/preprod LIVE di lab `cluster-nkk8q` (ArgoCD 18 apps, Vault HA, pipeline SIT green: sync-wait + k6 + ZAP + Schemathesis). Sisa: litmus gate, preprod kraken gate, Infinispan Hot Rod mTLS (analytics 500), prod sync window + promotion via pipeline |
+| DEPLOY-011 | P1 | Promotion | SIT/UAT/preprod LIVE di lab `cluster-nkk8q` (ArgoCD 18 apps, Vault HA, pipeline SIT green: sync-wait + k6 + ZAP + Schemathesis). Sisa: litmus gate (`pod-delete` only via [ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)), preprod kraken gate (Cerberus guard via [ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)), Infinispan Hot Rod mTLS (analytics 500), prod sync window + promotion via pipeline |
 | INFRA-026 | P1 | Secrets | Vault HA live + restore drill verified. Sisa: snapshot S3 CronJob verify, kv readback via k8s auth, auto-unseal key backup |
 | DEPLOY-009 | P2 | CI/CD | Tekton Results live (365d); sisa: external HA PostgreSQL, Chains SLSA/Rekor evidence, Renovate |
 | DEVSECOPS-017 | P1 | Secrets | Tekton Buildah butuh `redhat-registry-pull` workspace + Vault `secret/payu/cicd/redhat-registry` (prerequisite eksternal — jangan placeholder) |
-| OPS-2026-08-01-05 | P2 | Chaos | Kraken manifest fixed (emptyDir + SCC); re-run preprod gate saat CPU pulih |
+| OPS-2026-08-01-05 | P2 | Chaos | Kraken manifest fixed (emptyDir + SCC); re-run preprod gate saat CPU pulih (refer [ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md) for steady-state Cerberus gate) |
 | OPS-2026-08-01-04 | P2 | Observability | Log delivery: vector connect OK; blocked 403 `lokistack-gateway.rego` kosong (operator bug LOG-2236 → RH support / tenant workaround). **2026-08-13**: recurring ERROR stack lokal dibersihkan — product-catalog cache `Optional` serialization (jackson-datatype-jdk8 di cache-starter), integration OJK timer DNS (disabled di container/local/dev); account IAM 401 business-rejection = legitimate |
 | OPS-2026-04-08-02 | P2 | Performance | k6 via operator/port-forward only (gateway unreachable dari host) |
 | READY-029 | P2 | Performance | Gatling defer ke cluster phase |

@@ -30,6 +30,8 @@ This directory contains the historical record of architectural decisions made fo
 | [0021](0021-cms-single-tenant.md)               | CMS — Single-Tenant                                    | Accepted | 2026-05-07 |
 | [0022](0022-money-idempotency-standard.md)       | Money & Idempotency Standard (Financial Integrity)     | Accepted | 2026-08-11 |
 | [0023](0023-mvp-scope.md)                        | MVP Scope Definition (Core Banking)                    | Accepted | 2026-08-11 |
+| [0024](0024-chaos-engineering-and-fault-injection-strategy.md) | Tiered Chaos Engineering & Fault Injection Strategy | Accepted | 2026-08-18 |
+| [0025](0025-snap-bi-and-partner-gateway-security-standard.md)  | SNAP-BI & Partner Gateway Security Standards         | Accepted | 2026-08-18 |
 
 ## 🚀 How to Create a New ADR
 

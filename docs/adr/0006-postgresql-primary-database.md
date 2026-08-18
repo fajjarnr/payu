@@ -18,23 +18,22 @@ PayU platform requires a relational database for:
 - **ACID Compliance**: Required for financial transactions
 - **Maturity**: Proven in production banking
 - **JSONB Support**: Flexibility for semi-structured data
-- **Ecosystem**: Excellent tooling (Flyway, pgAdmin, etc.)
-- **Support**: Crunchy PostgreSQL for OpenShift
+- **Ecosystem**: Excellent tooling (Flyway, pgAdmin, Hibernate 6.x)
+- **Deployment Portability**: CloudNativePG (CNPG) for in-cluster OpenShift (Dev/SIT/UAT) & AWS RDS Multi-AZ for managed Production
 
 ## Considered Options
 
-### Option 1: PostgreSQL 16 with JSONB
-
+### Option 1: PostgreSQL 16 (CNPG in-cluster for Staging + AWS RDS Multi-AZ for Production Target)
 - **Pros**:
-  - Full ACID compliance
-  - JSONB for flexible schemas
-  - Excellent tooling
-  - Crunchy Data for OpenShift
-  - Proven in banking
+  - Full ACID compliance and PostgreSQL 16 feature parity across all environments.
+  - JSONB for flexible KYC documents and audit logs.
+  - In-Cluster (Dev/SIT/UAT): CNPG provides self-contained 3-instance HA + Barman Cloud S3 backups without extra cloud infrastructure cost.
+  - Production: AWS RDS Multi-AZ / Aurora provides managed 99.99% SLA, hardware replication, KMS encryption at rest, and automated maintenance windows.
+  - Zero application code/Flyway migration changes between staging and production.
 - **Cons**:
-  - Manual sharding for scale
+  - Manual sharding required for extreme scale.
 - **Complexity**: Medium
-- **Rationale**: Best all-around choice for banking
+- **Rationale**: Best all-around choice for cloud-native banking with clear path to managed cloud production.
 
 ### Option 2: MySQL 8.0
 
@@ -73,7 +72,7 @@ PayU platform requires a relational database for:
 
 ## Decision
 
-**Choose PostgreSQL 16** for all services requiring persistence:
+**Choose PostgreSQL 16 as the Standard Database Engine** for all services requiring persistence:
 
 - Account data
 - Transaction records
@@ -81,17 +80,21 @@ PayU platform requires a relational database for:
 - KYC documents (JSONB)
 - Analytics data
 
+**Deployment Topology**:
+1. **Dev / SIT / UAT / Pre-Prod**: Orchestrated in-cluster via **CloudNativePG (CNPG 1.30+)** with 3 instances (1 Primary + 2 Standbys) and Barman Cloud continuous S3 WAL archiving.
+2. **Production Target**: Deployed on **AWS RDS PostgreSQL (Multi-AZ)** or **Amazon Aurora PostgreSQL** with automated cross-AZ synchronous replication, KMS volume encryption, and continuous PITR snapshots.
+
 **Use TimescaleDB** (PostgreSQL extension) for:
 
 - Time-series analytics data
 
 ## Rationale
 
-1. **ACID Compliance**: Essential for financial transactions
-2. **JSONB**: Flexibility for KYC documents, analytics
-3. **Tooling**: Flyway migrations, pgAdmin, etc.
-4. **Crunchy Data**: Red Hat certified operator for OpenShift
-5. **Open Source**: No licensing costs
+1. **ACID Compliance**: Essential for financial transactions and double-entry ledger.
+2. **JSONB**: Flexibility for KYC documents and audit trails.
+3. **Tooling**: 100% consistent Flyway migrations and JPA configurations across local, OpenShift, and AWS RDS.
+4. **Cloud-Native & Managed Ready**: In-cluster CNPG provides robust local/staging HA, while AWS RDS eliminates operational overhead in production.
+5. **No Vendor Lock-in**: Standard PostgreSQL wire protocol allows seamless migration between OpenShift in-cluster and managed AWS RDS.
 
 ## Consequences
 
@@ -99,8 +102,9 @@ PayU platform requires a relational database for:
 
 - ACID transactions guaranteed
 - JSONB for flexible schemas
-- Excellent tooling ecosystem
-- Crunchy Data for OpenShift
+- Identical SQL dialect, Flyway migrations, and JPA mappings between OpenShift CNPG and AWS RDS
+- OpenShift staging costs minimized via in-cluster CNPG
+- Production operational burden minimized via AWS RDS Multi-AZ managed services
 
 **Negative**:
 
