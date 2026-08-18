@@ -10,9 +10,9 @@
 | **Operations** | billing, notification, backoffice, support | 4 |
 | **Platform** | gateway, api-portal, cms, partner, promotion, product-catalog, integration | 7 |
 | **Support** | analytics, kyc (Python) | 2 |
-| **Simulators** | bi-fast, dukcapil, qris, va | 4 |
+| **Simulators** | bi-fast, biller, dukcapil, qris, va | 5 |
 
-**Total: 27 services (23 microservices + 4 simulators)**
+**Total: 28 services (23 microservices + 5 simulators)**
 
 > **Port Standard**: All services expose port **8080** inside containers. Refer to `infrastructure/local-podman/podman-compose.yml` for host mappings.
 
@@ -24,7 +24,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_account) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | User accounts, multi-pocket, profile management |
@@ -42,7 +42,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4, Keycloak |
+| **Technology** | Java 25, Spring Boot 4.1, Keycloak |
 | **Database** | PostgreSQL (payu_auth) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Authentication, MFA, OAuth2, session management |
@@ -60,7 +60,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL + Event Store (payu_transaction) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Transfers, BI-FAST, QRIS, payment processing |
@@ -78,7 +78,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_wallet) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Balance management, double-entry ledger |
@@ -96,7 +96,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_investment) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Mutual funds, Gold investment, Portfolio management |
@@ -109,7 +109,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_lending) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Loans, PayLater, Credit scoring integration |
@@ -122,7 +122,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_fx) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Foreign Exchange Rates & Conversion |
@@ -135,7 +135,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_statement) |
 | **Port** | 8010 (container) |
 | **Responsibilities** | E-Statement PDF Generation |
@@ -148,7 +148,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_dispute) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Transaction dispute management, chargebacks |
@@ -161,7 +161,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_compliance) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
@@ -176,7 +176,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x Native |
+| **Technology** | Java 25, Quarkus 3.x Native |
 | **Database** | PostgreSQL (payu_billing) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Bill payments (PLN, PDAM, etc) |
@@ -189,7 +189,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x Native |
+| **Technology** | Java 25, Quarkus 3.x Native |
 | **Database** | PostgreSQL (payu_notification) |
 | **Messaging** | AMQ Broker (AMQP 1.0) |
 | **Port** | 8080 (container) |
@@ -203,7 +203,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_backoffice) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Internal admin dashboard, audit, user management |
@@ -216,7 +216,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_support) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Customer support, ticketing, FAQ, chat support |
@@ -231,7 +231,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x Native |
+| **Technology** | Java 25, Quarkus 3.x Native |
 | **Port** | 8080 (container) |
 | **Responsibilities** | API Gateway, Rate limiting, Circuit breaker |
 | **Owner** | Platform Team |
@@ -243,7 +243,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x Native |
+| **Technology** | Java 25, Quarkus 3.x Native |
 | **Port** | 8081 (container) |
 | **Responsibilities** | Centralized OpenAPI Docs & Sandbox |
 | **Owner** | Platform Team |
@@ -255,7 +255,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_cms) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Content Management, Banners, Promos |
@@ -268,7 +268,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_partner) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Partner integration, API key management, webhooks |
@@ -281,7 +281,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_promotion) |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Promo campaigns, vouchers, rewards, cashback |
@@ -294,7 +294,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Database** | PostgreSQL (payu_catalog) |
 | **Port** | 8012 (container) |
 | **Responsibilities** | Banking products & fees catalog |
@@ -307,7 +307,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Spring Boot 3.4 |
+| **Technology** | Java 25, Spring Boot 4.1 |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Legacy system adapter, batch processing reconciliations |
 | **Owner** | Platform Team |
@@ -349,7 +349,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x |
+| **Technology** | Java 25, Quarkus 3.x |
 | **Port** | 8080 (container) |
 | **Responsibilities** | BI-FAST transfer simulation |
 | **Documentation** | [README.md](../../backend/simulators/bi-fast-simulator/README.md) |
@@ -360,7 +360,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x |
+| **Technology** | Java 25, Quarkus 3.x |
 | **Port** | 8080 (container) |
 | **Responsibilities** | Dukcapil identity verification simulation |
 | **Documentation** | [README.md](../../backend/simulators/dukcapil-simulator/README.md) |
@@ -371,10 +371,21 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x |
+| **Technology** | Java 25, Quarkus 3.x |
 | **Port** | 8080 (container) |
 | **Responsibilities** | QRIS payment simulation |
 | **Documentation** | [README.md](../../backend/simulators/qris-simulator/README.md) |
+
+---
+
+### biller-simulator
+
+| Attribute | Value |
+|-----------|-------|
+| **Technology** | Java 25, Quarkus 3.x |
+| **Port** | 8080 (container) |
+| **Responsibilities** | Bill payment / billing provider simulation |
+| **Documentation** | [README.md](../../backend/simulators/biller-simulator/README.md) |
 
 ---
 
@@ -382,7 +393,7 @@
 
 | Attribute | Value |
 |-----------|-------|
-| **Technology** | Java 21, Quarkus 3.x |
+| **Technology** | Java 25, Quarkus 3.x |
 | **Port** | 8085 (container) |
 | **Responsibilities** | Virtual Account (VA) payment simulation |
 | **Documentation** | [README.md](../../backend/simulators/va-simulator/) |

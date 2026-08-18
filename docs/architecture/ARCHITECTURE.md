@@ -331,7 +331,7 @@ C4Container
 
 | Attribute            | Value                                           |
 | -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                      |
+| **Technology**       | Java 25, Spring Boot 4.1.x                      |
 | **Database**         | PostgreSQL                                      |
 | **Port**             | 8001                                            |
 | **Responsibilities** | User accounts, multi-pocket, profile management |
@@ -377,7 +377,7 @@ account-service/
 
 | Attribute            | Value                                           |
 | -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x, Keycloak            |
+| **Technology**       | Java 25, Spring Boot 4.1.x, Keycloak            |
 | **Database**         | PostgreSQL                                      |
 | **Port**             | 8002                                            |
 | **Responsibilities** | Authentication, MFA, OAuth2, session management |
@@ -395,7 +395,7 @@ account-service/
 
 | Attribute            | Value                                       |
 | -------------------- | ------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                  |
+| **Technology**       | Java 25, Spring Boot 4.1.x                  |
 | **Database**         | PostgreSQL + Outbox (transactional)       |
 | **Port**             | 8003                                        |
 | **Responsibilities** | Transfer, BI-FAST, QRIS, payment processing |
@@ -415,7 +415,7 @@ account-service/
 
 | Attribute            | Value                             |
 | -------------------- | --------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x        |
+| **Technology**       | Java 25, Spring Boot 4.1.x        |
 | **Database**         | PostgreSQL (Double-entry ledger)  |
 | **Port**             | 8004                              |
 | **Responsibilities** | Balance management, ledger, holds |
@@ -446,7 +446,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                               |
 | -------------------- | --------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                       |
+| **Technology**       | Java 25, Spring Boot 4.1.x                       |
 | **Database**         | PostgreSQL                                          |
 | **Port**             | 8005                                                |
 | **Responsibilities** | Bill payments (PLN, PDAM, BPJS), wallet integration |
@@ -457,7 +457,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                           |
 | -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Quarkus 3.x (Native)                   |
+| **Technology**       | Java 25, Quarkus 3.x (Native)                   |
 | **Database**         | PostgreSQL                                      |
 | **Cache**            | Red Hat Data Grid (Hot Rod; REST v2 untuk Python)                   |
 | **Messaging**        | AMQ Broker (AMQP 1.0)                           |
@@ -516,7 +516,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                               |
 | -------------------- | --------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                          |
+| **Technology**       | Java 25, Spring Boot 4.1.x                          |
 | **Database**         | PostgreSQL                                          |
 | **Port**             | 8009                                                |
 | **Responsibilities** | Mutual funds, Gold investment, Portfolio management |
@@ -527,7 +527,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                       |
 | -------------------- | ------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                  |
+| **Technology**       | Java 25, Spring Boot 4.1.x                  |
 | **Database**         | PostgreSQL                                  |
 | **Port**             | 8010                                        |
 | **Responsibilities** | Loans, PayLater, Credit scoring integration |
@@ -538,7 +538,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                            |
 | -------------------- | ------------------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 4.1.x                       |
+| **Technology**       | Java 25, Spring Boot 4.1.x                       |
 | **Database**         | PostgreSQL                                       |
 | **Port**             | 8011                                             |
 | **Responsibilities** | Internal admin dashboard, audit, user management |
@@ -549,7 +549,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                             |
 | -------------------- | ------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                        |
+| **Technology**       | Java 25, Spring Boot 4.1.x                        |
 | **Database**         | PostgreSQL                                        |
 | **Port**             | 8012                                              |
 | **Responsibilities** | Partner integration, API key management, webhooks |
@@ -560,7 +560,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                        |
 | -------------------- | -------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                   |
+| **Technology**       | Java 25, Spring Boot 4.1.x                   |
 | **Database**         | PostgreSQL                                   |
 | **Port**             | 8013                                         |
 | **Responsibilities** | Promo campaigns, vouchers, rewards, cashback |
@@ -571,7 +571,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                          |
 | -------------------- | ---------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                     |
+| **Technology**       | Java 25, Spring Boot 4.1.x                     |
 | **Database**         | PostgreSQL                                     |
 | **Port**             | 8014                                           |
 | **Responsibilities** | Customer support, ticketing, FAQ, chat support |
@@ -582,7 +582,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                |
 | -------------------- | ------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 4.1.x           |
+| **Technology**       | Java 25, Spring Boot 4.1.x           |
 | **Database**         | PostgreSQL                           |
 | **Port**             | 8015                                 |
 | **Responsibilities** | PDF E-Statement generation & storage |
@@ -593,7 +593,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                              |
 | -------------------- | -------------------------------------------------- |
-| **Technology**       | Java 21, Quarkus 3.x (Native)                      |
+| **Technology**       | Java 25, Quarkus 3.x (Native)                      |
 | **Database**         | PostgreSQL                                         |
 | **Port**             | 8021                                               |
 | **Responsibilities** | Centralized OpenAPI Docs & Sandbox, partner portal |
@@ -604,7 +604,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                               |
 | -------------------- | --------------------------------------------------- |
-| **Technology**       | Java 21, Quarkus 3.x (Native)                       |
+| **Technology**       | Java 25, Quarkus 3.x (Native)                       |
 | **Database**         | PostgreSQL                                          |
 | **Port**             | 8080                                                |
 | **Responsibilities** | API Gateway, Routing, Rate Limiting, Authentication |
@@ -615,7 +615,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                                 |
 | -------------------- | ----------------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                            |
+| **Technology**       | Java 25, Spring Boot 4.1.x                            |
 | **Database**         | PostgreSQL                                            |
 | **Port**             | 8087                                                  |
 | **Responsibilities** | Regulatory compliance, AML/CFT, transaction screening |
@@ -626,7 +626,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                |
 | -------------------- | ------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 4.1.x           |
+| **Technology**       | Java 25, Spring Boot 4.1.x           |
 | **Database**         | PostgreSQL                           |
 | **Port**             | 8095                                 |
 | **Responsibilities** | Banners, Promos, Dynamic App Content |
@@ -637,7 +637,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                     |
 | -------------------- | ----------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                |
+| **Technology**       | Java 25, Spring Boot 4.1.x                |
 | **Database**         | PostgreSQL                                |
 | **Port**             | 8096                                      |
 | **Responsibilities** | Currency exchange rates, conversion logic |
@@ -648,7 +648,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                                  |
 | -------------------- | ------------------------------------------------------ |
-| **Technology**       | Java 21, Spring Boot 4.1.x                             |
+| **Technology**       | Java 25, Spring Boot 4.1.x                             |
 | **Database**         | PostgreSQL                                             |
 | **Port**             | 8098                                                   |
 | **Responsibilities** | Refund processing, dispute resolution, chargeback mgmt |
@@ -659,7 +659,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                        |
 | -------------------- | -------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                   |
+| **Technology**       | Java 25, Spring Boot 4.1.x                   |
 | **Database**         | PostgreSQL                                   |
 | **Port**             | 8100                                         |
 | **Responsibilities** | Partner product registry, catalog management |
@@ -670,7 +670,7 @@ CREATE TABLE ledger_entries (
 
 | Attribute            | Value                                           |
 | -------------------- | ----------------------------------------------- |
-| **Technology**       | Java 21, Spring Boot 4.1.x                      |
+| **Technology**       | Java 25, Spring Boot 4.1.x                      |
 | **Database**         | PostgreSQL                                      |
 | **Port**             | 8101                                            |
 | **Responsibilities** | External system integration, adapter management |

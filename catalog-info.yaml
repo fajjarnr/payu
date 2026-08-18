@@ -42,7 +42,7 @@ spec:
 
 ---
 # ============================================================
-# CORE BANKING SERVICES (Spring Boot 3.4 / Red Hat Runtimes)
+# CORE BANKING SERVICES (Spring Boot 4.1 / Red Hat Runtimes)
 # ============================================================
 
 apiVersion: backstage.io/v1alpha1
@@ -232,7 +232,7 @@ spec:
     - component:transaction-service
 
 # ============================================================
-# SUPPORTING SERVICES (Spring Boot 3.4)
+# SUPPORTING SERVICES (Spring Boot 4.1)
 # ============================================================
 
 ---

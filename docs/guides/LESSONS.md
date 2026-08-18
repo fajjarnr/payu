@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-281: Keep Architecture Docs in Lockstep With the Build (2026-08-18)
+
+**Context**: DX-DOCS-DRIFT-001 — `SERVICE_CATALOG.md`, `ARCHITECTURE.md`, and `catalog-info.yaml` documented Java 21 / Spring Boot 3.4 and only 4 simulators while the actual build runs Java 25 / Spring Boot 4.1 / Quarkus 3.x with 5 simulators (biller-simulator missing from the catalog).
+
+**Lesson**: When the platform stack or service inventory changes, update every architecture-facing artifact in the same change (service catalog counts/totals, per-service `Technology` rows, and Backstage `catalog-info.yaml` version headers). Verify against the source of truth (`backend/pom.xml`, per-service `java.version`/`maven.compiler`/`<release>`, `backend/simulators/`, `backend/shared/`) rather than trusting stale docs.
+
+**Applied evidence**: `grep -n "Java 21\|Spring Boot 3.4"` over the three files now returns exit 1 (no matches); `Java 25` present in 26 SERVICE_CATALOG rows and 21 ARCHITECTURE rows; `biller-simulator` added to the overview table + its own section.
+
 ## L-280: Automate CodeGraph Re-indexing After Large Refactors (2026-08-18)
 
 **Context**: DX-CODEGRAPH-001 — the repo ships a CodeGraph index but had no helper to re-sync/validate it, so after large refactors the index drifted and codegraph reads went stale.
