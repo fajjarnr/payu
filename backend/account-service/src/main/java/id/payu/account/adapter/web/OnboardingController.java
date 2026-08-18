@@ -53,14 +53,14 @@ public class OnboardingController {
             level = AuditLevel.INFO
     )
     @Operation(summary = "Register new user", description = "Create a new user account with email and password")
-    @ApiResponse(responseCode = "200", description = "User registered successfully",
+    @ApiResponse(responseCode = "201", description = "User registered successfully",
             content = @Content(schema = @Schema(implementation = RegisterUserResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid request data")
     @ApiResponse(responseCode = "409", description = "User already exists")
     public CompletableFuture<ResponseEntity<RegisterUserResponse>> register(@Valid @RequestBody RegisterUserRequest request) {
         return registerUserUseCase.registerUser(request)
                 .orTimeout(30, TimeUnit.SECONDS) // BUG-BE-140: Prevent indefinite hang on async registration
-                .thenApply(user -> ResponseEntity.ok(toResponse(user)));
+                .thenApply(user -> ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(toResponse(user)));
     }
 
     private RegisterUserResponse toResponse(User user) {

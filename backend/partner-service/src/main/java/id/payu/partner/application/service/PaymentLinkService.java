@@ -202,6 +202,7 @@ public class PaymentLinkService {
                 // IMP-2: conditional transition — a link confirmed concurrently is not overwritten
                 if (paymentLinkRepository.markExpiredIfActive(link.getId()) > 0) {
                     transitioned++;
+                    link.setStatus(PaymentLinkStatus.EXPIRED);
                     dispatchPaymentLinkExpiredEvent(link);
                 }
             }

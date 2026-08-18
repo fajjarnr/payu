@@ -2,6 +2,21 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-270: Systemic Security Boundaries, Outbox Isolation, and Decimal-Safe UI Flow (2026-08-18)
+
+**Context**: Full remediation of 30 audit findings across backend services and frontend Next.js application.
+
+**Lesson**:
+- **Isolation of Outbox Publishing from Internal Transfers**: When money has moved (internal debit and credit journal recorded), transient outbox event publishing errors must NOT mark the transaction as `FAILED` without an explicit compensatory reversal. Outbox failures should be logged and retried via durable transactional outbox patterns.
+- **Service Identity vs User Identity with Direct Access Grants**: Checking `azp` alone is insufficient when user clients or public clients share the realm. Verification of internal trusted service requests must assert service account identity patterns (e.g. `preferred_username.startsWith("service-account-")`) or dedicated internal mTLS client credentials.
+- **Frontend Mutation Retries & Idempotency**: Axios retry interceptors on HTTP 429/503 must only retry idempotent HTTP verbs (`GET`, `HEAD`, `OPTIONS`, `PUT`, `DELETE`) and never automatically replay `POST` financial mutations unless protected with an immutable, persisted idempotency key.
+- **Decimal Safety Across Frontend Inputs**: In monetary UI inputs and scheduled transfers, never use `parseInt` or unrestricted integer casting. Always maintain string-based or float decimal inputs (`step="any"`, `parseFloat`, `addCurrency`) to prevent silent truncation of cents/fractions.
+
+**Applied evidence**:
+- Backend reactor: `44/44` modules BUILD SUCCESS.
+- Frontend Next.js build: `86/86` routes SSG/SSR BUILD SUCCESS.
+- Podman local compose stack bumped to SemVer `1.12.0`.
+
 ## L-268: Idempotency Replay Evidence Must Use the Real Fingerprint (2026-08-17)
 
 **Context**: Verifying ARCH-GLOBAL-001, which binds an idempotency key to the canonical request body and request identity at both the shared starter and gateway boundary.

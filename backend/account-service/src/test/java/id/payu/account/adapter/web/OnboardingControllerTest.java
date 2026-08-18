@@ -88,7 +88,7 @@ class OnboardingControllerTest {
     class RegisterEndpoint {
 
         @Test
-        @DisplayName("should return 200 OK when registration is successful")
+        @DisplayName("should return 201 Created when registration is successful")
         void shouldReturnOkWhenRegistrationSuccessful() throws Exception {
             given(registerUserUseCase.registerUser(any(RegisterUserRequest.class)))
                     .willReturn(CompletableFuture.completedFuture(registeredUser));
@@ -100,7 +100,7 @@ class OnboardingControllerTest {
                     .andReturn();
 
             mockMvc.perform(asyncDispatch(mvcResult))
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.userId").value(registeredUser.getId().toString()))
                     .andExpect(jsonPath("$.externalId").value(registeredUser.getExternalId()))
                     .andExpect(jsonPath("$.status").value("ACTIVE"))

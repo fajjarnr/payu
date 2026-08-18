@@ -137,7 +137,7 @@ export default function TransferPage() {
 
     transferMutation.mutate(
       {
-        senderAccountId: data.fromAccountId,
+        senderAccountId: data.fromAccountId || accountId || '',
         recipientAccountNumber: data.toAccountId,
         amount: data.amount,
         description: data.description || '',

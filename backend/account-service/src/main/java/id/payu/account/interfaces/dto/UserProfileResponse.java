@@ -35,4 +35,26 @@ public record UserProfileResponse(
                 user.getKycStatus(),
                 user.getCreatedAt());
     }
+
+    /**
+     * SEC-ACCOUNT-001: Factory with masked NIK for REST responses.
+     */
+    public static UserProfileResponse fromMasked(User user) {
+        return new UserProfileResponse(
+                user.getId(),
+                user.getExternalId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getFullName(),
+                maskNik(user.getNik()),
+                user.getStatus(),
+                user.getKycStatus(),
+                user.getCreatedAt());
+    }
+
+    private static String maskNik(String nik) {
+        if (nik == null || nik.length() <= 6) return "******";
+        return nik.substring(0, 6) + "*".repeat(nik.length() - 6);
+    }
 }

@@ -6,6 +6,8 @@ import id.payu.notification.interfaces.dto.NotificationResponse;
 import id.payu.notification.interfaces.dto.SendNotificationRequest;
 import id.payu.notification.application.service.NotificationService;
 import io.quarkus.security.Authenticated;
+import io.quarkus.security.ForbiddenException;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -46,6 +48,17 @@ public class NotificationResource {
 
     @Inject
     NotificationService notificationService;
+
+    @Inject
+    SecurityIdentity securityIdentity;
+
+    private String callerSubject() {
+        return securityIdentity.getPrincipal().getName();
+    }
+
+    private boolean isAdmin() {
+        return securityIdentity.hasRole("ADMIN");
+    }
 
     /**
      * Send a notification to a user.
@@ -176,6 +189,10 @@ public class NotificationResource {
             example = "20"
         )
         @QueryParam("limit") @DefaultValue("20") int limit) {
+        // SEC-NOTIF-002: listAll restricted to admin
+        if (!isAdmin()) {
+            throw new ForbiddenException("Only admins may list all notifications");
+        }
         return notificationService.getAllNotifications(limit)
                 .stream()
                 .map(NotificationResponse::from)
@@ -243,7 +260,13 @@ public class NotificationResource {
         )
         @PathParam("id") UUID id) {
         return notificationService.getById(id)
-                .map(n -> Response.ok(NotificationResponse.from(n)).build())
+                .map(n -> {
+                    // SEC-NOTIF-002: ownership check
+                    if (!isAdmin() && !callerSubject().equals(n.getUserId())) {
+                        throw new ForbiddenException("Access denied");
+                    }
+                    return Response.ok(NotificationResponse.from(n)).build();
+                })
                 .orElse(Response.status(Response.Status.NOT_FOUND)
                         .entity(new ErrorResponse("NotificationEntity not found"))
                         .build());
@@ -311,6 +334,10 @@ public class NotificationResource {
             example = "20"
         )
         @QueryParam("limit") @DefaultValue("20") int limit) {
+        // SEC-NOTIF-002: user can only access own notifications
+        if (!isAdmin() && !callerSubject().equals(userId)) {
+            throw new ForbiddenException("Access denied: cannot access another user's notifications");
+        }
         return notificationService.getByUserId(userId, limit)
                 .stream()
                 .map(NotificationResponse::from)
@@ -379,6 +406,12 @@ public class NotificationResource {
             example = "123e4567-e89b-12d3-a456-426614174000"
         )
         @PathParam("id") UUID id) {
+        // SEC-NOTIF-002: ownership check before marking as read
+        notificationService.getById(id).ifPresent(n -> {
+            if (!isAdmin() && !callerSubject().equals(n.getUserId())) {
+                throw new ForbiddenException("Access denied");
+            }
+        });
         notificationService.markAsRead(id);
         return Response.ok().entity(new SuccessResponse("Marked as read")).build();
     }

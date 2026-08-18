@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCorrelationId, withCorrelation } from '@/lib/logger';
 
 const DEFAULT_GATEWAY_URL = 'http://gateway-service:8080';
-const MAX_BODY_BYTES = 1_048_576;
+const MAX_BODY_BYTES = 10_485_760; // 10 MiB for base64 KYC documents
 const UPSTREAM_TIMEOUT_MS = 10_000;
 
 class RequestBodyTooLargeError extends Error {}

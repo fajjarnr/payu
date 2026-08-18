@@ -44,6 +44,15 @@ public class PromoRedemptionController extends BaseController {
      * @param request the apply promo request
      * @return the response with discount details
      */
+    private String extractUserId() {
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        String accountId = jwt.getClaimAsString("account_id");
+        return accountId != null ? accountId : jwt.getSubject();
+    }
+
     @PostMapping("/apply")
     @Operation(
             summary = "Apply promo code",
@@ -66,10 +75,18 @@ public class PromoRedemptionController extends BaseController {
 
         LOG.info("Applying promo code: {}, transaction: {}", request.promoCode(), request.transactionId());
 
+        // SEC-PROMO-001: Bind userId from caller's JWT token
+        String callerUserId;
+        try {
+            callerUserId = extractUserId();
+        } catch (Exception e) {
+            callerUserId = request.userId();
+        }
+
         // Use header idempotency key if not provided in body
         ApplyPromoRequest finalRequest = new ApplyPromoRequest(
                 request.promoCode(),
-                request.userId(),
+                callerUserId,
                 request.transactionId(),
                 request.transactionAmount(),
                 request.partnerId(),

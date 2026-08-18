@@ -27,16 +27,17 @@ export const useUpdateUser = () => {
       UserService.updateUser(userId, data),
     ...MutationPresets.nonFinancial,
     onSuccess: (response) => {
-      // Update the auth store with new user data
+      // WEB-AUTH-001: Update user data while preserving active accountId
       if (response.user) {
-        setAuth(response.user, response.user.id);
+        const currentAccountId = useAuthStore.getState().accountId || response.user.id;
+        setAuth(response.user, currentAccountId);
       }
       // Invalidate user queries to refetch
       queryClient.invalidateQueries({ queryKey: ['user'] });
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
     onError: (error) => {
-      console.error('Update user failed:', error);
+      console.error('Update user failed:', error instanceof Error ? error.message : 'Unknown error');
     },
   });
 };

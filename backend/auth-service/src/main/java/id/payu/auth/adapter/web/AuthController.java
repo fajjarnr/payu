@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -429,7 +430,7 @@ public class AuthController extends BaseController {
             description = "Removes a user from Keycloak. Called internally by account-service "
                     + "as saga compensation when registration fails after IAM provisioning."
     )
-    @SecurityRequirements
+    @PreAuthorize("hasRole('ADMIN')")
     @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "delete-user")
     public ResponseEntity<ApiResponse<?>> deleteUser(
             @PathVariable String userId

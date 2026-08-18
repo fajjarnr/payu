@@ -92,6 +92,9 @@ public class DisbursementController {
         DisbursementEntity disbursement = disbursementUseCase.getDisbursement(id)
                 .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found: " + id));
 
+        // SEC-DISB-001: Verify caller owns the source account
+        authorizationService.verifyAccountOwnership(disbursement.getSourceAccountId(), extractUserId());
+
         return ResponseEntity.ok(DisbursementResponse.fromEntity(disbursement));
     }
 
@@ -103,6 +106,9 @@ public class DisbursementController {
 
         DisbursementEntity disbursement = disbursementUseCase.findByIdempotencyKey(key)
                 .orElseThrow(() -> new IllegalArgumentException("DisbursementEntity not found for key: " + key));
+
+        // SEC-DISB-001: Verify caller owns the source account
+        authorizationService.verifyAccountOwnership(disbursement.getSourceAccountId(), extractUserId());
 
         return ResponseEntity.ok(DisbursementResponse.fromEntity(disbursement));
     }

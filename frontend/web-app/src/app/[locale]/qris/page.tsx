@@ -3,14 +3,47 @@
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { QrCode, Camera, History, Image as ImageIcon, ShieldCheck, Info } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function QRISPage() {
    
-  const [_isScanning, _setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [showMyQr, setShowMyQr] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleToggleCamera = () => {
+    setIsScanning(!isScanning);
+    if (!isScanning) {
+      toast.info('Kamera aktif — arahkan ke kode QRIS');
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIsScanning(true);
+      setTimeout(() => {
+        setIsScanning(false);
+        toast.success(`QR Code dari "${file.name}" terdeteksi: Merchant PayU Simulator`);
+      }, 1000);
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-12">
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          className="hidden"
+        />
+
         <div className="flex justify-between items-end">
           <div>
             <h2 className="text-3xl font-bold text-foreground ">Pembayaran QRIS</h2>
@@ -29,15 +62,17 @@ export default function QRISPage() {
               <div className="relative z-10 w-full max-w-md text-center space-y-12">
                 <div className="relative aspect-square max-w-[350px] xl:max-w-[400px] mx-auto">
                     {/* Scanner Frame */}
-                    <div className="absolute inset-0 bg-muted/20 rounded-2xl border-2 border-dashed border-border group-hover:border-emerald-500/40 transition-all duration-700" />
+                    <div className={`absolute inset-0 rounded-2xl border-2 border-dashed transition-all duration-700 ${isScanning ? 'bg-emerald-500/10 border-emerald-500' : 'bg-muted/20 border-border group-hover:border-emerald-500/40'}`} />
                     <div className="absolute inset-8 xl:inset-10 border-2 border-emerald-500/20 rounded-xl animate-pulse" />
                     
                     {/* Floating Scanner Icon */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className="w-22 h-22 xl:w-24 xl:h-24 bg-background rounded-2xl flex items-center justify-center mb-5 shadow-2xl border border-border group-hover:scale-110 transition-transform duration-500">
-                            <Camera className="h-9 w-9 xl:h-10 xl:w-10 text-emerald-500" />
+                        <div className={`w-22 h-22 xl:w-24 xl:h-24 bg-background rounded-2xl flex items-center justify-center mb-5 shadow-2xl border border-border transition-transform duration-500 ${isScanning ? 'scale-110 ring-4 ring-emerald-500/30' : 'group-hover:scale-110'}`}>
+                            <Camera className={`h-9 w-9 xl:h-10 xl:w-10 ${isScanning ? 'text-emerald-400 animate-pulse' : 'text-emerald-500'}`} />
                         </div>
-                        <p className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase opacity-40">Scanning for QRIS Codes...</p>
+                        <p className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase opacity-40">
+                          {isScanning ? 'Kamera Aktif — Mengarahkan ke QR...' : 'Scanning for QRIS Codes...'}
+                        </p>
                     </div>
 
                     {/* Corner Borders */}
@@ -48,10 +83,16 @@ export default function QRISPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-5 max-w-sm mx-auto">
-                  <button className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-5 rounded-xl font-bold text-xs tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase">
-                    <Camera className="h-4 w-4" /> Buka Kamera
+                  <button 
+                    onClick={handleToggleCamera}
+                    data-testid="qris-camera-button"
+                    className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-5 rounded-xl font-bold text-xs tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase">
+                    <Camera className="h-4 w-4" /> {isScanning ? 'Tutup Kamera' : 'Buka Kamera'}
                   </button>
-                  <button className="flex-1 bg-muted/40 text-foreground py-5 rounded-xl font-bold text-xs tracking-[0.2em] border border-border hover:bg-muted/60 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase">
+                  <button 
+                    onClick={handleUploadClick}
+                    data-testid="qris-upload-button"
+                    className="flex-1 bg-muted/40 text-foreground py-5 rounded-xl font-bold text-xs tracking-[0.2em] border border-border hover:bg-muted/60 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase">
                     <ImageIcon className="h-4 w-4 text-emerald-500" /> Unggah Foto
                   </button>
                 </div>
@@ -65,7 +106,11 @@ export default function QRISPage() {
                     <History className="h-5 w-5 text-emerald-500" />
                     <h3 className="text-lg xl:text-xl font-bold text-foreground">Aktivitas Terakhir</h3>
                 </div>
-                <button className="text-xs font-bold text-emerald-600 tracking-[0.2em] hover:text-emerald-500 transition-colors uppercase border-b border-emerald-500/20">Lihat Semua</button>
+                <button 
+                  onClick={() => toast.info('Menampilkan semua transaksi QRIS')}
+                  className="text-xs font-bold text-emerald-600 tracking-[0.2em] hover:text-emerald-500 transition-colors uppercase border-b border-emerald-500/20">
+                  Lihat Semua
+                </button>
               </div>
 
               <div className="space-y-4">
@@ -118,14 +163,19 @@ export default function QRISPage() {
                 </div>
                 
                 <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 mb-8 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
-                   <QrCode className="h-32 w-32 text-white/5" />
-                   <div className="absolute inset-0 flex items-center justify-center">
-                       <p className="text-xs font-bold text-white/10 tracking-[0.2em] uppercase origin-center -rotate-12">Authorized Only</p>
-                   </div>
+                   <QrCode className={`h-32 w-32 transition-all ${showMyQr ? 'text-emerald-400 scale-105' : 'text-white/20'}`} />
+                   {!showMyQr && (
+                     <div className="absolute inset-0 flex items-center justify-center">
+                         <p className="text-xs font-bold text-white/30 tracking-[0.2em] uppercase origin-center -rotate-12">Authorized Only</p>
+                     </div>
+                   )}
                 </div>
                 
-                <button className="w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 rounded-xl font-bold text-xs tracking-[0.2em] transition-all border border-emerald-600/30 uppercase">
-                    Tampilkan Kode Saya
+                <button 
+                    onClick={() => setShowMyQr(!showMyQr)}
+                    data-testid="qris-show-personal-button"
+                    className="w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 rounded-xl font-bold text-xs tracking-[0.2em] transition-all border border-emerald-600/30 uppercase">
+                    {showMyQr ? 'Sembunyikan Kode' : 'Tampilkan Kode Saya'}
                 </button>
               </div>
               <div className="absolute top-[-30px] left-[-30px] w-40 h-40 bg-emerald-500/10 rounded-full blur-[80px]" />

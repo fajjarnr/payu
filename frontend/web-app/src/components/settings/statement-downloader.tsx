@@ -32,23 +32,31 @@ export default function StatementDownloader() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('monthly');
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [page, setPage] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(false);
 
   // Available years for statement generation
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i);
 
   // Load statements from API
-  const loadStatements = useCallback(async () => {
+  const loadStatements = useCallback(async (pageNum: number = 0) => {
     const { accountId: acctId } = useAuthStore.getState();
     if (!acctId) return;
     try {
       setIsLoading(true);
       setError(null);
-      const result = await StatementService.listStatements();
+      const result = await StatementService.listStatements(pageNum);
       const data = result.content;
-      setStatements(data);
+      if (pageNum === 0) {
+        setStatements(data);
+      } else {
+        setStatements(prev => [...prev, ...data]);
+      }
+      setPage(pageNum);
+      setHasMore(!result.last && result.totalPages > pageNum + 1);
     } catch (err) {
-      console.error('Failed to load statements:', err);
+      console.error('Failed to load statements:', err instanceof Error ? err.message : 'Unknown error');
       setError(t('history.errorLoad'));
     } finally {
       setIsLoading(false);
@@ -57,7 +65,7 @@ export default function StatementDownloader() {
 
   // Load statements on mount
   useEffect(() => {
-    loadStatements();
+    loadStatements(0);
   }, [loadStatements]);
 
   // BUG-FE-099: Read from store directly inside async handler to avoid stale closure
@@ -412,10 +420,10 @@ export default function StatementDownloader() {
         </div>
 
         {/* Load More Button */}
-        {!isLoading && statements.length > 0 && (
+        {!isLoading && statements.length > 0 && hasMore && (
           <div className="relative z-10 pt-4 border-t border-border">
             <button
-              onClick={loadStatements}
+              onClick={() => loadStatements(page + 1)}
               className="w-full py-4 text-center text-xs font-bold text-primary hover:text-bank-emerald transition-all uppercase tracking-wider"
               {...getA11yProps({ label: 'Muat lebih banyak e-statement' })}
             >

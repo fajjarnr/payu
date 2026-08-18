@@ -44,7 +44,6 @@ public class FxConversionService implements FxConversionUseCase {
 
     @Override
     @CircuitBreaker(name = "fx", fallbackMethod = "createConversionFallback")
-    @Retry(name = "fx")
     public FxConversion createConversion(FxConversion conversion) {
         FxRate rate = fxRateUseCase.getCurrentRate(conversion.getFromCurrency(), conversion.getToCurrency());
         

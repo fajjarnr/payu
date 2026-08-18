@@ -107,29 +107,39 @@ export class TransactionService {
   }
 
   async updateScheduledTransfer(id: string, request: Partial<CreateScheduledTransferRequest>): Promise<ScheduledTransfer> {
-    const response = await api.put<ScheduledTransfer>(`/scheduled-transfers/${id}`, request);
+    const response = await api.put<ScheduledTransfer>(`/scheduled-transfers/${id}`, request, {
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    });
     return response.data;
   }
 
   async cancelScheduledTransfer(id: string): Promise<ScheduledTransfer> {
-    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/cancel`);
+    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/cancel`, {}, {
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    });
     return response.data;
   }
 
   async pauseScheduledTransfer(id: string): Promise<ScheduledTransfer> {
-    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/pause`);
+    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/pause`, {}, {
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    });
     return response.data;
   }
 
   async resumeScheduledTransfer(id: string): Promise<ScheduledTransfer> {
-    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/resume`);
+    const response = await api.post<ScheduledTransfer>(`/scheduled-transfers/${id}/resume`, {}, {
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    });
     return response.data;
   }
 
   // === Split Bills (FE-GAP-008) ===
 
   async createSplitBill(request: CreateSplitBillRequest): Promise<SplitBill> {
-    const response = await api.post<SplitBill>('/split-bills', request);
+    const response = await api.post<SplitBill>('/split-bills', request, {
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    });
     return response.data;
   }
 
@@ -144,17 +154,23 @@ export class TransactionService {
   }
 
   async updateSplitBill(id: string, request: Partial<CreateSplitBillRequest>): Promise<SplitBill> {
-    const response = await api.put<SplitBill>(`/split-bills/${id}`, request);
+    const response = await api.put<SplitBill>(`/split-bills/${id}`, request, {
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    });
     return response.data;
   }
 
   async cancelSplitBill(id: string): Promise<SplitBill> {
-    const response = await api.post<SplitBill>(`/split-bills/${id}/cancel`);
+    const response = await api.post<SplitBill>(`/split-bills/${id}/cancel`, {}, {
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    });
     return response.data;
   }
 
   async activateSplitBill(id: string): Promise<SplitBill> {
-    const response = await api.post<SplitBill>(`/split-bills/${id}/activate`);
+    const response = await api.post<SplitBill>(`/split-bills/${id}/activate`, {}, {
+      headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    });
     return response.data;
   }
 

@@ -150,7 +150,8 @@ export class FxService {
   async createConversion(request: FxConversionRequest): Promise<FxConversionResponse> {
     const response = await api.post<FxConversionResponse>(
       `${this.baseUrl}/conversions`,
-      request
+      request,
+      { headers: { 'X-Idempotency-Key': crypto.randomUUID() } }
     );
     return response.data;
   }
@@ -169,7 +170,9 @@ export class FxService {
 
   async reverseConversion(conversionId: string): Promise<FxConversionResponse> {
     const response = await api.post<FxConversionResponse>(
-      `${this.baseUrl}/conversions/${conversionId}/reverse`
+      `${this.baseUrl}/conversions/${conversionId}/reverse`,
+      {},
+      { headers: { 'X-Idempotency-Key': crypto.randomUUID() } }
     );
     return response.data;
   }

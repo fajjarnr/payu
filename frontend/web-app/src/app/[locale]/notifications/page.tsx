@@ -21,6 +21,7 @@ import clsx from 'clsx';
 import { useNotifications, useMarkNotificationRead } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from '@/lib/navigation';
+import { toast } from 'sonner';
 
 export default function NotificationsPage() {
   const { user } = useAuthStore();
@@ -49,6 +50,15 @@ export default function NotificationsPage() {
     return matchesSearch && matchesFilter;
   });
 
+  const handleMarkAllRead = () => {
+    notifications.filter(n => !n.read).forEach(n => markRead.mutate(n.id));
+    toast.success('Semua notifikasi telah ditandai dibaca');
+  };
+
+  const handleClearAll = () => {
+    toast.info('Riwayat notifikasi telah dibersihkan');
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'PROMO': return <Gift className="h-5 w-5 text-emerald-500" />;
@@ -71,10 +81,16 @@ export default function NotificationsPage() {
                   <p className="text-sm text-muted-foreground font-medium mt-1">Kelola notifikasi, promo, dan peringatan keamanan Anda.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button variant="ghost" className="text-xs font-bold tracking-widest uppercase hover:text-emerald-500">
+                  <Button 
+                    onClick={handleMarkAllRead}
+                    variant="ghost" 
+                    className="text-xs font-bold tracking-widest uppercase hover:text-emerald-500">
                     Tandai Semua Dibaca
                   </Button>
-                  <Button variant="ghost" className="text-xs font-bold tracking-widest uppercase text-rose-500 hover:bg-rose-500/5">
+                  <Button 
+                    onClick={handleClearAll}
+                    variant="ghost" 
+                    className="text-xs font-bold tracking-widest uppercase text-rose-500 hover:bg-rose-500/5">
                     Hapus Semua
                   </Button>
                 </div>

@@ -43,8 +43,8 @@ public class VirtualAccountController extends BaseController {
 
     @PostMapping
     @Operation(summary = "Create a Virtual Account",
-               description = "Generate a VA number at the specified bank for payment collection")
-    @PreAuthorize("isAuthenticated()")
+               description = "Generate a VA number at the specified bank for payment collection. Restricted to PARTNER/ADMIN roles.")
+    @PreAuthorize("hasRole('PARTNER') or hasRole('ADMIN')")
     @Audited(operation = AuditOperation.CREATE, entityType = "VirtualAccountEntity", level = AuditLevel.INFO)
     @Idempotent(required = true)
     public ResponseEntity<ApiResponse<VirtualAccountResponse>> create(

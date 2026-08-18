@@ -360,8 +360,9 @@ export default function ScheduledTransfersPage() {
               <label className="text-sm font-medium">Jumlah (IDR)</label>
               <Input
                 type="number"
+                step="any"
                 value={editForm.amount}
-                onChange={(e) => setEditForm((prev) => ({ ...prev, amount: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
                 placeholder="100000"
               />
             </div>

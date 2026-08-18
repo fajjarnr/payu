@@ -5,6 +5,7 @@ import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/M
 import { useInvestmentAccount } from '@/hooks';
 import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/lib/currency';
+import { toast } from 'sonner';
 
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
@@ -41,6 +42,20 @@ export default function InvestmentsPage() {
                       {t('accountUnavailable')}
                     </p>
                   )}
+                  <div className="mt-6 flex flex-wrap gap-4">
+                    <button
+                      onClick={() => toast.info('Katalog produk investasi: Reksadana Pasar Uang & Saham')}
+                      data-testid="invest-buy-button"
+                      className="rounded-xl bg-primary px-6 py-3 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:bg-primary/90 transition-all active:scale-95">
+                      Beli Produk
+                    </button>
+                    <button
+                      onClick={() => toast.info('Pilih produk investasi dari portofolio untuk dijual')}
+                      data-testid="invest-sell-button"
+                      className="rounded-xl border border-border bg-muted/40 px-6 py-3 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-muted/60 transition-all active:scale-95">
+                      Jual Produk
+                    </button>
+                  </div>
                 </section>
               </StaggerItem>
 

@@ -92,7 +92,12 @@ public class WalletController extends BaseController {
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
             return false;
         }
-        return trustedServiceClientId.equals(jwt.getClaimAsString("azp"));
+        // SEC-WALLET-002: Verify client identity and ensure token is not a regular user token
+        boolean matchesClient = trustedServiceClientId.equals(jwt.getClaimAsString("azp"));
+        boolean hasUserAccountId = jwt.getClaimAsString("account_id") != null;
+        String preferredUsername = jwt.getClaimAsString("preferred_username");
+        boolean isExplicitServiceAccount = preferredUsername != null && preferredUsername.startsWith("service-account-");
+        return matchesClient && (!hasUserAccountId || isExplicitServiceAccount);
     }
 
     /**
@@ -252,17 +257,19 @@ public class WalletController extends BaseController {
     )
     @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Credit wallet", description = "Credit amount to wallet balance")
+    @Operation(summary = "Credit wallet", description = "Credit amount to wallet balance. Restricted to trusted service accounts.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Amount credited successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Wallet not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - account access denied")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - only trusted services may credit wallets")
     public ResponseEntity<ApiResponse<Map<String, String>>> credit(
             @Parameter(description = "Account ID", required = true) @PathVariable String accountId,
             @Valid @RequestBody CreditRequest request) {
-        // BUG-BE-150: Verify caller owns the account
-        verifyAccountOwnership(accountId);
+        // SEC-WALLET-001: Credit is a privileged operation — only trusted service accounts
+        if (!isTrustedServiceRequest()) {
+            throw new AccessDeniedException("Only trusted services may credit wallets");
+        }
 
         log.info("Crediting {} to account: {}", request.getAmount(), maskId(accountId));
 

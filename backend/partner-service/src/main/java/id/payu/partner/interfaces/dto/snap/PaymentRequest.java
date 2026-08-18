@@ -1,12 +1,16 @@
 package id.payu.partner.interfaces.dto.snap;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public class PaymentRequest {
+    @NotBlank(message = "partnerReferenceNo is required")
     @JsonProperty("partnerReferenceNo")
     public String partnerReferenceNo;
     
+    @NotNull(message = "amount is required")
     @JsonProperty("amount")
     public Amount amount;
     

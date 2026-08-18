@@ -25,9 +25,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserAccountControllerTest {
 
     private final UserPersistencePort userPort = mock(UserPersistencePort.class);
-    private final MockMvc mvc = MockMvcBuilders
-            .standaloneSetup(new UserAccountController(userPort))
-            .build();
+    private final MockMvc mvc;
+
+    UserAccountControllerTest() {
+        mvc = MockMvcBuilders
+                .standaloneSetup(new UserAccountController(userPort, "payu-backend"))
+                .build();
+        // Simulate trusted service request for tests
+        org.springframework.security.oauth2.jwt.Jwt jwt = org.springframework.security.oauth2.jwt.Jwt
+                .withTokenValue("test")
+                .header("alg", "RS256")
+                .claim("azp", "payu-backend")
+                .claim("sub", "test-user")
+                .build();
+        org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .setAuthentication(new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt));
+    }
 
     @Test
     void getAccountIdsByUserIdReturnsEmptyWhenUserMissing() throws Exception {

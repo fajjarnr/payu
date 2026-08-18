@@ -62,6 +62,11 @@ public class SplitBillController {
     @ApiResponse(responseCode = "201", description = "Split bill created successfully")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<SplitBillResponse> createSplitBill(@Valid @RequestBody CreateSplitBillRequest request) {
+        // SPLITBILL-SEC-001: Verify caller owns creatorAccountId
+        String userId = extractUserId();
+        if (request.getCreatorAccountId() != null && !request.getCreatorAccountId().toString().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("User is not authorized to create split bill for another account");
+        }
         log.info("Creating split bill: title={}, amount={}", request.getTitle(), request.getTotalAmount());
         SplitBillResponse response = splitBillUseCase.createSplitBill(request);
         return ResponseEntity.ok(response);

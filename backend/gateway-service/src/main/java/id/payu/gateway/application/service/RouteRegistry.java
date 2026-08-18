@@ -144,6 +144,7 @@ public class RouteRegistry {
         // Billing Service
         registerDefault("billers", "billing-service", "/api/v1/billers");
         registerDefault("payments", "billing-service", "/api/v1/payments");
+        registerDefault("billing/payments", "billing-service", "/api/v1/payments");
 
         // Notification Service
         registerDefault("notifications", "notification-service", "/api/v1/notifications");

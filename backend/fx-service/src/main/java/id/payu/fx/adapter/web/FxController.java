@@ -181,12 +181,24 @@ public class FxController extends BaseController {
     @Operation(summary = "Get conversion by ID", description = "Retrieve conversion transaction details")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Conversion found",
             content = @Content(schema = @Schema(implementation = FxConversionResponse.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - cannot access another user's conversion")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Conversion not found")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     public ResponseEntity<ApiResponse<FxConversionResponse>> getConversion(
-            @Parameter(description = "Conversion ID", required = true) @PathVariable UUID conversionId) {
+            @Parameter(description = "Conversion ID", required = true) @PathVariable UUID conversionId,
+            @AuthenticationPrincipal Jwt jwt) {
 
+        String accountId = jwt.getClaimAsString("account_id");
+        if (accountId == null) {
+            accountId = jwt.getSubject();
+        }
         FxConversion conversion = fxConversionService.getConversion(conversionId);
+
+        if (!conversion.getAccountId().equals(accountId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("FX_403", "Cannot access another user's conversion"));
+        }
+
         return ok(toResponse(conversion));
     }
 

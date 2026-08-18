@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.12.0] - 2026-08-18
+
+### Security & Financial Remediation
+- **SEC-WALLET-001 & SEC-WALLET-002**: Restricted `/wallets/{accountId}/credit` to trusted internal callers and tightened `isTrustedServiceRequest` to prevent unauthorized credit mutations.
+- **SEC-AUTH-001 & SEC-ACCOUNT-001**: Added `@PreAuthorize("hasRole('ADMIN')")` for user deletion, enforced account ownership on user profiles, and masked NIK in responses.
+- **SEC-NOTIF-002**: Bound notification queries and mark-read operations to caller `SecurityIdentity` in Quarkus notification-service.
+- **SEC-VA-001 & SEC-DISB-001 & PAY-DISB-001**: Added role and ownership authorization on VA and disbursement endpoints; added balance reservation release compensation on failed entity persistence.
+- **SEC-STATEMENT-001 & SEC-KYC-001**: Restricted partner statements to partner-scoped customers and updated Dukcapil cache key to `nik + ':' + fullName`.
+- **SEC-PROMO-001 & SEC-REFERRAL-001 & PROMO-REPLAY-001**: Bound promo redemption and referral creation to authenticated JWT subject, and added `@NotBlank` validation on `transactionId`.
+- **SNAP-IDM-001 & SNAP-TIME-001**: Enforced required `partnerReferenceNo` and strict 300s window in SNAP-BI payment flows.
+- **FX-IDOR-001 & FX-IDM-001**: Enforced account ownership checks on conversion details and removed un-idempotent `@Retry` around wallet mutations.
+- **SPLITBILL-SEC-001 & PAY-LINK-001 & PAY-LINK-002**: Enforced creator account authorization, validated payment methods, and fixed stale entity status before webhook dispatch.
+
+### Frontend & BFF
+- **WEB-BILL-001 & WEB-TRANSFER-001 & WEB-QRIS-001**: Aligned payments endpoint with idempotency keys, fixed recipient account fallback, and added interactive scanner state and file upload handlers.
+- **WEB-KYC-001 & WEB-IDM-001 & WEB-AUTH-001 & WEB-LOG-001**: Increased BFF body size limit to 10MB, guarded 429 auto-retry on mutations, preserved `accountId` on profile updates, and sanitized console error logs.
+- **WEB-INVEST-001 & WEB-LEND-001 & WEB-DEP-001**: Added interactive Buy/Sell actions, converted loan transaction IDs to string, and upgraded nanoid to patch high-severity vulnerability.
+- **WEB-STATEMENT-002 & WEB-NOTIF-001 & WEB-MONEY-001 & WEB-WALLET-001 & WEB-TXN-001 & WEB-QA-001**: Added statement pagination, wired notification handlers, preserved decimal precision, calculated dynamic reserve balance %, fixed credit/debit calculation, and enabled standard headless Chromium in Playwright config.
+
+### Verification & Infrastructure
+- Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
+- Next.js production build (`86/86` routes) BUILD SUCCESS with zero errors.
+- Advanced local app image tags in `podman-compose.yml` to SemVer `1.12.0`.
+
 ## [1.11.16] - 2026-08-17
 
 ### Fixed

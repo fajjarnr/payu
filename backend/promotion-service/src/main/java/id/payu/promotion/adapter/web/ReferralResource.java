@@ -23,6 +23,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/referrals")
 @Tag(name = "Referrals", description = "ReferralEntity management APIs")
 @SecurityRequirement(name = "bearerAuth")
+@org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
 public class ReferralResource {
 
     private final ReferralService referralService;

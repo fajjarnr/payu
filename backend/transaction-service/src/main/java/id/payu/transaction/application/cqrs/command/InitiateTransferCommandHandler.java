@@ -271,6 +271,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
      * reserve→commit→credit saga (with :REFUND compensation) is no longer needed.
      */
     private void processInternalTransfer(TransactionEntity transaction, InitiateTransferCommand command) {
+        boolean transferSucceeded = false;
         try {
             walletServicePort.transferBalance(
                     command.senderAccountId().toString(),
@@ -278,17 +279,29 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                     command.amount().getAmount(),
                     transaction.getId().toString()
             );
+            transferSucceeded = true;
             transaction.setStatus(TransactionStatus.COMPLETED);
             transaction.setCompletedAt(java.time.Instant.now());
-            eventPublisherPort.publishTransactionCompleted(transaction);
         } catch (Exception e) {
             log.error("Internal transfer failed, no compensation needed (atomic 1-hop). TransactionEntity: {}, Error: {}",
                     transaction.getId(), e.getMessage());
             transaction.setStatus(TransactionStatus.FAILED);
             transaction.setFailureReason("Internal transfer failed: " + e.getMessage());
-            eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
+            try {
+                eventPublisherPort.publishTransactionFailed(transaction, e.getMessage());
+            } catch (Exception pubEx) {
+                log.warn("Failed to publish transaction failed event for {}: {}", transaction.getId(), pubEx.getMessage());
+            }
         } finally {
             transactionPersistencePort.save(transaction);
+        }
+
+        if (transferSucceeded) {
+            try {
+                eventPublisherPort.publishTransactionCompleted(transaction);
+            } catch (Exception e) {
+                log.warn("Failed to publish transaction completed event for {}: {}", transaction.getId(), e.getMessage());
+            }
         }
     }
 

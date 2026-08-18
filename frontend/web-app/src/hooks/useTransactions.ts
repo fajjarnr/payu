@@ -37,7 +37,7 @@ export const useInitiateTransfer = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error) => {
-      console.error('Transfer failed:', error);
+      console.error('Transfer failed:', error instanceof Error ? error.message : 'Unknown error');
     }
   });
 };
@@ -53,7 +53,7 @@ export const useProcessQrisPayment = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error) => {
-      console.error('QRIS payment failed:', error);
+      console.error('QRIS payment failed:', error instanceof Error ? error.message : 'Unknown error');
     }
   });
 };
@@ -68,7 +68,7 @@ export const useCancelTransaction = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error) => {
-      console.error('Cancel transaction failed:', error);
+      console.error('Cancel transaction failed:', error instanceof Error ? error.message : 'Unknown error');
     }
   });
 };

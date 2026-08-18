@@ -36,13 +36,27 @@ public class PublicPaymentLinkController extends BaseController {
 
     @PostMapping("/{slug}/confirm")
     @Operation(summary = "Confirm payment on a payment link",
-               description = "Called after payment is processed to mark the link as paid")
+               description = "Called after payment is processed to mark the link as paid. Validates payment method and reference.")
     @Audited(operation = AuditOperation.UPDATE, entityType = "PaymentLinkEntity", level = AuditLevel.INFO)
     @Idempotent(required = true)
     public ResponseEntity<ApiResponse<PaymentLinkResponse>> confirmPayment(
             @PathVariable String slug,
             @RequestParam String paymentMethod,
             @RequestParam String paymentReference) {
+        // PAY-LINK-001: Validate inputs — reject blank or unknown values
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("PAY_001", "paymentMethod is required"));
+        }
+        if (paymentReference == null || paymentReference.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("PAY_002", "paymentReference is required"));
+        }
+        if (!java.util.Set.of("BANK_TRANSFER", "VA", "QRIS", "EWALLET", "CREDIT_CARD", "DEBIT_CARD")
+                .contains(paymentMethod.toUpperCase())) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("PAY_003", "Unknown paymentMethod: " + paymentMethod));
+        }
         PaymentLinkResponse response = paymentLinkService.confirmPayment(slug, paymentMethod, paymentReference);
         return ok(response);
     }

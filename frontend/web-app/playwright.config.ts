@@ -39,8 +39,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 720 },
-        // Use system Google Chrome (faster than snap Chromium)
-        channel: 'chrome',
       },
     },
     // Temporarily disable other browsers to focus on Chromium first

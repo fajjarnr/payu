@@ -38,7 +38,7 @@ export default function BillsPage() {
  const { data: recentPayments, isLoading } = useQuery({
   queryKey: ['recent-payments', accountId],
   queryFn: async () => {
-   const response = await api.get('/billing/payments?size=5');
+   const response = await api.get('/payments?size=5');
    return response.data;
   },
   enabled: !!accountId
@@ -46,7 +46,9 @@ export default function BillsPage() {
 
  const paymentMutation = useMutation({
   mutationFn: (data: CreatePaymentRequest) => {
-   return api.post('/billing/payments', data);
+   return api.post('/payments', data, {
+    headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+   });
   },
   onSuccess: () => {
    addToast(`Pembayaran ${selectedBiller?.name} sebesar ${formatCurrency(amount)} telah diproses.`, 'success');

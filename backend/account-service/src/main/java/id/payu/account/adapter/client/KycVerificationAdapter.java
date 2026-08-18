@@ -51,7 +51,7 @@ public class KycVerificationAdapter implements KycVerificationPort {
     @Override
     @CircuitBreaker(name = "dukcapilService", fallbackMethod = "verifyNikFallback")
     @Retry(name = "dukcapilService")
-    @Cacheable(value = "nikVerification", key = "#request.nik()", unless = "#result == null")
+    @Cacheable(value = "nikVerification", key = "#request.nik() + ':' + #request.fullName().trim().toLowerCase()", unless = "#result == null")
     public VerifyNikResponse verifyNik(VerifyNikRequest request) {
         String requestId = UUID.randomUUID().toString();
         String maskedNik = maskNik(request.nik());

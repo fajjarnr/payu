@@ -74,6 +74,14 @@ public class SnapBiPaymentService {
                     null);
         }
 
+        if (isBlank(request.partnerReferenceNo)) {
+            return new PaymentResponse(
+                    "4002501",
+                    "partnerReferenceNo is required",
+                    null,
+                    null);
+        }
+
         if (isBlank(request.sourceAccountNo) || isBlank(request.beneficiaryAccountNo)) {
             return new PaymentResponse(
                     "4002501",

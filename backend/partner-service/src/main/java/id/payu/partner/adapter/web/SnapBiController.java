@@ -69,7 +69,7 @@ public class SnapBiController {
             OffsetDateTime requestTime = OffsetDateTime.parse(timestamp);
             OffsetDateTime now = OffsetDateTime.now();
             Duration diff = Duration.between(requestTime, now).abs();
-            return diff.toMinutes() <= 5;
+            return diff.toSeconds() <= 300;
         } catch (DateTimeParseException e) {
             return false;
         }

@@ -1,6 +1,50 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
-## Deploy 1.11.16 (2026-08-17)
+## Deploy 1.12.0 (2026-08-18)
+
+- **Platform Audit Remediation (30/30 Findings CLOSED)**: Complete remediation of all findings across backend services and Next.js web application:
+  - **Batch 1 (Critical Security & Backend)**:
+    - `SEC-WALLET-001`: Restricted `/wallets/{accountId}/credit` to internal trusted services with role checks.
+    - `SEC-AUTH-001`: Added `@PreAuthorize("hasRole('ADMIN')")` on user deletion in `AuthController`.
+    - `SEC-ACCOUNT-001`: Enforced account ownership and masked NIK in `UserAccountController`.
+    - `SEC-NOTIF-002`: Injected Quarkus `SecurityIdentity` to enforce subject binding on notifications.
+    - `SEC-VA-001`: Enforced `PARTNER`/`ADMIN` role checks on VA generation in `VirtualAccountController`.
+    - `PAY-LINK-001`: Added validation on public payment link confirmations in `PublicPaymentLinkController`.
+    - `PAY-SETTLE-001`: Guarded settlement batch completion on missing/pending entries in `SettlementService`.
+  - **Batch 2 (Critical Web & Financial)**:
+    - `WEB-BILL-001`: Aligned billing payments endpoint to `/payments` with `X-Idempotency-Key` and added route alias in Gateway.
+    - `WEB-TRANSFER-001`: Fixed `fromAccountId` fallback for manual recipient input in transfer page.
+    - `WEB-QRIS-001`: Interactive scanner toggle, upload handler, and personal QR display in `qris/page.tsx`.
+    - `WEB-KYC-001`: Increased BFF proxy payload limit from 1 MiB to 10 MiB for base64 KYC documents.
+    - `WEB-IDM-001`: Restricted 429 auto-retries in Axios to idempotent methods and attached `X-Idempotency-Key` headers across mutations.
+  - **Batch 3 (Systematic Backend & Web)**:
+    - `SEC-WALLET-002`: Tightened `isTrustedServiceRequest` in `WalletController`.
+    - `TXN-TRANSFER-001`: Isolated outbox event publishing from money transfer completion in `InitiateTransferCommandHandler`.
+    - `SEC-DISB-001` & `PAY-DISB-001`: Enforced disbursement ownership and added balance compensation on persistence errors.
+    - `SEC-STATEMENT-001`: Bound partner statement access to partner customer scope.
+    - `SEC-KYC-001`: Composite cache key (`nik + ':' + fullName`) in `KycVerificationAdapter`.
+    - `SEC-PROMO-001` & `SEC-REFERRAL-001` & `PROMO-REPLAY-001`: Bound authenticated user ID, added `@PreAuthorize`, and enforced required `transactionId`.
+    - `SNAP-IDM-001` & `SNAP-TIME-001`: Enforced `partnerReferenceNo` and strict 300s window in SNAP-BI.
+    - `FX-IDOR-001` & `FX-IDM-001`: Added conversion ownership check and removed unsafe `@Retry`.
+    - `SPLITBILL-SEC-001`: Enforced caller ownership for `creatorAccountId` in `SplitBillController`.
+    - `PAY-LINK-002`: Updated link status to `EXPIRED` before webhook dispatch.
+    - `WEB-AUTH-001` & `WEB-LOG-001`: Fixed PUT path and sanitized error console logging.
+    - `WEB-INVEST-001`: Added interactive Buy/Sell investment actions.
+    - `WEB-LEND-001`: Fixed transaction ID type to string and wired toast alerts.
+    - `WEB-DEP-001`: Resolved high-severity nanoid vulnerability via `npm audit fix`.
+  - **Batch 4 (Minor Polish)**:
+    - `API-CONTRACT-001`: Returned HTTP 201 Created on user registration in `OnboardingController`.
+    - `STATEMENT-PDF-001`: Safe transaction table pagination and boundary handling in `StatementService`.
+    - `WEB-STATEMENT-002`: Added pagination support to statement downloader.
+    - `WEB-NOTIF-001`: Wired mark-all/clear handlers and toast notifications.
+    - `WEB-MONEY-001`: Preserved decimal precision with `parseFloat` and `step="any"`.
+    - `WEB-WALLET-001`: Calculated dynamic reserve balance percentage from live account data.
+    - `WEB-TXN-001`: Correctly classified incoming internal transfers as credit in summary.
+    - `WEB-QA-001`: Removed Chrome system channel constraint in Playwright config.
+- **Build & Verification**:
+  - Full Backend Reactor (`44/44` modules): **100% BUILD SUCCESS** (`mvn -f backend/pom.xml clean package -DskipTests -T 1C`).
+  - Next.js Web App (`86/86` routes): **100% BUILD SUCCESS** (`npm --prefix frontend/web-app run build`).
+  - Podman Compose Stack: image tags bumped to SemVer **`1.12.0`** across all 37 services.
 
 - **ARCH-GLOBAL-001 (VERIFIED)**: shared idempotency and gateway fingerprints bind canonical request bodies to request identity; different payloads return `409`, canonical-equivalent replay returns the cached response. Evidence: api-commons `29/29`, gateway filter `5/5`.
 - **Build**: backend reactor `44/44` BUILD SUCCESS with the serial release command; stale gateway gRPC configuration was removed and the api-portal JaCoCo plugin version was pinned to the parent-managed `0.8.13`.

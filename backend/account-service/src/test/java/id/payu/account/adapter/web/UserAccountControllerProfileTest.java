@@ -34,8 +34,17 @@ class UserAccountControllerProfileTest {
     @BeforeEach
     void setUp() {
         userPersistencePort = mock(UserPersistencePort.class);
-        UserAccountController controller = new UserAccountController(userPersistencePort);
+        UserAccountController controller = new UserAccountController(userPersistencePort, "payu-backend");
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        // Simulate trusted service request for tests
+        org.springframework.security.oauth2.jwt.Jwt jwt = org.springframework.security.oauth2.jwt.Jwt
+                .withTokenValue("test")
+                .header("alg", "RS256")
+                .claim("azp", "payu-backend")
+                .claim("sub", "test-user")
+                .build();
+        org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .setAuthentication(new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt));
     }
 
     private User user() {

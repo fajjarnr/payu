@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreApprovals } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import { formatCurrency } from '@/lib/currency';
+import { toast } from 'sonner';
 
 export default function LendingPage() {
   const { user } = useAuthStore();
@@ -54,7 +55,7 @@ export default function LendingPage() {
     minimumPayment: payLaterData?.minimumPayment ?? '0',
     dueDate: payLaterData?.dueDate ?? '--',
     transactions: (payLaterTxns ?? []).map(t => ({
-      id: Number(t.id) || 0,
+      id: String(t.id),
       merchant: t.merchantName ?? 'Unknown',
       amount: t.amount,
       date: t.createdAt ?? '--',
@@ -88,7 +89,10 @@ export default function LendingPage() {
                   </div>
                   <TabsContent value="paylater" className="mt-0">
                     <ButtonMotion>
-                      <Button data-testid="activate-paylater-button" className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
+                      <Button 
+                        onClick={() => toast.info('Fitur Aktivasi PayLater sedang diproses')}
+                        data-testid="activate-paylater-button" 
+                        className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
                         <Plus className="h-4 w-4" /> Aktifkan PayLater
                       </Button>
                     </ButtonMotion>
@@ -195,7 +199,10 @@ export default function LendingPage() {
                             </div>
                           </div>
                           <ButtonMotion className="w-full">
-                            <Button data-testid={`apply-loan-${i}`} className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
+                            <Button 
+                              onClick={() => toast.success(`Pengajuan ${product.name} telah diterima dan sedang diverifikasi`)}
+                              data-testid={`apply-loan-${i}`} 
+                              className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
                               Ajukan Sekarang <ArrowRight className="h-4 w-4" />
                             </Button>
                           </ButtonMotion>
@@ -218,45 +225,46 @@ export default function LendingPage() {
                             </div>
                             <div>
                               <p className="text-xs font-bold text-white/80 tracking-widest uppercase">PayLater Limit</p>
-                              <h3 className="text-2xl font-bold">
-                                {isLoadingPayLater ? <Skeleton className="h-8 w-32 bg-white/20" /> : formatCurrency(payLaterStats.availableLimit)}
-                              </h3>
+                              <h3 className="text-3xl font-bold tracking-tight mt-1">{formatCurrency(payLaterStats.creditLimit)}</h3>
                             </div>
                           </div>
-                          <p className="text-sm text-white/80">Tersedia untuk belanja sekarang, bayar nanti</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Jatuh Tempo</p>
-                          <div className="flex items-center gap-2 justify-end">
-                            <Calendar className="h-4 w-4" />
-                            <span className="font-bold">
-                                {isLoadingPayLater ? "..." : payLaterStats.dueDate}
-                            </span>
+                          <div className="flex gap-4 text-xs font-bold text-white/80">
+                            <span>Terpakai: {formatCurrency(payLaterStats.usedLimit)}</span>
+                            <span>•</span>
+                            <span>Tersedia: {formatCurrency(payLaterStats.availableLimit)}</span>
                           </div>
+                        </div>
+
+                        <div className="text-left md:text-right bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
+                          <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Jatuh Tempo</p>
+                          <p className="font-bold">{payLaterStats.dueDate}</p>
                         </div>
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="relative z-10 space-y-2">
+                        <div className="flex justify-between text-xs font-bold tracking-widest uppercase text-white/80">
+                          <span>Penggunaan Limit</span>
+                          <span>{creditUtilization.toFixed(0)}%</span>
+                        </div>
+                        <div className="w-full bg-black/20 h-3 rounded-full overflow-hidden p-0.5 border border-white/10">
+                          <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: `${creditUtilization}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="relative z-10 mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                          <div className="flex justify-between text-xs font-bold text-white/80 tracking-widest uppercase mb-2">
-                            <span>Limit Terpakai</span>
-                            <span>{formatCurrency(payLaterStats.usedLimit)} / {formatCurrency(payLaterStats.creditLimit)}</span>
-                          </div>
-                          <div className="w-full bg-white/20 h-3 rounded-full overflow-hidden">
-                            <div className="bg-white h-full rounded-full transition-all" style={{ width: `${creditUtilization}%` }} />
-                          </div>
+                          <p className="text-xs font-bold text-white/60 tracking-widest uppercase">Pembayaran Minimum</p>
+                          <p className="text-xl font-bold">{formatCurrency(payLaterStats.minimumPayment)}</p>
                         </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-white/20">
-                          <div>
-                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase">Pembayaran Minimum</p>
-                            <p className="text-xl font-bold">{formatCurrency(payLaterStats.minimumPayment)}</p>
-                          </div>
-                          <ButtonMotion>
-                            <Button data-testid="pay-bill-button" variant="secondary" className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg">
-                              Bayar Tagihan
-                            </Button>
-                          </ButtonMotion>
-                        </div>
+                        <ButtonMotion>
+                          <Button 
+                            onClick={() => toast.info('Memproses pembayaran tagihan PayLater...')}
+                            data-testid="pay-bill-button" 
+                            variant="secondary" 
+                            className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg">
+                            Bayar Tagihan
+                          </Button>
+                        </ButtonMotion>
                       </div>
                     </div>
                   </StaggerItem>

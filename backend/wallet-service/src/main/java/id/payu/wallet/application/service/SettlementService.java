@@ -119,6 +119,20 @@ public class SettlementService implements SettlementUseCase {
         log.info("Completing settlement batch {}", batchId);
 
         SettlementBatch batch = getSettlementBatch(batchId);
+
+        // PAY-SETTLE-001: Block completion if entries haven't been processed
+        if (batch.getEntries() == null || batch.getEntries().isEmpty()) {
+            throw new IllegalStateException("Cannot complete settlement batch " + batchId
+                    + " — no entries have been processed");
+        }
+        long pendingCount = batch.getEntries().stream()
+                .filter(e -> e.getStatus() == EntryStatus.PENDING)
+                .count();
+        if (pendingCount > 0) {
+            throw new IllegalStateException("Cannot complete settlement batch " + batchId
+                    + " — " + pendingCount + " entries still PENDING");
+        }
+
         batch.complete();
 
         SettlementBatch saved = settlementPersistencePort.saveSettlementBatch(batch);

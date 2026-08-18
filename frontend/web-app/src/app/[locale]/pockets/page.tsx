@@ -341,7 +341,13 @@ export default function PocketsPage() {
                                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1 opacity-60">Protokol Cadangan</p>
                                     <p className="text-2xl font-bold text-foreground tabular-nums">{formatCurrency(balance?.reservedBalance ?? '0', { locale: bcp47Locale })}</p>
                                     <div className="h-1.5 w-full bg-muted rounded-full mt-4 overflow-hidden shadow-inner">
-                                        <div className="h-full bg-emerald-500/40" style={{ width: '15%' }} />
+                                        {(() => {
+                                          const res = Number(balance?.reservedBalance ?? 0);
+                                          const avail = Number(balance?.availableBalance ?? 0);
+                                          const tot = res + avail;
+                                          const pct = tot > 0 ? Math.min(100, Math.round((res / tot) * 100)) : 0;
+                                          return <div className="h-full bg-emerald-500/40" style={{ width: `${pct}%` }} />;
+                                        })()}
                                     </div>
                                 </div>
                                 <div className="bg-gray-900 p-8 rounded-2xl text-white relative overflow-hidden shadow-2xl group flex flex-col justify-between min-h-[180px] border border-white/5">

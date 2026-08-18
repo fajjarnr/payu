@@ -114,8 +114,22 @@ public class DisbursementService implements DisbursementUseCase {
         // (id=non-null, version=null) as "detached" and calls merge() which
         // throws StaleObjectStateException for new rows. See context7
         // spring-projects spring-data-jpa entity state-detection strategy.
-        DisbursementEntity saved = disbursementRepository.persistNew(disbursement);
-        log.info("Created disbursement: {}", saved.getId());
+        DisbursementEntity saved;
+        try {
+            saved = disbursementRepository.persistNew(disbursement);
+            log.info("Created disbursement: {}", saved.getId());
+        } catch (Exception e) {
+            log.error("Failed to persist disbursement {}, releasing reservation {}",
+                    disbursement.getId(), reservation.getReservationId(), e);
+            try {
+                walletService.releaseBalance(sourceAccountId, disbursement.getId().toString(),
+                        reservation.getReservationId(), amount.getAmount());
+            } catch (Exception compEx) {
+                log.error("Failed to compensate balance reservation {}: {}",
+                        reservation.getReservationId(), compEx.getMessage());
+            }
+            throw e;
+        }
 
         return saved;
     }

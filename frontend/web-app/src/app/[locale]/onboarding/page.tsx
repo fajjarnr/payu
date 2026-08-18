@@ -60,7 +60,7 @@ export default function OnboardingPage() {
       setTimeout(() => router.push('/login'), 2500);
     },
     onError: (error) => {
-      console.error('Registration failed:', error);
+      console.error('Registration failed:', error instanceof Error ? error.message : 'Unknown error');
       toast.error(t('registrationFailed'));
     }
   });

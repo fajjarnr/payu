@@ -147,8 +147,15 @@ api.interceptors.response.use(
       }
     }
 
-    // IMP-004: Handle 429 Rate Limit with exponential backoff
+    // IMP-004 / WEB-IDM-001: Handle 429 Rate Limit with exponential backoff for idempotent requests only
     if (error.response?.status === 429) {
+      const method = (originalRequest.method || 'GET').toUpperCase();
+      const isIdempotentMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
+      const hasIdempotencyKey = Boolean(
+        originalRequest.headers?.['X-Idempotency-Key'] || 
+        originalRequest.headers?.['x-idempotency-key']
+      );
+
       const state = getRateLimitState(originalRequest);
       const retryAfter = error.response.headers['retry-after'];
 
@@ -168,8 +175,8 @@ api.interceptors.response.use(
         duration: Math.min(delayMs, 5000),
       });
 
-      // Check if we should retry
-      if (state.retryCount < state.maxRetries) {
+      // Check if we should retry (only if idempotent or has idempotency key)
+      if ((isIdempotentMethod || hasIdempotencyKey) && state.retryCount < state.maxRetries) {
         state.retryCount++;
 
         // Wait for the delay then retry

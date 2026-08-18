@@ -68,8 +68,12 @@ const typeConfig: Record<string, { label: string; icon: typeof ArrowLeftRight }>
   TOP_UP: { label: 'Top Up', icon: ArrowDownLeft },
 };
 
-// Helper to check if transaction type is a credit (income)
-const isCreditType = (type: string): boolean => type === 'TOP_UP';
+// Helper to check if transaction is a credit (income) for current account
+const isCreditType = (type: string, t?: Transaction, currentAccountId?: string | null): boolean => {
+  if (type === 'TOP_UP') return true;
+  if (t && currentAccountId && t.recipientAccountId === currentAccountId) return true;
+  return false;
+};
 
 export default function TransactionsPage() {
   const accountId = useAuthStore((state) => state.accountId);
@@ -84,8 +88,8 @@ export default function TransactionsPage() {
   const cancelTransaction = useCancelTransaction();
 
   // Compute stats from actual transaction data
-  const totalIn = transactions?.filter((t: Transaction) => isCreditType(t.type)).reduce((sum: string, t: Transaction) => addCurrency(sum, t.amount), '0') ?? '0';
-  const totalOut = transactions?.filter((t: Transaction) => !isCreditType(t.type)).reduce((sum: string, t: Transaction) => addCurrency(sum, t.amount), '0') ?? '0';
+  const totalIn = transactions?.filter((t: Transaction) => isCreditType(t.type, t, accountId)).reduce((sum: string, t: Transaction) => addCurrency(sum, t.amount), '0') ?? '0';
+  const totalOut = transactions?.filter((t: Transaction) => !isCreditType(t.type, t, accountId)).reduce((sum: string, t: Transaction) => addCurrency(sum, t.amount), '0') ?? '0';
   const pendingCount = transactions?.filter((t: Transaction) => t.status === 'PENDING' || t.status === 'PROCESSING').length ?? 0;
   const completedCount = transactions?.filter((t: Transaction) => t.status === 'COMPLETED').length ?? 0;
 

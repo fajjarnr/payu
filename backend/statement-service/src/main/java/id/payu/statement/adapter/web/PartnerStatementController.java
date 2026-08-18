@@ -43,6 +43,24 @@ public class PartnerStatementController {
         this.statementService = statementService;
     }
 
+    private void verifyPartnerAccess(String customerId) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return;
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+        if (isAdmin) return;
+
+        if (auth.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+            String partnerId = jwt.getClaimAsString("partner_id");
+            if (partnerId == null) {
+                partnerId = jwt.getSubject();
+            }
+            if (partnerId != null && !customerId.equals(partnerId) && !customerId.startsWith(partnerId + "-") && !customerId.startsWith("partner-" + partnerId)) {
+                throw new org.springframework.security.access.AccessDeniedException("Partner not authorized to access statement for: " + customerId);
+            }
+        }
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('PARTNER', 'ADMIN')")
     @Operation(summary = "Query partner statements (JSON)",
@@ -51,6 +69,7 @@ public class PartnerStatementController {
             @RequestParam String customerId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        verifyPartnerAccess(customerId);
         log.info("Partner statement query for customerId={}, from={}, to={}", customerId, from, to);
 
         Page<StatementResponse> page = statementService.listStatements(
