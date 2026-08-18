@@ -32,9 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **FE-PROXY-AUTH-001**: Next.js middleware no longer force-logs-out an active user on a transient gateway validation timeout — only a definitive `401`/`403` counts as invalid; transient failures proceed and the BFF refreshes client-side, preserving form state. Added regression test.
 - **BE-PROMO-002**: removed dead frontend gamification code (`PromotionService` methods/types, `useGamification` hook, exports) and the gateway `gamification` route + BFF whitelist prefix, since the backend dropped gamification (`V5__drop_gamification_tables.sql`, SIMP-002).
 
+### Developer Experience & CI
+- **DX-CI-FE-001**: added `.github/workflows/frontend-tests.yml` — automatic lint, `tsc --noEmit` type-check, i18n coverage, and Vitest unit/component tests for `frontend/web-app` on push/PR (previously web-app tests were never CI-gated).
+- **DX-CI-COMMITS-001**: added `commitlint.config.js` + `.github/workflows/commitlint.yml` using `wagoid/commitlint-github-action` to enforce Conventional Commits on PR commits/titles, protecting automated semver + changelog generation. Config validated locally (valid commit passes, invalid fails exit 1).
+
 ### Verification
 - Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
-- Next.js production build clean; `tsc --noEmit` no errors; ESLint clean; Vitest `1211 passed`.
+- Next.js production build clean; `tsc --noEmit` no errors; ESLint clean; Vitest `1212 passed`.
 - Billing, promotion, lending, backoffice, integration, gateway, wallet test suites green (only Docker-gated Testcontainers tests excluded — no Docker in this env).
 - Podman stack rebuilt and deployed as SemVer `1.13.0`; all `37/37` containers healthy; smoke tests `3/3`; new gateway routes verified (`401` instead of `404`).
 

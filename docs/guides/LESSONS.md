@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-279: CI Gates Need No Root `package.json` to Enforce Conventional Commits (2026-08-18)
+
+**Context**: DX-CI-COMMITS-001 — the repo had no PR gate for Conventional Commits, risking broken automated semver/changelog generation.
+
+**Lesson**: `wagoid/commitlint-github-action` enforces Conventional Commits on PR commits and titles via a standalone `commitlint.config.js` at the repo root — no root `package.json` or Husky install required. Validate the config locally (`npx commitlint --config commitlint.config.js`) before relying on CI.
+
+**Applied evidence**: valid `fix(platform): ...` commit passes; non-conventional message fails with exit 1, as the CI action would.
+
 ## L-277: Distinguish Definitive Auth Rejection From Transient Network Failure (2026-08-18)
 
 **Context**: FE-PROXY-AUTH-001 — the Next.js middleware treated any failed `/auth/validate` fetch (including a gateway timeout) as "invalid token" and force-redirected active users to `/login`, destroying form state.
