@@ -161,4 +161,20 @@ Use data warehouse for reporting:
 
 ---
 
-*Created via @principal-architect*
+## Evolution & Subsequent Standards
+
+Prinsip dasar **Database per Service** pada ADR ini tetap aktif dan menjadi fondasi utama persistensi data PayU. Untuk detail implementasi teknis mutakhir yang menyempurnakan dokumen ini, rujuk dokumen ADR berikut:
+
+1. **Event Streaming & Kafka Governance ([ADR-0026](0026-kafka-topic-governance-and-dlq-strategy.md))**:
+   - Format topic menggunakan standar CloudEvents 1.0.2: `payu.<domain>.<event-type>.v<n>` (bukan topic generik seperti contoh awal).
+   - Seluruh publishing event wajib melalui Transactional Outbox Pattern via `outbox-starter`.
+2. **Money & Idempotency Invariants ([ADR-0022](0022-money-idempotency-standard.md))**:
+   - Double-entry ledger, `BigDecimal` HALF_EVEN, dan `X-Idempotency-Key` pada seluruh mutasi finansial antar-database.
+3. **Database High Availability & PITR ([ADR-0031](0031-database-resilience-pitr-and-disaster-recovery.md))**:
+   - CloudNativePG (CNPG) Barman Cloud continuous WAL streaming ke S3 dengan target RPO=0 dan RTO < 5 menit.
+4. **Multi-Tenant Row-Level Security ([ADR-0033](0033-database-row-level-security-and-multi-tenant-isolation-standard.md))**:
+   - Di dalam masing-masing database service, isolasi multi-tenant (TokoBapak, Nobar, Dolan, dll.) ditegakkan menggunakan **PostgreSQL RLS (`FORCE ROW LEVEL SECURITY`) + GUC `app.tenant_id`**.
+
+---
+
+*Created via @principal-architect (Updated 2026-08-18 with ADR-0026/0031/0033 cross-references)*
