@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-282: Ship a Developer Guide for the Mandated Context7 Workflow (2026-08-18)
+
+**Context**: DX-CONTEXT7-001 — `AGENTS.md` and `.agents/skills/dx-engineer/SKILL.md` mandate Context7 verification before using any third-party library, but no `docs/guides/` entry explained the workflow for human developers upgrading libraries.
+
+**Lesson**: When a process is mandated for agents, also document it for humans in `docs/guides/` (resolve library ID → query the relevant concept → cross-check pinned version → implement → verify). A short, actionable reference beats a policy buried in a skill file.
+
+**Applied evidence**: `docs/guides/CONTEXT7_WORKFLOW.md` created with the 5-step workflow and a quick-reference table of commonly used library paths.
+
 ## L-281: Keep Architecture Docs in Lockstep With the Build (2026-08-18)
 
 **Context**: DX-DOCS-DRIFT-001 — `SERVICE_CATALOG.md`, `ARCHITECTURE.md`, and `catalog-info.yaml` documented Java 21 / Spring Boot 3.4 and only 4 simulators while the actual build runs Java 25 / Spring Boot 4.1 / Quarkus 3.x with 5 simulators (biller-simulator missing from the catalog).

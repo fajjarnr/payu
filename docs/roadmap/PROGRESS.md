@@ -9,6 +9,7 @@
   - **DX/CI**: added `frontend-tests.yml` (lint/type-check/i18n/Vitest gate for web-app, DX-CI-FE-001) and `commitlint.config.js` + `commitlint.yml` (Conventional Commits gate, DX-CI-COMMITS-001).
   - **DX/CodeGraph**: added `scripts/refresh-codegraph.sh` (sync/`--status`/`--full`) + `make codegraph-refresh` to re-index/validate the CodeGraph index after large refactors (DX-CODEGRAPH-001), verified against the live index (4051 files, 73,375 nodes).
   - **DX/Docs**: reconciled architecture doc drift (DX-DOCS-DRIFT-001) — `SERVICE_CATALOG.md`, `ARCHITECTURE.md`, and `catalog-info.yaml` now reflect Java 25 / Spring Boot 4.1 / Quarkus 3.x and 5 simulators incl. `biller-simulator`.
+  - **DX/Docs**: added `docs/guides/CONTEXT7_WORKFLOW.md` developer guide for the mandated Context7 library-verification workflow (DX-CONTEXT7-001).
 - **Build & Verification**:
   - Full Backend Reactor (`44/44` modules): **BUILD SUCCESS**.
   - Next.js: `tsc --noEmit` clean, ESLint clean, Vitest `1212 passed`.

@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DX-CI-COMMITS-001**: added `commitlint.config.js` + `.github/workflows/commitlint.yml` using `wagoid/commitlint-github-action` to enforce Conventional Commits on PR commits/titles, protecting automated semver + changelog generation. Config validated locally (valid commit passes, invalid fails exit 1).
 - **DX-CODEGRAPH-001**: added `scripts/refresh-codegraph.sh` + `make codegraph-refresh` (sync/full/status modes) to re-index/validate the CodeGraph index after large refactors; verified against the live index (4051 files, 73,375 nodes).
 - **DX-DOCS-DRIFT-001**: reconciled architecture documentation drift — `SERVICE_CATALOG.md`, `ARCHITECTURE.md`, and `catalog-info.yaml` now reflect the actual stack (Java 25, Spring Boot 4.1, Quarkus 3.x) and inventory (5 simulators incl. `biller-simulator`) instead of the stale Java 21 / Spring Boot 3.4 / 4-simulator references.
+- **DX-CONTEXT7-001**: added `docs/guides/CONTEXT7_WORKFLOW.md` — a concise developer guide (resolve → query → cross-check version → implement → verify) with a quick-reference table for the Context7 library paths mandated in `AGENTS.md` / the DX skill.
 
 ### Verification
 - Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
