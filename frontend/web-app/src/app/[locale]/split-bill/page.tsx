@@ -40,6 +40,21 @@ export default function SplitBillPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newBillName, setNewBillName] = useState('');
   const [newBillAmount, setNewBillAmount] = useState('');
+  const [participants, setParticipants] = useState<Array<{ accountId: string; accountNumber: string; accountName: string }>>([
+    { accountId: '', accountNumber: '', accountName: '' },
+  ]);
+
+  const updateParticipant = (index: number, field: 'accountId' | 'accountNumber' | 'accountName', value: string) => {
+    setParticipants((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)));
+  };
+
+  const addParticipantRow = () => {
+    setParticipants((prev) => [...prev, { accountId: '', accountNumber: '', accountName: '' }]);
+  };
+
+  const removeParticipantRow = (index: number) => {
+    setParticipants((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const splitBills = ((Array.isArray(splitBillsData) ? splitBillsData : []) as unknown as Array<{
     id: string;
@@ -78,20 +93,27 @@ export default function SplitBillPage() {
 
   const handleCreate = () => {
     if (!newBillName || !newBillAmount) return;
+    const validParticipants = participants
+      .map((p) => ({ ...p, accountId: p.accountId.trim(), accountNumber: p.accountNumber.trim(), accountName: p.accountName.trim() }))
+      .filter((p) => p.accountId && p.accountNumber && p.accountName);
+    if (validParticipants.length === 0) return;
+    const totalAmount = parseCurrencyExact(newBillAmount);
+    const perHead = divideCurrency(totalAmount, validParticipants.length);
     createSplitBill.mutate(
       {
         title: newBillName,
-        totalAmount: parseCurrencyExact(newBillAmount),
+        totalAmount,
         currency: 'IDR',
         creatorAccountId: acctId,
         splitType: 'EQUAL',
-        participants: [],
+        participants: validParticipants.map((p) => ({ ...p, amountOwed: perHead })),
       },
       {
         onSuccess: () => {
           setShowCreateModal(false);
           setNewBillName('');
           setNewBillAmount('');
+          setParticipants([{ accountId: '', accountNumber: '', accountName: '' }]);
         },
       }
     );
@@ -189,6 +211,51 @@ export default function SplitBillPage() {
                         className="h-12"
                       />
                     </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        Peserta (min. 1)
+                      </label>
+                      <Button type="button" variant="outline" size="sm" onClick={addParticipantRow} className="h-9 gap-1 text-xs font-bold uppercase tracking-widest">
+                        <UserPlus className="h-3 w-3" /> Tambah Peserta
+                      </Button>
+                    </div>
+                    {participants.map((p, i) => (
+                      <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.4fr_auto] gap-3 items-center">
+                        <Input
+                          placeholder="Account ID"
+                          value={p.accountId}
+                          onChange={(e) => updateParticipant(i, 'accountId', e.target.value)}
+                          className="h-11"
+                        />
+                        <Input
+                          placeholder="No. Rekening"
+                          value={p.accountNumber}
+                          onChange={(e) => updateParticipant(i, 'accountNumber', e.target.value)}
+                          className="h-11"
+                        />
+                        <Input
+                          placeholder="Nama"
+                          value={p.accountName}
+                          onChange={(e) => updateParticipant(i, 'accountName', e.target.value)}
+                          className="h-11"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={participants.length === 1}
+                          onClick={() => removeParticipantRow(i)}
+                          className="h-11 text-rose-500"
+                        >
+                          Hapus
+                        </Button>
+                      </div>
+                    ))}
+                    <p className="text-xs text-muted-foreground">
+                      Jumlah tiap peserta dibagi rata (split rata).
+                    </p>
                   </div>
                   <div className="flex gap-4">
                     <Button onClick={handleCreate} disabled={createSplitBill.isPending} className="h-12 px-8">

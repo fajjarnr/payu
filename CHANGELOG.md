@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **FE-LEND-001**: aligned `PreApprovalCheckRequest` to the backend `LoanPreApprovalRequest` contract (`loanType`, `principalAmount`, `tenureMonths`, `purpose`) instead of the wrong `requestedAmount` shape that failed validation 400.
 - **FE-PROXY-AUTH-001**: Next.js middleware no longer force-logs-out an active user on a transient gateway validation timeout — only a definitive `401`/`403` counts as invalid; transient failures proceed and the BFF refreshes client-side, preserving form state. Added regression test.
 - **BE-PROMO-002**: removed dead frontend gamification code (`PromotionService` methods/types, `useGamification` hook, exports) and the gateway `gamification` route + BFF whitelist prefix, since the backend dropped gamification (`V5__drop_gamification_tables.sql`, SIMP-002).
+- **FE-SPLIT-001**: split-bill create modal now collects at least one participant (account ID, account number, name) instead of always sending `participants: []`, and auto-computes the per-head `amountOwed` for an equal split — previously every create always failed backend `@NotEmpty participants` validation with 400. Added regression test.
 
 ### Developer Experience & CI
 - **DX-CI-FE-001**: added `.github/workflows/frontend-tests.yml` — automatic lint, `tsc --noEmit` type-check, i18n coverage, and Vitest unit/component tests for `frontend/web-app` on push/PR (previously web-app tests were never CI-gated).

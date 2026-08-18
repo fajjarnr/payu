@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-283: Collect Required Request Fields in the UI Before Submit (2026-08-18)
+
+**Context**: FE-SPLIT-001 — the split-bill create modal only collected title/amount and always sent `participants: []`, while the backend `CreateSplitBillRequest` requires `@NotEmpty participants`. Every create failed validation with 400.
+
+**Lesson**: When the backend DTO marks a field `@NotEmpty`/`@NotNull`, the corresponding UI form must collect that field (with a visible input + validation) before submit. If the amount is split per head, compute and send `amountOwed` so the request satisfies the contract. Add a regression test that submits a valid request and asserts the mutation receives non-empty, well-formed payload.
+
+**Applied evidence**: `SplitBillPage.test.tsx` 4/4 green including the new FE-SPLIT-001 test asserting `participants.length === 2` with per-head `amountOwed` `'150000'`; `tsc --noEmit` clean; ESLint clean; full Vitest `1213 passed`.
+
 ## L-282: Ship a Developer Guide for the Mandated Context7 Workflow (2026-08-18)
 
 **Context**: DX-CONTEXT7-001 — `AGENTS.md` and `.agents/skills/dx-engineer/SKILL.md` mandate Context7 verification before using any third-party library, but no `docs/guides/` entry explained the workflow for human developers upgrading libraries.
