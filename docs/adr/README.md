@@ -33,6 +33,10 @@ This directory contains the historical record of architectural decisions made fo
 | [0024](0024-chaos-engineering-and-fault-injection-strategy.md) | Tiered Chaos Engineering & Fault Injection Strategy | Accepted | 2026-08-18 |
 | [0025](0025-snap-bi-and-partner-gateway-security-standard.md)  | SNAP-BI & Partner Gateway Security Standards         | Accepted | 2026-08-18 |
 | [0026](0026-kafka-topic-governance-and-dlq-strategy.md)        | Kafka Topic Governance & Dead Letter Queue Strategy  | Accepted | 2026-08-18 |
+| [0027](0027-notification-service-architecture-and-multi-channel-delivery.md) | Notification Service Architecture & Multi-Channel Delivery | Accepted | 2026-08-18 |
+| [0028](0028-step-up-authentication-and-dynamic-linking-standard.md) | Step-Up Authentication, Dynamic Linking & Transaction PIN Security Standard | Accepted | 2026-08-18 |
+| [0029](0029-iso20022-interbank-clearing-and-suspense-ledgering.md) | ISO 20022 Interbank Clearing, Suspense Account Ledgering & Central Bank Settlement Standard | Accepted | 2026-08-18 |
+| [0030](0030-realtime-transaction-velocity-and-aml-risk-scoring.md) | Real-Time Transaction Velocity Counter, Fraud Risk Pre-Check & AML Decision Pipeline | Accepted | 2026-08-18 |
 
 ## 🚀 How to Create a New ADR
 

@@ -70,7 +70,7 @@
 - **Compose**: default local app image tag advanced to SemVer `1.11.16`; deprecated Quarkus Hibernate environment keys were replaced with `QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY`; parity test `22/22` and `apps` profile render (37 services) green.
 - **Deploy live**: `BUILDAH_FORMAT=docker podman compose ... build` completed; Podman stack deployed with **37/37 containers healthy** and gateway, account, wallet, web, API portal, and Keycloak smoke health checks returning `200`.
 - **Runtime evidence**: after dependency startup settled, the final 30-second log window contained no WARN/ERROR records. Initial recreation emitted transient dependency churn (Kafka topic metadata and database connection resets), so the startup window is not represented as zero-noise.
-- **Backlog blockers**: ARCH-GLOBAL-002 lacks a PIN/step-up credential and verification contract; ARCH-GLOBAL-003 lacks clearing CoA/settlement ownership; ARCH-GLOBAL-004 lacks a risk provider/model and velocity-store contract. External OCP, provider, SIEM, and GitHub-admin blockers remain in `TODOS.md`.
+- **Backlog blockers**: Global banking architecture trio unblocked via formal ADRs: ARCH-GLOBAL-002 (ADR-0028 Step-Up & Dynamic Linking), ARCH-GLOBAL-003 (ADR-0029 ISO 20022 Clearing & Suspense Ledgering), and ARCH-GLOBAL-004 (ADR-0030 Real-Time Velocity & AML Scoring). External OCP, provider, SIEM, and GitHub-admin blockers remain in `TODOS.md`.
 
 ## Deploy 1.11.15 (2026-08-17)
 
