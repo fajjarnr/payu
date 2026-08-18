@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useUIStore } from '@/stores';
 import { ButtonMotion } from '@/components/ui/Motion';
 import { useAuthStore } from '@/stores/authStore';
-import { cn } from '@/lib/utils';
+import { cn, idempotencyKeyFor } from '@/lib/utils';
 import { toast } from 'sonner';
 import { formatCurrency, parseCurrencyExact } from '@/lib/currency';
 
@@ -46,8 +46,10 @@ export default function BillsPage() {
 
  const paymentMutation = useMutation({
   mutationFn: (data: CreatePaymentRequest) => {
+   // FE-IDM-003: deterministic idempotency key so a safe retry of the same
+   // bill payment reuses the same key (no duplicate mutation on timeout/retry).
    return api.post('/payments', data, {
-    headers: { 'X-Idempotency-Key': crypto.randomUUID() }
+    headers: { 'X-Idempotency-Key': idempotencyKeyFor('billing:pay', `${data.billerCode}:${data.customerId}:${data.amount}`) }
    });
   },
   onSuccess: () => {
@@ -73,7 +75,6 @@ export default function BillsPage() {
     billerCode: selectedBiller.code,
     customerId,
     amount: parseCurrencyExact(amount),
-    referenceNumber: `REF-${Date.now()}`,
    };
 
   paymentMutation.mutate(data);

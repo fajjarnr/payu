@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-276: Deterministic Idempotency Keys Beat `crypto.randomUUID()` (2026-08-18)
+
+**Context**: FE-IDM-002/003 — frontend mutations generated a fresh idempotency key per invocation, defeating safe retry (timeout/retry → new key → duplicate mutation).
+
+**Lesson**: For a financial mutation that may be retried, derive a deterministic key from the logical operation + resource identifier (`idempotencyKeyFor(operation, resourceId)`), so a retry of the same operation reuses the same key. This preserves the backend idempotency contract. The backend still validates the key format; a stable key does not reduce security since the request fingerprint binds the key to the body.
+
+**Applied evidence**: `tsc --noEmit` clean, Vitest `1211` passed after migration.
+
 ## L-271: Hexagonal Domain Ports Must Not Leak Spring Data `Page` (2026-08-18)
 
 **Context**: BE-BILL-001 added a paginated payment-history query to `billing-service`.

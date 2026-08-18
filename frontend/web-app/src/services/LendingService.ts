@@ -213,7 +213,9 @@ export class LendingService {
 
 export interface PreApprovalCheckRequest {
   userId: string;
-  requestedAmount?: Money;
+  loanType: 'PERSONAL_LOAN' | 'INSTALMENT_LOAN' | 'MICRO_LOAN';
+  principalAmount: Money;
+  tenureMonths: number;
   purpose?: string;
 }
 

@@ -26,7 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Frontend & BFF
 - **FE-IDM-002**: replaced per-invocation `crypto.randomUUID()` idempotency keys with deterministic keys (`idempotencyKeyFor(operation, resourceId)`) for scheduled-transfer and split-bill mutations so safe retries reuse the same key.
+- **FE-IDM-003**: bills page now derives a deterministic `X-Idempotency-Key` per bill payment and drops the unused client `referenceNumber`, so safe retries reuse the same key (no duplicate mutation on timeout/retry).
 - **FE-MONEY-002/003**: converted money fields to `Money` (string decimal) across `TransactionService` (`makeParticipantPayment`, scheduled-transfer `amount`), `StatementService` (opening/closing/credits/debits), and `WalletService` (card `dailyLimit`); removed `parseFloat`/`parseInt` from `scheduled-transfers` and `cards` pages.
+- **FE-LEND-001**: aligned `PreApprovalCheckRequest` to the backend `LoanPreApprovalRequest` contract (`loanType`, `principalAmount`, `tenureMonths`, `purpose`) instead of the wrong `requestedAmount` shape that failed validation 400.
 
 ### Verification
 - Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
