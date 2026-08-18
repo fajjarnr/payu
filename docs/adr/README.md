@@ -37,6 +37,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0028](0028-step-up-authentication-and-dynamic-linking-standard.md) | Step-Up Authentication, Dynamic Linking & Transaction PIN Security Standard | Accepted | 2026-08-18 |
 | [0029](0029-iso20022-interbank-clearing-and-suspense-ledgering.md) | ISO 20022 Interbank Clearing, Suspense Account Ledgering & Central Bank Settlement Standard | Accepted | 2026-08-18 |
 | [0030](0030-realtime-transaction-velocity-and-aml-risk-scoring.md) | Real-Time Transaction Velocity Counter, Fraud Risk Pre-Check & AML Decision Pipeline | Accepted | 2026-08-18 |
+| [0031](0031-database-resilience-pitr-and-disaster-recovery.md) | Database High-Availability, Continuous Point-In-Time Recovery (PITR) & Disaster Recovery Standard | Accepted | 2026-08-18 |
 
 ## 🚀 How to Create a New ADR
 
