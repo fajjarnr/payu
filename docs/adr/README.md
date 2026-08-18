@@ -32,6 +32,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0023](0023-mvp-scope.md)                        | MVP Scope Definition (Core Banking)                    | Accepted | 2026-08-11 |
 | [0024](0024-chaos-engineering-and-fault-injection-strategy.md) | Tiered Chaos Engineering & Fault Injection Strategy | Accepted | 2026-08-18 |
 | [0025](0025-snap-bi-and-partner-gateway-security-standard.md)  | SNAP-BI & Partner Gateway Security Standards         | Accepted | 2026-08-18 |
+| [0026](0026-kafka-topic-governance-and-dlq-strategy.md)        | Kafka Topic Governance & Dead Letter Queue Strategy  | Accepted | 2026-08-18 |
 
 ## 🚀 How to Create a New ADR
 

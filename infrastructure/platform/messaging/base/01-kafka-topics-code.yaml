@@ -339,7 +339,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.kyc.ktp-uploaded.v1
@@ -390,7 +390,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.lending.loan-approved.v1
@@ -560,7 +560,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.promotion.cashback-event.v1
@@ -730,24 +730,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
-    cleanup.policy: delete
----
-# KafkaTopic - payu.transaction.completed.v42
-apiVersion: kafka.strimzi.io/v1
-kind: KafkaTopic
-metadata:
-  name: payu.transaction.completed.v42
-  labels:
-    app.kubernetes.io/name: payu.transaction.completed.v42
-    app.kubernetes.io/part-of: payu
-    app.kubernetes.io/component: messaging
-    strimzi.io/cluster: payu-kafka
-spec:
-  partitions: 3
-  replicas: 3
-  config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.transaction.initiated.v1
@@ -815,7 +798,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.transaction.payment-made.v1
@@ -934,7 +917,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.transaction.transfer-archived.v1
@@ -1019,7 +1002,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.wallet.balance-reserved.v1
@@ -1087,7 +1070,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.wallet.escrow-expired.v1
@@ -1257,7 +1240,7 @@ spec:
   partitions: 3
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 2592000000
     cleanup.policy: delete
 ---
 # KafkaTopic - payu.webhook.events.v1
@@ -1276,3 +1259,565 @@ spec:
   config:
     retention.ms: 604800000
     cleanup.policy: delete
+---
+# KafkaTopic - payu.account.kyc-completed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.account.kyc-completed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.account.kyc-completed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.account.opened.v10.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.account.opened.v10.dlq
+  labels:
+    app.kubernetes.io/name: payu.account.opened.v10.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.account.user-created.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.account.user-created.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.account.user-created.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.account.user-updated.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.account.user-updated.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.account.user-updated.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.lending.loan-approved.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.lending.loan-approved.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.lending.loan-approved.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.lending.loan-disbursed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.lending.loan-disbursed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.lending.loan-disbursed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.lending.loan-rejected.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.lending.loan-rejected.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.lending.loan-rejected.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.lending.loan-repayment-processed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.lending.loan-repayment-processed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.lending.loan-repayment-processed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.partner.merchant-settlement.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.partner.merchant-settlement.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.partner.merchant-settlement.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.partner.payment-completed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.partner.payment-completed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.partner.payment-completed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.partner.payment-link-event.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.partner.payment-link-event.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.partner.payment-link-event.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.partner.payment-refunded.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.partner.payment-refunded.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.partner.payment-refunded.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.partner.refund-completed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.partner.refund-completed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.partner.refund-completed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.initiated.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.initiated.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.initiated.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.participant-added.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.participant-added.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.participant-added.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.payment-made.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.payment-made.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.payment-made.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.payment-reminder.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.payment-reminder.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.payment-reminder.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.split-bill-activated.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.split-bill-activated.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.split-bill-activated.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.split-bill-cancelled.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.split-bill-cancelled.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.split-bill-cancelled.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.split-bill-completed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.split-bill-completed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.split-bill-completed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.split-bill-created.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.split-bill-created.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.split-bill-created.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.transfer-archived.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.transfer-archived.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.transfer-archived.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.va-paid.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.va-paid.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.va-paid.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.balance-reserved.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.balance-reserved.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.balance-reserved.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.created.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.created.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.created.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.escrow-expired.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.escrow-expired.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.escrow-expired.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.escrow-held.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.escrow-held.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.escrow-held.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.escrow-refunded.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.escrow-refunded.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.escrow-refunded.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.escrow-released.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.escrow-released.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.escrow-released.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.escrow-settled.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.escrow-settled.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.escrow-settled.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.reservation-committed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.reservation-committed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.reservation-committed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.reservation-released.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.reservation-released.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.reservation-released.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.wallet.topup-completed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.wallet.topup-completed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.wallet.topup-completed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
