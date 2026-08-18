@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BE-BILL-002**: `extractIdempotencyKey` no longer mints a random UUID fallback — missing `X-Idempotency-Key` now fails with 400 instead of silently hiding the contract violation.
 - **SEC-AUTH-001**: fixed `ROLE_` prefix mismatch — `backoffice`, `cms`, and `integration` controllers used `hasAnyAuthority('admin'...)` while the Keycloak converter emits `ROLE_`-prefixed authorities. Migrated to `hasRole('ADMIN')`/`hasAnyRole('ADMIN', ...)`, restoring admin/operator access (was 403).
 - **BE-CARD-001**: implemented missing `PUT /api/v1/cards/{cardId}` (update daily limit) and `DELETE /api/v1/cards/{cardId}` (close card) endpoints with ownership checks, domain methods, and unit tests.
+- **BE-ACC-001**: added `PUT /api/v1/accounts/users/{userId}` for profile updates (fullName/email/phoneNumber) with ownership check, aligned `UserService`/`useUpdateUser` to the returned profile.
+- **BE-INVEST-001**: fixed `@PreAuthorize` ownership check to resolve `account_id` (with `sub` fallback) instead of comparing against `sub` alone, preventing 403 on own investment accounts.
 - **BE-PROMO-001**: added missing `/api/v1/segments` REST controller + hexagonal service/ports for customer segmentation (entity + migration existed but no API was exposed).
 - **LEND-SCHED-001**: added `@EnableSchedulerLock`, ShedLock config, and `V11__add_shedlock_table.sql` so repayment reconciliation runs exactly once across replicas.
 

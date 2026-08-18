@@ -125,5 +125,44 @@ public class UserAccountController {
 
         return ResponseEntity.ok(ApiResponse.success(UserProfileResponse.fromMasked(userOpt.get())));
     }
+
+    /**
+     * Updates the user profile for an externalId (BE-ACC-001).
+     * SEC-ACCOUNT-001: Ownership or trusted-service check. NIK masked in response.
+     */
+    @PutMapping("/{userId}")
+    @Operation(summary = "Update user profile by externalId",
+               description = "Updates fullName/email/phoneNumber for a user (by Keycloak externalId). NIK is masked.")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> updateUserProfile(
+            @Parameter(description = "Keycloak externalId (sub claim)")
+            @PathVariable String userId,
+            @RequestBody UpdateUserProfileRequest request) {
+
+        verifyOwnershipOrTrusted(userId);
+
+        User user = userPersistencePort.findByExternalId(userId)
+                .orElseThrow(() -> new AccessDeniedException("User not found: " + userId));
+
+        if (request.fullName() != null) {
+            user.setFullName(request.fullName());
+        }
+        if (request.email() != null && !request.email().isBlank()) {
+            user.setEmail(request.email());
+        }
+        if (request.phoneNumber() != null) {
+            user.setPhoneNumber(request.phoneNumber());
+        }
+        user.setUpdatedAt(java.time.LocalDateTime.now());
+
+        User saved = userPersistencePort.save(user);
+        log.info("Updated user profile for externalId={}", userId);
+        return ResponseEntity.ok(ApiResponse.success(UserProfileResponse.fromMasked(saved)));
+    }
+
+    /**
+     * BE-ACC-001: request DTO for updating a user profile.
+     */
+    public record UpdateUserProfileRequest(String fullName, String email, String phoneNumber) {
+    }
 }
 

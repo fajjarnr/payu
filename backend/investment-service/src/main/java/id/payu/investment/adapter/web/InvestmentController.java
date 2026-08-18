@@ -77,7 +77,7 @@ public class InvestmentController extends BaseController {
     }
 
     @PostMapping("/deposits")
-    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
+    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), #jwt.claims['account_id'] ?: #jwt.subject)")
     @Audited(
             operation = AuditOperation.OTHER,
             entityType = "Deposit",
@@ -102,7 +102,7 @@ public class InvestmentController extends BaseController {
     }
 
     @PostMapping("/mutual-funds")
-    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
+    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), #jwt.claims['account_id'] ?: #jwt.subject)")
     @Audited(
             operation = AuditOperation.OTHER,
             entityType = "InvestmentTransaction",
@@ -151,7 +151,7 @@ public class InvestmentController extends BaseController {
     }
 
     @PostMapping("/sell")
-    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), authentication.principal.subject)")
+    @PreAuthorize("isAuthenticated() and @investmentSecurityService.isAccountOwner(#request.accountId(), #jwt.claims['account_id'] ?: #jwt.subject)")
     @Audited(
             operation = AuditOperation.OTHER,
             entityType = "InvestmentTransaction",
