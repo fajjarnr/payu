@@ -1,8 +1,11 @@
 package id.payu.gateway.application.service;
 
+import id.payu.gateway.application.service.GatewaySchedulerLock;
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import java.time.Duration;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -23,11 +26,18 @@ public class CheckoutService {
     // In-memory store for checkout tokens (production would use Redis)
     private final ConcurrentHashMap<String, CheckoutSession> sessions = new ConcurrentHashMap<>();
 
+    @Inject
+    GatewaySchedulerLock schedulerLock;
+
     /**
      * Cleanup expired sessions every 10 minutes to prevent unbounded memory growth.
+     * ADR-0042: distributed lock
      */
     @Scheduled(every = "10m")
     void cleanupExpiredSessions() {
+        if (!schedulerLock.tryAcquire("gateway-checkout-cleanupExpiredSessions", Duration.ofMinutes(5))) {
+            return;
+        }
         int before = sessions.size();
         sessions.entrySet().removeIf(e -> e.getValue().expiresAt().isBefore(Instant.now()));
         int removed = before - sessions.size();

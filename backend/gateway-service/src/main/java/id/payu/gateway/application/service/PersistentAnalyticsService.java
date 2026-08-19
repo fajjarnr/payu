@@ -47,6 +47,9 @@ public class PersistentAnalyticsService {
     @Inject
     ApiAnalyticsRepository analyticsRepository;
 
+    @Inject
+    GatewaySchedulerLock schedulerLock;
+
     private boolean enabled;
     private int batchSize;
     private int detailedRetentionDays;
@@ -119,10 +122,14 @@ public class PersistentAnalyticsService {
 
     /**
      * Scheduled flush of buffered events to persistent storage.
+     * ADR-0042: distributed lock — ponytail per-shard if throughput matters
      */
     @Scheduled(every = "{gateway.analytics.flush-interval}", delayed = "1m")
     void flushBuffer() {
         if (!enabled || eventBuffer.isEmpty()) {
+            return;
+        }
+        if (!schedulerLock.tryAcquire("gateway-analytics-flushBuffer", Duration.ofMinutes(5))) {
             return;
         }
 
@@ -158,10 +165,14 @@ public class PersistentAnalyticsService {
     /**
      * Scheduled daily aggregation of metrics.
      * Runs at 2 AM daily to aggregate the previous day's data.
+     * ADR-0042: distributed lock
      */
     @Scheduled(cron = "0 2 * * * ?")
     void aggregateDailyMetrics() {
         if (!enabled) {
+            return;
+        }
+        if (!schedulerLock.tryAcquire("gateway-analytics-aggregateDailyMetrics", Duration.ofMinutes(30))) {
             return;
         }
 
@@ -179,10 +190,14 @@ public class PersistentAnalyticsService {
     /**
      * Scheduled cleanup of old detailed data.
      * Retains 90 days of detailed data.
+     * ADR-0042: distributed lock
      */
     @Scheduled(cron = "0 3 0 * * ?")
     void cleanupDetailedData() {
         if (!enabled) {
+            return;
+        }
+        if (!schedulerLock.tryAcquire("gateway-analytics-cleanupDetailedData", Duration.ofMinutes(30))) {
             return;
         }
 

@@ -1,5 +1,13 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.8 (2026-08-19)
+
+- **GW-CONCUR-001 (ADR-0042) CLOSED** — gateway `HotRod` distributed lock:
+  - `HotRodCacheClient.tryLock(String,Duration)` `putIfAbsentAsync` `TTL` + `GatewaySchedulerLock.tryAcquire(name,lockAtMostFor)` `shedlock:` `TTL` `await 2s` `ponytail: global lock per scheduler, fail-open` + `@Scheduled` guards `checkExpiringKeys 10m` `flushBuffer 5m` `aggregateDailyMetrics 30m` `cleanupDetailedData 30m` `cleanupExpiredSessions 5m` (ShedLock-lite via existing `payu` HotRod, no new DB)
+  - `Context7` `ShedLock 7.8.0` `JdbcTemplateLockProvider(usingDbTime)` verified, Quarkus `CDI` `5.0.0` — ponytail uses `HotRod` not `JDBC` for gateway (no `DataSource` in gateway, `HotRod` already `payu` cache)
+- **Build & Verification**: `gateway-service` `package` `BUILD SUCCESS` `3.3s` (`473 tests 80 pre-existing`), `31` images retagged `1.13.7→1.13.8` `PAYU_VERSION:-1.13.8` `gateway-service` rebuilt `HotRodCacheClient` `GatewaySchedulerLock`
+- **Backlog**: `TODOS` `GW-CONCUR-001` removed (now `1` DX + `5` cross-layer), `Last Release 1.13.8`, `ARCH-BESTP-001` `Accepted`
+
 ## Deploy 1.13.7 (2026-08-19)
 
 - **DX-TS-BRANDED-001 (ADR-0047) CLOSED** — branded `Id` + `Money`:

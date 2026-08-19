@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-293: Quarkus Scheduled Tasks Need HotRod Distributed Lock, Not Just @Scheduled (2026-08-19)
+
+**Context**: GW-CONCUR-001 — `gateway-service` `ApiKeyRotationService` `PersistentAnalyticsService` `CheckoutService` `@Scheduled` without lock → multi-instance double execution, `HotRodCacheClient` already `payu` cache.
+
+**Lesson**: add `HotRodCacheClient.tryLock(String,Duration)` `putIfAbsentAsync` `TTL` + `GatewaySchedulerLock.tryAcquire(name,lockAtMostFor)` `shedlock:` `TTL` `await 2s` `ponytail: global lock per scheduler` `fail-open` + guard each `@Scheduled` `checkExpiringKeys 10m` `flushBuffer 5m` `aggregateDailyMetrics 30m` `cleanupDetailedData 30m` `cleanupExpiredSessions 5m` (Context7 `ShedLock 7.8.0` `JdbcTemplateLockProvider(usingDbTime)` verified, Quarkus `CDI 5.0.0` — ponytail uses `HotRod` not `JDBC` for gateway, `HotRod` already `payu` `payu` cache, upgrade to `ShedLock JdbcTemplate` if `DataSource` added).
+
+**Applied evidence**: `gateway-service` `package` `BUILD SUCCESS` `3.3s`, `TODOS` `GW-CONCUR-001` removed.
+
 ## L-292: Branded Nominal Types Prevent ID Mismatch with Gradual Adoption (2026-08-19)
 
 **Context**: DX-TS-BRANDED-001 — `types/index.ts` plain `string` for `AccountId`/`UserId`/`TransactionId`/`Money` caused `BE-PARTNER-001` `Number(user.id)` `NaN` and `BE-INVEST-001` `account_id` mismatch.

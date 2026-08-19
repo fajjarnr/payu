@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.7` (2026-08-19) |
+| **Last Release** | `1.13.8` (2026-08-19) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka; **login web live** (LOGIN-001..006 closed) |
-| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 5 cross-layer findings + 2 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
-| **Last Updated** | 2026-08-19 — Fix DX-TS-BRANDED-001 (branded Id + Money) |
+| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 5 cross-layer findings + 1 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
+| **Last Updated** | 2026-08-19 — Fix GW-CONCUR-001 (distributed lock gateway) |
 
 ---
 
@@ -160,9 +160,11 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 ### Audit 2026-08-18 — DX Engineering (hanya OPEN)
 
+> **GW-CONCUR-001 FIXED 1.13.8 → `CHANGELOG.md` `1.13.8`** — distributed lock via `HotRodCacheClient.tryLock` `GatewaySchedulerLock`.
+
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| GW-CONCUR-001 | 🟠 | gateway/concurrency | `gateway-service` scheduled tasks (`ApiKeyRotationService:119`, `PersistentAnalyticsService:123,162,183`, `CheckoutService:29`) tanpa distributed lock — multi-instance double execution — std di [ADR-0042](../adr/0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md): `shedlock` `JdbcTemplate(usingDbTime)` | `ApiKeyRotationService.java:119` |
+| — | — | — | No open DX findings — `DX-TS-BRANDED-001` + `GW-CONCUR-001` closed | — |
 
 > **FIXED DX 2026-08-18 (8 items) → `CHANGELOG.md` `1.13.0`**: DX-CI-FE-001, DX-CI-COMMITS-001, DX-CATALOG-001 (ghost + 5 service + 5 simulator + 14 starter), DX-DOCS-DRIFT-001, DX-CODEGRAPH-001, DX-RTK-ENV-001, DX-CONTEXT7-001, LEND-SCHED-001, plus GW-ROUTING-004 & BFF-ROUTING-002.
 

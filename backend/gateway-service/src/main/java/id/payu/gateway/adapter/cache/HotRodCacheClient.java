@@ -116,6 +116,16 @@ public class HotRodCacheClient {
         return Uni.createFrom().completionStage(() -> remoteCache().removeAsync(key)).replaceWithVoid();
     }
 
+    /**
+     * ADR-0042: distributed tryLock via HotRod putIfAbsent (ShedLock-lite).
+     * ponytail: single key per scheduler, TTL = lockAtMostFor; add DB fallback if HotRod down
+     */
+    public Uni<Boolean> tryLock(String lockKey, Duration ttl) {
+        return Uni.createFrom().completionStage(
+                        () -> remoteCache().putIfAbsentAsync(lockKey, "locked", ttl.toMillis(), TimeUnit.MILLISECONDS))
+                .map(prev -> prev == null);
+    }
+
     public Uni<Long> increment(String key, Duration ttl) {
         return Uni.createFrom().item(() -> incrementSynchronously(key, ttl))
                 .runSubscriptionOn(io.smallrye.mutiny.infrastructure.Infrastructure.getDefaultExecutor());

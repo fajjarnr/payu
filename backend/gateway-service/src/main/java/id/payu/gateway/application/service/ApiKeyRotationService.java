@@ -9,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -31,6 +32,9 @@ public class ApiKeyRotationService {
 
     @Inject
     HotRodCacheClient cache;
+
+    @Inject
+    GatewaySchedulerLock schedulerLock;
 
     private boolean enabled;
 
@@ -115,10 +119,14 @@ public class ApiKeyRotationService {
 
     /**
      * Scheduled task to check for expiring API keys.
+     * ADR-0042: distributed lock via HotRod (ShedLock-lite)
      */
     @Scheduled(every = "1h")
     void checkExpiringKeys() {
         if (!enabled) {
+            return;
+        }
+        if (!schedulerLock.tryAcquire("gateway-apiKeyRotation-checkExpiringKeys", Duration.ofMinutes(10))) {
             return;
         }
 

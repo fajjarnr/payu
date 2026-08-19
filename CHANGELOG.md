@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.8] - 2026-08-19
+
+### Fixed (Gateway — ADR-0042)
+- **GW-CONCUR-001 / ARCH-BESTP-001**: `gateway-service` `ApiKeyRotationService:119` `PersistentAnalyticsService:123,162,183` `CheckoutService:29` tanpa distributed lock — multi-instance double execution. Added `HotRodCacheClient.tryLock(String,Duration)` via `putIfAbsentAsync` + `GatewaySchedulerLock.tryAcquire(name,lockAtMostFor)` (`shedlock: + name` `TTL lockAtMostFor`, `await 2s`, `ponytail: global lock per scheduler, TTL lockAtMostFor; upgrade to ShedLock JdbcTemplate(usingDbTime) if DB lock needed` + `fail-open` for now) + `@Scheduled` guards `checkExpiringKeys 10m` `flushBuffer 5m` `aggregateDailyMetrics 30m` `cleanupDetailedData 30m` `cleanupExpiredSessions 5m` (ShedLock-lite via existing `HotRod` `payu` cache, no new infra) — std di [ADR-0042](../adr/0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md) `shedlock JdbcTemplate(usingDbTime)` / Quarkus `quarkus-shedlock`.
+
+### Verification
+- `mvn -f backend/gateway-service/pom.xml package -DskipTests` `BUILD SUCCESS` `Quarkus 3.33.1 3.3s` (`473 tests 80 failures 58 skipped` pre-existing `JWKS/HotRod/proxy` need live stack, unchanged by lock)
+- Podman `31` images retagged `1.13.7→1.13.8` `PAYU_VERSION:-1.13.8` `gateway-service` rebuilt `HotRodCacheClient` + `GatewaySchedulerLock`
+
 ## [1.13.7] - 2026-08-19
 
 ### Fixed (DX — ADR-0047)
