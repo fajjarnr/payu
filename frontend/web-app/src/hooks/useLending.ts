@@ -94,3 +94,17 @@ export function useCheckPreApproval() {
     ...MutationPresets.readOnly,
   });
 }
+
+export function usePayLaterPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, amount }: { userId: string; amount: string }) =>
+      LendingService.recordPayment(userId, amount),
+    ...MutationPresets.financial,
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['paylater', vars.userId] });
+      qc.invalidateQueries({ queryKey: ['paylater-transactions', vars.userId] });
+      qc.invalidateQueries({ queryKey: ['wallet-balance'] });
+    },
+  });
+}

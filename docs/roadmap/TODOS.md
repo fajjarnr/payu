@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.2` (2026-08-19) |
+| **Last Release** | `1.13.3` (2026-08-19) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka; **login web live** (LOGIN-001..006 closed) |
-| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 7 cross-layer findings + 3 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
-| **Last Updated** | 2026-08-19 — Fix DX-HOOKS-001 (root Husky v9 + commitlint/lint-staged) + ADR-0035 |
+| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 6 cross-layer findings + 3 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
+| **Last Updated** | 2026-08-19 — ADR-0037 gRPC & Protobuf Governance Accepted + TODOS linked (ARCH-BESTP-002) |
 
 ---
 
@@ -54,11 +54,11 @@
 | ARCH-NOTIF-001 | notification | Implementasi multi-kanal & zero-cost provider sesuai [ADR-0027](../adr/0027-notification-service-architecture-and-multi-channel-delivery.md): (1) topic `payment-events` → `payu.billing.payment-completed.v1` / `payu.transaction.payment-expired.v1`, (2) contacts payload & isolasi fallback, (3) `TelegramSender` & `SmsSimulatorSender`, (4) `FcmPushSender` FCM v1, (5) enkripsi AES-256 GCM `recipient` & `body` (UU PDP). | Test suite notification-service green + E2E OTP via Telegram/Simulator |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
 | PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection — workflow `.github/workflows/analytics-tests.yml` sudah ada; sisa = setting GitHub branch protection (butuh `gh`/admin repo) | CI gate aktif via GitHub settings |
-| QAMVP-004 | kyc | Security test DONE 2026-08-13; e2e workflow + CI `.github/workflows/kyc-tests.yml` DONE. Sisa: provider OCR/liveness nyata gate (butuh credential eksternal) | Test + live evidence |
+| QAMVP-004 | kyc | Security test DONE 2026-08-13; e2e workflow + CI `.github/workflows/kyc-tests.yml` DONE. Sisa: provider OCR/liveness nyata gate (butuh credential eksternal) — std Python di [ADR-0036](../adr/0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md): `python-starter` hexagonal-lite, PG/TimescaleDB + RLS + AES-GCM/HMAC, Kafka outbox `payu.<domain>.<event>.v<n>`, ONNX `<30ms`, OCR sidecar | Test + live evidence + ADR-0036 green |
 | QAMVP-005 | platform | CI k6 wired 2026-08-13 — `.github/workflows/k6-tests.yml` (smoke/load/stress, SLO `p95<500ms`/`p99<1s`/`avg<300ms`/`rate<0.01`). Sisa: green run dengan kredensial staging | Laporan k6 di CI |
 | ARCH-GLOBAL-002 | security | Step-Up Auth & Dynamic Linking [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md): `user_pins` Argon2id + 3-strike lockout, `POST /internal/v1/auth/step-up/{challenge,verify}` (Redis TTL 180s, `payload_digest = SHA256(sender+recipient+amount+currency+nonce)`), 2-phase `/prepare`→`/execute` di transaction-service, test suite PIN/lockout/expiry/tampering. | Test suite auth & transaction step-up green |
 | ARCH-GLOBAL-003 | core-banking | ISO 20022 Clearing & Suspense Ledgering [ADR-0029](../adr/0029-iso20022-interbank-clearing-and-suspense-ledgering.md): Chart of Accounts (`SYSTEM_BI_FAST_CLEARING` dll), `WalletClearingUseCase` (reserve/settle/reverse), refactor `InitiateTransferCommandHandler`, invariant double-entry. | Double-entry clearing audit match + invariant tests green |
-| ARCH-GLOBAL-004 | risk-aml | Velocity & AML Risk Scoring [ADR-0030](../adr/0030-realtime-transaction-velocity-and-aml-risk-scoring.md): Redis `evaluate_velocity.lua` (ZSET 10m/24h + daily amount), `RiskEvaluationPort` → `POST /api/v1/analytics/fraud/score` (<30ms), 4-tier (ALLOW/REQUIRE_STEP_UP/HOLD_FOR_REVIEW/BLOCK_REJECT). | Velocity & hold-review tests green |
+| ARCH-GLOBAL-004 | risk-aml | Velocity & AML Risk Scoring [ADR-0030](../adr/0030-realtime-transaction-velocity-and-aml-risk-scoring.md) + std Python [ADR-0036](../adr/0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md): Redis `evaluate_velocity.lua` (ZSET 10m/24h) → `POST /api/v1/analytics/fraud/score` (`onnxruntime` p99 `<30ms`, `payu.analytics.fraud-scored.v1`), 4-tier (ALLOW/REQUIRE_STEP_UP/HOLD_FOR_REVIEW/BLOCK_REJECT) | Velocity & hold-review tests green + ADR-0036 fraud ONNX green |
 | ARCH-GLOBAL-005 | platform | DB HA, PITR & DR Drill [ADR-0031](../adr/0031-database-resilience-pitr-and-disaster-recovery.md): `barmanObjectStore` S3 WAL (`archive_timeout=60s`) + VolumeSnapshot harian, runbook CNPG, skrip `scripts/backup-dr/`, RTO<5m/RPO=0. | PITR drill verified + failover RTO<15s |
 | ARCH-GLOBAL-006 | security | Perimeter Security [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md): Coraza WAF (CRS v4.x, PL1/PL2, SNAP-BI exclusions), Wazuh cluster + CLF Syslog RFC5424 `tcp://wazuh-manager.wazuh.svc.cluster.local:514`. | Wazuh dashboard live + CLF arriving + Coraza block test |
 | ARCH-GLOBAL-007 | data-security | RLS & Multi-Tenant Isolation [ADR-0033](../adr/0033-database-row-level-security-and-multi-tenant-isolation-standard.md): `TenantAwareTransactionSynchronization` (`SET LOCAL app.tenant_id`), role `payu_migrator` vs `payu_app`, `FORCE ROW LEVEL SECURITY` 27 tabel, JWT `partner_id`/`tenant_id` + gateway sanitization. | `BlindIndexAndTenantIsolationIntegrationTest` green + 0-row mismatch |
@@ -75,7 +75,7 @@
 | Key | Domain | Item |
 |:---|:---|:---|
 | READY-060 | card | Card tokenization + 3DS |
-| READY-062 | ml | ONNX fraud detection model |
+| READY-062 | ml | ONNX fraud detection model — `onnxruntime` per [ADR-0036](../adr/0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md) (`ml/fraud_detection`, S3 `payu-models/<name>/v<n>/model.onnx`, p99 `<30ms`) |
 
 ---
 
@@ -146,7 +146,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| FE-STUB-001 | 🟠 | web/investment-lending | `investments/page.tsx` (I1-I5) dan `lending/page.tsx` (L1-L7) hanya `toast.info/success` tanpa hook/mutation ke backend | `investments/page.tsx:60-70`; `lending/page.tsx:93,203,261` |
 | FE-ONBOARD-001 | 🟠 | web/kyc | `onboarding/page.tsx` wajibkan upload KTP Step 1 tetapi tidak kirim ke `POST /accounts/register` maupun `kyc-service` — Flow #28 terputus | `onboarding/page.tsx:40-66`; FLOWS `835-860` |
 | FE-SEC-001 | 🟡 | web/security | `security/page.tsx` kirim `challengeId`/`credential` kosong ke `registerBiometric.mutate` — WebAuthn fail | `security/page.tsx:23-33` |
 | BE-SUPP-001 / FE-STUB-002 | 🟠 | support | `support-service` hanya manajemen pelatihan agent; tanpa API `/tickets` & FAQ publik; UI `support/page.tsx` statis tanpa handler | `SupportController.java:25-100`; `support/page.tsx:56-58` |
@@ -212,13 +211,13 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 
 ### 3. 📝 Backlog ADR Baru yang Perlu Dibuat
 
-> **Update 2026-08-19**: ADR-0035 Dual-Control Maker-Checker dipromosikan dari gate PARTNER-PROD-011 → **Accepted** (lihat [ADR-0035](../adr/0035-dual-control-partner-onboarding-and-sla-runbook.md)). Daftar di bawah digeser 0035→0036 dst.
+> **Update 2026-08-19**: ADR-0035 Dual-Control (PARTNER-PROD-011) + ADR-0036 Python FastAPI (QAMVP-004/ARCH-GLOBAL-004/READY-062) + ADR-0037 gRPC & Protobuf Governance (ARCH-BESTP-002) → **Accepted** (lihat [ADR-0035](../adr/0035-dual-control-partner-onboarding-and-sla-runbook.md), [ADR-0036](../adr/0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md) & [ADR-0037](../adr/0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md)).
 
 | No | Nomor ADR Usulan | Judul / Topik ADR | Prioritas |
 |:---:|:---|:---|:---:|
 | — | **ADR-0035** | ✅ **Dual-Control (Maker-Checker) Partner Onboarding, SLA & Runbook** — PARTNER-PROD-011 (Accepted 2026-08-19) | **P1** |
-| 1 | **ADR-0036** | Python FastAPI Microservice Architecture for AI/ML, KYC & Analytics | **P1** |
-| 2 | **ADR-0037** | Internal Synchronous Inter-Service Communication via gRPC & Protobuf Governance | **P1** |
+| — | **ADR-0036** | ✅ **Python FastAPI Microservice Architecture for AI/ML, KYC & Analytics** — QAMVP-004/ARCH-GLOBAL-004/READY-062 (Accepted 2026-08-19) | **P1** |
+| — | **ADR-0037** | ✅ **Internal Synchronous Inter-Service Communication via gRPC & Protobuf Governance** — ARCH-BESTP-002 (Accepted 2026-08-19) | **P1** |
 | 3 | **ADR-0038** | Distributed Transaction Management: Orchestrated Saga Pattern with Persistent State Machine | **P1** |
 | 4 | **ADR-0039** | Next.js App Router BFF Security, Token Relay & Session Management Standard | **P1** |
 | 5 | **ADR-0040** | Field-Level Encryption, Searchable Encryption via HMAC Blind Indexing & Key Lifecycle | **P1** |
@@ -235,6 +234,6 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 | Key | Domain | Deskripsi Masalah & Rekomendasi Best Practice | Status |
 |:---|:---|:---|:---:|
 | ARCH-BESTP-001 | gateway | Scheduled tasks Quarkus tanpa distributed lock (lihat `GW-CONCUR-001`) — perlu lock Redis/DB ala ShedLock | 🔴 OPEN |
-| ARCH-BESTP-002 | grpc | File `.proto` tersebar per-service tanpa `proto-commons` / Buf central repo — risiko drift | 🔴 OPEN |
+| ARCH-BESTP-002 | grpc | File `.proto` tersebar per-service tanpa `proto-commons` / Buf central repo — risiko drift — std di [ADR-0037](../adr/0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md): `backend/shared/proto-commons` + Buf lint/breaking, `grpc 1.83.1` `protobuf 3.25.5` gov, Istio mTLS `PLAINTEXT`, deadline 1s + retry idempotent, `common.proto` single source | 🟢 Accepted |
 | ARCH-BESTP-003 | lending | Hardcoded rules logic sisa — migrasi tuntas ke DRL/DMN `lending-rules` (ADR-0015) | 🔴 OPEN |
 | ARCH-BESTP-004 | docs | ADR-0008..0013 sangat singkat — perlu pendalaman (Hot Rod ProtoStream, BFF security, Testcontainers) | 🔴 OPEN |

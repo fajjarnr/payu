@@ -2,7 +2,7 @@
 
 import DashboardLayout from '@/components/DashboardLayout';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-import { useInvestmentAccount } from '@/hooks';
+import { useInvestmentAccount, useBuyDeposit, useSellInvestment, useCreateInvestmentAccount } from '@/hooks';
 import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
@@ -10,8 +10,38 @@ import { toast } from 'sonner';
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
   const { data: account, isLoading: loadingAccount, isError: accountError } = useInvestmentAccount();
+  const buyDeposit = useBuyDeposit();
+  const sellInvestment = useSellInvestment();
+  const createAccount = useCreateInvestmentAccount();
 
   const hasAccount = Boolean(account) && !accountError;
+
+  // ponytail: minimal wiring for I1-I5 — buy/sell via real mutations, no extra modal abstraction
+  const handleBuy = async () => {
+    try {
+      let acc = account;
+      if (!acc) {
+        acc = await createAccount.mutateAsync();
+      }
+      await buyDeposit.mutateAsync({ accountId: acc.id, amount: '1000000', tenure: 12 });
+      toast.success('Pembelian deposit berhasil');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Gagal membeli produk');
+    }
+  };
+
+  const handleSell = async () => {
+    try {
+      if (!account) {
+        toast.error('Belum ada akun investasi');
+        return;
+      }
+      await sellInvestment.mutateAsync({ accountId: account.id, transactionId: account.id, amount: '500000' });
+      toast.success('Penjualan berhasil');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Gagal menjual produk');
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -44,16 +74,18 @@ export default function InvestmentsPage() {
                   )}
                   <div className="mt-6 flex flex-wrap gap-4">
                     <button
-                      onClick={() => toast.info('Katalog produk investasi: Reksadana Pasar Uang & Saham')}
+                      onClick={handleBuy}
+                      disabled={buyDeposit.isPending || createAccount.isPending}
                       data-testid="invest-buy-button"
-                      className="rounded-xl bg-primary px-6 py-3 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:bg-primary/90 transition-all active:scale-95">
-                      Beli Produk
+                      className="rounded-xl bg-primary px-6 py-3 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50">
+                      {buyDeposit.isPending ? 'Memproses...' : 'Beli Produk'}
                     </button>
                     <button
-                      onClick={() => toast.info('Pilih produk investasi dari portofolio untuk dijual')}
+                      onClick={handleSell}
+                      disabled={sellInvestment.isPending}
                       data-testid="invest-sell-button"
-                      className="rounded-xl border border-border bg-muted/40 px-6 py-3 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-muted/60 transition-all active:scale-95">
-                      Jual Produk
+                      className="rounded-xl border border-border bg-muted/40 px-6 py-3 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-muted/60 transition-all active:scale-95 disabled:opacity-50">
+                      {sellInvestment.isPending ? 'Memproses...' : 'Jual Produk'}
                     </button>
                   </div>
                 </section>

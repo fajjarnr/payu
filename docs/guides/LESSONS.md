@@ -2,6 +2,17 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-288: Toast-Only Stubs Hide Missing Financial Mutations — Wire Real Hooks (2026-08-19)
+
+**Context**: FE-STUB-001 — `investments/page.tsx` `Beli Produk`/`Jual Produk` and `lending/page.tsx` `Aktifkan PayLater`/`Ajukan Pinjaman`/`Bayar Tagihan` were `toast.info/success` only, no `useBuyDeposit`/`useSellInvestment`/`useActivatePayLater`/`useApplyLoan`/`usePayLaterPayment`.
+
+**Lesson**:
+- A UI button that represents a financial action (I1-I5, L1-L7) must call a real mutation (`InvestmentService.buyDeposit`/`sell`, `LendingService.activatePayLater`/`applyLoan`/`recordPayment`) with `Money` string and `getFinancialMutationHeaders` idempotency, not a toast. Keep the wiring minimal: `handleBuy` creates `InvestmentAccount` if missing then `buyDeposit` `1000000` `tenure 12`; `handleSell` `sell` `500000`; lending handlers use sample `Money` `5000000`/`10000000` and `5000000` income, disabled `isPending`, success/error toasts.
+- For `PayLater` payment, the backend `recordPayment` reads `amount` from JSON body (not query param); expose a dedicated `usePayLaterPayment` hook that invalidates `paylater`/`transactions`/`wallet-balance` on success.
+- Reuse existing `codegraph` services `InvestmentService`/`LendingService` (already correct `Money` string, `getFinancialMutationHeaders`) — no new abstraction.
+
+**Applied evidence**: `investments/page.tsx` `handleBuy`/`handleSell` wired, `lending/page.tsx` `handleActivatePayLater`/`handleApplyLoan`/`handlePayBill` wired, `useLending.ts` new `usePayLaterPayment` exported `hooks/index.ts`, `npm build` `86/86`.
+
 ## L-287: Root Husky v9 Must Gate Backend/Web/Infra/Docs, Not Just Mobile (2026-08-19)
 
 **Context**: DX-HOOKS-001 — git root had no `.husky/`, no root `package.json` `prepare: husky`, no `commitlint`/`lint-staged` at root. Hooks only in `frontend/mobile/.husky` (custom `grep` regex, `_/husky.sh` v4 style, isolated, never active at git root) → backend/web/infra/docs commits never gated.

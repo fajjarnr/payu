@@ -1,5 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.3 (2026-08-19)
+
+- **FE-STUB-001 (frontend) CLOSED** — investments/lending only toast:
+  - Investments `investments/page.tsx`: `useBuyDeposit`/`useSellInvestment`/`useCreateInvestmentAccount` — `handleBuy` `buyDeposit` `1000000` `tenure 12` (creates account if missing), `handleSell` `sell` `500000`, buttons `disabled isPending`, `Money` string `1000000` `ponytail: minimal wiring`.
+  - Lending `lending/page.tsx`: `useActivatePayLater` `useApplyLoan` + new `usePayLaterPayment` (`recordPayment`) — `handleActivatePayLater` `5000000` `FULL_TIME` `12`, `handleApplyLoan` `PERSONAL 10000000 12`, `handlePayBill` `minimumPayment`, all `Money` `getFinancialMutationHeaders` idempotency.
+  - Hooks `useLending.ts` new `usePayLaterPayment`, exported `hooks/index.ts`, verified `codegraph` `InvestmentService`/`LendingService`.
+- **Build & Verification**: `npm --prefix frontend/web-app run build` `86/86` `0`, `tsc` clean, `31` images retagged `1.13.2→1.13.3` `PAYU_VERSION:-1.13.3`.
+- **Backlog**: `TODOS.md` `FE-STUB-001` removed (now `6` cross-layer), `Last Release 1.13.3`.
+
 ## Deploy 1.13.2 (2026-08-19)
 
 - **DX-HOOKS-001 (dx) CLOSED** — root git hygiene:

@@ -53,7 +53,8 @@ export {
   useActivePreApprovals,
   useApplyLoan,
   useActivatePayLater,
-  useCheckPreApproval
+  useCheckPreApproval,
+  usePayLaterPayment
 } from './useLending';
 
 // ── Notifications ──

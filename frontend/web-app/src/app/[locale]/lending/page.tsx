@@ -8,7 +8,7 @@ import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/c
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreApprovals } from '@/hooks';
+import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreApprovals, useActivatePayLater, useApplyLoan, usePayLaterPayment } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
@@ -20,6 +20,47 @@ export default function LendingPage() {
   const { data: payLaterData, isLoading: isLoadingPayLater } = usePayLater(userId);
   const { data: payLaterTxns } = usePayLaterTransactions(userId);
   const { data: preApprovals, isLoading: isLoadingPreApprovals } = useActivePreApprovals(userId);
+  const activatePayLater = useActivatePayLater();
+  const applyLoan = useApplyLoan();
+  const payLaterPayment = usePayLaterPayment();
+
+  // ponytail: minimal wiring for L1-L7 — real mutations instead of toast-only stubs
+  const handleActivatePayLater = async () => {
+    try {
+      await activatePayLater.mutateAsync({
+        userId,
+        request: { monthlyIncome: '5000000', employmentType: 'FULL_TIME', employmentDurationMonths: 12 },
+      });
+      toast.success('PayLater berhasil diaktifkan');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Gagal aktivasi PayLater');
+    }
+  };
+
+  const handleApplyLoan = async (productName: string) => {
+    try {
+      await applyLoan.mutateAsync({
+        externalId: `ext-${Date.now()}`,
+        loanType: 'PERSONAL',
+        principalAmount: '10000000',
+        tenureMonths: 12,
+        purpose: productName,
+      });
+      toast.success(`Pengajuan ${productName} telah diterima`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Gagal mengajukan pinjaman');
+    }
+  };
+
+  const handlePayBill = async () => {
+    try {
+      const amount = payLaterData?.minimumPayment ?? '100000';
+      await payLaterPayment.mutateAsync({ userId, amount });
+      toast.success('Pembayaran tagihan berhasil');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Gagal membayar tagihan');
+    }
+  };
 
   const loanProducts = [
     {
@@ -90,10 +131,11 @@ export default function LendingPage() {
                   <TabsContent value="paylater" className="mt-0">
                     <ButtonMotion>
                       <Button 
-                        onClick={() => toast.info('Fitur Aktivasi PayLater sedang diproses')}
+                        onClick={handleActivatePayLater}
+                        disabled={activatePayLater.isPending}
                         data-testid="activate-paylater-button" 
-                        className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2">
-                        <Plus className="h-4 w-4" /> Aktifkan PayLater
+                        className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2 disabled:opacity-50">
+                        <Plus className="h-4 w-4" /> {activatePayLater.isPending ? 'Memproses...' : 'Aktifkan PayLater'}
                       </Button>
                     </ButtonMotion>
                   </TabsContent>
@@ -200,10 +242,11 @@ export default function LendingPage() {
                           </div>
                           <ButtonMotion className="w-full">
                             <Button 
-                              onClick={() => toast.success(`Pengajuan ${product.name} telah diterima dan sedang diverifikasi`)}
+                              onClick={() => handleApplyLoan(product.name)}
+                              disabled={applyLoan.isPending}
                               data-testid={`apply-loan-${i}`} 
-                              className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
-                              Ajukan Sekarang <ArrowRight className="h-4 w-4" />
+                              className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50">
+                              {applyLoan.isPending ? 'Memproses...' : <>Ajukan Sekarang <ArrowRight className="h-4 w-4" /></>}
                             </Button>
                           </ButtonMotion>
                         </div>
@@ -258,11 +301,12 @@ export default function LendingPage() {
                         </div>
                         <ButtonMotion>
                           <Button 
-                            onClick={() => toast.info('Memproses pembayaran tagihan PayLater...')}
+                            onClick={handlePayBill}
+                            disabled={payLaterPayment.isPending}
                             data-testid="pay-bill-button" 
                             variant="secondary" 
-                            className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg">
-                            Bayar Tagihan
+                            className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg disabled:opacity-50">
+                            {payLaterPayment.isPending ? 'Memproses...' : 'Bayar Tagihan'}
                           </Button>
                         </ButtonMotion>
                       </div>

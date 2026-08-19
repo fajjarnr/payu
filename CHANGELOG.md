@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.3] - 2026-08-19
+
+### Fixed (Frontend)
+- **FE-STUB-001**: `investments/page.tsx` (I1-I5) and `lending/page.tsx` (L1-L7) were `toast.info/success` stubs without backend mutations. Wired to real hooks:
+  - Investments: `useBuyDeposit`/`useSellInvestment`/`useCreateInvestmentAccount` in `investments/page.tsx` — `handleBuy` creates account if missing then `buyDeposit` `1000000` `tenure 12`, `handleSell` `sell` `500000` via `account.id`, buttons disabled `isPending`, `Money` string ` ponytail: minimal wiring, no modal abstraction`.
+  - Lending: `useActivatePayLater`/`useApplyLoan` + new `usePayLaterPayment` (`recordPayment`) in `lending/page.tsx` — `handleActivatePayLater` `monthlyIncome 5000000`, `handleApplyLoan` `PERSONAL 10000000 tenor 12`, `handlePayBill` `minimumPayment` via `recordPayment`, all with `Money` string and `getFinancialMutationHeaders` idempotency.
+  - Hooks `useLending.ts` new `usePayLaterPayment`, exported via `hooks/index.ts`.
+
+### Verification
+- `npm --prefix frontend/web-app run build` `86/86` `0` `tsc --noEmit` clean, frontend `1212` Vitest still green (no regression on `investments/lending` pages).
+- Podman `31` images retagged `1.13.2→1.13.3`, `compose` `PAYU_VERSION:-1.13.3`.
+
 ## [1.13.2] - 2026-08-19
 
 ### Fixed (DX)
