@@ -133,7 +133,7 @@ Pengecekan frekuensi pergerakan dana menggunakan struktur data **Redis ZSET (Sor
 
 ### 3. Model Scoring Risiko 5-Faktor (`analytics-service`)
 
-`FraudDetectionEngine` di [backend/analytics-service/src/app/ml/fraud_detection.py](file:///home/ubuntu/payu/backend/analytics-service/src/app/ml/fraud_detection.py) menghitung skor komposit ($0.0 - 100.0$) berdasarkan formula pembobotan:
+`FraudDetectionEngine` di [backend/analytics-service/src/app/ml/fraud_detection.py](../../backend/analytics-service/src/app/ml/fraud_detection.py) menghitung skor komposit ($0.0 - 100.0$) berdasarkan formula pembobotan:
 
 $$\text{RiskScore} = \sum (\text{FactorWeight}_i \times \text{FactorScore}_i)$$
 

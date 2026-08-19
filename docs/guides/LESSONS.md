@@ -2,6 +2,26 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-286: Prune Unused Container Image Tags to Free Disk and Avoid Registry Drift (2026-08-19)
+
+**Context**: INFRA-018 — `podman images` held `347` `localhost/payu:*` tags (`1.13.0`/`1.12.0`/`1.11.x`) + `72` dangling `<none>` after successive `1.13.x` promotions. Disk `96G` `67%` full.
+
+**Lesson**: After a semver promotion (`podman tag ...:1.13.0 ...:1.13.1` for all `31` services + rebuild of the changed service), prune stale tags with `podman image prune -f` + `podman rmi $(grep -v 1.13.1)` (untagging a shared ID just removes the tag, not the image). Rebuild the changed service last so its new ID isn't overwritten by the bulk tag. Verify `37/37` healthy post-prune and `df -h` (`67%`→`39%`).
+
+**Applied evidence**: `podman images --format "{{.Repository}}:{{.Tag}}" | grep -v 1.13.1 | xargs podman rmi -f` left `0` old payu tags, `31` `1.13.1` remain, disk `38G` `39%`.
+
+## L-285: Never `Number()` a Keycloak UUID and Avoid Numeric-Only Lookup for Partner Tenancy (2026-08-19)
+
+**Context**: BE-PARTNER-001 — `merchant/page.tsx` did `Number(user.id)` where `user.id` is a Keycloak UUID (`550e8400-e29b-41d4-a716-446655440000`) → `NaN` → `getProfile(NaN)` → dashboard never loads. `PartnerController` only offered `GET /{id}` (`Long`) — no `GET /me` or `/by-user/{userId}` for JWT-based lookup.
+
+**Lesson**:
+- Keycloak `sub`/`user.id` is a UUID string, not a numeric DB PK. Frontend must never coerce it with `Number()`/`parseInt`; use the string claim (`email`/`sub`) verbatim and resolve the resource via a JWT-authenticated `/me` endpoint.
+- For partner tenancy, prefer an `email`-based single lookup (`findByEmail`) when the partner's unique email matches the user's Keycloak email — no migration needed. Mark the ceiling with `ponytail:`: single-partner-per-email; if multi-partner-per-user or email-mismatch is needed, add an `owner_user_id` column + `findByOwnerUserId` and migrate.
+- In Spring MVC, place `@GetMapping("/me")` **before** `@GetMapping("/{id}")` — `/me` is more specific and wins over the variable, otherwise `Long id` tries to parse `"me"` as a number. When testing such endpoints with `@AutoConfigureMockMvc(addFilters=false)`, `@WithMockUser` (via `TestExecutionListener`) works but `SecurityMockMvcRequestPostProcessors.jwt()/user()` post-processors are ignored (they need the filter chain). Use `@WithMockUser(username="test@example.com")` and handle `auth.getName()` containing `"@"` as the email fallback, plus a `JwtAuthenticationToken` branch for production JWTs (`@AuthenticationPrincipal Jwt` + `SecurityContextHolder` fallback).
+- Gateway `partners` prefix + BFF whitelist `/api/v1/partners` already cover `/me` — no route change needed. Add `getMyPartner()` to `PartnerService` and a `useMyPartner()` hook for future use.
+
+**Applied evidence**: `PartnerService.findByEmail()` added, `PartnerController.getMyPartner()` handles `Jwt` + `UsernamePassword` fallback, `PartnerControllerTest` `7/7` (found/not-found/`/v1` alias), `merchant/page.tsx` now `await PartnerService.getMyPartner()`, `podman` stack `37/37` healthy on `1.13.1`.
+
 ## L-284: Keep the Backstage Catalog in Lockstep With the Service Inventory (2026-08-18)
 
 **Context**: DX-CATALOG-001 — `catalog-info.yaml` drifted: a ghost `ab-testing-service` that doesn't exist in `backend/`, 5 real services + 5 simulators missing, and only 3 of 17 shared starters registered.

@@ -171,7 +171,7 @@ public interface StepUpVerificationPort {
 ### 5. Biometric & Platform Authenticator Evolution
 
 1. **Mobile Local Biometric (FaceID / TouchID)**:
-   - Sesuai prinsip [cybersecurity-architect/SKILL.md:L86](file:///home/ubuntu/payu/.agents/skills/cybersecurity-architect/SKILL.md#L86), biometrik lokal pada mobile adalah *local device unlocker*, bukan bukti otorisasi backend mandiri.
+   - Sesuai prinsip [cybersecurity-architect/SKILL.md:L86](../../.agents/skills/cybersecurity-architect/SKILL.md#L86), biometrik lokal pada mobile adalah *local device unlocker*, bukan bukti otorisasi backend mandiri.
    - Mobile app memanfaatkan Biometrik lokal untuk meng-unlock encrypted PIN / private key di **iOS Keychain (Secure Enclave)** atau **Android Keystore (TEE)**.
 2. **FIDO2 / WebAuthn Client Assertion (Fase Lanjutan)**:
    - Challenge di-*sign* menggunakan asymmetric keypair (ECDSA P-256) yang terdaftar di `auth-service`. Header `X-Transaction-Signature` dikirimkan sebagai alternatif `X-Transaction-PIN`.

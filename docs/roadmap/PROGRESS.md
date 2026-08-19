@@ -1,5 +1,18 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.1 (2026-08-19)
+
+- **BE-PARTNER-001 (partner) CLOSED** — merchant dashboard `Number(user.id)` `NaN` + missing lookup:
+  - Backend `partner-service`: new `GET /partners/me` (dual `"/v1/partners"` + `"/partners"` → both `/me` variants) resolves by JWT `email` claim (`preferred_username` → `sub` fallback). `PartnerService.findByEmail()` → `PartnerRepository.findByEmail` (already existed). `PartnerController` fallback via `SecurityContextHolder` handles `JwtAuthenticationToken` vs `@WithMockUser` test principal (contains `@`). Added `ponytail:` comment on email-based single-partner ceiling. Tests `PartnerControllerTest` `7/7` (found/not-found/`/v1` alias) + `PartnerService` unit.
+  - Frontend `web-app`: `PartnerService.getMyPartner()` → `GET /partners/me`, `useMyPartner()` hook, `merchant/page.tsx` `useEffect` now `await PartnerService.getMyPartner()` (removed `Number(user.id)` `NaN` path). BFF `/api/v1/[...path]` already whitelists `/api/v1/partners` → `/me` covered; gateway `RouteRegistry` `partners` → `/partners` covers `/me`.
+  - Verified via `codegraph_explore` on `PartnerController`/`PartnerService`/`PartnerEntity`/`PartnerRepository` and manual `merchant/page.tsx` read.
+- **Infrastructure**: pruned unused images — `podman image prune` + `rmi` for `1.13.0`/`1.12.0`/`1.11.x` + dangling. Disk `96G` `67%`→`39%` freed ~26 GB. Remaining `31` images `1.13.1` (partner-service rebuilt `7ade3c6e75ab`). All `37/37` containers still healthy.
+- **Build & Verification**:
+  - `mvn -f backend/partner-service/pom.xml test -Dtest=PartnerControllerTest` `7/7`, `mvn clean package -DskipTests` BUILD SUCCESS (partner-service), `npm --prefix frontend/web-app run build` `86/86` clean.
+  - Podman `--profile apps` `37/37` healthy (`account`/`wallet`/`gateway`/`web` etc), `partner-service` healthy ~60s, log scan final 30s `0 ERROR` (transient Kafka `UNKNOWN_TOPIC_OR_PARTITION` at startup only).
+- **SemVer**: `podman-compose.yml` `${PAYU_VERSION:-1.13.1}` (`1.13.0`→`1.13.1`), all services tagged `1.13.1` via `podman tag`, partner-service rebuilt.
+- **Backlog**: `TODOS.md` `BE-PARTNER-001` removed (now `7` cross-layer findings), `Last Release 1.13.1` `2026-08-19`, `INFRA-018` partially addressed via prune.
+
 ## Deploy 1.13.0 (2026-08-18)
 
 - **Cross-layer audit remediation (2026-08-18)** — fixed gateway/BFF routing, backend, and frontend findings:

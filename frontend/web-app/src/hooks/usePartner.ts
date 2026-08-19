@@ -25,6 +25,15 @@ export function usePartner(id: number) {
   });
 }
 
+export function useMyPartner() {
+  return useQuery({
+    queryKey: ['partner', 'me'],
+    queryFn: () => PartnerService.getMyPartner(),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
 export function useRegisterPartner() {
   const qc = useQueryClient();
   return useMutation({

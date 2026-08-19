@@ -29,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@WithMockUser(roles = "ADMIN")
 public class PartnerControllerTest {
 
     @Autowired
@@ -42,6 +41,7 @@ public class PartnerControllerTest {
     private SandboxFilter sandboxFilter;
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void testGetAllPartners() throws Exception {
         PartnerDTO partner = new PartnerDTO(
             1L,
@@ -64,6 +64,7 @@ public class PartnerControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void testGetPartnerById_Found() throws Exception {
         PartnerDTO partner = new PartnerDTO(
             1L,
@@ -86,6 +87,7 @@ public class PartnerControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void testGetPartnerById_NotFound() throws Exception {
         when(partnerService.getPartnerById(999L)).thenReturn(null);
 
@@ -94,6 +96,7 @@ public class PartnerControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     public void testCreatePartner_Success() throws Exception {
         PartnerDTO newPartner = new PartnerDTO(
             null,
@@ -139,5 +142,43 @@ public class PartnerControllerTest {
                 .andExpect(jsonPath("$.data.name").value("New PartnerEntity"))
                 .andExpect(jsonPath("$.data.clientId").exists())
                 .andExpect(jsonPath("$.data.clientSecret").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "ADMIN")
+    public void testGetMyPartner_Found() throws Exception {
+        PartnerDTO partner = new PartnerDTO(
+            1L, "Test PartnerEntity", "MERCHANT", "test@example.com",
+            "+62123456789", true, "client-id", null, "public-key"
+        );
+        when(partnerService.findByEmail("test@example.com")).thenReturn(Optional.of(partner));
+
+        mockMvc.perform(get("/partners/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("test@example.com"));
+    }
+
+    @Test
+    @WithMockUser(username = "unknown@example.com", roles = "ADMIN")
+    public void testGetMyPartner_NotFound() throws Exception {
+        when(partnerService.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/partners/me"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "ADMIN")
+    public void testGetMyPartner_JwtFallback() throws Exception {
+        // Tests fallback path where principal name contains email ( Covers Jwt email claim path via same fallback)
+        PartnerDTO partner = new PartnerDTO(
+            1L, "Test PartnerEntity", "MERCHANT", "test@example.com",
+            "+62123456789", true, "client-id", null, "public-key"
+        );
+        when(partnerService.findByEmail("test@example.com")).thenReturn(Optional.of(partner));
+
+        mockMvc.perform(get("/v1/partners/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("test@example.com"));
     }
 }

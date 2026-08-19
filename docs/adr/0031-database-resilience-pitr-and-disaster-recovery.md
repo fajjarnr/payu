@@ -233,7 +233,7 @@ Pengujian berkala wajib dijalankan minimal setiap kuartal dengan tahapan:
    - Buat *dummy test transaction* dengan timestamp $T_1$.
    - Simulasikan bencana / drop table pada $T_2$.
    - Spin up cluster `payu-database-drill` dengan target recovery $T_1$.
-   - Eksekusi [cleanup-test-db.sh](file:///home/ubuntu/payu/scripts/cleanup-test-db.sh) dan verifikasi data transaksi $T_1$ utuh, sedangkan korupsi $T_2$ tereliminasi.
+   - Eksekusi [cleanup-test-db.sh](../../scripts/cleanup-test-db.sh) dan verifikasi data transaksi $T_1$ utuh, sedangkan korupsi $T_2$ tereliminasi.
 3. **Double-Entry Ledger Invariant Check (`dr-verify-ledger-integrity.sh`)**:
    - Query otomatis: `SELECT SUM(debit_amount) - SUM(credit_amount) FROM journal_entries;` (Wajib = `0.0000`).
    - Verifikasi Flyway schema history integrity di seluruh 22 database.

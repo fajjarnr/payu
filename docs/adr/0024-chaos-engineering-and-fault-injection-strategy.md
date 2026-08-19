@@ -97,9 +97,9 @@ flowchart TD
 
 ## Implementation & Audit References
 
-- [ADR-0008: Resilience Patterns (Circuit Breaker & Retry)](file:///home/ubuntu/payu/docs/adr/0008-resilience-patterns.md)
-- [ADR-0022: Money & Idempotency Standard](file:///home/ubuntu/payu/docs/adr/0022-money-idempotency-standard.md)
-- [DevSecOps Architecture](file:///home/ubuntu/payu/docs/architecture/DEVSECOPS_ARCHITECTURE.md)
-- [Litmus OpenShift Compatibility Report](file:///home/ubuntu/payu/docs/guides/LITMUS_CHAOS_OPENSHIFT_COMPATIBILITY.md)
-- [PCI-DSS v4.0 Evidence Report](file:///home/ubuntu/payu/docs/compliance/PCI-DSS-v4.0-Evidence-Report.md)
-- [Platform Todos Roadmap](file:///home/ubuntu/payu/docs/roadmap/TODOS.md)
+- [ADR-0008: Resilience Patterns (Circuit Breaker & Retry)](./0008-resilience-patterns.md)
+- [ADR-0022: Money & Idempotency Standard](./0022-money-idempotency-standard.md)
+- [DevSecOps Architecture](../architecture/DEVSECOPS_ARCHITECTURE.md)
+- [Litmus OpenShift Compatibility Report](../guides/LITMUS_CHAOS_OPENSHIFT_COMPATIBILITY.md)
+- [PCI-DSS v4.0 Evidence Report](../compliance/PCI-DSS-v4.0-Evidence-Report.md)
+- [Platform Todos Roadmap](../roadmap/TODOS.md)

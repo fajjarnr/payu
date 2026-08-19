@@ -137,7 +137,7 @@ Berdasarkan standar industri perbankan dan Bank Indonesia SNAP-BI, PayU menetapk
 | **Transactional Outbox Lag** | $\frac{\text{Count}(\text{Outbox events published } \le 1000\text{ms})}{\text{Total Outbox events}}$ | **99.90%** | 0.10% | **P1 (Critical)** |
 | **Webhook Delivery Durability** | $\frac{\text{Webhooks Delivered Successfully } \le 3 \text{ retries}}{\text{Total Webhooks Triggered}}$ | **99.95%** | 0.05% | **P1 (Critical)** |
 
-> [!IMPORTANT]
+!!! note "Important"
 > **Pengecualian Status HTTP 4xx dari Availability SLO**:
 > Request dengan respon HTTP 4xx (misal: `400 Bad Request`, `401 Unauthorized`, `404 Not Found`, `422 Unprocessable Entity` karena saldo tidak cukup) **DIKECUALIKAN** dari perhitungan error budget, karena merefleksikan validasi bisnis yang benar. Hanya status HTTP `5xx` (`500 Internal Server Error`, `502 Bad Gateway`, `503 Service Unavailable`, `504 Gateway Timeout`) dan koneksi yang drop yang mengonsumsi Error Budget.
 
@@ -253,9 +253,9 @@ Implementasi ditegakkan via `MdcMaskingPatternLayout` di `backend/shared/logging
 
 | Action Item | Komponen / Target | File / Lokasi Referensi |
 | :--- | :--- | :--- |
-| **1. Multi-Burn-Rate Rules** | Prometheus Alert Rules | [`infrastructure/platform/observability/monitoring/alerts/slo-alerts.yaml`](file:///home/ubuntu/payu/infrastructure/platform/observability/monitoring/alerts/slo-alerts.yaml) |
-| **2. OTel Collector Pipelines** | OpenTelemetry Collector CR | [`infrastructure/platform/observability/tracing/otel-collector.yaml`](file:///home/ubuntu/payu/infrastructure/platform/observability/tracing/otel-collector.yaml) |
-| **3. TempoStack Deployment** | Red Hat Tempo Operator CR | [`infrastructure/platform/observability/tracing/tempostack.yaml`](file:///home/ubuntu/payu/infrastructure/platform/observability/tracing/tempostack.yaml) |
-| **4. W3C CloudEvents Tracing** | Shared Events Starter | [`backend/shared/events-starter/src/main/java/id/payu/events/cloudevents/CloudEventEnvelope.java`](file:///home/ubuntu/payu/backend/shared/events-starter/src/main/java/id/payu/events/cloudevents/CloudEventEnvelope.java) |
-| **5. Trace ID & MDC Filter** | Shared Logging Starter | [`backend/shared/logging-starter/src/main/java/id/payu/logging/filter/TraceIdFilter.java`](file:///home/ubuntu/payu/backend/shared/logging-starter/src/main/java/id/payu/logging/filter/TraceIdFilter.java) |
-| **6. Partner & SRE Dashboards** | Grafana Dashboards | [`infrastructure/platform/observability/monitoring/grafana/dashboards/`](file:///home/ubuntu/payu/infrastructure/platform/observability/monitoring/grafana/dashboards/) |
+| **1. Multi-Burn-Rate Rules** | Prometheus Alert Rules | [`infrastructure/platform/observability/monitoring/alerts/slo-alerts.yaml`](../../infrastructure/platform/observability/monitoring/alerts/slo-alerts.yaml) |
+| **2. OTel Collector Pipelines** | OpenTelemetry Collector CR | [`infrastructure/platform/observability/tracing/otel-collector.yaml`](../../infrastructure/platform/observability/tracing/otel-collector.yaml) |
+| **3. TempoStack Deployment** | Red Hat Tempo Operator CR | [`infrastructure/platform/observability/tracing/tempostack.yaml`](../../infrastructure/platform/observability/tracing/tempostack.yaml) |
+| **4. W3C CloudEvents Tracing** | Shared Events Starter | [`backend/shared/events-starter/src/main/java/id/payu/events/cloudevents/CloudEventEnvelope.java`](../../backend/shared/events-starter/src/main/java/id/payu/events/cloudevents/CloudEventEnvelope.java) |
+| **5. Trace ID & MDC Filter** | Shared Logging Starter | [`backend/shared/logging-starter/src/main/java/id/payu/logging/filter/TraceIdFilter.java`](../../backend/shared/logging-starter/src/main/java/id/payu/logging/filter/TraceIdFilter.java) |
+| **6. Partner & SRE Dashboards** | Grafana Dashboards | [`infrastructure/platform/observability/monitoring/grafana/dashboards/`](../../infrastructure/platform/observability/monitoring/grafana/dashboards/) |

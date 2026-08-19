@@ -19,6 +19,8 @@ import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
 import java.util.List;
@@ -65,6 +67,51 @@ public class PartnerController extends BaseController {
     @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
     public ResponseEntity<?> getAllPartners() {
         return ok(partnerService.getAllPartners());
+    }
+
+    @GetMapping("/me")
+    @Operation(
+        summary = "Get my partner profile",
+        description = "Lookup partner by authenticated user's email claim (preferred_username fallback). ponytail: email-based single lookup, add owner_user_id column + findByOwnerUserId if multi-partner or email mismatch matters"
+    )
+    @SecurityRequirement(name = OpenApiConstants.SECURITY_SCHEME_BEARER)
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMyPartner(@AuthenticationPrincipal Jwt jwt) {
+        String email = null;
+        if (jwt != null) {
+            email = jwt.getClaimAsString("email");
+            if (email == null || email.isBlank()) {
+                email = jwt.getClaimAsString("preferred_username");
+            }
+            if (email == null || email.isBlank()) {
+                email = jwt.getSubject();
+            }
+        }
+        // Fallback: resolve Jwt from SecurityContext when @AuthenticationPrincipal is null (e.g., test config)
+        if ((email == null || email.isBlank()) && org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null) {
+            var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken jwtAuth) {
+                Jwt token = jwtAuth.getToken();
+                email = token.getClaimAsString("email");
+                if (email == null || email.isBlank()) {
+                    email = token.getClaimAsString("preferred_username");
+                }
+                if (email == null || email.isBlank()) {
+                    email = token.getSubject();
+                }
+            } else {
+                String name = auth.getName();
+                if (name != null && name.contains("@")) {
+                    email = name;
+                }
+            }
+        }
+        if (email == null || email.isBlank()) {
+            return notFound("PartnerEntity", "me");
+        }
+        return partnerService.findByEmail(email)
+                .<ResponseEntity<?>>map(this::ok)
+                .orElse(notFound("PartnerEntity", "me"));
     }
 
     @GetMapping("/{id}")

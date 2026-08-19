@@ -208,10 +208,10 @@ Wazuh Manager mengorelasikan 5 sumber telemetri keamanan:
 
 ## Implementation & Verification References
 
-- [ADR-0010: Security Standards](file:///home/ubuntu/payu/docs/adr/0010-security-standards.md)
-- [ADR-0025: SNAP-BI & Partner Gateway Security Standards](file:///home/ubuntu/payu/docs/adr/0025-snap-bi-and-partner-gateway-security-standard.md)
-- [DevSecOps Architecture](file:///home/ubuntu/payu/docs/architecture/DEVSECOPS_ARCHITECTURE.md)
-- [Incident Response Runbook](file:///home/ubuntu/payu/docs/operations/INCIDENT_RESPONSE.md)
-- [Wazuh Platform Helm Values](file:///home/ubuntu/payu/infrastructure/platform/security/wazuh/values.yaml)
-- [OpenShift Cluster Logging Forwarder](file:///home/ubuntu/payu/infrastructure/platform/security/logging/cluster-logging.yaml)
-- [PCI-DSS v4.0 Evidence Report](file:///home/ubuntu/payu/docs/compliance/PCI-DSS-v4.0-Evidence-Report.md)
+- [ADR-0010: Security Standards](./0010-security-standards.md)
+- [ADR-0025: SNAP-BI & Partner Gateway Security Standards](./0025-snap-bi-and-partner-gateway-security-standard.md)
+- [DevSecOps Architecture](../architecture/DEVSECOPS_ARCHITECTURE.md)
+- [Incident Response Runbook](../operations/INCIDENT_RESPONSE.md)
+- [Wazuh Platform Helm Values](../../infrastructure/platform/security/wazuh/values.yaml)
+- [OpenShift Cluster Logging Forwarder](../../infrastructure/platform/security/logging/cluster-logging.yaml)
+- [PCI-DSS v4.0 Evidence Report](../compliance/PCI-DSS-v4.0-Evidence-Report.md)

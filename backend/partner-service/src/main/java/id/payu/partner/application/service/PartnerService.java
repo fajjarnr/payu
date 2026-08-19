@@ -30,6 +30,10 @@ public class PartnerService {
         return partnerRepository.findById(id).map(this::toDTO).orElse(null);
     }
 
+    public java.util.Optional<PartnerDTO> findByEmail(String email) {
+        return partnerRepository.findByEmail(email).map(this::toDTO);
+    }
+
     /**
      * BUG-BE-138 FIX: Lookup partner by clientId via service layer.
      * Allows SnapBiController to use service instead of direct repository access.

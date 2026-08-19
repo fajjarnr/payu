@@ -52,7 +52,6 @@ metadata:
   title: Account Service
   description: User accounts, profile management, multi-pocket wallets
   annotations:
-    backstage.io/techdocs-ref: dir:backend/account-service
     backstage.io/kubernetes-id: account-service
     argocd/app-name: account-service
     tektonci/build-namespace: payu-ci
@@ -80,7 +79,6 @@ metadata:
   title: Auth Service
   description: Authentication, risk-based MFA, biometrics, OAuth2/OIDC
   annotations:
-    backstage.io/techdocs-ref: dir:backend/auth-service
     backstage.io/kubernetes-id: auth-service
   tags: [java, spring-boot, security, core-banking]
 spec:
@@ -103,7 +101,6 @@ metadata:
   title: Transaction Service
   description: Transfers, BI-FAST, QRIS, transaction sharding
   annotations:
-    backstage.io/techdocs-ref: dir:backend/transaction-service
     backstage.io/kubernetes-id: transaction-service
   tags: [java, spring-boot, core-banking, high-volume]
 spec:
@@ -127,7 +124,6 @@ metadata:
   title: Wallet Service
   description: Double-entry ledger, balance management, escrow, pockets
   annotations:
-    backstage.io/techdocs-ref: dir:backend/wallet-service
     backstage.io/kubernetes-id: wallet-service
   tags: [java, spring-boot, core-banking, ledger]
 spec:
@@ -150,7 +146,6 @@ metadata:
   title: Investment Service
   description: Mutual funds, gold investment, deposits
   annotations:
-    backstage.io/techdocs-ref: dir:backend/investment-service
     backstage.io/kubernetes-id: investment-service
   tags: [java, spring-boot, core-banking]
 spec:
@@ -172,7 +167,6 @@ metadata:
   title: Lending Service
   description: Loans, PayLater, credit scoring, installments
   annotations:
-    backstage.io/techdocs-ref: dir:backend/lending-service
     backstage.io/kubernetes-id: lending-service
   tags: [java, spring-boot, core-banking]
 spec:
@@ -195,7 +189,6 @@ metadata:
   title: FX Service
   description: Currency exchange rates & conversion (critical for Dolan/Maca)
   annotations:
-    backstage.io/techdocs-ref: dir:backend/fx-service
     backstage.io/kubernetes-id: fx-service
   tags: [java, spring-boot, core-banking, fx]
 spec:
@@ -217,7 +210,6 @@ metadata:
   title: Statement Service
   description: PDF E-Statement generation, historical balance
   annotations:
-    backstage.io/techdocs-ref: dir:backend/statement-service
     backstage.io/kubernetes-id: statement-service
   tags: [java, spring-boot]
 spec:
@@ -243,7 +235,6 @@ metadata:
   title: Backoffice Service
   description: Internal admin dashboard, audit, user management
   annotations:
-    backstage.io/techdocs-ref: dir:backend/backoffice-service
     backstage.io/kubernetes-id: backoffice-service
   tags: [java, spring-boot, admin]
 spec:
@@ -264,7 +255,6 @@ metadata:
   title: Partner Service
   description: Partner integration, API key management, SNAP-BI, webhooks
   annotations:
-    backstage.io/techdocs-ref: dir:backend/partner-service
     backstage.io/kubernetes-id: partner-service
   tags: [java, spring-boot, gateway, snap-bi]
 spec:
@@ -286,7 +276,6 @@ metadata:
   title: Promotion Service
   description: Promo campaigns, vouchers, rewards, cashback, loyalty points
   annotations:
-    backstage.io/techdocs-ref: dir:backend/promotion-service
     backstage.io/kubernetes-id: promotion-service
   tags: [java, spring-boot]
 spec:
@@ -307,7 +296,6 @@ metadata:
   title: Support Service
   description: Customer support, ticketing, FAQ
   annotations:
-    backstage.io/techdocs-ref: dir:backend/support-service
     backstage.io/kubernetes-id: support-service
   tags: [java, spring-boot]
 spec:
@@ -328,7 +316,6 @@ metadata:
   title: Compliance Service
   description: Regulatory compliance, AML/CFT, transaction screening (OJK required)
   annotations:
-    backstage.io/techdocs-ref: dir:backend/compliance-service
     backstage.io/kubernetes-id: compliance-service
   tags: [java, spring-boot, security, compliance]
 spec:
@@ -349,7 +336,6 @@ metadata:
   title: CMS Service
   description: Banners, promos, dynamic content management
   annotations:
-    backstage.io/techdocs-ref: dir:backend/cms-service
     backstage.io/kubernetes-id: cms-service
   tags: [java, spring-boot]
 spec:
@@ -370,7 +356,6 @@ metadata:
   title: Dispute Service
   description: Dispute, refund and chargeback management
   annotations:
-    backstage.io/techdocs-ref: dir:backend/dispute-service
     backstage.io/kubernetes-id: dispute-service
   tags: [java, spring-boot, operations]
 spec:
@@ -387,7 +372,6 @@ metadata:
   title: Product Catalog Service
   description: Product and catalog management
   annotations:
-    backstage.io/techdocs-ref: dir:backend/product-catalog-service
     backstage.io/kubernetes-id: product-catalog-service
   tags: [java, spring-boot, platform]
 spec:
@@ -404,7 +388,6 @@ metadata:
   title: Integration Service
   description: External integrator onboarding and SNAP-BI integration management
   annotations:
-    backstage.io/techdocs-ref: dir:backend/integration-service
     backstage.io/kubernetes-id: integration-service
   tags: [java, spring-boot, integration]
 spec:
@@ -421,7 +404,6 @@ metadata:
   title: Loan Origination Process
   description: Lending loan origination workflow orchestration
   annotations:
-    backstage.io/techdocs-ref: dir:backend/loan-origination-process
     backstage.io/kubernetes-id: loan-origination-process
   tags: [java, spring-boot, lending]
 spec:
@@ -440,7 +422,6 @@ metadata:
   title: Lending Rules
   description: Lending decision and eligibility rules engine
   annotations:
-    backstage.io/techdocs-ref: dir:backend/lending-rules
     backstage.io/kubernetes-id: lending-rules
   tags: [java, spring-boot, lending, rules]
 spec:
@@ -463,7 +444,6 @@ metadata:
   title: Gateway Service
   description: API Gateway — rate limiting, JWT validation, routing, idempotency, HMAC signing
   annotations:
-    backstage.io/techdocs-ref: dir:backend/gateway-service
     backstage.io/kubernetes-id: gateway-service
   tags: [java, quarkus, gateway, native]
 spec:
@@ -488,7 +468,6 @@ metadata:
   title: Billing Service
   description: Bill payments (PLN, PDAM, Telkom, etc.) — Quarkus Native
   annotations:
-    backstage.io/techdocs-ref: dir:backend/billing-service
     backstage.io/kubernetes-id: billing-service
   tags: [java, quarkus, native]
 spec:
@@ -509,7 +488,6 @@ metadata:
   title: Notification Service
   description: Push, SMS, Email, WhatsApp notifications — Quarkus Native
   annotations:
-    backstage.io/techdocs-ref: dir:backend/notification-service
     backstage.io/kubernetes-id: notification-service
   tags: [java, quarkus, native, messaging]
 spec:
@@ -531,7 +509,6 @@ metadata:
   title: API Portal Service
   description: Centralized OpenAPI docs, Swagger UI, partner sandbox
   annotations:
-    backstage.io/techdocs-ref: dir:backend/api-portal-service
     backstage.io/kubernetes-id: api-portal-service
   tags: [java, quarkus, native, developer-portal]
 spec:
@@ -554,7 +531,6 @@ metadata:
   title: KYC Service
   description: OCR, liveness detection, identity verification — Python FastAPI
   annotations:
-    backstage.io/techdocs-ref: dir:backend/kyc-service
     backstage.io/kubernetes-id: kyc-service
   tags: [python, fastapi, ml, ocr]
 spec:
@@ -575,7 +551,6 @@ metadata:
   title: Analytics Service
   description: Fraud scoring, user insights, ML models — Python FastAPI
   annotations:
-    backstage.io/techdocs-ref: dir:backend/analytics-service
     backstage.io/kubernetes-id: analytics-service
   tags: [python, fastapi, ml, fraud]
 spec:
@@ -601,7 +576,6 @@ metadata:
   title: PayU Web App
   description: Digital Banking UI — Next.js 15+, React, Premium Emerald design
   annotations:
-    backstage.io/techdocs-ref: dir:frontend/web-app
     backstage.io/kubernetes-id: web-app
   tags: [typescript, nextjs, react, frontend]
 spec:
@@ -620,7 +594,6 @@ metadata:
   title: Developer Documentation Portal
   description: Partner-facing documentation — Next.js 16, i18n, SDK samples
   annotations:
-    backstage.io/techdocs-ref: dir:frontend/developer-docs
     backstage.io/kubernetes-id: developer-docs
   tags: [typescript, nextjs, documentation, partner-portal]
 spec:
@@ -637,7 +610,6 @@ metadata:
   title: PayU Mobile App
   description: Mobile banking — Expo / React Native
   annotations:
-    backstage.io/techdocs-ref: dir:frontend/mobile
   tags: [typescript, react-native, expo, mobile]
 spec:
   type: mobile-app
@@ -659,7 +631,6 @@ metadata:
   title: BI-FAST Simulator
   description: BI-FAST transfer simulation for development/testing
   annotations:
-    backstage.io/techdocs-ref: dir:backend/simulators/bi-fast-simulator
   tags: [java, quarkus, simulator]
 spec:
   type: service
@@ -675,7 +646,6 @@ metadata:
   title: Biller Simulator
   description: Bill payment / billing provider simulation for development/testing
   annotations:
-    backstage.io/techdocs-ref: dir:backend/simulators/biller-simulator
   tags: [java, quarkus, simulator]
 spec:
   type: service
@@ -691,7 +661,6 @@ metadata:
   title: Dukcapil Simulator
   description: Dukcapil identity verification simulation for development/testing
   annotations:
-    backstage.io/techdocs-ref: dir:backend/simulators/dukcapil-simulator
   tags: [java, quarkus, simulator]
 spec:
   type: service
@@ -707,7 +676,6 @@ metadata:
   title: QRIS Simulator
   description: QRIS payment simulation for development/testing
   annotations:
-    backstage.io/techdocs-ref: dir:backend/simulators/qris-simulator
   tags: [java, quarkus, simulator]
 spec:
   type: service
@@ -723,7 +691,6 @@ metadata:
   title: VA Simulator
   description: Virtual Account (VA) payment simulation for development/testing
   annotations:
-    backstage.io/techdocs-ref: dir:backend/simulators/va-simulator
   tags: [java, quarkus, simulator]
 spec:
   type: service

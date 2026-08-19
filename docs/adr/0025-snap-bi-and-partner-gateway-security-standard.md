@@ -100,9 +100,9 @@ flowchart TD
 
 ## Implementation & Audit References
 
-- [ADR-0010: Security Standards](file:///home/ubuntu/payu/docs/adr/0010-security-standards.md)
-- [ADR-0022: Money & Idempotency Standard](file:///home/ubuntu/payu/docs/adr/0022-money-idempotency-standard.md)
-- [ADR-0024: Tiered Chaos Engineering & Fault Injection Strategy](file:///home/ubuntu/payu/docs/adr/0024-chaos-engineering-and-fault-injection-strategy.md)
-- [Gateway Architecture](file:///home/ubuntu/payu/docs/roadmap/GATEWAY_ARCH.md)
-- [Lesson Learned L-254 (SNAP-BI Endpoint Path Binding)](file:///home/ubuntu/payu/docs/guides/LESSONS.md)
-- [PCI-DSS v4.0 Evidence Report](file:///home/ubuntu/payu/docs/compliance/PCI-DSS-v4.0-Evidence-Report.md)
+- [ADR-0010: Security Standards](./0010-security-standards.md)
+- [ADR-0022: Money & Idempotency Standard](./0022-money-idempotency-standard.md)
+- [ADR-0024: Tiered Chaos Engineering & Fault Injection Strategy](./0024-chaos-engineering-and-fault-injection-strategy.md)
+- [Gateway Architecture](../roadmap/GATEWAY_ARCH.md)
+- [Lesson Learned L-254 (SNAP-BI Endpoint Path Binding)](../guides/LESSONS.md)
+- [PCI-DSS v4.0 Evidence Report](../compliance/PCI-DSS-v4.0-Evidence-Report.md)

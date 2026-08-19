@@ -60,6 +60,12 @@ export const PartnerService = {
     return response.data;
   },
 
+  /** GET /partners/me — Get my partner by JWT email */
+  async getMyPartner() {
+    const response = await api.get<Partner>('/partners/me');
+    return response.data;
+  },
+
   /** PUT /partners/{id} — Update partner */
   async updatePartner(id: number, data: Partial<Partner>) {
     const response = await api.put<Partner>(`/partners/${id}`, data);

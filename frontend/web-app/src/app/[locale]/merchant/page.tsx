@@ -17,25 +17,21 @@ export default function MerchantDashboard() {
  const [partner, setPartner] = useState<Partner | null>(null);
  const [loading, setLoading] = useState(true);
 
- useEffect(() => {
-  const fetchPartner = async () => {
-   try {
-    const partnerId = user?.id ? Number(user.id) : 0;
-    if (!partnerId) {
+  useEffect(() => {
+   const fetchPartner = async () => {
+    try {
+     // ponytail: email-based /me lookup; upgrade to owner_user_id if multi-tenant per user
+     const data = await PartnerService.getMyPartner();
+     setPartner(data);
+    } catch (error) {
+     console.error('Failed to fetch partner', error);
+    } finally {
      setLoading(false);
-     return;
     }
-    const data = await PartnerService.getProfile(partnerId);
-    setPartner(data);
-   } catch (error) {
-    console.error('Failed to fetch partner', error);
-   } finally {
-    setLoading(false);
-   }
-  };
+   };
 
-  fetchPartner();
- }, [user?.id]);
+   fetchPartner();
+  }, []);
 
  if (loading) {
   return (

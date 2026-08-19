@@ -11,6 +11,10 @@ nav:
     - Service Catalog: architecture/SERVICE_CATALOG.md
     - Event Catalog: architecture/EVENT_CATALOG.md
     - Gateway Architecture: roadmap/GATEWAY_ARCH.md
+  - ADR:
+    - Index: adr/README.md
+    - Guidelines: adr/0000-adr-guidelines.md
+    - Template: adr/0001-template.md
   - API:
     - Standards: api/API_STANDARDS.md
   - Guides:
@@ -64,7 +68,13 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
   - admonition
   - pymdownx.details
   - pymdownx.tabbed:
@@ -74,6 +84,12 @@ markdown_extensions:
   - md_in_html
   - toc:
       permalink: true
+
+extra_javascript:
+  - https://unpkg.com/mermaid@10.9.1/dist/mermaid.min.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - javascripts/mermaid-init.js
+  - javascripts/mathjax-init.js
 
 extra:
   social:

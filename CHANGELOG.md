@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.1] - 2026-08-19
+
+### Fixed (Partner)
+- **BE-PARTNER-001**: `merchant/page.tsx` parsed Keycloak UUID (`user.id`) via `Number()` → `NaN`, and `PartnerController` only supported numeric `Long` IDs. Added `GET /partners/me` (also `/v1/partners/me`) that resolves the partner by the authenticated user's email claim (`email` → `preferred_username` → `sub` fallback, `ponytail: email-based single lookup, add owner_user_id column if multi-partner needed`), with `@PreAuthorize("isAuthenticated()")` + `SecurityContext` fallback for `JwtAuthenticationToken` vs `UsernamePassword`. Added `PartnerService.findByEmail()` + repository `findByEmail`. Frontend: `PartnerService.getMyPartner()` + `useMyPartner()` hook, `merchant/page.tsx` now calls `getMyPartner()` instead of `Number(user.id)` (fixes `NaN` dashboard). `PartnerControllerTest` 7/7 green (covers `/me` found/not-found/`/v1` alias). Gateway `partners` route already covers `/me`; BFF whitelist `/api/v1/partners` covers `/me`.
+
+### Infrastructure & Housekeeping
+- **Image prune (INFRA-018 follow-up)**: untagged and removed unused container images (`1.13.0`/`1.12.0`/`1.11.x` + dangling `<none>`) via `podman image prune` + `podman rmi $(grep -v 1.13.1)`. Disk `/dev/root` `67%` (64G) → `39%` (38G) freed ~24-26 GB. Remaining: `31` images `1.13.1` (incl. rebuilt `partner-service:1.13.1` `7ade3c6e75ab`). Stack remains `37/37` healthy post-prune.
+- **SemVer promotion**: `infrastructure/local/podman/podman-compose.yml` default `${PAYU_VERSION:-1.13.0}` → `1.13.1` (31 images), `podman tag` promotion for all services to `1.13.1` then rebuild `partner-service`.
+
+### Verification
+- `mvn -f backend/partner-service/pom.xml test -Dtest=PartnerControllerTest` `7/7` green (previously `1` failure due to `@WithMockUser` vs `Jwt` MockMvc setup — fixed by removing class-level mock and using `@WithMockUser(username="test@example.com")`).
+- `mvn -f backend/partner-service/pom.xml clean package -DskipTests` BUILD SUCCESS; `npm --prefix frontend/web-app run build` `86/86` routes clean, `tsc --noEmit` no errors.
+- Podman stack `--profile apps` `37/37` healthy (`1.13.1`), `partner-service` `healthy` 60s after start, log `0 ERROR` (ShedLock `@Profile("!test")` — no error in `container` profile), only transient Kafka `UNKNOWN_TOPIC_OR_PARTITION` at startup.
+
 ## [1.13.0] - 2026-08-18
 
 ### Fixed (Gateway / BFF routing)

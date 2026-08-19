@@ -22,7 +22,7 @@ Dalam industri perbankan dan *core banking systems*, terdapat perbedaan mendasar
    - **PBI No. 23/6/PBI/2021 (Penyelenggaraan BI-FAST)** & **PADG BI No. 24/7/PADG/2022**: Mengatur kewajiban likuiditas rekening *settlement* di Bank Indonesia serta pencatatan audit trail real-time.
    - **PSAK Perbankan (Pedoman Standar Akuntansi Perbankan Indonesia / PSAPI)**: Mewajibkan pencatatan akuntansi berbasis **Double-Entry Bookkeeping** yang mencatat pos perantara (*Suspense / Clearing Transit Account*) dan rekening *Nostro / Giro Kas pada Bank Indonesia*.
 
-Sebelum ADR ini dibuat, implementasi `commitReservation` pada `wallet-service` ([WalletService.java:L247-L250](file:///home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/application/service/WalletService.java#L247-L250)) hanya mencatat **1 baris DEBIT pada wallet nasabah** tanpa jurnal pasangannya (KREDIT ke pos kliring bank dan pemotongan kas Giro BI saat penyelesaian), sehingga melanggar invarian buku besar berpasangan ($sum(\text{debit}) \neq sum(\text{credit})$) dan menyebabkan selisih audit trail dengan Bank Sentral (`ARCH-GLOBAL-003`).
+Sebelum ADR ini dibuat, implementasi `commitReservation` pada `wallet-service` ([WalletService.java:L247-L250](../../backend/wallet-service/src/main/java/id/payu/wallet/application/service/WalletService.java#L247-L250)) hanya mencatat **1 baris DEBIT pada wallet nasabah** tanpa jurnal pasangannya (KREDIT ke pos kliring bank dan pemotongan kas Giro BI saat penyelesaian), sehingga melanggar invarian buku besar berpasangan ($sum(\text{debit}) \neq sum(\text{credit})$) dan menyebabkan selisih audit trail dengan Bank Sentral (`ARCH-GLOBAL-003`).
 
 ---
 
@@ -158,13 +158,13 @@ public final class SystemAccountConstants {
 ### 2. Invarian Domain & Double-Entry Integrity
 
 1. **Journal Balance Assertion**:
-   Setiap pembuatan jurnal wajib memanggil [JournalEntry.java:L53-L65](file:///home/ubuntu/payu/backend/wallet-service/src/main/java/id/payu/wallet/domain/model/JournalEntry.java#L53-L65):
+   Setiap pembuatan jurnal wajib memanggil [JournalEntry.java:L53-L65](../../backend/wallet-service/src/main/java/id/payu/wallet/domain/model/JournalEntry.java#L53-L65):
    $$\sum_{e \in \text{entries}} \text{debit}(e) == \sum_{e \in \text{entries}} \text{credit}(e)$$
    Jika tidak seimbang, transaksi dibatalkan (*fail-fast* dengan `UnbalancedJournalException`).
 2. **Immutability of Financial Records**:
    Dilarang melakukan `UPDATE` atau `DELETE` pada tabel `ledger_entries` maupun `journal_entries`. Setiap koreksi kegagalan/timeout wajib dibukukan melalui jurnal pembalik (*reversal journal*) dengan `reference_type = 'REVERSAL'`.
 3. **Database Concurrency & Idempotency Guard**:
-   Callback settlement interbank menggunakan *pessimistic lock* `FOR UPDATE` ([InitiateTransferCommandHandler.java:L168](file:///home/ubuntu/payu/backend/transaction-service/src/main/java/id/payu/transaction/application/cqrs/command/InitiateTransferCommandHandler.java#L168)) pada entitas transaksi untuk menjamin callback yang dikirim berulang oleh BI-FAST hanya memicu 1 kali mutasi settlement di `wallet-service`.
+   Callback settlement interbank menggunakan *pessimistic lock* `FOR UPDATE` ([InitiateTransferCommandHandler.java:L168](../../backend/transaction-service/src/main/java/id/payu/transaction/application/cqrs/command/InitiateTransferCommandHandler.java#L168)) pada entitas transaksi untuk menjamin callback yang dikirim berulang oleh BI-FAST hanya memicu 1 kali mutasi settlement di `wallet-service`.
 
 ---
 
