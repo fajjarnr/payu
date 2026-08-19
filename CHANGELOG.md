@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.2] - 2026-08-19
+
+### Fixed (DX)
+- **DX-HOOKS-001**: Root missing Husky v9 (only `frontend/mobile/.husky` isolated, not active at git root). Added root `package.json` (`private`, `prepare: husky`, `@commitlint/cli@19.6.0`, `@commitlint/config-conventional@19.6.0`, `husky@9.1.7`, `lint-staged@15.2.0`, `prettier@3.4.0`, `lint-staged` `prettier --write` for `*.{js,ts,tsx,jsx,json,md,yml,yaml}`), `.husky/commit-msg` (`npx --no -- commitlint --edit $1` `ponytail: minimal hook`), `.husky/pre-commit` (`npx --no -- lint-staged` `ponytail: global prettier; heavy tsc/test stay in CI`). Verified `Context7` Husky v9 (`npx husky init` → `prepare: husky`), commit-msg valid `feat(test):` 0 / invalid `bad` 1, pre-commit `No staged files` 0. Mobile `.husky` kept as reference but now gated by root.
+
+### Verification
+- `npm install --ignore-scripts` 164 packages `0 vulnerabilities`, `.husky/commit-msg` / `pre-commit` executable, `commitlint` gate active; existing `commitlint.config.js` reused.
+- Podman `31` images tagged `1.13.2` (`podman tag` from `1.13.1`), `compose` `PAYU_VERSION:-1.13.2` ready.
+
 ## [1.13.1] - 2026-08-19
 
 ### Fixed (Partner)

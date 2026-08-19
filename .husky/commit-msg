@@ -1,0 +1,4 @@
+#!/bin/sh
+# DX-HOOKS-001: Husky v9 commit-msg hook - validates Conventional Commits via commitlint
+# ponytail: minimal hook - just commitlint, no O(n^2) scan; add lint-staged to pre-commit if needed
+npx --no -- commitlint --edit "$1"

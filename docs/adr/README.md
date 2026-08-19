@@ -41,6 +41,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0032](0032-perimeter-security-waf-coraza-and-siem-wazuh.md) | Perimeter Security: Tiered WAF (AWS WAF & Coraza OWASP CRS) and Centralized SIEM (Wazuh & CLF Syslog) | Accepted | 2026-08-18 |
 | [0033](0033-database-row-level-security-and-multi-tenant-isolation-standard.md) | Database Row-Level Security (PostgreSQL RLS) & Multi-Tenant Isolation Standard (PARTNER-PROD-006) | Accepted | 2026-08-18 |
 | [0034](0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md) | End-to-End Observability, Distributed Tracing (W3C/OTel/Tempo), and Multi-Window Multi-Burn-Rate SLI/SLO Standard (PARTNER-PROD-009) | Accepted | 2026-08-18 |
+| [0035](0035-dual-control-partner-onboarding-and-sla-runbook.md) | Dual-Control (Maker-Checker) Partner Onboarding, SLA & Runbook (PARTNER-PROD-011) | Accepted | 2026-08-19 |
 
 
 ## 🚀 How to Create a New ADR

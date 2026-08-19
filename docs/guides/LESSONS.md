@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-287: Root Husky v9 Must Gate Backend/Web/Infra/Docs, Not Just Mobile (2026-08-19)
+
+**Context**: DX-HOOKS-001 — git root had no `.husky/`, no root `package.json` `prepare: husky`, no `commitlint`/`lint-staged` at root. Hooks only in `frontend/mobile/.husky` (custom `grep` regex, `_/husky.sh` v4 style, isolated, never active at git root) → backend/web/infra/docs commits never gated.
+
+**Lesson**:
+- Husky v9 `npx husky init` sets `package.json` `scripts.prepare: husky` (v8 `husky install` deprecated) and creates `.husky/pre-commit` as a plain shell file (`npm test` placeholder). Use `npx --no -- commitlint --edit $1` in `.husky/commit-msg` (verified via `Context7` `/typicode/husky` v9.1.7) and `npx --no -- lint-staged` in `.husky/pre-commit`.
+- Keep `prepare` hooks minimal at root: `commit-msg` `commitlint` (fail 1 on `bad commit`, pass 0 on `feat(test):`) and `pre-commit` `prettier --write` via `lint-staged` (`*.{js,ts,tsx,jsx,json,md,yml,yaml}`) — heavy `tsc --noEmit`/`jest` stay in CI (`DX-CI-FE-001` `frontend-tests.yml`), not in pre-commit (ponytail: global prettier, not O(n^2) scan).
+- Root `lint-staged` `eslint --fix` needs `eslint` at root (not present); use `prettier --write` until `eslint` is added to root devDeps, otherwise pre-commit fails on missing binary.
+- After `npm install --ignore-scripts`, verify `.husky/commit-msg` 0/1 and `pre-commit` `No staged files` 0.
+
+**Applied evidence**: `package.json` `1.13.1→1.13.2` with `husky@9.1.7` + `@commitlint/cli@19.6.0` + `lint-staged@15.2.0` + `prettier@3.4.0`, `.husky/commit-msg` + `pre-commit` executable, `commitlint.config.js` reused, `TODOS.md` `DX-HOOKS-001` removed.
+
 ## L-286: Prune Unused Container Image Tags to Free Disk and Avoid Registry Drift (2026-08-19)
 
 **Context**: INFRA-018 — `podman images` held `347` `localhost/payu:*` tags (`1.13.0`/`1.12.0`/`1.11.x`) + `72` dangling `<none>` after successive `1.13.x` promotions. Disk `96G` `67%` full.

@@ -1,0 +1,4 @@
+#!/bin/sh
+# DX-HOOKS-001: pre-commit hook - runs lint-staged on staged files (backend/web/infra/docs)
+# ponytail: global lint-staged; per-service heavy checks (tsc/test) stay in CI (DX-CI-FE-001)
+npx --no -- lint-staged

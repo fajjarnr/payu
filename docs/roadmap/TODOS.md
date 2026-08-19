@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.1` (2026-08-19) |
+| **Last Release** | `1.13.2` (2026-08-19) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka; **login web live** (LOGIN-001..006 closed) |
-| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 7 cross-layer findings + 4 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
-| **Last Updated** | 2026-08-19 — Fix BE-PARTNER-001 (`/partners/me` + merchant dashboard) + image prune 67%→39% (24 GB freed) |
+| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 7 cross-layer findings + 3 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
+| **Last Updated** | 2026-08-19 — Fix DX-HOOKS-001 (root Husky v9 + commitlint/lint-staged) + ADR-0035 |
 
 ---
 
@@ -95,7 +95,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 | PARTNER-PROD-008 | P0 | ⏸️ Belum | PG HA+PITR via CNPG Barman Cloud ([ADR-0031](../adr/0031-database-resilience-pitr-and-disaster-recovery.md)), restore drill, RPO=0/RTO<5m |
 | PARTNER-PROD-009 | P1 | ⏸️ Belum | SLI/SLO, dashboard+alert, traces E2E ([ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md)) |
 | PARTNER-PROD-010 | P0 | ⏸️ Belum | Contract/k6/chaos ([ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)), pentest, sign-off |
-| PARTNER-PROD-011 | P1 | ⏸️ Belum | Dual-control onboarding, SLA/escalation, runbook, on-call |
+| PARTNER-PROD-011 | P1 | ⏸️ Belum | Dual-control (Maker-Checker) onboarding, SLA/escalation, runbook & on-call — spec di [ADR-0035](../adr/0035-dual-control-partner-onboarding-and-sla-runbook.md): `PENDING_APPROVAL`/`REJECTED`, roles `PARTNER_MAKER`/`PARTNER_CHECKER` (`maker≠checker` DB CHECK), Flyway V19, SLO `p95<4j` jam kerja / `p99<24j` kalender & SLA `1×24j`, Telegram `T+4j` / page `T+24j`, audit+outbox `payu.partner.*.v1`, runbook `docs/operations/PARTNER_ONBOARDING_RUNBOOK.md` |
 
 > Local APIcast (profile `api-management`) tidak bisa authless — public edge butuh APIManager (cluster-level).
 
@@ -164,7 +164,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| DX-HOOKS-001 | 🔴 | dx/git-hygiene | Root tanpa Husky v9 (`.husky/`), `prepare` script, commitlint/lint-staged — hooks hanya di `frontend/mobile/.husky` (tidak aktif di root) → backend/web/infra/docs tidak ter-gate pre-commit | `.husky/` absen di root |
 | DX-TS-BRANDED-001 | 🟠 | web/types | `types/index.ts` & clients pakai plain `string` untuk `AccountId`/`UserId`/`TransactionId`/`Money` tanpa branded types — pemicu bug mismatch (BE-PARTNER-001/BE-INVEST-001) | `frontend/web-app/src/types/index.ts:21-80` |
 | GW-CONCUR-001 | 🟠 | gateway/concurrency | `gateway-service` scheduled tasks (`ApiKeyRotationService:119`, `PersistentAnalyticsService:123,162,183`, `CheckoutService:29`) tanpa distributed lock — multi-instance double execution | `ApiKeyRotationService.java:119` |
 
@@ -213,20 +212,23 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 
 ### 3. 📝 Backlog ADR Baru yang Perlu Dibuat
 
+> **Update 2026-08-19**: ADR-0035 Dual-Control Maker-Checker dipromosikan dari gate PARTNER-PROD-011 → **Accepted** (lihat [ADR-0035](../adr/0035-dual-control-partner-onboarding-and-sla-runbook.md)). Daftar di bawah digeser 0035→0036 dst.
+
 | No | Nomor ADR Usulan | Judul / Topik ADR | Prioritas |
 |:---:|:---|:---|:---:|
-| 1 | **ADR-0035** | Python FastAPI Microservice Architecture for AI/ML, KYC & Analytics | **P1** |
-| 2 | **ADR-0036** | Internal Synchronous Inter-Service Communication via gRPC & Protobuf Governance | **P1** |
-| 3 | **ADR-0037** | Distributed Transaction Management: Orchestrated Saga Pattern with Persistent State Machine | **P1** |
-| 4 | **ADR-0038** | Next.js App Router BFF Security, Token Relay & Session Management Standard | **P1** |
-| 5 | **ADR-0039** | Field-Level Encryption, Searchable Encryption via HMAC Blind Indexing & Key Lifecycle | **P1** |
-| 6 | **ADR-0040** | Transactional Outbox Pattern with Polling Skip-Locked Dispatcher vs Debezium CDC | **P2** |
-| 7 | **ADR-0041** | Distributed Job Scheduling & Cluster-Wide Concurrency Lock Standard using ShedLock | **P1** |
-| 8 | **ADR-0042** | Enterprise Integration Patterns & Core Banking Protocol Bridging with Apache Camel | **P2** |
-| 9 | **ADR-0043** | Secrets Lifecycle & Zero-Trust Secrets Management with Vault & ESO | **P1** |
-| 10 | **ADR-0044** | GitOps Continuous Delivery, Infrastructure as Code & Supply Chain Security | **P2** |
-| 11 | **ADR-0045** | Time-Series Financial Telemetry via TimescaleDB Hypertables | **P2** |
-| 12 | **ADR-0046** | Frontend Nominal Branded Types & Strict Financial Money Precision Standard | **P1** |
+| — | **ADR-0035** | ✅ **Dual-Control (Maker-Checker) Partner Onboarding, SLA & Runbook** — PARTNER-PROD-011 (Accepted 2026-08-19) | **P1** |
+| 1 | **ADR-0036** | Python FastAPI Microservice Architecture for AI/ML, KYC & Analytics | **P1** |
+| 2 | **ADR-0037** | Internal Synchronous Inter-Service Communication via gRPC & Protobuf Governance | **P1** |
+| 3 | **ADR-0038** | Distributed Transaction Management: Orchestrated Saga Pattern with Persistent State Machine | **P1** |
+| 4 | **ADR-0039** | Next.js App Router BFF Security, Token Relay & Session Management Standard | **P1** |
+| 5 | **ADR-0040** | Field-Level Encryption, Searchable Encryption via HMAC Blind Indexing & Key Lifecycle | **P1** |
+| 6 | **ADR-0041** | Transactional Outbox Pattern with Polling Skip-Locked Dispatcher vs Debezium CDC | **P2** |
+| 7 | **ADR-0042** | Distributed Job Scheduling & Cluster-Wide Concurrency Lock Standard using ShedLock | **P1** |
+| 8 | **ADR-0043** | Enterprise Integration Patterns & Core Banking Protocol Bridging with Apache Camel | **P2** |
+| 9 | **ADR-0044** | Secrets Lifecycle & Zero-Trust Secrets Management with Vault & ESO | **P1** |
+| 10 | **ADR-0045** | GitOps Continuous Delivery, Infrastructure as Code & Supply Chain Security | **P2** |
+| 11 | **ADR-0046** | Time-Series Financial Telemetry via TimescaleDB Hypertables | **P2** |
+| 12 | **ADR-0047** | Frontend Nominal Branded Types & Strict Financial Money Precision Standard | **P1** |
 
 ### 4. ⚠️ Kesenjangan Best Practice & Anti-Pattern yang Memerlukan Remediasi
 

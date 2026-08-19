@@ -1,5 +1,15 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.2 (2026-08-19)
+
+- **DX-HOOKS-001 (dx) CLOSED** — root git hygiene:
+  - Root `package.json` `private` `prepare: husky` + `@commitlint/cli@19.6.0` + `@commitlint/config-conventional@19.6.0` + `husky@9.1.7` + `lint-staged@15.2.0` + `prettier@3.4.0`, `lint-staged` `prettier --write` for `*.{js,ts,tsx,jsx,json,md,yml,yaml}` (ponytail: global prettier, heavy `tsc/test` stay in CI `DX-CI-FE-001`).
+  - `.husky/commit-msg` `npx --no -- commitlint --edit $1` (ponytail: minimal hook, valid `feat(test):` 0 / invalid `bad` 1), `.husky/pre-commit` `npx --no -- lint-staged` (`No staged files` 0). Verified `Context7` Husky v9 `npx husky init` → `prepare: husky`.
+  - Previously only `frontend/mobile/.husky` (custom grep, not `commitlint --edit`, isolated, not active at git root) → now `backend/web/infra/docs` gated at root.
+- **Build & Verification**: `npm install --ignore-scripts` 164 packages `0 vulnerabilities`, hooks executable, `commitlint` gate active; `podman` `31` images retagged `1.13.2` (`1.13.1→1.13.2`), `compose` `PAYU_VERSION:-1.13.2`.
+- **Backlog**: `TODOS.md` `DX-HOOKS-001` removed (now `3` DX findings: `DX-TS-BRANDED-001`, `GW-CONCUR-001`), `Last Release 1.13.2`.
+- **SemVer**: `package.json` `1.13.1→1.13.2`, `podman-compose.yml` `1.13.1→1.13.2`.
+
 ## Deploy 1.13.1 (2026-08-19)
 
 - **BE-PARTNER-001 (partner) CLOSED** — merchant dashboard `Number(user.id)` `NaN` + missing lookup:
