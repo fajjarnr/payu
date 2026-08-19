@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
+import KYCService from '@/services/KYCService';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerUserSchema, RegisterUserRequest } from '@/types';
@@ -45,15 +46,44 @@ export default function OnboardingPage() {
     `KTP-${Date.now()}-${typeof crypto !== 'undefined' ? crypto.randomUUID().substring(0, 8) : 'rnd'}`
   );
 
+  const fileToBase64 = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.includes(',') ? result.split(',')[1] : result);
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterUserRequest>({
     resolver: zodResolver(registerUserSchema)
   });
 
   const mutation = useMutation({
-    mutationFn: (data: RegisterUserRequest) => {
-      // Strip confirmPassword before sending to API (it's only for client-side validation)
+    mutationFn: async (data: RegisterUserRequest) => {
       const { confirmPassword: _confirmPassword, ...payload } = data as RegisterUserRequest & { confirmPassword?: string };
-      return api.post('/accounts/register', payload);
+      const res = await api.post('/accounts/register', payload);
+      // ponytail: upload KTP to kyc-service if present — Flow #28 minimal, non-blocking KYC
+      if (ktpFile) {
+        try {
+          const base64 = await fileToBase64(ktpFile);
+          const userId = (res.data as any)?.data?.id || (res.data as any)?.id || payload.username;
+          const start = await KYCService.startVerification({
+            userId: String(userId),
+            fullName: payload.fullName,
+            nik: payload.nik,
+            dateOfBirth: '1990-01-01',
+            address: 'Indonesia',
+            phone: (payload as any).phoneNumber,
+          });
+          await KYCService.uploadKtp({ verificationId: start.verificationId, ktpImage: base64, nik: payload.nik });
+        } catch (kycErr) {
+          console.warn('KYC upload failed (non-blocking):', kycErr);
+        }
+      }
+      return res;
     },
     onSuccess: () => {
       setStep(3);

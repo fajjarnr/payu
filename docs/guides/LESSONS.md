@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-289: Onboarding Must Not Drop KTP — Wire KTP Base64 to KYC Service (2026-08-19)
+
+**Context**: FE-ONBOARD-001 — `onboarding/page.tsx` Step 1 `ktpFile` required (`disabled={!ktpFile}`) but `mutationFn` `POST /accounts/register` ignored `ktpFile` (Flow #28 `835-860` eKYC broken, BFF 10 MiB not exercised).
+
+**Lesson**: `fileToBase64` via `FileReader.readAsDataURL` split `,` + `KYCService.startVerification` (`userId` from register `id` or `username`, `fullName`/`nik`, dummy `1990-01-01`/`Indonesia`) + `KYCService.uploadKtp` (`verificationId`, `ktpImage` base64 `nik`) after register, non-blocking `try/catch` `console.warn` (registration must succeed even if KYC fails), `ponytail: upload KTP to kyc-service if present — Flow #28 minimal`. BFF already `10_485_760` (WEB-KYC-001) covers 5 MB image.
+
+**Applied evidence**: `onboarding/page.tsx` `fileToBase64` + `KYCService` wiring, `npm build` `86/86`.
+
 ## L-288: Toast-Only Stubs Hide Missing Financial Mutations — Wire Real Hooks (2026-08-19)
 
 **Context**: FE-STUB-001 — `investments/page.tsx` `Beli Produk`/`Jual Produk` and `lending/page.tsx` `Aktifkan PayLater`/`Ajukan Pinjaman`/`Bayar Tagihan` were `toast.info/success` only, no `useBuyDeposit`/`useSellInvestment`/`useActivatePayLater`/`useApplyLoan`/`usePayLaterPayment`.

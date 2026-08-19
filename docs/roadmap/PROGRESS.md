@@ -1,5 +1,13 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.4 (2026-08-19)
+
+- **FE-ONBOARD-001 (kyc) CLOSED** — onboarding KTP not sent to KYC:
+  - `onboarding/page.tsx` `mutationFn` now `fileToBase64` + `KYCService.startVerification` (`userId` from register response `id` or `username`, `fullName`/`nik`, dummy `1990-01-01`/`Indonesia`) + `KYCService.uploadKtp` (`verificationId`, `ktpImage` base64 `nik`) after `POST /accounts/register`, non-blocking `try/catch` `console.warn`, `ponytail: upload KTP to kyc-service if present — Flow #28 minimal`.
+  - BFF already `10_485_760` (WEB-KYC-001) covers 5 MB base64 + `KYCService.MAX_BASE64_SIZE 7 MB` guard.
+- **Build & Verification**: `npm --prefix frontend/web-app run build` `86/86` `0`, `tsc` clean, `31` images retagged `1.13.3→1.13.4` `PAYU_VERSION:-1.13.4`.
+- **Backlog**: `TODOS.md` `FE-ONBOARD-001` removed (now `5` cross-layer), `Last Release 1.13.4`.
+
 ## Deploy 1.13.3 (2026-08-19)
 
 - **FE-STUB-001 (frontend) CLOSED** — investments/lending only toast:

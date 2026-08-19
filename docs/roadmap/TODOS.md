@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.3` (2026-08-19) |
+| **Last Release** | `1.13.4` (2026-08-19) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka; **login web live** (LOGIN-001..006 closed) |
-| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 6 cross-layer findings + 3 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
-| **Last Updated** | 2026-08-19 — ADR-0039 Next.js BFF Security Accepted + TODOS linked |
+| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 5 cross-layer findings + 3 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
+| **Last Updated** | 2026-08-19 — Fix FE-ONBOARD-001 (KTP upload → KYC) |
 
 ---
 
@@ -146,7 +146,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| FE-ONBOARD-001 | 🟠 | web/kyc | `onboarding/page.tsx` wajibkan upload KTP Step 1 tetapi tidak kirim ke `POST /accounts/register` maupun `kyc-service` — Flow #28 terputus | `onboarding/page.tsx:40-66`; FLOWS `835-860` |
 | FE-SEC-001 | 🟡 | web/security | `security/page.tsx` kirim `challengeId`/`credential` kosong ke `registerBiometric.mutate` — WebAuthn fail; BFF session, CSRF, token relay, dan route authorization mengikuti [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md), sedangkan payload WebAuthn tetap perlu diperbaiki terpisah | `security/page.tsx:23-33` |
 | BE-SUPP-001 / FE-STUB-002 | 🟠 | support | `support-service` hanya manajemen pelatihan agent; tanpa API `/tickets` & FAQ publik; UI `support/page.tsx` statis tanpa handler | `SupportController.java:25-100`; `support/page.tsx:56-58` |
 | FE-STUB-003 | 🟠 | qris | `qris/page.tsx` simulasi `setTimeout` + toast tanpa EMVCo decode, query personal QR/limit, atau mutasi SNAP-BI QRIS | `qris/page.tsx:25-34,109-124` |

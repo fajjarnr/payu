@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.4] - 2026-08-19
+
+### Fixed (Frontend)
+- **FE-ONBOARD-001**: `onboarding/page.tsx` Step 1 required KTP upload but `mutationFn` sent only `POST /accounts/register` (KTP dropped, Flow #28 broken, BFF 10 MiB limit not used). Added `fileToBase64` helper + `KYCService.startVerification` + `KYCService.uploadKtp` after register (non-blocking `try/catch` warn, uses `userId` from register response or `username` fallback, `nik`/`fullName` from payload, dummy `1990-01-01`/`Indonesia` for required fields, `ponytail: upload KTP to kyc-service if present — Flow #28 minimal`). BFF already `10_485_760` (WEB-KYC-001).
+
+### Verification
+- `npm --prefix frontend/web-app run build` `86/86` `0` `tsc --noEmit` clean.
+- Podman `31` images retagged `1.13.3→1.13.4`, `compose` `PAYU_VERSION:-1.13.4`.
+
 ## [1.13.3] - 2026-08-19
 
 ### Fixed (Frontend)
