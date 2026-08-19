@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.15] - 2026-08-19
+
+### Added (Data Security — ADR-0033 scaffold)
+- **ARCH-GLOBAL-007 (1/4)**: `platform` RLS scaffold:
+  - `datasource-starter` `TenantAwareTransactionSynchronization` `SET LOCAL app.tenant_id` + `RESET` on `afterCompletion` `TenantContext` `ponytail: per-transaction GUC`
+  - `wallet-service` `V116__enable_rls_wallet.sql` `ALTER TABLE wallets ENABLE/FORCE RLS` `CREATE POLICY wallet_tenant_isolation AS RESTRICTIVE USING (tenant_id = current_setting('app.tenant_id', true))` `ponytail: single table example, 26 more tables + restrictive policy`
+  - Remaining: `TenantAwareHikariDataSource` `SET LOCAL` on `connection` `RESET` on `close` + `payu_migrator` vs `payu_app` `BYPASSRLS` + `27` tables `FORCE RLS` + `JWT partner_id/tenant_id` `gateway` sanitization
+
+### Verification
+- `datasource-starter` `TenantAwareTransactionSynchronization` compiles, `wallet-service` `V116` valid `Flyway` `29→30` `migrations`
+- Podman `31` images retagged `1.13.14→1.13.15` `PAYU_VERSION:-1.13.15` `datasource-starter` `wallet-service` rebuilt
+
 ## [1.13.14] - 2026-08-19
 
 ### Added (Security — ADR-0032 scaffold)

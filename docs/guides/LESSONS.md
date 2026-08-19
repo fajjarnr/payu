@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-300: RLS Needs SET LOCAL per Transaction, Not per Statement (2026-08-19)
+
+**Context**: ARCH-GLOBAL-007 — `TenantAwareTransactionSynchronization` missing `SET LOCAL app.tenant_id` per transaction, `wallets` `ENABLE/FORCE RLS` missing.
+
+**Lesson**: `TenantAwareTransactionSynchronization` `afterCompletion` `RESET` `TenantContext.clear()` + `V116__enable_rls_wallet.sql` `ENABLE/FORCE RLS` `CREATE POLICY wallet_tenant_isolation AS RESTRICTIVE USING (tenant_id = current_setting('app.tenant_id', true))` `ponytail: single table example` — add `TenantAwareHikariDataSource` `SET LOCAL` on `getConnection` + `RESET` on `close` + `payu_migrator` `BYPASSRLS` vs `payu_app` `NOBYPASSRLS` + `27` tables.
+
+**Applied evidence**: `TenantAwareTransactionSynchronization` compiles, `V116` `Flyway 29→30`, `TODOS` `ARCH-GLOBAL-007` still OPEN.
+
 ## L-299: Coraza WAF Needs CRS v4 PL1/PL2 and Wazuh Needs CLF Syslog (2026-08-19)
 
 **Context**: ARCH-GLOBAL-006 — `coraza-waf.yaml` missing `CRS v4` `PL1/PL2` `SNAP-BI` exclusions, `wazuh-siem.yaml` missing `CLF` `syslog RFC5424`.

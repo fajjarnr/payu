@@ -1,5 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.15 (2026-08-19)
+
+- **ARCH-GLOBAL-007 scaffold (ADR-0033)** — RLS 1/4:
+  - `datasource-starter` `TenantAwareTransactionSynchronization` `SET LOCAL app.tenant_id` `RESET` `TenantContext` `ponytail: per-transaction`
+  - `wallet-service` `V116__enable_rls_wallet.sql` `ENABLE/FORCE RLS` `CREATE POLICY wallet_tenant_isolation AS RESTRICTIVE` `ponytail: single table`
+  - Remaining: `TenantAwareHikariDataSource` `payu_migrator` vs `payu_app` `27` tables `FORCE RLS` `JWT` `gateway`
+- **Build & Verification**: `datasource-starter` `TenantAwareTransactionSynchronization` compiles `V116` `Flyway 29→30` `31` images retagged `1.13.14→1.13.15` `PAYU_VERSION:-1.13.15`
+- **Backlog**: `TODOS` `ARCH-GLOBAL-007` still OPEN (3/4), `Last Release 1.13.15`
+
 ## Deploy 1.13.14 (2026-08-19)
 
 - **ARCH-GLOBAL-006 scaffold (ADR-0032)** — WAF+Wazuh 1/4:
