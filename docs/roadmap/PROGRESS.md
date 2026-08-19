@@ -1,5 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.12 (2026-08-19)
+
+- **ARCH-GLOBAL-004 scaffold (ADR-0030/0036/0038)** — velocity 1/4:
+  - `transaction-service` `redis/evaluate_velocity.lua` `ZREMRANGEBYSCORE` `ZCARD` `5 tx/10m` `50M daily` `ponytail`
+  - `RiskEvaluationPort` `score` `ponytail: stub 0` + `VelocityGuard` `isAllowed` `luaScript` `ponytail: in-memory`
+  - Remaining: `Redis` `lua` `HOLD_FOR_REVIEW→PAUSED` `ALLOW/REQUIRE_STEP_UP/BLOCK_REJECT` `onnxruntime` `p99 <30ms`
+- **Build & Verification**: `transaction-service` `package` BUILD SUCCESS, `31` images retagged `1.13.11→1.13.12` `PAYU_VERSION:-1.13.12` `transaction-service` rebuilt
+- **Backlog**: `TODOS` `ARCH-GLOBAL-004` still OPEN (3/4), `Last Release 1.13.12`
+
 ## Deploy 1.13.11 (2026-08-19)
 
 - **V115 FK fix (ADR-0029)** — `c000...101` not present (existing `1500` is `a000...015`), children FK `23503` `fk_coa_parent` at `Line 6`. Fixed `V115` to `parent_id = (SELECT id FROM chart_of_accounts WHERE code = '1500')` for `1510-1550` `ON CONFLICT`

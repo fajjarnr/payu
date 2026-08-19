@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-297: Velocity Lua Needs ZSET + Daily Counter with ponytail Thresholds (2026-08-19)
+
+**Context**: ARCH-GLOBAL-004 — `evaluate_velocity.lua` missing, `RiskEvaluationPort` not existing.
+
+**Lesson**: `ZREMRANGEBYSCORE` `ZCARD` for `10m` `600` `24h` `86400`, `GET` daily amount, `5 tx/10m` + `50M` `INCRBYFLOAT` `EXPIRE` `ponytail` thresholds, `RiskEvaluationPort.score` stub `0`, `VelocityGuard.isAllowed` `ponytail: in-memory fallback` — real `RedisTemplate.execute` lua + `HOLD_FOR_REVIEW→PAUSED` saga next.
+
+**Applied evidence**: `evaluate_velocity.lua` valid `transaction-service` resource, `RiskEvaluationPort` + `VelocityGuard` added, `package` BUILD SUCCESS.
+
 ## L-296: Self-Referencing FK Needs SELECT for Existing Parent, Not Hardcoded ID (2026-08-19)
 
 **Context**: `V115` `1500` already exists as `a000...015` (code `1500`), but `V115` tried to insert `1500` with `c000...101` `ON CONFLICT DO NOTHING` (skipped), then children `1510-1550` with `parent_id = 'c000...101'` FK failed `23503`.

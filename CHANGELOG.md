@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.12] - 2026-08-19
+
+### Added (Risk/AML — ADR-0030/0036/0038 scaffold)
+- **ARCH-GLOBAL-004 (1/4)**: `transaction-service` velocity & AML scaffold:
+  - `redis/evaluate_velocity.lua` `ZREMRANGEBYSCORE` `ZCARD` 10m/24h `GET` daily amount `5 tx/10m` `50M daily` `ZADD` `EXPIRE` `INCRBYFLOAT` `ponytail: 5 tx/10m + 50M`
+  - `RiskEvaluationPort.java` `score(userId,amount,currency)` `int` `ponytail: stub 0, wire POST /api/v1/analytics/fraud/score <30ms`
+  - `VelocityGuard.java` `@Service isAllowed` `luaScript` `ponytail: in-memory fallback`
+  - Remaining: `RedisTemplate.execute` lua `HOLD_FOR_REVIEW→PAUSED` saga `ALLOW/REQUIRE_STEP_UP/BLOCK_REJECT` + `analytics-service` `onnxruntime` `p99 <30ms` + tests
+
+### Verification
+- `transaction-service` `package -DskipTests` BUILD SUCCESS (lua resource included)
+- Podman `31` images retagged `1.13.11→1.13.12` `PAYU_VERSION:-1.13.12` `transaction-service` rebuilt
+
 ## [1.13.11] - 2026-08-19
 
 ### Fixed (Core Banking — ADR-0029 FK)
