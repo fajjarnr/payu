@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.6] - 2026-08-19
+
+### Added (Security — ADR-0028 scaffold)
+- **ARCH-GLOBAL-002 (1/4)**: `auth-service` Step-Up Auth & Dynamic Linking scaffold:
+  - `V4__add_user_pins.sql` `user_pins` (`user_id` PK, `pin_hash` 512, `failed_attempts`, `locked_until` 15m soft-lock, `created_at`/`updated_at`) + `idx_user_pins_locked_until` — `ponytail: no per-user salt column (salt embedded in Argon2 hash)`
+  - `SecurityConfig.argon2PasswordEncoder()` `Argon2PasswordEncoder(16,32,1,1<<12,3)` memory-hard (Context7 Spring Security 6.5, BouncyCastle `bcprov-jdk18on:1.82`) — `ponytail: 16/32/1/4096/3 defaults (1s target)`
+  - Remaining: `POST /internal/v1/auth/step-up/{challenge,verify}` Redis TTL 180s `payload_digest=SHA256(sender+recipient+amount+currency+nonce)`, 2-phase `/prepare`→`/execute` in `transaction-service`, test suite PIN/lockout/expiry/tampering — ponytail ceiling
+
+### Verification
+- `auth-service` Flyway `V4` valid, `mvn package -DskipTests` BUILD SUCCESS (quarkus augmentation 4.5s)
+- Podman `31` images retagged `1.13.5→1.13.6` `PAYU_VERSION:-1.13.6` (auth-service rebuilt pending)
+
 ## [1.13.5] - 2026-08-19
 
 ### Fixed (Notification — ADR-0027 partial)

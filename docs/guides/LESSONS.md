@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-291: Step-Up Auth Needs Argon2id with BouncyCastle and user_pins Table First (2026-08-19)
+
+**Context**: ARCH-GLOBAL-002 — ADR-0028 `user_pins` Argon2id + 3-strike lockout 15m, but no table and no hasher existed.
+
+**Lesson**: create `V4__add_user_pins.sql` (`user_id` PK, `pin_hash` 512, `failed_attempts`, `locked_until`, `idx_user_pins_locked_until`) first (ponytail no separate salt column, salt embedded in Argon2 hash), then `SecurityConfig.argon2PasswordEncoder()` `16/32/1/4096/3` (Context7 Spring Security 6.5, requires `org.bouncycastle:bcprov-jdk18on:1.82` explicit dep, `1<<12` memory 4096 KiB). Remaining challenge/verify Redis TTL 180s `payload_digest=SHA256(...)` and 2-phase transaction are next increments — don't bundle table+hasher+endpoints in one commit.
+
+**Applied evidence**: `V4__add_user_pins.sql` valid, `SecurityConfig` bean added, `mvn package -DskipTests` BUILD SUCCESS.
+
 ## L-290: Notification Lab Providers Must Not Fail-Closed (2026-08-19)
 
 **Context**: ARCH-NOTIF-001 — `SmsSender`/`PushSender` fail-closed `NONE` by default (PROD-044 correct), but lab `TELEGRAM`/`SIMULATOR`/`FCM` were unimplemented → OTP via Telegram/Simulator still `FAILED` in lab. `payment-events` topic `payu.transaction.payment-expired.v1` missed `payu.billing.payment-completed.v1`.

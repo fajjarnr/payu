@@ -1,5 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.6 (2026-08-19)
+
+- **ARCH-GLOBAL-002 scaffold (ADR-0028)** — Step-Up Auth 1/4:
+  - `auth-service` `V4__add_user_pins.sql` `user_pins` + `idx_user_pins_locked_until` (ponytail no salt column)
+  - `SecurityConfig.argon2PasswordEncoder()` `16/32/1/4096/3` `bcprov-jdk18on:1.82` (Context7 Spring Security 6.5)
+  - Remaining: `POST /internal/v1/auth/step-up/{challenge,verify}` Redis TTL 180s `payload_digest`, 2-phase `/prepare`→`/execute` + tests
+- **Build & Verification**: `auth-service` `V4` `package` BUILD SUCCESS, `31` images retagged `1.13.5→1.13.6` `PAYU_VERSION:-1.13.6`
+- **Backlog**: `TODOS` `ARCH-GLOBAL-002` still OPEN (3/4 remaining), `Last Release 1.13.6`
+
 ## Deploy 1.13.5 (2026-08-19)
 
 - **ARCH-NOTIF-001 partial (ADR-0027)** — `notification-service` lab providers + billing topic:

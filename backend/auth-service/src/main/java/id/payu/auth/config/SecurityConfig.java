@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -146,5 +147,14 @@ public class SecurityConfig {
         jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuerUri));
 
         return jwtDecoder;
+    }
+
+    /**
+     * ADR-0028 Step-Up Auth: Argon2id memory-hard hasher for user_pins.pin_hash.
+     * ponytail: 16/32/1/4096/3 defaults (1s target), tune memory if needed
+     */
+    @Bean
+    public Argon2PasswordEncoder argon2PasswordEncoder() {
+        return new Argon2PasswordEncoder(16, 32, 1, 1 << 12, 3);
     }
 }

@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.5` (2026-08-19) |
+| **Last Release** | `1.13.6` (2026-08-19) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka; **login web live** (LOGIN-001..006 closed) |
 | **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 5 cross-layer findings + 3 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
-| **Last Updated** | 2026-08-19 — ADR-0040..0047 Accepted (8 sisa backlog ADR) + TODOS linked |
+| **Last Updated** | 2026-08-19 — ARCH-GLOBAL-002 scaffold (user_pins + Argon2id) |
 
 ---
 
