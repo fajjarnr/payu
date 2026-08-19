@@ -1,5 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.14 (2026-08-19)
+
+- **ARCH-GLOBAL-006 scaffold (ADR-0032)** — WAF+Wazuh 1/4:
+  - `coraza-waf.yaml` `ConfigMap coraza-waf-config` `coraza.conf` `CRS v4.x` `PL1/PL2` `X-SIGNATURE` `X-CLIENT-KEY` `ponytail: stub`
+  - `wazuh-siem.yaml` `ConfigMap wazuh-manager-config` `ossec.conf` `jsonout` + `ClusterLogForwarder payu-clf-wazuh` `syslog RFC5424` `tcp://wazuh-manager.wazuh.svc.cluster.local:514` `audit→wazuh` `ponytail: stub`
+  - Remaining: `Coraza SPOA` `CRS` `Wazuh Indexer/Dashboard` `CLF oc apply` `WAF block test` `Wazuh dashboard` `CLF arriving`
+- **Build & Verification**: `coraza-waf.yaml` `wazuh-siem.yaml` `yaml valid` `kind ConfigMap/ClusterLogForwarder` `31` images retagged `1.13.13→1.13.14` `PAYU_VERSION:-1.13.14`
+- **Backlog**: `TODOS` `ARCH-GLOBAL-006` still OPEN (3/4), `Last Release 1.13.14`
+
 ## Deploy 1.13.13 (2026-08-19)
 
 - **ARCH-GLOBAL-005 scaffold (ADR-0031)** — DB HA 1/4:

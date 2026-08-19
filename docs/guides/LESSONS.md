@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-299: Coraza WAF Needs CRS v4 PL1/PL2 and Wazuh Needs CLF Syslog (2026-08-19)
+
+**Context**: ARCH-GLOBAL-006 — `coraza-waf.yaml` missing `CRS v4` `PL1/PL2` `SNAP-BI` exclusions, `wazuh-siem.yaml` missing `CLF` `syslog RFC5424`.
+
+**Lesson**: `coraza-waf.yaml` `ConfigMap coraza-waf-config` `coraza.conf` `CRS v4.x` `PL1/PL2` `SecRule REQUEST_URI /v1/partner` `X-SIGNATURE` `X-CLIENT-KEY` `SecRequestBodyLimit 131072` `Anomaly Threshold 5` `ponytail: stub ConfigMap` + `wazuh-siem.yaml` `ConfigMap wazuh-manager-config` `ossec.conf` `jsonout` + `ClusterLogForwarder payu-clf-wazuh` `syslog RFC5424` `tcp://wazuh-manager.wazuh.svc.cluster.local:514` `audit→wazuh` `ponytail: stub CLF + Wazuh Manager` — real needs `Coraza SPOA` `CRS tuning` `Wazuh Indexer/Dashboard` `oc apply`.
+
+**Applied evidence**: `coraza-waf.yaml` `wazuh-siem.yaml` `yaml valid` `kind ConfigMap/ClusterLogForwarder` `TODOS` `ARCH-GLOBAL-006` still OPEN.
+
 ## L-298: Barman S3 Needs archive_timeout 60s and VolumeSnapshot in HA Patch (2026-08-19)
 
 **Context**: ARCH-GLOBAL-005 — `ha-patch.yaml` missing `barmanObjectStore` `S3` `archive_timeout 60s` `VolumeSnapshot`, `scripts/backup-dr` missing.

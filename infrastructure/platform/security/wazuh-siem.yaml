@@ -1,0 +1,35 @@
+# ADR-0032 Wazuh SIEM + CLF Syslog RFC5424 — ponytail: stub CLF + Wazuh Manager, real needs Wazuh Indexer/Dashboard + CLF apply via oc
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wazuh-manager-config
+  namespace: payu-dev
+data:
+  ossec.conf: |
+    <ossec_config>
+      <global><jsonout_output>yes</jsonout_output></global>
+      <remote><connection>syslog</connection><port>514</port><protocol>tcp</protocol></remote>
+      <alerts><log_alert_level>3</log_alert_level></alerts>
+    </ossec_config>
+---
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: payu-clf-wazuh
+  namespace: openshift-logging
+spec:
+  outputs:
+    - name: wazuh-syslog
+      type: syslog
+      syslog:
+        rfc: RFC5424
+        facility: local0
+        severity: informational
+        payloadKey: message
+      url: tcp://wazuh-manager.wazuh.svc.cluster.local:514
+      tls:
+        insecureSkipVerify: true
+  pipelines:
+    - name: payu-audit-to-wazuh
+      inputRefs: [audit]
+      outputRefs: [wazuh-syslog]

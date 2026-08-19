@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.14] - 2026-08-19
+
+### Added (Security — ADR-0032 scaffold)
+- **ARCH-GLOBAL-006 (1/4)**: `platform` Perimeter Security scaffold:
+  - `infrastructure/platform/security/coraza-waf.yaml` `ConfigMap coraza-waf-config` `coraza.conf` `CRS v4.x PL1/PL2` `SecRule REQUEST_URI /v1/partner` `X-SIGNATURE` `X-CLIENT-KEY` exclusions `SecRequestBodyLimit 131072` `Anomaly Threshold 5` `ponytail: stub ConfigMap, real WAF needs Ingress annotation + Coraza SPOA`
+  - `infrastructure/platform/security/wazuh-siem.yaml` `ConfigMap wazuh-manager-config` `ossec.conf` `jsonout` `remote syslog 514 tcp` + `ClusterLogForwarder payu-clf-wazuh` `syslog RFC5424` `tcp://wazuh-manager.wazuh.svc.cluster.local:514` `audit`→`wazuh-syslog` `ponytail: stub CLF + Wazuh Manager, real needs Indexer/Dashboard + oc apply`
+  - Remaining: `Coraza` `SPOA` `CRS tuning` `Wazuh` `Indexer` `Dashboard` `CLF` `oc apply` `WAF` `block test` `Wazuh` `dashboard` `CLF` `arriving`
+
+### Verification
+- `ha-patch.yaml` `coraza` `wazuh` `yaml --kind ConfigMap/ClusterLogForwarder` valid
+- Podman `31` images retagged `1.13.13→1.13.14` `PAYU_VERSION:-1.13.14` (no app rebuild, infra manifest only)
+
 ## [1.13.13] - 2026-08-19
 
 ### Added (Platform — ADR-0031 scaffold)

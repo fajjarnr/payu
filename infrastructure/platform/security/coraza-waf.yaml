@@ -1,0 +1,26 @@
+# ADR-0032 Perimeter Security — Coraza WAF (OWASP CRS v4.x, PL1/PL2, SNAP-BI exclusions)
+# ponytail: stub ConfigMap, real WAF needs Ingress annotation + Coraza SPOA + CRS tuning
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coraza-waf-config
+  namespace: payu-dev
+data:
+  coraza.conf: |
+    # Coraza OWASP CRS v4.x PL1/PL2
+    Include @crs-setup.conf
+    Include @owasp_crs/*.conf
+    # SNAP-BI exclusions
+    SecRule REQUEST_URI "@beginsWith /v1/partner" "id:1001,phase:1,pass,nolog,ctl:ruleRemoveByTag=attack-xss,ctl:ruleRemoveByTag=attack-sqli"
+    SecRule REQUEST_HEADERS:X-SIGNATURE "@rx .+" "id:1002,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-xss;ARGS:X-SIGNATURE"
+    SecRule REQUEST_HEADERS:X-CLIENT-KEY "@rx .+" "id:1003,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:X-CLIENT-KEY"
+    SecRequestBodyAccess On
+    SecRequestBodyLimit 131072
+    SecRuleEngine On
+    SecDefaultAction "phase:1,log,auditlog,deny,status:403"
+    SecDefaultAction "phase:2,log,auditlog,deny,status:403"
+  crs-setup.conf: |
+    SecDefaultAction "phase:1,log,auditlog,pass"
+    SecDefaultAction "phase:2,log,auditlog,pass"
+    SecAction "id:900110,phase:1,pass,nolog,setvar:tx.inbound_anomaly_score_threshold=5"
+    SecAction "id:900200,phase:1,pass,nolog,setvar:tx.paranoia_level=1"
