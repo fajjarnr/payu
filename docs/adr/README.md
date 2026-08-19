@@ -44,6 +44,8 @@ This directory contains the historical record of architectural decisions made fo
 | [0035](0035-dual-control-partner-onboarding-and-sla-runbook.md) | Dual-Control (Maker-Checker) Partner Onboarding, SLA & Runbook (PARTNER-PROD-011) | Accepted | 2026-08-19 |
 | [0036](0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md) | Python FastAPI Microservice Architecture for AI/ML, KYC & Analytics (QAMVP-004/ARCH-GLOBAL-004/READY-062) | Accepted | 2026-08-19 |
 | [0037](0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md) | Internal Synchronous Inter-Service Communication via gRPC & Protobuf Governance (grpc-starter, ARCH-BESTP-002) | Accepted | 2026-08-19 |
+| [0038](0038-distributed-transaction-management-orchestrated-saga-pattern-with-persistent-state-machine.md) | Distributed Transaction Management: Orchestrated Saga Pattern with Persistent State Machine (saga-starter) | Accepted | 2026-08-19 |
+| [0039](0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md) | Next.js App Router BFF Security, Token Relay & Session Management Standard | Accepted | 2026-08-19 |
 
 
 ## 🚀 How to Create a New ADR
