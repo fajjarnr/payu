@@ -1,5 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.13 (2026-08-19)
+
+- **ARCH-GLOBAL-005 scaffold (ADR-0031)** — DB HA 1/4:
+  - `ha-patch.yaml` `barmanObjectStore` `s3://payu-backups/payu-database` `endpointURL` `s3Credentials` `wal` `gzip` `archive_timeout 60s` `ponytail: S3 placeholder`
+  - `scripts/backup-dr/dr-cnpg-failover-drill.sh` `dr-cnpg-pitr-restore.sh` `dr-verify-ledger-integrity.sh` `ponytail: stub PASS`
+  - Remaining: `S3` `VolumeSnapshot` `CNPG 1.30+` `RTO<5m` `RPO=0` `scripts/backup-dr` real drill
+- **Build & Verification**: `ha-patch.yaml` valid `kind Cluster` `archive_timeout 60s` `scripts` `+x` `stub PASS` `31` images retagged `1.13.12→1.13.13` `PAYU_VERSION:-1.13.13`
+- **Backlog**: `TODOS` `ARCH-GLOBAL-005` still OPEN (3/4), `Last Release 1.13.13`
+
 ## Deploy 1.13.12 (2026-08-19)
 
 - **ARCH-GLOBAL-004 scaffold (ADR-0030/0036/0038)** — velocity 1/4:

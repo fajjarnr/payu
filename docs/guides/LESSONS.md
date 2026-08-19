@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-298: Barman S3 Needs archive_timeout 60s and VolumeSnapshot in HA Patch (2026-08-19)
+
+**Context**: ARCH-GLOBAL-005 — `ha-patch.yaml` missing `barmanObjectStore` `S3` `archive_timeout 60s` `VolumeSnapshot`, `scripts/backup-dr` missing.
+
+**Lesson**: `ha-patch.yaml` `barmanObjectStore` `destinationPath s3://payu-backups/payu-database` `endpointURL s3.ap-southeast-1.amazonaws.com` `s3Credentials payu-backup-s3` `wal compression gzip maxParallel 8` + `postgresql.parameters.archive_timeout 60s` `ponytail: S3 placeholder` + `scripts/backup-dr/dr-cnpg-failover-drill.sh` `dr-cnpg-pitr-restore.sh` `dr-verify-ledger-integrity.sh` `ponytail: stub PASS` — real drill needs `OCP` `CNPG 1.30+` `S3` creds.
+
+**Applied evidence**: `ha-patch.yaml` `barmanObjectStore` valid, `archive_timeout 60s`, `scripts` `+x` `stub PASS`, `TODOS` `ARCH-GLOBAL-005` still OPEN.
+
 ## L-297: Velocity Lua Needs ZSET + Daily Counter with ponytail Thresholds (2026-08-19)
 
 **Context**: ARCH-GLOBAL-004 — `evaluate_velocity.lua` missing, `RiskEvaluationPort` not existing.

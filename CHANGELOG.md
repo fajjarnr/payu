@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.13] - 2026-08-19
+
+### Added (Platform — ADR-0031 scaffold)
+- **ARCH-GLOBAL-005 (1/4)**: `platform` DB HA PITR scaffold:
+  - `infrastructure/platform/data/overlays/common/ha-patch.yaml` `barmanObjectStore` `s3://payu-backups/payu-database` `endpointURL s3.ap-southeast-1.amazonaws.com` `s3Credentials payu-backup-s3` `wal compression gzip maxParallel 8` + `postgresql.parameters.archive_timeout 60s` `ponytail: S3 creds placeholder, real bucket when Vault payu-backup-s3 exists`
+  - `scripts/backup-dr/dr-cnpg-failover-drill.sh` `dr-cnpg-pitr-restore.sh` `dr-verify-ledger-integrity.sh` `ponytail: stub PASS, add oc cnpg failover + PITR + psql ledger when OCP creds exist`
+  - Remaining: `barmanObjectStore` `S3` `VolumeSnapshot` `CSI VolumeSnapshot` `CNPG 1.30+` `RTO<5m` `RPO=0` + `scripts/backup-dr/` real drill + `runbook CNPG`
+
+### Verification
+- `ha-patch.yaml` `barmanObjectStore` valid `yaml --kind Cluster` `postgresql.archive_timeout 60s`
+- `scripts/backup-dr/*.sh` `chmod +x` `stub PASS`
+- Podman `31` images retagged `1.13.12→1.13.13` `PAYU_VERSION:-1.13.13` (no app rebuild, infra manifest only)
+
 ## [1.13.12] - 2026-08-19
 
 ### Added (Risk/AML — ADR-0030/0036/0038 scaffold)
