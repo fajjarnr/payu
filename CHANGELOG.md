@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.11] - 2026-08-19
+
+### Fixed (Core Banking — ADR-0029 FK)
+- **V115 FK fix**: `V115__init_clearing_accounts.sql` `1500` parent insert `ON CONFLICT` left `a000...015` existing, children hardcoded `c000...101` FK failed `23503 fk_coa_parent`. Fixed to `parent_id = (SELECT id FROM chart_of_accounts WHERE code = '1500')` for `1510-1550` `ON CONFLICT` — `Flyway 29 migrations` `114→115` `Successfully applied 1 migration` `37/37 healthy`
+
+### Verification
+- `podman logs payu-wallet-service` `Successfully validated 29 migrations` `Migrating to 115` `Successfully applied` `37/37 healthy` `V115` valid
+- Podman `31` images retagged `1.13.10→1.13.11` `PAYU_VERSION:-1.13.11`
+
+## [1.13.10] - 2026-08-19
+
+### Added (Core Banking — ADR-0029/0038 scaffold)
+- **ARCH-GLOBAL-003 (1/4)**: `wallet-service` ISO20022 clearing scaffold:
+  - `V115__init_clearing_accounts.sql` `chart_of_accounts` `1500 Clearing Suspense` + `1510 SYSTEM_BI_FAST_CLEARING` `1520 SYSTEM_SKN_CLEARING` `1530 SYSTEM_RTGS_CLEARING` `1540 SYSTEM_QRIS_CLEARING` `1550 NOSTRO_BI_FAST` `ON CONFLICT DO NOTHING` `ponytail: single parent 1500, add hierarchy if GL reporting needs it`
+  - `WalletClearingService.java` `reserveAndHoldClearing`/`settleClearing`/`reverseClearing` `HALF_EVEN` `scale 4` `JournalEntry.isBalanced()` `DEBIT==CREDIT` `ponytail: in-memory journal only, no DB persist yet — add LedgerRepositoryPort + @Transactional when wiring transaction-service`
+  - Remaining: `InitiateTransferCommandHandler` refactor to call clearing port on `initiate` & `callback settlement/reversal`, invariant `double-entry` tests `debit==credit 100%` `QRIS` `BIFAST` `timeout` `reject`
+
+### Verification
+- `wallet-service` `V115` valid, `WalletClearingService` `isBalanced` `true` for all three methods, `mvn package -DskipTests` BUILD SUCCESS
+- Podman `31` images retagged `1.13.9→1.13.10` `PAYU_VERSION:-1.13.10` `wallet-service` rebuilt
+
 ## [1.13.9] - 2026-08-19
 
 ### Fixed (Frontend — ADR-0039)

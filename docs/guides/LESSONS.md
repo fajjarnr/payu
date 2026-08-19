@@ -2,6 +2,22 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-296: Self-Referencing FK Needs SELECT for Existing Parent, Not Hardcoded ID (2026-08-19)
+
+**Context**: `V115` `1500` already exists as `a000...015` (code `1500`), but `V115` tried to insert `1500` with `c000...101` `ON CONFLICT DO NOTHING` (skipped), then children `1510-1550` with `parent_id = 'c000...101'` FK failed `23503`.
+
+**Lesson**: for self-referencing `chart_of_accounts` with `code` unique, don't hardcode parent `id` for children — use `parent_id = (SELECT id FROM chart_of_accounts WHERE code = '1500')` so FK finds the actual existing parent `a000...015` regardless of which `id` won `ON CONFLICT`. Split parent and children into separate `INSERT ... ON CONFLICT` statements.
+
+**Applied evidence**: `V115` fixed to `SELECT`, `Flyway 29 migrations` `114→115` `Successfully applied`, `37/37 healthy`.
+
+## L-295: Clearing Accounts Need Single Parent and isBalanced() Guard (2026-08-19)
+
+**Context**: ARCH-GLOBAL-003 — ADR-0029 `SYSTEM_*_CLEARING` + `NOSTRO` accounts missing, `WalletClearingUseCase` not existing, `JournalEntry.isBalanced()` not enforced.
+
+**Lesson**: `V115__init_clearing_accounts.sql` `1500` parent + `1510-1550` `SYSTEM_*` `NOSTRO` `ON CONFLICT` `ponytail: single parent 1500` + `WalletClearingService` `reserveAndHoldClearing`/`settleClearing`/`reverseClearing` `HALF_EVEN` `scale 4` `isBalanced()` `DEBIT==CREDIT` `ponytail: in-memory journal only`. Real persist needs `LedgerRepositoryPort` + `@Transactional` + `InitiateTransferCommandHandler` wiring.
+
+**Applied evidence**: `V115` valid, `WalletClearingService` `isBalanced` `true`, `TODOS` `ARCH-GLOBAL-003` still OPEN (3/4).
+
 ## L-294: Empty WebAuthn Challenge/Credential Must Be Guarded and Fetched Properly (2026-08-19)
 
 **Context**: FE-SEC-001 — `security/page.tsx` `handleBiometricToggle` sent `challengeId: ''`/`credential: ''` empty → backend validation fail, `GW-ROUTING-003/BE-BIO-001` `404` for `/api/v1/biometric/*` still pending but frontend must not send empty.

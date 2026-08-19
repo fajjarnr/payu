@@ -1,5 +1,20 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.11 (2026-08-19)
+
+- **V115 FK fix (ADR-0029)** — `c000...101` not present (existing `1500` is `a000...015`), children FK `23503` `fk_coa_parent` at `Line 6`. Fixed `V115` to `parent_id = (SELECT id FROM chart_of_accounts WHERE code = '1500')` for `1510-1550` `ON CONFLICT`
+- **Build & Verification**: `Flyway 29 migrations` `114→115` `Successfully applied` `37/37 healthy` `wallet-service:1.13.11 89ec58` `31` images `1.13.10→1.13.11` `PAYU_VERSION:-1.13.11`
+- **Backlog**: `TODOS` `Last Release 1.13.11`, `V115` `Failed` → `Success`
+
+## Deploy 1.13.10 (2026-08-19)
+
+- **ARCH-GLOBAL-003 scaffold (ADR-0029/0038)** — clearing 1/4:
+  - `wallet-service` `V115__init_clearing_accounts.sql` `1500` + `1510-1550` `SYSTEM_*` `NOSTRO` `ON CONFLICT` `ponytail: single parent 1500`
+  - `WalletClearingService` `reserveAndHoldClearing`/`settleClearing`/`reverseClearing` `HALF_EVEN` `scale 4` `isBalanced()` `DEBIT==CREDIT` `ponytail: in-memory`
+  - Remaining: `InitiateTransferCommandHandler` refactor + invariant tests `QRIS` `BIFAST` `timeout`
+- **Build & Verification**: `wallet-service` `package` BUILD SUCCESS, `31` images retagged `1.13.9→1.13.10` `PAYU_VERSION:-1.13.10` `wallet-service` rebuilt
+- **Backlog**: `TODOS` `ARCH-GLOBAL-003` still OPEN (3/4), `Last Release 1.13.10`
+
 ## Deploy 1.13.9 (2026-08-19)
 
 - **FE-SEC-001 (ADR-0039) CLOSED** — `security/page.tsx` empty WebAuthn:
