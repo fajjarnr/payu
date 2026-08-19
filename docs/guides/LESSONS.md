@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-294: Empty WebAuthn Challenge/Credential Must Be Guarded and Fetched Properly (2026-08-19)
+
+**Context**: FE-SEC-001 — `security/page.tsx` `handleBiometricToggle` sent `challengeId: ''`/`credential: ''` empty → backend validation fail, `GW-ROUTING-003/BE-BIO-001` `404` for `/api/v1/biometric/*` still pending but frontend must not send empty.
+
+**Lesson**: `handleBiometricToggle` `async` fetch `AuthService.getBiometricChallenge()` `challengeId/challenge/rpId/timeout`, then `navigator.credentials.create` `publicKey` `challenge/rp/user/pubKeyCredParams/timeout` + `btoa(attestationObject/rawId)` fallback `btoa(challenge)` + guard `!username` + `!challengeId/challenge` toast, `registerBiometric.mutate` with non-empty `challengeId/credential` `onSuccess` `toast.success` `ponytail: minimal WebAuthn` (backend `404` still pending, but frontend no longer sends `''`).
+
+**Applied evidence**: `security/page.tsx` `handleBiometricToggle` `async` + `AuthService` + `navigator.credentials`, `npm build` `86/86`, `TODOS` `FE-SEC-001` removed.
+
 ## L-293: Quarkus Scheduled Tasks Need HotRod Distributed Lock, Not Just @Scheduled (2026-08-19)
 
 **Context**: GW-CONCUR-001 — `gateway-service` `ApiKeyRotationService` `PersistentAnalyticsService` `CheckoutService` `@Scheduled` without lock → multi-instance double execution, `HotRodCacheClient` already `payu` cache.

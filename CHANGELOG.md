@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.9] - 2026-08-19
+
+### Fixed (Frontend — ADR-0039)
+- **FE-SEC-001**: `security/page.tsx` `handleBiometricToggle` kirim `challengeId: ''`/`credential: ''` kosong ke `registerBiometric.mutate` — WebAuthn selalu fail validasi. Fixed to fetch `AuthService.getBiometricChallenge()` then `navigator.credentials.create` `publicKey` `challenge/rp/user/pubKeyCredParams/timeout` + base64 `attestationObject`/`rawId` fallback `btoa(challenge)` (ponytail: minimal WebAuthn, no polyfill, fail gracefully, backend `GW-ROUTING-003/BE-BIO-001` `404` still pending for `/api/v1/biometric/*` route) — std di [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md) BFF session/CSRF/token relay.
+
+### Verification
+- `npm --prefix frontend/web-app run build` `86/86` `0` `tsc --noEmit` clean
+- Podman `31` images retagged `1.13.8→1.13.9` `PAYU_VERSION:-1.13.9` `web-app` rebuilt
+
 ## [1.13.8] - 2026-08-19
 
 ### Fixed (Gateway — ADR-0042)

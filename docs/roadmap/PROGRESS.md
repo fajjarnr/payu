@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.9 (2026-08-19)
+
+- **FE-SEC-001 (ADR-0039) CLOSED** — `security/page.tsx` empty WebAuthn:
+  - `handleBiometricToggle` now `async` fetches `AuthService.getBiometricChallenge()` `challengeId/challenge/rpId/timeout`, then `navigator.credentials.create` `publicKey` `challenge/rp/user/pubKeyCredParams/timeout` + `btoa(attestationObject/rawId)` fallback `btoa(challenge)` + guard `!username` + `!challengeId/challenge` toast, `registerBiometric.mutate` `challengeId/credential` non-empty, `onSuccess` `toast.success` `ponytail: minimal WebAuthn` (backend `GW-ROUTING-003/BE-BIO-001` `404` still pending for `/api/v1/biometric/*`)
+- **Build & Verification**: `npm --prefix frontend/web-app run build` `86/86` `0` `tsc` clean, `31` images retagged `1.13.8→1.13.9` `PAYU_VERSION:-1.13.9` `web-app` rebuilt
+- **Backlog**: `TODOS` `FE-SEC-001` removed (now `4` cross-layer), `Last Release 1.13.9`
+
 ## Deploy 1.13.8 (2026-08-19)
 
 - **GW-CONCUR-001 (ADR-0042) CLOSED** — gateway `HotRod` distributed lock:

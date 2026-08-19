@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.8` (2026-08-19) |
+| **Last Release** | `1.13.9` (2026-08-19) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka; **login web live** (LOGIN-001..006 closed) |
-| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 5 cross-layer findings + 1 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
-| **Last Updated** | 2026-08-19 — Fix GW-CONCUR-001 (distributed lock gateway) |
+| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 4 cross-layer findings + 1 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
+| **Last Updated** | 2026-08-19 — Fix FE-SEC-001 (WebAuthn guard) |
 
 ---
 
@@ -146,7 +146,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| FE-SEC-001 | 🟡 | web/security | `security/page.tsx` kirim `challengeId`/`credential` kosong ke `registerBiometric.mutate` — WebAuthn fail; BFF session, CSRF, token relay, dan route authorization mengikuti [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md), sedangkan payload WebAuthn tetap perlu diperbaiki terpisah | `security/page.tsx:23-33` |
 | BE-SUPP-001 / FE-STUB-002 | 🟠 | support | `support-service` hanya manajemen pelatihan agent; tanpa API `/tickets` & FAQ publik; UI `support/page.tsx` statis tanpa handler | `SupportController.java:25-100`; `support/page.tsx:56-58` |
 | FE-STUB-003 | 🟠 | qris | `qris/page.tsx` simulasi `setTimeout` + toast tanpa EMVCo decode, query personal QR/limit, atau mutasi SNAP-BI QRIS | `qris/page.tsx:25-34,109-124` |
 | FE-STUB-004 | 🟠 | auth | `forgot-password-form.tsx` hanya toast kosmetik tanpa alur Keycloak/auth-service | `forgot-password-form.tsx:22` |
