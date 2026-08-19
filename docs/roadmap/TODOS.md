@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.4` (2026-08-19) |
+| **Last Release** | `1.13.5` (2026-08-19) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka; **login web live** (LOGIN-001..006 closed) |
 | **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 5 cross-layer findings + 3 infra/DX findings (sisa OPEN only — FIXED sudah di `CHANGELOG.md`/`PROGRESS.md`) |
-| **Last Updated** | 2026-08-19 — Fix FE-ONBOARD-001 (KTP upload → KYC) |
+| **Last Updated** | 2026-08-19 — ADR-0040..0047 Accepted (8 sisa backlog ADR) + TODOS linked |
 
 ---
 
@@ -86,12 +86,12 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 | Gate | Pri | Status | Sisa |
 |:---|:---:|:---|:---|
 | PARTNER-PROD-001 | P0 | 🟢 Public edge APIcast LIVE (sandbox) | WAF Coraza (DEPLOY-006 / [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md)), mTLS APIcast→gateway, rate-limit per-IP, runbook restart |
-| PARTNER-PROD-002 | P0 | 🟢 Enkripsi at-rest + rotation + backfill LIVE (V18, 0 plaintext) | Vault key management production |
+| PARTNER-PROD-002 | P0 | 🟢 Enkripsi at-rest + rotation + backfill LIVE (V18, 0 plaintext) — std di [ADR-0040](../adr/0040-field-level-encryption-searchable-encryption-via-hmac-blind-indexing-and-key-lifecycle.md): AES-256-GCM + HMAC blind `*_bidx`, Vault KEK/DEK, rotation `90d` | Vault key management production |
 | PARTNER-PROD-003 | P0 | 🟢 Webhook trust boundary LIVE | Egress policy eksplisit, response-body scan |
 | PARTNER-PROD-004 | P0 | 🟢 Delivery durability LIVE | DLQ consumer/alert otomatis |
-| PARTNER-PROD-005 | P0 | 🟢 Reconciliation LIVE | Reconcile outbox, auto-resolve, alert destination |
+| PARTNER-PROD-005 | P0 | 🟢 Reconciliation LIVE — std di [ADR-0041](../adr/0041-transactional-outbox-pattern-with-polling-skip-locked-dispatcher-vs-debezium-cdc.md): polling `SKIP LOCKED` + CloudEvents `payu.*.v<n>` + DLQ `*.dlq` | Reconcile outbox, auto-resolve, alert destination |
 | PARTNER-PROD-006 | P0 | 🟢 Tenant isolation LIVE | RLS GUC integration, partner-scoped Keycloak roles, audit list query |
-| PARTNER-PROD-007 | P1 | ⏸️ Belum | HPA≥3, PDB minAvailable 2, topology spread, bounded timeout |
+| PARTNER-PROD-007 | P1 | ⏸️ Belum | HPA≥3, PDB minAvailable 2, topology spread, bounded timeout — locks via [ADR-0042](../adr/0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md) |
 | PARTNER-PROD-008 | P0 | ⏸️ Belum | PG HA+PITR via CNPG Barman Cloud ([ADR-0031](../adr/0031-database-resilience-pitr-and-disaster-recovery.md)), restore drill, RPO=0/RTO<5m |
 | PARTNER-PROD-009 | P1 | ⏸️ Belum | SLI/SLO, dashboard+alert, traces E2E ([ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md)) |
 | PARTNER-PROD-010 | P0 | ⏸️ Belum | Contract/k6/chaos ([ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)), pentest, sign-off |
@@ -131,7 +131,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| ARCH-DLQ-001 | 🟠 | promotion, cms, dispute, statement, platform | Tanpa `.dlq` wiring per-service; outbox event gagal permanen kini di-copy best-effort ke `destinationTopic + .dlq` (platform DONE 2026-08-13) + 42 DLQ topics declared retention 30d (2026-08-18). Sisa: consumer per service menunggu alert destination; `OutboxCleanupScheduler` log `OUTBOX-001 ALERT` sebagai safety net. `scripts/dlq-replay.sh` P1 | OutboxCleanupScheduler.java:77-85 |
+| ARCH-DLQ-001 | 🟠 | promotion, cms, dispute, statement, platform | Tanpa `.dlq` wiring per-service; outbox event gagal permanen kini di-copy best-effort ke `destinationTopic + .dlq` (platform DONE 2026-08-13) + 42 DLQ topics declared retention 30d (2026-08-18). Sisa: consumer per service menunggu alert destination; `OutboxCleanupScheduler` log `OUTBOX-001 ALERT` sebagai safety net. `scripts/dlq-replay.sh` P1 — std di [ADR-0041](../adr/0041-transactional-outbox-pattern-with-polling-skip-locked-dispatcher-vs-debezium-cdc.md): `SKIP LOCKED` + `*.dlq` | OutboxCleanupScheduler.java:77-85 |
 | ARCH-DEDUP-001 | 🟠 | partner, promotion | Migrasi dedup DELETE baris finansial pre-constraint (`snap_bi_payments`/`refunds`/`cashbacks`/`rewards`) — legal hanya jika belum pernah jalan di prod; perlu bukti env + policy | partner V16/V17; promotion V11/V12 |
 | ARCH-FLYWAY-001 | 🟠 | account | Destruktif historis `DROP COLUMN` + `RENAME COLUMN` di migrasi ter-aplikasi — anti-pattern, risiko fresh-restore; jangan diulang | account V10:16-27 |
 
@@ -162,8 +162,8 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| DX-TS-BRANDED-001 | 🟠 | web/types | `types/index.ts` & clients pakai plain `string` untuk `AccountId`/`UserId`/`TransactionId`/`Money` tanpa branded types — pemicu bug mismatch (BE-PARTNER-001/BE-INVEST-001) | `frontend/web-app/src/types/index.ts:21-80` |
-| GW-CONCUR-001 | 🟠 | gateway/concurrency | `gateway-service` scheduled tasks (`ApiKeyRotationService:119`, `PersistentAnalyticsService:123,162,183`, `CheckoutService:29`) tanpa distributed lock — multi-instance double execution | `ApiKeyRotationService.java:119` |
+| DX-TS-BRANDED-001 | 🟠 | web/types | `types/index.ts` & clients pakai plain `string` untuk `AccountId`/`UserId`/`TransactionId`/`Money` tanpa branded types — pemicu bug mismatch (BE-PARTNER-001/BE-INVEST-001) — std di [ADR-0047](../adr/0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md): branded `Id` + `Money string` `HALF_EVEN` | `frontend/web-app/src/types/index.ts:21-80` |
+| GW-CONCUR-001 | 🟠 | gateway/concurrency | `gateway-service` scheduled tasks (`ApiKeyRotationService:119`, `PersistentAnalyticsService:123,162,183`, `CheckoutService:29`) tanpa distributed lock — multi-instance double execution — std di [ADR-0042](../adr/0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md): `shedlock` `JdbcTemplate(usingDbTime)` | `ApiKeyRotationService.java:119` |
 
 > **FIXED DX 2026-08-18 (8 items) → `CHANGELOG.md` `1.13.0`**: DX-CI-FE-001, DX-CI-COMMITS-001, DX-CATALOG-001 (ghost + 5 service + 5 simulator + 14 starter), DX-DOCS-DRIFT-001, DX-CODEGRAPH-001, DX-RTK-ENV-001, DX-CONTEXT7-001, LEND-SCHED-001, plus GW-ROUTING-004 & BFF-ROUTING-002.
 
@@ -210,7 +210,7 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 
 ### 3. 📝 Backlog ADR Baru yang Perlu Dibuat
 
-> **Update 2026-08-19**: ADR-0035 Dual-Control (PARTNER-PROD-011) + ADR-0036 Python FastAPI (QAMVP-004/ARCH-GLOBAL-004/READY-062) + ADR-0037 gRPC (ARCH-BESTP-002) + ADR-0038 Orchestrated Saga (ARCH-GLOBAL-003/004) + ADR-0039 Next.js BFF Security (FE-SEC-001/WEB-IDM-001) -> **Accepted** (lihat ADR-0035 s/d [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md)).
+> **Update 2026-08-19**: ADR-0035 Dual-Control (PARTNER-PROD-011) + ADR-0036 Python FastAPI (QAMVP-004/ARCH-GLOBAL-004/READY-062) + ADR-0037 gRPC (ARCH-BESTP-002) + ADR-0038 Orchestrated Saga (ARCH-GLOBAL-003/004) + ADR-0039 Next.js BFF Security (FE-SEC-001) + **ADR-0040..0047 (8 sisa backlog)** → **Accepted** (lihat ADR-0035 s/d [ADR-0047](../adr/0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md)).
 
 | No | Nomor ADR Usulan | Judul / Topik ADR | Prioritas |
 |:---:|:---|:---|:---:|
@@ -218,21 +218,21 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 | — | **ADR-0036** | ✅ **Python FastAPI Microservice Architecture for AI/ML, KYC & Analytics** — QAMVP-004/ARCH-GLOBAL-004/READY-062 (Accepted 2026-08-19) | **P1** |
 | — | **ADR-0037** | ✅ **Internal Synchronous Inter-Service Communication via gRPC & Protobuf Governance** — ARCH-BESTP-002 (Accepted 2026-08-19) | **P1** |
 | — | **ADR-0038** | ✅ **Distributed Transaction Management: Orchestrated Saga Pattern with Persistent State Machine** — ARCH-GLOBAL-003/004 (Accepted 2026-08-19) | **P1** |
-| — | **ADR-0039** | ✅ **Next.js App Router BFF Security, Token Relay & Session Management Standard** — FE-SEC-001/WEB-IDM-001 (Accepted 2026-08-19) | **P1** |
-| 5 | **ADR-0040** | Field-Level Encryption, Searchable Encryption via HMAC Blind Indexing & Key Lifecycle | **P1** |
-| 6 | **ADR-0041** | Transactional Outbox Pattern with Polling Skip-Locked Dispatcher vs Debezium CDC | **P2** |
-| 7 | **ADR-0042** | Distributed Job Scheduling & Cluster-Wide Concurrency Lock Standard using ShedLock | **P1** |
-| 8 | **ADR-0043** | Enterprise Integration Patterns & Core Banking Protocol Bridging with Apache Camel | **P2** |
-| 9 | **ADR-0044** | Secrets Lifecycle & Zero-Trust Secrets Management with Vault & ESO | **P1** |
-| 10 | **ADR-0045** | GitOps Continuous Delivery, Infrastructure as Code & Supply Chain Security | **P2** |
-| 11 | **ADR-0046** | Time-Series Financial Telemetry via TimescaleDB Hypertables | **P2** |
-| 12 | **ADR-0047** | Frontend Nominal Branded Types & Strict Financial Money Precision Standard | **P1** |
+| — | **ADR-0039** | ✅ **Next.js App Router BFF Security, Token Relay & Session Management Standard** — FE-SEC-001 (Accepted 2026-08-19) | **P1** |
+| — | **ADR-0040** | ✅ **Field-Level Encryption, Searchable Encryption via HMAC Blind Indexing & Key Lifecycle** — PARTNER-PROD-002 / UU PDP (Accepted 2026-08-19) | **P1** |
+| — | **ADR-0041** | ✅ **Transactional Outbox Pattern with Polling SKIP LOCKED Dispatcher vs Debezium CDC** — ARCH-DLQ-001 / PARTNER-PROD-005 (Accepted 2026-08-19) | **P2** |
+| — | **ADR-0042** | ✅ **Distributed Job Scheduling & Cluster-Wide Concurrency Lock Standard using ShedLock** — GW-CONCUR-001 / ARCH-BESTP-001 (Accepted 2026-08-19) | **P1** |
+| — | **ADR-0043** | ✅ **Enterprise Integration Patterns & Core Banking Protocol Bridging with Apache Camel** — OJK/SWIFT/ISO 20022 (Accepted 2026-08-19) | **P2** |
+| — | **ADR-0044** | ✅ **Secrets Lifecycle & Zero-Trust Secrets Management with Vault & ESO** — DEVSECOPS-017 / INFRA-026 (Accepted 2026-08-19) | **P1** |
+| — | **ADR-0045** | ✅ **GitOps Continuous Delivery, Infrastructure as Code & Supply Chain Security** — DEVSECOPS-017 (Accepted 2026-08-19) | **P2** |
+| — | **ADR-0046** | ✅ **Time-Series Financial Telemetry via TimescaleDB Hypertables** — READY-062 / analytics (Accepted 2026-08-19) | **P2** |
+| — | **ADR-0047** | ✅ **Frontend Nominal Branded Types & Strict Financial Money Precision Standard** — DX-TS-BRANDED-001 (Accepted 2026-08-19) | **P1** |
 
 ### 4. ⚠️ Kesenjangan Best Practice & Anti-Pattern yang Memerlukan Remediasi
 
 | Key | Domain | Deskripsi Masalah & Rekomendasi Best Practice | Status |
 |:---|:---|:---|:---:|
-| ARCH-BESTP-001 | gateway | Scheduled tasks Quarkus tanpa distributed lock (lihat `GW-CONCUR-001`) — perlu lock Redis/DB ala ShedLock | 🔴 OPEN |
+| ARCH-BESTP-001 | gateway | Scheduled tasks Quarkus tanpa distributed lock (lihat `GW-CONCUR-001`) — perlu lock Redis/DB ala ShedLock — std di [ADR-0042](../adr/0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md): `shedlock` `JdbcTemplate` + Quarkus `quarkus-shedlock` | 🟢 Accepted |
 | ARCH-BESTP-002 | grpc | File `.proto` tersebar per-service tanpa `proto-commons` / Buf central repo — risiko drift — std di [ADR-0037](../adr/0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md): `backend/shared/proto-commons` + Buf lint/breaking, `grpc 1.83.1` `protobuf 3.25.5` gov, Istio mTLS `PLAINTEXT`, deadline 1s + retry idempotent, `common.proto` single source | 🟢 Accepted |
 | ARCH-BESTP-003 | lending | Hardcoded rules logic sisa — migrasi tuntas ke DRL/DMN `lending-rules` (ADR-0015) | 🔴 OPEN |
 | ARCH-BESTP-004 | docs | ADR-0008..0013 sangat singkat — perlu pendalaman (Hot Rod ProtoStream, BFF security, Testcontainers) | 🔴 OPEN |

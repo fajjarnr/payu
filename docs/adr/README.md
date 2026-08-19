@@ -46,6 +46,14 @@ This directory contains the historical record of architectural decisions made fo
 | [0037](0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md) | Internal Synchronous Inter-Service Communication via gRPC & Protobuf Governance (grpc-starter, ARCH-BESTP-002) | Accepted | 2026-08-19 |
 | [0038](0038-distributed-transaction-management-orchestrated-saga-pattern-with-persistent-state-machine.md) | Distributed Transaction Management: Orchestrated Saga Pattern with Persistent State Machine (saga-starter) | Accepted | 2026-08-19 |
 | [0039](0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md) | Next.js App Router BFF Security, Token Relay & Session Management Standard | Accepted | 2026-08-19 |
+| [0040](0040-field-level-encryption-searchable-encryption-via-hmac-blind-indexing-and-key-lifecycle.md) | Field-Level Encryption, Searchable Encryption via HMAC Blind Indexing & Key Lifecycle (PARTNER-PROD-002) | Accepted | 2026-08-19 |
+| [0041](0041-transactional-outbox-pattern-with-polling-skip-locked-dispatcher-vs-debezium-cdc.md) | Transactional Outbox Pattern with Polling SKIP LOCKED Dispatcher vs Debezium CDC | Accepted | 2026-08-19 |
+| [0042](0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md) | Distributed Job Scheduling & Cluster-Wide Concurrency Lock Standard using ShedLock (GW-CONCUR-001) | Accepted | 2026-08-19 |
+| [0043](0043-enterprise-integration-patterns-and-core-banking-protocol-bridging-with-apache-camel.md) | Enterprise Integration Patterns & Core Banking Protocol Bridging with Apache Camel | Accepted | 2026-08-19 |
+| [0044](0044-secrets-lifecycle-and-zero-trust-secrets-management-with-vault-and-eso.md) | Secrets Lifecycle & Zero-Trust Secrets Management with Vault & ESO (DEVSECOPS-017) | Accepted | 2026-08-19 |
+| [0045](0045-gitops-continuous-delivery-infrastructure-as-code-and-supply-chain-security.md) | GitOps Continuous Delivery, Infrastructure as Code & Supply Chain Security | Accepted | 2026-08-19 |
+| [0046](0046-time-series-financial-telemetry-via-timescaledb-hypertables.md) | Time-Series Financial Telemetry via TimescaleDB Hypertables | Accepted | 2026-08-19 |
+| [0047](0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md) | Frontend Nominal Branded Types & Strict Financial Money Precision Standard (DX-TS-BRANDED-001) | Accepted | 2026-08-19 |
 
 
 ## 🚀 How to Create a New ADR
