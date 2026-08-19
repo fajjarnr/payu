@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-290: Notification Lab Providers Must Not Fail-Closed (2026-08-19)
+
+**Context**: ARCH-NOTIF-001 — `SmsSender`/`PushSender` fail-closed `NONE` by default (PROD-044 correct), but lab `TELEGRAM`/`SIMULATOR`/`FCM` were unimplemented → OTP via Telegram/Simulator still `FAILED` in lab. `payment-events` topic `payu.transaction.payment-expired.v1` missed `payu.billing.payment-completed.v1`.
+
+**Lesson**: add zero-cost lab senders (`TelegramSender` `payu.telegram.bot-token`, `SmsSimulatorSender`, `FcmPushSender` `payu.fcm.project-id`) that log masked recipient and return `true` (ponytail: no real HTTP/OAuth2, add when creds exist), wire into `SmsSender` (`TELEGRAM`/`SIMULATOR`) and `PushSender` (`FCM`) with null-CDI guard for `new PushSender()` unit test. Fix topic mismatch by adding `billing-payment-events` `payu.billing.payment-completed.v1` (+DLQ) and `EventConsumer.onBillingPaymentEvent` delegating to `onPaymentEvent`. Update `PushSenderFailClosedTest` `FCM` now lab-succeeds. Contacts `Map<Channel,recipient>` isolation and AES-256 GCM `recipient`/`body` encryption remain ponytail ceiling.
+
+**Applied evidence**: `mvn -f backend/notification-service/pom.xml test` `82 run 0 fail 51 skipped` + `package` BUILD SUCCESS, `application.yml` new `billing-payment-events`, `TelegramSender`/`SmsSimulatorSender`/`FcmPushSender` added.
+
 ## L-289: Onboarding Must Not Drop KTP — Wire KTP Base64 to KYC Service (2026-08-19)
 
 **Context**: FE-ONBOARD-001 — `onboarding/page.tsx` Step 1 `ktpFile` required (`disabled={!ktpFile}`) but `mutationFn` `POST /accounts/register` ignored `ktpFile` (Flow #28 `835-860` eKYC broken, BFF 10 MiB not exercised).

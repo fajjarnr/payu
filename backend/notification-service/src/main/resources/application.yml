@@ -74,9 +74,14 @@ quarkus:
 # SMS provider configuration — PROD-044: fail-closed by default (NONE).
 # Set SMS_PROVIDER=LOG only for explicit dev-mode logging; real providers
 # (TWILIO/VONAGE/ZENZIVA) are not implemented yet and also fail closed.
+# ADR-0027 zero-cost lab: TELEGRAM (bot-token) / SIMULATOR (log-only)
 payu:
   sms:
     provider: ${SMS_PROVIDER:NONE}
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+  fcm:
+    project-id: ${FCM_PROJECT_ID:}
     # twilio:
     #   account-sid: ${TWILIO_SID:}
     #   auth-token: ${TWILIO_TOKEN:}
@@ -89,13 +94,6 @@ payu:
     #   passkey: ${ZENZIVA_PASSKEY:}
   push:
     provider: ${PUSH_PROVIDER:NONE}
-"%dev":
-  quarkus:
-    hibernate-orm:
-      schema-management:
-        strategy: drop-and-create
-    mailer:
-      mock: true
 mp:
   messaging:
     incoming:
@@ -120,6 +118,13 @@ mp:
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
         dead-letter-queue.topic: payu.transaction.payment-expired.v1.dlq
+      billing-payment-events:
+        connector: smallrye-kafka
+        topic: payu.billing.payment-completed.v1
+        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        auto.offset.reset: earliest
+        failure-strategy: dead-letter-queue
+        dead-letter-queue.topic: payu.billing.payment-completed.v1.dlq
       split-bill-events:
         connector: smallrye-kafka
         topics:
@@ -148,3 +153,10 @@ mp:
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
         dead-letter-queue.topic: payu.kyc.failed.v1.dlq
+"%dev":
+  quarkus:
+    hibernate-orm:
+      schema-management:
+        strategy: drop-and-create
+    mailer:
+      mock: true

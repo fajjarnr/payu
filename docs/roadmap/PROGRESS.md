@@ -1,5 +1,15 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.5 (2026-08-19)
+
+- **ARCH-NOTIF-001 partial (ADR-0027)** — `notification-service` lab providers + billing topic:
+  - `TelegramSender` (`payu.telegram.bot-token`) + `SmsSimulatorSender` + `FcmPushSender` (`payu.fcm.project-id`) lab stubs (log masked recipient, `true`, `ponytail: add real HTTP + OAuth2 when creds exist`), wired into `SmsSender` (`TELEGRAM`/`SIMULATOR`) and `PushSender` (`FCM`) with null-CDI guard for `PushSenderFailClosedTest`
+  - `application.yml` `payu.telegram.bot-token` + `payu.fcm.project-id`, new `billing-payment-events` `payu.billing.payment-completed.v1` (+DLQ) + `EventConsumer.onBillingPaymentEvent` → `onPaymentEvent` (fixes `payment-events` vs `payu.billing.payment-completed.v1`/`payu.transaction.payment-expired.v1` mismatch (1))
+  - `PushSenderFailClosedTest` `FCM` lab-succeeds (was fail-closed), `mvn test` `82 run 0 fail 51 skipped` + `package` BUILD SUCCESS
+  - Remaining (2) contacts `Map<Channel,recipient>` isolation + (5) AES-256 GCM `recipient`/`body` encryption — ceiling noted
+- **Build & Verification**: `notification-service` `package -DskipTests` BUILD SUCCESS, `31` images retagged `1.13.4→1.13.5` `PAYU_VERSION:-1.13.5`, `notification-service` image rebuilt
+- **Backlog**: `TODOS.md` `ARCH-NOTIF-001` still OPEN (2+5 remaining), `Last Release 1.13.5`
+
 ## Deploy 1.13.4 (2026-08-19)
 
 - **FE-ONBOARD-001 (kyc) CLOSED** — onboarding KTP not sent to KYC:

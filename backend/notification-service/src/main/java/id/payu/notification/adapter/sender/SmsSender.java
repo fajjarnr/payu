@@ -3,6 +3,7 @@ package id.payu.notification.adapter.sender;
 import id.payu.notification.domain.Notification;
 import id.payu.notification.domain.RecipientMasker;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -22,9 +23,17 @@ public class SmsSender {
     @ConfigProperty(name = "payu.sms.provider", defaultValue = "NONE")
     String smsProvider;
 
+    @Inject
+    TelegramSender telegramSender;
+
+    @Inject
+    SmsSimulatorSender simulatorSender;
+
     public boolean send(Notification notification) {
         return switch (smsProvider == null ? "NONE" : smsProvider.toUpperCase()) {
             case "LOG" -> sendViaLog(notification);
+            case "TELEGRAM" -> telegramSender != null ? telegramSender.send(notification) : labLog("TELEGRAM", notification);
+            case "SIMULATOR" -> simulatorSender != null ? simulatorSender.send(notification) : labLog("SIMULATOR", notification);
             case "NONE" -> failClosed(notification);
             case "TWILIO", "VONAGE", "ZENZIVA" -> {
                 LOG.warnf("SMS provider '%s' is not implemented yet — failing closed", smsProvider);
@@ -35,6 +44,11 @@ public class SmsSender {
                 yield failClosed(notification);
             }
         };
+    }
+
+    private boolean labLog(String provider, Notification n) {
+        LOG.infof("[%s-SIM] To %s | %s — %s (no CDI, lab mode)", provider, RecipientMasker.mask(n.getRecipient()), n.getTitle(), n.getBody());
+        return true;
     }
 
     private boolean failClosed(Notification notification) {

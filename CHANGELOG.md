@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.5] - 2026-08-19
+
+### Fixed (Notification — ADR-0027 partial)
+- **ARCH-NOTIF-001 (3/5)**: `notification-service` zero-cost lab + topic fix:
+  - `TelegramSender.java` (`payu.telegram.bot-token`) + `SmsSimulatorSender.java` + `FcmPushSender.java` (`payu.fcm.project-id`) — lab stubs log masked recipient and return `true` (ponytail: no HTTP retry, add real Telegram `sendMessage` / FCM v1 `messages:send` + OAuth2 when creds exist)
+  - `SmsSender.java` now supports `TELEGRAM`/`SIMULATOR` (fallback lab log if CDI null), `PushSender.java` `FCM` now delegates to `FcmPushSender` (null-CDI guard for unit test)
+  - `application.yml` adds `payu.telegram.bot-token`, `payu.fcm.project-id`, new incoming `billing-payment-events` `payu.billing.payment-completed.v1` (+DLQ) and `EventConsumer.onBillingPaymentEvent` delegating to `onPaymentEvent` — fixes `payment-events` vs `payu.billing.payment-completed.v1` / `payu.transaction.payment-expired.v1` mismatch (1)
+  - `PushSenderFailClosedTest` updated: `FCM` now lab-succeeds (was fail-closed)
+  - Remaining: (2) contacts `Map<Channel,recipient>` isolation, (5) AES-256 GCM `recipient`/`body` encryption (UU PDP) — ponytail ceiling, add column converters + migration when prod data needs at-rest encryption
+
+### Verification
+- `mvn -f backend/notification-service/pom.xml test` `82 run 0 fail 51 skipped` + `package -DskipTests` BUILD SUCCESS
+- `mvn -f backend/shared/quarkus-api-commons/pom.xml install -DskipTests` for reactor dep
+- Podman `31` images retagged `1.13.4→1.13.5`, `compose` `PAYU_VERSION:-1.13.5`, `notification-service` rebuilt
+
 ## [1.13.4] - 2026-08-19
 
 ### Fixed (Frontend)

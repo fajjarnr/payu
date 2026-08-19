@@ -130,6 +130,12 @@ public class EventConsumer {
         }
     }
 
+    @Incoming("billing-payment-events")
+    public void onBillingPaymentEvent(String payload) {
+        // ADR-0027: billing completed is same flow as payment-events, but separate topic payu.billing.payment-completed.v1
+        onPaymentEvent(payload);
+    }
+
     @Incoming("payment-events")
     public void onPaymentEvent(String payload) {
         LOG.infof("Received payment event: %s", payload);

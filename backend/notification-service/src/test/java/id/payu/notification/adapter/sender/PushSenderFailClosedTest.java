@@ -30,10 +30,10 @@ class PushSenderFailClosedTest {
     }
 
     @Test
-    @DisplayName("unimplemented FCM fails closed")
-    void unimplementedFcmFailsClosed() {
+    @DisplayName("FCM lab stub succeeds (ADR-0027)")
+    void fcmLabSucceeds() {
         sender.pushProvider = "FCM";
-        assertThat(sender.send(notification())).isFalse();
+        assertThat(sender.send(notification())).isTrue();
     }
 
     @Test

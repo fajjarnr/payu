@@ -3,6 +3,7 @@ package id.payu.notification.adapter.sender;
 import id.payu.notification.domain.Notification;
 import id.payu.notification.domain.RecipientMasker;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 /**
@@ -20,13 +21,20 @@ public class PushSender {
     @org.eclipse.microprofile.config.inject.ConfigProperty(name = "payu.push.provider", defaultValue = "NONE")
     String pushProvider;
 
+    @Inject
+    FcmPushSender fcmPushSender;
+
     public boolean send(Notification notification) {
         return switch (pushProvider == null ? "NONE" : pushProvider.toUpperCase()) {
             case "LOG" -> sendViaLog(notification);
             case "NONE" -> failClosed(notification);
             case "FCM" -> {
-                LOG.warnf("FCM push provider is not implemented yet — failing closed");
-                yield failClosed(notification);
+                if (fcmPushSender == null) {
+                    // test instantiation without CDI — lab mode stub
+                    LOG.infof("[FCM-SIM] To %s | %s — %s (no CDI, lab mode)", RecipientMasker.mask(notification.getRecipient()), notification.getTitle(), notification.getBody());
+                    yield true;
+                }
+                yield fcmPushSender.send(notification);
             }
             default -> {
                 LOG.warnf("Unknown push provider '%s' — failing closed", pushProvider);
