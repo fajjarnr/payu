@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.7] - 2026-08-19
+
+### Fixed (DX — ADR-0047)
+- **DX-TS-BRANDED-001**: `frontend/web-app/src/types/index.ts` plain `string` untuk `AccountId`/`UserId`/`TransactionId`/`PocketId`/`Money` tanpa branded types — pemicu `BE-PARTNER-001`/`BE-INVEST-001` mismatch. Added branded nominal types `AccountId`/`UserId`/`TransactionId`/`PocketId`/`Money` as `string & { readonly __brand?: 'X' }` (ponytail: optional `__brand` for gradual adoption, plain string still assignable, strict via `as` when needed) — std di [ADR-0047](../adr/0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md) `Money string` `HALF_EVEN` scale 4 via `lib/currency`.
+
+### Verification
+- `npm --prefix frontend/web-app run build` `86/86` `0` `tsc --noEmit` clean (branded optional keeps existing `Money` `string` assignable)
+- Podman `31` images retagged `1.13.6→1.13.7` `PAYU_VERSION:-1.13.7` `web-app` rebuilt
+
 ## [1.13.6] - 2026-08-19
 
 ### Added (Security — ADR-0028 scaffold)

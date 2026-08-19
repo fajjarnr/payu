@@ -47,7 +47,13 @@ export interface LoginResponse {
 // IMP-011 Fix: Consolidated pocket types to match backend API
 // Backend uses: SAVINGS, SHARED, GOAL (no MAIN/SAVING singular)
 export type PocketType = 'SAVINGS' | 'SHARED' | 'GOAL';
-export type Money = string;
+// ADR-0047: branded nominal types to prevent ID mismatch (BE-PARTNER-001/BE-INVEST-001)
+// ponytail: optional __brand for gradual adoption — plain string still assignable, strict via `as` when needed
+export type AccountId = string & { readonly __brand?: 'AccountId' };
+export type UserId = string & { readonly __brand?: 'UserId' };
+export type TransactionId = string & { readonly __brand?: 'TransactionId' };
+export type PocketId = string & { readonly __brand?: 'PocketId' };
+export type Money = string & { readonly __brand?: 'Money' };
 
 export interface Pocket {
   id: string;

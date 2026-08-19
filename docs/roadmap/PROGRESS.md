@@ -1,5 +1,13 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.7 (2026-08-19)
+
+- **DX-TS-BRANDED-001 (ADR-0047) CLOSED** — branded `Id` + `Money`:
+  - `frontend/web-app/src/types/index.ts` added `AccountId`/`UserId`/`TransactionId`/`PocketId`/`Money` as `string & { readonly __brand?: 'X' }` (ponytail optional brand, plain string still assignable, prevents `Number(user.id)` `NaN` + `BE-INVEST-001` `account_id` mismatch, `HALF_EVEN` scale 4 via `lib/currency`)
+  - Remaining gradual adoption: update `Pocket.id` `PocketId`, `Transaction.id` `TransactionId`, etc. — ceiling noted
+- **Build & Verification**: `npm --prefix frontend/web-app run build` `86/86` `0` `tsc` clean, `31` images retagged `1.13.6→1.13.7` `PAYU_VERSION:-1.13.7` `web-app` rebuilt
+- **Backlog**: `TODOS` `DX-TS-BRANDED-001` removed (now `2` DX: `GW-CONCUR-001` + `FE-SEC-001`? actually `FE-SEC-001` is cross-layer), `Last Release 1.13.7`
+
 ## Deploy 1.13.6 (2026-08-19)
 
 - **ARCH-GLOBAL-002 scaffold (ADR-0028)** — Step-Up Auth 1/4:

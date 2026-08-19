@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-292: Branded Nominal Types Prevent ID Mismatch with Gradual Adoption (2026-08-19)
+
+**Context**: DX-TS-BRANDED-001 — `types/index.ts` plain `string` for `AccountId`/`UserId`/`TransactionId`/`Money` caused `BE-PARTNER-001` `Number(user.id)` `NaN` and `BE-INVEST-001` `account_id` mismatch.
+
+**Lesson**: define `AccountId`/`UserId`/`TransactionId`/`PocketId`/`Money` as `string & { readonly __brand?: 'X' }` (optional `__brand` for gradual adoption, plain string still assignable, strict via `as AccountId`). `Money` `HALF_EVEN` scale 4 remains via `lib/currency`. Update `Pocket.id` `PocketId` etc. incrementally — don't break build by making brand required in one commit.
+
+**Applied evidence**: `frontend/web-app/src/types/index.ts` branded types added, `npm build` `86/86` `tsc` clean, `TODOS` `DX-TS-BRANDED-001` removed.
+
 ## L-291: Step-Up Auth Needs Argon2id with BouncyCastle and user_pins Table First (2026-08-19)
 
 **Context**: ARCH-GLOBAL-002 — ADR-0028 `user_pins` Argon2id + 3-strike lockout 15m, but no table and no hasher existed.
