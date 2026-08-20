@@ -175,8 +175,6 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 
 | Key | ADR | Status Saat Ini | Status Target | Tindakan Diperlukan |
 |:---|:---|:---:|:---:|:---|
-| ADR-ALIGN-001 | [ADR-0016](../adr/0016-arch-006-phase-a-strategy.md) | Deferred (2026-06-14) | ✅ Accepted / Completed | Kode 100% migrasi Java 25 + Spring Boot 4.1.0 (`backend/pom.xml` + 17 starters). Update status dokumen. |
-| ADR-ALIGN-002 | [ADR-0014](../adr/0014-api-management-platform.md) | Proposed (2026-03-02) | 📝 Accepted (Tiered) | Finalisasi 2-tier: Tier 1 Public Edge (APIcast/3scale) vs Tier 2 Core Gateway (Quarkus). |
 
 ### 2. 🔴 ADR yang Sudah Ada tapi Belum / Sebagian Diimplementasikan
 

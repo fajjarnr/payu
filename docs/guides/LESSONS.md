@@ -5908,3 +5908,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Verify tags exist via `podman pull` before pinning; use `v` prefix for Anchore/ProjectDiscovery, date tag for rsyslog.
 - **Action**: Fixed `podman-compose.yml` 4 tags to `v*` + `rsyslog:2026-04`, `rtk pull` 7 tools ok, `podman rmi latest` cleanup, tag v1.13.34.
 
+## 2026-08-20 — ADR align
+- **Context**: `ADR-ALIGN-001/002` doc alignment per principal-architect audit — not code, already reflected in `ARCH-GLOBAL` P1.
+- **Learning**: Keep `TODOS` only for implementation, doc alignment to `PROGRESS.md`.
+- **Action**: Removed 2, 230→228 lines, tag v1.13.35.
+

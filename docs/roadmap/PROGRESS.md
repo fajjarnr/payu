@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.35 (2026-08-20)
+
+- **ADR align hygiene**: removed `ADR-ALIGN-001/002` 230→228 lines, `PAYU_VERSION` 1.13.35.
+
 ## Deploy 1.13.34 (2026-08-20)
 
 - **Tool semver fix**: `gitleaks/nuclei/syft/grype` `v` prefix, `rsyslog:2026-04`, 7 tools `rtk pull` ok, `latest` removed, `PAYU_VERSION` 1.13.34.

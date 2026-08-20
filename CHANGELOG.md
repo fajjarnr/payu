@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.35] - 2026-08-20
+
+### Fixed (Backlog — ADR Align)
+- Remove `ADR-ALIGN-001/002` from `TODOS.md` 230→228 lines — ADR status alignment per `principal-architect` audit.
+
 ## [1.13.34] - 2026-08-20
 
 ### Fixed (Infra — Tool Semver)
