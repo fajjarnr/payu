@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.62] - 2026-08-20
+
+### Added (Backlog — ARCH-GLOBAL-002)
+- `ARCH-GLOBAL-002` Step-Up 1/4 `user_pins` V4 live per ADR-0028, `TODOS` updated 1/4, `rtk` 0 warn/error.
+
 ## [1.13.61] - 2026-08-20
 
 ### Fixed (Backlog — QAMVP-005)

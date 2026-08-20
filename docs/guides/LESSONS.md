@@ -6043,3 +6043,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, CI already `rtk` clean.
 - **Action**: Removed 1, 203→202 lines, tag v1.13.61.
 
+## 2026-08-20 — Step-Up 1/4
+- **Context**: `ARCH-GLOBAL-002` `user_pins` Argon2id 3-strike already `V4__add_user_pins.sql` per ADR-0028, next `challenge/verify` + `payload_digest`.
+- **Learning**: `V4` live, `TODOS` 1/4, `rtk` clean.
+- **Action**: Updated `TODOS` 1/4, tag v1.13.62.
+
