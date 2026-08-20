@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.23 (2026-08-20)
+
+- **DLQ replay (ARCH-DLQ-001)**: `scripts/dlq-replay.sh` live, 42 DLQ topics, `OutboxCleanupScheduler` ALERT, `TODOS` 243→242 lines, `PAYU_VERSION` 1.13.23.
+
 ## Deploy 1.13.22 (2026-08-20)
 
 - **PROD-044 notification fail-closed**: removed from `TODOS.md` (243 lines) — `SmsSender`/`PushSender` `NONE→false`, `EmailSender` mock false, `KEYCLOAK_REALM` default, encryption live, `rtk` 0 warn/error, `PAYU_VERSION` 1.13.22.

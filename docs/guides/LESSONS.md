@@ -5848,3 +5848,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Fail-closed must be default, not opt-in; `rtk` log checks confirm no false success, `podman-compose config` clean.
 - **Action**: Verified via codegraph + `rtk`, removed from TODOS 244→243, tag v1.13.22.
 
+## 2026-08-20 — DLQ replay
+- **Context**: `ARCH-DLQ-001` required `SKIP LOCKED` + `*.dlq` + `scripts/dlq-replay.sh` — 42 DLQ topics already declared, `OutboxCleanupScheduler` ALERT as safety net, but replay script missing.
+- **Learning**: DLQ must be `.dlq` suffix per topic `payu.<domain>.<event>.v<n>.dlq`, retention 30d, replay via `kafka-console-consumer`→`producer` best-effort, ponytail minimal bash without extra deps.
+- **Action**: Created `scripts/dlq-replay.sh` 1.4K, chmod +x, `rtk` 0 warn/error, removed from TODOS 243→242, tag v1.13.23.
+

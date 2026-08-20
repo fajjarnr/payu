@@ -122,7 +122,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| ARCH-DLQ-001 | 🟠 | promotion, cms, dispute, statement, platform | Tanpa `.dlq` wiring per-service; outbox event gagal permanen kini di-copy best-effort ke `destinationTopic + .dlq` (platform DONE 2026-08-13) + 42 DLQ topics declared retention 30d (2026-08-18). Sisa: consumer per service menunggu alert destination; `OutboxCleanupScheduler` log `OUTBOX-001 ALERT` sebagai safety net. `scripts/dlq-replay.sh` P1 — std di [ADR-0041](../adr/0041-transactional-outbox-pattern-with-polling-skip-locked-dispatcher-vs-debezium-cdc.md): `SKIP LOCKED` + `*.dlq` | OutboxCleanupScheduler.java:77-85 |
 | ARCH-DEDUP-001 | 🟠 | partner, promotion | Migrasi dedup DELETE baris finansial pre-constraint (`snap_bi_payments`/`refunds`/`cashbacks`/`rewards`) — legal hanya jika belum pernah jalan di prod; perlu bukti env + policy | partner V16/V17; promotion V11/V12 |
 | ARCH-FLYWAY-001 | 🟠 | account | Destruktif historis `DROP COLUMN` + `RENAME COLUMN` di migrasi ter-aplikasi — anti-pattern, risiko fresh-restore; jangan diulang | account V10:16-27 |
 
