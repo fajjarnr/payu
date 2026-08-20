@@ -6018,3 +6018,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `V109` `tenant_isolation_beneficiaries` `current_setting('app.tenant_id')`, `TODOS` removed 208→207.
 - **Action**: `V109` live, tag v1.13.56.
 
+## 2026-08-20 — Card P3
+- **Context**: `READY-060` card tokenization + 3DS P3 — not MVP, defer per roadmap.
+- **Learning**: Keep `TODOS` only for MVP, P3 to backlog.
+- **Action**: Removed 1, 207→206 lines, tag v1.13.57.
+
