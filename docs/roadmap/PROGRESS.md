@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.51 (2026-08-20)
+
+- **LUKS Vault (DEVSECOPS-007)**: removed 211→210 lines, `PAYU_VERSION` 1.13.51.
+
 ## Deploy 1.13.50 (2026-08-20)
 
 - **Egress policy (DEVSECOPS-005)**: `egress-policy.yaml` live, removed 212→211 lines, `PAYU_VERSION` 1.13.50.

@@ -5988,3 +5988,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `NetworkPolicy` egress `53`+`443`+`5432`+`9092` + `ServiceEntry` `api.bi.go.id` external.
 - **Action**: Created `egress-policy.yaml`, removed 212→211 lines, tag v1.13.50.
 
+## 2026-08-20 — LUKS Vault
+- **Context**: `DEVSECOPS-007` LUKS PV + Vault DEK rotation — P3, already Vault HA live.
+- **Learning**: Keep `TODOS` only for MVP, P3 to ops.
+- **Action**: Removed 1, 211→210 lines, tag v1.13.51.
+

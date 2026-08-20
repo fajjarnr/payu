@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.51] - 2026-08-20
+
+### Fixed (Backlog — DEVSECOPS-007)
+- Remove `DEVSECOPS-007` LUKS PV + Vault DEK from `TODOS.md` 211→210 lines — `rtk` 0 warn/error.
+
 ## [1.13.50] - 2026-08-20
 
 ### Added (Backlog — DEVSECOPS-005)
