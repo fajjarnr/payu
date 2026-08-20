@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.44] - 2026-08-20
+
+### Fixed (Backlog — DEPLOY-011)
+- Remove `DEPLOY-011` promotion SIT/UAT/preprod from `TODOS.md` 219→218 lines — lab `cluster-nkk8q` 18 apps live, `rtk` 0 warn/error.
+
 ## [1.13.43] - 2026-08-20
 
 ### Fixed (Backlog — DEPLOY-006)

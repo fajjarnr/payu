@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.44 (2026-08-20)
+
+- **Promotion env (DEPLOY-011)**: removed 219→218 lines, `PAYU_VERSION` 1.13.44.
+
 ## Deploy 1.13.43 (2026-08-20)
 
 - **WAF Wazuh (DEPLOY-006)**: removed 220→219 lines, `PAYU_VERSION` 1.13.43.

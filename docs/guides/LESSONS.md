@@ -5953,3 +5953,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, `rtk` + `mvn` clean.
 - **Action**: Removed 1, 220→219 lines, tag v1.13.43, `mvn BUILD SUCCESS`.
 
+## 2026-08-20 — Promotion env
+- **Context**: `DEPLOY-011` SIT/UAT/preprod live di lab `cluster-nkk8q` 18 apps, sisa litmus Kraken/Cerberus preprod — P2 chaos.
+- **Learning**: Keep `TODOS` only for MVP, chaos to staging.
+- **Action**: Removed 1, 219→218 lines, tag v1.13.44, `mvn` + `rtk` clean.
+
