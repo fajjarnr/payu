@@ -54,7 +54,7 @@ public class FxRate {
     }
 
     public BigDecimal convert(BigDecimal amount) {
-        return amount.multiply(rate);
+        return amount.multiply(rate).setScale(4, java.math.RoundingMode.HALF_EVEN);
     }
 
     public static FxRateBuilder builder() {

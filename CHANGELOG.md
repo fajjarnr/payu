@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.25] - 2026-08-20
+
+### Fixed (Backlog — PROD-002)
+- `fx-service` provider `BI` fallback URL `https://api.bi.go.id/fx`, cache TTL `5m` (`application.yml:103,110`), `BigDecimal 19,4 HALF_EVEN` for `FxRate`/`Stub`/`Http` + `convert` (fx  `PROD-002` std ADR-0050), `rtk` 0 warn/error.
+
 ## [1.13.24] - 2026-08-20
 
 ### Added (Backlog — INFRA-029)

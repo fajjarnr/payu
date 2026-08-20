@@ -100,14 +100,14 @@ springdoc:
 
 fx:
   provider:
-    url: ${FX_PROVIDER_URL:}
+    url: ${FX_PROVIDER_URL:https://api.bi.go.id/fx}
     api-key: ${FX_PROVIDER_API_KEY:}
-    source: ${FX_PROVIDER_SOURCE:}
+    source: ${FX_PROVIDER_SOURCE:BI}
     timeout: ${FX_PROVIDER_TIMEOUT:3s}
-    max-age: ${FX_PROVIDER_MAX_AGE:15m}
+    max-age: ${FX_PROVIDER_MAX_AGE:5m}
   providers:
-    default-provider: ${FX_DEFAULT_PROVIDER:UNCONFIGURED}
-    cache-ttl-minutes: 10
+    default-provider: ${FX_DEFAULT_PROVIDER:BI}
+    cache-ttl-minutes: 5
     supported-currencies: IDR,USD,EUR,SGD,JPY,GBP,AUD,CNY
     base-currency: IDR
   scheduler:

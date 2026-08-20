@@ -21,11 +21,11 @@ import java.util.Map;
 public class StubFxRateProviderAdapter implements FxRateProviderPort {
 
     private static final Map<String, BigDecimal> RATES = Map.of(
-        "USD", new BigDecimal("16000.00"),
-        "EUR", new BigDecimal("17500.00"),
-        "SGD", new BigDecimal("12000.00"),
-        "JPY", new BigDecimal("110.00"),
-        "GBP", new BigDecimal("20500.00")
+        "USD", new BigDecimal("16000.0000"),
+        "EUR", new BigDecimal("17500.0000"),
+        "SGD", new BigDecimal("12000.0000"),
+        "JPY", new BigDecimal("110.0000"),
+        "GBP", new BigDecimal("20500.0000")
     );
 
     @Override
@@ -37,8 +37,8 @@ public class StubFxRateProviderAdapter implements FxRateProviderPort {
         return FxRate.builder()
             .fromCurrency(from)
             .toCurrency(to)
-            .rate(rate)
-            .inverseRate(BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_EVEN))
+            .rate(rate.setScale(4, RoundingMode.HALF_EVEN))
+            .inverseRate(BigDecimal.ONE.divide(rate, 4, RoundingMode.HALF_EVEN))
             .validFrom(LocalDateTime.now())
             .validUntil(observedAt.plusHours(1))
             .source("local-stub")
@@ -54,7 +54,7 @@ public class StubFxRateProviderAdapter implements FxRateProviderPort {
         }
         Map<String, BigDecimal> rates = new HashMap<>();
         RATES.forEach((currency, idrRate) ->
-                rates.put(currency, BigDecimal.ONE.divide(idrRate, 10, RoundingMode.HALF_EVEN)));
+                rates.put(currency, BigDecimal.ONE.divide(idrRate, 4, RoundingMode.HALF_EVEN)));
         return rates;
     }
 
@@ -73,7 +73,7 @@ public class StubFxRateProviderAdapter implements FxRateProviderPort {
         if ("IDR".equals(fromCurrency)) {
             BigDecimal idrRate = RATES.get(toCurrency);
             if (idrRate != null) {
-                return BigDecimal.ONE.divide(idrRate, 10, RoundingMode.HALF_EVEN);
+                return BigDecimal.ONE.divide(idrRate, 4, RoundingMode.HALF_EVEN);
             }
         }
         return throwUnknownPair(fromCurrency, toCurrency);

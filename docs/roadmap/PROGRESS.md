@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.25 (2026-08-20)
+
+- **FX provider (PROD-002)**: `BI` URL + `5m` TTL, `BigDecimal 19,4 HALF_EVEN`, `TODOS` 241→240 lines, `PAYU_VERSION` 1.13.25.
+
 ## Deploy 1.13.24 (2026-08-20)
 
 - **Audit log Wazuh sink (INFRA-029)**: `audit-syslog` rsyslog 8.2408.0 RFC5424, `5514:514`, `rtk` 0 warn/error, `PAYU_VERSION` 1.13.24, `TODOS` 241 lines.

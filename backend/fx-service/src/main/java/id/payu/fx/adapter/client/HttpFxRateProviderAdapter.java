@@ -78,8 +78,8 @@ public class HttpFxRateProviderAdapter implements FxRateProviderPort {
         return FxRate.builder()
                 .fromCurrency(from)
                 .toCurrency(to)
-                .rate(rate)
-                .inverseRate(BigDecimal.ONE.divide(rate, 12, RoundingMode.HALF_EVEN))
+                .rate(rate.setScale(4, RoundingMode.HALF_EVEN))
+                .inverseRate(BigDecimal.ONE.divide(rate, 4, RoundingMode.HALF_EVEN))
                 .source(snapshot.source())
                 .observedAt(toLocalDateTime(snapshot.observedAt()))
                 .build();

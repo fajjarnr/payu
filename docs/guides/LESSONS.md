@@ -5858,3 +5858,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Add `audit-syslog` `rsyslog:8.2408.0` (semver, not latest) with `5514:514` tcp/udp, `*infra-defaults`, no extra vol, `rtk podman-compose config` validates, `PAYU_VERSION` bump keeps semver.
 - **Action**: Added service, removed `INFRA-029` 242→241, tag v1.13.24.
 
+## 2026-08-20 — FX provider BI fallback
+- **Context**: `PROD-002` required `BI` fallback URL, `5m` TTL, `19,4 HALF_EVEN` — `application.yml` had empty URL and `10m`, `Stub` used `scale 2/10` not `4`.
+- **Learning**: Money must be `BigDecimal` `HALF_EVEN` `setScale(4)`, provider `BI` default prevents `WARN` when `FX_PROVIDER_URL` missing, cache `5m` per ADR-0050.
+- **Action**: Fixed `application.yml:103,110`, `Stub`/`Http`/`FxRate.convert` to `4` `HALF_EVEN`, removed `PROD-002` 241→240, tag v1.13.25.
+
