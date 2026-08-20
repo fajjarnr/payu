@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.30 (2026-08-20)
+
+- **P2 defer hygiene**: removed `READY-029/030` (Gatling/SOAK cluster phase) 236→234 lines, `PAYU_VERSION` 1.13.30.
+
 ## Deploy 1.13.29 (2026-08-20)
 
 - **Cache JMX hygiene**: `payu-cache` JMX disabled, `rtk` 0 warn/error, `PAYU_VERSION` 1.13.29.

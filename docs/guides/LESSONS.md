@@ -5883,3 +5883,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Infinispan enables JMX remoting by default; disable via `-Dinfinispan.server.jmx.enabled=false -Dcom.sun.management.jmxremote=false` in `JAVA_OPTS_BASE`, `infinispan-config.xml` already `<jmx enabled="false"/>` but not enough for remoting.
 - **Action**: Added to `podman-compose.yml:116`, verified `rtk podman logs | grep -i warn|error` 0, `podman rmi` cleanup.
 
+## 2026-08-20 — P2 defer Gatling/SOAK
+- **Context**: `READY-029/030` P2 Defer per ADR-0023 — Gatling/SOAK defer to cluster/staging phase, not MVP local.
+- **Learning**: Keep `TODOS` only for in-scope MVP, defer out-of-scope to roadmap, `rtk` checks remain clean.
+- **Action**: Removed 2, 236→234 lines, tag v1.13.30.
+

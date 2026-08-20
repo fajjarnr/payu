@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.30] - 2026-08-20
+
+### Fixed (Backlog — P2 Defer)
+- Remove `READY-029`/`030` Gatling/SOAK defer (P2 out-of-scope ADR-0023) from `TODOS.md` 236→234 lines, `rtk` 0 warn/error.
+
 ## [1.13.29] - 2026-08-20
 
 ### Fixed (Infra — Log Hygiene)
