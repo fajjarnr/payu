@@ -94,7 +94,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Pri | Category | Summary |
 |:---|:---:|:---|:---|
-| INFRA-026 | P1 | Secrets | Vault HA live + restore drill verified. Sisa: snapshot S3 CronJob verify, kv readback, auto-unseal backup |
 | DEPLOY-009 | P2 | CI/CD | Tekton Results live (365d); sisa: external HA PostgreSQL, Chains SLSA/Rekor evidence, Renovate |
 | DEVSECOPS-017 | P1 | Secrets | Tekton Buildah butuh `redhat-registry-pull` workspace + Vault `secret/payu/cicd/redhat-registry` |
 | OPS-2026-08-01-05 | P2 | Chaos | Kraken manifest fixed (emptyDir + SCC); re-run preprod gate saat CPU pulih ([ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)) |

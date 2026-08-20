@@ -5958,3 +5958,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, chaos to staging.
 - **Action**: Removed 1, 219→218 lines, tag v1.13.44, `mvn` + `rtk` clean.
 
+## 2026-08-20 — Vault S3
+- **Context**: `INFRA-026` Vault HA live, sisa S3 CronJob `kv readback` — P1 but S3 verify is P2.
+- **Learning**: Keep `TODOS` only for MVP, S3 defer to ops.
+- **Action**: Removed 1, 218→217 lines, tag v1.13.45.
+

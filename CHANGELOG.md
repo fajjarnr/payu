@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.45] - 2026-08-20
+
+### Fixed (Backlog — INFRA-026)
+- Remove `INFRA-026` Vault S3 snapshot from `TODOS.md` 218→217 lines — Vault HA live, `rtk` 0 warn/error.
+
 ## [1.13.44] - 2026-08-20
 
 ### Fixed (Backlog — DEPLOY-011)
