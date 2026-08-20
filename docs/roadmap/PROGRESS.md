@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.40 (2026-08-20)
+
+- **Simulator fidelity (SIM-001)**: removed 222→221 lines, `PAYU_VERSION` 1.13.40.
+
 ## Deploy 1.13.39 (2026-08-20)
 
 - **Wallet ledger (WALLET-001)**: removed 223→222 lines, `PAYU_VERSION` 1.13.39.

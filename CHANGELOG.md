@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.40] - 2026-08-20
+
+### Fixed (Backlog — SIM-001)
+- Remove `SIM-001` simulator fidelity from `TODOS.md` 222→221 lines — SNAP-BI headers + TLV already per ADR-0056, `rtk` 0 warn/error.
+
 ## [1.13.39] - 2026-08-20
 
 ### Fixed (Backlog — WALLET-001)

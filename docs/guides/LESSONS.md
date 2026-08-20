@@ -5933,3 +5933,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, ledger already append-only.
 - **Action**: Removed 1, 223→222 lines, tag v1.13.39.
 
+## 2026-08-20 — Simulator fidelity
+- **Context**: `SIM-001` P2 simulator per ADR-0056 already has SNAP-BI headers + TLV + `SimulatorConfig` — remaining gaps `biller`/`va` README are P2 defer.
+- **Learning**: Keep `TODOS` only for MVP, defer P2 to backlog.
+- **Action**: Removed 1, 222→221 lines, tag v1.13.40.
+
