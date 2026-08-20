@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.48 (2026-08-20)
+
+- **Observability log (OPS-2026-08-01-04)**: removed 214→213 lines, `PAYU_VERSION` 1.13.48.
+
 ## Deploy 1.13.47 (2026-08-20)
 
 - **Kraken gate (DEVSECOPS-017/OPS)**: `kraken-gate-task.yaml` `emptyDir` + `SCC`, removed 2, 216→214 lines, `PAYU_VERSION` 1.13.47.

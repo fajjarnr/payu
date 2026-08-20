@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.48] - 2026-08-20
+
+### Fixed (Backlog — OPS Log)
+- Remove `OPS-2026-08-01-04` observability log delivery from `TODOS.md` 214→213 lines — vector OK, Loki 403 rego fixed (LOG-2236), recurring ERROR cleaned (`cache Optional` etc), `rtk` 0 warn/error.
+
 ## [1.13.47] - 2026-08-20
 
 ### Fixed (Backlog — DEVSECOPS-017 + OPS Kraken)

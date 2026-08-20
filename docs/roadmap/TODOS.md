@@ -94,7 +94,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Pri | Category | Summary |
 |:---|:---:|:---|:---|
-| OPS-2026-08-01-04 | P2 | Observability | Log delivery: vector OK; blocked 403 `lokistack-gateway.rego` kosong (operator bug LOG-2236). **2026-08-13**: recurring ERROR dibersihkan (cache `Optional`, OJK timer DNS, account IAM 401 legit) |
 | OPS-2026-04-08-02 | P2 | Performance | k6 via operator/port-forward only (gateway unreachable dari host) |
 | DEVSECOPS-005 | P3 | Network | EgressNetworkPolicy + Istio egress gateway |
 | DEVSECOPS-007 | P3 | Security | LUKS encryption PV + Vault DEK rotation |

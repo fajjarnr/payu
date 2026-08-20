@@ -5973,3 +5973,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `emptyDir` for `work` + `stepTemplate` SCC suppresses `trust` warn, `rtk` 0 warn/error.
 - **Action**: Fixed `kraken-gate-task.yaml`, removed 2, 216→214 lines, tag v1.13.47.
 
+## 2026-08-20 — Observability log
+- **Context**: `OPS-2026-08-01-04` vector OK, Loki 403 rego empty (LOG-2236), recurring ERROR `cache Optional` etc cleaned 2026-08-13.
+- **Learning**: Keep `TODOS` only for OPEN, log delivery already OK, `rtk` 0 warn/error.
+- **Action**: Removed 1, 214→213 lines, tag v1.13.48.
+
