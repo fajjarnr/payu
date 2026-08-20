@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.20] - 2026-08-20
+
+### Fixed (Backlog — Partner Gate)
+- Remove 6 `PARTNER-PROD-001..006` (🟢 LIVE) from `TODOS.md` (250→244 lines) — public edge, encryption, webhook, delivery, reconciliation, tenant isolation already LIVE per `PROGRESS.md`, 0 warn/error via `rtk`.
+
 ## [1.13.19] - 2026-08-20
 
 ### Fixed (Backlog — CB-006)

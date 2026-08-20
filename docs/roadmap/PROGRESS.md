@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.20 (2026-08-20)
+
+- **Partner gate hygiene (6 LIVE)**: removed `PARTNER-PROD-001..006` from `TODOS.md` (244 lines) — `rtk podman-compose config` clean, `PAYU_VERSION` 1.13.20.
+
 ## Deploy 1.13.19 (2026-08-20)
 
 - **CB-006 platform deploy**: removed from `TODOS.md` (250 lines) — `ACCOUNT-007` closed, `rtk podman-compose config` + `podman logs payu-database-rw` no error (1 initdb warn trust expected).

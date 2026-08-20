@@ -83,12 +83,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Gate | Pri | Status | Sisa |
 |:---|:---:|:---|:---|
-| PARTNER-PROD-001 | P0 | 🟢 Public edge APIcast LIVE (sandbox) | WAF Coraza (DEPLOY-006 / [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md)), mTLS APIcast→gateway, rate-limit per-IP, runbook restart |
-| PARTNER-PROD-002 | P0 | 🟢 Enkripsi at-rest + rotation + backfill LIVE (V18, 0 plaintext) — std di [ADR-0040](../adr/0040-field-level-encryption-searchable-encryption-via-hmac-blind-indexing-and-key-lifecycle.md): AES-256-GCM + HMAC blind `*_bidx`, Vault KEK/DEK, rotation `90d` | Vault key management production |
-| PARTNER-PROD-003 | P0 | 🟢 Webhook trust boundary LIVE | Egress policy eksplisit, response-body scan |
-| PARTNER-PROD-004 | P0 | 🟢 Delivery durability LIVE | DLQ consumer/alert otomatis |
-| PARTNER-PROD-005 | P0 | 🟢 Reconciliation LIVE — std di [ADR-0041](../adr/0041-transactional-outbox-pattern-with-polling-skip-locked-dispatcher-vs-debezium-cdc.md): polling `SKIP LOCKED` + CloudEvents `payu.*.v<n>` + DLQ `*.dlq` | Reconcile outbox, auto-resolve, alert destination |
-| PARTNER-PROD-006 | P0 | 🟢 Tenant isolation LIVE | RLS GUC integration, partner-scoped Keycloak roles, audit list query |
 | PARTNER-PROD-007 | P1 | ⏸️ Belum | HPA≥3, PDB minAvailable 2, topology spread, bounded timeout — locks via [ADR-0042](../adr/0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md) |
 | PARTNER-PROD-008 | P0 | ⏸️ Belum | PG HA+PITR via CNPG Barman Cloud ([ADR-0031](../adr/0031-database-resilience-pitr-and-disaster-recovery.md)), restore drill, RPO=0/RTO<5m |
 | PARTNER-PROD-009 | P1 | ⏸️ Belum | SLI/SLO, dashboard+alert, traces E2E ([ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md)) |
