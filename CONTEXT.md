@@ -12,3 +12,13 @@
 - **Route Handler**: A public HTTP endpoint in the web application that must perform its own authentication, authorization, input validation, and response policy.
 - **Proxy**: An early request decision point used for routing or optimistic navigation checks. It is not the final authorization boundary.
 - **Server Component**: A server-rendered UI component that can access server-only session context and should fetch protected data without an unnecessary browser round trip.
+
+## Lending and Credit Scoring
+
+- **CreditScoringFact**: Transient input fact for the Drools engine (kycStatus, tenureMonths, totalTransactions, totalAmount, successRate) with a mutable `score` accumulator via `addScore`/`subtractScore`; not persisted.
+- **CreditScore**: Persisted snapshot (`credit_scores` table) — userId, score (BigDecimal, HALF_EVEN), riskCategory, lastCalculatedAt; single row per user (tenant-aware).
+- **RiskCategory**: Derived enum from score tiers (EXCELLENT ≥750, GOOD ≥700, FAIR ≥650, POOR ≥600, VERY_POOR <600); produced by pricing DMN, not stored in Fact.
+- **PreApproval**: Decision output for loan origination (requestedAmount vs maxApprovedAmount, minInterestRate, maxTenureMonths, estimatedMonthlyPayment, status, creditScore, riskCategory, validUntil +30d).
+- **PreApprovalStatus**: Result of eligibility DMN — APPROVED / CONDITIONALLY_APPROVED / REJECTED.
+- **LoanApplication**: User request (externalId, loanType, principalAmount, tenureMonths, purpose) that yields a Loan (status APPROVED / REJECTED / PENDING_APPROVAL); eligibility and pricing come from DMN, installment math stays in Java.
+- **PricingTier**: Interest-rate band derived from creditScore (≥750→12%, ≥700→14%, ≥650→16%, else 18%) — owned by pricing DMN, duplicated previously in `LoanPreApprovalService` and `LendingApplicationService`.
