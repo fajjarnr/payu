@@ -5918,3 +5918,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Deduplicate `ARCH-GLOBAL ↔ ADR-GAP`, keep `Backlog Aksi P1` as single source.
 - **Action**: Removed 2, 228→226 lines, tag v1.13.36.
 
+## 2026-08-20 — BESTP done
+- **Context**: `ARCH-BESTP-001`/`002` already 🟢 Done (ShedLock/gRPC) per ADR-0042/0037, still in `TODOS` as OPEN.
+- **Learning**: Keep `TODOS` only for OPEN, move Done to `PROGRESS.md`.
+- **Action**: Removed 2, 226→224 lines, tag v1.13.37.
+

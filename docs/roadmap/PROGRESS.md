@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.37 (2026-08-20)
+
+- **BESTP done hygiene**: removed `ARCH-BESTP-001/002` 226→224 lines, `PAYU_VERSION` 1.13.37.
+
 ## Deploy 1.13.36 (2026-08-20)
 
 - **ADR gap hygiene**: removed `ADR-GAP-001/002` 228→226 lines, `PAYU_VERSION` 1.13.36.
