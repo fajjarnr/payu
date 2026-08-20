@@ -6058,3 +6058,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, velocity already `rtk` clean.
 - **Action**: Removed 1, 201→200 lines, tag v1.13.64.
 
+## 2026-08-20 — DB HA PITR
+- **Context**: `ARCH-GLOBAL-005` DB HA PITR `barmanObjectStore` S3 WAL per ADR-0031 already PITR drill verified.
+- **Learning**: Keep `TODOS` only for OPEN, PITR already `rtk` clean.
+- **Action**: Removed 1, 200→199 lines, tag v1.13.65.
+

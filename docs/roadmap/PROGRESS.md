@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.65 (2026-08-20)
+
+- **DB HA PITR (ARCH-GLOBAL-005)**: removed 200→199 lines, `PAYU_VERSION` 1.13.65.
+
 ## Deploy 1.13.64 (2026-08-20)
 
 - **Velocity AML (ARCH-GLOBAL-004)**: removed 201→200 lines, `PAYU_VERSION` 1.13.64.

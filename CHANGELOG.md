@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.65] - 2026-08-20
+
+### Fixed (Backlog — ARCH-GLOBAL-005)
+- Remove `ARCH-GLOBAL-005` DB HA PITR from `TODOS.md` 200→199 lines — PITR drill verified per ADR-0031, `rtk` 0 warn/error.
+
 ## [1.13.64] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-004)
