@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.26 (2026-08-20)
+
+- **Audit hygiene (DEDUP/FLYWAY)**: removed 2 historic `ARCH-*` (240→238 lines) — `rtk` clean, `PAYU_VERSION` 1.13.26.
+
 ## Deploy 1.13.25 (2026-08-20)
 
 - **FX provider (PROD-002)**: `BI` URL + `5m` TTL, `BigDecimal 19,4 HALF_EVEN`, `TODOS` 241→240 lines, `PAYU_VERSION` 1.13.25.

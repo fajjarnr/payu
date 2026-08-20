@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.26] - 2026-08-20
+
+### Fixed (Backlog — Audit Hygiene)
+- Remove `ARCH-DEDUP-001` + `ARCH-FLYWAY-001` from `TODOS.md` (240→238 lines) — historic dedup/flyway already V16/V17 + V10:16-27, lesson "jangan diulang" in `LESSONS.md`, `rtk` 0 warn/error.
+
 ## [1.13.25] - 2026-08-20
 
 ### Fixed (Backlog — PROD-002)
