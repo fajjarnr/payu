@@ -236,6 +236,9 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 | — | **ADR-0054** | ✅ **Dispute and Chargeback Standard** — dispute-service (Accepted 2026-08-20) | **P2** |
 | — | **ADR-0055** | ✅ **Promotion, Cashback and Reward Saga Standard** — promotion-service (Accepted 2026-08-20) | **P2** |
 | — | **ADR-0056** | ✅ **Simulator Fidelity and Contract Testing Standard** — SIM-001 (Accepted 2026-08-20) | **P2** |
+| — | **ADR-0057** | 📝 **Billing Provider & Biller Catalogue Governance** — biller-simulator (Proposed P3, deferred per ADR-0023) | **P3** |
+| — | **ADR-0058** | 📝 **Backoffice RBAC & Admin Audit Trail** — backoffice-service (Proposed P3, deferred) | **P3** |
+| — | **ADR-0059** | 📝 **Product Catalog & Partner Product Governance** — product-catalog-service (Proposed P3, deferred) | **P3** |
 
 ### 4. ⚠️ Kesenjangan Best Practice & Anti-Pattern yang Memerlukan Remediasi
 
