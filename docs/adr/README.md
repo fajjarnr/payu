@@ -62,6 +62,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0053](0053-investment-and-gold-portfolio-standard.md) | Investment and Gold Portfolio Standard | Accepted | 2026-08-20 |
 | [0054](0054-dispute-and-chargeback-standard.md) | Dispute and Chargeback Standard | Accepted | 2026-08-20 |
 | [0055](0055-promotion-cashback-and-reward-saga-standard.md) | Promotion, Cashback and Reward Saga Standard | Accepted | 2026-08-20 |
+| [0056](0056-simulator-fidelity-and-contract-testing-standard.md) | Simulator Fidelity and Contract Testing Standard (SIM-001) | Accepted | 2026-08-20 |
 
 
 ## 🚀 How to Create a New ADR
