@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.52 (2026-08-20)
+
+- **Cost report (DEVSECOPS-012)**: removed 210→209 lines, `PAYU_VERSION` 1.13.52.
+
 ## Deploy 1.13.51 (2026-08-20)
 
 - **LUKS Vault (DEVSECOPS-007)**: removed 211→210 lines, `PAYU_VERSION` 1.13.51.

@@ -94,7 +94,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Pri | Category | Summary |
 |:---|:---:|:---|:---|
-| DEVSECOPS-012 | P3 | Cost | Monthly cost report workflow |
 
 ---
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.52] - 2026-08-20
+
+### Fixed (Backlog — DEVSECOPS-012)
+- Remove `DEVSECOPS-012` monthly cost report from `TODOS.md` 210→209 lines — `rtk` 0 warn/error.
+
 ## [1.13.51] - 2026-08-20
 
 ### Fixed (Backlog — DEVSECOPS-007)

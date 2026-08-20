@@ -5993,3 +5993,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, P3 to ops.
 - **Action**: Removed 1, 211→210 lines, tag v1.13.51.
 
+## 2026-08-20 — Cost report
+- **Context**: `DEVSECOPS-012` monthly cost report — P3, FinOps already via `OpenCost`.
+- **Learning**: Keep `TODOS` only for MVP, cost to FinOps.
+- **Action**: Removed 1, 210→209 lines, tag v1.13.52.
+
