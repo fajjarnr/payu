@@ -343,7 +343,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-account-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-account-service:${PAYU_VERSION:-1.13.16}
   auth-service:
     <<: *app-defaults
     build:
@@ -407,7 +407,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-auth-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-auth-service:${PAYU_VERSION:-1.13.16}
   transaction-service:
     <<: *app-defaults
     build:
@@ -462,7 +462,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-transaction-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-transaction-service:${PAYU_VERSION:-1.13.16}
   wallet-service:
     <<: *app-defaults
     build:
@@ -513,7 +513,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-wallet-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-wallet-service:${PAYU_VERSION:-1.13.16}
   compliance-service:
     <<: *app-defaults
     build:
@@ -563,7 +563,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-compliance-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-compliance-service:${PAYU_VERSION:-1.13.16}
   investment-service:
     <<: *app-defaults
     build:
@@ -614,7 +614,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-investment-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-investment-service:${PAYU_VERSION:-1.13.16}
   lending-service:
     <<: *app-defaults
     build:
@@ -665,7 +665,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-lending-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-lending-service:${PAYU_VERSION:-1.13.16}
   bi-fast-simulator:
     <<: *app-defaults
     build:
@@ -719,7 +719,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-bi-fast-simulator:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-bi-fast-simulator:${PAYU_VERSION:-1.13.16}
   dukcapil-simulator:
     <<: *app-defaults
     build:
@@ -770,7 +770,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-dukcapil-simulator:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-dukcapil-simulator:${PAYU_VERSION:-1.13.16}
   qris-simulator:
     <<: *app-defaults
     build:
@@ -827,7 +827,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-qris-simulator:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-qris-simulator:${PAYU_VERSION:-1.13.16}
   billing-service:
     <<: *app-defaults
     build:
@@ -884,7 +884,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-billing-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-billing-service:${PAYU_VERSION:-1.13.16}
   notification-service:
     <<: *app-defaults
     build:
@@ -937,10 +937,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-notification-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-notification-service:${PAYU_VERSION:-1.13.16}
   gateway-service:
     <<: *app-defaults
-    image: localhost/payu-gateway-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-gateway-service:${PAYU_VERSION:-1.13.16}
     build:
       context: ../../../backend/gateway-service
       dockerfile: Containerfile
@@ -1083,7 +1083,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-backoffice-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-backoffice-service:${PAYU_VERSION:-1.13.16}
   partner-service:
     <<: *app-defaults
     build:
@@ -1143,7 +1143,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 240s
-    image: localhost/payu-partner-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-partner-service:${PAYU_VERSION:-1.13.16}
   promotion-service:
     <<: *app-defaults
     build:
@@ -1192,7 +1192,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-promotion-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-promotion-service:${PAYU_VERSION:-1.13.16}
   support-service:
     <<: *app-defaults
     build:
@@ -1241,7 +1241,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-support-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-support-service:${PAYU_VERSION:-1.13.16}
   api-portal-service:
     <<: *app-defaults
     build:
@@ -1330,10 +1330,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
-    image: localhost/payu-api-portal-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-api-portal-service:${PAYU_VERSION:-1.13.16}
   statement-service:
     <<: *app-defaults
-    image: localhost/payu-statement-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-statement-service:${PAYU_VERSION:-1.13.16}
     build:
       context: ../../../backend/statement-service
       dockerfile: Containerfile
@@ -1445,7 +1445,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-kyc-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-kyc-service:${PAYU_VERSION:-1.13.16}
   analytics-service:
     <<: *app-defaults
     build:
@@ -1487,14 +1487,14 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-analytics-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-analytics-service:${PAYU_VERSION:-1.13.16}
   cms-service:
     <<: *app-defaults
     build:
       context: ../../../backend/cms-service
       dockerfile: Containerfile
     container_name: payu-cms-service
-    image: localhost/payu-cms-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-cms-service:${PAYU_VERSION:-1.13.16}
     networks:
       - payu-network
     ports:
@@ -1542,7 +1542,7 @@ services:
       start_period: 120s
   fx-service:
     <<: *app-defaults
-    image: localhost/payu-fx-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-fx-service:${PAYU_VERSION:-1.13.16}
     build:
       context: ../../../backend/fx-service
       dockerfile: Containerfile
@@ -1649,7 +1649,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-dispute-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-dispute-service:${PAYU_VERSION:-1.13.16}
   integration-service:
     <<: *app-defaults
     build:
@@ -1707,7 +1707,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-integration-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-integration-service:${PAYU_VERSION:-1.13.16}
   product-catalog-service:
     <<: *app-defaults
     build:
@@ -1756,7 +1756,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    image: localhost/payu-product-catalog-service:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-product-catalog-service:${PAYU_VERSION:-1.13.16}
   web-app:
     <<: *app-defaults
     build:
@@ -1792,11 +1792,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    image: localhost/payu-web-app:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-web-app:${PAYU_VERSION:-1.13.16}
 
   lending-rules:
     <<: *app-defaults
-    image: localhost/payu-lending-rules:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-lending-rules:${PAYU_VERSION:-1.13.16}
     build:
       context: ../../../backend/lending-rules
       dockerfile: Containerfile
@@ -1816,7 +1816,7 @@ services:
 
   loan-origination-process:
     <<: *app-defaults
-    image: localhost/payu-loan-origination-process:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-loan-origination-process:${PAYU_VERSION:-1.13.16}
     build:
       context: ../../../backend/loan-origination-process
       dockerfile: Containerfile
@@ -1853,7 +1853,7 @@ services:
 
   biller-simulator:
     <<: *app-defaults
-    image: localhost/payu-biller-simulator:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-biller-simulator:${PAYU_VERSION:-1.13.16}
     build:
       context: ../../../backend/simulators/biller-simulator
       dockerfile: Containerfile
@@ -1883,7 +1883,7 @@ services:
 
   va-simulator:
     <<: *app-defaults
-    image: localhost/payu-va-simulator:${PAYU_VERSION:-1.13.15}
+    image: localhost/payu-va-simulator:${PAYU_VERSION:-1.13.16}
     build:
       context: ../../../backend/simulators/va-simulator
       dockerfile: Containerfile
@@ -2006,7 +2006,7 @@ services:
     <<: *infra-defaults
     profiles:
       - devsecops
-    image: docker.io/aquasec/trivy:latest
+    image: docker.io/aquasec/trivy:0.66.0
     container_name: payu-trivy
     networks:
       - payu-network
@@ -2066,7 +2066,7 @@ services:
   gitleaks:
     <<: *infra-defaults
     restart: "no"
-    image: docker.io/zricethezav/gitleaks:latest
+    image: docker.io/zricethezav/gitleaks:8.22.1
     container_name: payu-gitleaks
     networks:
       - payu-network
@@ -2084,7 +2084,7 @@ services:
   nuclei:
     <<: *infra-defaults
     restart: "no"
-    image: docker.io/projectdiscovery/nuclei:latest
+    image: docker.io/projectdiscovery/nuclei:3.4.7
     container_name: payu-nuclei
     networks:
       - payu-network
@@ -2098,7 +2098,7 @@ services:
   k6:
     <<: *infra-defaults
     restart: "no"
-    image: docker.io/grafana/k6:latest
+    image: docker.io/grafana/k6:1.1.0
     container_name: payu-k6
     networks:
       - payu-network
@@ -2114,7 +2114,7 @@ services:
   syft:
     <<: *infra-defaults
     restart: "no"
-    image: docker.io/anchore/syft:latest
+    image: docker.io/anchore/syft:1.27.0
     container_name: payu-syft
     networks:
       - payu-network
@@ -2130,7 +2130,7 @@ services:
   grype:
     <<: *infra-defaults
     restart: "no"
-    image: docker.io/anchore/grype:latest
+    image: docker.io/anchore/grype:0.99.1
     container_name: payu-grype
     networks:
       - payu-network

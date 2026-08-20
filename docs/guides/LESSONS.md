@@ -5822,3 +5822,9 @@ Running the full transaction-service suite (4 Testcontainers tests, each startin
 ### L-227: Jacoco's BUNDLE and per-CLASS rules use different excludes — align them (2026-08-13)
 
 ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.1%, because the jacoco BUNDLE rule counted generated `grpc` (4708 lines at ~14%) and `dto`/`entity`/`config`/`domain.model` packages while the per-CLASS rule excluded them. Add the same `<excludes>` (grpc, dto, entity, config, domain/model) at the `check` execution level so the BUNDLE denominator matches what is realistically coverable, then keep per-CLASS ≥ threshold. Also verify with `mvn verify` (not just `test` + jacoco:report): only `check` actually enforces the gate.
+
+## 2026-08-20 — Infra semver & compose hygiene
+- **Context**: `infrastructure/local/podman/podman-compose.yml` had 6 `latest` tags (trivy, gitleaks, nuclei, k6, syft, grype) — violates semver reproducibility, `podman-compose config` warned about mutable tags.
+- **Learning**: `latest` breaks deterministic deploys & cache; pin to semver. Validate with `podman-compose config` (no warn/error) and `PAYU_VERSION` check. Use `podman-compose 1.5.0` (apt) not `podman compose` plugin missing compose provider.
+- **Action**: Pinned 6 images to `0.66.0`/`8.22.1`/`3.4.7`/`1.1.0`/`1.27.0`/`0.99.1`, verified `grep :latest` empty, `podman images` 0 unused. Future: script to lint compose for `:latest` in CI.
+

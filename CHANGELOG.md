@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.16] - 2026-08-20
+
+### Fixed (Infra — Compose SemVer)
+- Pin 6 `latest` images to semver: `aquasec/trivy:0.66.0`, `zricethezav/gitleaks:8.22.1`, `projectdiscovery/nuclei:3.4.7`, `grafana/k6:1.1.0`, `anchore/syft:1.27.0`, `anchore/grype:0.99.1` — `podman-compose config` no warn/error, `PAYU_VERSION` `1.13.15` semver validated, no unused tags.
+
 ## [1.13.15] - 2026-08-19
 
 ### Added (Data Security — ADR-0033 scaffold)

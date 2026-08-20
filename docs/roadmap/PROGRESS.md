@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.16 (2026-08-20)
+
+- **Infra semver (compose)**: pin 6 `latest` → semver, `podman-compose config` clean, `PAYU_VERSION` 1.13.15 validated. No `latest` remain, no unused image tags (0 images local, semver enforced). Best practice: avoid `latest` for reproducible deploys.
+
 ## Deploy 1.13.15 (2026-08-19)
 
 - **ARCH-GLOBAL-007 scaffold (ADR-0033)** — RLS 1/4:
