@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.28 (2026-08-20)
+
+- **Forgot password (FE-STUB-004)**: `forgot-password-form.tsx` POST with idempotency, `TODOS` 236 lines, `PAYU_VERSION` 1.13.28.
+
 ## Deploy 1.13.27 (2026-08-20)
 
 - **QRIS EMVCo (FE-STUB-003)**: `qris/page.tsx` `crc16X25` + TLV placeholder, `TODOS` 237 lines, `PAYU_VERSION` 1.13.27.

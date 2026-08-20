@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.28] - 2026-08-20
+
+### Fixed (Backlog — FE-STUB-004)
+- `forgot-password-form.tsx` POST `/api/auth/forgot-password` with `X-Idempotency-Key` + Keycloak `execute-actions-email` per ADR-0039 (ponytail minimal, rate-limit/audit handled backend), `TODOS` 237→236 lines.
+
 ## [1.13.27] - 2026-08-20
 
 ### Fixed (Backlog — FE-STUB-003)

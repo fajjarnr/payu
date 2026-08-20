@@ -13,13 +13,24 @@ export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
   const [email, setEmail] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       toast.error('Email wajib diisi');
       return;
     }
-    toast.info('Fitur reset password akan segera hadir');
+    try {
+      // ponytail: OIDC PKCE + Keycloak execute-actions-email per ADR-0039, rate-limit IP + audit payu.auth.password-reset-requested.v1 handled by backend
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Idempotency-Key': crypto.randomUUID() },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) toast.success('Instruksi reset telah dikirim');
+      else toast.error('Gagal mengirim instruksi');
+    } catch {
+      toast.error('Gagal mengirim instruksi');
+    }
   };
 
   return (

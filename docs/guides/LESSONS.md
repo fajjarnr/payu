@@ -5873,3 +5873,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Add `crc16X25` (poly 0x1021, init 0xFFFF, xorout 0xFFFF) for tag 63, placeholder TLV check before `setTimeout`; full decode (tags 26/30/54/59) + `GET /accounts/{id}/qris` when backend `qrCodeHash` live.
 - **Action**: Added `crc16X25` + comment, removed from TODOS 238→237, `rtk` 0 warn/error, tag v1.13.27.
 
+## 2026-08-20 — Forgot password OIDC
+- **Context**: `FE-STUB-004` toast stub without Keycloak — violates ADR-0039 OIDC PKCE + `execute-actions-email`.
+- **Learning**: Frontend should POST `/api/auth/forgot-password` with `X-Idempotency-Key` (crypto.randomUUID), backend handles rate-limit IP + audit `payu.auth.password-reset-requested.v1`.
+- **Action**: Added async fetch, removed from TODOS 237→236, tag v1.13.28.
+
