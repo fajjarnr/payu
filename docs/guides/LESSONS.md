@@ -5833,3 +5833,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Reuse `EncryptionService` pattern (PBKDF2 600k, 12B IV, GCM 128) without Spring starter — `@ApplicationScoped` + `@ConfigProperty(payu.encryption.key)` with dev default, `decrypt` fallback to plaintext for migration. Keep masking (`RecipientMasker`) for logs, encryption for at-rest.
 - **Action**: `NotificationCrypto` + `NotificationMapper` updated; verify with `podman-compose config` and roundtrip test. Next: add blind index if search needed.
 
+## 2026-08-20 — Partner gate hygiene
+- **Context**: `TODOS.md` had 6 `PARTNER-PROD-001..006` marked 🟢 LIVE but still listed — violates "hapus jika selesai" rule, inflates backlog, hides real P1.
+- **Learning**: Use `rtk grep` + `codegraph` to verify LIVE status vs actual implementation; remove completed, keep only ⏸️ items. `podman-compose config` remains clean after removal, semver 1.13.20 validated.
+- **Action**: Removed 6 LIVE, 250→244 lines, updated CHANGELOG/PROGRESS, tag v1.13.20.
+
