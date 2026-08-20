@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.56] - 2026-08-20
+
+### Added (Backlog — ARCH-GLOBAL-007)
+- `V109__add_rls_for_beneficiaries.sql` `FORCE RLS` `beneficiaries` 4/4 per ADR-0033, remove `ARCH-GLOBAL-007` from `TODOS.md` 208→207 lines, `rtk` 0 warn/error.
+
 ## [1.13.55] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-007)

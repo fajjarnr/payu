@@ -6013,3 +6013,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `V108` `tenant_isolation_accounts` `current_setting('app.tenant_id')`.
 - **Action**: `V108` live, `TODOS` 3/4, tag v1.13.55.
 
+## 2026-08-20 — RLS 4/4
+- **Context**: `ARCH-GLOBAL-007` 3/4→4/4, `beneficiaries` `FORCE RLS` per ADR-0033, 27 tabel total, `BlindIndexAndTenantIsolationIntegrationTest` green.
+- **Learning**: `V109` `tenant_isolation_beneficiaries` `current_setting('app.tenant_id')`, `TODOS` removed 208→207.
+- **Action**: `V109` live, tag v1.13.56.
+
