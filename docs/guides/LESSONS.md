@@ -5903,3 +5903,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep deferred mobile out of active backlog, `rtk` clean.
 - **Action**: Removed 2, 232→230 lines, tag v1.13.33.
 
+## 2026-08-20 — Tool semver manifest unknown
+- **Context**: `rtk podman pull` for `gitleaks:8.22.1`/`nuclei:3.4.7` etc failed `manifest unknown` — tags use `v` prefix (`v8.22.1`), `rsyslog:8.2408.0` not exists (only `latest`/`2026-04`).
+- **Learning**: Verify tags exist via `podman pull` before pinning; use `v` prefix for Anchore/ProjectDiscovery, date tag for rsyslog.
+- **Action**: Fixed `podman-compose.yml` 4 tags to `v*` + `rsyslog:2026-04`, `rtk pull` 7 tools ok, `podman rmi latest` cleanup, tag v1.13.34.
+

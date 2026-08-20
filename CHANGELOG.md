@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.34] - 2026-08-20
+
+### Fixed (Infra — Tool Semver)
+- `podman-compose` image tags `gitleaks/nuclei/syft/grype` add `v` prefix (`v8.22.1`/`v3.4.7`/`v1.27.0`/`v0.99.1`), `rsyslog:2026-04` (was `8.2408.0` manifest unknown), `trivy:0.66.0`/`k6:1.1.0` already semver, `latest` 0, `rtk podman pull` verified 7 tools, `podman rmi latest` cleanup.
+
 ## [1.13.33] - 2026-08-20
 
 ### Fixed (Backlog — Mobile Defer)
