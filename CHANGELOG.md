@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.43] - 2026-08-20
+
+### Fixed (Backlog — DEPLOY-006)
+- Remove `DEPLOY-006` WAF Coraza + Wazuh from `TODOS.md` 220→219 lines — `audit-syslog` live, `rtk` 0 warn/error, `mvn` 3.9.9 `BUILD SUCCESS`.
+
 ## [1.13.42] - 2026-08-20
 
 ### Fixed (Build — Maven Java 25)

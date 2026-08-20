@@ -94,7 +94,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Pri | Category | Summary |
 |:---|:---:|:---|:---|
-| DEPLOY-006 | P1 | Security | Coraza WAF (INFRA-015) + Wazuh SIEM (INFRA-011) + CLF sink ([ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md)) |
 | DEPLOY-011 | P1 | Promotion | SIT/UAT/preprod LIVE di lab `cluster-nkk8q` (ArgoCD 18 apps, Vault HA, pipeline SIT green). Sisa: litmus `pod-delete` via [ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md), Kraken+Cerberus preprod, Infinispan mTLS, prod sync window |
 | INFRA-026 | P1 | Secrets | Vault HA live + restore drill verified. Sisa: snapshot S3 CronJob verify, kv readback, auto-unseal backup |
 | DEPLOY-009 | P2 | CI/CD | Tekton Results live (365d); sisa: external HA PostgreSQL, Chains SLSA/Rekor evidence, Renovate |

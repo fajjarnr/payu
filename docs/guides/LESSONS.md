@@ -5948,3 +5948,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Maven 3.9.16 wagon-http bug with Java 25; downgrade to 3.9.9 via `sdkman` fixes, `rtk mvn clean package -DskipTests -T 1C` 42s `BUILD SUCCESS`.
 - **Action**: `sdk use maven 3.9.9`, `PAYU_VERSION` 1.13.42, `rtk` verified.
 
+## 2026-08-20 — WAF Wazuh
+- **Context**: `DEPLOY-006` Coraza WAF + Wazuh `audit-syslog` already live per ADR-0032.
+- **Learning**: Keep `TODOS` only for OPEN, `rtk` + `mvn` clean.
+- **Action**: Removed 1, 220→219 lines, tag v1.13.43, `mvn BUILD SUCCESS`.
+
