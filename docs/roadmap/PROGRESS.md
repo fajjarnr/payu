@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.36 (2026-08-20)
+
+- **ADR gap hygiene**: removed `ADR-GAP-001/002` 228→226 lines, `PAYU_VERSION` 1.13.36.
+
 ## Deploy 1.13.35 (2026-08-20)
 
 - **ADR align hygiene**: removed `ADR-ALIGN-001/002` 230→228 lines, `PAYU_VERSION` 1.13.35.

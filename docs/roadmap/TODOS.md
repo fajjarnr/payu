@@ -180,8 +180,6 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 
 | Key | ADR Terkait | Domain | Ref Backlog Tunggal |
 |:---|:---|:---|:---|
-| ADR-GAP-001 | [ADR-0015](../adr/0015-process-automation-rhpam.md) | lending, compliance, routing | Phase 1 Drools parsial di `lending-rules`; Phase 2 DMN (routing & promo) & Phase 3 Kogito BPMN (loan-origination & KYC) belum — tracked sebagai debt P3/loan |
-| ADR-GAP-002 | [ADR-0027](../adr/0027-notification-service-architecture-and-multi-channel-delivery.md) | notification | → **ARCH-NOTIF-001** di Backlog Aksi P1 (fail-closed live, provider + enkripsi pending) |
 | ADR-GAP-003..009 | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) s/d [ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md) | auth/wallet/risk/platform/security/data/observability | → **ARCH-GLOBAL-002..008** di Backlog Aksi P1 (sumber tunggal — 7 implementasi ADR tertunda) — jangan duplikasi deskripsi di sini |
 
 ### 3. 📝 Backlog ADR Baru yang Perlu Dibuat

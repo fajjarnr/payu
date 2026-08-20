@@ -5913,3 +5913,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for implementation, doc alignment to `PROGRESS.md`.
 - **Action**: Removed 2, 230→228 lines, tag v1.13.35.
 
+## 2026-08-20 — ADR gap
+- **Context**: `ADR-GAP-001/002` gap already covered by `ARCH-GLOBAL` P1 implementation backlog.
+- **Learning**: Deduplicate `ARCH-GLOBAL ↔ ADR-GAP`, keep `Backlog Aksi P1` as single source.
+- **Action**: Removed 2, 228→226 lines, tag v1.13.36.
+

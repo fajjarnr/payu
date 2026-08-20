@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.36] - 2026-08-20
+
+### Fixed (Backlog — ADR Gap)
+- Remove `ADR-GAP-001/002` from `TODOS.md` 228→226 lines — gap already in `ARCH-GLOBAL` P1, `rtk` 0 warn/error.
+
 ## [1.13.35] - 2026-08-20
 
 ### Fixed (Backlog — ADR Align)
