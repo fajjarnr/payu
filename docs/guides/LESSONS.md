@@ -5968,3 +5968,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, external HA to ops.
 - **Action**: Removed 1, 217→216 lines, tag v1.13.46.
 
+## 2026-08-20 — Kraken gate
+- **Context**: `DEVSECOPS-017` Tekton Buildah `redhat-registry-pull` + `OPS-2026-08-01-05` Kraken `emptyDir` + SCC `runAsNonRoot:1001` `drop ALL`.
+- **Learning**: `emptyDir` for `work` + `stepTemplate` SCC suppresses `trust` warn, `rtk` 0 warn/error.
+- **Action**: Fixed `kraken-gate-task.yaml`, removed 2, 216→214 lines, tag v1.13.47.
+

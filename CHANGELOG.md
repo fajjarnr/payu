@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.47] - 2026-08-20
+
+### Fixed (Backlog — DEVSECOPS-017 + OPS Kraken)
+- `kraken-gate-task.yaml` add `emptyDir` + `SCC` `runAsNonRoot:1001` `drop ALL` per `OPS-2026-08-01-05`, remove `DEVSECOPS-017` + `OPS-2026-08-01-05` from `TODOS.md` 216→214 lines, `rtk` 0 warn/error.
+
 ## [1.13.46] - 2026-08-20
 
 ### Fixed (Backlog — DEPLOY-009)
