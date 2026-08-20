@@ -6053,3 +6053,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, saga already `rtk` clean.
 - **Action**: Removed 1, 202→201 lines, tag v1.13.63.
 
+## 2026-08-20 — Velocity AML
+- **Context**: `ARCH-GLOBAL-004` `evaluate_velocity.lua` + `POST /api/v1/analytics/fraud/score` per ADR-0030 already green.
+- **Learning**: Keep `TODOS` only for OPEN, velocity already `rtk` clean.
+- **Action**: Removed 1, 201→200 lines, tag v1.13.64.
+

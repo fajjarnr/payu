@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.64] - 2026-08-20
+
+### Fixed (Backlog — ARCH-GLOBAL-004)
+- Remove `ARCH-GLOBAL-004` velocity/AML from `TODOS.md` 201→200 lines — `evaluate_velocity.lua` + `POST /api/v1/analytics/fraud/score` already green per ADR-0030, `rtk` 0 warn/error.
+
 ## [1.13.63] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-003)

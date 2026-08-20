@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.64 (2026-08-20)
+
+- **Velocity AML (ARCH-GLOBAL-004)**: removed 201→200 lines, `PAYU_VERSION` 1.13.64.
+
 ## Deploy 1.13.63 (2026-08-20)
 
 - **Clearing saga (ARCH-GLOBAL-003)**: removed 202→201 lines, `PAYU_VERSION` 1.13.63.
