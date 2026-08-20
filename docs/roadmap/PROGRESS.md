@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.29 (2026-08-20)
+
+- **Cache JMX hygiene**: `payu-cache` JMX disabled, `rtk` 0 warn/error, `PAYU_VERSION` 1.13.29.
+
 ## Deploy 1.13.28 (2026-08-20)
 
 - **Forgot password (FE-STUB-004)**: `forgot-password-form.tsx` POST with idempotency, `TODOS` 236 lines, `PAYU_VERSION` 1.13.28.

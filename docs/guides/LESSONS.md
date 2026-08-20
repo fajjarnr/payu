@@ -5878,3 +5878,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Frontend should POST `/api/auth/forgot-password` with `X-Idempotency-Key` (crypto.randomUUID), backend handles rate-limit IP + audit `payu.auth.password-reset-requested.v1`.
 - **Action**: Added async fetch, removed from TODOS 237→236, tag v1.13.28.
 
+## 2026-08-20 — Cache JMX warning
+- **Context**: `rtk podman logs payu-cache` showed `ISPN080072: JMX remoting enabled without security realm` — violates "no warn/error".
+- **Learning**: Infinispan enables JMX remoting by default; disable via `-Dinfinispan.server.jmx.enabled=false -Dcom.sun.management.jmxremote=false` in `JAVA_OPTS_BASE`, `infinispan-config.xml` already `<jmx enabled="false"/>` but not enough for remoting.
+- **Action**: Added to `podman-compose.yml:116`, verified `rtk podman logs | grep -i warn|error` 0, `podman rmi` cleanup.
+

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.29] - 2026-08-20
+
+### Fixed (Infra — Log Hygiene)
+- `payu-cache` disable JMX (`-Dinfinispan.server.jmx.enabled=false -Dcom.sun.management.jmxremote=false`) — suppress `ISPN080072` WARN, `rtk podman logs` 0 warn/error, `rtk podman-compose config` clean, `PAYU_VERSION` 1.13.29.
+
 ## [1.13.28] - 2026-08-20
 
 ### Fixed (Backlog — FE-STUB-004)
