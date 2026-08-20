@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.53] - 2026-08-20
+
+### Added (Backlog — ARCH-GLOBAL-007)
+- `V107__add_rls_for_users.sql` `FORCE RLS` `users` 2/4 per ADR-0033, `TODOS` updated 2/4, `rtk` 0 warn/error.
+
 ## [1.13.52] - 2026-08-20
 
 ### Fixed (Backlog — DEVSECOPS-012)

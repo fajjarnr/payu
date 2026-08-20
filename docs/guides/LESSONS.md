@@ -5998,3 +5998,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, cost to FinOps.
 - **Action**: Removed 1, 210→209 lines, tag v1.13.52.
 
+## 2026-08-20 — RLS 2/4
+- **Context**: `ARCH-GLOBAL-007` RLS 1/4 → 2/4, `users` `FORCE RLS` per ADR-0033, 27 tabel total.
+- **Learning**: `ENABLE ROW LEVEL SECURITY` + `FORCE` + `tenant_isolation` policy `current_setting('app.tenant_id')`.
+- **Action**: `V107` live, `TODOS` 2/4, tag v1.13.53.
+

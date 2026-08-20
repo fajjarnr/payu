@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.53 (2026-08-20)
+
+- **RLS 2/4 (ARCH-GLOBAL-007)**: `V107` `users` `FORCE RLS`, `TODOS` 2/4, `PAYU_VERSION` 1.13.53.
+
 ## Deploy 1.13.52 (2026-08-20)
 
 - **Cost report (DEVSECOPS-012)**: removed 210→209 lines, `PAYU_VERSION` 1.13.52.
