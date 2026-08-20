@@ -6003,3 +6003,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `ENABLE ROW LEVEL SECURITY` + `FORCE` + `tenant_isolation` policy `current_setting('app.tenant_id')`.
 - **Action**: `V107` live, `TODOS` 2/4, tag v1.13.53.
 
+## 2026-08-20 — Observability
+- **Context**: `ARCH-GLOBAL-008` alerts active + trace E2E per ADR-0034 already.
+- **Learning**: Keep `TODOS` only for OPEN, observability already live.
+- **Action**: Removed 1, 209→208 lines, tag v1.13.54.
+

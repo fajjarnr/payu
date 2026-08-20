@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.54] - 2026-08-20
+
+### Fixed (Backlog — ARCH-GLOBAL-008)
+- Remove `ARCH-GLOBAL-008` observability from `TODOS.md` 209→208 lines — alerts active + trace E2E per ADR-0034, `rtk` 0 warn/error.
+
 ## [1.13.53] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-007)
