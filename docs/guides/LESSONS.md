@@ -6073,3 +6073,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `POST /internal/v1/auth/step-up/{challenge,verify}` minimal, next `transaction 2-phase`.
 - **Action**: `StepUpController` live, `TODOS` 2/4, tag v1.13.67.
 
+## 2026-08-20 — Step-Up 3/4 Redis
+- **Context**: `ARCH-GLOBAL-002` 2/4→3/4, Redis 180s `payload_digest` per ADR-0028, `payu-cache` Infinispan for reference, Redis for ephemeral.
+- **Learning**: `payu-redis` `redis:7.4.1` `*infra-defaults` + `spring-data-redis` `StringRedisTemplate` `SET EX 180` + in-memory fallback, `application.yml` `spring.data.redis.host`.
+- **Action**: `payu-redis` live, `StepUpController` Redis, `TODOS` 3/4, tag v1.13.68.
+

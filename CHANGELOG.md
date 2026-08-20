@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.68] - 2026-08-20
+
+### Added (Backlog — ARCH-GLOBAL-002)
+- `StepUpController` Redis `payu-redis:6379` 180s `payload_digest` 3/4 per ADR-0028, `spring-data-redis` + `payu-redis` `redis:7.4.1`, `TODOS` 3/4.
+
 ## [1.13.67] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-002)

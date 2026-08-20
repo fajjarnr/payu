@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.68 (2026-08-20)
+
+- **Step-Up 3/4 (ARCH-GLOBAL-002)**: `payu-redis` `StepUpController` Redis 180s, `TODOS` 3/4, `PAYU_VERSION` 1.13.68.
+
 ## Deploy 1.13.67 (2026-08-20)
 
 - **Step-Up 2/4 (ARCH-GLOBAL-002)**: `StepUpController` live, `TODOS` 2/4, `PAYU_VERSION` 1.13.67.

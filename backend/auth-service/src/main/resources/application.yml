@@ -2,3 +2,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:payu-redis}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
