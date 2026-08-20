@@ -52,7 +52,7 @@
 |:---|:---|:---|:---|
 | CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
 | ARCH-NOTIF-001 | notification | Implementasi multi-kanal & zero-cost provider sesuai [ADR-0027](../adr/0027-notification-service-architecture-and-multi-channel-delivery.md): (1) topic `payment-events` → `payu.billing.payment-completed.v1` / `payu.transaction.payment-expired.v1`, (2) contacts payload & isolasi fallback, (3) `TelegramSender` & `SmsSimulatorSender`, (4) `FcmPushSender` FCM v1, (5) enkripsi AES-256 GCM `recipient` & `body` (UU PDP). | Test suite notification-service green + E2E OTP via Telegram/Simulator |
-| PROD-002 | fx | Approved FX provider URL/credential + live evidence | Rate live + audit pair |
+| PROD-002 | fx | Approved FX provider URL/credential + live evidence — std di [ADR-0050](../adr/0050-fx-provider-and-rate-governance-standard.md): single provider + BI fallback, cache TTL 5m, BigDecimal 19,4 HALF_EVEN, idempotency | Rate live + audit pair |
 | PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection — workflow `.github/workflows/analytics-tests.yml` sudah ada; sisa = setting GitHub branch protection (butuh `gh`/admin repo) | CI gate aktif via GitHub settings |
 | QAMVP-004 | kyc | Security test DONE 2026-08-13; e2e workflow + CI `.github/workflows/kyc-tests.yml` DONE. Sisa: provider OCR/liveness nyata gate (butuh credential eksternal) — std Python di [ADR-0036](../adr/0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md): `python-starter` hexagonal-lite, PG/TimescaleDB + RLS + AES-GCM/HMAC, Kafka outbox `payu.<domain>.<event>.v<n>`, ONNX `<30ms`, OCR sidecar | Test + live evidence + ADR-0036 green |
 | QAMVP-005 | platform | CI k6 wired 2026-08-13 — `.github/workflows/k6-tests.yml` (smoke/load/stress, SLO `p95<500ms`/`p99<1s`/`avg<300ms`/`rate<0.01`). Sisa: green run dengan kredensial staging | Laporan k6 di CI |
@@ -229,6 +229,12 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 | — | **ADR-0047** | ✅ **Frontend Nominal Branded Types & Strict Financial Money Precision Standard** — DX-TS-BRANDED-001 (Accepted 2026-08-19) | **P1** |
 | — | **ADR-0048** | ✅ **Lending Eligibility and Pricing via DMN Decision Tables (ADR-0015 Phase 2)** — ARCH-BESTP-003 (Accepted 2026-08-20) | **P1** |
 | — | **ADR-0049** | ✅ **Wallet Immutable Ledger and Double-Entry Standard** — WALLET-001 (Accepted 2026-08-20) | **P1** |
+| — | **ADR-0050** | ✅ **FX Provider and Rate Governance Standard** — PROD-002 (Accepted 2026-08-20) | **P1** |
+| — | **ADR-0051** | ✅ **Support Ticket and FAQ Lifecycle Standard** — BE-SUPP-001 (Accepted 2026-08-20) | **P1** |
+| — | **ADR-0052** | ✅ **QRIS and Virtual Account Integration Standard** — FE-STUB-003 (Accepted 2026-08-20) | **P1** |
+| — | **ADR-0053** | ✅ **Investment and Gold Portfolio Standard** — investment-service (Accepted 2026-08-20) | **P1** |
+| — | **ADR-0054** | ✅ **Dispute and Chargeback Standard** — dispute-service (Accepted 2026-08-20) | **P2** |
+| — | **ADR-0055** | ✅ **Promotion, Cashback and Reward Saga Standard** — promotion-service (Accepted 2026-08-20) | **P2** |
 
 ### 4. ⚠️ Kesenjangan Best Practice & Anti-Pattern yang Memerlukan Remediasi
 

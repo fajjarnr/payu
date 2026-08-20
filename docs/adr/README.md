@@ -54,6 +54,14 @@ This directory contains the historical record of architectural decisions made fo
 | [0045](0045-gitops-continuous-delivery-infrastructure-as-code-and-supply-chain-security.md) | GitOps Continuous Delivery, Infrastructure as Code & Supply Chain Security | Accepted | 2026-08-19 |
 | [0046](0046-time-series-financial-telemetry-via-timescaledb-hypertables.md) | Time-Series Financial Telemetry via TimescaleDB Hypertables | Accepted | 2026-08-19 |
 | [0047](0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md) | Frontend Nominal Branded Types & Strict Financial Money Precision Standard (DX-TS-BRANDED-001) | Accepted | 2026-08-19 |
+| [0048](0048-lending-eligibility-and-pricing-via-dmn-decision-tables.md) | Lending Eligibility and Pricing via DMN Decision Tables (ARCH-BESTP-003) | Accepted | 2026-08-20 |
+| [0049](0049-wallet-immutable-ledger-and-double-entry-standard.md) | Wallet Immutable Ledger and Double-Entry Standard (WALLET-001) | Accepted | 2026-08-20 |
+| [0050](0050-fx-provider-and-rate-governance-standard.md) | FX Provider and Rate Governance Standard (PROD-002) | Accepted | 2026-08-20 |
+| [0051](0051-support-ticket-and-faq-lifecycle-standard.md) | Support Ticket and FAQ Lifecycle Standard (BE-SUPP-001) | Accepted | 2026-08-20 |
+| [0052](0052-qris-and-virtual-account-integration-standard.md) | QRIS and Virtual Account Integration Standard (FE-STUB-003) | Accepted | 2026-08-20 |
+| [0053](0053-investment-and-gold-portfolio-standard.md) | Investment and Gold Portfolio Standard | Accepted | 2026-08-20 |
+| [0054](0054-dispute-and-chargeback-standard.md) | Dispute and Chargeback Standard | Accepted | 2026-08-20 |
+| [0055](0055-promotion-cashback-and-reward-saga-standard.md) | Promotion, Cashback and Reward Saga Standard | Accepted | 2026-08-20 |
 
 
 ## 🚀 How to Create a New ADR
