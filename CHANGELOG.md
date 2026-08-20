@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.42] - 2026-08-20
+
+### Fixed (Build — Maven Java 25)
+- Downgrade Maven 3.9.16→3.9.9 via `sdkman` — `BasicAuthCache cast` fix for Java 25, `rtk mvn -f backend/pom.xml clean package -DskipTests -T 1C` `BUILD SUCCESS` 42s, `PAYU_VERSION` 1.13.42.
+
 ## [1.13.41] - 2026-08-20
 
 ### Fixed (Backlog — BESTP Lending)

@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.42 (2026-08-20)
+
+- **Build toolchain (Maven)**: `sdk install maven 3.9.9` — Java 25 `BUILD SUCCESS`, `PAYU_VERSION` 1.13.42.
+
 ## Deploy 1.13.41 (2026-08-20)
 
 - **Lending BESTP (ARCH-BESTP-003)**: removed 221→220 lines, `PAYU_VERSION` 1.13.41.
