@@ -94,7 +94,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Pri | Category | Summary |
 |:---|:---:|:---|:---|
-| OPS-2026-04-08-02 | P2 | Performance | k6 via operator/port-forward only (gateway unreachable dari host) |
 | DEVSECOPS-005 | P3 | Network | EgressNetworkPolicy + Istio egress gateway |
 | DEVSECOPS-007 | P3 | Security | LUKS encryption PV + Vault DEK rotation |
 | DEVSECOPS-012 | P3 | Cost | Monthly cost report workflow |

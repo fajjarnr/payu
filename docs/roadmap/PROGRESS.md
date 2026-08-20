@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.49 (2026-08-20)
+
+- **k6 perf (OPS-2026-04-08-02)**: removed 213→212 lines, `PAYU_VERSION` 1.13.49.
+
 ## Deploy 1.13.48 (2026-08-20)
 
 - **Observability log (OPS-2026-08-01-04)**: removed 214→213 lines, `PAYU_VERSION` 1.13.48.

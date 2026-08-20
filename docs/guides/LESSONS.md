@@ -5978,3 +5978,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, log delivery already OK, `rtk` 0 warn/error.
 - **Action**: Removed 1, 214→213 lines, tag v1.13.48.
 
+## 2026-08-20 — k6 perf
+- **Context**: `OPS-2026-04-08-02` k6 via operator/port-forward only — `k6:1.1.0` already semver per 1.13.46.
+- **Learning**: Keep `TODOS` only for OPEN, k6 already `rtk` clean.
+- **Action**: Removed 1, 213→212 lines, tag v1.13.49.
+
