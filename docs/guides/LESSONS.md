@@ -6068,3 +6068,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, perimeter already `rtk` clean.
 - **Action**: Removed 1, 199→198 lines, tag v1.13.66.
 
+## 2026-08-20 — Step-Up 2/4
+- **Context**: `ARCH-GLOBAL-002` 1/4→2/4, `StepUpController` `challenge/verify` `payload_digest SHA256` per ADR-0028, in-memory 180s (ponytail: Redis `quarkus-redis` next).
+- **Learning**: `POST /internal/v1/auth/step-up/{challenge,verify}` minimal, next `transaction 2-phase`.
+- **Action**: `StepUpController` live, `TODOS` 2/4, tag v1.13.67.
+

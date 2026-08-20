@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.67] - 2026-08-20
+
+### Added (Backlog — ARCH-GLOBAL-002)
+- `StepUpController` `POST /internal/v1/auth/step-up/{challenge,verify}` `payload_digest SHA256` 2/4 per ADR-0028 (ponytail: in-memory 180s, next Redis), `TODOS` 2/4.
+
 ## [1.13.66] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-006)

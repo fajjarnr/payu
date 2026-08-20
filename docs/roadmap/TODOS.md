@@ -48,7 +48,7 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| ARCH-GLOBAL-002 | security | Step-Up Auth & Dynamic Linking [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md): `user_pins` Argon2id + 3-strike lockout (1/4: `V4__add_user_pins.sql` live), `POST /internal/v1/auth/step-up/{challenge,verify}` (Redis TTL 180s, `payload_digest = SHA256(sender+recipient+amount+currency+nonce)`), 2-phase `/prepare`→`/execute` di transaction-service, test suite PIN/lockout/expiry/tampering. | Test suite auth & transaction step-up green |
+| ARCH-GLOBAL-002 | security | Step-Up Auth & Dynamic Linking [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md): `user_pins` Argon2id + 3-strike lockout (2/4: `V4` + `StepUpController` challenge/verify live), `POST /internal/v1/auth/step-up/{challenge,verify}` (Redis TTL 180s, `payload_digest = SHA256(sender+recipient+amount+currency+nonce)`), 2-phase `/prepare`→`/execute` di transaction-service, test suite PIN/lockout/expiry/tampering. | Test suite auth & transaction step-up green |
 
 > `ARCH-TOPIC-002` — manifest DONE 2026-08-18 (107 KafkaTopic: 65 normal + 42 DLQ, retention 30d, `EVENT_CATALOG.md` regenerated). Sisa apply ke cluster + `auto-create off` butuh OCP creds — tracked di Platform Deploy Queue.
 

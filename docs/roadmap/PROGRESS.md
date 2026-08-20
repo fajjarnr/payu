@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.67 (2026-08-20)
+
+- **Step-Up 2/4 (ARCH-GLOBAL-002)**: `StepUpController` live, `TODOS` 2/4, `PAYU_VERSION` 1.13.67.
+
 ## Deploy 1.13.66 (2026-08-20)
 
 - **Perimeter security (ARCH-GLOBAL-006)**: removed 199→198 lines, `PAYU_VERSION` 1.13.66.
