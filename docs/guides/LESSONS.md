@@ -6048,3 +6048,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `V4` live, `TODOS` 1/4, `rtk` clean.
 - **Action**: Updated `TODOS` 1/4, tag v1.13.62.
 
+## 2026-08-20 — Clearing saga
+- **Context**: `ARCH-GLOBAL-003` ISO20022 + Saga `SagaState` `COMPLETED/COMPENSATED/COMPENSATION_FAILED` already in `saga-starter` per ADR-0029/0038.
+- **Learning**: Keep `TODOS` only for OPEN, saga already `rtk` clean.
+- **Action**: Removed 1, 202→201 lines, tag v1.13.63.
+

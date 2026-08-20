@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.63 (2026-08-20)
+
+- **Clearing saga (ARCH-GLOBAL-003)**: removed 202→201 lines, `PAYU_VERSION` 1.13.63.
+
 ## Deploy 1.13.62 (2026-08-20)
 
 - **Step-Up 1/4 (ARCH-GLOBAL-002)**: `V4` `user_pins` live, `TODOS` 1/4, `PAYU_VERSION` 1.13.62.

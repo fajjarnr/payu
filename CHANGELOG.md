@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.63] - 2026-08-20
+
+### Fixed (Backlog — ARCH-GLOBAL-003)
+- Remove `ARCH-GLOBAL-003` clearing + saga from `TODOS.md` 202→201 lines — `SagaState` `COMPLETED/COMPENSATED/COMPENSATION_FAILED` + `TransferSagaOrchestrator` already per ADR-0029/0038, `rtk` 0 warn/error.
+
 ## [1.13.62] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-002)
