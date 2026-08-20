@@ -121,8 +121,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| MOBILE-JSX-001 | 🟠 | mobile | `useTransactionQuery.test.ts` dan `useWalletQuery.test.ts` JSX di file `.ts` (bukan `.tsx`) — Babel parse error | src/__tests__/hooks/useTransactionQuery.test.ts:84 |
-| MOBILE-MOCK-001 | 🟡 | mobile | `accessibility.test.tsx` me-mock `react-native` tanpa stub `NativeSettingsManager`/`SettingsManager` — langgar TurboModule Registry RN 0.76 | frontend/mobile/src/testing/accessibility.test.tsx:58-63 |
 
 ### Audit 2026-08-18 — Web ↔ Gateway ↔ Backend Cross-Layer (hanya OPEN)
 

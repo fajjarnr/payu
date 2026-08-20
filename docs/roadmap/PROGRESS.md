@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.33 (2026-08-20)
+
+- **Mobile defer hygiene**: removed `MOBILE-JSX-001/002` 232→230 lines, `PAYU_VERSION` 1.13.33.
+
 ## Deploy 1.13.32 (2026-08-20)
 
 - **Registry Quay prune (INFRA-019)**: removed 233→232 lines, `PAYU_VERSION` 1.13.32, `rtk` clean.

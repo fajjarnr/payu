@@ -5898,3 +5898,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `PAYU_VERSION` semver, no `latest`, `rtk` clean.
 - **Action**: Removed 233→232, tag v1.13.32.
 
+## 2026-08-20 — Mobile defer
+- **Context**: `MOBILE-JSX-001`/`MOBILE-MOCK-001` mobile tests — `TODOS` says "Jangan kerjakan mobile" until PO activates, but still listed as OPEN.
+- **Learning**: Keep deferred mobile out of active backlog, `rtk` clean.
+- **Action**: Removed 2, 232→230 lines, tag v1.13.33.
+
