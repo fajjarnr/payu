@@ -5843,3 +5843,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Postgres `trust` is default when `POSTGRES_HOST_AUTH_METHOD` not set; set `scram-sha-256` + `POSTGRES_INITDB_ARGS` to enforce password auth locally, matches production `scram-sha-256`.
 - **Action**: Added env to `podman-compose.yml:78-79`, verified `rtk` logs 0 warn/error, `podman-compose config` clean.
 
+## 2026-08-20 — PROD-044 fail-closed
+- **Context**: `TODOS` PROD-044 required fail-closed for SMS/PUSH (`NONE→false`), LOG explicit, `mailer.mock` not inherited, `KEYCLOAK_REALM` default. `SmsSender`/`PushSender` already `NONE→failClosed`, `EmailSender` mock false, realm default `payu`.
+- **Learning**: Fail-closed must be default, not opt-in; `rtk` log checks confirm no false success, `podman-compose config` clean.
+- **Action**: Verified via codegraph + `rtk`, removed from TODOS 244→243, tag v1.13.22.
+
