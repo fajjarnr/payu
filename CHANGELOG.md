@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.61] - 2026-08-20
+
+### Fixed (Backlog — QAMVP-005)
+- Remove `QAMVP-005` k6 CI from `TODOS.md` 203→202 lines — workflow `.github/workflows/k6-tests.yml` wired 2026-08-13, `rtk` 0 warn/error.
+
 ## [1.13.60] - 2026-08-20
 
 ### Fixed (Backlog — QAMVP-004)

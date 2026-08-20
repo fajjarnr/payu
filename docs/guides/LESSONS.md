@@ -6038,3 +6038,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, external cred to gate.
 - **Action**: Removed 1, 204→203 lines, tag v1.13.60.
 
+## 2026-08-20 — k6 CI
+- **Context**: `QAMVP-005` k6 wired 2026-08-13 `.github/workflows/k6-tests.yml` smoke/load/stress SLO, sisa green run staging cred.
+- **Learning**: Keep `TODOS` only for MVP, CI already `rtk` clean.
+- **Action**: Removed 1, 203→202 lines, tag v1.13.61.
+
