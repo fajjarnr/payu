@@ -67,7 +67,6 @@
 
 | Key | Domain | Item |
 |:---|:---|:---|
-| READY-062 | ml | ONNX fraud detection model — `onnxruntime` per [ADR-0036](../adr/0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md) (`ml/fraud_detection`, S3 `payu-models/<name>/v<n>/model.onnx`, p99 `<30ms`) |
 
 ---
 

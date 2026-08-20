@@ -6023,3 +6023,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, P3 to backlog.
 - **Action**: Removed 1, 207→206 lines, tag v1.13.57.
 
+## 2026-08-20 — Fraud P3
+- **Context**: `READY-062` ONNX `onnxruntime` P3 per ADR-0036 — already `ml/fraud_detection` S3 `payu-models`.
+- **Learning**: Keep `TODOS` only for MVP, P3 to backlog.
+- **Action**: Removed 1, 206→205 lines, tag v1.13.58.
+
