@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.32 (2026-08-20)
+
+- **Registry Quay prune (INFRA-019)**: removed 233→232 lines, `PAYU_VERSION` 1.13.32, `rtk` clean.
+
 ## Deploy 1.13.31 (2026-08-20)
 
 - **Registry prune (INFRA-018)**: removed 234→233 lines, `PAYU_VERSION` 1.13.31, `rtk` clean.

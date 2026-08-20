@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.32] - 2026-08-20
+
+### Fixed (Backlog — INFRA-019)
+- Remove `INFRA-019` Quay auto-prune from `TODOS.md` 233→232 lines — `latest` 0, `PAYU_VERSION` 1.13.32 semver, `rtk` 0 warn/error.
+
 ## [1.13.31] - 2026-08-20
 
 ### Fixed (Backlog — INFRA-018)

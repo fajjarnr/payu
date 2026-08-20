@@ -5893,3 +5893,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Pin all images to semver, `PAYU_VERSION` 1.13.31, `rtk podman images` 0 unused, `podman rmi` cleanup.
 - **Action**: Removed from TODOS 234→233, tag v1.13.31.
 
+## 2026-08-20 — Registry Quay prune
+- **Context**: `INFRA-019` Quay auto-prune — `latest` 0, semver 1.13.32 prevents prune.
+- **Learning**: Keep `PAYU_VERSION` semver, no `latest`, `rtk` clean.
+- **Action**: Removed 233→232, tag v1.13.32.
+
