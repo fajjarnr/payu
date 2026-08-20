@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.41] - 2026-08-20
+
+### Fixed (Backlog — BESTP Lending)
+- Remove `ARCH-BESTP-003` lending DRL/DMN from `TODOS.md` 221→220 lines — DRL `credit_scoring.drl` 15 rules + DMN `eligibility/pricing` already per ADR-0048, `rtk` 0 warn/error.
+
 ## [1.13.40] - 2026-08-20
 
 ### Fixed (Backlog — SIM-001)

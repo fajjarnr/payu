@@ -5938,3 +5938,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, defer P2 to backlog.
 - **Action**: Removed 1, 222→221 lines, tag v1.13.40.
 
+## 2026-08-20 — Lending BESTP
+- **Context**: `ARCH-BESTP-003` P1 DRL/DMN migration — `credit_scoring.drl` 15 rules + `eligibility/pricing.dmn` already per ADR-0048.
+- **Learning**: Keep `TODOS` only for OPEN, DRL/DMN already done.
+- **Action**: Removed 1, 221→220 lines, tag v1.13.41.
+
