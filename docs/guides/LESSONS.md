@@ -5923,3 +5923,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, move Done to `PROGRESS.md`.
 - **Action**: Removed 2, 226→224 lines, tag v1.13.37.
 
+## 2026-08-20 — BESTP docs
+- **Context**: `ARCH-BESTP-004` P3 ADR 0008..0013 singkat — doc depth, not MVP code.
+- **Learning**: Keep `TODOS` only for MVP code, doc depth to backlog.
+- **Action**: Removed 1, 224→223 lines, tag v1.13.38.
+
