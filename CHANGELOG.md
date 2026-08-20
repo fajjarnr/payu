@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.39] - 2026-08-20
+
+### Fixed (Backlog — WALLET-001)
+- Remove `WALLET-001` immutable ledger from `TODOS.md` 223→222 lines — `JournalEntry`/`LedgerEntry` append-only `REVOKE UPDATE/DELETE` per ADR-0049 already, `rtk` 0 warn/error.
+
 ## [1.13.38] - 2026-08-20
 
 ### Fixed (Backlog — BESTP Docs)

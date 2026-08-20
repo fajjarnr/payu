@@ -5928,3 +5928,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP code, doc depth to backlog.
 - **Action**: Removed 1, 224→223 lines, tag v1.13.38.
 
+## 2026-08-20 — Wallet ledger
+- **Context**: `WALLET-001` immutable double-entry — `REVOKE UPDATE/DELETE` per ADR-0049 already in `wallet-service` migrations.
+- **Learning**: Keep `TODOS` only for OPEN, ledger already append-only.
+- **Action**: Removed 1, 223→222 lines, tag v1.13.39.
+
