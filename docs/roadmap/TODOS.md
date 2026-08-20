@@ -50,7 +50,6 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| CB-006 | platform | Prod deploy core banking: gates + HPA≥2 + PDB2 + DR drill (ACCOUNT-007) | ACCOUNT-007 closed |
 | PROD-002 | fx | Approved FX provider URL/credential + live evidence — std di [ADR-0050](../adr/0050-fx-provider-and-rate-governance-standard.md): single provider + BI fallback, cache TTL 5m, BigDecimal 19,4 HALF_EVEN, idempotency | Rate live + audit pair |
 | PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection — workflow `.github/workflows/analytics-tests.yml` sudah ada; sisa = setting GitHub branch protection (butuh `gh`/admin repo) | CI gate aktif via GitHub settings |
 | QAMVP-004 | kyc | Security test DONE 2026-08-13; e2e workflow + CI `.github/workflows/kyc-tests.yml` DONE. Sisa: provider OCR/liveness nyata gate (butuh credential eksternal) — std Python di [ADR-0036](../adr/0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md): `python-starter` hexagonal-lite, PG/TimescaleDB + RLS + AES-GCM/HMAC, Kafka outbox `payu.<domain>.<event>.v<n>`, ONNX `<30ms`, OCR sidecar | Test + live evidence + ADR-0036 green |

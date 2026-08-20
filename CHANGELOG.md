@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.19] - 2026-08-20
+
+### Fixed (Backlog — CB-006)
+- Remove `CB-006` from `TODOS.md` — `ACCOUNT-007` closed, gates/HPA/PDB verified via `rtk` checks, 0 warn/error.
+
 ## [1.13.18] - 2026-08-20
 
 ### Fixed (Backlog — TODOS hygiene)

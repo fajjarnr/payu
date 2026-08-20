@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.19 (2026-08-20)
+
+- **CB-006 platform deploy**: removed from `TODOS.md` (250 lines) — `ACCOUNT-007` closed, `rtk podman-compose config` + `podman logs payu-database-rw` no error (1 initdb warn trust expected).
+
 ## Deploy 1.13.18 (2026-08-20)
 
 - **TODOS hygiene (ARCH-NOTIF-001)**: removed from `TODOS.md` (251 lines) — encryption live, `rtk` checks clean, `PAYU_VERSION` 1.13.18.
