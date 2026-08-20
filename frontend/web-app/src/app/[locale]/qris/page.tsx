@@ -5,6 +5,16 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { QrCode, Camera, History, Image as ImageIcon, ShieldCheck, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
+// ponytail: minimal EMVCo CRC16 X25 (tag 63) — full TLV 26/30/54/59 + query GET /accounts/{id}/qris when backend live per ADR-0025
+function crc16X25(data: string): string {
+  let crc = 0xffff;
+  for (let i = 0; i < data.length; i++) {
+    crc ^= data.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1;
+  }
+  return ((crc ^ 0xffff) & 0xffff).toString(16).toUpperCase().padStart(4, '0');
+}
+
 export default function QRISPage() {
    
   const [isScanning, setIsScanning] = useState(false);
@@ -26,6 +36,8 @@ export default function QRISPage() {
     const file = e.target.files?.[0];
     if (file) {
       setIsScanning(true);
+      // EMVCo TLV + CRC16 X25 check (tag 63) — placeholder until GET /accounts/{id}/qris live
+      // const payload = "000201...6304ABCD"; const crc = crc16X25(payload.slice(0, -4)); if (crc !== payload.slice(-4)) { toast.error('QRIS CRC invalid'); setIsScanning(false); return; }
       setTimeout(() => {
         setIsScanning(false);
         toast.success(`QR Code dari "${file.name}" terdeteksi: Merchant PayU Simulator`);

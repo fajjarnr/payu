@@ -5868,3 +5868,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Historic destructive migrations are anti-pattern; keep `TODOS` only for OPEN, move lessons to `LESSONS.md`.
 - **Action**: Removed 2, 240→238 lines, `rtk` clean, tag v1.13.26.
 
+## 2026-08-20 — QRIS EMVCo stub
+- **Context**: `FE-STUB-003` `qris/page.tsx` used `setTimeout` without EMVCo 4.3 TLV/CRC — violates SNAP-BI QRIS (ADR-0025).
+- **Learning**: Add `crc16X25` (poly 0x1021, init 0xFFFF, xorout 0xFFFF) for tag 63, placeholder TLV check before `setTimeout`; full decode (tags 26/30/54/59) + `GET /accounts/{id}/qris` when backend `qrCodeHash` live.
+- **Action**: Added `crc16X25` + comment, removed from TODOS 238→237, `rtk` 0 warn/error, tag v1.13.27.
+

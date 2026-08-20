@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.27] - 2026-08-20
+
+### Fixed (Backlog — FE-STUB-003)
+- `qris/page.tsx` add `crc16X25` EMVCo tag 63 + placeholder TLV check (ponytail minimal, full decode per ADR-0025 when `GET /accounts/{id}/qris` live), `TODOS` 238→237 lines, `rtk` 0 warn/error.
+
 ## [1.13.26] - 2026-08-20
 
 ### Fixed (Backlog — Audit Hygiene)

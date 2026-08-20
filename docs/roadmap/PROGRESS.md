@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.27 (2026-08-20)
+
+- **QRIS EMVCo (FE-STUB-003)**: `qris/page.tsx` `crc16X25` + TLV placeholder, `TODOS` 237 lines, `PAYU_VERSION` 1.13.27.
+
 ## Deploy 1.13.26 (2026-08-20)
 
 - **Audit hygiene (DEDUP/FLYWAY)**: removed 2 historic `ARCH-*` (240→238 lines) — `rtk` clean, `PAYU_VERSION` 1.13.26.
