@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.60] - 2026-08-20
+
+### Fixed (Backlog — QAMVP-004)
+- Remove `QAMVP-004` kyc provider from `TODOS.md` 204→203 lines — security test + e2e DONE, sisa external cred per ADR-0036, `rtk` 0 warn/error.
+
 ## [1.13.59] - 2026-08-20
 
 ### Fixed (Backlog — PROD-018)

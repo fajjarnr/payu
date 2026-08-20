@@ -6033,3 +6033,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, workflow already `rtk` clean.
 - **Action**: Removed 1, 205→204 lines, tag v1.13.59.
 
+## 2026-08-20 — KYC provider
+- **Context**: `QAMVP-004` security test + e2e DONE 2026-08-13, sisa external OCR/liveness cred per ADR-0036.
+- **Learning**: Keep `TODOS` only for MVP, external cred to gate.
+- **Action**: Removed 1, 204→203 lines, tag v1.13.60.
+

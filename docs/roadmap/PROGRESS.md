@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.60 (2026-08-20)
+
+- **KYC provider (QAMVP-004)**: removed 204→203 lines, `PAYU_VERSION` 1.13.60.
+
 ## Deploy 1.13.59 (2026-08-20)
 
 - **Analytics branch protection (PROD-018)**: removed 205→204 lines, `PAYU_VERSION` 1.13.59.
