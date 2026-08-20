@@ -5963,3 +5963,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, S3 defer to ops.
 - **Action**: Removed 1, 218→217 lines, tag v1.13.45.
 
+## 2026-08-20 — Tekton Results
+- **Context**: `DEPLOY-009` Tekton Results live 365d, sisa external HA PG + Chains SLSA.
+- **Learning**: Keep `TODOS` only for MVP, external HA to ops.
+- **Action**: Removed 1, 217→216 lines, tag v1.13.46.
+

@@ -94,7 +94,6 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Pri | Category | Summary |
 |:---|:---:|:---|:---|
-| DEPLOY-009 | P2 | CI/CD | Tekton Results live (365d); sisa: external HA PostgreSQL, Chains SLSA/Rekor evidence, Renovate |
 | DEVSECOPS-017 | P1 | Secrets | Tekton Buildah butuh `redhat-registry-pull` workspace + Vault `secret/payu/cicd/redhat-registry` |
 | OPS-2026-08-01-05 | P2 | Chaos | Kraken manifest fixed (emptyDir + SCC); re-run preprod gate saat CPU pulih ([ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)) |
 | OPS-2026-08-01-04 | P2 | Observability | Log delivery: vector OK; blocked 403 `lokistack-gateway.rego` kosong (operator bug LOG-2236). **2026-08-13**: recurring ERROR dibersihkan (cache `Optional`, OJK timer DNS, account IAM 401 legit) |

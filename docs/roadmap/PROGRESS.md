@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.46 (2026-08-20)
+
+- **Tekton Results (DEPLOY-009)**: removed 217→216 lines, `PAYU_VERSION` 1.13.46.
+
 ## Deploy 1.13.45 (2026-08-20)
 
 - **Vault S3 (INFRA-026)**: removed 218→217 lines, `PAYU_VERSION` 1.13.45.
