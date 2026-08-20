@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.18 (2026-08-20)
+
+- **TODOS hygiene (ARCH-NOTIF-001)**: removed from `TODOS.md` (251 lines) — encryption live, `rtk` checks clean, `PAYU_VERSION` 1.13.18.
+
 ## Deploy 1.13.17 (2026-08-20)
 
 - **Notification encryption (ARCH-NOTIF-001)**: `NotificationCrypto` + `NotificationMapper` AES-GCM recipient/body, `podman-compose config` clean, topics verified. Fail-closed & zero-cost providers (Telegram/Simulator/FCM) already live.

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.18] - 2026-08-20
+
+### Fixed (Backlog — TODOS hygiene)
+- Remove `ARCH-NOTIF-001` from `docs/roadmap/TODOS.md` — encryption live (recipient/body AES-GCM), topics verified, 0 warn/error via `rtk podman-compose config`.
+
 ## [1.13.17] - 2026-08-20
 
 ### Added (Notification — ARCH-NOTIF-001)
