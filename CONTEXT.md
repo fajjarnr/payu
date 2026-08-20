@@ -22,3 +22,12 @@
 - **PreApprovalStatus**: Result of eligibility DMN — APPROVED / CONDITIONALLY_APPROVED / REJECTED.
 - **LoanApplication**: User request (externalId, loanType, principalAmount, tenureMonths, purpose) that yields a Loan (status APPROVED / REJECTED / PENDING_APPROVAL); eligibility and pricing come from DMN, installment math stays in Java.
 - **PricingTier**: Interest-rate band derived from creditScore (≥750→12%, ≥700→14%, ≥650→16%, else 18%) — owned by pricing DMN, duplicated previously in `LoanPreApprovalService` and `LendingApplicationService`.
+
+## Wallet and Immutable Ledger
+
+- **Wallet**: Materialized balance view per accountId (balance, reservedBalance, currency, version for optimistic locking); derived from ledger, not source of truth.
+- **LedgerEntry**: Immutable append-only line in `ledger_entries` (id, transactionId, journalEntryId, accountId, coaCode, entryType DEBIT/CREDIT, amount BigDecimal 19,4 HALF_EVEN, balanceAfter, referenceType/Id, createdAt); no UPDATE/DELETE.
+- **JournalEntry**: Atomic header for one business transaction (id, transactionId, createdAt) grouping 2+ LedgerEntries where sum DEBIT = sum CREDIT; enforced by `Journal.isBalanced()` and DB CHECK.
+- **Chart of Accounts (CoA)**: Canonical codes (e.g., ASSET_WALLET, LIABILITY_CLEARING, SYSTEM_BI_FAST_CLEARING) — enum top-level file, not inner class.
+- **Available Balance**: `balance - reservedBalance`; invariant `available >= 0`; `reservedBalance` tracks holds (reserve/commit/release) without mutating ledger.
+- **Reversal Entry**: Correction via new JournalEntry with opposite entries (referenceType=REVERSAL, referenceId=originalJournalId); never DELETE ledger.
