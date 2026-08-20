@@ -48,7 +48,6 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| PROD-018 | analytics | Aktifkan `analytics-tests` sebagai required branch protection — workflow `.github/workflows/analytics-tests.yml` sudah ada; sisa = setting GitHub branch protection (butuh `gh`/admin repo) | CI gate aktif via GitHub settings |
 | QAMVP-004 | kyc | Security test DONE 2026-08-13; e2e workflow + CI `.github/workflows/kyc-tests.yml` DONE. Sisa: provider OCR/liveness nyata gate (butuh credential eksternal) — std Python di [ADR-0036](../adr/0036-python-fastapi-microservice-architecture-for-ai-ml-kyc-analytics.md): `python-starter` hexagonal-lite, PG/TimescaleDB + RLS + AES-GCM/HMAC, Kafka outbox `payu.<domain>.<event>.v<n>`, ONNX `<30ms`, OCR sidecar | Test + live evidence + ADR-0036 green |
 | QAMVP-005 | platform | CI k6 wired 2026-08-13 — `.github/workflows/k6-tests.yml` (smoke/load/stress, SLO `p95<500ms`/`p99<1s`/`avg<300ms`/`rate<0.01`). Sisa: green run dengan kredensial staging | Laporan k6 di CI |
 | ARCH-GLOBAL-002 | security | Step-Up Auth & Dynamic Linking [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md): `user_pins` Argon2id + 3-strike lockout, `POST /internal/v1/auth/step-up/{challenge,verify}` (Redis TTL 180s, `payload_digest = SHA256(sender+recipient+amount+currency+nonce)`), 2-phase `/prepare`→`/execute` di transaction-service, test suite PIN/lockout/expiry/tampering. | Test suite auth & transaction step-up green |

@@ -6028,3 +6028,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for MVP, P3 to backlog.
 - **Action**: Removed 1, 206→205 lines, tag v1.13.58.
 
+## 2026-08-20 — Analytics branch protection
+- **Context**: `PROD-018` `analytics-tests` workflow exists, branch protection needs `gh` admin.
+- **Learning**: Keep `TODOS` only for MVP, workflow already `rtk` clean.
+- **Action**: Removed 1, 205→204 lines, tag v1.13.59.
+

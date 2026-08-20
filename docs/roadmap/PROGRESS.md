@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.59 (2026-08-20)
+
+- **Analytics branch protection (PROD-018)**: removed 205→204 lines, `PAYU_VERSION` 1.13.59.
+
 ## Deploy 1.13.58 (2026-08-20)
 
 - **Fraud P3 (READY-062)**: removed 206→205 lines, `PAYU_VERSION` 1.13.58.

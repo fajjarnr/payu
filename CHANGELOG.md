@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.59] - 2026-08-20
+
+### Fixed (Backlog — PROD-018)
+- Remove `PROD-018` analytics branch protection from `TODOS.md` 205→204 lines — workflow `.github/workflows/analytics-tests.yml` exists, `rtk` 0 warn/error.
+
 ## [1.13.58] - 2026-08-20
 
 ### Fixed (Backlog — READY-062)
