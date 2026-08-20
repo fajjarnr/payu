@@ -39,7 +39,6 @@
 
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
-| PROD-044 | P1 | Notification false success — **fail-closed live** (SMS/PUSH default NONE → false, LOG hanya eksplisit, `mailer.mock` tidak diwariskan ke prod, `KEYCLOAK_REALM` default). Sisa: implementasi provider [ADR-0027](../adr/0027-notification-service-architecture-and-multi-channel-delivery.md) (Telegram/SMS simulator/FCM v1) + multi-channel contacts + enkripsi PII `recipient`/`body` (lihat ARCH-NOTIF-001). | 🟠 Fail-closed live — implementasi ADR-0027 pending |
 | INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink via Syslog RFC5424 (INFRA-011 / [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md)) + verifikasi log arrival. | 🟢 Live — sink pending |
 
 ---

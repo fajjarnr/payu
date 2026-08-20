@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.22 (2026-08-20)
+
+- **PROD-044 notification fail-closed**: removed from `TODOS.md` (243 lines) — `SmsSender`/`PushSender` `NONE→false`, `EmailSender` mock false, `KEYCLOAK_REALM` default, encryption live, `rtk` 0 warn/error, `PAYU_VERSION` 1.13.22.
+
 ## Deploy 1.13.21 (2026-08-20)
 
 - **DB log hygiene**: `payu-database-rw` scram-sha-256 auth — `rtk podman logs` 0 warn/error, `podman-compose config` clean, 1.13.21.

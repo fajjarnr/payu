@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.22] - 2026-08-20
+
+### Fixed (Backlog — PROD-044)
+- Remove `PROD-044` from `TODOS.md` — fail-closed live verified (`payu.sms.provider=NONE→false`, `payu.push.provider=NONE→false`, `LOG` explicit, `mailer.mock` false, `KEYCLOAK_REALM=payu` default) + `ARCH-NOTIF-001` encryption live, `rtk` 0 warn/error.
+
 ## [1.13.21] - 2026-08-20
 
 ### Fixed (Infra — Log Hygiene)
