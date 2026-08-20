@@ -5863,3 +5863,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Money must be `BigDecimal` `HALF_EVEN` `setScale(4)`, provider `BI` default prevents `WARN` when `FX_PROVIDER_URL` missing, cache `5m` per ADR-0050.
 - **Action**: Fixed `application.yml:103,110`, `Stub`/`Http`/`FxRate.convert` to `4` `HALF_EVEN`, removed `PROD-002` 241→240, tag v1.13.25.
 
+## 2026-08-20 — Audit dedup/flyway
+- **Context**: `ARCH-DEDUP-001` + `ARCH-FLYWAY-001` historic `DELETE`/`DROP COLUMN` — already V16/V17 + V10:16-27, lesson "jangan diulang" prevents fresh-restore risk.
+- **Learning**: Historic destructive migrations are anti-pattern; keep `TODOS` only for OPEN, move lessons to `LESSONS.md`.
+- **Action**: Removed 2, 240→238 lines, `rtk` clean, tag v1.13.26.
+
