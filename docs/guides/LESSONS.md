@@ -5983,3 +5983,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, k6 already `rtk` clean.
 - **Action**: Removed 1, 213→212 lines, tag v1.13.49.
 
+## 2026-08-20 — Egress policy
+- **Context**: `DEVSECOPS-005` Egress `NetworkPolicy` + Istio `ServiceEntry` per `DEVSECOPS-005`.
+- **Learning**: `NetworkPolicy` egress `53`+`443`+`5432`+`9092` + `ServiceEntry` `api.bi.go.id` external.
+- **Action**: Created `egress-policy.yaml`, removed 212→211 lines, tag v1.13.50.
+

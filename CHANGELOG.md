@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.50] - 2026-08-20
+
+### Added (Backlog — DEVSECOPS-005)
+- `infrastructure/platform/security/egress/egress-policy.yaml` `NetworkPolicy` + `ServiceEntry` Istio egress per `DEVSECOPS-005`, `TODOS` 212→211 lines, `rtk` 0 warn/error.
+
 ## [1.13.49] - 2026-08-20
 
 ### Fixed (Backlog — OPS Perf)

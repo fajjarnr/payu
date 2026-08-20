@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.50 (2026-08-20)
+
+- **Egress policy (DEVSECOPS-005)**: `egress-policy.yaml` live, removed 212→211 lines, `PAYU_VERSION` 1.13.50.
+
 ## Deploy 1.13.49 (2026-08-20)
 
 - **k6 perf (OPS-2026-04-08-02)**: removed 213→212 lines, `PAYU_VERSION` 1.13.49.
