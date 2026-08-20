@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.31 (2026-08-20)
+
+- **Registry prune (INFRA-018)**: removed 234→233 lines, `PAYU_VERSION` 1.13.31, `rtk` clean.
+
 ## Deploy 1.13.30 (2026-08-20)
 
 - **P2 defer hygiene**: removed `READY-029/030` (Gatling/SOAK cluster phase) 236→234 lines, `PAYU_VERSION` 1.13.30.

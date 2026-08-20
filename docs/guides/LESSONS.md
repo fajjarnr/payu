@@ -5888,3 +5888,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for in-scope MVP, defer out-of-scope to roadmap, `rtk` checks remain clean.
 - **Action**: Removed 2, 236→234 lines, tag v1.13.30.
 
+## 2026-08-20 — Registry prune 31 tags
+- **Context**: `INFRA-018` image hilang saat upgrade 31 tags — prune + GC policy, `PAYU_VERSION` semver 1.13.31 with 31 tags, `latest` 0 prevents prune.
+- **Learning**: Pin all images to semver, `PAYU_VERSION` 1.13.31, `rtk podman images` 0 unused, `podman rmi` cleanup.
+- **Action**: Removed from TODOS 234→233, tag v1.13.31.
+
