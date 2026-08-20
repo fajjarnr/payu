@@ -6063,3 +6063,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Keep `TODOS` only for OPEN, PITR already `rtk` clean.
 - **Action**: Removed 1, 200→199 lines, tag v1.13.65.
 
+## 2026-08-20 — Perimeter security
+- **Context**: `ARCH-GLOBAL-006` Wazuh live + CLF + Coraza per ADR-0032 already.
+- **Learning**: Keep `TODOS` only for OPEN, perimeter already `rtk` clean.
+- **Action**: Removed 1, 199→198 lines, tag v1.13.66.
+

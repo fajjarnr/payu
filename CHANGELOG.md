@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.66] - 2026-08-20
+
+### Fixed (Backlog — ARCH-GLOBAL-006)
+- Remove `ARCH-GLOBAL-006` perimeter security from `TODOS.md` 199→198 lines — Wazuh live + CLF + Coraza per ADR-0032, `rtk` 0 warn/error.
+
 ## [1.13.65] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-005)
