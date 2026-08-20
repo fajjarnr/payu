@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.24] - 2026-08-20
+
+### Added (Backlog — INFRA-029)
+- `audit-syslog` `rsyslog/rsyslog:8.2408.0` (RFC5424) for Wazuh SIEM sink per ADR-0032, `5514:514`, `rtk podman-compose config` clean, `TODOS` 242→241 lines.
+
 ## [1.13.23] - 2026-08-20
 
 ### Added (Backlog — ARCH-DLQ-001)

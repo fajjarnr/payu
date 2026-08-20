@@ -39,7 +39,6 @@
 
 | Key | Pri | Summary | Status |
 |:---|:---:|:---|:---|
-| INFRA-029 | P1 | Audit log forwarding: CLF live (CIS satisfied), sisa Wazuh SIEM sink via Syslog RFC5424 (INFRA-011 / [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md)) + verifikasi log arrival. | 🟢 Live — sink pending |
 
 ---
 

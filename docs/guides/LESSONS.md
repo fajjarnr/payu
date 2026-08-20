@@ -5853,3 +5853,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: DLQ must be `.dlq` suffix per topic `payu.<domain>.<event>.v<n>.dlq`, retention 30d, replay via `kafka-console-consumer`→`producer` best-effort, ponytail minimal bash without extra deps.
 - **Action**: Created `scripts/dlq-replay.sh` 1.4K, chmod +x, `rtk` 0 warn/error, removed from TODOS 243→242, tag v1.13.23.
 
+## 2026-08-20 — Audit Wazuh sink
+- **Context**: `INFRA-029` CLF live but Wazuh SIEM sink pending via Syslog RFC5424 (ADR-0032). Local `podman-compose` lacked syslog forwarder, `podman logs` would show no forwarder warn.
+- **Learning**: Add `audit-syslog` `rsyslog:8.2408.0` (semver, not latest) with `5514:514` tcp/udp, `*infra-defaults`, no extra vol, `rtk podman-compose config` validates, `PAYU_VERSION` bump keeps semver.
+- **Action**: Added service, removed `INFRA-029` 242→241, tag v1.13.24.
+
