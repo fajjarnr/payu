@@ -1,14 +1,20 @@
 package id.payu.notification.adapter.persistence;
 
+import id.payu.notification.adapter.crypto.NotificationCrypto;
 import id.payu.notification.adapter.persistence.entity.NotificationEntity;
 import id.payu.notification.domain.Notification;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * Mapper between Notification domain model and NotificationEntity persistence model.
+ * Encrypts recipient & body at rest (AES-256 GCM, UU PDP) via NotificationCrypto.
  */
 @ApplicationScoped
 public class NotificationMapper {
+
+    @Inject
+    NotificationCrypto crypto;
 
     public Notification toDomain(NotificationEntity entity) {
         if (entity == null) {
@@ -19,9 +25,9 @@ public class NotificationMapper {
         domain.setId(entity.id);
         domain.setUserId(entity.userId);
         domain.setChannel(entity.channel);
-        domain.setRecipient(entity.recipient);
+        domain.setRecipient(crypto != null ? crypto.decrypt(entity.recipient) : entity.recipient);
         domain.setTitle(entity.title);
-        domain.setBody(entity.body);
+        domain.setBody(crypto != null ? crypto.decrypt(entity.body) : entity.body);
         domain.setTemplateId(entity.templateId);
         domain.setData(entity.data);
         domain.setStatus(entity.status);
@@ -56,9 +62,9 @@ public class NotificationMapper {
         }
         entity.userId = domain.getUserId();
         entity.channel = domain.getChannel();
-        entity.recipient = domain.getRecipient();
+        entity.recipient = crypto != null ? crypto.encrypt(domain.getRecipient()) : domain.getRecipient();
         entity.title = domain.getTitle();
-        entity.body = domain.getBody();
+        entity.body = crypto != null ? crypto.encrypt(domain.getBody()) : domain.getBody();
         entity.templateId = domain.getTemplateId();
         entity.data = domain.getData();
         entity.status = domain.getStatus();

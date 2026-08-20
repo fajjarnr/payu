@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.17 (2026-08-20)
+
+- **Notification encryption (ARCH-NOTIF-001)**: `NotificationCrypto` + `NotificationMapper` AES-GCM recipient/body, `podman-compose config` clean, topics verified. Fail-closed & zero-cost providers (Telegram/Simulator/FCM) already live.
+
 ## Deploy 1.13.16 (2026-08-20)
 
 - **Infra semver (compose)**: pin 6 `latest` → semver, `podman-compose config` clean, `PAYU_VERSION` 1.13.15 validated. No `latest` remain, no unused image tags (0 images local, semver enforced). Best practice: avoid `latest` for reproducible deploys.

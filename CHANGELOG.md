@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.17] - 2026-08-20
+
+### Added (Notification — ARCH-NOTIF-001)
+- AES-256 GCM encryption for `recipient` & `body` at rest (UU PDP): `NotificationCrypto` (PBKDF2 600k, 12B IV, 128b tag), `NotificationMapper` encrypt on write / decrypt on read, backward compat plaintext fallback. Topics `payu.billing.payment-completed.v1` / `payu.transaction.payment-expired.v1` already wired via `billing-payment-events` / `payment-events` (verified `application.yml:114,121`).
+
 ## [1.13.16] - 2026-08-20
 
 ### Fixed (Infra — Compose SemVer)

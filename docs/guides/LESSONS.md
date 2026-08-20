@@ -5828,3 +5828,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `latest` breaks deterministic deploys & cache; pin to semver. Validate with `podman-compose config` (no warn/error) and `PAYU_VERSION` check. Use `podman-compose 1.5.0` (apt) not `podman compose` plugin missing compose provider.
 - **Action**: Pinned 6 images to `0.66.0`/`8.22.1`/`3.4.7`/`1.1.0`/`1.27.0`/`0.99.1`, verified `grep :latest` empty, `podman images` 0 unused. Future: script to lint compose for `:latest` in CI.
 
+## 2026-08-20 — Notification encryption
+- **Context**: ARCH-NOTIF-001 required AES-GCM for `recipient`/`body` (UU PDP). `NotificationEntity` stored plaintext, risk PII leak. Quarkus Panache not using Spring `EncryptedStringConverter`, so mapper-layer encryption needed.
+- **Learning**: Reuse `EncryptionService` pattern (PBKDF2 600k, 12B IV, GCM 128) without Spring starter — `@ApplicationScoped` + `@ConfigProperty(payu.encryption.key)` with dev default, `decrypt` fallback to plaintext for migration. Keep masking (`RecipientMasker`) for logs, encryption for at-rest.
+- **Action**: `NotificationCrypto` + `NotificationMapper` updated; verify with `podman-compose config` and roundtrip test. Next: add blind index if search needed.
+
