@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.21] - 2026-08-20
+
+### Fixed (Infra — Log Hygiene)
+- `payu-database-rw` add `POSTGRES_HOST_AUTH_METHOD=scram-sha-256` + `POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=scram-sha-256` — suppress `initdb: warning: enabling "trust"` (rtk `podman logs` now 0 warn/error), `podman-compose config` clean, `PAYU_VERSION` 1.13.21.
+
 ## [1.13.20] - 2026-08-20
 
 ### Fixed (Backlog — Partner Gate)

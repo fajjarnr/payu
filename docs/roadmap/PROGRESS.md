@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.21 (2026-08-20)
+
+- **DB log hygiene**: `payu-database-rw` scram-sha-256 auth — `rtk podman logs` 0 warn/error, `podman-compose config` clean, 1.13.21.
+
 ## Deploy 1.13.20 (2026-08-20)
 
 - **Partner gate hygiene (6 LIVE)**: removed `PARTNER-PROD-001..006` from `TODOS.md` (244 lines) — `rtk podman-compose config` clean, `PAYU_VERSION` 1.13.20.

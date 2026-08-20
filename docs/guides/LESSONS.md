@@ -5838,3 +5838,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: Use `rtk grep` + `codegraph` to verify LIVE status vs actual implementation; remove completed, keep only ⏸️ items. `podman-compose config` remains clean after removal, semver 1.13.20 validated.
 - **Action**: Removed 6 LIVE, 250→244 lines, updated CHANGELOG/PROGRESS, tag v1.13.20.
 
+## 2026-08-20 — DB trust warning
+- **Context**: `podman logs payu-database-rw` showed `initdb: warning: enabling "trust" authentication` — violates "no warn/error" goal, insecure for prod parity.
+- **Learning**: Postgres `trust` is default when `POSTGRES_HOST_AUTH_METHOD` not set; set `scram-sha-256` + `POSTGRES_INITDB_ARGS` to enforce password auth locally, matches production `scram-sha-256`.
+- **Action**: Added env to `podman-compose.yml:78-79`, verified `rtk` logs 0 warn/error, `podman-compose config` clean.
+
