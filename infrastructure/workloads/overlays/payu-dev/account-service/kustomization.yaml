@@ -5,7 +5,6 @@ namespace: payu-dev
 
 resources:
   - ../../../base/account-service
-  - postgres.yaml
 
 images:
   - name: account-service
