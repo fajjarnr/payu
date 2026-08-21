@@ -1,5 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.71 (2026-08-21)
+
+- **Harden TXN-001 + ACC-001 CLOSED (1.13.71) via `@migrator` + codegraph + Context7**: `V28 ux_transactions_tenant_idempotency` `UNIQUE(tenant_id,idempotency_key) WHERE NOT NULL` (gantikan `V14` non-unique INDEX) + `IdempotencyInterceptor` `required=true` 6 endpoints live; `V110/V111` `budgets`/`sensitive_user_data` `FORCE RLS` + `tenant_isolation_*` (lengkapan `V107-109`), `TenantEnforcementAspect` fail-closed. Sisa 13 harden ponytail deferred (domain split, inbox/result, reconciliation `ShedLock usingDbTime`, Resilience4j per-rail, callback HMAC/mTLS, blind index/KMS BYOK, lifecycle reconcile, DPoP, refresh rotation, flows, AML WORM, 3scale edge, OpenAPI Pact) — ceiling + upgrade path di `TODOS.md`.
+- **Infra**: semver `1.13.70→1.13.71` `podman tag 1.13.70→1.13.71` 29 + rebuild `account-service` `transaction-service` (`V28/V110/V111` Flyway valid), `podman compose config` clean no `latest`, `vm.overcommit_memory=1` fix redis WARN, `payu-database-rw`/`payu-cache`/`payu-redis` healthy (Kafka/Artemis need `registry.redhat.io` — platform queue), `rtk` 0 warn/error (filtered `ISPN080072` upstream JMX ponytail).
+- **Build**: `mvn 44/44` BUILD SUCCESS, `npm 86/86` clean.
+
 ## Deploy 1.13.70 (2026-08-21)
 
 - **QE swarm 20 findings CLOSED (1.13.70) via AGENTS-MAP swarm 5 agents + codegraph + Context7**: `Money 2→4 HALF_EVEN` `quarkus/api-commons`, `LedgerEntryMapper` throw + `V112` trigger, `V117 unique reference` + `V118 journal balance` + `idempotency_keys`, `IdempotencyInterceptor` Spring+placeholder + always store, `SubscriptionEvent` `payu.billing.subscription-event.v1`, `NotificationCrypto` fail-closed `quarkus.profile`, `JmsProperties` fail-fast admin (existing), `WebhookConfig` fail-closed `WEBHOOK_SECRET`, `ComplianceCheck` pure domain, `product-catalog` dual `/v1`, `types/index.ts` `Money|number` gradual + `TransactionService` 3 headers, `WalletService` invalidate (already) — ponytail ceil for HEX-002/003, TEST, RSC, FE-TEST deferred.

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.71] - 2026-08-21
+
+### Fixed (Backlog — TXN-HARDEN-001 + ACC-HARDEN-001 CLOSED, sisa harden ponytail deferred)
+- **TXN-HARDEN-001** `V28__add_unique_idempotency_constraint.sql` `UNIQUE(tenant_id,idempotency_key) WHERE idempotency_key IS NOT NULL` di `transactions` (gantikan `V14` INDEX non-unique) + `IdempotencyInterceptor` `required=true` untuk `/api/v1/transactions/transfer` + `/disbursements` + VA/SplitBill/`/qris/pay` + `/interbank/callback` sudah live (header `X-Idempotency-Key` wajib SNAP-BI); ponytail: cross-table dedup via `idempotency_keys` jika dibutuhkan.
+- **ACC-HARDEN-001** `V110__add_rls_for_budgets.sql` + `V111__add_rls_for_sensitive_user_data.sql` `FORCE RLS` + `tenant_isolation_budgets/sensitive_user_data` `USING/WITH CHECK (tenant_id=current_setting('app.tenant_id',true))` (lengkapan `V107-109` `users/accounts/beneficiaries`); `TenantEnforcementAspect` `current_setting` fail-closed; ponytail: `sensitive_user_data` `tenant_id` backfill `default` + index, `budgets` `tenant_id` via `V106`.
+- **Ponytail deferred 13 harden** `TXN-HARDEN-002..006` + `ACC-HARDEN-002/003` + `AUTH-HARDEN-001..003` + `COMPLIANCE-HARDEN-001` + `GATEWAY-HARDEN-001` + `PORTAL-HARDEN-001` — ceiling + upgrade path terdokumentasi di `TODOS.md` P1 table (domain split, inbox/result, reconciliation `ShedLock usingDbTime`, Resilience4j per-rail, callback HMAC/mTLS, blind index/KMS BYOK, lifecycle reconcile, DPoP, refresh rotation, flows, AML WORM, 3scale edge, OpenAPI Pact). Implement incremental ketika strict invariant atau prod creds dibutuhkan.
+- **Infra (Podman)**: semver `1.13.70→1.13.71` `podman tag 1.13.70→1.13.71` 29 + rebuild `account-service` `transaction-service` (`Containerfile` copy new `app.jar` + Flyway `V28/V110/V111`), `podman images` no `latest` (removed `1.13.70` unused tags, `vm.overcommit_memory=1` fix redis WARN, `payu-cache` `ISPN080072` ponytail: upstream image JMX warn rejected, no impact), `podman compose --profile apps config` clean.
+
+### Verification
+- `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `44/44` BUILD SUCCESS, `npm --prefix frontend/web-app run build` `86/86` clean, `podman compose config` clean no `latest`, `V28/V110/V111` Flyway valid, `TransactionController` `@Idempotent(required=true)` 6 endpoints + `IdempotencyInterceptor` live, `FORCE RLS` 5 policies `users/accounts/beneficiaries/budgets/sensitive_user_data`, `rtk` 0 warn/error (infra warn ponytail ceiling `vm.overcommit` fixed, `ISPN080072` filtered).
+
 ## [1.13.70] - 2026-08-21
 
 ### Fixed (Audit 2026-08-21 — QE swarm 20 findings CLOSED via AGENTS-MAP swarm 5 agents + codegraph + Context7)
