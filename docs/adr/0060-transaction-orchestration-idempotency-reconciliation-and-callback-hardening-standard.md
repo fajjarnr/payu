@@ -1,6 +1,6 @@
 # ADR-0060: Transaction Orchestration — Idempotency, Reconciliation & Callback Hardening Standard
 
-**Status**: Proposed  
+**Status**: Accepted  
 **Date**: 2026-08-22  
 **Deciders**: Core Banking Engineering, Platform Engineering, Risk & Compliance  
 **Relates to**: ADR-0022 (Money & Idempotency), ADR-0041 (Transactional Outbox), ADR-0042 (ShedLock), ADR-0049 (Wallet Immutable Ledger), ADR-0029 (ISO20022), ADR-0025 (SNAP-BI), PADG 14/2025 BI-FAST

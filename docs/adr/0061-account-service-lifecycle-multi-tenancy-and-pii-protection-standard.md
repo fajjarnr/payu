@@ -1,6 +1,6 @@
 # ADR-0061: Account Service — Lifecycle, Multi-Tenancy & PII Protection Standard
 
-**Status**: Proposed  
+**Status**: Accepted  
 **Date**: 2026-08-22  
 **Deciders**: Core Banking Engineering, Platform Engineering, Risk & Compliance, DPO  
 **Relates to**: ADR-0022 (Money & Idempotency), ADR-0033 (RLS), ADR-0040 (Field Encryption & Blind Index), ADR-0041 (Outbox), ADR-0049 (Wallet Ledger), PADG BI-FAST, UU PDP, PCI-DSS

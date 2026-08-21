@@ -63,9 +63,15 @@ This directory contains the historical record of architectural decisions made fo
 | [0054](0054-dispute-and-chargeback-standard.md) | Dispute and Chargeback Standard | Accepted | 2026-08-20 |
 | [0055](0055-promotion-cashback-and-reward-saga-standard.md) | Promotion, Cashback and Reward Saga Standard | Accepted | 2026-08-20 |
 | [0056](0056-simulator-fidelity-and-contract-testing-standard.md) | Simulator Fidelity and Contract Testing Standard (SIM-001) | Accepted | 2026-08-20 |
-| [0060](0060-transaction-orchestration-idempotency-reconciliation-and-callback-hardening-standard.md) | Transaction Orchestration — Idempotency, Reconciliation & Callback Hardening (TXN-HARDEN Q1-Q6, PADG 14/2025) | Proposed | 2026-08-22 |
-| [0061](0061-account-service-lifecycle-multi-tenancy-and-pii-protection-standard.md) | Account Service — Lifecycle, Multi-Tenancy & PII Protection (ACC-HARDEN, Crassula/AWS CLM, UU PDP) | Proposed | 2026-08-22 |
-| [0062](0062-auth-service-oauth2-dpop-refresh-rotation-and-device-binding-standard.md) | Auth Service — OAuth2 DPoP, Refresh Rotation & Device Binding (AUTH-HARDEN, RHBK 26.4 RFC9449) | Proposed | 2026-08-22 |
+| [0057](0057-billing-provider-and-biller-catalogue-governance-standard.md) | Billing Provider & Biller Catalogue Governance (BILLING) | Accepted | 2026-08-22 |
+| [0058](0058-backoffice-rbac-and-admin-audit-trail-standard.md) | Backoffice RBAC & Admin Audit Trail (BACKOFFICE) | Accepted | 2026-08-22 |
+| [0059](0059-product-catalog-and-partner-product-governance-standard.md) | Product Catalog & Partner Product Governance (CATALOG) | Accepted | 2026-08-22 |
+| [0060](0060-transaction-orchestration-idempotency-reconciliation-and-callback-hardening-standard.md) | Transaction Orchestration — Idempotency, Reconciliation & Callback Hardening (TXN-HARDEN Q1-Q6, PADG 14/2025) | Accepted | 2026-08-22 |
+| [0061](0061-account-service-lifecycle-multi-tenancy-and-pii-protection-standard.md) | Account Service — Lifecycle, Multi-Tenancy & PII Protection (ACC-HARDEN, Crassula/AWS CLM, UU PDP) | Accepted | 2026-08-22 |
+| [0062](0062-auth-service-oauth2-dpop-refresh-rotation-and-device-binding-standard.md) | Auth Service — OAuth2 DPoP, Refresh Rotation & Device Binding (AUTH-HARDEN, RHBK 26.4 RFC9449) | Accepted | 2026-08-22 |
+| [0063](0063-compliance-service-aml-cft-pci-dss-audit-trail-standard.md) | Compliance Service — AML/CFT, PCI-DSS Req10 & Audit-Trail (COMPLIANCE-HARDEN) | Accepted | 2026-08-22 |
+| [0064](0064-gateway-service-rate-limiting-3scale-and-edge-protection-standard.md) | Gateway Service — 3scale APIcast Edge & Rate Limiting (GATEWAY-HARDEN) | Accepted | 2026-08-22 |
+| [0065](0065-api-portal-service-openapi-aggregation-and-developer-experience-standard.md) | API Portal Service — OpenAPI Aggregation & DX (PORTAL-HARDEN) | Accepted | 2026-08-22 |
 
 
 ## 🚀 How to Create a New ADR

@@ -1,6 +1,6 @@
 # ADR-0062: Auth Service — OAuth2, DPoP, Refresh Rotation & Device Binding Standard
 
-**Status**: Proposed  
+**Status**: Accepted  
 **Date**: 2026-08-22  
 **Deciders**: Core Banking Engineering, Platform Engineering, Risk & Compliance  
 **Relates to**: ADR-0010 (Security), ADR-0028 (Step-Up & Dynamic Linking), ADR-0039 (BFF Token Relay), ADR-0044 (Vault), RHBK 26.4/26.6, RFC 9449 DPoP, RFC 9700 BCP OAuth2.1
