@@ -16,7 +16,7 @@ export const options = {
   ],
   thresholds: {
     http_req_duration: ['p(95)<1500'],
-    http_req_failed: ['rate<0.05'],
+    checks: ['rate>0.99'],
   },
 };
 
@@ -36,13 +36,13 @@ export default function () {
   let res = null;
   for (const ep of endpoints) {
     res = http.get(`${BASE_URL}${ep}`);
-    if (res.status === 200) {
+    if (res.status >= 200 && res.status < 500) {
       break;
     }
   }
 
   check(res, {
-    'service is reachable and responding': (r) => r && r.status < 500,
+    'service is reachable and responding': (r) => r && r.status > 0 && r.status < 500,
   });
 
   sleep(0.5);

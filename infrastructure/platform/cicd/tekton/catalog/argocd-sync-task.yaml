@@ -32,6 +32,8 @@ spec:
           exit 0
         fi
         deadline=$(( $(date +%s) + $(params.TIMEOUT_SECONDS) ))
+        sync_status="Unknown"
+        health_status="Unknown"
         while [ "$(date +%s)" -lt "$deadline" ]; do
           sync_status=$(oc get applications.argoproj.io "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.sync.status}' 2>/dev/null || true)
           health_status=$(oc get applications.argoproj.io "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" -o jsonpath='{.status.health.status}' 2>/dev/null || true)
@@ -45,8 +47,8 @@ spec:
           sleep 10
         done
 
-        echo "[!] Timed out waiting for $(params.APPLICATION_NAME) sync=$(sync_status) health=$(health_status) - non-blocking in dev"
-        if [ "$health_status" = "Healthy" ]; then
+        echo "[!] Timed out waiting for $(params.APPLICATION_NAME) sync=${sync_status} health=${health_status} - non-blocking in dev"
+        if [ "${health_status}" = "Healthy" ]; then
           exit 0
         fi
         exit 1

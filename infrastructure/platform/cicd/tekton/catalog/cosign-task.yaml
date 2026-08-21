@@ -28,7 +28,10 @@ spec:
       description: "Signing mode used for the image"
   steps:
     - name: attach-sbom-and-sign
-      image: "registry.redhat.io/rhtas/cosign-rhel9@sha256:0bc571d1d9c188579dc5c404134144f660beb62f69f784b48230ff84b3881499"
+      # ponytail: pinned to RHTAS 1.2.0 (cosign v2) - v3 referrers-fallback index PUT is rejected by
+      # the OpenShift internal registry (Image dockerImageManifests requires arch/os); see LESSONS.md
+      image: "registry.redhat.io/rhtas/cosign-rhel9@sha256:cb53dcc3bc912dd7f12147f33af1b435eae5ff4ab83b85c0277b4004b20a0248"
+      workingDir: $(workspaces.source.path)
       script: |
         #!/bin/sh
         set -eu
@@ -47,10 +50,10 @@ spec:
         fi
 
         echo "[*] Attesting CycloneDX SBOM from $(params.SBOM_PATH)"
-        timeout 60 cosign attest --yes --key "$KEY_PATH" --predicate "$(params.SBOM_PATH)" --type cyclonedx "$(params.IMAGE)"
+        timeout 300 cosign attest --yes --key "$KEY_PATH" --predicate "$(params.SBOM_PATH)" --type cyclonedx "$(params.IMAGE)"
 
         echo "[*] Signing with required key pair"
-        timeout 60 cosign sign --yes --key "$KEY_PATH" --tlog-upload=$(params.TLOG_UPLOAD) "$(params.IMAGE)"
+        timeout 300 cosign sign --yes --key "$KEY_PATH" --tlog-upload=$(params.TLOG_UPLOAD) --registry-referrers-mode legacy "$(params.IMAGE)"
         echo -n "keypair" | tee $(results.SIGN_MODE.path)
 
         echo "[✓] Sign step completed for $(params.IMAGE)"
