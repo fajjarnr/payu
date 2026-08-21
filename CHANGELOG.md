@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.77] - 2026-08-21
+
+### Fixed (CNPG DB secrets + outbox/shedlock + AMQ health)
+- **CNPG**: `payu-database` Cluster Setting up primary → Running 1/1 after creating `payu-database-app`/`superuser` secrets via `data/overlays/dev/cnpg-secrets.yaml` stringData payu/postgres (was secret not found CreateContainerConfigError). Applied via `rtk oc apply -k data/overlays/dev`. Outbox still Connection refused timeout, shedlock now Running 1/1, payu-cache 1/1 Running.
+- **AMQ**: operator v3.2.1-8 Installing 6 restarts startup probe timeout http://10.131.0.31:8080/healthy — pending resource/CPU, not blocking payu-dev workloads scaled 0. Pods payu-dev now 0/0 deploys, warnings old ErrImagePull TTL, new warnings only jobs.
+- **SemVer**: bump 1.13.76→1.13.77 PATCH data infra.
+
 ## [1.13.76] - 2026-08-21
 
 ### Fixed (Operator via Foundation + Workloads Replicas 0 + ExternalSecret v1beta1)

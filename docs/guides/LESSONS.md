@@ -6177,3 +6177,6 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Workloads ImagePullBackOff**: internal registry `image-registry.openshift-image-registry.svc:5000/payu-dev/*:1.8.x` name unknown karena imagestream belum built. Ponytail: scale deployments `replicas:0` via kustomization `replicas: count:0` + newTag `1.13.76` pending Tekton `payu-build-pipeline` (scale 3 when built) untuk hilangkan Warning, jangan patch via `oc scale`.
 - **SemVer PATCH**: infra fix 1.13.75→1.13.76, image tag sync via kustomization.
 
+## 2026-08-21 — CNPG secrets via overlay
+
+- **CNPG bootstrap secrets** must exist before Cluster: payu-database-app/superuser not found → CreateContainerConfigError, fix add `cnpg-secrets.yaml` stringData via `data/overlays/dev/kustomization.yaml` resources, apply with `rtk oc apply -k`, not `oc create secret`.

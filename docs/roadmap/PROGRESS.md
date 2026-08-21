@@ -2,6 +2,12 @@
 
 ## Deploy 1.13.75 (2026-08-21)
 
+## Deploy 1.13.77 (2026-08-21)
+
+- **Data**: rtk oc apply -k data/overlays/dev cnpg-secrets payu-database-app/superuser → payu-database-1 Running 1/1, initdb Completed, payu-cache 1/1, shedlock-bootstrap Running, outbox Connection refused pending.
+- **Workloads**: deploys 0/0, ImagePull warnings old TTL, no new.
+- **AMQ**: operator Installing probe timeout, non-blocking.
+
 ## Deploy 1.13.76 (2026-08-21)
 
 - **Operators via foundation**: rtk oc apply -k foundation/cluster-operators (ns+OperatorGroup then subscriptions) — CNPG 1.30.0 Succeeded, 3scale v0.13.4 Succeeded, ESO v0.11.0 Succeeded, RHBK 26.6.6 Succeeded, AMQ Installing probe timeout.

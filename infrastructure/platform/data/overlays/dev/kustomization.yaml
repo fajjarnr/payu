@@ -7,6 +7,7 @@ kind: Kustomization
 
 namespace: payu-dev
 resources:
+  - cnpg-secrets.yaml
   # Dev-only: standalone Infinispan StatefulSet serves plain Hot Rod. The
   # operator-managed Infinispan CR (base/datagrid.yaml) is skipped because the
   # Data Grid 8.6.5 operator webhook (vinfinispan.kb.io) panics on it in the
