@@ -63,6 +63,9 @@ This directory contains the historical record of architectural decisions made fo
 | [0054](0054-dispute-and-chargeback-standard.md) | Dispute and Chargeback Standard | Accepted | 2026-08-20 |
 | [0055](0055-promotion-cashback-and-reward-saga-standard.md) | Promotion, Cashback and Reward Saga Standard | Accepted | 2026-08-20 |
 | [0056](0056-simulator-fidelity-and-contract-testing-standard.md) | Simulator Fidelity and Contract Testing Standard (SIM-001) | Accepted | 2026-08-20 |
+| [0060](0060-transaction-orchestration-idempotency-reconciliation-and-callback-hardening-standard.md) | Transaction Orchestration — Idempotency, Reconciliation & Callback Hardening (TXN-HARDEN Q1-Q6, PADG 14/2025) | Proposed | 2026-08-22 |
+| [0061](0061-account-service-lifecycle-multi-tenancy-and-pii-protection-standard.md) | Account Service — Lifecycle, Multi-Tenancy & PII Protection (ACC-HARDEN, Crassula/AWS CLM, UU PDP) | Proposed | 2026-08-22 |
+| [0062](0062-auth-service-oauth2-dpop-refresh-rotation-and-device-binding-standard.md) | Auth Service — OAuth2 DPoP, Refresh Rotation & Device Binding (AUTH-HARDEN, RHBK 26.4 RFC9449) | Proposed | 2026-08-22 |
 
 
 ## 🚀 How to Create a New ADR

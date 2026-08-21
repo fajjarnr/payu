@@ -175,8 +175,8 @@ C4Container
     System_Boundary(core_banking, "Core Banking Services") {
       Container(account_svc, "Account Service", "Spring Boot 4.1", "User accounts, multi-pocket, profile")
       Container(auth_svc, "Auth Service", "Spring Boot 4.1", "Authentication, MFA, OAuth2")
-      Container(transaction_svc, "Transaction Service", "Spring Boot 4.1", "Transfers, BI-FAST, QRIS")
-      Container(wallet_svc, "Wallet Service", "Spring Boot 4.1", "Double-entry ledger, balance management")
+      Container(transaction_svc, "Transaction Service", "Spring Boot 4.1", "Transfer/BI-FAST/SKN/RTGS, QRIS/VA/SplitBill/Batch, outbox+reconciler (ADR-0060)")
+      Container(wallet_svc, "Wallet Service", "Spring Boot 4.1", "Double-entry Journal+Ledger, holds, RLS (ADR-0049)")
       Container(investment_svc, "Investment Service", "Spring Boot 4.1", "Mutual funds, Gold investment")
       Container(lending_svc, "Lending Service", "Spring Boot 4.1", "Loans, PayLater, credit scoring")
       Container(fx_svc, "FX Service", "Spring Boot 4.1", "Currency exchange rates")
@@ -396,18 +396,23 @@ account-service/
 | Attribute            | Value                                       |
 | -------------------- | ------------------------------------------- |
 | **Technology**       | Java 25, Spring Boot 4.1.x                  |
-| **Database**         | PostgreSQL + Outbox (transactional)       |
+| **Database**         | PostgreSQL + Outbox (transactional) + RLS + ShedLock |
 | **Port**             | 8003                                        |
-| **Responsibilities** | Transfer, BI-FAST, QRIS, payment processing |
+| **Responsibilities** | Transfer (internal / BI-FAST / SKN / RTGS), QRIS, Virtual Account, SplitBill, Batch Disbursement, Scheduled Transfer, Smart Routing; wallet integration (reserve/commit/release); outbox `payu.transaction.*.v1` + `.dlq` (ADR-0041); reconciliation `payu.transaction.*` (PADG 14/2025) — see ADR-0060 |
+| **Glossary** | `Transaction` = orchestration state machine (mutable, `transactions` table `PENDING→COMPLETED`, `@Version`); `Transfer` = internal 1-hop atomik; `Disbursement` = payout eksternal async; `Payment` = QRIS/VA collection; `BillPayment` = di `billing-service` (`BillerType` PLN/PDAM) bukan di sini — see CONTEXT.md §Transaction Orchestration, ADR-0060 |
 
-**Transaction Types:**
+**Transaction Types (orchestration, bukan ledger truth — ledger di `wallet-service` ADR-0049):**
 
-| Type              | Processing       | SLA   |
-| ----------------- | ---------------- | ----- |
-| Internal Transfer | Synchronous      | < 1s  |
-| BI-FAST           | Async (callback) | < 5s  |
-| QRIS Payment      | Synchronous      | < 3s  |
-| Bill Payment      | Async (callback) | < 30s |
+| Type | Rail | Processing | SLA | Notes |
+| --- | --- | --- | --- | --- |
+| Internal Transfer | PayU internal | Sync 1-hop `wallet.transferBalance()` | < 1s | no reserve, idempoten `referenceNumber` |
+| BI-FAST | BI-FAST | Async `reserve→rail→settle FOR UPDATE` + callback + inbox dedup | < 5s | `X-Idempotency-Key` UNIQUE(tenant_id,key) V28, reconciler 5m |
+| SKN / RTGS | SKN/RTGS clearing | Async via `sknServicePort`/`rgsServicePort` → `integration-service` adapter | < 30s / < 5m | batch window, `settleInterbankTransfer` |
+| QRIS Payment | QRIS | Sync | < 3s | `isEligible` via `TransferRoute` |
+| Virtual Account | VA | Async `PENDING→PAID/EXPIRED` | < 5s callback | `va-simulator`, HMAC + idempotency |
+| SplitBill | — | Sync calc + async settlement | < 1s calc | `split_bills` + `split_bill_participants` (`@Version`) |
+| Batch Disbursement | BI-FAST bulk | Async `PENDING→PROCESSING→COMPLETED/PARTIAL` | < 30s per item | `batch_disbursements` + `disbursements` `UNIQUE(idempotency_key)` |
+| Scheduled Transfer | — | Scheduled `@SchedulerLock usingDbTime` | cron | `scheduled_transfers` |
 
 ---
 
@@ -420,25 +425,37 @@ account-service/
 | **Port**             | 8004                              |
 | **Responsibilities** | Balance management, ledger, holds |
 
-**Double-Entry Ledger Design:**
+**Double-Entry Ledger Design (canonical — ADR-0049, CONTEXT.md §Wallet):**
 
 ```sql
--- Ledger entries table
-CREATE TABLE ledger_entries (
+-- Journal header: atomic grouping per business transaction (ADR-0049)
+CREATE TABLE journal_entries (
     id UUID PRIMARY KEY,
-    transaction_id UUID NOT NULL,
-    account_id UUID NOT NULL,
-    entry_type VARCHAR(10) NOT NULL, -- DEBIT, CREDIT
-    amount DECIMAL(19,4) NOT NULL,
-    currency VARCHAR(3) DEFAULT 'IDR',
-    balance_after DECIMAL(19,4) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    CONSTRAINT positive_amount CHECK (amount > 0)
+    transaction_id UUID NOT NULL UNIQUE, -- idempotency key, one journal per transaction
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Always balance: SUM(CREDIT) = SUM(DEBIT) per transaction
+-- Immutable append-only ledger, corrections via reversal journal (never UPDATE/DELETE)
+-- REVOKE UPDATE,DELETE ON ledger_entries FROM payu_app; FORCE RLS per ADR-0033
+CREATE TABLE ledger_entries (
+    id UUID PRIMARY KEY,
+    transaction_id UUID NOT NULL REFERENCES journal_entries(transaction_id),
+    journal_entry_id UUID NOT NULL REFERENCES journal_entries(id),
+    account_id UUID NOT NULL,
+    coa_code VARCHAR(32) NOT NULL, -- Chart of Accounts enum: ASSET_WALLET, LIABILITY_CLEARING, SYSTEM_BI_FAST_CLEARING (top-level file)
+    entry_type VARCHAR(10) NOT NULL, -- DEBIT, CREDIT
+    amount DECIMAL(19,4) NOT NULL,
+    currency VARCHAR(3) NOT NULL DEFAULT 'IDR',
+    balance_after DECIMAL(19,4) NOT NULL, -- denormalized for O(1) reads, reconciled vs SUM(ledger)
+    reference_type VARCHAR(32), -- e.g. REVERSAL, TRANSFER, DISBURSEMENT
+    reference_id UUID, -- original journal id for reversals
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT positive_amount CHECK (amount > 0)
+    -- invariant enforced in domain Journal.isBalanced() + DB deferred CHECK SUM(DEBIT)=SUM(CREDIT) per journal_entry_id
+);
 ```
+
+> `Wallet` (`balance`, `reservedBalance`, `currency`, `version` optimistic locking) adalah materialized view untuk `available = balance - reservedBalance >=0` (`reserve/commit/release`); source of truth = `ledger_entries` (replay `SUM(credits)-SUM(debits)`). Bill payment (`billing-service` `BillPayment` `BillerType`) dan `VirtualAccount` bukan ledger di sini — lihat §3.2.3 & ADR-0060.
 
 ---
 
