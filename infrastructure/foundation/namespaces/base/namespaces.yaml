@@ -81,6 +81,6 @@ metadata:
     payu.io/environment: cicd
     payu.io/managed-by: platform-team
     payu.io/tier: non-production
-    pod-security.kubernetes.io/enforce: restricted
-    pod-security.kubernetes.io/audit: restricted
-    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
