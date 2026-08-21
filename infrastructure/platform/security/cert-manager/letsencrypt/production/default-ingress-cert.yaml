@@ -5,9 +5,13 @@ metadata:
   namespace: openshift-ingress
 spec:
   secretName: app-router-certs
+  duration: 720h # 30d
+  renewBefore: 168h # 7d
+  privateKey:
+    rotationPolicy: Never
+  dnsNames:
+    - '*.apps.payu.ocp.fajjjar.my.id'
   issuerRef:
     name: letsencrypt-prod-issuer
     kind: ClusterIssuer
-  dnsNames:
-    - '*.apps.cluster-9xtfg.9xtfg.sandbox5612.opentlc.com'
-    - 'apps.cluster-9xtfg.9xtfg.sandbox5612.opentlc.com'
+    group: cert-manager.io

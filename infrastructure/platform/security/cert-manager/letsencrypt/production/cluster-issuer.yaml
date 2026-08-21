@@ -48,7 +48,29 @@ spec:
             - '9xtfg.sandbox5612.opentlc.com'
 
       # -----------------------------------------------------------------------
-      # Zone 3 (EXAMPLE): Untuk zone domain tambahan lainnya
+      # Zone 3 (ACTIVE): payu.ocp.fajjjar.my.id → Z06846852WNH0L4ZSACW3
+      # Covers: *.apps.payu.ocp.fajjjar.my.id, apps.payu.ocp.fajjjar.my.id, payu.ocp.fajjjar.my.id, ocp.fajjjar.my.id
+      # Ingress default: apps.payu.ocp.fajjjar.my.id (oc get ingress.config cluster .spec.domain)
+      # Credentials: cert-manager-aws-creds (student, ap-southeast-1, via kube-system/aws-creds)
+      # -----------------------------------------------------------------------
+      - dns01:
+          route53:
+            accessKeyIDSecretRef:
+              name: cert-manager-aws-creds
+              key: aws_access_key_id
+            secretAccessKeySecretRef:
+              name: cert-manager-aws-creds
+              key: aws_secret_access_key
+            hostedZoneID: 'Z06846852WNH0L4ZSACW3'
+            region: ap-southeast-1
+        selector:
+          dnsZones:
+            - 'payu.ocp.fajjjar.my.id'
+            - 'apps.payu.ocp.fajjjar.my.id'
+            - 'ocp.fajjjar.my.id'
+
+      # -----------------------------------------------------------------------
+      # Zone 4 (EXAMPLE): Untuk zone domain tambahan lainnya
       # -----------------------------------------------------------------------
       # - dns01:
       #     route53:

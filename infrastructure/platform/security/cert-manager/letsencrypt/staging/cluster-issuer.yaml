@@ -14,7 +14,7 @@ spec:
             accessKeyIDSecretRef:
               name: cert-manager-aws-creds
               key: aws_access_key_id
-            hostedZoneID: 'Z04238027XPQ9QDPS3F9'
+            hostedZoneID: 'Z06846852WNH0L4ZSACW3'
             region: ap-southeast-1
             secretAccessKeySecretRef:
               key: aws_secret_access_key
@@ -22,3 +22,5 @@ spec:
         selector:
           dnsZones:
             - 'ocp.fajjjar.my.id'
+            - 'payu.ocp.fajjjar.my.id'
+            - 'apps.payu.ocp.fajjjar.my.id'

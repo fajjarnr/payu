@@ -18,6 +18,6 @@ resources:
   # Production
   - letsencrypt/production/cluster-issuer.yaml
   - letsencrypt/production/route53-credentials.yaml
-  - letsencrypt/production/certificate.apps.yaml
   - letsencrypt/production/certificate.api.yaml
   - letsencrypt/production/certificate.shared-ingress.yaml
+  - letsencrypt/production/default-ingress-cert.yaml
