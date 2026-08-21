@@ -2,6 +2,19 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-312: AMQ Broker Cluster Credentials + OLM Resolution Deadlock Fix + Vitest Barrel Hook Mocks + Money Scale 4 Invariants (2026-08-21)
+
+**Context**: Provisioning Red Hat AMQ Broker 7.14 Multiarch cluster (`deploymentPlan.size: 2`) on OpenShift `payu-dev`, resolving Operator Lifecycle Manager (OLM) deadlock, and achieving 100% frontend and backend test pass rates with 0 error logs across all running pods.
+
+**Lesson**:
+- **OLM Resolution Deadlock from Overlapping Subscriptions**: Co-installing two operator subscriptions that claim the exact same CRD version (e.g. `openshift-external-secrets-operator` from `redhat-operators` and `external-secrets-operator` from `community-operators`) triggers a permanent `ResolutionDeadlock` constraint failure in OLM that halts all operator installs in `openshift-operators`. Maintain a single, deduplicated subscription per operator.
+- **AMQ Broker Clustered Credentials Requirement**: In clustered ActiveMQ Artemis deployments (`deploymentPlan.size > 1`), the init container strictly requires `AMQ_CLUSTER_USER` and `AMQ_CLUSTER_PASSWORD` in the secret referenced by `credentialsSecret`. Without these keys, the pod errors in init with missing cluster credential variables.
+- **Barrel File Hook Mocking in Vitest**: When page components import hooks from barrel exports (`@/hooks`), tests that mock sub-modules (`@/hooks/useLending` or `@/hooks/useInvestments`) can leave mutation hooks undefined if the component imports them through `@/hooks`. Always mock `@/hooks` directly with all queries and mutations (`useActivatePayLater`, `useApplyLoan`, `usePayLaterPayment`, `useBuyDeposit`, etc.) to guarantee isolated unit test execution.
+- **Scale 4 Money Alignment**: Financial domains adhering to rule #1 (`DECIMAL(19,4)` and `HALF_EVEN` rounding) require test assertions in serializers, JPA converters, and domain models to reflect the 4 decimal scale standard (`"100.5000"`, `"99.9900"`).
+- **Log Hygiene**: Background and unauthenticated HTTP calls (such as missing refresh tokens on initial page load) should log at `DEBUG` rather than `WARN` level to maintain clean, noise-free production logs.
+
+**Applied evidence**: `oc get pods -n payu-dev` (`payu-broker-ss-0` and `payu-broker-ss-1` 1/1 Running Ready), 42 pods in `payu-dev` running ready with 0 error logs, `cd frontend/web-app && npm test` (94/94 test files passed, 1213 tests green), `cd frontend/web-app && npm run build` (86/86 SSG pages built cleanly), `curl -k https://payu-dev.apps.fajjjar.my.id/api/health` (HTTP 200 `healthy`).
+
 ## L-311: Full Microservices 1/1 Pod Readiness on OpenShift + PostgreSQL Single Node + NetworkPolicies (2026-08-21)
 
 **Context**: Full microservices deployment to OpenShift `payu-dev` with 30 backend microservices, 5 simulators, Next.js web application, CNPG PostgreSQL, Red Hat DataGrid cache, Strimzi Kafka, and Red Hat Build of Keycloak (RHBK). Encountered PostgreSQL connection drops, `SyncRep` synchronous replication deadlocks on single instance dev, missing databases, Flyway RLS `policename` typo, and JPA `@Embeddable` mapping issue on `ComplianceCheck`.

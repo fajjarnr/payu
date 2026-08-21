@@ -33,10 +33,14 @@ describe('ForgotPasswordPage', () => {
     expect(toast.error).toHaveBeenCalled();
   });
 
-  it('should show info when submitting with an email', () => {
+  it('should show success when submitting with an email', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
     renderWithIntl(<ForgotPasswordPage />);
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'user@payu.id' } });
     fireEvent.click(screen.getByRole('button', { name: 'Kirim Instruksi' }));
-    expect(toast.info).toHaveBeenCalled();
+    await vi.waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('Instruksi reset telah dikirim');
+    });
+    vi.unstubAllGlobals();
   });
 });

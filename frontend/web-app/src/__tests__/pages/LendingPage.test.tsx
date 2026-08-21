@@ -29,7 +29,7 @@ vi.mock('@/stores/authStore', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useLending', () => ({
+vi.mock('@/hooks', () => ({
   useCreditScore: () => ({
     data: { score: 750, category: 'GOOD', maxLoanAmount: 50000000 },
     isLoading: false,
@@ -45,6 +45,15 @@ vi.mock('@/hooks/useLending', () => ({
   useActivePreApprovals: () => ({
     data: [],
     isLoading: false,
+  }),
+  useActivatePayLater: () => ({
+    mutateAsync: vi.fn(),
+  }),
+  useApplyLoan: () => ({
+    mutateAsync: vi.fn(),
+  }),
+  usePayLaterPayment: () => ({
+    mutateAsync: vi.fn(),
   }),
 }));
 

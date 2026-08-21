@@ -22,10 +22,20 @@ vi.mock('@/stores/authStore', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useInvestments', () => ({
+vi.mock('@/hooks', () => ({
   useInvestmentAccount: () => ({
     data: { id: 'acc_1', balance: 50000000, currency: 'IDR', status: 'ACTIVE' },
     isLoading: false,
+    isError: false,
+  }),
+  useBuyDeposit: () => ({
+    mutateAsync: vi.fn(),
+  }),
+  useSellInvestment: () => ({
+    mutateAsync: vi.fn(),
+  }),
+  useCreateInvestmentAccount: () => ({
+    mutateAsync: vi.fn(),
   }),
 }));
 

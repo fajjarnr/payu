@@ -79,22 +79,22 @@ class MoneyTest {
         }
 
         @Test
-        @DisplayName("Should normalize amount to scale 2")
-        void shouldNormalizeAmountToScale2() {
-            Money money = Money.of(new BigDecimal("100.555"), "IDR");
+        @DisplayName("Should normalize amount to scale 4")
+        void shouldNormalizeAmountToScale4() {
+            Money money = Money.of(new BigDecimal("100.55555"), "IDR");
 
-            assertThat(money.getAmount().scale()).isEqualTo(2);
-            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100.56"));
+            assertThat(money.getAmount().scale()).isEqualTo(4);
+            assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100.5556"));
         }
 
         @Test
         @DisplayName("Should use banker's rounding (HALF_EVEN)")
         void shouldUseBankersRounding() {
-            Money money1 = Money.of(new BigDecimal("100.545"), "IDR");
-            Money money2 = Money.of(new BigDecimal("100.535"), "IDR");
+            Money money1 = Money.of(new BigDecimal("100.54545"), "IDR");
+            Money money2 = Money.of(new BigDecimal("100.54535"), "IDR");
 
-            assertThat(money1.getAmount()).isEqualByComparingTo(new BigDecimal("100.54"));
-            assertThat(money2.getAmount()).isEqualByComparingTo(new BigDecimal("100.54"));
+            assertThat(money1.getAmount()).isEqualByComparingTo(new BigDecimal("100.5454"));
+            assertThat(money2.getAmount()).isEqualByComparingTo(new BigDecimal("100.5454"));
         }
 
         @Test
@@ -789,7 +789,7 @@ class MoneyTest {
         @Test
         @DisplayName("Should have correct default scale")
         void shouldHaveCorrectDefaultScale() {
-            assertThat(Money.DEFAULT_SCALE).isEqualTo(2);
+            assertThat(Money.DEFAULT_SCALE).isEqualTo(4);
         }
 
         @Test
@@ -872,10 +872,10 @@ class MoneyTest {
 
         @ParameterizedTest
         @CsvSource({
-            "100.005, 100.00",
-            "100.015, 100.02",
-            "100.025, 100.02",
-            "100.035, 100.04"
+            "100.00005, 100.0000",
+            "100.00015, 100.0002",
+            "100.00025, 100.0002",
+            "100.00035, 100.0004"
         })
         @DisplayName("Should apply banker's rounding correctly")
         void shouldApplyBankersRoundingCorrectly(String input, String expected) {

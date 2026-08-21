@@ -37,9 +37,9 @@ class MoneySerializerTest {
 
         String json = objectMapper.writeValueAsString(money);
 
-        assertThat(json).contains("\"amount\":\"100.50\"");
+        assertThat(json).contains("\"amount\":\"100.5000\"");
         assertThat(json).contains("\"currencyCode\":\"IDR\"");
-        assertThat(json).contains("\"formatted\":\"IDR 100.50\"");
+        assertThat(json).contains("\"formatted\":\"IDR 100.5000\"");
     }
 
     @Test
@@ -49,9 +49,9 @@ class MoneySerializerTest {
 
         String json = objectMapper.writeValueAsString(money);
 
-        assertThat(json).contains("\"amount\":\"99.99\"");
+        assertThat(json).contains("\"amount\":\"99.9900\"");
         assertThat(json).contains("\"currencyCode\":\"USD\"");
-        assertThat(json).contains("\"formatted\":\"USD 99.99\"");
+        assertThat(json).contains("\"formatted\":\"USD 99.9900\"");
     }
 
     @Test
@@ -61,7 +61,7 @@ class MoneySerializerTest {
 
         String json = objectMapper.writeValueAsString(money);
 
-        assertThat(json).contains("\"amount\":\"0.00\"");
+        assertThat(json).contains("\"amount\":\"0.0000\"");
     }
 
     @Test
@@ -90,7 +90,7 @@ class MoneySerializerTest {
         String json = mapper.writeValueAsString(transaction);
 
         assertThat(json).contains("\"amount\"");
-        assertThat(json).contains("\"50000.00\"");
+        assertThat(json).contains("\"50000.0000\"");
         assertThat(json).contains("\"description\":\"Test transaction\"");
     }
 }

@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "simulated_va",
        indexes = {
-           @Index(name = "idx_sim_va_number", columnList = "va_number", unique = true),
            @Index(name = "idx_sim_va_status", columnList = "status"),
            @Index(name = "idx_sim_va_bank", columnList = "bank_code")
        })

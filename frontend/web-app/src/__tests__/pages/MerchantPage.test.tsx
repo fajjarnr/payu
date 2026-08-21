@@ -24,11 +24,11 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-const mockGetProfile = vi.fn();
+const mockGetMyPartner = vi.fn();
 
 vi.mock('@/services/PartnerService', () => ({
   PartnerService: {
-    getProfile: (...args: unknown[]) => mockGetProfile(...args),
+    getMyPartner: (...args: unknown[]) => mockGetMyPartner(...args),
   },
 }));
 
@@ -39,25 +39,25 @@ describe('MerchantDashboard', () => {
 
   it('should show loading state initially', () => {
     // Never resolve so we stay in loading state
-    mockGetProfile.mockReturnValue(new Promise(() => {}));
+    mockGetMyPartner.mockReturnValue(new Promise(() => {}));
     renderMerchant();
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
   it('should render merchant portal when no partner found', async () => {
-    mockGetProfile.mockRejectedValue(new Error('Not found'));
+    mockGetMyPartner.mockRejectedValue(new Error('Not found'));
     renderMerchant();
     expect(await screen.findByText('Portal Merchant')).toBeInTheDocument();
   });
 
   it('should render register link when not registered', async () => {
-    mockGetProfile.mockRejectedValue(new Error('Not found'));
+    mockGetMyPartner.mockRejectedValue(new Error('Not found'));
     renderMerchant();
     expect(await screen.findByText('Daftar sebagai Merchant')).toBeInTheDocument();
   });
 
   it('should render merchant dashboard when partner exists', async () => {
-    mockGetProfile.mockResolvedValue({
+    mockGetMyPartner.mockResolvedValue({
       id: 1,
       name: 'Test Merchant',
       email: 'test@merchant.com',

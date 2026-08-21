@@ -1,5 +1,13 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.80 (2026-08-21)
+
+- **Clustered ActiveMQ Artemis Broker (2/2 Running Ready)**: Resolved OLM dependency deadlock in `openshift-operators` by removing duplicate ESO subscription. Configured `AMQ_CLUSTER_USER` and `AMQ_CLUSTER_PASSWORD` in `payu-secrets.yaml` for clustered broker replication. Applied `amq-broker.yaml` resulting in `payu-broker-ss-0` and `payu-broker-ss-1` running ready (1/1) with JGroups discovery. `notification-service` and `integration-service` JMS consumers connected with 0 errors.
+- **Frontend Test Suite (94/94 Passed, 1213 Tests Green)**: Aligned component and hook mocks in `ForgotPasswordPage.test.tsx`, `MerchantPage.test.tsx`, `InvestmentsPage.test.tsx`, and `LendingPage.test.tsx`. Verified full suite pass and Next.js 16 SSG production build across all 86 pages.
+- **Scale 4 Money Alignment**: Updated `MoneyJpaConverterTest`, `MoneySerializerTest`, and `MoneyTest` in `api-commons` to assert standard `DECIMAL(19,4)` format and banker's rounding (`HALF_EVEN`) across all 179 tests.
+- **Backend Cleanliness**: Removed redundant index on `va_number` in `va-simulator` `VirtualAccount.java` preventing Hibernate startup warnings. Changed unauthenticated refresh token attempt log level to `DEBUG`.
+- **Zero Warn/Error Pod Logs**: Verified 42 pods running ready in `payu-dev` and `payu-sso` with clean healthcheck and zero error logs. Verified `https://payu-dev.apps.fajjjar.my.id/api/health` returns HTTP 200 `healthy`.
+
 ## Deploy 1.13.79 (2026-08-21)
 
 - **100% Pod Readiness**: All 30 microservices, 5 simulators, Next.js web-app, CNPG PostgreSQL, Strimzi Kafka, Red Hat DataGrid, and Keycloak successfully running and ready (1/1) in `payu-dev` and `payu-sso`.

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.80] - 2026-08-21
+
+### Added
+- **ActiveMQ Artemis Clustered Broker**: Provisioned `payu-broker` ActiveMQ Artemis 7.14 Multiarch cluster with 2 replicas (`payu-broker-ss-0` and `payu-broker-ss-1`) running 1/1 in `payu-dev`. Added `AMQ_CLUSTER_USER` and `AMQ_CLUSTER_PASSWORD` in `payu-secrets.yaml` for JGroups cluster discovery and replication. Connected `notification-service` and `integration-service` consumers cleanly with 0 errors.
+
+### Fixed
+- **OLM Resolution Deadlock**: Resolved subscription conflict in `openshift-operators` namespace by deduplicating External Secrets Operator subscriptions in `subscriptions.yaml`.
+- **Frontend Test Suite (94/94 Green)**: Fixed mock contracts and hook stubs across `ForgotPasswordPage.test.tsx`, `MerchantPage.test.tsx`, `InvestmentsPage.test.tsx`, and `LendingPage.test.tsx` for 100% test pass rate (1213 passed, 1 skipped).
+- **Scale 4 Money Alignment**: Updated `MoneyJpaConverterTest`, `MoneySerializerTest`, and `MoneyTest` in `api-commons` to assert `DECIMAL(19,4)` standard scale and banker's rounding (`HALF_EVEN`) across all 179 tests.
+- **Log Noise Elimination**: Removed redundant unique index on `va_number` in `va-simulator` `VirtualAccount.java`. Lowered unauthenticated token refresh attempt log level to `DEBUG`.
+- **Pod Readiness**: All 42 pods across `payu-dev` and `payu-sso` running ready (1/1) with 0 error logs and `https://payu-dev.apps.fajjjar.my.id/api/health` returning HTTP 200 `healthy`.
+
 ## [1.13.79] - 2026-08-21
 
 ### Fixed (Full Microservices 1/1 Pod Readiness on OpenShift + CNPG DB Setup + Ingress)

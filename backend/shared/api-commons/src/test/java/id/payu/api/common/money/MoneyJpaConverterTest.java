@@ -25,7 +25,7 @@ class MoneyJpaConverterTest {
 
         String dbData = converter.convertToDatabaseColumn(money);
 
-        assertThat(dbData).isEqualTo("IDR|100.50");
+        assertThat(dbData).isEqualTo("IDR|100.5000");
     }
 
     @Test
@@ -35,7 +35,7 @@ class MoneyJpaConverterTest {
 
         String dbData = converter.convertToDatabaseColumn(money);
 
-        assertThat(dbData).isEqualTo("USD|99.99");
+        assertThat(dbData).isEqualTo("USD|99.9900");
     }
 
     @Test

@@ -35,7 +35,7 @@ export async function POST() {
     const refreshToken = cookieStore.get('refreshToken')?.value;
 
     if (!refreshToken) {
-      logger.warn({ action: 'refresh' }, 'Token refresh failed — no refresh token cookie');
+      logger.debug({ action: 'refresh' }, 'Token refresh skipped — no refresh token cookie');
       const response = NextResponse.json(
         { success: false, message: 'No refresh token' },
         { status: 401 },
