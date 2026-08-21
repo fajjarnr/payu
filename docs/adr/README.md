@@ -72,6 +72,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0063](0063-compliance-service-aml-cft-pci-dss-audit-trail-standard.md) | Compliance Service — AML/CFT, PCI-DSS Req10 & Audit-Trail (COMPLIANCE-HARDEN) | Accepted | 2026-08-22 |
 | [0064](0064-gateway-service-rate-limiting-3scale-and-edge-protection-standard.md) | Gateway Service — 3scale APIcast Edge & Rate Limiting (GATEWAY-HARDEN) | Accepted | 2026-08-22 |
 | [0065](0065-api-portal-service-openapi-aggregation-and-developer-experience-standard.md) | API Portal Service — OpenAPI Aggregation & DX (PORTAL-HARDEN) | Accepted | 2026-08-22 |
+| [0066](0066-polyrepo-pipeline-per-service-devsecops-standard.md) | Polyrepo Per-Service DevSecOps Pipeline (Monorepo→Polyrepo, 6 stages, SLSA) | Accepted | 2026-08-22 |
 
 
 ## 🚀 How to Create a New ADR
