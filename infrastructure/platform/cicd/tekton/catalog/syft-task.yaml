@@ -1,0 +1,73 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: syft-sbom
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Generate a CycloneDX SBOM for a built image using Syft."
+  params:
+    - name: IMAGE
+      type: string
+      description: "Image reference to inventory"
+    - name: OUTPUT_FILE
+      type: string
+      description: "Path where the generated SBOM should be written"
+    - name: FORMAT
+      type: string
+      description: "Syft output format"
+      default: "cyclonedx-json"
+  workspaces:
+    - name: source
+      description: "Workspace used to persist the generated SBOM"
+    - name: dockerconfig
+      description: "Docker registry credentials"
+      optional: true
+  results:
+    - name: SBOM_PATH
+      description: "Path to the generated SBOM file"
+  steps:
+    - name: prepare-output-dir
+      image: registry.redhat.io/ubi9/ubi-minimal@sha256:a50731d3397a4ee28583f1699842183d4d24fadcc565c4688487af9ee4e13a44
+      script: |
+        #!/bin/sh
+        set -eu
+        mkdir -p "$(dirname "$(params.OUTPUT_FILE)")"
+        image_registry="$(params.IMAGE)"
+        image_registry="${image_registry%%/*}"
+
+        mkdir -p "$(workspaces.source.path)/.docker"
+
+        is_openshift=0
+        case "$image_registry" in
+          *openshift-image-registry*) is_openshift=1 ;;
+        esac
+
+        if [ "$is_openshift" -eq 1 ] && [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+          token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+          auth=$(printf 'unused:%s' "$token" | base64 -w0)
+          echo "{\"auths\":{\"$image_registry\":{\"auth\":\"$auth\"}}}" > "$(workspaces.source.path)/.docker/config.json"
+        elif [ "$(workspaces.dockerconfig.bound)" = "true" ] && [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
+          cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" "$(workspaces.source.path)/.docker/config.json"
+        fi
+      workingDir: $(workspaces.source.path)
+    - name: generate
+      image: docker.io/anchore/syft@sha256:b46e597614ddc78621e560af3fabf9346e35462ea1c886a38b30bcc7ca601a73
+      env:
+        - name: DOCKER_CONFIG
+          value: $(workspaces.source.path)/.docker
+      command:
+        - /syft
+      args:
+        - registry:$(params.IMAGE)
+        - -o
+        - $(params.FORMAT)=$(params.OUTPUT_FILE)
+      workingDir: $(workspaces.source.path)
+    - name: publish-result
+      image: registry.redhat.io/ubi9/ubi-minimal@sha256:a50731d3397a4ee28583f1699842183d4d24fadcc565c4688487af9ee4e13a44
+      script: |
+        #!/bin/sh
+        set -eu
+        echo -n "$(params.OUTPUT_FILE)" | tee $(results.SBOM_PATH.path)
+      workingDir: $(workspaces.source.path)

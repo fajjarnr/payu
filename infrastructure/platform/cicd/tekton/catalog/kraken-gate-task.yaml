@@ -1,0 +1,53 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: kraken-chaos-gate
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Apply Kraken and Cerberus resources, then wait for the Kraken job to complete."
+  params:
+    - name: KUSTOMIZE_DIR
+      type: string
+      description: "Path to the Kraken Kustomize overlay"
+      default: infrastructure/platform/security/chaos/kraken
+    - name: NAMESPACE
+      type: string
+      description: "Namespace where the Kraken resources are created"
+      default: payu-preprod
+    - name: JOB_NAME
+      type: string
+      description: "Kraken job name"
+      default: kraken-run
+    - name: TIMEOUT
+      type: string
+      description: "oc wait timeout"
+      default: 30m
+  workspaces:
+    - name: source
+      description: "Workspace containing infrastructure manifests"
+  volumes:
+    - name: work
+      emptyDir: {}
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  steps:
+    - name: execute
+      image: registry.redhat.io/openshift4/ose-cli-rhel9@sha256:18d9d46126acfe8ca89549d0e56c3b0c6fe978578dd8c57b2c131adff663df26
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+
+        oc apply -k "$(workspaces.source.path)/$(params.KUSTOMIZE_DIR)"
+        oc wait --for=condition=available deployment/cerberus -n "$(params.NAMESPACE)" --timeout=5m
+        oc wait --for=condition=complete job/$(params.JOB_NAME) -n "$(params.NAMESPACE)" --timeout="$(params.TIMEOUT)"
+        echo "[✓] Kraken job completed successfully"

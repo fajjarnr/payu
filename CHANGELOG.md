@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.15.0] - 2026-08-22
+
+### Added
+- **DEVSECOPS 6 Stages (v1.4.0) per-service**: `gitleaks`+`trufflehog`+`semgrep` (Stage1 Source), `buildah`+`syft`+`grype`+`trivy`+`rhacs` (Stage2 Build, SLSA L2+), `zap-baseline` (dev/sit)+`schemathesis` (sit/uat)+`k6 smoke` (dev/sit)+`litmus` (sit)+`kraken` (preprod) (Stage3 Test), `cosign`+`argocd-sync` (prune/selfHeal)+`gitops-writeback` digest (Stage4 Deploy), OSSM `PeerAuthentication STRICT` (>uat) + Falco skip RHCOS (Stage5 Runtime), LokiStack+Wazuh 12m + Grafana (Stage6 Observability). `target-env` param `dev|sit|uat|preprod|prod` with `when` gates per NS matrix §3.1, `results.tekton.dev 365d`, Chains provenance, promotion by digest `kustomize edit set image @sha256`.
+
+### Fixed
+- **Catalog**: expanded `payu-catalog-v1` 7→16 tasks (added trufflehog/syft/grype/zap/schemathesis/k6/litmus/kraken/rhacs) and re-applied to `payu-cicd`.
+- **Pipelines**: 23 per-service `Pipeline` CRs in `payu-cicd` upgraded to 15 tasks each with env gates.
+
 ## [1.14.0] - 2026-08-22
 
 ### Added

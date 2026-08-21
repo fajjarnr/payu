@@ -1,0 +1,62 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: grype-scan
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Scan an image or SBOM with Grype and fail on configured severity."
+  params:
+    - name: TARGET
+      type: string
+      description: "Resolved scan target, e.g. image reference or sbom:/path/to/file"
+    - name: FAIL_ON
+      type: string
+      description: "Minimum severity that should fail the task"
+      default: "critical"
+  workspaces:
+    - name: source
+      description: Workspace containing the generated SBOM file.
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+    env:
+      - name: HOME
+        value: /tekton/home
+      - name: XDG_CACHE_HOME
+        value: /tekton/home/.cache
+      - name: TMPDIR
+        value: /tekton/home/tmp
+      - name: GRYPE_DB_AUTO_UPDATE
+        value: "true"
+  steps:
+    - name: prepare-cache-dirs
+      image: registry.redhat.io/ubi9/ubi-minimal@sha256:a50731d3397a4ee28583f1699842183d4d24fadcc565c4688487af9ee4e13a44
+      command:
+        - /bin/sh
+      args:
+        - -ceu
+        - |
+          mkdir -p "$XDG_CACHE_HOME" "$TMPDIR"
+    - name: update-db
+      image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
+      command:
+        - /grype
+      args:
+        - db
+        - update
+    - name: scan
+      image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
+      workingDir: $(workspaces.source.path)
+      command:
+        - /grype
+      args:
+        - $(params.TARGET)
+        - --fail-on
+        - $(params.FAIL_ON)

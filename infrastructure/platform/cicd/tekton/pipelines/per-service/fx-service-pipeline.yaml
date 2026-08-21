@@ -3,11 +3,14 @@ kind: Pipeline
 metadata:
   name: fx-service-pipeline
   annotations:
-    results.tekton.dev/result-retention: "365d"
+    results.tekton.dev/result-retention: "365d" # PCI Req10 + §4.4 Tekton Results 12m
     payu.io/catalog-version: payu-catalog-v1
     payu.io/service: fx-service
+    tekton.dev/chains: "true" # SLSA L2+ provenance
 spec:
-  description: Polyrepo 6 stages (ADR-0066) via catalog payu-catalog-v1
+  description: |
+    Polyrepo 6 stages DEVSECOPS_ARCHITECTURE v1.4.0 — payu-dev (auto) → payu-sit (ACS+Litmus) → payu-uat (manual+Schemathesis) → payu-preprod (Kraken+Cerberus) → payu prod (Blue/Green Rollouts)
+    Stage1 gitleaks+trufflehog+semgrep/Bandit/SpotBugs, Stage2 Buildah+Syft+Grype+Trivy+RHACS+CVE gate+license, Stage3 ZAP+Nuclei+Schemathesis+Dredd+k6+Litmus/Kraken, Stage4 ArgoCD sync+cosign+Chains+gitops-writeback digest, Stage5 OSSM mTLS STRICT>VSO Vault, Stage6 Loki+Wazuh 12m.
   params:
     - name: service-name
       type: string
@@ -18,9 +21,15 @@ spec:
       default: main
     - name: image
       type: string
+      description: registry/namespace/name (no tag)
     - name: image-tag
       type: string
       default: "1.0.0"
+      description: semver tag, promote by digest @sha256
+    - name: target-env
+      type: string
+      default: "dev"
+      description: dev|sit|uat|preprod|prod — gates per NS matrix §3.1
     - name: catalog-revision
       type: string
       default: payu-catalog-v1
@@ -29,74 +38,78 @@ spec:
     - name: maven-settings
       optional: true
   tasks:
+    # Stage1 — Source & Commit Security (§4.1)
     - name: gitleaks
-      taskRef:
-        resolver: git
-        params:
-          - {name: url, value: https://github.com/fajjarnr/payu.git}
-          - {name: revision, value: $(params.catalog-revision)}
-          - {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/gitleaks-task.yaml}
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/gitleaks-task.yaml}]}
+      workspaces: [{name: source, workspace: source}]
+    - name: trufflehog
+      runAfter: [gitleaks]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/trufflehog-task.yaml}]}
       workspaces: [{name: source, workspace: source}]
     - name: semgrep
-      runAfter: [gitleaks]
-      taskRef:
-        resolver: git
-        params:
-          - {name: url, value: https://github.com/fajjarnr/payu.git}
-          - {name: revision, value: $(params.catalog-revision)}
-          - {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/semgrep-task.yaml}
+      runAfter: [trufflehog]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/semgrep-task.yaml}]}
       workspaces: [{name: source, workspace: source}]
+      params: [{name: service-name, value: $(params.service-name)}]
+    # Stage2 — Build & Image Security (§4.2)
     - name: build
       runAfter: [semgrep]
-      taskRef:
-        resolver: git
-        params:
-          - {name: url, value: https://github.com/fajjarnr/payu.git}
-          - {name: revision, value: $(params.catalog-revision)}
-          - {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/buildah-task.yaml}
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/buildah-task.yaml}]}
       workspaces: [{name: source, workspace: source}]
-      params:
-        - {name: IMAGE, value: $(params.image):$(params.image-tag)}
-        - {name: CONTEXT_DIR, value: .}
-        - {name: DOCKERFILE, value: ./Containerfile.runtime}
-    - name: trivy
+      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: CONTEXT_DIR, value: .}, {name: DOCKERFILE, value: ./Containerfile.runtime}]
+    - name: syft
       runAfter: [build]
-      taskRef:
-        resolver: git
-        params:
-          - {name: url, value: https://github.com/fajjarnr/payu.git}
-          - {name: revision, value: $(params.catalog-revision)}
-          - {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/trivy-task.yaml}
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/syft-task.yaml}]}
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}]
-    - name: cosign-sign
+    - name: grype
+      runAfter: [syft]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/grype-task.yaml}]}
+      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}]
+    - name: trivy
+      runAfter: [grype]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/trivy-task.yaml}]}
+      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}]
+    - name: rhacs-scan
       runAfter: [trivy]
-      taskRef:
-        resolver: git
-        params:
-          - {name: url, value: https://github.com/fajjarnr/payu.git}
-          - {name: revision, value: $(params.catalog-revision)}
-          - {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/cosign-task.yaml}
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/rhacs-tasks.yaml}]}
+      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}]
+    # Stage3 — Test (dev/sit) §4.3 — ZAP, Schemathesis, k6, Litmus
+    - name: zap-baseline
+      runAfter: [rhacs-scan]
+      when: [{input: $(params.target-env), operator: in, values: ["dev", "sit"]}]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/zap-baseline-task.yaml}]}
+      params: [{name: TARGET_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}]
+    - name: schemathesis
+      runAfter: [zap-baseline]
+      when: [{input: $(params.target-env), operator: in, values: ["sit", "uat"]}]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/schemathesis-task.yaml}]}
+      params: [{name: SERVICE_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}]
+    - name: k6-smoke
+      runAfter: [schemathesis]
+      when: [{input: $(params.target-env), operator: in, values: ["dev", "sit"]}]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/k6-task.yaml}]}
+      params: [{name: SERVICE_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}, {name: K6_SCENARIO, value: smoke}]
+    - name: litmus
+      runAfter: [k6-smoke]
+      when: [{input: $(params.target-env), operator: in, values: ["sit"]}]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/litmus-gate-task.yaml}]}
+      params: [{name: SERVICE_NAME, value: $(params.service-name)}, {name: NAMESPACE, value: payu-$(params.target-env)}]
+    - name: kraken
+      runAfter: [litmus]
+      when: [{input: $(params.target-env), operator: in, values: ["preprod"]}]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/kraken-gate-task.yaml}]}
+      params: [{name: KRAKEN_CONFIG, value: infrastructure/platform/security/chaos/kraken/runtime.yaml}]
+    # Stage4 — Deploy & Policy Gate §4.4 + Signing §4.2.3
+    - name: cosign-sign
+      runAfter: [kraken]
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/cosign-task.yaml}]}
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}]
     - name: argocd-sync
       runAfter: [cosign-sign]
-      taskRef:
-        resolver: git
-        params:
-          - {name: url, value: https://github.com/fajjarnr/payu.git}
-          - {name: revision, value: $(params.catalog-revision)}
-          - {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/argocd-sync-task.yaml}
-      params:
-        - {name: service-name, value: $(params.service-name)}
-        - {name: image-digest, value: $(tasks.build.results.IMAGE_DIGEST)}
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/argocd-sync-task.yaml}]}
+      params: [{name: service-name, value: $(params.service-name)}, {name: image-digest, value: $(tasks.build.results.IMAGE_DIGEST)}, {name: target-env, value: $(params.target-env)}]
     - name: gitops-writeback
       runAfter: [argocd-sync]
-      taskRef:
-        resolver: git
-        params:
-          - {name: url, value: https://github.com/fajjarnr/payu.git}
-          - {name: revision, value: $(params.catalog-revision)}
-          - {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/gitops-writeback-task.yaml}
-      params:
-        - {name: service-name, value: $(params.service-name)}
-        - {name: image-digest, value: $(tasks.build.results.IMAGE_DIGEST)}
+      taskRef: {resolver: git, params: [{name: url, value: https://github.com/fajjarnr/payu.git}, {name: revision, value: $(params.catalog-revision)}, {name: pathInRepo, value: infrastructure/platform/cicd/tekton/catalog/gitops-writeback-task.yaml}]}
+      params: [{name: service-name, value: $(params.service-name)}, {name: image-digest, value: $(tasks.build.results.IMAGE_DIGEST)}, {name: target-env, value: $(params.target-env)}]
       workspaces: [{name: source, workspace: source}]

@@ -1,0 +1,239 @@
+# RHACS (StackRox) Tekton Tasks for DevSecOps Pipeline
+# Tasks: image-check, image-scan, deployment-check
+# Uses a 10-minute projected ServiceAccount OIDC token mapped by RHACS to the
+# Continuous Integration role, plus the public Central CA ConfigMap.
+# ============================================================
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: rhacs-image-scan
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: security
+spec:
+  description: >
+    Scan a container image for vulnerabilities using RHACS (roxctl).
+    Returns CVE list with severity levels.
+  params:
+    - name: IMAGE
+      type: string
+      description: Full image reference to scan (registry/namespace/image:tag)
+    - name: ROX_CENTRAL_ENDPOINT
+      type: string
+      description: ACS Central endpoint (host:port)
+      default: central.stackrox.svc:443
+    - name: OUTPUT_FORMAT
+      type: string
+      description: Output format (table, csv, json, junit)
+      default: table
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  steps:
+    - name: scan-image
+      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel9@sha256:979f329cbe0d0dd1c41e63b471c246294780c5daf029c239ebd7d48129e75a15
+      env:
+        - name: ROX_CENTRAL_ADDRESS
+          value: $(params.ROX_CENTRAL_ENDPOINT)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        echo "🔍 RHACS Image Scan: $(params.IMAGE)"
+        echo "   Central: ${ROX_CENTRAL_ADDRESS}"
+        echo "============================================"
+
+        timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+          --ca /var/run/rhacs-ca/ca.pem \
+          --token-file /var/run/rhacs-identity/token \
+          image scan \
+          --image "$(params.IMAGE)" \
+          --output "$(params.OUTPUT_FORMAT)" \
+          --force
+
+        echo ""
+        echo "✅ Image scan complete"
+      volumeMounts:
+        - name: rhacs-identity
+          mountPath: /var/run/rhacs-identity
+          readOnly: true
+        - name: rhacs-ca
+          mountPath: /var/run/rhacs-ca
+          readOnly: true
+  volumes:
+    - name: rhacs-identity
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: rhacs-ci
+              expirationSeconds: 600
+              path: token
+    - name: rhacs-ca
+      configMap:
+        name: rhacs-central-ca
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: rhacs-image-check
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: security
+spec:
+  description: >
+    Check a container image against RHACS build-time policies.
+    Fails the pipeline if critical policy violations are found.
+  params:
+    - name: IMAGE
+      type: string
+      description: Full image reference to check
+    - name: ROX_CENTRAL_ENDPOINT
+      type: string
+      default: central.stackrox.svc:443
+  results:
+    - name: check-result
+      description: Pass or fail result of the image check
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  steps:
+    - name: check-image
+      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel9@sha256:979f329cbe0d0dd1c41e63b471c246294780c5daf029c239ebd7d48129e75a15
+      env:
+        - name: ROX_CENTRAL_ADDRESS
+          value: $(params.ROX_CENTRAL_ENDPOINT)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        echo "🛡️ RHACS Image Policy Check: $(params.IMAGE)"
+        echo "   Central: ${ROX_CENTRAL_ADDRESS}"
+        echo "============================================"
+
+        set +e
+        output=$(timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+          --ca /var/run/rhacs-ca/ca.pem \
+          --token-file /var/run/rhacs-identity/token \
+          image check \
+          --image "$(params.IMAGE)" \
+          --output table 2>&1)
+        status=$?
+        set -e
+
+        echo "${output}"
+
+        if [ ${status} -eq 0 ]; then
+          echo "PASS" | tee $(results.check-result.path)
+          echo ""
+          echo "✅ Image passes all ACS build-time policies"
+        else
+          echo "FAIL" | tee $(results.check-result.path)
+          echo ""
+          echo "❌ Image VIOLATES ACS build-time policies!"
+          echo "   Review violations above and fix before deploying."
+          exit 1
+        fi
+      volumeMounts:
+        - name: rhacs-identity
+          mountPath: /var/run/rhacs-identity
+          readOnly: true
+        - name: rhacs-ca
+          mountPath: /var/run/rhacs-ca
+          readOnly: true
+  volumes:
+    - name: rhacs-identity
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: rhacs-ci
+              expirationSeconds: 600
+              path: token
+    - name: rhacs-ca
+      configMap:
+        name: rhacs-central-ca
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: rhacs-deployment-check
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: security
+spec:
+  description: >
+    Check Kubernetes deployment YAML against RHACS deploy-time policies.
+    Catches misconfigurations before they reach the cluster.
+  params:
+    - name: DEPLOYMENT_FILE
+      type: string
+      description: Path to deployment YAML within the workspace
+    - name: ROX_CENTRAL_ENDPOINT
+      type: string
+      default: central.stackrox.svc:443
+  workspaces:
+    - name: source
+      description: Workspace containing deployment manifests
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  steps:
+    - name: check-deployment
+      image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel9@sha256:979f329cbe0d0dd1c41e63b471c246294780c5daf029c239ebd7d48129e75a15
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: ROX_CENTRAL_ADDRESS
+          value: $(params.ROX_CENTRAL_ENDPOINT)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        echo "📋 RHACS Deployment Policy Check"
+        echo "   File: $(params.DEPLOYMENT_FILE)"
+        echo "   Central: ${ROX_CENTRAL_ADDRESS}"
+        echo "============================================"
+
+        roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+          --ca /var/run/rhacs-ca/ca.pem \
+          --token-file /var/run/rhacs-identity/token \
+          deployment check \
+          --file "$(params.DEPLOYMENT_FILE)" \
+          --output table
+
+        echo ""
+        echo "✅ Deployment passes all ACS deploy-time policies"
+      volumeMounts:
+        - name: rhacs-identity
+          mountPath: /var/run/rhacs-identity
+          readOnly: true
+        - name: rhacs-ca
+          mountPath: /var/run/rhacs-ca
+          readOnly: true
+  volumes:
+    - name: rhacs-identity
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: rhacs-ci
+              expirationSeconds: 600
+              path: token
+    - name: rhacs-ca
+      configMap:
+        name: rhacs-central-ca

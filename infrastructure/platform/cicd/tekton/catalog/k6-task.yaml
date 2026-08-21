@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: k6-load-test
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Run a k6 workload as an automated performance gate."
+  params:
+    - name: SCRIPT_PATH
+      type: string
+      description: "Path to the k6 script relative to the repository root"
+    - name: VUS
+      type: string
+      description: "Virtual users override"
+      default: "20"
+    - name: DURATION
+      type: string
+      description: "Test duration override"
+      default: "2m"
+    - name: BASE_URL
+      type: string
+      description: "Base URL of the target environment"
+      default: ""
+  workspaces:
+    - name: source
+      description: "Workspace containing repository sources and test scripts"
+  steps:
+    - name: run
+      image: docker.io/grafana/k6@sha256:8cd78f9d0de5f50bc8821cceecf356d5d9e839e6611c226a3fcf13c591080fbd
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        allowPrivilegeEscalation: false
+      env:
+        - name: BASE_URL
+          value: $(params.BASE_URL)
+        - name: GATEWAY_URL
+          value: $(params.BASE_URL)
+      script: |
+        #!/bin/sh
+        set -eu
+
+        SCRIPT="$(workspaces.source.path)/$(params.SCRIPT_PATH)"
+        if [ ! -f "$SCRIPT" ]; then
+          echo "[✗] k6 script not found: $SCRIPT"
+          exit 1
+        fi
+
+        k6 run --vus "$(params.VUS)" --duration "$(params.DURATION)" "$SCRIPT"
