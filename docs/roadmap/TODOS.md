@@ -20,8 +20,8 @@
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
 | **Last Release** | `1.13.69` (2026-08-21) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — PARTNER-PROD-007..011 + DEVSECOPS-017 OPEN; **login web live** (LOGIN-001..006 closed) |
-| **Backlog Aktif** | 0 P1 aksi + 0 cross-layer findings (ARCH-GLOBAL-002, GW-ROUTING-003/BE-BIO-001, BE-SUPP-001 CLOSED 1.13.69) + 5 gate PARTNER-PROD + DEVSECOPS-017 |
-| **Last Updated** | 2026-08-21 — ARCH-GLOBAL-002 + GW-ROUTING-003/BE-BIO-001 + BE-SUPP-001 CLOSED, StepUp 4/4 + biometric + tickets, podman 5.7.0 cek (6.1.0 desktop only) |
+| **Backlog Aktif** | 20 findings Audit 2026-08-21 (QE swarm + delegated agents: tester/auditor/logic-builder/migrator/styler) + 5 gate PARTNER-PROD + DEVSECOPS-017 |
+| **Last Updated** | 2026-08-21 — Delegated via AGENTS-MAP.md: @tester/@auditor/@logic-builder/@migrator/@styler verified 18 + 2 new (JMS/webhook) — ARCH-GLOBAL-002 + GW-ROUTING-003/BE-BIO-001 + BE-SUPP-001 CLOSED 1.13.69 |
 
 ---
 
@@ -121,6 +121,44 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 | — | — | — | No open DX findings — `DX-TS-BRANDED-001` + `GW-CONCUR-001` closed | — |
 
 > **FIXED DX 2026-08-18 (8 items) → `CHANGELOG.md` `1.13.0`**: DX-CI-FE-001, DX-CI-COMMITS-001, DX-CATALOG-001 (ghost + 5 service + 5 simulator + 14 starter), DX-DOCS-DRIFT-001, DX-CODEGRAPH-001, DX-RTK-ENV-001, DX-CONTEXT7-001, LEND-SCHED-001, plus GW-ROUTING-004 & BFF-ROUTING-002.
+
+### Audit 2026-08-21 — Quality Engineer Swarm (Backend + Web-App)
+
+> Swarm 3 agents (money/security + arch/testing + web) via codegraph. Verifikasi file:line sebelum tulis. Fokus: BigDecimal/ledger/idempotency/outbox/hexagonal/testing pyramid + Next.js money/idempotency/a11y.
+
+| Key | Sev | Domain | Ringkasan | Bukti |
+|---|:---:|:---|:---|:---|
+| QE-MONEY-001 | 🔴 High | Money scale | `Money.DEFAULT_SCALE=2` langgar invariant `DECIMAL(19,4) HALF_EVEN`; semua `normalizeAmount` truncate 2 desimal, DB simpan 4 — risiko rounding di jalur uang | `backend/shared/quarkus-api-commons/src/main/java/id/payu/quarkus/commons/money/Money.java:20,165` vs `WalletEntity.java:39` `precision=19,scale=4` |
+| QE-LEDGER-001 | 🔴 High | Ledger immutable | `LedgerEntryMapper.updateEntityFromDomain` expose UPDATE pada ledger append-only; setter `setAmount/setBalanceAfter` tanpa DB REVOKE/trigger — koreksi harus via reversal entry | `backend/wallet-service/src/main/java/id/payu/wallet/adapter/persistence/mapper/LedgerEntryMapper.java:76` `LedgerEntryEntity.java:156,164,180` |
+| QE-LEDGER-002 | 🔴 High | Ledger race | Idempotency cek `findByTransactionId/referenceId` sebelum `SELECT FOR UPDATE`; tanpa unique constraint `referenceId` → concurrent duplikat double-execute | `backend/wallet-service/src/main/java/id/payu/wallet/application/service/WalletService.java:520-534` `WalletTransactionEntity.java:18` idx bukan unique |
+| QE-IDEMP-001 | 🔴 High | Idempotency | `IdempotencyInterceptor.storeSuccessfulResponse` hanya cache jika `response instanceof ContentCachingResponseWrapper` — class adalah placeholder kosong tidak pernah di-wrap → replay tidak pernah hit cache, duplikasi mutasi | `backend/shared/api-commons/src/main/java/id/payu/commons/idempotency/IdempotencyInterceptor.java:353,395` |
+| QE-EVENT-001 | 🔴 High | Outbox/topic | `SubscriptionEvent.TOPIC="subscription.events"` langgar kontrak `payu.<domain>.<event>.v<n>`; akan ditolak `OutboxService.DESTINATION_TOPIC_PATTERN` jika lewat outbox | `backend/billing-service/src/main/java/id/payu/billing/domain/event/SubscriptionEvent.java:23` vs `OutboxService.java:73` |
+| QE-SEC-001 | 🔴 High | Security | `NotificationCrypto` default key+salt hardcode (`CHANGE-ME-IN-PRODUCTION…`) fail-open jika env kosong — prod bisa jalan dengan key dev | `backend/notification-service/src/main/java/id/payu/notification/crypto/NotificationCrypto.java:26,28` |
+| QE-LEDGER-003 | 🟡 Med | Ledger balance | `JournalEntry.isBalanced()` hanya in-memory; tanpa DB CHECK `sum(debit)=sum(credit)` per journal — partial save bisa lolos | `backend/wallet-service/src/main/java/id/payu/wallet/domain/model/JournalEntry.java:53` `JournalEntryEntity.java:32` |
+| QE-CACHE-001 | 🟡 Med | Money cache | `getBalance` pakai `staleWhileRevalidate` 15s/30s — baca saldo bisa stale setelah mutasi, race invalidasi | `backend/wallet-service/src/main/java/id/payu/wallet/application/service/WalletService.java:121-129` |
+| QE-HEX-001 | 🔴 High | Hexagonal | Domain `ComplianceCheck` pakai `@Embeddable/@Column/@Enumerated` (`jakarta.persistence`) — domain tergantung framework, langgar `HexagonalArchitectureRules.FRAMEWORK_PACKAGES` | `backend/compliance-service/src/main/java/id/payu/compliance/domain/model/ComplianceCheck.java:8` |
+| QE-HEX-002 | 🟡 Med | Hexagonal | Port `DataAccessAuditPersistencePort`/`StatementRepositoryPort` import `Page/Pageable` Spring Data — port bocorkan framework type | `backend/compliance-service/src/main/java/id/payu/compliance/domain/port/out/DataAccessAuditPersistencePort.java:6` `backend/statement-service/src/main/java/id/payu/statement/domain/port/out/StatementRepositoryPort.java:3` |
+| QE-HEX-003 | 🟡 Med | Hexagonal | `NotificationService` (application) import langsung `adapter.sender.EmailSender` — bukan via `port/out`, invert dependency | `backend/notification-service/src/main/java/id/payu/notification/application/service/NotificationService.java:3` |
+| QE-API-001 | 🟡 Med | API | `product-catalog` expose `/products` & `/admin/products` tanpa prefix `/v1/` — langgar path versioned plural kebab | `backend/product-catalog-service/src/main/java/id/payu/productcatalog/adapter/web/HealthController.java:24` `PublicProductController.java:20` |
+| QE-TEST-001 | 🔴 High | Testing | 7 service tanpa Testcontainers (api-portal, backoffice, fx, gateway, integration, lending, support) — test DB/Kafka pakai mock/H2, risiko drift skema Flyway | `backend/*-service/src/test` grep Testcontainers = 0 (positive: `product-catalog/...ProductControllerIntegrationTest.java:32`) |
+| QE-TEST-002 | 🟡 Med | Testing | Concurrent `X-Idempotency-Key` test hanya wallet+partner; lending/transaction/dispute hanya single replay tanpa `CountDownLatch` — tidak buktikan 10 concurrent → 1 mutasi | `backend/wallet-service/src/test/...WalletControllerConcurrencyIdempotencyTest.java:41` vs `backend/transaction-service/src/test` (0 CountDownLatch) |
+| QE-FE-MONEY-001 | 🔴 High | Web money | `Money` branded string tapi `AnalyticsData/SpendingCategory/FxConversion(amount:number)` dll pakai `number` — presisi IEEE-754 di agregasi/display langgar BigDecimal | `frontend/web-app/src/types/index.ts:52,205,347,358` `SpendingInsights.tsx:23` `PartnerService.ts:157` |
+| QE-FE-SC-001 | 🟡 Med | Web RSC | 150 file `use client` — semua `app/[locale]/*` page (landing, analytics, pockets, transfer) jadi client component, langgar maximalkan Server Components | `frontend/web-app/src/app/[locale]/page.tsx:1` `grep "use client" → 150` |
+| QE-FE-IDEMP-001 | 🟡 Med | Web idempotency | `TransactionService.addParticipant/accept/decline` POST tanpa `X-Idempotency-Key`; interceptor `lib/api.ts` tidak inject otomatis | `frontend/web-app/src/services/TransactionService.ts:177-189` `src/lib/api.ts:46-50` |
+| QE-FE-TEST-001 | 🟡 Med | Web test | `BalanceCard.test.tsx` assert CSS (`toHaveClass('bg-bank-green')`, `querySelector('.grid')`) bukan user behavior; mock masih pakai `token/refreshToken` (sudah httpOnly) | `frontend/web-app/src/__tests__/components/BalanceCard.test.tsx:8,51` `stores/authStore.ts:41` |
+| QE-SEC-002 | 🔴 High | Security | JMS `JmsProperties.password="admin"` hardcode (admin/admin) — starter default bocor ke prod jika tidak override | `backend/shared/jms-starter/src/main/java/id/payu/jms/config/JmsProperties.java:27,30` |
+| QE-SEC-003 | 🟡 Med | Security | Webhook HMAC `WebhookConfig.DEV_DEFAULT_SECRET` fail-open — bootable di prod tanpa env | `backend/shared/api-commons/src/main/java/id/payu/api/common/webhook/WebhookConfig.java:79,157` |
+
+> **Delegasi via `.agents/agents/AGENTS-MAP.md`** — `@quality-engineer→@tester`, `@cybersecurity-architect→@auditor`, `@core-banking-engineer/@api-architect/@integration-architect→@logic-builder`, `@data-architect→@migrator`, `@frontend-architect→@styler`. Swarm 5 agents paralel, Context7 gate per agent + codegraph.
+
+> **Verifikasi agen (2026-08-21):**
+> - `@tester`: QE-TEST-001 refined → 2 svc truly no dep (api-portal,gateway Quarkus excusable) + 5 svc dep present tapi integration masih H2 `flyway.enabled=false` — drift tetap; QE-TEST-002 narrowed → hanya `lending-service` missing 10-concurrent (tx/billing/dispute/partner sudah punya harness QAMVP-011); QE-FE-TEST-001 systemic 12 files `toHaveClass/querySelector`. Proposed 5 failing-test specs (lending concurrent, Money scale 2→4, PG Flyway smoke, BalanceCard behavior, TransactionService idempotency).
+> - `@auditor`: CONFIRMED QE-SEC-001 & QE-IDEMP-001 (placeholder `ContentCachingResponseWrapper` never wrapped, replay never cache — P0). NEW QE-SEC-002/003. Vault `ClusterSecretStore` masih `tokenSecretRef: root-token` http (DEVSECOPS-017), mTLS STRICT OK, IDOR wallet/transaction PASS (partner email-based owner → track PARTNER-PROD-011).
+> - `@logic-builder`: CONFIRMED QE-MONEY-001 (scale 2→4 breaking MAJOR), QE-LEDGER-001 (V112 trigger ada tapi `updateEntityFromDomain` setter masih expose), QE-LEDGER-002 (idx non-unique), QE-LEDGER-003 (isBalanced in-memory only), QE-EVENT-001, QE-HEX-001/002/003, QE-API-001. Owning layer: domain/shared kernel + adapter/migration.
+> - `@migrator`: DB `DECIMAL(19,4)` sudah V104 tapi app scale 2 truncates; QE-LEDGER-002/003 CONFIRMED vs `V1__`, `V6__`, `V8__`; pgcrypto implicit, GIN missing, RLS partial, Redis idempotency tanpa PG table. Proposed Flyway `V117__unique_idempotency`, `V118__journal_balance_trigger`, `V119__pgcrypto_gin_rls`, `V120__idempotency_keys`.
+> - `@styler`: QE-FE-MONEY-001 CONFIRMED tapi cite `:52,347` drop — real leaks `AnalyticsData:205` `SpendingCategory:219` `FxConversion:358` + `currency.ts parseCurrency:number`; QE-FE-SC-001 true gap ~24 pages (150 inflated, ~110 leaves legit); QE-FE-IDEMP-001 3 methods missing header (interceptor blame drop); QE-FE-TEST-001 stale mock + fragile locators, a11y contrast filtered.
+
+> Rekomendasi quick-win urut (owner): QE-IDEMP-001 `@logic-builder` (filter wrapper 0.5d) → QE-SEC-001 `@auditor` (hapus default key 0.5d) → QE-SEC-002/003 `@auditor` (JMS/webhook Vault 0.25d) → QE-EVENT-001 `@logic-builder` → QE-MONEY-001 `@logic-builder` (scale 4 MAJOR) → QE-LEDGER-002 `@migrator` V117 (unique) → QE-TEST-001 `@tester` (PG smoke) → QE-FE-IDEMP-001 `@styler` (3-line header).
 
 ### MVP Feature Readiness — 2026-08-13 (ringkas)
 
