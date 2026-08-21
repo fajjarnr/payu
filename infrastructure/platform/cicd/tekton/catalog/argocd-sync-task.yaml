@@ -26,9 +26,23 @@ spec:
         #!/bin/sh
         set -eu
 
-        # ponytail: missing Application non-blocking (simulators)
+        # ponytail: missing Application non-blocking (simulators) - fall back to
+        # waiting for the Deployment rollout so downstream probes (zap/k6) do not
+        # race a still-running rollout and get connection refused
         if ! oc get applications.argoproj.io "$(params.APPLICATION_NAME)" -n "$(params.NAMESPACE)" >/dev/null 2>&1; then
-          echo "[!] Application $(params.APPLICATION_NAME) not found - skipping"
+          echo "[!] Application $(params.APPLICATION_NAME) not found - waiting for Deployment rollout"
+          DEPLOY="$(echo "$(params.APPLICATION_NAME)" | sed -E 's/-dev$|-sit$|-uat$|-preprod$|-prod$//')"
+          DEPLOY_NS="$(echo "$(params.APPLICATION_NAME)" | sed -nE 's/.*-(dev|sit|uat|preprod|prod)$/payu-\1/p')"
+          deadline=$(( $(date +%s) + $(params.TIMEOUT_SECONDS) ))
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            if oc get deploy "$DEPLOY" -n "$DEPLOY_NS" >/dev/null 2>&1 && \
+               [ "$(oc get deploy "$DEPLOY" -n "$DEPLOY_NS" -o jsonpath='{.status.availableReplicas}')" = "$(oc get deploy "$DEPLOY" -n "$DEPLOY_NS" -o jsonpath='{.spec.replicas}')" ]; then
+              echo "[✓] Deployment $DEPLOY rolled out in $DEPLOY_NS"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "[!] Timed out waiting for Deployment $DEPLOY rollout - continuing (non-blocking)"
           exit 0
         fi
         deadline=$(( $(date +%s) + $(params.TIMEOUT_SECONDS) ))
