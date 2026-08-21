@@ -1,0 +1,54 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata: {name: payu-service-binding}
+spec:
+  params:
+    - {name: git-url, value: $(body.repository.clone_url)}
+    - {name: git-revision, value: $(body.head_commit.id)}
+    - {name: service-name, value: $(body.repository.name)}
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: ClusterTriggerBinding
+metadata: {name: payu-service}
+spec:
+  params:
+    - {name: git-repo-url, value: $(body.repository.clone_url)}
+    - {name: git-revision, value: $(body.head_commit.id)}
+    - {name: git-repo-name, value: $(body.repository.name)}
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata: {name: payu-service-template}
+spec:
+  params: [{name: git-url}, {name: git-revision, default: main}, {name: service-name}]
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata: {generateName: $(tt.params.service-name)-, annotations: {results.tekton.dev/result-retention: "365d"}}
+      spec:
+        pipelineRef: {name: payu-service-pipeline}
+        params:
+          - {name: service-name, value: $(tt.params.service-name)}
+          - {name: git-url, value: $(tt.params.git-url)}
+          - {name: git-revision, value: $(tt.params.git-revision)}
+        workspaces:
+          - {name: source, volumeClaimTemplate: {spec: {accessModes: [ReadWriteOnce], resources: {requests: {storage: 1Gi}}}}}
+          - {name: maven-settings, secret: {secretName: maven-settings}}
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata: {name: el-github-listener, labels: {app.kubernetes.io/part-of: payu}}
+spec:
+  serviceAccountName: tekton-triggers-sa
+  triggers:
+    - name: github-push
+      bindings: [{ref: payu-service-binding}, {ref: payu-service, kind: ClusterTriggerBinding}]
+      template: {ref: payu-service-template}
+      interceptors:
+        - ref: {name: github}
+          params:
+            - {name: secretRef, value: {secretName: github-webhook-secret, secretKey: secretToken}}
+            - {name: eventTypes, value: ["push"]}
+        - ref: {name: cel}
+          params: [{name: filter, value: "body.ref == 'refs/heads/main'"}]
+          # polyrepo always-run, no when: head_commit.message contains service

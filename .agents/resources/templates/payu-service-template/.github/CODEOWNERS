@@ -1,0 +1,4 @@
+*       @fajjarnr/platform-team
+/src/   @fajjarnr/backend-team
+/.tekton/ @fajjarnr/platform-team
+/k8s/   @fajjarnr/platform-team

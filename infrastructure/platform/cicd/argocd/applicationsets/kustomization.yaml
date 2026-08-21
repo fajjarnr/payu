@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - payu-applicationsets.yaml
+  - payu-account-service-applicationset.yaml

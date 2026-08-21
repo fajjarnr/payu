@@ -1,0 +1,123 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: gitops-writeback
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Update the environment overlay image entry and commit the GitOps write-back."
+  params:
+    - name: service-name
+      type: string
+    - name: environment
+      type: string
+    - name: image-digest
+      type: string
+      description: Immutable sha256 digest to promote
+    - name: registry-url
+      type: string
+      default: image-registry.openshift-image-registry.svc:5000
+    - name: registry-namespace
+      type: string
+      default: payu-dev
+    - name: git-revision
+      type: string
+      default: main
+    - name: push-changes
+      type: string
+      default: "false"
+  workspaces:
+    - name: source
+      description: "Cloned GitOps repository"
+  steps:
+    - name: writeback
+      image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:cbd89c531953a43b8055bda72f7696be80f57fd1d782567a91d82e0fbcb3d26d
+      script: |
+        #!/bin/sh
+        set -eu
+
+        cd "$(workspaces.source.path)"
+        case "$(params.environment)" in
+          dev|sit|uat|preprod|prod)
+            OVERLAY_DIR="payu-$(params.environment)"
+            ;;
+          *)
+            echo "[X] Unsupported environment $(params.environment). Expected one of: dev, sit, uat, preprod, prod"
+            exit 1
+            ;;
+        esac
+        if [ "$(params.environment)" = "prod" ] && [ "$(params.push-changes)" != "true" ]; then
+          echo "[X] Production rollback/promotion requires a pushed Git commit" >&2
+          exit 1
+        fi
+
+        TARGET_DIR="infrastructure/workloads/overlays/${OVERLAY_DIR}"
+        if [ ! -d "$TARGET_DIR" ]; then
+          echo "[X] Overlay directory $TARGET_DIR not found!"
+          exit 1
+        fi
+        if ! printf '%s' "$(params.image-digest)" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+          echo "[X] image-digest must be a lowercase sha256 digest" >&2
+          exit 1
+        fi
+
+        IMAGE_NAME="$(params.registry-url)/$(params.registry-namespace)/$(params.service-name)"
+        IMAGE_REF="${IMAGE_NAME}@$(params.image-digest)"
+
+        cd "$TARGET_DIR"
+        if ! grep -Fq -- "- name: $IMAGE_NAME" kustomization.yaml; then
+          echo "[X] Image entry not found for $IMAGE_NAME" >&2
+          exit 1
+        fi
+
+        # Keep the repository in newName and store the immutable reference in
+        # Kustomize's digest field. A digest embedded in newName is not a
+        # portable Kustomization image transform.
+        awk -v name="$IMAGE_NAME" -v target="$IMAGE_NAME" -v digest="$(params.image-digest)" '
+          $0 ~ ("- name: " name "$") { found=1; print; next }
+          found && /newTag:/ {
+            match($0, /^[[:space:]]*/)
+            print substr($0, RSTART, RLENGTH) "digest: " digest
+            found=0
+            next
+          }
+          found && /digest:/ {
+            sub(/digest:.*/, "digest: " digest)
+            print
+            found=0
+            next
+          }
+          found && /newName:/ {
+            sub(/newName:.*/, "newName: " target)
+            print
+            match($0, /^[[:space:]]*/)
+            print substr($0, RSTART, RLENGTH) "digest: " digest
+            found=0
+            next
+          }
+          { print }
+        ' kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+
+        if ! grep -Fq -- "digest: $(params.image-digest)" kustomization.yaml; then
+          echo "[X] Failed to write digest for $IMAGE_NAME" >&2
+          exit 1
+        fi
+
+        git config --global --add safe.directory "$(workspaces.source.path)"
+        git config --global user.email "gitops-bot@payu.internal"
+        git config --global user.name "Tekton GitOps Bot"
+        git add kustomization.yaml
+        if git diff --cached --quiet; then
+          echo "[*] No image change for $(params.service-name) in $(params.environment)"
+        else
+          git commit -m "chore(gitops): promote $(params.service-name) to ${IMAGE_REF} in $(params.environment)"
+        fi
+
+        if [ "$(params.push-changes)" = "true" ]; then
+          git push origin HEAD:$(params.git-revision)
+          echo "[✓] GitOps write-back pushed to $(params.git-revision)"
+        else
+          echo "[*] push-changes=false, commit retained locally in workspace only"
+        fi
+        echo "[✓] Updated $(params.service-name) image to ${IMAGE_REF} in $(params.environment)"

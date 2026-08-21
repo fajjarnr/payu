@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: payu-account-service
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: gitops
+    payu.io/service: account-service
+    payu.io/catalog-version: payu-catalog-v1
+  annotations:
+    payu.io/description: "Per-service ApplicationSet for account-service (ADR-0066 polyrepo) — generates 5 env Apps from monorepo path during migration; polyrepo target: fajjarnr/payu-account-service k8s/overlays/<env>"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: payu-dev
+            project: payu-dev
+            path: infrastructure/workloads/overlays/payu-dev/account-service
+          - env: sit
+            namespace: payu-sit
+            project: payu-sit
+            path: infrastructure/workloads/overlays/payu-sit/account-service
+          - env: uat
+            namespace: payu-uat
+            project: payu-uat
+            path: infrastructure/workloads/overlays/payu-uat/account-service
+          - env: preprod
+            namespace: payu-preprod
+            project: payu-preprod
+            path: infrastructure/workloads/overlays/payu-preprod/account-service
+          - env: prod
+            namespace: payu
+            project: payu
+            path: infrastructure/workloads/overlays/payu-prod/account-service
+  template:
+    metadata:
+      name: "account-service-{{.env}}"
+      labels:
+        app.kubernetes.io/name: account-service
+        app.kubernetes.io/part-of: payu
+        payu.io/environment: "{{.env}}"
+      annotations:
+        payu.io/promotion-mode: digest # kustomize edit set image account-service@sha256:digest via gitops-writeback
+    spec:
+      project: "{{.project}}"
+      source:
+        repoURL: https://github.com/fajjarnr/payu.git
+        targetRevision: main
+        path: "{{.path}}"
+        # ponytail: monorepo path during migration; after cutover switch to https://github.com/fajjarnr/payu-account-service.git k8s/overlays/{{.env}}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m

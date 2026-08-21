@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata: {name: "{{serviceName}}", namespace: openshift-gitops}
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - {env: dev, namespace: payu-dev, project: payu-dev}
+          - {env: sit, namespace: payu-sit, project: payu-sit}
+          - {env: uat, namespace: payu-uat, project: payu-uat}
+          - {env: preprod, namespace: payu-preprod, project: payu-preprod}
+          - {env: prod, namespace: payu, project: payu}
+  template:
+    metadata: {name: "{{serviceName}}-{{.env}}"}
+    spec:
+      project: "{{.project}}"
+      source: {repoURL: https://github.com/fajjarnr/payu-{{serviceName}}.git, targetRevision: main, path: "k8s/overlays/{{.env}}"}
+      destination: {server: https://kubernetes.default.svc, namespace: "{{.namespace}}"}
+      syncPolicy: {automated: {prune: true, selfHeal: true}, syncOptions: [CreateNamespace=true]}
+# promote by digest: kustomize edit set image {{serviceName}}@sha256:digest via gitops-writeback

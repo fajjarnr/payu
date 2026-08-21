@@ -88,6 +88,10 @@ spec:
           value: fx-service
         - name: SERVICE_VERSION
           value: 1.8.106
+        - name: SPRINGDOC_API_DOCS_ENABLED
+          value: "false"
+        - name: SPRINGDOC_SWAGGER_UI_ENABLED
+          value: "false"
         - name: SPRING_PROFILES_ACTIVE
           value: container
         - name: SERVER_PORT

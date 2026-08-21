@@ -71,3 +71,16 @@ metadata:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+    payu.io/environment: cicd
+    payu.io/managed-by: platform-team
+    payu.io/tier: non-production
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

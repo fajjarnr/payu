@@ -1,0 +1,47 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: semgrep
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Run Semgrep OSS across service sources as the primary multi-language SAST gate."
+  params:
+    - name: CONTEXT_DIR
+      type: string
+      description: "Directory to scan"
+      default: "."
+    - name: RULESET
+      type: string
+      description: "Semgrep ruleset"
+      default: "auto"
+  workspaces:
+    - name: source
+      description: "Workspace containing source code"
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  steps:
+    - name: scan
+      image: docker.io/returntocorp/semgrep@sha256:550dfdac1ec5d4a757d1c2ac0197a6360ef3ac8e3d0a804731eab07242e91b4c
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: HOME
+          value: /tmp
+      script: |
+        #!/bin/sh
+        set -eu
+        semgrep scan \
+          --config "$(params.RULESET)" \
+          --error \
+          --exclude node_modules \
+          --exclude target \
+          --exclude dist \
+          "$(workspaces.source.path)/$(params.CONTEXT_DIR)"
+        echo "Semgrep security gate passed."

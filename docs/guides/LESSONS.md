@@ -6225,3 +6225,8 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 ## 2026-08-21 — build-push-all.sh TAG sync + podman
 
 - Script TAG latest→semver sync kustomization, add login, add web-app, podman 4.9.3 installed, mvn via podman run maven:3.9 pending for jar.
+## 2026-08-22 — ADR-0066 Polyrepo lean template
+- **Reuse workloads as single source**: `infrastructure/workloads` owns k8s base/overlays; cookiecutter template (` .agents/resources/templates/payu-service-template`) only holds `.tekton`, `.argocd`, `Containerfile.runtime`, `CODEOWNERS` delta. Duplicate `k8s/` in template removed after review — prevents drift. Next service copy via `cp -r workloads/base/<svc>`.
+- **Catalog via git resolver**: 7 tasks copied to `tekton/catalog` with `payu-catalog-v1` tag; per-service `pipeline.yaml` uses `resolver: git` pathInRepo, not cluster taskRef. Avoids 27-task duplication.
+- **No WARN invariant**: SpringDoc enabled by default caused WARN in prod; fix at trust boundary via deployment env `SPRINGDOC_*=false` + `application.yml` `enabled:false` so running pods fixed without rebuild. FxRateService WARN→INFO with ponytail ceiling.
+

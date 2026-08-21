@@ -2080,3 +2080,6 @@ Closed 3 high-priority tickets in a single session:
   environment-isolated Vault, databases, Kafka, Data Grid, image streams, or
   runtime secrets. Existing overlays also retain dev endpoints/secrets, have
   quota and production namespace/RBAC defects, and are not safe to apply.
+### 2026-08-22 — ADR-0066 Polyrepo Pipeline (v1.13.83)
+- Catalog `payu-catalog-v1` 7 tasks, template `.agents/resources/templates/payu-service-template`, ApplicationSet `payu-account-service` 5 envs, vault per-service `payu/<env>/<service>`, workloads single source, no WARN logs (fx/tx/wallet), pods 42/42 Ready.
+

@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# ponytail: single catalog kustomize reuses task YAMLs verbatim; per-service version pin via git tag payu-catalog-v1, no per-task versioning until divergence needed
+resources:
+  - buildah-task.yaml
+  - gitleaks-task.yaml
+  - semgrep-task.yaml
+  - trivy-task.yaml
+  - cosign-task.yaml
+  - argocd-sync-task.yaml
+  - gitops-writeback-task.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: payu
+  app.kubernetes.io/component: tekton-catalog
+  payu.io/catalog-version: v1

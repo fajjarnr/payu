@@ -1,0 +1,114 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: trivy
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Scan container images for vulnerabilities using Trivy"
+  params:
+    - name: IMAGE
+      type: string
+      description: "Image to scan"
+    - name: SEVERITY
+      type: string
+      description: "Severity levels to check"
+      default: "CRITICAL,HIGH"
+    - name: EXIT_CODE
+      type: string
+      description: "Exit code when vulnerabilities found (0=warn, 1=fail)"
+      default: "1"
+    - name: IGNORE_FILE
+      type: string
+      description: "Optional service-scoped Trivy YAML exception file within the source workspace"
+      default: ""
+  workspaces:
+    - name: output
+      description: Workspace for scan reports
+      optional: true
+    - name: dockerconfig
+      description: Docker registry credentials
+      optional: true
+  results:
+    - name: VULN_COUNT
+      description: Number of vulnerabilities found
+    - name: SCAN_RESULT
+      description: PASS or FAIL
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  steps:
+    - name: scan
+      image: "docker.io/aquasec/trivy@sha256:b88012e2a0a309d6a8a00463d4e63e5e513377fb74eccbc8f9b0f8f81940ebeb"
+      env:
+        - name: HOME
+          value: /tmp
+        - name: TRIVY_CACHE_DIR
+          value: /tmp/trivy
+      command:
+        - /bin/sh
+      args:
+        - -ceu
+        - |
+          echo "[*] Scanning image: $(params.IMAGE)"
+          echo "[*] Severity filter: $(params.SEVERITY)"
+
+          mkdir -p "$HOME/.docker" "$TRIVY_CACHE_DIR"
+
+          image_registry="$(params.IMAGE)"
+          image_registry="${image_registry%%/*}"
+
+          is_openshift=0
+          case "$image_registry" in
+            *openshift-image-registry*) is_openshift=1 ;;
+          esac
+
+          if [ "$is_openshift" -eq 1 ] && [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+            token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+            auth=$(printf 'unused:%s' "$token" | base64 -w0)
+            echo "{\"auths\":{\"$image_registry\":{\"auth\":\"$auth\"}}}" > "$HOME/.docker/config.json"
+          elif [ "$(workspaces.dockerconfig.bound)" = "true" ] && [ -f "$(workspaces.dockerconfig.path)/.dockerconfigjson" ]; then
+            cp "$(workspaces.dockerconfig.path)/.dockerconfigjson" "$HOME/.docker/config.json"
+          fi
+
+          trivy image \
+            --severity $(params.SEVERITY) \
+            --exit-code 0 \
+            --format json \
+            --output /tmp/trivy-report.json \
+            $(params.IMAGE)
+
+          if [ -f /tmp/trivy-report.json ]; then
+            VULN_COUNT=$(grep -o '"VulnerabilityID"' /tmp/trivy-report.json | wc -l || echo "0")
+          else
+            VULN_COUNT=0
+          fi
+          echo -n "$VULN_COUNT" | tee $(results.VULN_COUNT.path)
+
+          set +e
+          IGNORE_ARGS=""
+          if [ -n "$(params.IGNORE_FILE)" ] && [ -f "$(workspaces.output.path)/$(params.IGNORE_FILE)" ]; then
+            IGNORE_ARGS="--ignorefile $(workspaces.output.path)/$(params.IGNORE_FILE)"
+          fi
+          trivy image \
+            --severity $(params.SEVERITY) \
+            $IGNORE_ARGS \
+            --exit-code $(params.EXIT_CODE) \
+            $(params.IMAGE)
+          RESULT=$?
+          set -e
+
+          if [ $RESULT -eq 0 ]; then
+            echo -n "PASS" | tee $(results.SCAN_RESULT.path)
+            echo "[✓] No unaccepted $(params.SEVERITY) vulnerabilities found"
+          else
+            echo -n "FAIL" | tee $(results.SCAN_RESULT.path)
+            echo "[✗] Found unaccepted vulnerabilities at $(params.SEVERITY) level ($VULN_COUNT total reported)"
+            exit $(params.EXIT_CODE)
+          fi

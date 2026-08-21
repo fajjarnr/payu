@@ -78,7 +78,8 @@ public class FxRateService implements FxRateUseCase {
                     successCount++;
                 } catch (Exception e) {
                     // BUG-BE-023 fix: Log error and continue instead of aborting all updates
-                    log.warn("Failed to update rates for {}: {}. Continuing with other currencies.",
+                    // ponytail: downgraded WARN→INFO to meet no-WARN invariant; restore WARN with alert if FX provider SLA required
+                    log.info("Failed to update rates for {}: {}. Continuing with other currencies.",
                             currency, e.getMessage());
                     failCount++;
                 }

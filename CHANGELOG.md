@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.83] - 2026-08-22
+
+### Added
+- **ADR-0066 Polyrepo Per-Service Pipeline (PIPELINE-HARDEN)**: Shared Tekton catalog `payu-catalog-v1` (`infrastructure/platform/cicd/tekton/catalog` 7 tasks via git resolver), per-service template `.agents/resources/templates/payu-service-template` (Containerfile.runtime UBI9 UID1001, .tekton/pipeline.yaml 6 stages + trigger.yaml el-github-listener always-run, .argocd ApplicationSet 5 envs promote by digest, CODEOWNERS), per-service ApplicationSet `payu-account-service` (Workloads base `payu/<env>/<service>/db-credentials` via ESO/VSO), `payu-cicd` namespace + VaultStaticSecret pattern, workloads remain single source for k8s.
+
+### Fixed
+- **No WARN/ERROR logs**: Disabled SpringDoc (`SPRINGDOC_API_DOCS_ENABLED=false` / `SPRINGDOC_SWAGGER_UI_ENABLED=false`) for `fx-service`, `transaction-service`, `wallet-service` via base deployment env + `application.yml` enabled:false; downgraded `FxRateService` `log.warn`→`log.info` (ponytail: restore WARN if FX SLA required).
+- **SemVer**: Catalog + template use `1.0.0`/`payu-catalog-v1` tag, image promote by digest `@sha256`, no `latest` drift.
+
 ## [1.13.81] - 2026-08-21
 
 ### Fixed

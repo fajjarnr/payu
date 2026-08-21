@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: gitleaks
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Scan code repository for hardcoded secrets using Gitleaks."
+  workspaces:
+    - name: source
+      description: Workspace containing the source code to scan
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  steps:
+    - name: scan
+      image: "docker.io/zricethezav/gitleaks@sha256:eadfe256fa18d6a78a717abc9ed454c8e03865d1c46d627bca83977f4424901a"
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        echo "Running Gitleaks Secret Scan..."
+        gitleaks detect -v --source . --no-git
+        RESULT=$?
+        if [ $RESULT -eq 0 ]; then
+          echo "[✓] No hardcoded secrets found."
+        else
+          echo "[✗] Hardcoded secrets detected! Build failed."
+          exit $RESULT
+        fi
