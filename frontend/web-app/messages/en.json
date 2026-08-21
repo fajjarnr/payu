@@ -661,6 +661,43 @@
       "button": "Start Free",
       "terms": "Terms & Conditions",
       "privacy": "Privacy Policy"
+    },
+    "features": {
+      "qris": {
+        "title": "Pay with QRIS",
+        "desc": "Scan, confirm, done. Pay and get paid at millions of merchants nationwide."
+      },
+      "pockets": {
+        "title": "Pockets & Sub-accounts",
+        "desc": "Separate money for savings, business, and daily needs inside one account."
+      },
+      "bills": {
+        "title": "Auto Bills",
+        "desc": "Electricity, water, top-ups, and installments paid on time with automatic scheduling."
+      }
+    },
+    "how": {
+      "title": "Up and running in 3 steps",
+      "step1": {
+        "title": "Register & verify",
+        "desc": "Create your account and complete identity verification in under 5 minutes."
+      },
+      "step2": {
+        "title": "Top up your balance",
+        "desc": "Fund via bank transfer, virtual account, or your favorite e-wallet."
+      },
+      "step3": {
+        "title": "Start transacting",
+        "desc": "Send money, pay bills, and manage everything without limits."
+      }
+    },
+    "secure": {
+      "item1": "End-to-end encryption",
+      "item2": "Biometric verification",
+      "item3": "Licensed & audited"
+    },
+    "footer": {
+      "tagline": "Modern financial solutions for individuals and businesses."
     }
   }
 }

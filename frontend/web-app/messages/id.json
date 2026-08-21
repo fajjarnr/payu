@@ -661,6 +661,43 @@
       "button": "Mulai Gratis",
       "terms": "Syarat & Ketentuan",
       "privacy": "Privacy Policy"
+    },
+    "features": {
+      "qris": {
+        "title": "Bayar dengan QRIS",
+        "desc": "Scan, konfirmasi, selesai. Bayar dan terima pembayaran di jutaan merchant."
+      },
+      "pockets": {
+        "title": "Pocket & Sub-akun",
+        "desc": "Pisahkan dana untuk tabungan, usaha, dan kebutuhan harian dalam satu akun."
+      },
+      "bills": {
+        "title": "Tagihan Otomatis",
+        "desc": "Listrik, air, pulsa, dan cicilan terbayar tepat waktu dengan penjadwalan otomatis."
+      }
+    },
+    "how": {
+      "title": "Mulai dalam 3 langkah",
+      "step1": {
+        "title": "Daftar & verifikasi",
+        "desc": "Buat akun dan lengkapi verifikasi identitas kurang dari 5 menit."
+      },
+      "step2": {
+        "title": "Top up saldo",
+        "desc": "Isi saldo lewat bank, virtual account, atau e-wallet favoritmu."
+      },
+      "step3": {
+        "title": "Mulai bertransaksi",
+        "desc": "Kirim uang, bayar tagihan, dan kelola keuangan tanpa batas."
+      }
+    },
+    "secure": {
+      "item1": "Enkripsi end-to-end",
+      "item2": "Verifikasi biometrik",
+      "item3": "Berlisensi & diaudit"
+    },
+    "footer": {
+      "tagline": "Solusi finansial modern untuk individu dan bisnis."
     }
   }
 }

@@ -1,382 +1,385 @@
 'use client';
 
 import { Link } from '@/lib/navigation';
-import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { Shield, Zap, Menu, X, PieChart, Globe } from 'lucide-react';
-import { Fragment, useState, useEffect, useRef } from 'react';
-
-const SLIDE_IDS = ['hero', 'app', 'about', 'support'] as const;
+import {
+  BadgeCheck,
+  BarChart3,
+  CheckCircle2,
+  Fingerprint,
+  Globe,
+  Lock,
+  Menu,
+  Plus,
+  QrCode,
+  ReceiptText,
+  Shield,
+  Wallet,
+  X,
+  Zap,
+} from 'lucide-react';
+import { Fragment, useState } from 'react';
 
 export default function LandingPage() {
   const t = useTranslations('landing');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const rawHeroTitle = t.raw('heroTitle') as string;
-
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const goToSlide = (index: number) => {
-    const targetId = SLIDE_IDS[index];
-    const el = document.getElementById(targetId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      setScrolled(container.scrollTop > 50);
-    };
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = SLIDE_IDS.indexOf(entry.target.id as (typeof SLIDE_IDS)[number]);
-            if (index !== -1) {
-              setCurrentSlide(index);
-            }
-          }
-        });
-      },
-      {
-        root: container,
-        threshold: 0.5,
-      }
-    );
-
-    container.addEventListener('scroll', handleScroll);
-    SLIDE_IDS.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      observer.disconnect();
-    };
-  }, []);
 
   const handleNavClick = (e: React.MouseEvent, targetId: string) => {
     e.preventDefault();
-    const el = document.getElementById(targetId.replace('#', ''));
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
     setMobileMenuOpen(false);
   };
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="h-screen w-screen overflow-hidden bg-void font-inter text-snow [font-feature-settings:'ss01','ss03']">
-        {/* Navigation */}
-        <nav
-          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-            scrolled
-              ? 'border-b border-white/[0.07] bg-void/90 py-4 backdrop-blur-xl'
-              : 'bg-transparent py-8'
-          }`}
-        >
-          <div className="mx-auto flex max-w-[1080px] items-center justify-between px-6">
-            {/* Logo */}
-            <Link href={'/'} className="flex items-center cursor-pointer" aria-label="PayU Home">
-              <span className="text-xl font-normal tracking-tight text-snow">PayU</span>
-            </Link>
+    <div className="min-h-screen bg-background font-inter text-foreground">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-[1080px] items-center justify-between px-6">
+          <Link href={'/'} className="flex items-center gap-1.5 cursor-pointer" aria-label="PayU Home">
+            <span className="font-heading text-xl font-bold tracking-tight">PayU</span>
+            <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+          </Link>
 
-            {/* Center Links */}
-            <div className="hidden md:flex items-center gap-8 text-sm font-normal text-fog">
-              <a href="#app" onClick={(e) => handleNavClick(e, '#app')} className={`transition-colors hover:text-snow cursor-pointer ${currentSlide === 1 ? 'text-snow' : ''}`}>
-                {t('nav.features')}
-              </a>
-              <a href="#about" onClick={(e) => handleNavClick(e, '#about')} className={`transition-colors hover:text-snow cursor-pointer ${currentSlide === 2 ? 'text-snow' : ''}`}>
-                {t('nav.about')}
-              </a>
-              <a href="#support" onClick={(e) => handleNavClick(e, '#support')} className={`transition-colors hover:text-snow cursor-pointer ${currentSlide === 3 ? 'text-snow' : ''}`}>
-                {t('nav.support')}
-              </a>
-            </div>
+          <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground" aria-label="Main">
+            <a href="#features" onClick={(e) => handleNavClick(e, 'features')} className="transition-colors hover:text-foreground cursor-pointer">
+              {t('nav.features')}
+            </a>
+            <a href="#how" onClick={(e) => handleNavClick(e, 'how')} className="transition-colors hover:text-foreground cursor-pointer">
+              {t('how.title')}
+            </a>
+            <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className="transition-colors hover:text-foreground cursor-pointer">
+              {t('nav.about')}
+            </a>
+          </nav>
 
-            {/* Right */}
-            <div className="flex items-center gap-3">
-              <Link
-                href={'/login'}
-                className="hidden md:inline-flex min-h-[44px] items-center rounded-pill border border-white/[0.08] bg-white/[0.05] px-5 py-2 text-sm font-normal text-snow transition-colors hover:bg-white/10 cursor-pointer"
-              >
-                {t('nav.login')}
-              </Link>
-              <button
-                className="flex size-11 items-center justify-center rounded-pill border border-white/[0.08] bg-white/[0.05] text-snow transition-colors cursor-pointer md:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-expanded={mobileMenuOpen}
-                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-              >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-            </div>
-          </div>
-        </nav>
-
-        {/* Mobile Nav Overlay */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-10 bg-void"
+          <div className="flex items-center gap-2.5">
+            <Link
+              href={'/login'}
+              className="hidden sm:inline-flex min-h-[40px] items-center rounded-full border border-border bg-card px-5 text-sm font-medium transition-colors hover:bg-accent/10 cursor-pointer"
             >
-              <button
-                className="absolute top-8 right-6 flex size-11 items-center justify-center text-snow cursor-pointer"
-                onClick={() => setMobileMenuOpen(false)}
-                aria-label="Close menu"
-              >
-                <X size={24} />
-              </button>
-              <a href="#app" className="text-2xl font-normal text-chalk transition-colors hover:text-snow" onClick={(e) => handleNavClick(e, '#app')}>
+              {t('nav.login')}
+            </Link>
+            <Link
+              href={'/onboarding'}
+              className="hidden sm:inline-flex min-h-[40px] items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
+            >
+              {t('getStarted')}
+            </Link>
+            <button
+              className="flex size-10 items-center justify-center rounded-full border border-border bg-card cursor-pointer sm:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="border-t border-border bg-background sm:hidden">
+            <nav className="mx-auto flex max-w-[1080px] flex-col gap-1 px-6 py-4" aria-label="Mobile">
+              <a href="#features" onClick={(e) => handleNavClick(e, 'features')} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
                 {t('nav.features')}
               </a>
-              <a href="#about" className="text-2xl font-normal text-chalk transition-colors hover:text-snow" onClick={(e) => handleNavClick(e, '#about')}>
+              <a href="#how" onClick={(e) => handleNavClick(e, 'how')} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
+                {t('how.title')}
+              </a>
+              <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
                 {t('nav.about')}
               </a>
-              <a href="#support" className="text-2xl font-normal text-chalk transition-colors hover:text-snow" onClick={(e) => handleNavClick(e, '#support')}>
-                {t('nav.support')}
-              </a>
-              <Link href={'/login'} className="mt-4 inline-flex min-h-[44px] items-center rounded-pill bg-bone px-6 py-2.5 text-sm font-normal text-ink transition-colors hover:bg-snow cursor-pointer">
+              <Link href={'/login'} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
                 {t('nav.login')}
               </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <Link href={'/onboarding'} className="mt-1 inline-flex min-h-[44px] items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground cursor-pointer">
+                {t('getStarted')}
+              </Link>
+            </nav>
+          </div>
+        )}
+      </header>
 
-        <div ref={containerRef} className="h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth">
-          {/* Slide 1: Hero */}
-          <section id="hero" className="relative flex h-screen w-full snap-start flex-col items-center justify-center overflow-hidden bg-void">
-            <div className="relative z-10 mx-auto flex w-full max-w-[1080px] flex-col items-center px-6 pt-24 pb-12 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-xs font-normal text-fog"
-              >
+      <main>
+        {/* Hero */}
+        <section className="relative overflow-hidden">
+          <div className="pointer-events-none absolute -top-40 right-[-12%] size-[520px] rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute bottom-[-30%] left-[-10%] size-[400px] rounded-full bg-primary/5 blur-3xl" aria-hidden="true" />
+
+          <div className="relative mx-auto grid max-w-[1080px] grid-cols-1 items-center gap-14 px-6 pb-20 pt-16 sm:pt-24 lg:grid-cols-2">
+            <div>
+              <span className="inline-block animate-fade-in rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary motion-reduce:animate-none">
                 {t('badge')}
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, ease: 'easeOut' }}
-                className="text-display font-normal text-snow lg:text-display-lg"
-              >
+              </span>
+              <h1 className="animate-fade-in mt-6 font-heading text-4xl font-extrabold leading-[1.06] tracking-tight sm:text-6xl motion-reduce:animate-none" style={{ animationDelay: '80ms' }}>
                 {rawHeroTitle.split(/<br\s*\/?>/i).map((line, index) => (
                   <Fragment key={`${index}-${line}`}>
                     {index > 0 && <br />}
                     {line}
                   </Fragment>
                 ))}
-              </motion.h1>
-
-              {/* Card Mockup — Default restyle */}
-              <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="relative mt-12 aspect-[1.586] w-full max-w-[400px] rounded-card border-[0.5px] border-white/[0.08] bg-graphite p-7 shadow-panel"
-              >
-                <div className="flex items-start justify-between">
-                  <span className="text-lg font-normal tracking-tight text-snow">PayU</span>
-                  <div className="h-7 w-9 rounded-xs border border-white/[0.08] bg-charcoal" aria-hidden="true" />
-                </div>
-                <p className="mt-7 text-left text-base tracking-[0.22em] text-chalk">3243 4535 1345 6432</p>
-                <div className="mt-7 flex items-end justify-between">
-                  <div className="text-left">
-                    <p className="text-[9px] font-medium tracking-wider text-fog uppercase">Valid Thru</p>
-                    <p className="mt-0.5 text-sm font-medium text-snow">12/27</p>
-                  </div>
-                  <div className="flex -space-x-2.5" aria-hidden="true">
-                    <div className="size-7 rounded-full border border-white/[0.06] bg-charcoal" />
-                    <div className="size-7 rounded-full border border-white/[0.1] bg-white/[0.06]" />
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                className="mt-10 flex flex-col items-center gap-4"
-              >
+              </h1>
+              <p className="animate-fade-in mt-6 max-w-md text-lg leading-relaxed text-muted-foreground motion-reduce:animate-none" style={{ animationDelay: '160ms' }}>
+                {t('slide4.subtitle')}
+              </p>
+              <div className="animate-fade-in mt-8 flex flex-wrap items-center gap-3 motion-reduce:animate-none" style={{ animationDelay: '240ms' }}>
                 <Link
                   href={'/onboarding'}
-                  className="inline-flex min-h-[44px] items-center rounded-pill bg-bone px-6 py-2.5 text-sm font-normal text-ink shadow-[0_1px_4px_rgba(0,0,0,0.1),0_0_1px_rgba(0,0,0,0.1)] transition-colors hover:bg-snow cursor-pointer"
+                  className="inline-flex min-h-[48px] items-center rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 cursor-pointer"
                 >
                   {t('getStarted')}
                 </Link>
-                <p className="text-sm font-normal text-steel">{t('hero.freeAdmin')}</p>
-              </motion.div>
-            </div>
-          </section>
-
-          {/* Slide 2: Features */}
-          <section id="app" className="relative flex h-screen w-full snap-start items-center overflow-hidden bg-void">
-            <div className="mx-auto grid w-full max-w-[1080px] grid-cols-1 items-center gap-12 px-6 py-24 lg:grid-cols-12 lg:gap-16">
-              <div className="space-y-6 lg:col-span-5">
-                <span className="inline-block rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-xs font-normal text-fog">
-                  {t('slide2.badge')}
-                </span>
-                <h2 className="text-heading-lg font-normal text-snow">
-                  {t('slide2.title')} <br />
-                  <span className="text-arc-blue">{t('slide2.titleHighlight')}</span>
-                </h2>
-                <p className="max-w-md text-subheading font-normal text-fog">{t('slide2.subtitle')}</p>
+                <Link
+                  href={'/login'}
+                  className="inline-flex min-h-[48px] items-center rounded-full border border-border bg-card px-7 text-sm font-semibold transition-colors hover:bg-accent/10 cursor-pointer"
+                >
+                  {t('nav.login')}
+                </Link>
               </div>
+              <p className="animate-fade-in mt-4 text-xs text-muted-foreground motion-reduce:animate-none" style={{ animationDelay: '300ms' }}>
+                {t('hero.freeAdmin')}
+              </p>
 
-              <div className="grid gap-4 md:grid-cols-2 lg:col-span-7">
-                <div className="space-y-4">
-                  <div className="rounded-card border-[0.5px] border-white/[0.07] bg-graphite p-7 transition-colors duration-300 hover:border-white/[0.14]">
-                    <Zap size={16} className="mb-4 text-signal-blue" aria-hidden="true" />
-                    <h3 className="mb-1.5 text-base font-normal text-snow">{t('slide2.analytics.title')}</h3>
-                    <p className="text-sm leading-relaxed text-fog">{t('slide2.analytics.desc')}</p>
+              <dl className="mt-10 flex gap-10 border-t border-border pt-6">
+                <div>
+                  <dt className="sr-only">{t('slide3.statsAnnual')}</dt>
+                  <dd className="font-heading text-2xl font-bold tabular-nums tracking-tight">50T+</dd>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{t('slide3.statsAnnual')}</p>
+                </div>
+                <div>
+                  <dt className="sr-only">{t('slide3.statsTrusted')}</dt>
+                  <dd className="font-heading text-2xl font-bold tabular-nums tracking-tight">2.4M+</dd>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{t('slide3.statsTrusted')}</p>
+                </div>
+                <div className="hidden sm:block">
+                  <dt className="sr-only">{t('secure.item3')}</dt>
+                  <dd className="flex items-center gap-1.5 font-heading text-2xl font-bold tracking-tight">
+                    ISO
+                    <BadgeCheck size={20} className="text-primary" aria-hidden="true" />
+                  </dd>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{t('secure.item3')}</p>
+                </div>
+              </dl>
+            </div>
+
+            {/* Phone Mockup — decorative */}
+            <div className="relative mx-auto hidden w-[290px] [perspective:1400px] sm:block lg:w-[310px]" aria-hidden="true">
+              <div className="animate-[float-3d_8s_ease-in-out_infinite] motion-reduce:animate-none">
+              <div className="absolute -inset-10 rounded-full bg-primary/10 blur-3xl" />
+              <div className="relative rounded-[3rem] border border-border bg-card p-2.5 shadow-2xl shadow-primary/10">
+                <div className="space-y-5 rounded-[2.5rem] bg-background px-5 pb-7 pt-4">
+                  <div className="mx-auto h-1.5 w-16 rounded-full bg-border" />
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">PayU</p>
+                      <p className="text-sm font-semibold tracking-tight">Budiono</p>
+                    </div>
+                    <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">B</div>
                   </div>
-                  <div className="rounded-card border-[0.5px] border-white/[0.07] bg-graphite p-7 transition-colors duration-300 hover:border-white/[0.14]">
-                    <Globe size={16} className="mb-4 text-signal-blue" aria-hidden="true" />
-                    <h3 className="mb-1.5 text-base font-normal text-snow">{t('slide2.connectivity.title')}</h3>
-                    <p className="text-sm leading-relaxed text-fog">{t('slide2.connectivity.desc')}</p>
+
+                  <div className="rounded-2xl bg-primary p-4 text-primary-foreground shadow-lg shadow-primary/30">
+                    <p className="text-[10px] opacity-70">Total Saldo</p>
+                    <p className="mt-0.5 font-heading text-xl font-bold tracking-tight tabular-nums">Rp24.562.800</p>
+                    <p className="mt-3 text-[10px] font-medium opacity-70">•••• 4682</p>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { icon: QrCode, label: 'QRIS' },
+                      { icon: Zap, label: 'Kirim' },
+                      { icon: Plus, label: 'Top Up' },
+                      { icon: Wallet, label: 'Pocket' },
+                    ].map(({ icon: Icon, label }) => (
+                      <div key={label} className="flex flex-col items-center gap-1.5">
+                        <div className="flex size-11 w-full items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <Icon size={18} />
+                        </div>
+                        <span className="text-[9px] font-medium text-muted-foreground">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      { name: 'QRIS Merchant', amount: '-Rp45.000', positive: false },
+                      { name: 'Top Up Pocket', amount: '+Rp500.000', positive: true },
+                      { name: 'Transfer Budi', amount: '-Rp120.000', positive: false },
+                    ].map((tx) => (
+                      <div key={tx.name} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`flex size-8 items-center justify-center rounded-full ${tx.positive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                            {tx.positive ? <Plus size={14} /> : <QrCode size={14} />}
+                          </div>
+                          <span className="text-xs font-medium">{tx.name}</span>
+                        </div>
+                        <span className={`text-xs font-semibold tabular-nums ${tx.positive ? 'text-primary' : ''}`}>{tx.amount}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="md:h-full">
-                  <div className="flex h-full flex-col justify-center rounded-card border-[0.5px] border-white/[0.07] bg-graphite p-7 transition-colors duration-300 hover:border-white/[0.14]">
-                    <Shield size={16} className="mb-4 text-signal-blue" aria-hidden="true" />
-                    <h3 className="mb-1.5 text-base font-normal text-snow">{t('slide2.security.title')}</h3>
-                    <p className="text-sm leading-relaxed text-fog">{t('slide2.security.desc')}</p>
-                  </div>
+              </div>
+
+              <div className="absolute -right-12 top-16 flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 shadow-xl">
+                <CheckCircle2 size={18} className="text-primary" />
+                <div>
+                  <p className="text-[11px] font-semibold">Payment Successful</p>
+                  <p className="text-[10px] text-muted-foreground">QRIS • Rp45.000</p>
                 </div>
               </div>
+              </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Slide 3: Stats */}
-          <section id="about" className="relative flex h-screen w-full snap-start items-center overflow-hidden bg-void">
-            <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_0.5px,transparent_0.5px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_0.5px,transparent_0.5px)] bg-[size:100px_100px]" />
+        {/* Features */}
+        <section id="features" className="scroll-mt-24 border-t border-border py-20 sm:py-24">
+          <div className="mx-auto max-w-[1080px] px-6">
+            <div className="max-w-xl">
+              <span className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
+                {t('slide2.badge')}
+              </span>
+              <h2 className="mt-5 font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
+                {t('slide2.title')} <span className="text-primary">{t('slide2.titleHighlight')}</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground">{t('slide2.subtitle')}</p>
+            </div>
 
-            <div className="relative z-10 mx-auto grid w-full max-w-[1080px] grid-cols-1 items-center gap-16 px-6 py-24 lg:grid-cols-2">
-              <div className="space-y-10">
-                <div className="space-y-6">
-                  <span className="inline-block rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-xs font-normal text-fog">
+            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { icon: BarChart3, title: t('slide2.analytics.title'), desc: t('slide2.analytics.desc') },
+                { icon: QrCode, title: t('features.qris.title'), desc: t('features.qris.desc') },
+                { icon: Wallet, title: t('features.pockets.title'), desc: t('features.pockets.desc') },
+                { icon: ReceiptText, title: t('features.bills.title'), desc: t('features.bills.desc') },
+                { icon: Globe, title: t('slide2.connectivity.title'), desc: t('slide2.connectivity.desc') },
+                { icon: Shield, title: t('slide2.security.title'), desc: t('slide2.security.desc') },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="group rounded-2xl border border-border bg-card p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                    <Icon size={20} />
+                  </div>
+                  <h3 className="mt-5 font-heading text-lg font-bold tracking-tight">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how" className="scroll-mt-24 py-20 sm:py-24">
+          <div className="mx-auto max-w-[1080px] px-6">
+            <div className="rounded-3xl bg-muted/50 px-8 py-14 sm:px-14">
+              <h2 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{t('how.title')}</h2>
+              <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-6">
+                {[
+                  { n: 1, title: t('how.step1.title'), desc: t('how.step1.desc') },
+                  { n: 2, title: t('how.step2.title'), desc: t('how.step2.desc') },
+                  { n: 3, title: t('how.step3.title'), desc: t('how.step3.desc') },
+                ].map(({ n, title, desc }) => (
+                  <li key={n} className="relative border-t-2 border-primary/20 pt-6 sm:border-t-0 sm:border-l-2 sm:border-l-primary/20 sm:pl-8 sm:pt-0">
+                    <span className="font-heading text-5xl font-extrabold tracking-tighter text-primary/25" aria-hidden="true">
+                      0{n}
+                    </span>
+                    <h3 className="mt-3 font-heading text-lg font-bold tracking-tight">{title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        {/* Security / About */}
+        <section id="about" className="scroll-mt-24 pb-20 sm:pb-24">
+          <div className="mx-auto max-w-[1080px] px-6">
+            <div className="relative overflow-hidden rounded-3xl bg-primary px-8 py-14 text-primary-foreground sm:px-14 sm:py-16">
+              <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
+              <div className="pointer-events-none absolute -bottom-28 -left-20 size-80 rounded-full bg-black/10 blur-2xl" aria-hidden="true" />
+
+              <div className="relative grid gap-12 lg:grid-cols-2 lg:items-center">
+                <div>
+                  <span className="inline-block rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold">
                     {t('slide3.badge')}
                   </span>
-                  <h2 className="text-heading-lg font-normal text-snow">
-                    {t('slide3.title')} <br />
-                    <span className="text-arc-blue">{t('slide3.titleHighlight')}</span>
+                  <h2 className="mt-5 font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
+                    {t('slide3.title')} <span className="opacity-70">{t('slide3.titleHighlight')}</span>
                   </h2>
+                  <p className="mt-4 max-w-md leading-relaxed opacity-80">{t('slide2.security.desc')}</p>
                 </div>
-                <div className="flex gap-16 border-t border-white/[0.07] pt-8">
-                  <div>
-                    <p className="text-heading-lg font-normal text-snow">50T+</p>
-                    <p className="mt-1 text-sm font-normal text-steel">{t('slide3.statsAnnual')}</p>
-                  </div>
-                  <div>
-                    <p className="text-heading-lg font-normal text-snow">2.4M+</p>
-                    <p className="mt-1 text-sm font-normal text-steel">{t('slide3.statsTrusted')}</p>
-                  </div>
-                </div>
+
+                <ul className="space-y-4">
+                  {[
+                    { icon: Lock, label: t('secure.item1') },
+                    { icon: Fingerprint, label: t('secure.item2') },
+                    { icon: BadgeCheck, label: t('secure.item3') },
+                  ].map(({ icon: Icon, label }) => (
+                    <li key={label} className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4 backdrop-blur-sm">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                        <Icon size={18} aria-hidden="true" />
+                      </span>
+                      <span className="text-sm font-semibold">{label}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              {/* Product panel */}
-              <div className="hidden lg:block">
-                <div className="overflow-hidden rounded-card border-[0.5px] border-white/[0.07] bg-graphite shadow-panel">
-                  <div className="flex items-center justify-between border-b border-white/[0.05] px-5 py-3">
-                    <div className="flex gap-1.5" aria-hidden="true">
-                      <div className="size-2 rounded-full bg-white/[0.08]" />
-                      <div className="size-2 rounded-full bg-white/[0.08]" />
-                      <div className="size-2 rounded-full bg-white/[0.08]" />
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 rounded-xs border border-mint/60 px-1.5 py-0.5 text-[9px] font-medium text-mint">
-                      <span className="size-1 rounded-full bg-mint" aria-hidden="true" />
-                      LIVE
-                    </span>
-                  </div>
-                  <div className="divide-y divide-white/[0.04] px-5">
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-xs text-chalk">QRIS Settlement</span>
-                      <span className="text-xs tabular-nums text-snow">Rp 1.240.000.000</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-xs text-chalk">Transfer Clearing</span>
-                      <span className="text-xs tabular-nums text-snow">Rp 892.500.000</span>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-xs text-chalk">Virtual Accounts</span>
-                      <span className="text-xs tabular-nums text-snow">Rp 407.250.000</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 border-t border-white/[0.05] px-5 py-4">
-                    <PieChart size={16} className="text-signal-blue" aria-hidden="true" />
-                    <div>
-                      <p className="text-[9px] font-medium tracking-wider text-fog uppercase">Growth YTD</p>
-                      <p className="text-sm font-medium tabular-nums text-snow">+14.2%</p>
-                    </div>
-                  </div>
+              <div className="relative mt-14 flex gap-14 border-t border-white/15 pt-8">
+                <div>
+                  <p className="font-heading text-3xl font-extrabold tabular-nums tracking-tighter sm:text-4xl">50T+</p>
+                  <p className="mt-1 text-sm opacity-70">{t('slide3.statsAnnual')}</p>
+                </div>
+                <div>
+                  <p className="font-heading text-3xl font-extrabold tabular-nums tracking-tighter sm:text-4xl">2.4M+</p>
+                  <p className="mt-1 text-sm opacity-70">{t('slide3.statsTrusted')}</p>
                 </div>
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Slide 4: CTA */}
-          <section id="support" className="relative flex h-screen w-full snap-start items-center overflow-hidden bg-void">
-            <div className="relative z-10 mx-auto flex w-full max-w-[1080px] flex-col items-center px-6 py-24 text-center">
-              <h2 className="text-display font-normal text-snow lg:text-display-lg">
-                {t('slide4.title')} <br />
-                <span className="text-arc-blue">{t('slide4.titleHighlight')}</span>
-              </h2>
-              <p className="mt-6 max-w-md text-subheading font-normal text-fog">{t('slide4.subtitle')}</p>
-              <Link
-                href={'/onboarding'}
-                className="mt-10 inline-flex min-h-[44px] items-center rounded-pill bg-bone px-6 py-2.5 text-sm font-normal text-ink shadow-[0_1px_4px_rgba(0,0,0,0.1),0_0_1px_rgba(0,0,0,0.1)] transition-colors hover:bg-snow cursor-pointer"
-              >
-                {t('slide4.button')}
+        {/* CTA */}
+        <section id="support" className="scroll-mt-24 border-t border-border py-24 sm:py-32">
+          <div className="mx-auto flex max-w-[1080px] flex-col items-center px-6 text-center">
+            <h2 className="max-w-2xl font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">
+              {t('slide4.title')} <span className="text-primary">{t('slide4.titleHighlight')}</span>
+            </h2>
+            <p className="mt-5 max-w-md text-muted-foreground">{t('slide4.subtitle')}</p>
+            <Link
+              href={'/onboarding'}
+              className="mt-9 inline-flex min-h-[48px] items-center rounded-full bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-colors hover:bg-primary/90 cursor-pointer"
+            >
+              {t('slide4.button')}
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-muted/40">
+        <div className="mx-auto max-w-[1080px] px-6 py-12">
+          <div className="flex flex-col justify-between gap-8 sm:flex-row">
+            <div className="max-w-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="font-heading text-lg font-bold tracking-tight">PayU</span>
+                <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t('footer.tagline')}</p>
+            </div>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <span className="mb-1 text-xs font-semibold uppercase tracking-wider text-foreground/60">Legal</span>
+              <Link href={'/terms'} className="transition-colors hover:text-foreground cursor-pointer">
+                {t('slide4.terms')}
+              </Link>
+              <Link href={'/privacy'} className="transition-colors hover:text-foreground cursor-pointer">
+                {t('slide4.privacy')}
               </Link>
             </div>
-
-            <footer className="absolute bottom-0 left-0 right-0 border-t border-white/[0.07]">
-              <div className="mx-auto flex max-w-[1080px] items-center justify-between px-6 py-6">
-                <span className="text-xs font-normal text-steel">PayU</span>
-                <div className="flex gap-6 text-xs font-normal text-steel">
-                  <Link href={'/terms'} className="transition-colors hover:text-chalk cursor-pointer">
-                    {t('slide4.terms')}
-                  </Link>
-                  <Link href={'/privacy'} className="transition-colors hover:text-chalk cursor-pointer">
-                    {t('slide4.privacy')}
-                  </Link>
-                </div>
-              </div>
-            </footer>
-          </section>
+          </div>
+          <div className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
+            © 2026 PayU. All rights reserved.
+          </div>
         </div>
-
-        {/* Slide Indicators */}
-        <div className="fixed bottom-10 left-1/2 z-50 flex -translate-x-1/2 gap-4">
-          {SLIDE_IDS.map((id, i) => (
-            <button
-              key={id}
-              onClick={() => goToSlide(i)}
-              aria-label={`Go to ${id}`}
-              className="cursor-pointer p-3"
-            >
-              <span
-                className={`block h-1.5 rounded-full transition-all duration-300 ${
-                  currentSlide === i ? 'w-8 bg-bone' : 'w-1.5 bg-white/20 hover:bg-white/40'
-                }`}
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-    </MotionConfig>
+      </footer>
+    </div>
   );
 }

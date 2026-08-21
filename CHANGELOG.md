@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.17.0] - 2026-08-21
+
+### Changed
+
+- **web-app**: Rombak total landing page jadi gaya fintech modern-minimalis terang — heading Outfit (font-heading), aksen primary hijau, alur scroll normal (snap-scroll & slide dots dihapus), konten diperbanyak: grid 6 fitur, bagian "3 langkah", band keamanan, footer lengkap; mockup HP dengan animasi 3D CSS murni (`float-3d`, reduced-motion aware). Keys i18n baru untuk en & id.
+
 ## [1.16.0] - 2026-08-21
 
 ### Changed
