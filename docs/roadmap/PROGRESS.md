@@ -2,6 +2,12 @@
 
 ## Deploy 1.13.75 (2026-08-21)
 
+## Deploy 1.13.76 (2026-08-21)
+
+- **Operators via foundation**: rtk oc apply -k foundation/cluster-operators (ns+OperatorGroup then subscriptions) — CNPG 1.30.0 Succeeded, 3scale v0.13.4 Succeeded, ESO v0.11.0 Succeeded, RHBK 26.6.6 Succeeded, AMQ Installing probe timeout.
+- **ExternalSecret**: apiVersion v1 -> v1beta1 fix, Password v1alpha1 keep, re-apply not patch.
+- **Workloads payu-dev**: rtk oc apply -k workloads/overlays/payu-dev replicas 0 all 31 deploys (ponytail scale 0 pending Tekton), newTag 1.13.76, current deploy 0/0 pods 3 jobs CreateContainerConfigError, old ErrImagePull warnings until TTL. Use rtk oc, semver PATCH.
+
 - **Shared NS delegation + TLS (1.13.75) via Route53 PHZ Z101 + `oc apply -f` shared**: `aws route53 create-hosted-zone apps.fajjjar.my.id Z10103903MRVEAEFIS9U0` `NS ns-806/1199/218/1668` `dig NS` `awsdns` (was Cloudflare `lovisa/clayton`), `oc apply -f ingress/shared.yaml` `shared-ingress` `3` `Unmanaged` `apps.fajjjar.my.id` `shared-ingress-cert` `router-shared-ingress aa2a095a ZKVM4W9LS7TM`, `ClusterIssuer Z035→Z101 apps.fajjjar.my.id` `Ready True` `oc delete challenge/order/request` stale `Z035`, `TXT jrY TTL 10 Z101` `Challenge Presented` `Order pending→valid` `Certificate shared-ingress-cert True CN *.apps.fajjjar.my.id YR2 2026-08-21→11-19`, `aws route53 UPSERT A *.apps.fajjjar.my.id Alias aa2a095a ZKVM4W9LS7TM Z101`, `oc get certificate -A 5 True` `codegraph 4084/73887` `PAYU_VERSION 1.13.74→1.13.75 31`.
 
 ## Deploy 1.13.74 (2026-08-21)

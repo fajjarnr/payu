@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.76] - 2026-08-21
+
+### Fixed (Operator via Foundation + Workloads Replicas 0 + ExternalSecret v1beta1)
+- **Operators (foundation/cluster-operators)**: `rtk oc apply -f namespace-operatorgroup.yaml` + `subscriptions.yaml` via `redhat-operators/certified/community` — CNPG 1.30.0 Succeeded, 3scale-operator v0.13.4 Succeeded, external-secrets-operator v0.11.0 Succeeded, RHBK 26.6.6 Succeeded, AMQ Streams Installing (startup probe timeout, 6 restarts), datagrid/ pipelines pending. Duplicate manual `/tmp/amq` manifests removed, single source `. Use `rtk oc` not plain `oc`.
+- **ExternalSecret CRD**: ` payu-keycloak-client-secrets` apiVersion `external-secrets.io/v1` → `v1beta1` match CRD `externalsecrets.external-secrets.io` (`v1alpha1/v1beta1` only), `Password` remain `generators.external-secrets.io/v1alpha1`. Fix via yaml re-apply not `oc patch`.
+- **Workloads (payu-dev)**: `rtk oc apply -k workloads/overlays/payu-dev` 31 deployments scaled `replicas:0` + images newTag `1.13.76` (ponytail: scale 0 pending Tekton `payu-build-pipeline` build via `image-registry.openshift-image-registry.svc:5000/payu-dev/*:1.13.76`, scale 3 when built) to eliminate `ImagePullBackOff name unknown` warnings; simulators + web-app also 0; current `deploy 0/0`, pods 3 jobs pending `CreateContainerConfigError` (outbox/shedlock) need CNPG Cluster ready. Old `ErrImagePull` events remain until TTL.
+- **CRD**: `OperatorGroup` `Subscription` OLM (`installPlanApproval Automatic`), `APIManager apps.3scale.net/v1alpha1`, `Kafka/ KafkaNodePool kafka.strimzi.io/v1`, `ExternalSecret external-secrets.io/v1beta1`, `Cluster postgresql.cnpg.io/v1`.
+- **SemVer**: bump `1.13.75 → 1.13.76` PATCH infra fix, image tag sync.
+
+### Deferred
+- **LLM-HARDEN-001** skip per lab (payu-mlops 1× GPU, 30d retention).
+
 ## [1.13.75] - 2026-08-21
 
 ### Fixed (Shared Ingress NS Delegation + TLS — Route53 PHZ Z101 + A Alias)

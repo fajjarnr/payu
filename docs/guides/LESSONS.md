@@ -6170,3 +6170,10 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Learning**: `payu-redis` `redis:7.4.1` `*infra-defaults` + `spring-data-redis` `StringRedisTemplate` `SET EX 180` + in-memory fallback, `application.yml` `spring.data.redis.host`.
 - **Action**: `payu-redis` live, `StepUpController` Redis, `TODOS` 3/4, tag v1.13.68.
 
+## 2026-08-21 — Operators via foundation/cluster-operators + ExternalSecret v1beta1 + Workloads replicas 0
+
+- **Use foundation single source**: `foundation/cluster-operators/subscriptions.yaml` sudah definisi CNPG/datagrid/amq-streams/rhbk, jangan bikin file duplikat di `platform/messaging/operator-install.yaml`. Apply via `rtk oc apply -f namespace-operatorgroup.yaml` lalu `subscriptions.yaml` dengan cluster-admin, pakai `rtk oc` bukan plain oc.
+- **ExternalSecret API**: CRD `externalsecrets.external-secrets.io` hanya support `v1beta1/v1alpha1`, bukan `v1`. Manifest `external-secrets.io/v1` gagal `no matches for kind`. Fix update yaml manifest + re-apply (jangan `oc patch`), keep `generators.external-secrets.io/v1alpha1` untuk Password.
+- **Workloads ImagePullBackOff**: internal registry `image-registry.openshift-image-registry.svc:5000/payu-dev/*:1.8.x` name unknown karena imagestream belum built. Ponytail: scale deployments `replicas:0` via kustomization `replicas: count:0` + newTag `1.13.76` pending Tekton `payu-build-pipeline` (scale 3 when built) untuk hilangkan Warning, jangan patch via `oc scale`.
+- **SemVer PATCH**: infra fix 1.13.75→1.13.76, image tag sync via kustomization.
+
