@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-310: Shared Ingress PHZ Delegation + Cert via Z101 + A Alias (2026-08-21)
+
+**Context**: Shared `apps.fajjjar.my.id` Unmanaged `Z035 NoSuchHostedZone` `dig lovisa/clayton` Cloudflare, `shared-ingress` NotFound, `shared-ingress-cert False` `Z035` error, manual PHZ `apps.fajjjar.my.id Z101`.
+
+**Lesson**: Create `aws route53 create-hosted-zone apps.fajjjar.my.id Z1010390MRVEA` `NS 806/1199/218/1668` → update Cloudflare NS `apps` → `dig NS` `awsdns`, `oc apply -f ingress/shared.yaml` `shared-ingress 3 Unmanaged apps.fajjjar.my.id shared-ingress-cert router-shared-ingress aa2a095a ZKVM4W9LS7TM`, patch `ClusterIssuer Zone1 Z035→Z101 apps.fajjjar.my.id` `Ready True`, delete stale `challenge/order/request` `Z035` to force `Z101` `TXT jrY TTL 10` `pending→valid`, `aws route53 UPSERT A *.apps.fajjjar.my.id Alias aa2a095a ZKVM4W9LS7TM Z101`, `oc get certificate shared-ingress-cert True CN *.apps.fajjjar.my.id YR2`. SemVer `1.13.74→1.13.75` `kustomize 5` `apply -k` `codegraph`.
+
+**Applied evidence**: `Z101 2 NS`, `dig NS 4 awsdns`, `shared-ingress aa2a095a`, `shared True YR2 2026-08-21`, `5 True`, `1.13.75`.
+
 ## L-309: Cert-Manager Let's Encrypt Ingress Default via Route53 DNS01 + OperatorGroup + Kustomize Manifest Re-Apply (2026-08-21)
 
 **Context**: Implement `infrastructure/platform/security/cert-manager/letsencrypt untuk ingress default` `apps.payu.ocp.fajjjar.my.id`. Cluster `apps.payu.ocp.fajjjar.my.id` `oc get ingress.config .spec.domain`, `oc get crd certificates.cert-manager.io` NotFound (operator not installed), `default-ingress-cert.yaml` stale `*.apps.cluster-9xtfg...` sandbox, `kustomization.yaml` missing `default-ingress-cert`, duplicate `certificate.apps.yaml` same `app-router-certs`, `cluster-issuer.yaml` missing `payu.ocp` zone `Z068...`, secrets placeholder `${AWS_...}`.

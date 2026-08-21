@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.75] - 2026-08-21
+
+### Fixed (Shared Ingress NS Delegation + TLS — Route53 PHZ Z101 + A Alias)
+
+- **Route53 PHZ**: `aws route53 create-hosted-zone --name apps.fajjjar.my.id` `Z10103903MRVEAEFIS9U0` 2 records `NS ns-806/1199/218/1668`, `dig NS apps.fajjjar.my.id` now `awsdns` (was `lovisa/clayton` Cloudflare), Cloudflare NS updated manual, `oc apply -f infrastructure/foundation/cluster-config/ingress/shared.yaml` `shared-ingress` `3` replicas `Unmanaged` `domain apps.fajjjar.my.id` `defaultCertificate shared-ingress-cert` → `router-shared-ingress LoadBalancer aa2a095a27ab84c8680180976c88e532-abaa3b567480eb0d.elb.ap-southeast-1.amazonaws.com` `ZKVM4W9LS7TM` `172.30.83.240`.
+- **ClusterIssuer Fix**: `letsencrypt/production/cluster-issuer.yaml` `Zone 1 Z03524191B5L20ILPO48O fajjjar` `NoSuchHostedZone` → `Z10103903MRVEAEFIS9U0 apps.fajjjar.my.id` `cert-manager-aws-creds ap-southeast-1` via yaml edit + `oc apply -k` `configured` + `oc create secret` re-apply, `ClusterIssuer letsencrypt-prod-issuer Ready True` `observedGeneration 2`.
+- **Certificate Shared**: `oc delete challenge/order` stale `Z035` + `oc delete certificaterequest shared-ingress-cert-1` → `new TXT _acme-challenge.apps.fajjjar.my.id jrY... TTL 10 Z101` `Presented` `pending → valid` `Order pending → valid` `Challenge 671/896` `Z101`, `aws route53 change-resource-record-sets Z101 UPSERT A *.apps.fajjjar.my.id Alias aa2a095a ZKVM4W9LS7TM`, `oc get certificate shared-ingress-cert -n openshift-ingress Ready True` `subject CN *.apps.fajjjar.my.id issuer C US O Let's Encrypt CN YR2 notBefore 2026-08-21 notAfter 2026-11-19` (was `False Issuing` `Z035` error), `default-ingress-cert True` `api True` stay.
+- **Verification**: `oc get ingresscontroller -A` `default 80m` + `shared-ingress 5s` `2/2` `spec.domain apps.fajjjar.my.id` `oc get svc -n openshift-ingress router-shared-ingress LoadBalancer` `oc get certificate -A 5 True` `oc kustomize 5 Certificate` `oc apply -k --dry-run 11` `codegraph 4084/73887` `rtk grep 31/31 1.13.75`. SemVer `1.13.74→1.13.75` 31 images.
+
+### Verification
+
+- `aws route53 get-hosted-zone Z101` `2 NS`, `dig NS apps.fajjjar.my.id 4 awsdns`, `oc get ingresscontroller shared-ingress` `shared-ingress-cert` `router-shared-ingress aa2a095a`, `oc get certificate shared-ingress-cert True`, `aws TXT Z101 _acme-challenge jrY`, `podman-compose.yml 31 1.13.75`.
+
 ## [1.13.74] - 2026-08-21
 
 ### Fixed (Cert-Manager Let's Encrypt — Ingress Default TLS via Route53 DNS01 — Manifest Re-Apply)
