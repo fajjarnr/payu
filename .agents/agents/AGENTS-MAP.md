@@ -32,6 +32,7 @@ pekerjaan spesifik.
 | `@quality-engineer` | `@tester` | Full-stack testing, contract testing, perf. |
 | `@dx-engineer` | `@orchestrator` | Git workflow, PR standards, CI/CD integration. |
 | `@debugging-methodology` | `@tester` | Root cause analysis, systematic debugging. |
+| `@finops-engineer` | `@auditor` | Audit biaya cloud (OpenCost/Kubecost), alokasi, budget alerts & idle-resource detection. |
 
 ## 🔄 Execution Workflow
 
@@ -74,4 +75,4 @@ mereka menyentuh file/area yang berbeda:
 
 ---
 
-*Last Updated: 2026-08-06*
+*Last Updated: 2026-08-21*

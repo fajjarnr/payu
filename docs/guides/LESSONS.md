@@ -2,6 +2,19 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-304: Swarm Mode Prompt Guide — Parallel Agents via AGENTS-MAP (2026-08-21)
+
+**Context**: `AGENTS.md:60` Swarm Mode + `.agents/agents/AGENTS-MAP.md:61` Parallel Execution, 11 agents + 17 skills `REGISTRY.yaml:1` `v3.3.0` `2026-08-21` `Spring Boot 4.1.0`.
+
+**Lesson**: Swarm = collision guard. **Paralel HANYA jika file/service berbeda**; jika berbagi file/state wajib sekuensial (AGENTS.md:60). Gunakan `git worktree` di `.worktrees/` untuk tugas paralel skala besar, `*.gitignore`. Mapping di `AGENTS-MAP.md:13` — 16 skills→11 agents + `finops-engineer→auditor` (OpenCost/Kubecost). Template:
+- `Swarm paralel: @logic-builder (backend/account-service) + @migrator (DB) + @styler (frontend/web-app) — file berbeda`
+- `Sekuensial: @logic-builder → @tester di file sama — jangan paralel`
+- `Full SDLC: @lifecycle-manager plan (approval) → @scaffolder → @logic-builder/@migrator/@styler paralel → @tester verify → @auditor/@compliance-auditor review → @orchestrator PR`
+- `Handshake: @web-artifacts-builder→@builder, @dx-engineer→@orchestrator`
+Contoh siap pakai: `Swarm: transfer antar rekening — @logic-builder domain+idempotency X-Idempotency-Key di account-service + @migrator V__ DECIMAL(19,4) outbox + @styler screen web-app paralel, lalu @tester + @auditor sebelum @orchestrator PR`. Sebelum merge/PR wajib `subagent reviewer` audit diff.
+
+**Applied evidence**: `AGENTS.md:60` pointer ke `AGENTS-MAP.md` + 11 agents patch Context7 gate `Spring Boot 4.1.0` (`/spring-projects/spring-boot` `v4.1.0`), `AGENTS-MAP.md:35` finops row, `REGISTRY.yaml` `3.3.0` `2026-08-21`.
+
 ## L-303: Support Hexagonal Needs Domain Port + Adapter, Not Direct Repository in Web (2026-08-21)
 
 **Context**: BE-SUPP-001 `SupportController` directly injected `SupportTicketRepository`/`FaqRepository` + returned `SupportTicketEntity` — ArchUnit `Adapter.Web mayNotBeAccessedByAnyLayer` failed 53 tests 1 failure.

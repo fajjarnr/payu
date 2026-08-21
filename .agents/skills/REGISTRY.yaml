@@ -1,11 +1,12 @@
-version: 3.2.1
-last_updated: 2026-05-04
+version: 3.3.0
+last_updated: 2026-08-21
 consolidation_notes: |
   Standardized AI skill ecosystem for PayU Platform.
   - principal-architect: Unified architectural strategy and documentation.
   - platform-engineer: Integrated DevOps, SRE, and release management.
   - Hexagonal Architecture & Domain-Driven Design (DDD) enforcement.
   - Secure-by-design principles (PCI-DSS & OJK compliance).
+  - 2026-08-21: Sync mapping with AGENTS-MAP (finops-engineer → auditor), align last_updated.
 skills:
   - name: ai-engineer
     version: 2.0.0
