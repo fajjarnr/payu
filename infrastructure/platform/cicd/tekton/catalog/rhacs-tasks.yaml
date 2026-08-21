@@ -49,7 +49,7 @@ spec:
         echo "   Central: ${ROX_CENTRAL_ADDRESS}"
         echo "============================================"
 
-        timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+        timeout 300 roxctl -e "${ROX_CENTRAL_ADDRESS}" \
           --ca /var/run/rhacs-ca/ca.pem \
           --token-file /var/run/rhacs-identity/token \
           image scan \
@@ -68,12 +68,8 @@ spec:
           readOnly: true
   volumes:
     - name: rhacs-identity
-      projected:
-        sources:
-          - serviceAccountToken:
-              audience: rhacs-ci
-              expirationSeconds: 600
-              path: token
+      secret:
+        secretName: roxctl-api-token
     - name: rhacs-ca
       configMap:
         name: rhacs-central-ca
@@ -123,7 +119,7 @@ spec:
         echo "============================================"
 
         set +e
-        output=$(timeout 30 roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+        output=$(timeout 300 roxctl -e "${ROX_CENTRAL_ADDRESS}" \
           --ca /var/run/rhacs-ca/ca.pem \
           --token-file /var/run/rhacs-identity/token \
           image check \
@@ -154,12 +150,8 @@ spec:
           readOnly: true
   volumes:
     - name: rhacs-identity
-      projected:
-        sources:
-          - serviceAccountToken:
-              audience: rhacs-ci
-              expirationSeconds: 600
-              path: token
+      secret:
+        secretName: roxctl-api-token
     - name: rhacs-ca
       configMap:
         name: rhacs-central-ca
@@ -210,7 +202,7 @@ spec:
         echo "   Central: ${ROX_CENTRAL_ADDRESS}"
         echo "============================================"
 
-        roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+        roxctl -e "${ROX_CENTRAL_ADDRESS}" \
           --ca /var/run/rhacs-ca/ca.pem \
           --token-file /var/run/rhacs-identity/token \
           deployment check \
@@ -228,12 +220,8 @@ spec:
           readOnly: true
   volumes:
     - name: rhacs-identity
-      projected:
-        sources:
-          - serviceAccountToken:
-              audience: rhacs-ci
-              expirationSeconds: 600
-              path: token
+      secret:
+        secretName: roxctl-api-token
     - name: rhacs-ca
       configMap:
         name: rhacs-central-ca

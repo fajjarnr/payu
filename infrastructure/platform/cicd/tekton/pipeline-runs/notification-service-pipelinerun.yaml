@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: notification-service-build-
+  namespace: payu-cicd
+  labels:
+    app: payu
+    service: notification-service
+    type: build
+spec:
+  pipelineRef:
+    name: notification-service-pipeline
+  params:
+    - name: service-name
+      value: notification-service
+    - name: git-url
+      value: https://github.com/fajjarnr/payu.git
+    - name: git-revision
+      value: main
+    - name: image
+      value: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
+    - name: image-tag
+      value: "1.15.1"
+    - name: target-env
+      value: "dev"
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+    - name: dockerconfig
+      secret:
+        secretName: redhat-registry-pull
+    - name: m2-cache
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+    - name: signing-secrets
+      secret:
+        secretName: signing-secrets
+    - name: maven-settings
+      secret:
+        secretName: maven-settings
+

@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: statement-service-build-
+  namespace: payu-cicd
+  labels:
+    app: payu
+    service: statement-service
+    type: build
+spec:
+  pipelineRef:
+    name: statement-service-pipeline
+  params:
+    - name: service-name
+      value: statement-service
+    - name: git-url
+      value: https://github.com/fajjarnr/payu.git
+    - name: git-revision
+      value: main
+    - name: image
+      value: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
+    - name: image-tag
+      value: "1.15.1"
+    - name: target-env
+      value: "dev"
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+    - name: dockerconfig
+      secret:
+        secretName: redhat-registry-pull
+    - name: m2-cache
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+    - name: signing-secrets
+      secret:
+        secretName: signing-secrets
+    - name: maven-settings
+      secret:
+        secretName: maven-settings
+

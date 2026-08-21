@@ -39,8 +39,12 @@ spec:
         KEY_PATH="$(workspaces.signing-secrets.path)/cosign.key"
         PASSWORD_PATH="$(workspaces.signing-secrets.path)/cosign.password"
         test -s "$KEY_PATH"
-        test -s "$PASSWORD_PATH"
-        export COSIGN_PASSWORD="$(cat "$PASSWORD_PATH")"
+        # ponytail: empty-password keypair (lab) - tolerate missing/empty password file
+        if [ -s "$PASSWORD_PATH" ]; then
+          export COSIGN_PASSWORD="$(cat "$PASSWORD_PATH")"
+        else
+          export COSIGN_PASSWORD=""
+        fi
 
         echo "[*] Attesting CycloneDX SBOM from $(params.SBOM_PATH)"
         timeout 60 cosign attest --yes --key "$KEY_PATH" --predicate "$(params.SBOM_PATH)" --type cyclonedx "$(params.IMAGE)"

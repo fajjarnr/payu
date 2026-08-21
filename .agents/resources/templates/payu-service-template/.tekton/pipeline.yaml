@@ -101,14 +101,12 @@ spec:
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: SEVERITY, value: CRITICAL}, {name: EXIT_CODE, value: "0"}]
     - name: rhacs-scan
       runAfter: [trivy]
-      when: [{input: $(params.target-env), operator: in, values: ["sit", "uat", "preprod", "prod"]}]
       taskRef:
         name: rhacs-image-scan
         kind: Task
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: ROX_CENTRAL_ENDPOINT, value: central.stackrox.svc:443}]
     - name: cosign-sign
       runAfter: [rhacs-scan]
-      when: [{input: $(params.target-env), operator: in, values: ["sit", "uat", "preprod", "prod"]}]
       taskRef:
         name: cosign-sign
         kind: Task

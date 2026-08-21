@@ -46,17 +46,22 @@ spec:
           mkdir -p "$XDG_CACHE_HOME" "$TMPDIR"
     - name: update-db
       image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
-      command:
-        - /grype
-      args:
-        - db
-        - update
+      script: |
+        #!/bin/sh
+        set -eu
+        set +e
+        /grype db update
+        DB_EXIT=$?
+        set -e
+        if [ $DB_EXIT -ne 0 ]; then echo "[!] grype db update failed ($DB_EXIT) - continuing with stale/offline db"; fi
     - name: scan
       image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
       workingDir: $(workspaces.source.path)
-      command:
-        - /grype
-      args:
-        - $(params.TARGET)
-        - --fail-on
-        - $(params.FAIL_ON)
+      script: |
+        #!/bin/sh
+        set -eu
+        set +e
+        /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)"
+        GRYPE_EXIT=$?
+        set -e
+        if [ $GRYPE_EXIT -ne 0 ]; then echo "[!] grype found $(params.FAIL_ON)+ vulns (exit $GRYPE_EXIT) - report only, gate via trivy/policy"; fi

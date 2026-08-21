@@ -101,7 +101,6 @@ spec:
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: SEVERITY, value: CRITICAL}, {name: EXIT_CODE, value: "0"}]
     - name: rhacs-scan
       runAfter: [trivy]
-      when: [{input: $(params.target-env), operator: in, values: ["sit", "uat", "preprod", "prod"]}]
       taskRef:
         name: rhacs-image-scan
         kind: Task

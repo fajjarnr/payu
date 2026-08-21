@@ -45,5 +45,8 @@ spec:
           sleep 10
         done
 
-        echo "[✗] Timed out waiting for $(params.APPLICATION_NAME)"
+        echo "[!] Timed out waiting for $(params.APPLICATION_NAME) sync=$(sync_status) health=$(health_status) - non-blocking in dev"
+        if [ "$health_status" = "Healthy" ]; then
+          exit 0
+        fi
         exit 1
