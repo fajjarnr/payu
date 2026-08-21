@@ -163,3 +163,45 @@
     transform: translateY(0);
   }
 }
+
+/*
+ * Landing page tokens — "Default" style reference (DESIGN.md).
+ * Additive only: these names are not referenced by any other page.
+ */
+@theme {
+  /* Colors */
+  --color-void: #0b0c0e;
+  --color-graphite: #131416;
+  --color-charcoal: #1f1f21;
+  --color-steel: #71717a;
+  --color-fog: #858687;
+  --color-chalk: #cececf;
+  --color-snow: #ffffff;
+  --color-bone: #f2f2f2;
+  --color-ink: #333333;
+  --color-signal-blue: #3b82f6;
+  --color-arc-blue: #60a5fa;
+  --color-mint: #4ade80;
+
+  /* Type scale — whisper-weight display */
+  --text-display-lg: 64px;
+  --text-display-lg--line-height: 0.94;
+  --text-display-lg--letter-spacing: -1.28px;
+  --text-display: 52px;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -1.3px;
+  --text-heading-lg: 42px;
+  --text-heading-lg--line-height: 1.15;
+  --text-heading-lg--letter-spacing: -0.88px;
+  --text-subheading: 18px;
+  --text-subheading--line-height: 1.45;
+  --text-subheading--letter-spacing: -0.61px;
+
+  /* Shapes */
+  --radius-pill: 10px;
+  --radius-card: 12px;
+
+  /* Elevation — inset highlight, no cast shadows on cards */
+  --shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 20px 44px rgba(0, 0, 0, 0.14);
+}

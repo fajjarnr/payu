@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.16.0] - 2026-08-21
+
+### Changed
+
+- **web-app**: Redesign landing page mengikuti style reference "Default" (DESIGN.md) — canvas void `#0b0c0e`, headline Inter weight-400 52–64px, CTA pill bone, border hairline 0.5px, aksen Signal Blue; kartu kredit mockup di-restyle gelap, slide indicator dots di-restyle, dekorasi tropis dihapus. Token desain bersifat aditif (hanya dipakai landing page); tidak ada perubahan logic/state/i18n.
+
 ## [1.15.1] - 2026-08-22
 
 ### Fixed
