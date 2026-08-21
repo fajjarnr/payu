@@ -2,6 +2,9 @@
 
 ## Deploy 1.13.75 (2026-08-21)
 
+## Deploy 1.13.79 (2026-08-21)
+
+- **Build script**: TAG 1.13.78→1.13.79, login, web-app, podman 4.9.3, 29 apps (31 deploys) 0/1 ImagePull 1.13.79 pending build via podman run maven.
 ## Deploy 1.13.78 (2026-08-21)
 
 - **Workloads**: fix kustomize image name tag, newTag 1.13.77, replicas 1 all backend + web-app via `rtk oc apply -k workloads/overlays/payu-dev` 31 deploys 0/1 ImagePullBackOff (registry empty, need Tekton build).

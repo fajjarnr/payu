@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.79] - 2026-08-21
+
+### Fixed (build-push-all.sh TAG 1.13.78 + 29 apps deploy)
+- **Script**: `scripts/build-push-all.sh` TAG `latest`→`1.13.78`, add `podman login --tls-verify=false -u $(oc whoami) -p $(oc whoami -t) $REGISTRY`, add web-app build (was only backend), REGISTRY route `default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id` sync kustomization `image-registry...:5000/payu-dev/*:1.13.78` (imagePull via imagestream). Podman 4.9.3 installed, mvn still needed for jar (podman run maven:3.9 pending).
+- **Deploy**: 31 deploys in payu-dev (23 microservices +5 sims + lending-rules + web-app + 2 extra) — SERVICES.md expects 29 (23+5+1) infra 33 total, current 31 deploys 0/1 pending ImagePull 1.13.78, 29 apps as requested deployed manifests via `rtk oc apply -k workloads/overlays/payu-dev` replicas 1, image kustomize name fix retained.
+- **SemVer**: bump 1.13.78→1.13.79 PATCH script fix.
+
 ## [1.13.78] - 2026-08-21
 
 ### Fixed (Workloads image kustomize fix + scale 1 deploy all backend + web-app)

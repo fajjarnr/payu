@@ -4,7 +4,7 @@ set -e
 
 REGISTRY="default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id"
 NAMESPACE="payu-dev"
-TAG="latest"
+TAG="1.13.79"
 
 # Java Spring Boot services (have target/*.jar)
 SPRING_SERVICES=(
