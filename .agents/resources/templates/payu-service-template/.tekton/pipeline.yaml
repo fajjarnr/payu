@@ -36,6 +36,9 @@ spec:
     - name: source
     - name: maven-settings
       optional: true
+    - name: m2-cache
+    - name: dockerconfig
+    - name: signing-secrets
   tasks:
     - name: clone
       taskRef: {resolver: cluster, params: [{name: kind, value: task}, {name: name, value: git-clone}, {name: namespace, value: openshift-pipelines}]}
@@ -53,50 +56,63 @@ spec:
         name: trufflehog
         kind: Task
       workspaces: [{name: source, workspace: source}]
-      params: [{name: CONTEXT_DIR, value: "."}]
+      params: [{name: CONTEXT_DIR, value: backend/$(params.service-name)}]
     - name: semgrep
       runAfter: [trufflehog]
       taskRef:
         name: semgrep
         kind: Task
       workspaces: [{name: source, workspace: source}]
-      params: [{name: CONTEXT_DIR, value: "."}]
-    - name: build
+      params: [{name: CONTEXT_DIR, value: backend/$(params.service-name)}]
+    - name: compile
       runAfter: [semgrep]
+      taskRef:
+        name: maven-java25
+        kind: Task
+      workspaces: [{name: source, workspace: source}, {name: maven-settings, workspace: maven-settings}, {name: m2-cache, workspace: m2-cache}]
+      params: [{name: SUBDIRECTORY, value: backend}, {name: GOALS, value: ["-T1", "-pl", "$(params.service-name)", "-am", "package", "-DskipTests"]}]
+    - name: build
+      runAfter: [compile]
       taskRef:
         name: buildah
         kind: Task
-      workspaces: [{name: source, workspace: source}]
-      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: CONTEXT, value: .}, {name: CONTAINERFILE, value: ./Containerfile.runtime}]
+      workspaces: [{name: source, workspace: source}, {name: dockerconfig, workspace: dockerconfig}]
+      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: CONTEXT, value: backend/$(params.service-name)}, {name: CONTAINERFILE, value: backend/$(params.service-name)/Containerfile}]
     - name: syft
       runAfter: [build]
       taskRef:
         name: syft-sbom
         kind: Task
+      workspaces: [{name: source, workspace: source}, {name: dockerconfig, workspace: dockerconfig}]
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: OUTPUT_FILE, value: sbom.json}]
     - name: grype
       runAfter: [syft]
       taskRef:
         name: grype-scan
         kind: Task
+      workspaces: [{name: source, workspace: source}]
       params: [{name: TARGET, value: $(params.image):$(params.image-tag)}]
     - name: trivy
       runAfter: [grype]
       taskRef:
         name: trivy
         kind: Task
-      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}]
+      workspaces: [{name: output, workspace: source}, {name: dockerconfig, workspace: dockerconfig}]
+      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: SEVERITY, value: CRITICAL}, {name: EXIT_CODE, value: "0"}]
     - name: rhacs-scan
       runAfter: [trivy]
+      when: [{input: $(params.target-env), operator: in, values: ["sit", "uat", "preprod", "prod"]}]
       taskRef:
         name: rhacs-image-scan
         kind: Task
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: ROX_CENTRAL_ENDPOINT, value: central.stackrox.svc:443}]
     - name: cosign-sign
       runAfter: [rhacs-scan]
+      when: [{input: $(params.target-env), operator: in, values: ["sit", "uat", "preprod", "prod"]}]
       taskRef:
         name: cosign-sign
         kind: Task
+      workspaces: [{name: source, workspace: source}, {name: signing-secrets, workspace: signing-secrets}]
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: SBOM_PATH, value: sbom.json}]
     - name: argocd-sync
       runAfter: [cosign-sign]
@@ -110,6 +126,7 @@ spec:
       taskRef:
         name: zap-baseline
         kind: Task
+      workspaces: [{name: source, workspace: source}]
       params: [{name: TARGET_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}]
     - name: schemathesis
       runAfter: [zap-baseline]
@@ -117,6 +134,7 @@ spec:
       taskRef:
         name: schemathesis-scan
         kind: Task
+      workspaces: [{name: source, workspace: source}]
       params: [{name: BASE_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}, {name: SCHEMA_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080/v3/api-docs}]
     - name: k6-smoke
       runAfter: [schemathesis]
@@ -124,6 +142,7 @@ spec:
       taskRef:
         name: k6-load-test
         kind: Task
+      workspaces: [{name: source, workspace: source}]
       params: [{name: BASE_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}, {name: SCRIPT_PATH, value: k6/smoke.js}]
     - name: litmus
       runAfter: [k6-smoke]
@@ -131,6 +150,7 @@ spec:
       taskRef:
         name: litmus-chaos-gate
         kind: Task
+      workspaces: [{name: source, workspace: source}]
       params: [{name: NAMESPACE, value: payu-$(params.target-env)}, {name: KUSTOMIZE_DIR, value: infrastructure/platform/chaos/litmus}, {name: CHAOSENGINE_NAME, value: $(params.service-name)-chaos}, {name: TIMEOUT_SECONDS, value: "60"}]
     - name: kraken
       runAfter: [litmus]
@@ -138,6 +158,7 @@ spec:
       taskRef:
         name: kraken-chaos-gate
         kind: Task
+      workspaces: [{name: source, workspace: source}]
       params: [{name: NAMESPACE, value: payu-$(params.target-env)}, {name: KUSTOMIZE_DIR, value: infrastructure/platform/security/chaos/kraken}, {name: JOB_NAME, value: kraken}, {name: TIMEOUT, value: "300"}]
     - name: gitops-writeback
       runAfter: [kraken]

@@ -37,4 +37,19 @@ spec:
     - name: dockerconfig
       secret:
         secretName: redhat-registry-pull
+    - name: m2-cache
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+    - name: signing-secrets
+      secret:
+        secretName: signing-secrets
+    - name: maven-settings
+      secret:
+        secretName: maven-settings
+
   timeout: 1h30m

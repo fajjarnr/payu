@@ -1,0 +1,71 @@
+# Custom Maven Task with JDK 25 for PayU services.
+# ============================================================
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: maven-java25
+  namespace: payu-cicd
+  labels:
+    app: payu
+    type: build
+spec:
+  description: Maven build task with Red Hat OpenJDK 25 for PayU services.
+  params:
+    - name: GOALS
+      type: array
+      description: Maven goals to run
+      default:
+        - package
+    - name: MAVEN_MIRROR_URL
+      type: string
+      description: Maven repository mirror URL
+      default: ""
+    - name: SUBDIRECTORY
+      type: string
+      description: Subdirectory within workspace for sources
+      default: ""
+    - name: MAVEN_IMAGE
+      type: string
+      description: Maven image to use
+      default: registry.redhat.io/ubi9/openjdk-25@sha256:f35678fbb52016a6b61ea586ee4413e616a300cdf0969bf0bfc5b7c6791033d6
+  workspaces:
+    - name: source
+      description: Workspace with source code
+    - name: maven-settings
+      description: Maven settings.xml
+      optional: true
+    - name: m2-cache
+      description: Maven local repository cache
+      mountPath: /root/.m2
+      optional: true
+  stepTemplate:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
+  steps:
+    - name: maven-goals
+      image: $(params.MAVEN_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.SUBDIRECTORY)
+      env:
+        - name: HOME
+          value: /tekton/home
+        - name: MAVEN_MIRROR_URL
+          value: $(params.MAVEN_MIRROR_URL)
+      command:
+        - /usr/bin/mvn
+      args:
+        - "$(params.GOALS[*])"
+        - -Dmaven.repo.local=$(workspaces.source.path)/.m2
+        - -Duser.home=/tekton/home
+        - -Dmaven.resolver.transport=wagon
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "250m"
+        limits:
+          memory: "4Gi"
+          cpu: "1000m"

@@ -312,7 +312,7 @@ test.describe('Accessibility - Full Site Scan @a11y', () => {
       // Report violations but don't fail the test for minor issues
       if (accessibilityScanResults.violations.length > 0) {
         // Intentional console.warn for accessibility reporting - suppressing lint
-        console.warn(`Accessibility violations on ${name}:`,
+        console.warn('Accessibility violations detected:', name,
           accessibilityScanResults.violations.map((v) => ({
             rule: v.id,
             impact: v.impact,

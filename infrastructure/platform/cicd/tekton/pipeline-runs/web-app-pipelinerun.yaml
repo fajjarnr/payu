@@ -1,24 +1,24 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  generateName: account-service-build-
+  generateName: web-app-build-
   namespace: payu-cicd
   labels:
     app: payu
-    service: account-service
+    service: web-app
     type: build
 spec:
   pipelineRef:
-    name: account-service-pipeline
+    name: web-app-pipeline
   params:
     - name: service-name
-      value: account-service
+      value: web-app
     - name: git-url
       value: https://github.com/fajjarnr/payu.git
     - name: git-revision
       value: main
     - name: image
-      value: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
+      value: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     - name: image-tag
       value: "1.15.1"
     - name: target-env

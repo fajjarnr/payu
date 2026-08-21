@@ -4,8 +4,8 @@ metadata:
   name: default
   annotations:
     payu.io/updated-by: "platform-engineer"
-    payu.io/updated-at: "2026-08-01"
-    payu.io/reason: "cluster-9xtfg worker autoscaling (us-east-1f, m6a.4xlarge)"
+    payu.io/updated-at: "2026-08-21"
+    payu.io/reason: "PayU cluster autoscaling (ap-southeast-1, m6a.4xlarge/r6a.4xlarge)"
 spec:
   # Allow k6/batch pods (priority=-10) to trigger scale-up
   podPriorityThreshold: -10

@@ -1,10 +1,11 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: payu-service-pipeline
+  name: biller-simulator-pipeline
   annotations:
     results.tekton.dev/result-retention: "365d" # PCI Req10 + §4.4 Tekton Results 12m
     payu.io/catalog-version: payu-catalog-v1
+    payu.io/service: biller-simulator
     tekton.dev/chains: "true" # SLSA L2+ provenance
 spec:
   description: |
@@ -13,17 +14,20 @@ spec:
   params:
     - name: service-name
       type: string
+      default: "biller-simulator"
     - name: git-url
       type: string
+      default: "https://github.com/fajjarnr/payu.git"
     - name: git-revision
       type: string
       default: main
     - name: image
       type: string
+      default: "image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator"
       description: registry/namespace/name (no tag)
     - name: image-tag
       type: string
-      default: "1.0.0"
+      default: "1.15.1"
       description: semver tag, promote by digest @sha256
     - name: target-env
       type: string
@@ -56,28 +60,28 @@ spec:
         name: trufflehog
         kind: Task
       workspaces: [{name: source, workspace: source}]
-      params: [{name: CONTEXT_DIR, value: backend/$(params.service-name)}]
+      params: [{name: CONTEXT_DIR, value: backend/simulators/biller-simulator}]
     - name: semgrep
       runAfter: [trufflehog]
       taskRef:
         name: semgrep
         kind: Task
       workspaces: [{name: source, workspace: source}]
-      params: [{name: CONTEXT_DIR, value: backend/$(params.service-name)}]
+      params: [{name: CONTEXT_DIR, value: backend/simulators/biller-simulator}]
     - name: compile
       runAfter: [semgrep]
       taskRef:
         name: maven-java25
         kind: Task
-      workspaces: [{name: source, workspace: source}, {name: maven-settings, workspace: maven-settings}, {name: m2-cache, workspace: m2-cache}]
-      params: [{name: SUBDIRECTORY, value: backend}, {name: GOALS, value: ["-T1", "-pl", "$(params.service-name)", "-am", "package", "-DskipTests"]}]
+      workspaces: [{name: source, workspace: source}, {name: maven-settings, workspace: maven-settings}]
+      params: [{name: SUBDIRECTORY, value: backend}, {name: GOALS, value: ["-T1", "-pl", "simulators/biller-simulator", "-am", "package", "-DskipTests"]}]
     - name: build
       runAfter: [compile]
       taskRef:
         name: buildah
         kind: Task
       workspaces: [{name: source, workspace: source}, {name: dockerconfig, workspace: dockerconfig}]
-      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: CONTEXT, value: backend/$(params.service-name)}, {name: CONTAINERFILE, value: backend/$(params.service-name)/Containerfile}]
+      params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: CONTEXT, value: backend/simulators/biller-simulator}, {name: CONTAINERFILE, value: backend/simulators/biller-simulator/Containerfile}]
     - name: syft
       runAfter: [build]
       taskRef:
@@ -108,6 +112,7 @@ spec:
       params: [{name: IMAGE, value: $(params.image):$(params.image-tag)}, {name: ROX_CENTRAL_ENDPOINT, value: central.stackrox.svc:443}]
     - name: cosign-sign
       runAfter: [rhacs-scan]
+      when: [{input: $(params.target-env), operator: in, values: ["sit", "uat", "preprod", "prod"]}]
       taskRef:
         name: cosign-sign
         kind: Task
@@ -118,7 +123,7 @@ spec:
       taskRef:
         name: argocd-sync-wait
         kind: Task
-      params: [{name: APPLICATION_NAME, value: $(params.service-name)-$(params.target-env)}, {name: NAMESPACE, value: payu-$(params.target-env)}]
+      params: [{name: APPLICATION_NAME, value: $(params.service-name)-$(params.target-env)}, {name: NAMESPACE, value: openshift-gitops}]
     - name: zap-baseline
       runAfter: [argocd-sync]
       when: [{input: $(params.target-env), operator: in, values: ["dev", "sit"]}]
@@ -142,7 +147,7 @@ spec:
         name: k6-load-test
         kind: Task
       workspaces: [{name: source, workspace: source}]
-      params: [{name: BASE_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}, {name: SCRIPT_PATH, value: k6/smoke.js}]
+      params: [{name: BASE_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}, {name: SCRIPT_PATH, value: tests/performance/k6/local-smoke.js}]
     - name: litmus
       runAfter: [k6-smoke]
       when: [{input: $(params.target-env), operator: in, values: ["sit"]}]

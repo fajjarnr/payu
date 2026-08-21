@@ -18,6 +18,8 @@ resources:
   - litmus-gate-task.yaml
   - kraken-gate-task.yaml
   - rhacs-tasks.yaml
+  - maven-task.yaml
+  - maven-java21-task.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: payu

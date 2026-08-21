@@ -36,6 +36,7 @@ spec:
       description: Source code workspace
     - name: dockerconfig
       description: Docker registry credentials
+      optional: true
   results:
     - name: BUILT_IMAGE_DIGEST
       description: SHA digest of the built image

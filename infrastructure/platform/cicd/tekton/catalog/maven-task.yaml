@@ -1,0 +1,62 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: maven
+  namespace: payu-cicd
+  labels:
+    app.kubernetes.io/part-of: payu
+spec:
+  description: "Run Maven builds for PayU Java services (Spring Boot & Quarkus)"
+  params:
+    - name: GOALS
+      type: array
+      description: Maven goals to execute
+      default: ["package", "-DskipTests"]
+    - name: MAVEN_IMAGE
+      type: string
+      description: Maven builder image
+      default: "registry.redhat.io/ubi9/openjdk-21@sha256:a0692b56b28a61418f122857cf717431317294127e9946ed99272b574fe54bdf"
+    - name: CONTEXT_DIR
+      type: string
+      description: Directory containing pom.xml
+      default: "."
+    - name: MAVEN_MIRROR_URL
+      type: string
+      description: Maven mirror/cache URL
+      default: ""
+  workspaces:
+    - name: source
+      description: Source code workspace
+    - name: maven-settings
+      description: Maven settings.xml
+      optional: true
+    - name: m2-cache
+      description: Maven local repository cache
+      mountPath: /root/.m2
+      optional: true
+  results:
+    - name: BUILD_VERSION
+      description: The version of the built artifact
+  steps:
+    - name: maven-build
+      image: $(params.MAVEN_IMAGE)
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
+      command: ["mvn"]
+      args: ["$(params.GOALS[*])"]
+      env:
+        - name: MAVEN_OPTS
+          value: "-Xmx1024m -XX:+UseParallelGC"
+      resources:
+        requests:
+          memory: "1Gi"
+          cpu: "500m"
+        limits:
+          memory: "2Gi"
+          cpu: "2"
+    - name: extract-version
+      image: "registry.redhat.io/ubi9/ubi-minimal@sha256:c0e70387664f30cd9cf2795b547e4a9a51002c44a4a86aa9335ab030134bf392"
+      workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
+      script: |
+        #!/bin/bash
+        VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d '[:space:]')
+        echo -n "$VERSION" | tee $(results.BUILD_VERSION.path)

@@ -23,6 +23,7 @@ spec:
       description: "Shared source workspace containing the generated SBOM"
     - name: signing-secrets
       description: "Workspace containing cosign.key and cosign.password"
+      optional: true
   results:
     - name: SIGN_MODE
       description: "Signing mode used for the image"

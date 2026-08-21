@@ -1,20 +1,53 @@
-# PayU MachineAutoscaler — current cluster (cluster-nkk8q, ap-southeast-1)
-# Worker pool: m6a.4xlarge (16 vCPU / 64 GiB) in AZ ap-southeast-1a.
-# Min 5 = current baseline (46+ pods in payu-dev + promotion environments).
-# Max 10 = 160 vCPU / 640 GiB ceiling for SIT/UAT/preprod/prod + k6 load runs.
+# PayU MachineAutoscaler — current cluster (payu-kn6xr, ap-southeast-1)
+# Worker pool: 3 AZs (ap-southeast-1a, 1b, 1c).
+# Min 1 per AZ (3 total) = current baseline (42+ pods in payu-dev + platform services).
+# Max 4 per AZ (12 total) = dynamic scaling ceiling for SIT/UAT/preprod/prod + k6 load runs.
+---
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
 metadata:
   name: payu-worker-ap-southeast-1a
   namespace: openshift-machine-api
   annotations:
-    payu.io/updated-at: "2026-08-03"
-    payu.io/reason: "worker pool growth for promotion environments (DEPLOY-011) and k6 performance runs"
+    payu.io/updated-at: "2026-08-21"
+    payu.io/reason: "worker pool growth for promotion environments and k6 performance runs"
 spec:
-  minReplicas: 5
-  maxReplicas: 10
+  minReplicas: 1
+  maxReplicas: 4
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
-    name: cluster-nkk8q-6v55s-worker-ap-southeast-1a
+    name: payu-kn6xr-worker-ap-southeast-1a
+---
+apiVersion: autoscaling.openshift.io/v1beta1
+kind: MachineAutoscaler
+metadata:
+  name: payu-worker-ap-southeast-1b
+  namespace: openshift-machine-api
+  annotations:
+    payu.io/updated-at: "2026-08-21"
+    payu.io/reason: "worker pool growth for promotion environments and k6 performance runs"
+spec:
+  minReplicas: 1
+  maxReplicas: 4
+  scaleTargetRef:
+    apiVersion: machine.openshift.io/v1beta1
+    kind: MachineSet
+    name: payu-kn6xr-worker-ap-southeast-1b
+---
+apiVersion: autoscaling.openshift.io/v1beta1
+kind: MachineAutoscaler
+metadata:
+  name: payu-worker-ap-southeast-1c
+  namespace: openshift-machine-api
+  annotations:
+    payu.io/updated-at: "2026-08-21"
+    payu.io/reason: "worker pool growth for promotion environments and k6 performance runs"
+spec:
+  minReplicas: 1
+  maxReplicas: 4
+  scaleTargetRef:
+    apiVersion: machine.openshift.io/v1beta1
+    kind: MachineSet
+    name: payu-kn6xr-worker-ap-southeast-1c
 
