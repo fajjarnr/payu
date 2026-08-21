@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.14.0] - 2026-08-22
+
+### Added
+- **Polyrepo 1:1 Pipelines**: 23 per-service `Pipeline` CRs in `payu-cicd` (`account-service-pipeline` ... `wallet-service-pipeline`) via `tekton/pipelines/per-service/` (each `taskRef` -> catalog `payu-catalog-v1` git resolver, `PipelineRun` per-service isolated, no `when` filter). Monorepo `payu-build-pipeline` deprecated (`payu-monorepo-archive`).
+
 ## [1.13.83] - 2026-08-22
 
 ### Added
