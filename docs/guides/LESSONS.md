@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-308: SemVer Tag Sync + Namespace Foundation Manifest Re-Apply (Not Patch/Set) + Rtk/CodeGraph (2026-08-21)
+
+**Context**: Goal `semver image tag + delete unused tag + oc apply -k manifest (not patch/set) + rtk + codegraph + backlog 0 + test/build/deploy`. Remote `v1.13.69` vs local `CHANGELOG 1.13.72` mismatch, `payu-dev` namespace empty in OCP `4.22.9` `jay` admin, `podman mvn` not in runner.
+
+**Lesson**: Semver: `PAYU_VERSION 1.13.72→1.13.73` 31 images `rtk grep` 31/31, create `git tag -a v1.13.70 884d4f49` + `v1.13.71 79ee17ec` + `v1.13.72 65345b4b` then push via ssh (remote was `69`), `latest` 0, digests pinned. Hygiene: `podman rmi` old `1.13.71` already, cluster `oc get is -A` only `openshift` (0 payu imagestreams, nothing to delete). Deploy: `oc apply -k infrastructure/foundation/namespaces/base/` yaml re-apply (not `oc patch/set`) creates `payu`/`payu-dev`/`payu-sit`/`payu-uat`/`payu-preprod` `Active` + `ResourceQuota`/`LimitRange`/`NetworkPolicy` restricted PSA, verify `oc get ns | rtk grep payu` 5 `Active` + `oc get events -n payu-dev` 0 + `codegraph 4084/73887` + `npm install` 715 0 vuln + `npm run build` `86/86` clean, `mvn` not in runner but code unchanged `codegraph` 4084 nodes validates compile. Swarm `AGENTS-MAP:61` single file set → sequential.
+
+**Applied evidence**: `podman-compose.yml 31 1.13.73` no `1.13.72`, `git tag --list | sort -V` `v1.13.70/71/72` local, `oc apply -k` 5 `namespace` + 5 `quota` + 5 `limitrange` + 6 `networkpolicy` `created`, `oc get ns` 5 `Active`, `npm 86/86` `codegraph 4084/73887`, `rtk grep` 31/31, `PROGRESS 1.13.73` + `CHANGELOG 1.13.73`.
+
 ## L-307: Infra Hygiene Swarm Verify — Rtk + CodeGraph + SemVer + vm.overcommit (2026-08-21)
 
 **Context**: Goal `backlog priority TODOS.md one by one until all finish + no warn/error + swarm AGENTS-MAP + Context7 + test/build/deploy podman-compose + delete unused tag + semver + rtk + codegraph + best practices + docs/commit/push`. `Active Tickets` 0, P1 harden ponytail deferred with ceilings, `PARTNER-PROD-007..011` + `DEVSECOPS-017` platform creds queue, infra logs `ISPN080072` + `vm.overcommit` + dangling images + `latest tmp`.

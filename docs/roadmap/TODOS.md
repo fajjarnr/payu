@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.72` (2026-08-21) |
+| **Last Release** | `1.13.73` (2026-08-21) |
 | **Core Banking MVP** | 🔴 Belum MVP production ready — PARTNER-PROD-007..011 + DEVSECOPS-017 OPEN (platform creds queue); **login web live** (LOGIN-001..006 closed) |
 | **Backlog Aktif** | PARTNER-PROD-007..011 (5 gates) + DEVSECOPS-017 — TXN-HARDEN-001 + ACC-HARDEN-001 CLOSED 1.13.71, sisa harden ponytail deferred |
-| **Last Updated** | 2026-08-21 — Infra hygiene 1.13.72 semver + rtk 0 warn/error + codegraph 4051/73375 + dangling prune + `Active Tickets` 0 (ponytail deferred ceilings, platform queue pending creds) |
+| **Last Updated** | 2026-08-21 — SemVer tag sync 1.13.73 + namespace foundation manifest re-apply 5 Active via oc apply -k (not patch/set) + rtk grep 31/31 + codegraph 4084/73887 + npm 86/86 + `Active Tickets` 0 (ponytail deferred ceilings, platform queue pending creds) |
 
 ---
 

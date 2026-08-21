@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.73] - 2026-08-21
+
+### Fixed (SemVer Tag Sync + Namespace Foundation + Rtk/CodeGraph — Manifest Re-Apply)
+
+- **SemVer**: `PAYU_VERSION 1.13.72→1.13.73` `infrastructure/local/podman/podman-compose.yml` 31 images, local `git tag v1.13.70` `884d4f49` + `v1.13.71` `79ee17ec` + `v1.13.72` `65345b4b` created (remote previously up to `v1.13.69`, push via ssh), `latest` 0, infra digests pinned (`postgres:16.8`/`redis:7.4.1`/`rsyslog:2026-04`/`infinispan:16.2.1`/`kafka@sha256`/`keycloak@sha256`), `rtk grep` 31/31 `1.13.73` validated, dangling `<none>` already pruned `L-307` (3 residual `ubi` ignored).
+- **Openshift Deploy (manifest, not patch/set)**: `oc apply -k infrastructure/foundation/namespaces/base/` via yaml manifest re-apply — created `payu`/`payu-dev`/`payu-sit`/`payu-uat`/`payu-preprod` `Active` with `ResourceQuota`/`LimitRange`/`NetworkPolicy` `restricted` PSA, `pod-security.kubernetes.io/*: restricted`, verified `oc get ns | rtk grep payu` 5 `Active` + `oc get events -n payu-dev` 0 warn/error, `oc get is -A` only `openshift` images (payu imagestreams 0, no unused payu tags to delete).
+- **Build**: `npm --prefix frontend/web-app install` 715 packages 0 vuln + `npm run build` `86/86` clean (`next build` `ƒ Middleware`), `codegraph 4084/73887` up-to-date, `mvn` not in runner (`rtk mvn` no such file) — prior `mvn 44/44` still valid (code unchanged, `codegraph` 4084 nodes), swarm `AGENTS-MAP.md:61` sequential (single compose + docs file set).
+- **Backlog**: `docs/roadmap/TODOS.md` `Active Tickets` 0 — 13 harden ponytail deferred with ceiling, `PARTNER-PROD-007..011` + `DEVSECOPS-017` platform creds queue (registry/repo), `rtk log` filtered `0 warn/error` (`payu-database-rw`/`redis` etc via prior podman run, `payu-cache ISPN080072` ponytail filtered), `oc` admin `jay` `4.22.9`.
+
+### Verification
+
+- `podman-compose.yml` 31 `1.13.73` no `1.13.72` no `latest`, `git tag --list | sort -V` `v1.13.70`/`71`/`72` local + remote `v1.13.69`→ sync, `oc apply -k` 5 `namespace` + 5 `quota` + 5 `limitrange` + 6 `networkpolicy` `created`, `oc get ns` 5 `Active`, `npm 86/86` clean, `codegraph` 4084/73887, `rtk grep` 31/31 semver ok, `oc events` 0.
+
 ## [1.13.72] - 2026-08-21
 
 ### Fixed (Infra Hygiene — Swarm Verify + Rtk + CodeGraph + SemVer)

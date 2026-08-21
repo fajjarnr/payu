@@ -1,5 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.73 (2026-08-21)
+
+- **SemVer tag sync + Namespace foundation manifest re-apply (1.13.73) via `oc apply -k` + `rtk` + `codegraph`**: `PAYU_VERSION 1.13.72→1.13.73` 31 images `rtk grep` 31/31, local `git tag v1.13.70 884d4f49` + `v1.13.71 79ee17ec` + `v1.13.72 65345b4b` created (remote was `v1.13.69`, push via ssh), `latest` 0, dangling already pruned. `oc apply -k infrastructure/foundation/namespaces/base/` yaml manifest re-apply (not `oc patch/set`) → `payu`/`payu-dev`/`payu-sit`/`payu-uat`/`payu-preprod` `Active` 5 + `ResourceQuota` 5 + `LimitRange` 5 + `NetworkPolicy` 6 `restricted` PSA, `oc get ns | rtk grep payu` 5 `Active`, `oc get events -n payu-dev` 0, `oc get is -A` only `openshift` (0 payu imagestreams, no unused payu tags). `npm install` 715 0 vuln + `npm run build` `86/86` clean, `codegraph 4084/73887` up-to-date, `mvn` not in runner but prior `44/44` still valid (code unchanged). `Active Tickets` 0 — 13 harden ponytail deferred, `PARTNER-PROD-007..011` + `DEVSECOPS-017` creds queue. Swarm `AGENTS-MAP:61` sequential (single file set).
+
 ## Deploy 1.13.72 (2026-08-21)
 
 - **Infra hygiene swarm verify (1.13.72) via `rtk` + `codegraph` + semver**: `Active Tickets` 0 — `TXN-HARDEN-002..006` + `ACC-HARDEN-002/003` + `AUTH/GATEWAY/COMPLIANCE/PORTAL` ponytail deferred with ceiling (strict invariant or prod creds trigger), `PARTNER-PROD-007..011` + `DEVSECOPS-017` platform creds queue (OCP `registry.redhat.io` auth for Kafka/Artemis/Keycloak, `VaultStaticSecret payu/<env>`, `Barman S3`, `Loki KMS` — not closable locally, documented `TODOS.md:19`). Swarm `AGENTS-MAP.md:61` evaluated — single infra file set → sequential.
