@@ -76,7 +76,7 @@ class WebhookUrlValidatorServiceTest {
         @DisplayName("rejects userinfo in URL")
         void rejectsUserinfo() {
             assertThrows(IllegalArgumentException.class,
-                    () -> validator(PUBLIC_V4).validate("https://user:pass@hooks.example.com/payu") // trufflehog:ignore -- test userinfo rejection);
+                    () -> validator(PUBLIC_V4).validate("https://user:pass@hooks.example.com/payu")); // trufflehog:ignore -- test userinfo rejection
         }
 
         @Test
