@@ -74,6 +74,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0065](0065-api-portal-service-openapi-aggregation-and-developer-experience-standard.md) | API Portal Service — OpenAPI Aggregation & DX (PORTAL-HARDEN) | Accepted | 2026-08-22 |
 | [0066](0066-polyrepo-pipeline-per-service-devsecops-standard.md) | Polyrepo Per-Service DevSecOps Pipeline (Monorepo→Polyrepo, 6 stages, SLSA) | Accepted | 2026-08-22 |
 | [0067](0067-llm-integration-for-payu-services-standard.md) | LLM Integration for PayU Services — RAG, Guardrails & Private Deployment (BPPD, FinRAG-12B) | Proposed | 2026-08-22 |
+| [0068](0068-keda-autoscaling-kafka-and-prometheus-standard.md) | KEDA Autoscaling — Kafka Lag & Prometheus Triggers (HPA++) | Proposed | 2026-08-22 |
 
 
 ## 🚀 How to Create a New ADR
