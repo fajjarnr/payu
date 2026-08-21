@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` & `payu-sso` all 30 microservices + 5 simulators + Next.js web application + Keycloak + PostgreSQL + Kafka + DataGrid + ActiveMQ Artemis 2/2 Clustered all **1/1 Running Ready** (2026-08-21). Route `https://payu-dev.apps.fajjjar.my.id` returns 200 healthy. |
-| **Last Release** | `1.13.80` (2026-08-21) |
+| **Last Release** | `1.13.81` (2026-08-21) |
 | **Core Banking MVP** | 🟢 MVP workloads live on OpenShift — all services migrated Flyway DB, ActiveMQ clustered broker live, 94/94 web-app tests & 86/86 SSG pages passing; partner prod credentials queue remains. |
 | **Backlog Aktif** | Sisa harden ponytail deferred (ceiling when strict needed) |
-| **Last Updated** | 2026-08-21 — Full deployment v1.13.80 on OpenShift: all 30 services, 5 simulators, web-app, ActiveMQ broker cluster, and infra 1/1 Running Ready with 0 error logs |
+| **Last Updated** | 2026-08-21 — SemVer sync v1.13.80→1.13.81: package.json/podman-compose/workloads 31× 1.13.81 + oc tag 31× + rtk oc apply -k → 42/42 1/1 Running Ready 0 error logs |
 
 ---
 

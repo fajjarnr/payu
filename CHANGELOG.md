@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.81] - 2026-08-21
+
+### Fixed
+- **SemVer Image Tag Sync (1.13.80→1.13.81)**: Aligned `package.json` `1.13.15→1.13.81`, `infrastructure/local/podman/podman-compose.yml` `31× PAYU_VERSION 1.13.75→1.13.81`, `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` `31× newTag 1.13.79→1.13.81` via `oc tag -n payu-dev payu-dev/<service>:1.13.80 → :1.13.81` + `rtk oc apply -k workloads/overlays/payu-dev` (not `oc patch/set`). Verified `44/44` backend `BUILD SUCCESS` (`mvn -f backend/pom.xml clean package -DskipTests -T 1C`), `npm --prefix frontend/web-app run build` `86/86` `0` (`Next.js 16` `ƒ Middleware`, `rtk npm` `0 error 2 workspace-root warn ponytail`), `oc get deployments -n payu-dev` `31/31 1.13.81`, `oc get pods -n payu-dev` `42/42 1/1 Running Ready` (`payu-sso` `2/2`), `curl -k https://payu-dev.apps.fajjjar.my.id/api/health` `200 healthy`, `codegraph 4088/73891` up-to-date, recent-30s `0 WARN/ERROR` (`SpringDoc`/`Flyway` startup WARN only in historic window, filtered). `DEVSECOPS-017`/`PARTNER-PROD-007..011` remain platform queue (HPA/PDB `dev` `scale 1` `ponytail: HPA delete for quota` per `kustomization.yaml:213`, prod `min 3 max 10` when prom).
+
 ## [1.13.80] - 2026-08-21
 
 ### Added

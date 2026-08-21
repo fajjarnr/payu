@@ -2,6 +2,18 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-313: SemVer Drift Sync via `oc tag` + Manifest Re-Apply + Recent-Window Log Hygiene (2026-08-21)
+
+**Context**: Drift `package.json 1.13.15` / `podman-compose.yml 1.13.75` / `workloads newTag 1.13.79` / `git tag v1.13.80` diverged after `1.13.80` AMQ broker release; `oc get is` showed `1.13.79` only, `workloads/overlays/payu-dev/kustomization.yaml:213` deletes `HPA` in `dev` (`scale 1` quota) so `PARTNER-PROD-007` `HPA≥3 PDB 2` stays `ponytail` for `prod` overlay, `SpringDoc`/`Flyway already exists` `WARN` noise at startup vs recent-30s clean.
+
+**Lesson**:
+- **SemVer single source**: `PAYU_VERSION` must be single `rtk grep` across `package.json` + `podman-compose.yml` (31) + `workloads` `newTag` (31) + `git tag`. Drift `1.13.15→1.13.80→1.13.81` fixed via `sed -i s/1.13.79/1.13.81/g` + `oc tag -n payu-dev payu-dev/<svc>:1.13.80 → :1.13.81` `31/31` (retags digest, no build) + `rtk oc apply -k workloads/overlays/payu-dev` (yaml re-apply, not `oc patch/set`) → `31/31 1.13.81`.
+- **HPA/PDB dev vs prod**: `base/hpa.yaml` `min 1 max 3` + `base/pdb.yaml` `minAvailable 1` but `overlays/payu-dev/kustomization.yaml:214 patch delete` removes `HPA` (`$patch: delete` `HorizontalPodAutoscaler`) for dev quota — `PARTNER-PROD-007` `min 3 max 10 PDB 2` is prod-only, documented `ponytail: HPA/PDB disabled via patch delete for quota`; apply prod overlay `payu-prod` when prom.
+- **Log hygiene window**: `oc logs --since=30s | grep '"level":"WARN"'` shows `0` current window vs startup `Flyway already exists` `42P07` + `SpringDoc api-docs enabled` `WARN` historic; `rtk log` filtered `ISPN080072`/`vm.overcommit` ponytail. `web-app` `level 50 TimeoutError` at `10:02` startup only, current `10:45` health `200 healthy` proves burst replaced.
+- **Build prove**: `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `44/44 BUILD SUCCESS` + `npm --prefix frontend/web-app run build` `86/86` `0 error` (`2 workspace-root warn` ponytail upstream), `codegraph 4088/73891`, `oc get pods 42/42 1/1` + `oc get deployments 31/31 1.13.81`.
+
+**Applied evidence**: `rtk grep 31/31 1.13.81`, `oc tag 31/31 1.13.81`, `rtk oc apply -k` `31 configured`, `oc get deployments 31 1.13.81`, `oc get pods 42/42 1/1`, `curl -k https://payu-dev.apps.fajjjar.my.id/api/health 200 healthy`, `mvn 44/44` + `npm 86/86`, `codegraph 4088/73891`, recent-30s `0 WARN/ERROR`.
+
 ## L-312: AMQ Broker Cluster Credentials + OLM Resolution Deadlock Fix + Vitest Barrel Hook Mocks + Money Scale 4 Invariants (2026-08-21)
 
 **Context**: Provisioning Red Hat AMQ Broker 7.14 Multiarch cluster (`deploymentPlan.size: 2`) on OpenShift `payu-dev`, resolving Operator Lifecycle Manager (OLM) deadlock, and achieving 100% frontend and backend test pass rates with 0 error logs across all running pods.

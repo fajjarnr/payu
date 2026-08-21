@@ -1,5 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.81 (2026-08-21)
+
+- **SemVer Sync + Redeploy 31 Workloads (1.13.80→1.13.81)**: Aligned `package.json` `1.13.15→1.13.81`, `podman-compose.yml` `31× PAYU_VERSION 1.13.75→1.13.81`, `workloads/overlays/payu-dev/kustomization.yaml` `31× newTag 1.13.79→1.13.81` + comment `ponytail: scale 1 dev single replica; HPA/PDB disabled via patch delete for quota`. Retagged `oc tag -n payu-dev payu-dev/<service>:1.13.80→:1.13.81` `31/31` then `rtk oc apply -k workloads/overlays/payu-dev` (yaml re-apply, not `oc patch/set`) → `31/31 1.13.81`. Verified `44/44` backend `BUILD SUCCESS`, `npm 86/86` clean (`rtk npm` `0 error`, `2 workspace-root warn ponytail`), `oc get pods -n payu-dev` `42/42 1/1 Running Ready` + `payu-sso 2/2`, `oc get deployments` `31/31 1.13.81`, `curl -k https://payu-dev.apps.fajjjar.my.id/api/health` `200 healthy`, `codegraph 4088/73891`, recent-30s `0 WARN/ERROR` (historic `SpringDoc`/`Flyway` `already exists` WARN startup only).
+- **Backlog**: `Active Tickets` `0` — 13 harden `ponytail deferred` (`TODOS.md:53` ceiling), `PARTNER-PROD-007..011` + `DEVSECOPS-017` platform queue (dev `scale 1` `HPA delete` ponytail, prod `HPA min 3 max 10 PDB 2` when prom).
+
 ## Deploy 1.13.80 (2026-08-21)
 
 - **Clustered ActiveMQ Artemis Broker (2/2 Running Ready)**: Resolved OLM dependency deadlock in `openshift-operators` by removing duplicate ESO subscription. Configured `AMQ_CLUSTER_USER` and `AMQ_CLUSTER_PASSWORD` in `payu-secrets.yaml` for clustered broker replication. Applied `amq-broker.yaml` resulting in `payu-broker-ss-0` and `payu-broker-ss-1` running ready (1/1) with JGroups discovery. `notification-service` and `integration-service` JMS consumers connected with 0 errors.
