@@ -6180,3 +6180,7 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 ## 2026-08-21 — CNPG secrets via overlay
 
 - **CNPG bootstrap secrets** must exist before Cluster: payu-database-app/superuser not found → CreateContainerConfigError, fix add `cnpg-secrets.yaml` stringData via `data/overlays/dev/kustomization.yaml` resources, apply with `rtk oc apply -k`, not `oc create secret`.
+
+## 2026-08-21 — Kustomize images name must not include tag
+
+- Kustomize images transformer matches `name` exactly. Overlay had `name: .../service:1.8.22` but base deployment `image: ...:1.8.84` → no match, newTag not applied. Fix remove tag from name: `name: .../service` + newTag. Use rtk oc apply -k, not oc set image.

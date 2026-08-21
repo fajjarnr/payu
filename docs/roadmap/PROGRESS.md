@@ -2,6 +2,9 @@
 
 ## Deploy 1.13.75 (2026-08-21)
 
+## Deploy 1.13.78 (2026-08-21)
+
+- **Workloads**: fix kustomize image name tag, newTag 1.13.77, replicas 1 all backend + web-app via `rtk oc apply -k workloads/overlays/payu-dev` 31 deploys 0/1 ImagePullBackOff (registry empty, need Tekton build).
 ## Deploy 1.13.77 (2026-08-21)
 
 - **Data**: rtk oc apply -k data/overlays/dev cnpg-secrets payu-database-app/superuser → payu-database-1 Running 1/1, initdb Completed, payu-cache 1/1, shedlock-bootstrap Running, outbox Connection refused pending.

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.78] - 2026-08-21
+
+### Fixed (Workloads image kustomize fix + scale 1 deploy all backend + web-app)
+- **Kustomize**: images `name: ...:tag` → `name: ...` without tag for transformer match, newTag `1.13.77` all 31 services, replicas 1 (ponytail: scale 0→1 per request deploy semua service). Before auth 1.8.84 not patched.
+- **Deploy**: `rtk oc apply -k workloads/overlays/payu-dev` 31 deploys 0/1 pending ImagePullBackOff 1.13.77 name unknown (internal registry empty, mvn/podman not local, need Tekton pipeline). Previous 1.13.76 scale 0 hid warnings.
+- **SemVer**: bump 1.13.77→1.13.78 PATCH kustomize fix.
+
 ## [1.13.77] - 2026-08-21
 
 ### Fixed (CNPG DB secrets + outbox/shedlock + AMQ health)
