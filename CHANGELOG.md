@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.72] - 2026-08-21
+
+### Fixed (Infra Hygiene — Swarm Verify + Rtk + CodeGraph + SemVer)
+
+- **Infra (Podman)**: semver `1.13.71→1.13.72` `podman tag` 29 images, `podman rmi` cleanup old `1.13.71` tags (no `latest`, dangling pruned via `podman rmi -f` — 3 residual `ubi` `<none>` ignored), `COMPOSE_PROFILES=apps podman compose config` clean, `vm.overcommit_memory=1` verified, `payu-database-rw`/`payu-cache`/`payu-redis`/`payu-rustfs`/`payu-audit-syslog` healthy; Kafka/Artemis/Keycloak need `registry.redhat.io` login — platform queue (tracked `TODOS.md:19` + `DEVSECOPS-017`). `podman logs` `rtk log` 0 warn/error (`payu-redis` 0 after recreate, `payu-cache` `ISPN080072` ponytail filtered upstream JMX — `JAVA_OPTS_BASE -Dinfinispan.server.jmx.enabled=false` already, no impact).
+- **Build**: `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `44/44` BUILD SUCCESS, `npm --prefix frontend/web-app run build` `86/86` clean (`next build` `ƒ Middleware`).
+- **CodeGraph/Rtk**: `scripts/refresh-codegraph.sh --status` index 4051 files/73375 nodes up-to-date, `rtk log` filtered checks for all infra containers, `rtk grep` semver validation.
+- **Backlog**: `docs/roadmap/TODOS.md` `Active Tickets` 0 — all P1 harden ponytail deferred with ceiling + upgrade path, `PARTNER-PROD-007..011` + `DEVSECOPS-017` require OCP/registry creds (platform queue), swarm `AGENTS-MAP.md:61` parallel evaluated (single service file set → sequential).
+
+### Verification
+
+- `podman images` 29 `1.13.72` no `latest`, no `1.13.71` (removed), `podman compose config` no warn, `rtk log` `payu-database-rw` 0 `payu-redis` 0 `payu-cache` filtered 1 WARN ponytail, `mvn 44/44` + `npm 86/86` clean.
+
 ## [1.13.71] - 2026-08-21
 
 ### Fixed (Backlog — TXN-HARDEN-001 + ACC-HARDEN-001 CLOSED, sisa harden ponytail deferred)

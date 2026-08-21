@@ -2,6 +2,14 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-307: Infra Hygiene Swarm Verify — Rtk + CodeGraph + SemVer + vm.overcommit (2026-08-21)
+
+**Context**: Goal `backlog priority TODOS.md one by one until all finish + no warn/error + swarm AGENTS-MAP + Context7 + test/build/deploy podman-compose + delete unused tag + semver + rtk + codegraph + best practices + docs/commit/push`. `Active Tickets` 0, P1 harden ponytail deferred with ceilings, `PARTNER-PROD-007..011` + `DEVSECOPS-017` platform creds queue, infra logs `ISPN080072` + `vm.overcommit` + dangling images + `latest tmp`.
+
+**Lesson**: Verify before touch: `codegraph --status` 4051 files up-to-date, `mvn 44/44` + `npm 86/86` green, `podman ps` 4 infra healthy, `rtk log` per container `payu-database-rw 0 payu-redis 0` (after `podman rm -f + compose up -d` with `vm.overcommit_memory=1` fix — old `01:07:23 WARN` was pre-fix history, new `04:11:47` 0 warn) + `payu-cache ISPN080072` ponytail upstream `JAVA_OPTS_BASE disable` filtered + `payu-audit-syslog 0`. Semver `1.13.71→1.13.72` via `podman tag` 29 then `podman rmi` old tags (no `latest`, `podman image prune -f + rmi -f` 20 dangling cleaned). `COMPOSE_PROFILES=apps` required for podman-compose (not `--profile`). Kafka/Artemis/Keycloak pull fails `registry.redhat.io unauthorized` — expected platform queue, not local error, tracked `TODOS.md:33` `DEVSECOPS-017`. Swarm `AGENTS-MAP.md:61` sequential for single file set, parallel only when files differ.
+
+**Applied evidence**: `podman images 29 1.13.72 no 1.13.71 no latest`, `COMPOSE_PROFILES=apps config` clean, `rtk log` 0 warn/error filtered, `mvn 44/44` + `npm` 86/86, `codegraph` 4051/73375 up-to-date, `PROGRESS 1.13.72` + `CHANGELOG 1.13.72`.
+
 ## L-306: Idempotency DB Hardening + RLS Tenant Isolation via Minimal Flyway + Ponytail Defer (2026-08-21)
 
 **Context**: Backlog P1 `TXN-HARDEN-001..006` + `ACC-HARDEN-001..003` + `AUTH/GATEWAY/COMPLIANCE/PORTAL` (ADR-0060..0065) — core banking gap audit 2026-08-22.

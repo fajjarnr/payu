@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.72 (2026-08-21)
+
+- **Infra hygiene swarm verify (1.13.72) via `rtk` + `codegraph` + semver**: `Active Tickets` 0 — `TXN-HARDEN-002..006` + `ACC-HARDEN-002/003` + `AUTH/GATEWAY/COMPLIANCE/PORTAL` ponytail deferred with ceiling (strict invariant or prod creds trigger), `PARTNER-PROD-007..011` + `DEVSECOPS-017` platform creds queue (OCP `registry.redhat.io` auth for Kafka/Artemis/Keycloak, `VaultStaticSecret payu/<env>`, `Barman S3`, `Loki KMS` — not closable locally, documented `TODOS.md:19`). Swarm `AGENTS-MAP.md:61` evaluated — single infra file set → sequential.
+- **Infra**: semver `1.13.71→1.13.72` `podman tag` 29 + `podman rmi` old `1.13.71` (no `latest`, dangling `podman rmi -f` 20 cleaned, 3 residual `ubi <none>` filtered), `COMPOSE_PROFILES=apps podman compose config` clean, `vm.overcommit_memory=1` verified `sysctl 1`, `payu-database-rw`/`payu-cache`/`payu-redis`/`payu-rustfs`/`payu-audit-syslog` healthy; recreated `payu-redis` `4.11.47` 0 warn/error (was 1 WARN before `vm.overcommit` fix), `payu-cache` `ISPN080072` ponytail filtered (`JAVA_OPTS_BASE` disable already, upstream image bug, filtered in `rtk`).
+- **Build**: `mvn 44/44` BUILD SUCCESS (34s), `npm 86/86` clean (`next build`).
+- **Rtk/CodeGraph**: `rtk log` `0 warn/error` (`payu-database-rw` 0, `payu-redis` 0, `payu-rustfs` 0, `payu-audit-syslog` 0, `payu-cache` 1 WARN ponytail filtered), `rtk grep` semver validated `29/29 1.13.72`, `scripts/refresh-codegraph.sh --status` 4051 files 73375 nodes up-to-date, `COMPOSE_PROFILES=apps config` clean.
+
 ## Deploy 1.13.71 (2026-08-21)
 
 - **Harden TXN-001 + ACC-001 CLOSED (1.13.71) via `@migrator` + codegraph + Context7**: `V28 ux_transactions_tenant_idempotency` `UNIQUE(tenant_id,idempotency_key) WHERE NOT NULL` (gantikan `V14` non-unique INDEX) + `IdempotencyInterceptor` `required=true` 6 endpoints live; `V110/V111` `budgets`/`sensitive_user_data` `FORCE RLS` + `tenant_isolation_*` (lengkapan `V107-109`), `TenantEnforcementAspect` fail-closed. Sisa 13 harden ponytail deferred (domain split, inbox/result, reconciliation `ShedLock usingDbTime`, Resilience4j per-rail, callback HMAC/mTLS, blind index/KMS BYOK, lifecycle reconcile, DPoP, refresh rotation, flows, AML WORM, 3scale edge, OpenAPI Pact) — ceiling + upgrade path di `TODOS.md`.
