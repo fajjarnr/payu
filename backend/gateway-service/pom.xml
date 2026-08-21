@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.quarkus.platform</groupId>
         <artifactId>quarkus-bom</artifactId>
-        <version>3.33.1</version>
+        <version>3.33.3</version>
         <relativePath/>
     </parent>
 
@@ -121,11 +121,11 @@
             <artifactId>quarkus-smallrye-jwt</artifactId>
         </dependency>
 
-        <!-- Nimbus JOSE+JWT for proper JWT validation with JWKS support -->
+        <!-- Nimbus JOSE+JWT for proper JWT validation with JWKS support — patched CVE-2025-53864 -->
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.40</version>
+            <version>10.9</version>
         </dependency>
 
         <!-- Health & Metrics -->
@@ -261,7 +261,7 @@
             <plugin>
                 <groupId>io.quarkus.platform</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
-                <version>3.33.1</version>
+                <version>3.33.3</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>

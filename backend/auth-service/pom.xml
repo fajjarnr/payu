@@ -19,7 +19,7 @@
     <properties>
         <java.version>25</java.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
-        <keycloak.version>26.0.0</keycloak.version>
+        <keycloak.version>26.0.12</keycloak.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <test.excluded.groups>integration</test.excluded.groups>
     </properties>
@@ -69,7 +69,7 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.82</version>
+            <version>1.84</version>
         </dependency>
 
         <!-- Keycloak Admin Client -->
