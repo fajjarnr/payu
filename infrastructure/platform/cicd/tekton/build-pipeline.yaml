@@ -6,6 +6,10 @@ metadata:
   labels:
     app: payu
     type: build
+    payu.io/deprecated: "true"
+  annotations:
+    payu.io/deprecated: "monorepo 23-way contention — frozen as payu-monorepo-archive after account-service polyrepo cutover (ADR-0066)"
+    payu.io/replaced-by: "per-service-pipelines"
 spec:
   description: |
     Build pipeline for PayU services with DevSecOps gates.
