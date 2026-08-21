@@ -175,17 +175,23 @@ export class TransactionService {
   }
 
   async addParticipant(splitBillId: string, participant: SplitBillParticipant): Promise<SplitBill> {
-    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants`, participant);
+    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants`, participant, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('split-bill:add-participant', splitBillId + ':' + participant.accountId) }
+    });
     return response.data;
   }
 
   async acceptParticipation(splitBillId: string, participantId: string): Promise<SplitBill> {
-    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/accept`);
+    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/accept`, {}, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('split-bill:accept', splitBillId + ':' + participantId) }
+    });
     return response.data;
   }
 
   async declineParticipation(splitBillId: string, participantId: string): Promise<SplitBill> {
-    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/decline`);
+    const response = await api.post<SplitBill>(`/split-bills/${splitBillId}/participants/${participantId}/decline`, {}, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('split-bill:decline', splitBillId + ':' + participantId) }
+    });
     return response.data;
   }
 

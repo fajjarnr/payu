@@ -83,6 +83,13 @@ public class WebhookConfig {
         if (DEV_DEFAULT_SECRET.equals(security.getSecret())) {
             log.warn("***** SECURITY WARNING: Webhook secret is using the default dev value. "
                     + "Set 'webhook.security.secret' to a strong, unique value in production! *****");
+            String active = System.getenv("SPRING_PROFILES_ACTIVE");
+            if (active == null) active = System.getProperty("spring.profiles.active", "");
+            boolean isProdLike = active != null && java.util.Set.of("prod", "container", "staging", "production").stream().anyMatch(active::contains);
+            // ponytail: fail-closed in prod-like profiles — dev/container local remains warn-only without breaking local compose
+            if (isProdLike) {
+                throw new IllegalStateException("webhook.security.secret default dev value forbidden in profile '" + active + "' — set WEBHOOK_SECRET via Vault");
+            }
         }
     }
 

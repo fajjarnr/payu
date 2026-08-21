@@ -1,6 +1,8 @@
 package id.payu.notification.adapter.crypto;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -32,6 +34,20 @@ public class NotificationCrypto {
     String salt;
 
     private SecretKeySpec secretKey;
+
+    @PostConstruct
+    void validateEncryptionConfig() {
+        String profile = ConfigProvider.getConfig().getOptionalValue("quarkus.profile", String.class)
+                .orElse(System.getenv().getOrDefault("QUARKUS_PROFILE", "dev"));
+        boolean isProdLike = profile != null && java.util.Set.of("prod", "container", "staging", "production").contains(profile);
+        if (isProdLike && "CHANGE-ME-IN-PRODUCTION-payu-dev-key-2026".equals(encryptionKey)) {
+            throw new IllegalStateException("payu.encryption.key default dev value forbidden in profile '" + profile + "' — set PAYU_ENCRYPTION_KEY via Vault/secret");
+        }
+        if (isProdLike && "PayU-AES256-PBKDF2-Key-Derivation-Salt-v2-2026!".equals(salt)) {
+            LOG.warn("payu.encryption.salt still default in prod-like profile '" + profile + "' — rotate via Vault");
+        }
+        // ponytail: fail-closed only for key; salt warn only (salt rotation needs migration without breaking decrypt)
+    }
 
     SecretKeySpec getKey() {
         if (secretKey != null) return secretKey;

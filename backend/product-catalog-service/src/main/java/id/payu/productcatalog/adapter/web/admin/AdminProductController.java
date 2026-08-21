@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * Base path: /admin/products
  */
 @RestController
-@RequestMapping("/admin/products")
+@RequestMapping({"/v1/admin/products", "/admin/products"})
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminProductController extends BaseController {
 

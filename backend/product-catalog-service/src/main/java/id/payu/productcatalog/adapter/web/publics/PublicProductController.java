@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * Base path: /products
  */
 @RestController
-@RequestMapping("/products")
+@RequestMapping({"/v1/products", "/products"}) // ponytail: dual prefix for AGENTS.md versioned /v1/... + legacy compat
 public class PublicProductController extends BaseController {
 
     private static final Logger log = LoggerFactory.getLogger(PublicProductController.class);

@@ -52,9 +52,9 @@ public final class Money implements Serializable, Comparable<Money> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Default scale for monetary calculations.
+     * Default scale for monetary calculations. // ponytail: 4 matches DECIMAL(19,4) HALF_EVEN (AGENTS.md Rule #1), DB invariant
      */
-    public static final int DEFAULT_SCALE = 2;
+    public static final int DEFAULT_SCALE = 4;
 
     /**
      * Default rounding mode for monetary calculations (Banker's rounding).

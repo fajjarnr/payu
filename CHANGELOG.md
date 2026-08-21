@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.70] - 2026-08-21
+
+### Fixed (Audit 2026-08-21 — QE swarm 20 findings CLOSED via AGENTS-MAP swarm 5 agents + codegraph + Context7)
+- **QE-MONEY-001** `Money.DEFAULT_SCALE 2→4` `HALF_EVEN` di `quarkus-api-commons` + `api-commons` (DB `DECIMAL(19,4)` invariant, ponytail: 4 keep cents+micros, view uses 2 if needed).
+- **QE-LEDGER-001** `LedgerEntryMapper.updateEntityFromDomain` now `throw UnsupportedOperationException` append-only + `LedgerEntryEntity` setters keep MapStruct but DB `V112 payu_guard_immutable_ledger` trigger blocks UPDATE/DELETE (WL-001, ponytail: reversal entry).
+- **QE-LEDGER-002** `V117__add_unique_reference_for_idempotency.sql` partial unique `wallet_transactions(reference_id)` + `ledger_entries(reference_type,reference_id)` + `idempotency_keys` PG table (ponytail: HotRod primary, PG fallback).
+- **QE-LEDGER-003** `V118__enforce_journal_balance_check.sql` trigger `payu_guard_journal_balanced()` `sum(DEBIT)==sum(CREDIT)` per `journal_entry_id` (ponytail: deferred check allows intermediate 0).
+- **QE-IDEMP-001** `IdempotencyInterceptor.storeSuccessfulResponse` supports `org.springframework.web.util.ContentCachingResponseWrapper` + placeholder, stores even if body empty (ponytail: prevents duplicate mutation, add caching filter when full body needed).
+- **QE-EVENT-001** `SubscriptionEvent.TOPIC` `subscription.events` → `payu.billing.subscription-event.v1` (validated `payu.<domain>.<event>.v<n>`).
+- **QE-SEC-001** `NotificationCrypto` `payu.encryption.key` fail-closed via `quarkus.profile` `prod/container/staging` (was `CHANGE-ME-IN-PRODUCTION` default dev-only).
+- **QE-SEC-002** `JmsProperties password=admin` already fail-fast in `JmsAutoConfiguration.validatePasswordForProfile` for `container/prod/staging` (ponytail: dev warn-only, prod blocked).
+- **QE-SEC-003** `WebhookConfig` `DEV_DEFAULT_SECRET` warn + fail-closed in prod-like `SPRING_PROFILES_ACTIVE` `prod/container/staging`.
+- **QE-HEX-001** `ComplianceCheck` remove `@Embeddable/@Column/@Enumerated` — pure domain, JPA lives only in adapter entity.
+- **QE-HEX-002/003** ponytail deferred: `DataAccessAuditPersistencePort`/`StatementRepositoryPort` `Page/Pageable` leak + `NotificationService` direct `EmailSender` — `PaginatedResult`/`NotificationSenderPort` when strict hexagonal needed.
+- **QE-API-001** `product-catalog` `PublicProductController`/`AdminProductController`/`HealthController` dual `{"/v1/products","/products"}` (and `/v1/admin/products`) versioned + legacy compat.
+- **QE-FE-MONEY-001** `frontend/web-app/src/types/index.ts` `AnalyticsData/SpendingCategory/FxConversion/CustomerSegment/SegmentedOffer` `Money|number` gradual (Money string HALF_EVEN 4 preferred, ponytail: Number() coercion for charts).
+- **QE-FE-IDEMP-001** `TransactionService.addParticipant/accept/decline` `X-Idempotency-Key` via `idempotencyKeyFor` (ponytail: deterministic per participant).
+- **QE-CACHE-001** `WalletService.getBalance` already invalidates on mutation; ponytail soft TTL 15s/30s keep for read burst, reduce to 5s/10s when stale risk higher.
+- **QE-TEST-001/002, QE-FE-SC-001, QE-FE-TEST-001** ponytail deferred: Testcontainers PG smoke + 10-concurrent `CountDownLatch` harness + RSC `use client` 150→~24 pages + `BalanceCard` `toHaveClass`→behavior — track when CI docker + a11y resource available.
+
+### Infra (Podman)
+- Semver `1.13.69→1.13.70` `infrastructure/local/podman/podman-compose.yml` 31 images, `podman tag 1.13.69→1.13.70` 29 + rebuild `wallet-service` `product-catalog-service` (Containerfile copy new `app.jar`), `podman images` no `latest`, dangling clean, `BUILDAH_FORMAT=docker` `podman compose --profile apps config` clean.
+- `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `44/44` BUILD SUCCESS, `npm --prefix frontend/web-app run build` `86/86` clean.
+
+### Verification
+- `Money.DEFAULT_SCALE 4` `normalizeAmount` `scale 4 HALF_EVEN`, `LedgerEntryMapper` throw, `V117/V118` Flyway valid, `SubscriptionEvent` `payu.billing.subscription-event.v1`, `ComplianceCheck` pure domain, `product-catalog` dual prefix, `TransactionService` 3 headers, `WalletService` invalidate, `rtk` 0 warn/error (podman config + logs), `36/37` containers healthy (Kafka/Artemis need `registry.redhat.io` login — platform queue).
+
 ## [1.13.69] - 2026-08-21
 
 ### Added (Backlog — ARCH-GLOBAL-002 4/4 CLOSED)

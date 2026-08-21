@@ -21,7 +21,7 @@ import java.util.Map;
  * Checks database (SELECT 1) and Kafka (listener status).
  */
 @RestController
-@RequestMapping("/products")
+@RequestMapping({"/v1/products", "/products"})
 public class HealthController {
 
     private static final Logger log = LoggerFactory.getLogger(HealthController.class);

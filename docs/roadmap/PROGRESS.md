@@ -1,5 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.70 (2026-08-21)
+
+- **QE swarm 20 findings CLOSED (1.13.70) via AGENTS-MAP swarm 5 agents + codegraph + Context7**: `Money 2→4 HALF_EVEN` `quarkus/api-commons`, `LedgerEntryMapper` throw + `V112` trigger, `V117 unique reference` + `V118 journal balance` + `idempotency_keys`, `IdempotencyInterceptor` Spring+placeholder + always store, `SubscriptionEvent` `payu.billing.subscription-event.v1`, `NotificationCrypto` fail-closed `quarkus.profile`, `JmsProperties` fail-fast admin (existing), `WebhookConfig` fail-closed `WEBHOOK_SECRET`, `ComplianceCheck` pure domain, `product-catalog` dual `/v1`, `types/index.ts` `Money|number` gradual + `TransactionService` 3 headers, `WalletService` invalidate (already) — ponytail ceil for HEX-002/003, TEST, RSC, FE-TEST deferred.
+- **Infra**: semver `1.13.70` `podman tag 1.13.69→1.13.70` 29 + rebuild `wallet/product-catalog` `BUILD SUCCESS`, `mvn 44/44` + `npm 86/86` clean, `podman compose --profile apps config` clean no `latest`, `payu-database-rw`/`payu-cache`/`payu-redis` healthy (Kafka/Artemis/Keycloak need `registry.redhat.io` — platform queue), `rtk` 0 warn/error.
+
 ## Deploy 1.13.69 (2026-08-21)
 
 - **Step-Up 4/4 + Biometric + Support CLOSED (ARCH-GLOBAL-002/GW-ROUTING-003/BE-SUPP-001)**: `StepUpController` Argon2id `UserPin` 3-strike 15m `payload_digest` tamper + Redis 180s `userId|digest` + `BiometricController` 32B WebAuthn 5 endpoints + `RouteRegistry biometric→auth-service` + `support-service` `V4 tickets/faqs` hexagonal `SupportTicketService`/`FaqService` + `payu-redis` live, `gateway`/`auth`/`support`/`web` rebuilt `1.13.69`, frontend `86/86`, `support` `53/53`, `mvn 44/44`, `podman 5.7.0` (6.1.0 desktop only), compose `1.13.69` no `latest`.

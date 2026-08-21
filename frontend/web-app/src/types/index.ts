@@ -202,21 +202,21 @@ export interface ProcessQrisPaymentRequest {
 }
 
 export interface AnalyticsData {
-  totalIncome: number;
-  totalExpenses: number;
-  monthlySavings: number;
-  investmentRoi: number;
-  incomeChange: number;
+  totalIncome: Money | number; // ponytail: Money string HALF_EVEN 4 preferred, number legacy for chart compat — migrate callers to Money
+  totalExpenses: Money | number;
+  monthlySavings: Money | number;
+  investmentRoi: number; // percent ROI
+  incomeChange: number; // percent delta
   expenseChange: number;
   savingsChange: number;
   roiChange: number;
   spendingBreakdown: SpendingCategory[];
-  trajectoryData?: { day: string; masuk: number; keluar: number }[];
+  trajectoryData?: { day: string; masuk: Money | number; keluar: Money | number }[];
 }
 
 export interface SpendingCategory {
   label: string;
-  amount: number;
+  amount: Money | number; // ponytail: Money string HALF_EVEN 4, number legacy until display migrates via Number()
   percentage: number;
   color: string;
 }
@@ -289,8 +289,8 @@ export interface CustomerSegment {
   name: string;
   description: string;
   tier: SegmentTier;
-  minBalance: number;
-  maxBalance?: number;
+  minBalance: Money | number; // ponytail: Money string preferred, number legacy
+  maxBalance?: Money | number;
   benefits: string[];
   requirements: string[];
   createdAt: string;
@@ -315,7 +315,7 @@ export interface SegmentedOffer {
   segmentId: string;
   segmentTier: SegmentTier;
   offerType: 'CASHBACK' | 'DISCOUNT' | 'REWARD_POINTS' | 'FREE_TRANSFER' | 'BONUS_INTEREST';
-  value: number;
+  value: Money | number; // ponytail: Money string preferred
   currency?: string;
   percentage?: number;
   validFrom: string;
@@ -323,8 +323,8 @@ export interface SegmentedOffer {
   terms: string[];
   imageUrl?: string;
   promoCode?: string;
-  minTransaction?: number;
-  maxReward?: number;
+  minTransaction?: Money | number;
+  maxReward?: Money | number;
   isActive: boolean;
   createdAt: string;
 }
@@ -355,11 +355,11 @@ export interface FxConversion {
   accountId: string;
   fromCurrency: string;
   toCurrency: string;
-  fromAmount: number;
-  toAmount: number;
-  exchangeRate: number;
-  fee: number;
-  effectiveAmount: number;
+  fromAmount: Money | number; // ponytail: Money string preferred, number legacy
+  toAmount: Money | number;
+  exchangeRate: number; // rate, not money
+  fee: Money | number;
+  effectiveAmount: Money | number;
   conversionDate: string;
   status: FxConversionStatus;
 }

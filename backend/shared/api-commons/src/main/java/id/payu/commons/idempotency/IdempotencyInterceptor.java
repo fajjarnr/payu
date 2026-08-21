@@ -337,28 +337,25 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
 
     /**
      * Stores a successful response for idempotency.
+     * ponytail: supports both Spring's ContentCachingResponseWrapper and placeholder; stores even if body empty so replay hits cache and prevents duplicate mutation (add caching filter when full body needed).
      */
     private void storeSuccessfulResponse(HttpServletRequest request, HttpServletResponse response,
                                         String idempotencyKey, Object requestBody) {
         try {
             int status = response.getStatus();
-
-            // Only cache successful responses (2xx) unless cacheErrors is enabled
-            if (status < 200 || status >= 300) {
-                return;
+            if (status < 200 || status >= 300) return;
+            String encoding = response.getCharacterEncoding();
+            if (encoding == null) encoding = StandardCharsets.UTF_8.name();
+            String responseBody = "";
+            if (response instanceof org.springframework.web.util.ContentCachingResponseWrapper springWrapper) {
+                byte[] content = springWrapper.getContentAsByteArray();
+                if (content.length > 0) responseBody = new String(content, encoding);
+            } else if (response instanceof ContentCachingResponseWrapper placeholder) {
+                byte[] content = placeholder.getContentAsByteArray();
+                if (content.length > 0) responseBody = new String(content, encoding);
             }
-
-            // Read response body from wrapped response if available
-            // Note: This requires a ContentCachingResponseWrapper
-            if (response instanceof ContentCachingResponseWrapper cachingResponse) {
-                byte[] content = cachingResponse.getContentAsByteArray();
-                if (content.length > 0) {
-                    String responseBody = new String(content, response.getCharacterEncoding());
-                    HttpStatus httpStatus = HttpStatus.valueOf(status);
-                    idempotencyService.storeResponse(idempotencyKey, requestBody, httpStatus, responseBody);
-                }
-            }
-
+            HttpStatus httpStatus = HttpStatus.valueOf(status);
+            idempotencyService.storeResponse(idempotencyKey, requestBody, httpStatus, responseBody);
         } catch (Exception e) {
             log.warn("Failed to store successful response for idempotency: {}", e.getMessage());
         }

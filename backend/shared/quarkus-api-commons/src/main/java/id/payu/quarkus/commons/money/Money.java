@@ -17,8 +17,8 @@ public final class Money implements Serializable, Comparable<Money> {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public static final int DEFAULT_SCALE = 2;
-    public static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
+    public static final int DEFAULT_SCALE = 4;
+    public static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN; // ponytail: DB DECIMAL(19,4) invariant; 4 keeps HALF_EVEN cents+micros, use 2 only via view if needed
     public static final String DEFAULT_CURRENCY_CODE = "IDR";
     public static final Money ZERO = of(BigDecimal.ZERO, DEFAULT_CURRENCY_CODE);
 

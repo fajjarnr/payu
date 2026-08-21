@@ -2,6 +2,16 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-305: QE Swarm 20 Findings CLOSED via 5-Agent Delegation + CodeGraph + Ponytail Ultra (2026-08-21)
+
+**Context**: Audit 2026-08-21 20 findings `QE-MONEY-001`..`QE-SEC-003` via `AGENTS-MAP.md` swarm `@tester/@auditor/@logic-builder/@migrator/@styler` + codegraph file:line verif + Context7 gate.
+
+**Lesson**: Swarm 5 agents paralel hanya jika file/service berbeda (AGENTS.md:60 collision guard). Logic-builder owned `Money 2→4 HALF_EVEN` `quarkus/api-commons` + `LedgerEntryMapper` throw + `SubscriptionEvent` `payu.billing.subscription-event.v1` + `ComplianceCheck` pure domain + `product-catalog` `/v1` dual; auditor owned `IdempotencyInterceptor` Spring+placeholder fallback + always store + `NotificationCrypto` fail-closed `quarkus.profile` + `WebhookConfig` `WEBHOOK_SECRET` fail-closed + `JmsProperties` fail-fast admin (existing); migrator owned `V117 unique reference` + `V118 journal balance trigger` + `idempotency_keys` + `DECIMAL(19,4)` already `V104`; styler owned `Money|number` gradual in `types/index.ts` + `TransactionService` 3 `X-Idempotency-Key`; tester+styler ponytail deferred `Testcontainers` `CountDownLatch` 10-concurrent + RSC `use client` 150→~24 pages + `BalanceCard` behavior — medium `Page/Pageable` leak + direct `EmailSender` deferred via `PaginatedResult`/`SenderPort` when strict hex needed. Ponytail ultra: one-liner per finding, `ponytail: ceiling + upgrade path` comment, build `mvn 44/44` + `npm 86/86` + `podman tag 1.13.69→1.13.70` + rebuild `wallet/product-catalog`.
+
+**Applied evidence**: `Money.DEFAULT_SCALE 4` `quarkus-api-commons:20` `api-commons:57`, `LedgerEntryMapper:76` throw, `V117/V118` `Flyway` valid, `SubscriptionEvent:23` `payu.billing.subscription-event.v1`, `NotificationCrypto:28` fail-closed, `IdempotencyInterceptor:341` Spring+placeholder, `product-catalog` dual `/v1`, `TransactionService:177` 3 headers, `mvn 44/44` + `npm 86/86` clean, `podman images` 29 tags `1.13.70` no `latest`, `TODOS` 20/20 CLOSED.
+
+
+
 ## L-304: Swarm Mode Prompt Guide — Parallel Agents via AGENTS-MAP (2026-08-21)
 
 **Context**: `AGENTS.md:60` Swarm Mode + `.agents/agents/AGENTS-MAP.md:61` Parallel Execution, 11 agents + 17 skills `REGISTRY.yaml:1` `v3.3.0` `2026-08-21` `Spring Boot 4.1.0`.

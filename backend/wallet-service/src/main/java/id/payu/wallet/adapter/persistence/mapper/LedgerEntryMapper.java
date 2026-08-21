@@ -71,9 +71,9 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
     LedgerEntry toDomain(LedgerEntryEntity entity);
 
     @Override
-    @BeanMapping(ignoreUnmappedSourceProperties = "journalEntryId")
-    @Mapping(target = "journalEntry", ignore = true)
-    void updateEntityFromDomain(LedgerEntry domain, @MappingTarget LedgerEntryEntity entity);
+    default void updateEntityFromDomain(LedgerEntry domain, @MappingTarget LedgerEntryEntity entity) {
+        throw new UnsupportedOperationException("ledger append-only: use toEntity + persist, not update (WL-001)");
+    }
 
     @Override
     @BeanMapping(ignoreUnmappedSourceProperties = {"new", "journalEntry"})

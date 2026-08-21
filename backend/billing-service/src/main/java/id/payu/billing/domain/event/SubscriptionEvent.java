@@ -20,7 +20,7 @@ import java.util.UUID;
  */
 public class SubscriptionEvent {
 
-    public static final String TOPIC = "subscription.events";
+    public static final String TOPIC = "payu.billing.subscription-event.v1"; // ponytail: was "subscription.events" legacy, now validated payu.<domain>.<event>.v<n>
     public static final String SUBSCRIPTION_CREATED = "subscription.created";
     public static final String CHARGE_SUCCEEDED = "charge.succeeded";
     public static final String CHARGE_FAILED = "charge.failed";

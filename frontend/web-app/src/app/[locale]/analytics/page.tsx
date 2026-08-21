@@ -42,8 +42,8 @@ export default function AnalyticsPage() {
     spendingBreakdown: [] as { label: string; amount: number; percentage: number; color: string }[]
   };
 
-  // BUG-FE-062: Use trajectory data from analytics instead of hardcoded array
-  const trajectoryData: { day: string; masuk: number; keluar: number }[] = analytics?.trajectoryData ?? []
+  // ponytail: Money string HALF_EVEN 4 preferred, number legacy — chart coerces via Number()
+  const trajectoryData: { day: string; masuk: number | string; keluar: number | string }[] = (analytics?.trajectoryData ?? []) as { day: string; masuk: number | string; keluar: number | string }[]
 
   const breakdownData = analyticsData.spendingBreakdown.map(cat => ({
     name: cat.label,
@@ -112,7 +112,7 @@ export default function AnalyticsPage() {
                   </span>
                 </div>
                 <p className="text-xs font-bold text-gray-400 tracking-[0.2em] mb-2">{stat.label}</p>
-                <h3 className="text-2xl font-bold text-foreground">Rp {stat.amount.toLocaleString('id-ID')}</h3>
+                <h3 className="text-2xl font-bold text-foreground">Rp {Number(stat.amount).toLocaleString('id-ID')}</h3>
               </div>
             ))}
           </div>
@@ -203,7 +203,7 @@ export default function AnalyticsPage() {
                     </ChartContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
                       <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-1">Total Keluar</p>
-                      <p className="text-2xl font-bold text-foreground">Rp {analyticsData.totalExpenses.toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</p>
+                      <p className="text-2xl font-bold text-foreground">Rp {Number(analyticsData.totalExpenses).toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</p>
                     </div>
                   </div>
 
@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
                           <span className="text-xs font-bold text-foreground tracking-widest uppercase">{cat.label}</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs font-bold text-gray-400 tracking-[0.1em]">Rp {cat.amount.toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</span>
+                          <span className="text-xs font-bold text-gray-400 tracking-[0.1em]">Rp {Number(cat.amount).toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</span>
                           <span className="text-xs font-bold text-muted-foreground ml-1">({cat.percentage}%)</span>
                         </div>
                       </div>
