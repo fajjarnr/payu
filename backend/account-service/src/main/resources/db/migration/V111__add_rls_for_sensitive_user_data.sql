@@ -7,7 +7,7 @@ ALTER TABLE sensitive_user_data ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sensitive_user_data FORCE ROW LEVEL SECURITY;
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policename = 'tenant_isolation_sensitive_user_data') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_isolation_sensitive_user_data') THEN
     CREATE POLICY tenant_isolation_sensitive_user_data ON sensitive_user_data
       USING (tenant_id = current_setting('app.tenant_id', true))
       WITH CHECK (tenant_id = current_setting('app.tenant_id', true));

@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-all-databases
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: create-all-databases
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: create-all-databases
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: database
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: create-db
+          image: registry.redhat.io/rhel9/postgresql-16:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: PGHOST
+              value: payu-database-rw.payu-dev.svc.cluster.local
+            - name: PGUSER
+              value: postgres
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-database-superuser
+                  key: password
+            - name: APP_USER
+              value: payu
+            - name: PGCONNECT_TIMEOUT
+              value: "10"
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+
+              echo "Creating all databases in payu-database..."
+              DBS="payu_auth payu_transaction payu_wallet payu_notification payu_billing keycloak payu_kyc payu_analytics payu_compliance payu_bifast payu_dukcapil payu_qris payu_investment payu_lending payu_loan_origination payu_biller payu_va_simulator payu_backoffice payu_partner payu_promotion payu_support payu_statement payu_fx payu_cms payu_abtesting payu_dispute payu_integration payu_products payu_gateway payu_api_portal payu_sonarqube"
+
+              for db in $DBS; do
+                EXISTS=$(psql -w -h "$PGHOST" -U "$PGUSER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db';")
+                if [ "$EXISTS" != "1" ]; then
+                  echo "Creating database $db..."
+                  psql -w -h "$PGHOST" -U "$PGUSER" -d postgres -c "CREATE DATABASE $db TEMPLATE template0 OWNER ${APP_USER};"
+                else
+                  echo "Database $db already exists."
+                fi
+                psql -w -h "$PGHOST" -U "$PGUSER" -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE $db TO ${APP_USER};" || true
+              done
+
+              echo "All databases created and granted successfully!"

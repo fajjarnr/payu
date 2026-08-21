@@ -26,7 +26,7 @@ spec:
   imageName: ghcr.io/cloudnative-pg/postgresql:16.8
   enableSuperuserAccess: true
 
-  instances: 3
+  instances: 1
 
   bootstrap:
     initdb:
@@ -73,11 +73,7 @@ spec:
       autovacuum_naptime: "30s"
       autovacuum_vacuum_scale_factor: "0.05"
       autovacuum_analyze_scale_factor: "0.02"
-
-    synchronous:
-      method: "any"
-      number: 1
-      failoverQuorum: true
+      synchronous_commit: "local"
 
   affinity:
     enablePodAntiAffinity: true

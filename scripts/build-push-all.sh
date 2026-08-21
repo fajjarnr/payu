@@ -2,13 +2,14 @@
 # Build and push all service images to OpenShift internal registry
 set -e
 
-REGISTRY="default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id"
+REGISTRY="localhost:5000"
 NAMESPACE="payu-dev"
 TAG="1.13.79"
 
-# Java Spring Boot services (have target/*.jar)
+# Java Spring Boot & Python services
 SPRING_SERVICES=(
   account-service
+  analytics-service
   auth-service
   backoffice-service
   billing-service
@@ -19,7 +20,9 @@ SPRING_SERVICES=(
   integration-service
   investment-service
   kyc-service
+  lending-rules
   lending-service
+  loan-origination-process
   partner-service
   product-catalog-service
   promotion-service
@@ -42,6 +45,7 @@ SIMULATORS=(
   biller-simulator
   dukcapil-simulator
   qris-simulator
+  va-simulator
 )
 
 build_and_push() {
@@ -85,6 +89,10 @@ for svc in "${SIMULATORS[@]}"; do
   build_and_push "${svc}" "backend/simulators/${svc}"
 done
 
+# Build Web App (Frontend)
+build_and_push "web-app" "frontend/web-app"
+
 echo "============================================"
-echo "All backend services built and pushed!"
+echo "All backend services and web-app built and pushed!"
 echo "============================================"
+

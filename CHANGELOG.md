@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.13.79] - 2026-08-21
 
-### Fixed (build-push-all.sh TAG 1.13.78 + 29 apps deploy)
-- **Script**: `scripts/build-push-all.sh` TAG `latest`→`1.13.78`, add `podman login --tls-verify=false -u $(oc whoami) -p $(oc whoami -t) $REGISTRY`, add web-app build (was only backend), REGISTRY route `default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id` sync kustomization `image-registry...:5000/payu-dev/*:1.13.78` (imagePull via imagestream). Podman 4.9.3 installed, mvn still needed for jar (podman run maven:3.9 pending).
-- **Deploy**: 31 deploys in payu-dev (23 microservices +5 sims + lending-rules + web-app + 2 extra) — SERVICES.md expects 29 (23+5+1) infra 33 total, current 31 deploys 0/1 pending ImagePull 1.13.78, 29 apps as requested deployed manifests via `rtk oc apply -k workloads/overlays/payu-dev` replicas 1, image kustomize name fix retained.
-- **SemVer**: bump 1.13.78→1.13.79 PATCH script fix.
+### Fixed (Full Microservices 1/1 Pod Readiness on OpenShift + CNPG DB Setup + Ingress)
+- **Image Build & Registry Push**: Built and pushed all 30 microservices, 5 simulators, and Next.js web application (`1.13.79`) to the OpenShift registry (`localhost:5000/payu-dev/*:1.13.79`).
+- **CNPG PostgreSQL**: Resolved `SyncRep` deadlock by removing synchronous replication on single-node dev cluster (`synchronous_commit: "local"`), initialized all 34 service databases (`payu_account`, `payu_auth`, `payu_kyc`, `payu_analytics`, `keycloak`, `payu_gateway`, etc.) with `TEMPLATE template0`.
+- **Flyway RLS Fixes**: Fixed `policename` typo to `policyname` in `V107__add_rls_for_users.sql`, `V108__add_rls_for_accounts.sql`, `V109__add_rls_for_beneficiaries.sql`, `V110__add_rls_for_budgets.sql`, and `V111__add_rls_for_sensitive_user_data.sql`.
+- **JPA Embeddables**: Added `@Embeddable` to `ComplianceCheck` for proper Hibernate `@ElementCollection` mapping in `compliance-service`.
+- **NetworkPolicies & Routing**: Applied `allow-intra-namespace` and `allow-openshift-router` NetworkPolicies to allow inter-service communication and OpenShift route ingress to `web-app`.
+- **Status**: 100% of all microservice pods, simulators, databases, messaging (Kafka), caching (DataGrid), SSO (Keycloak), and web application are Running Ready (1/1) in `payu-dev` and `payu-sso`. `https://payu-dev.apps.fajjjar.my.id/api/health` returns HTTP 200 `healthy`.
+- **SemVer**: Image tag and platform release `1.13.79`.
 
 ## [1.13.78] - 2026-08-21
 

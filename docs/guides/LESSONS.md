@@ -2,7 +2,19 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
-## L-310: Shared Ingress PHZ Delegation + Cert via Z101 + A Alias (2026-08-21)
+## L-311: Full Microservices 1/1 Pod Readiness on OpenShift + PostgreSQL Single Node + NetworkPolicies (2026-08-21)
+
+**Context**: Full microservices deployment to OpenShift `payu-dev` with 30 backend microservices, 5 simulators, Next.js web application, CNPG PostgreSQL, Red Hat DataGrid cache, Strimzi Kafka, and Red Hat Build of Keycloak (RHBK). Encountered PostgreSQL connection drops, `SyncRep` synchronous replication deadlocks on single instance dev, missing databases, Flyway RLS `policename` typo, and JPA `@Embeddable` mapping issue on `ComplianceCheck`.
+
+**Lesson**:
+- **CNPG PostgreSQL SyncRep**: In dev with single instance (`instances: 1`), removing `synchronous: {method: any, number: 1}` and setting `synchronous_commit: "local"` prevents PostgreSQL from blocking all write transactions on `SyncRep` (waiting for replica acknowledgement).
+- **PostgreSQL Database Provisioning**: Initializing all 34 service databases (`payu_account`, `payu_auth`, `payu_kyc`, `payu_analytics`, `keycloak`, `payu_gateway`, etc.) with `TEMPLATE template0` ensures database creation never blocks on active `template1` locks.
+- **NetworkPolicy Intra-Namespace & Router Ingress**: OVN-Kubernetes default-deny-all requires explicit `allow-intra-namespace` (`podSelector: app.kubernetes.io/part-of: payu`) and `allow-openshift-router` (`openshift-ingress` namespace) for web-app, BFF, and pod-to-pod communications.
+- **Flyway RLS Migration Fix**: PostgreSQL catalog table `pg_policies` has column `policyname` (with 'y'), not `policename`. Fixed across `V107__add_rls_for_users.sql`, `V108__add_rls_for_accounts.sql`, `V109__add_rls_for_beneficiaries.sql`, `V110__add_rls_for_budgets.sql`, and `V111__add_rls_for_sensitive_user_data.sql`.
+- **JPA ElementCollection Embeddables**: `ComplianceCheck` used in `AuditReportEntity` with `@ElementCollection` requires `@Embeddable` and JPA column/enum annotations for Hibernate schema generation.
+- **Result**: All 30 services, 5 simulators, Next.js web application, CNPG, Kafka, and Keycloak successfully transitioned to **1/1 Running Ready** on OpenShift cluster. `https://payu-dev.apps.fajjjar.my.id/api/health` returns `200 healthy`.
+
+**Applied evidence**: `oc get pods -n payu-dev` (all 1/1 Running Ready), `oc get pods -n payu-sso` (all 1/1 Running Ready), `curl -k https://payu-dev.apps.fajjjar.my.id/api/health` (HTTP 200 {"status":"healthy","dependencies":{"gateway":"UP"}}).
 
 **Context**: Shared `apps.fajjjar.my.id` Unmanaged `Z035 NoSuchHostedZone` `dig lovisa/clayton` Cloudflare, `shared-ingress` NotFound, `shared-ingress-cert False` `Z035` error, manual PHZ `apps.fajjjar.my.id Z101`.
 

@@ -27,3 +27,36 @@ spec:
       ports:
         - port: 11223
           protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-datagrid-clients
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  labels:
+    app.kubernetes.io/name: allow-datagrid-clients
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: network
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: payu-cache
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-dev
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-sso
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-api-management
+      ports:
+        - port: 11222
+          protocol: TCP
+

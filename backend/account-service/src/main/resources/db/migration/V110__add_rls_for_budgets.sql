@@ -5,7 +5,7 @@ ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budgets FORCE ROW LEVEL SECURITY;
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policename = 'tenant_isolation_budgets') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'tenant_isolation_budgets') THEN
     CREATE POLICY tenant_isolation_budgets ON budgets
       USING (tenant_id = current_setting('app.tenant_id', true))
       WITH CHECK (tenant_id = current_setting('app.tenant_id', true));

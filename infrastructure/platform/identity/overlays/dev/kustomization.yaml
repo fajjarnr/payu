@@ -7,7 +7,7 @@ kind: Kustomization
 
 resources:
   - ../common
-  - keycloak-db-secret-sync.yaml
+  - identity-dev-secrets.yaml
 
 namespace: payu-sso
 

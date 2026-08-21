@@ -17,11 +17,11 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.74` (2026-08-21) |
-| **Core Banking MVP** | 🔴 Belum MVP production ready — PARTNER-PROD-007..011 + DEVSECOPS-017 OPEN (platform creds queue); **login web live** (LOGIN-001..006 closed) |
-| **Backlog Aktif** | PARTNER-PROD-007..011 (5 gates) + DEVSECOPS-017 — sisa harden ponytail deferred (ceiling when strict needed) |
-| **Last Updated** | 2026-08-21 — Cert-manager Let's Encrypt ingress default 1.13.74 via Route53 Z068 DNS01 `oc apply -k` + rtk grep 31/31 + codegraph 4084/73887 + `Active Tickets` 0 |
+| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` & `payu-sso` all 30 microservices + 5 simulators + Next.js web application + Keycloak + PostgreSQL + Kafka + DataGrid all **1/1 Running Ready** (2026-08-21). Route `https://payu-dev.apps.fajjjar.my.id` returns 200 healthy. |
+| **Last Release** | `1.13.79` (2026-08-21) |
+| **Core Banking MVP** | 🟢 MVP workloads live on OpenShift — all services migrated Flyway DB, initialized, and healthy; partner prod credentials queue remains. |
+| **Backlog Aktif** | Sisa harden ponytail deferred (ceiling when strict needed) |
+| **Last Updated** | 2026-08-21 — Full deployment v1.13.79 on OpenShift: all 30 services, 5 simulators, web-app, and infra 1/1 Running Ready |
 
 ---
 
