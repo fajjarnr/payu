@@ -18,10 +18,10 @@
 | Metric | Value |
 |:---|:---|
 | **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); 0 HPA; prod & sit/uat/preprod empty di cluster ini (lab env di `cluster-nkk8q`). Keycloak Ready=True (root cause restart = DB endpoint race, resolved). |
-| **Last Release** | `1.13.15` (2026-08-19) |
-| **Core Banking MVP** | 🔴 Belum MVP production ready — ACCOUNT-007/PROD-044 tetap terbuka; **login web live** (LOGIN-001..006 closed) |
-| **Backlog Aktif** | 2 Active Tickets + 13 P1 aksi + 2 P3 + 4 cross-layer findings (🔴1 + 🟠3) + 3 best-practice OPEN (P1 2 + P2 1) + 1 infra/DX (sisa OPEN only — FIXED di `CHANGELOG.md`/`PROGRESS.md`) |
-| **Last Updated** | 2026-08-20 — ADR-0048..0056 + TODOS priority tidy (WALLET-001 P1, SIM-001 P2, findings severity sort) |
+| **Last Release** | `1.13.69` (2026-08-21) |
+| **Core Banking MVP** | 🔴 Belum MVP production ready — PARTNER-PROD-007..011 + DEVSECOPS-017 OPEN; **login web live** (LOGIN-001..006 closed) |
+| **Backlog Aktif** | 0 P1 aksi + 0 cross-layer findings (ARCH-GLOBAL-002, GW-ROUTING-003/BE-BIO-001, BE-SUPP-001 CLOSED 1.13.69) + 5 gate PARTNER-PROD + DEVSECOPS-017 |
+| **Last Updated** | 2026-08-21 — ARCH-GLOBAL-002 + GW-ROUTING-003/BE-BIO-001 + BE-SUPP-001 CLOSED, StepUp 4/4 + biometric + tickets, podman 5.7.0 cek (6.1.0 desktop only) |
 
 ---
 
@@ -48,7 +48,7 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
-| ARCH-GLOBAL-002 | security | Step-Up Auth & Dynamic Linking [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md): `user_pins` Argon2id + 3-strike lockout (3/4: `V4` + `StepUpController` Redis 180s live), `POST /internal/v1/auth/step-up/{challenge,verify}` (Redis TTL 180s, `payload_digest = SHA256(sender+recipient+amount+currency+nonce)`), 2-phase `/prepare`→`/execute` di transaction-service, test suite PIN/lockout/expiry/tampering. | Test suite auth & transaction step-up green |
+| — | — | No open P1 aksi — ARCH-GLOBAL-002 CLOSED 1.13.69 | — |
 
 > `ARCH-TOPIC-002` — manifest DONE 2026-08-18 (107 KafkaTopic: 65 normal + 42 DLQ, retention 30d, `EVENT_CATALOG.md` regenerated). Sisa apply ke cluster + `auto-create off` butuh OCP creds — tracked di Platform Deploy Queue.
 
@@ -104,8 +104,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Key | Sev | Domain | Ringkasan | Bukti |
 |:---|:---:|:---|:---|:---|
-| GW-ROUTING-003 / BE-BIO-001 | 🔴 | gateway/biometric | 5 endpoint `/api/v1/biometric/*` 404 — **best practice W3C WebAuthn/FIDO2 + ADR-0028 step-up**: challenge 32B, `user_pins` Argon2id 3-strike, Redis TTL 180s `payload_digest=SHA256(sender+recipient+amount+currency+nonce)`, `POST /internal/v1/auth/step-up/{challenge,verify}` + WebAuthn `attestation/assertion` — ref [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) + [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md) — tambah `biometric-service` atau `auth-service` controller + gateway `RouteRegistry` | `AuthService.ts:152-187`; `RouteRegistry.java:123-200` |
-| BE-SUPP-001 / FE-STUB-002 | 🟠 | support | `support-service` hanya training agent; tanpa API `/tickets` & FAQ publik (UI statis) — **best practice ITIL**: Ticket (OPEN→IN_PROGRESS→WAITING_CUSTOMER→RESOLVED→CLOSED), FAQ CMS, SLA 24j, idempotency `X-Idempotency-Key`, outbox `payu.support.ticket-created.v1` + `.dlq`, RLS `tenant_id`, encrypt PII — ref [ADR-0020](../adr/0020-support-centralized.md) (centralized) — implement `POST /api/v1/support/tickets` + `GET /faqs` + persist `support_tickets` | `SupportController.java:25-100`; `support/page.tsx:56-58` |
+| — | — | — | No open cross-layer findings — GW-ROUTING-003/BE-BIO-001 + BE-SUPP-001 CLOSED 1.13.69 | — |
 
 > **FIXED 2026-08-18 (15 items) → `CHANGELOG.md` `1.13.0`**: GW-ROUTING-001/002/004, BFF-ROUTING-001/002, BE-ACC-001, BE-BILL-001/002, BE-CARD-001, BE-INVEST-001, BE-PROMO-001/002, FE-IDM-002/003, FE-MONEY-002/003, FE-LEND-001, FE-SPLIT-001, SEC-RBAC-001.
 

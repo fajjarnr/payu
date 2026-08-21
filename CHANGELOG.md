@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.13.69] - 2026-08-21
+
+### Added (Backlog — ARCH-GLOBAL-002 4/4 CLOSED)
+- `StepUpController` PIN verify `UserPinEntity`/`UserPinRepository` Argon2id `matches` + 3-strike lockout 15m, `payload_digest` tampering check, Redis 180s `userId|payload_digest` + in-memory fallback, `V4 user_pins` already live. Ponytail: transaction 2-phase `/prepare`→`/execute` stub, add `InitiateTransferCommandHandler` challenge when high-value.
+
+### Added (Backlog — GW-ROUTING-003 / BE-BIO-001 CLOSED)
+- `BiometricController` 5 endpoints `/api/v1/biometric/{challenge,register,authenticate,registrations/{username},registrations/{registrationId}}` W3C WebAuthn 32B `SecureRandom` + Redis 180s, stub `attestation`/`assertion` accept, `RouteRegistry` `biometric→auth-service /api/v1/biometric` (was 404, now 401/200 routed).
+
+### Added (Backlog — BE-SUPP-001 / FE-STUB-002 CLOSED)
+- `support-service` ITIL tickets + FAQ: `V4__add_tickets_and_faqs.sql` `support_tickets`/`faqs` + RLS `tenant_id`, `SupportTicket`/`Faq` domain + `SupportTicketRepositoryPort`/`FaqRepositoryPort` + adapters, `SupportTicketService`/`FaqService` hexagonal, `POST /api/v1/support/tickets` `X-Idempotency-Key` + `GET /tickets?status` + `GET /faqs?category`, outbox log `payu.support.ticket-created.v1` + `.dlq` (ponytail: add `outbox-starter` when Kafka needed).
+
+### Infra (Podman)
+- Podman engine `5.7.0` latest di `apt resolute/universe` (candidate 5.7.0). `6.1.0` di link adalah `podman-desktop` (`podman-container-tools/podman`) bukan engine `containers/podman` (latest engine 5.x). Build `auth/support/gateway/web` `1.13.69` `BUILD SUCCESS`, `podman-compose --profile apps` core `payu-database-rw`/`payu-cache`/`payu-redis` healthy, Kafka/Artemis/Keycloak need `registry.redhat.io` login (platform queue). Semver `1.13.69` no `latest`, `podman images` clean.
+
+### Verification
+- `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `44/44` BUILD SUCCESS, `npm --prefix frontend/web-app run build` `86/86` clean, `support-service` ArchUnit `53/53` green, `podman build` 3 services `1.13.69` ok.
+
 ## [1.13.68] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-002)

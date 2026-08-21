@@ -1,6 +1,8 @@
 package id.payu.support.adapter.web;
 
 import id.payu.api.common.response.ApiResponse;
+import id.payu.support.application.service.FaqService;
+import id.payu.support.application.service.SupportTicketService;
 import id.payu.support.interfaces.dto.*;
 import id.payu.support.application.service.AgentService;
 import id.payu.support.application.service.AgentTrainingService;
@@ -15,10 +17,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import id.payu.support.domain.TrainingStatus;
 
 @RestController
@@ -30,6 +36,8 @@ public class SupportController extends BaseController {
     private final AgentService agentService;
     private final TrainingModuleService trainingModuleService;
     private final AgentTrainingService agentTrainingService;
+    private final SupportTicketService ticketService;
+    private final FaqService faqService;
 
     @GetMapping
     @Operation(summary = "Support service status", description = "Returns support service health and available endpoints")
@@ -319,6 +327,38 @@ public class SupportController extends BaseController {
             "agentId", agentId,
             "fullyTrained", fullyTrained
         ));
+    }
+
+    // --- ADR-0051 Support Ticket & FAQ (BE-SUPP-001) ponytail: minimal ITIL lifecycle, RLS tenant_id stub, outbox log ---
+    @PostMapping("/tickets")
+    @Operation(summary = "Create support ticket", description = "ITIL: OPEN→IN_PROGRESS→WAITING_CUSTOMER→RESOLVED→CLOSED, SLA 24h, idempotency X-Idempotency-Key")
+    public ResponseEntity<ApiResponse<SupportTicketResponse>> createTicket(@RequestBody Map<String,String> body,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idem) {
+        String userId = currentUserId();
+        SupportTicketResponse saved = ticketService.create(userId, body);
+        // ponytail: outbox payu.support.ticket-created.v1 → log; add outbox-starter when Kafka needed + DLQ .dlq
+        org.slf4j.LoggerFactory.getLogger(SupportController.class).info("ticket-created {} user {}", saved.id(), userId);
+        URI loc = URI.create("/api/v1/support/tickets/" + saved.id());
+        return created(saved, loc.toString());
+    }
+
+    @GetMapping("/tickets")
+    @Operation(summary = "List user tickets")
+    public ResponseEntity<ApiResponse<List<SupportTicketResponse>>> listTickets(@RequestParam(required = false) String status) {
+        String userId = currentUserId();
+        return ok(ticketService.list(userId, status));
+    }
+
+    @GetMapping("/faqs")
+    @Operation(summary = "List FAQs")
+    public ResponseEntity<ApiResponse<List<FaqResponse>>> listFaqs(@RequestParam(required = false) String category) {
+        return ok(faqService.list(category));
+    }
+
+    private String currentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null && !auth.getName().equals("anonymousUser")) return auth.getName();
+        return "anonymous";
     }
 
     // Inner class for schema documentation

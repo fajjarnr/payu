@@ -2,6 +2,30 @@
 
 This document serves as a chronological log of "Lessons Learned" and critical architectural discoveries made during development sessions. Detailed implementation patterns have been migrated to the **AI Agent Skill Ecosystem** in `.agents/skills/`.
 
+## L-303: Support Hexagonal Needs Domain Port + Adapter, Not Direct Repository in Web (2026-08-21)
+
+**Context**: BE-SUPP-001 `SupportController` directly injected `SupportTicketRepository`/`FaqRepository` + returned `SupportTicketEntity` — ArchUnit `Adapter.Web mayNotBeAccessedByAnyLayer` failed 53 tests 1 failure.
+
+**Lesson**: `SupportTicket`/`Faq` domain model + `SupportTicketRepositoryPort`/`FaqRepositoryPort` + `SupportTicketRepositoryAdapter`/`FaqRepositoryAdapter` mapping entity↔domain + `SupportTicketService`/`FaqService` returning `SupportTicketResponse`/`FaqResponse` DTO in `interfaces.dto` — Web now depends only on Application + DTO, Application on Domain port, Persistence implements port (hexagonal). Fix: `53/53` green.
+
+**Applied evidence**: `support-service` `mvn test` BUILD SUCCESS 53/53, `clean package -DskipTests` BUILD SUCCESS.
+
+## L-302: Biometric WebAuthn Needs 32B SecureRandom + Redis 180s + Gateway Route (2026-08-21)
+
+**Context**: GW-ROUTING-003/BE-BIO-001 5 endpoints `/api/v1/biometric/*` 404, frontend `AuthService.getBiometricChallenge` expected 32B challenge.
+
+**Lesson**: `BiometricController` `GET /challenge` `SecureRandom 32B` `Base64Url` `challengeId UUID` + Redis `bio:challenge:{id}` 180s + in-memory fallback + `POST /register`/`authenticate` stub accept + `GET/DELETE /registrations/*` + `RouteRegistry` `biometric→auth-service /api/v1/biometric` (was 404, now 401/200 routed). Ponytail: stub verify, add `FIDO2 attestation verifier` when crypto needed.
+
+**Applied evidence**: `gateway-service` RouteRegistry 5 endpoints, `frontend/web-app` build `86/86` clean, `RouteRegistry.getRouteCount` verified.
+
+## L-301: Step-Up PIN Needs Stored userId|payload_digest + 3-Strike Lockout (2026-08-21)
+
+**Context**: ARCH-GLOBAL-002 `StepUpController` stored only `payloadDigest`, verify ignored PIN, no lockout — ADR-0028 requires Argon2id + 3-strike 15m + payload_digest tamper.
+
+**Lesson**: `UserPinEntity`/`UserPinRepository` + `StepUpController` store `userId|payloadDigest` in Redis 180s `stepup:challenge:{id}` + verify parse `userId` + `expectedDigest.equals(payloadDigest)` tamper check + `encoder.matches(pin,hash)` + `failedAttempts>=3` → `lockedUntil=now+15m` + reset on success + `423` when locked + fallback `ConcurrentHashMap` 180s. Ponytail: transaction `prepare→execute` stub, add `InitiateTransferCommandHandler` challenge when high-value.
+
+**Applied evidence**: `auth-service` V4 `user_pins` live, Argon2 `16/32/1/4096/3`, `mvn 44/44` BUILD SUCCESS.
+
 ## L-300: RLS Needs SET LOCAL per Transaction, Not per Statement (2026-08-19)
 
 **Context**: ARCH-GLOBAL-007 — `TenantAwareTransactionSynchronization` missing `SET LOCAL app.tenant_id` per transaction, `wallets` `ENABLE/FORCE RLS` missing.

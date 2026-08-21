@@ -1,5 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Deploy 1.13.69 (2026-08-21)
+
+- **Step-Up 4/4 + Biometric + Support CLOSED (ARCH-GLOBAL-002/GW-ROUTING-003/BE-SUPP-001)**: `StepUpController` Argon2id `UserPin` 3-strike 15m `payload_digest` tamper + Redis 180s `userId|digest` + `BiometricController` 32B WebAuthn 5 endpoints + `RouteRegistry biometric→auth-service` + `support-service` `V4 tickets/faqs` hexagonal `SupportTicketService`/`FaqService` + `payu-redis` live, `gateway`/`auth`/`support`/`web` rebuilt `1.13.69`, frontend `86/86`, `support` `53/53`, `mvn 44/44`, `podman 5.7.0` (6.1.0 desktop only), compose `1.13.69` no `latest`.
+- **Infra**: `podman build` `auth/support/gateway/web` `1.13.69` ok, `payu-database-rw`/`payu-cache`/`payu-redis` healthy (Kafka/Artemis/Keycloak need `registry.redhat.io` login — platform queue), semver enforced, no unused `latest`.
+
 ## Deploy 1.13.68 (2026-08-20)
 
 - **Step-Up 3/4 (ARCH-GLOBAL-002)**: `payu-redis` `StepUpController` Redis 180s, `TODOS` 3/4, `PAYU_VERSION` 1.13.68.

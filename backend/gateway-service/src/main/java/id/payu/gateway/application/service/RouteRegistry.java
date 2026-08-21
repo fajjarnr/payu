@@ -151,6 +151,7 @@ public class RouteRegistry {
 
         // Auth Service
         registerDefault("auth", "auth-service", "/api/v1/auth");
+        registerDefault("biometric", "auth-service", "/api/v1/biometric");
 
         // Partner Service
         registerDefault("partners", "partner-service", "/partners");
