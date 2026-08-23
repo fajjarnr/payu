@@ -38,7 +38,7 @@ aiohttp==3.10.0
 
 # Utilities
 python-multipart==0.0.12
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.1
 setuptools<81  # pkg_resources removed in 82+
