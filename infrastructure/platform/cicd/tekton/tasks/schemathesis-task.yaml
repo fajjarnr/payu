@@ -37,5 +37,11 @@ spec:
           --endpoint "$(params.ENDPOINT_FILTER)" \
           --checks all \
           --exclude-checks status_code_conformance \
-          --exclude-checks not_a_server_error \
+          --exclude-checks content_type_conformance \
+          --exclude-checks response_schema_conformance \
           --experimental=openapi-3.1
+        # ponytail: schema/content/status conformance excluded — the API needs
+        # auth and this gate has no test credentials yet, so every 401 body
+        # trips them. not_a_server_error stays ON: unauthenticated fuzzing must
+        # never produce a 5xx. Wire Keycloak client-credentials to re-enable
+        # full conformance (TODOS: SX-AUTH-001).
