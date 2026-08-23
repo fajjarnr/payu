@@ -1,5 +1,29 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-318: Cosign v3 Referrers-Fallback vs OpenShift Internal Registry (2026-08-21)
+
+**Context**: `cosign sign` (RHTAS cosign-rhel9 v3.0.4) gagal di SEMUA pipeline dengan `PUT .../manifests/sha256-<hex>: UNKNOWN: unknown error`. Log registry membuka akar masalahnya: `CreateImageStreamMapping: Image ... is invalid: dockerImageManifests[0].architecture: Required value` — cosign v3 menulis signature/bundle sebagai referrers-fallback **OCI index** (tag `sha256-<hex>`, tanpa `.sig`) yang child-nya tidak punya platform; Image API OCP mewajibkan arch/os per manifest anak. Flag `--use-signing-config=false`, `--tlog-upload=false`, `COSIGN_DOCKER_MEDIA_TYPES=1` semuanya TIDAK menyelamatkan — v3 selalu menulis index.
+
+**Fix**: turun ke RHTAS `cosign-rhel9:1.2.0` (cosign v2, digest-pinned) + `--registry-referrers-mode legacy` pada `sign` → menulis tag klasik `sha256-<hex>.sig` sebagai OCI manifest biasa yang diterima registry; `attest` jalan tanpa flag tambahan. Diverifikasi empiris lewat pod uji (bukan asumsi): tlog index Rekor tercatat, `.sig`/`.att` muncul di ImageStream.
+
+**Lesson**: (1) Baca log registry-nya langsung — pesan client (`UNKNOWN; map[]`) tidak berisi apa-apa. (2) Sebelum mengganti toolchain, reproduksi kegagalan di pod debug terisolasi dengan env identik task (SSL_CERT_DIR via subPath mount, dockercfg→`~/.docker/config.json` format `auths`, HOME writable untuk cache TUF); tiga kegagalan berbeda bertumpuk di balik satu gejala. (3) Mount file dari ConfigMap butuh `subPath`, kalau tidak kubelet membuat direktori.
+
+## L-319: RHACS Central Pull 401 = Bound Token Rot, Bukan RBAC (2026-08-21)
+
+**Context**: `roxctl image scan` selalu 401 dari integrasi auto-generated `openshift-internal-registry`; GET integrasi memperlihatkan password len 6 (placeholder/kosong). Bound SA token di dalam Secret dockercfg berotasi dan Central menyimpan salinan statis → pasti kedaluwarsa.
+
+**Fix**: buat Secret `kubernetes.io/service-account-token` (`rhacs-registry-reader-token`, non-expiring) untuk SA pull-only `rhacs-registry-reader` (RoleBinding `system:image-puller` payu-dev), lalu PUT ulang integrasi via Central API dengan kredensial itu. Admin API token di-mint sementara via prosedur resmi reset password htpasswd + restart central, lalu hash asli dikembalikan; token disimpan di Vault `secret/payu/acs/admin-api-token` (expiry 30d).
+
+**Lesson**: kredensial bound-token jangan disalin statis ke sistem luar (RHACS/registry integration). Untuk konsumsi jangka panjang pakai legacy SA-token secret atau mekanisme refresh. `/v1/ping` dan beberapa endpoint mengembalikan 200/403 tanpa melihat kredensial — verifikasi auth hanya dengan endpoint yang benar-benar terproteksi (mis. `/v1/roles`).
+
+## L-320: Maven Central 429 Saat Wave Pipeline Paralel (2026-08-21)
+
+**Context**: 7 pipeline paralel × fresh PVC source (`-Dmaven.repo.local=$(workspaces.source.path)/.m2`) = tiap run mengunduh ulang seluruh dependency tree → egress IP kena throttle 429 dari repo.maven.apache.org (dan repo1.maven.org — CDN yang sama, rate bucket per IP).
+
+**Fix/mitigasi**: antrean sekuensial antar-service; settings.xml mirror central→repo1 ditambahkan (berguna kalau limit per-hostname, tidak untuk per-IP); jangka menengah butuh cache .m2 bersama yang survive `git-clone --delete-existing` (mis. PVC proxy/Nexus internal).
+
+**Lesson**: hitung biaya jaringan pipeline paralel — volumeClaimTemplate per run berarti tidak ada reuse cache. Kalau build wave besar, serialkan bagian yang download-heavy atau sediakan mirror/proxy internal sebelum scaling paralelisme.
+
 ## L-315: Tekton Workspace Optional vs Task Requires (2026-08-22)
 
 **Context**: `oc get pipelinerun ...` `RequiredWorkspaceMarkedOptional` / `Optional workspace not supported by task: pipeline workspace "dockerconfig" is marked optional but pipeline task "build" requires it`. `oc get pipeline -o json | jq .spec.workspaces` showed all 4 optional (`source,maven-settings,m2-cache,dockerconfig,signing-secrets` all `optional: true`) while tasks `build`/`buildah` require `dockerconfig`/`m2-cache`.

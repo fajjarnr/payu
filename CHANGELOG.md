@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.17.1] - 2026-08-21
+
+### Fixed
+
+- **Tekton/cosign**: `cosign-sign` gagal di seluruh pipeline (500 UNKNOWN dari internal registry) — cosign v3 menulis signature sebagai referrers-fallback OCI index yang ditolak Image API OpenShift (`dockerImageManifests` mewajibkan arch/os). Task dipindah ke RHTAS cosign 1.2.0 (digest-pinned) + `--registry-referrers-mode legacy`; tlog/Rekor tetap aktif. Diverifikasi empiris: attest+sign PASS, `.sig`/`.att` tag terbentuk.
+- **Tekton/RHACS**: `rhacs-image-scan` 401 — integrasi registry `openshift-internal-registry` di Central memakai bound SA token kedaluwarsa. Dibuat Secret token non-expiring `rhacs-registry-reader-token` (payu-dev) + PUT integrasi; scan diverifikasi sukses via Central API.
+- **Tekton/k6**: `k6-smoke` false-negative untuk service non-Spring (FastAPI/Next.js) karena probing endpoint health yang tidak ada mengotori threshold `http_req_failed`. Script kini berhenti pada respons pertama <500 dan gate pindah ke `checks rate>0.99`.
+- **Tekton/argocd-sync-wait**: bug `$sync_status`/`$health_status` (command substitution) pada jalur timeout; plus fallback menunggu rollout Deployment ketika Application ArgoCD tidak ditemukan (mencegah zap/k6 balapan dengan rollout).
+- **Tekton/maven**: workspace `maven-settings` tidak pernah dipakai mvn; kini `-s settings.xml` + mirror central→repo1.maven.org untuk menghindari 429 per-hostname saat wave paralel.
+- **partner-service**: kurung tutup tertelan komentar baris di `WebhookUrlValidatorServiceTest` memutus kompilasi CI.
+- **workloads/account-service (dev)**: StatefulSet `account-postgres` yatim (secret tak pernah ada, DB asli via CNPG `payu-database-rw`) dihapus dari overlay beserta referensi kustomize-nya.
+- **RBAC/platform**: terapkan `argocd-sa-supplement.yaml` (CRUD apps resources untuk controller ArgoCD) dan `allow-api-egress.yaml` (egress operator OLM → kube-apiserver) yang sebelumnya hanya ada di repo — memperbaiki CrashLoopBackOff rhbk-operator di sit/uat/preprod dan sync gagal ArgoCD.
+
 ## [1.17.0] - 2026-08-21
 
 ### Changed

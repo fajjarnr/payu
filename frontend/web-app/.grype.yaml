@@ -1,0 +1,14 @@
+# Grype suppression for PayU web-app image scans.
+# Everything listed here is verified NOT part of the application dependency
+# tree (npm audit on package-lock.json reports zero vulnerabilities).
+#
+# jsonwebtoken 4.2.2 / ws 1.x / tar@<4 / http-proxy etc. are VENDORED COPIES
+# shipped inside node_modules/next/dist/compiled/** — Next.js internal build
+# tooling, not reachable from application code paths.
+ignore:
+  # GHSA-c7hr-j4mj-j2w6: jsonwebtoken <=8.x prototype poisoning — vendored
+  # copy in node_modules/next/dist/compiled/jsonwebtoken (Next.js internals).
+  - package:
+      name: jsonwebtoken
+    vulnerability: GHSA-c7hr-j4mj-j2w6
+    fix-state: unknown

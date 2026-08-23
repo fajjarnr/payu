@@ -55,8 +55,13 @@ spec:
       image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
       workingDir: $(workspaces.source.path)
       command:
-        - /grype
+        - /bin/sh
       args:
-        - $(params.TARGET)
-        - --fail-on
-        - $(params.FAIL_ON)
+        - -ceu
+        - |
+          # Project may ship a .grype.yaml to document targeted suppressions
+          # (e.g. framework-vendored copies under next/dist/compiled).
+          if [ -f .grype.yaml ]; then
+            exec /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)" --config .grype.yaml
+          fi
+          exec /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)"

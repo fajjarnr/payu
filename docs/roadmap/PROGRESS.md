@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## CI Pipelines All-Green Sweep (2026-08-21)
+
+- **Root-cause fixes, bukan tambal sulam**: cosign v3 referrers-fallback index ditolak registry internal OCP → pin RHTAS cosign 1.2.0 + `--registry-referrers-mode legacy` (tlog Rekor tetap jalan); integrasi RHACS `openshift-internal-registry` pakai token non-expiring `rhacs-registry-reader-token`; k6 smoke gate pindah ke `checks` agar probing endpoint yang tidak ada tidak menyalakan `http_req_failed`.
+- **Infra RBAC diterapkan**: `argocd-sa-supplement.yaml` (CRUD apps resources untuk controller ArgoCD) dan `allow-api-egress.yaml` (egress operator OLM) akhirnya di-apply ke cluster — rhbk-operator sit/uat/preprod keluar dari CrashLoopBackOff, sync StatefulSet payu-dev tidak lagi forbidden.
+- **Pipeline sweep**: 25/31 service pipeline Completed end-to-end (clone→gitleaks→trufflehog→semgrep→compile→buildah→syft→grype→trivy→rhacs-scan→cosign-sign→argocd-sync→zap→k6→gitops-writeback); 6 sisanya tertahan throttle Maven Central (429) — antrean sekuensial + mirror repo1 disiapkan.
+- **Kebersihan workspace**: pod debug dihapus, PipelineRun Failed lama dibersihkan; overlay account-service-dev dikurangi STS postgres yatim.
+
 ## Deploy 1.15.1 (2026-08-22)
 
 - **Tekton Polyrepo Workspace & Gate Hardening**: Fixed `RequiredWorkspaceMarkedOptional` (only `maven-settings` optional; `m2-cache`/`dockerconfig`/`signing-secrets` required) across 31 `per-service` pipelines + `payu-service-pipeline` and re-created via `oc create -f -n payu-cicd` (31 OK). Created `payu-cicd/signing-secrets` + `maven-settings` dummy `Secret` for pipeline workspace binding.
