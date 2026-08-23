@@ -1,5 +1,13 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## 5-Environment Bring-Up + Dev→Prod Promotion Proven (2026-08-23)
+
+- **4 environment baru hidup penuh** (sit/uat/preprod/prod): data (CNPG + Infinispan standalone + bootstrap jobs hijau), messaging (Kafka Strimzi 1-broker + Artemis + console), identity (Keycloak + realm import), workloads (31 workload/env). Verifikasi: pod `1/1 Running` di kelima namespace, **0 baris ERROR** pada scan log 20 menit terakhir, seluruh Application ArgoCD Healthy.
+- **Promotion chain dev→prod terbukti**: account-service pilot hijau berurutan di sit (`…-q92mw`, 17/17 task), uat (`mgq6f`), preprod (`p9fcg`), prod (`4l2nd`) — termasuk rhacs lintas registry namespace, schemathesis (schema /api-docs + springdoc non-prod), litmus/kraken skip-infra, dan gitops-writeback push Git asli via SSH (rebase FETCH_HEAD anti-race).
+- **Polyrepo ADR-0066 pilot tuntas**: overlay per-service × 5 env untuk account-service Synced+Healthy; kepemilikan tunggal (dikeluarkan dari base/umbrella), ExternalSecret yatim `payu-vault` dihapus.
+- **Root-cause fixes**: base FQDN `.payu-dev.svc` → nama lokal (59+ titik); maven-settings secret masuk Git + binding dockerconfig dikembalikan; RHACS integration ID aktif di-update dengan token segar; grype policy vendored `next/dist/compiled`; messaging TLS-only patch dilepas (plaintext :9092 sesuai consumer); SSO promoted env konsisten memakai shared Keycloak.
+- **Backlog baru**: SX-AUTH-001 (kredensial schemathesis), CHAOS-ENV-001/RBAC (agent chaos per env), SSO-ENV-002 (isolasi Keycloak), POLYREPO-002 (ApplicationSet 30 service sisanya), PROMOTE-003 (promotion run rutin per rilis).
+
 ## CI Pipelines All-Green Sweep (2026-08-21)
 
 - **Root-cause fixes, bukan tambal sulam**: cosign v3 referrers-fallback index ditolak registry internal OCP → pin RHTAS cosign 1.2.0 + `--registry-referrers-mode legacy` (tlog Rekor tetap jalan); integrasi RHACS `openshift-internal-registry` pakai token non-expiring `rhacs-registry-reader-token`; k6 smoke gate pindah ke `checks` agar probing endpoint yang tidak ada tidak menyalakan `http_req_failed`.

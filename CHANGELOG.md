@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.0] - 2026-08-23
+
+### Added
+
+- **Full environment bring-up sit/uat/preprod/prod**: seluruh stack kini hidup di 5 environment — data (CNPG `payu-database` + Infinispan standalone + bootstrap jobs), messaging (Strimzi Kafka 1-broker + Artemis + console), identity (RHBK Keycloak + realm import), workloads (25 backend + 5 simulator + web-app). Semua pod **Running Ready**, 0 baris ERROR pada log lintas environment. Pola mengikuti dev yang terbukti (Infinispan standalone, secret plain) menunggu Vault/VSO (DEVSECOPS-017).
+- **Promotion pipeline dev→prod terbukti end-to-end** (pilot account-service): run hijau berturut-turut untuk `target-env=sit/uat/preprod/prod` dengan seluruh task — clone→gitleaks→trufflehog→semgrep→compile→build→syft→grype→trivy→rhacs-scan→cosign-sign→argocd-sync→zap/schemathesis/k6/litmus/kraken (per matriks env)→gitops-writeback (push Git asli via SSH).
+- **gitops-writeback SemVer + push**: mode `image-tag` menulis `newTag` SemVer (standar repo), fallback digest; workspace opsional `git-ssh` (secret `git-ssh-credentials`) mengaktifkan push asli dengan rebase FETCH_HEAD anti-race; fallback overlay per-service (ADR-0066).
+- **31 per-service pipelines** mendeklarasikan `push-changes` (gate prod) dan `image-tag`; template PipelineRun ter-bind penuh.
+
+### Fixed
+
+- **account-service polyrepo overlays**: render overlay lama menghasilkan image kosong + selector termutasi (immutable) — sync `account-service-dev` gagal; overlay ditulis ulang zero-drift + sibling sit/uat/preprod/prod; referensi account-service dibersihkan dari base & 5 umbrella (replicas list, images transform, patch exact-name) yang memutus `kustomize build`.
+- **ExternalSecret yatim**: `account-service-db-credentials` menunjuk ClusterSecretStore `payu-vault` yang tidak ada → kesehatan umbrella `payu-dev` Degraded; dihapus dari base (Vault tetap DEVSECOPS-017).
+- **Base FQDN hardcoded `.payu-dev.svc`** (59+ titik: DB host, cache-resp, lending-rules, otel) diganti nama service lokal-namespace sehingga overlay benar-benar env-agnostic; perilaku dev tak berubah.
+- **Tekton/maven-settings**: secret `maven-settings` tidak pernah ada (template menunjuk `redhat-registry-pull` yang juga tidak ada) → compile stuck Init. Manifest settings.xml (mirror repo1) masuk Git; binding workspace dikembalikan ke `dockerconfig`.
+- **Tekton/rhacs-scan lintas env**: integrasi registry Central di-update ke ID aktif (`db7dfb89…`) dengan token segar — scan image `payu-sit|uat|preprod|payu` tidak lagi 401.
+- **Tekton/grype**: temuan Critical berasal dari salinan vendored Next.js (`next/dist/compiled`) — proyek kini bisa menyertakan `.grype.yaml` (exclude path + ignore terdokumentasi); lookup config glob-based.
+- **Tekton/schemathesis**: schema URL salah (`/v3/api-docs` vs `/api-docs`) dan springdoc default-off — gate tidak pernah bisa load schema. springdoc dinyalakan via overlay non-prod; conformance yang tergantung kredensial ditangguhkan (SX-AUTH-001), deteksi 5xx tetap aktif.
+- **Tekton/litmus & kraken gate**: KUSTOMIZE_DIR salah path; kini skip eksplisit saat agent chaos belum terpasang di namespace target (CHAOS-ENV-001) alih-alih timeout buta; kraken juga drop pin `runAsUser` yang melanggar SCC restricted-v2.
+- **web-app pipelinerun**: tag usang 1.15.1 → 1.17.0 (SemVer live).
+- **GitOps ownership**: duplikat Secret `payu-keycloak-admin`/`db-secrets` di payu-secrets per-env dihapus (identitas milik overlay identity, db-secrets milik base+patch); label Namespace sit/uat/preprod dipulihkan.
+
+### Changed
+
+- **Messaging promoted env**: patch listener TLS-only (9093 SCRAM) dilepas dari common karena service & console memakai plaintext :9092 tanpa kredensial — warning "bootstrap broker disconnected" hilang; TLS menyusul bersama wiring per-service (DEVSECOPS-017).
+- **SSO promoted env**: issuer/JWK konsisten memakai Keycloak bersama (`sso-dev.apps…` + internal JWK) seperti dev; isolasi Keycloak per-environment menjadi backlog (SSO-ENV-002).
+
 ## [1.17.1] - 2026-08-21
 
 ### Fixed

@@ -17,11 +17,11 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready (5 workers across 3 AZs). `payu-dev` & `payu-sso` all 30 microservices + 5 simulators + Next.js web application + Keycloak + PostgreSQL + Kafka + DataGrid + ActiveMQ Artemis 2/2 Clustered all **1/1 Running Ready** (2026-08-21). Route `https://payu-dev.apps.fajjjar.my.id` returns 200 healthy. |
-| **Last Release** | `1.13.81` (2026-08-21) |
-| **Core Banking MVP** | 🟢 MVP workloads live on OpenShift — all services migrated Flyway DB, ActiveMQ clustered broker live, 94/94 web-app tests & 86/86 SSG pages passing; partner prod credentials queue remains. |
-| **Backlog Aktif** | Sisa harden ponytail deferred (ceiling when strict needed) |
-| **Last Updated** | 2026-08-21 — SemVer sync v1.13.80→1.13.81: package.json/podman-compose/workloads 31× 1.13.81 + oc tag 31× + rtk oc apply -k → 42/42 1/1 Running Ready 0 error logs |
+| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) + Kafka + DataGrid + Artemis semua **1/1 Running Ready**, 0 ERROR log (2026-08-23). Platform: cert-manager, RHACS, Litmus, ESO, ArgoCD, 3scale-operator Healthy; Tekton 31/31 per-service pipeline hijau di dev + promotion chain dev→sit→uat→preprod→prod terbukti hijau (pilot account-service, run `q92mw`/`mgq6f`/`p9fcg`/`4l2nd`). |
+| **Last Release** | `1.18.0` (2026-08-23) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; partner prod credentials queue remains. |
+| **Backlog Aktif** | Chaos agent per-env, Schemathesis credentials, SSO per-env isolation (lihat Platform Backlog baru di bawah) |
+| **Last Updated** | 2026-08-23 — v1.18.0: bring-up 4 environment + polyrepo account-service pilot 5 env hijau + writeback SemVer/push-SSH + deretan fix gate Tekton (rhacs lintas env, grype vendored, schemathesis path/springdoc, litmus/kraken skip-infra, maven-settings secret). |
 
 ---
 
@@ -50,6 +50,12 @@
 
 | Key | Domain | Item | Done saat |
 |:---|:---|:---|:---|
+| SX-AUTH-001 | platform / Tekton | **Schemathesis gate pakai kredensial** — client-credentials dari `payu-keycloak-client-secrets` per env → header Bearer; nyalakan kembali `content_type_conformance` + `response_schema_conformance` yang kini di-exclude | Gate 5xx-only aktif |
+| CHAOS-ENV-001 | platform / chaos | **Litmus agent + Kraken/Cerberus di namespace promoted** — pasang agent payu-sit/uat/preprod/payu agar ChaosEngine benar-benar dieksekusi; lengkapi RBAC cross-ns untuk SA pipeline (CHAOS-RBAC-001); lepas skip-infra pada kedua gate setelah live | Skip eksplisit saat infra absen |
+| SSO-ENV-002 | platform / identity | **Isolasi Keycloak per-environment** — seed client secrets per env (realm import membaca `payu-keycloak-client-secrets`), lalu arahkan issuer/JWK workloads ke `sso-<env>` route | Saat ini semua env memakai SSO bersama dev |
+| POLYREPO-002 | platform / ADR-0066 | **Per-service ApplicationSet untuk 30 service sisanya** — replikasi pola account-service (overlay ×5 env + ApplicationSet matrix), pindah kepemilikan keluar umbrella bertahap | Pilot account-service hijau 5 env |
+| PROMOTE-003 | platform / Tekton | **Promotion run rutin per rilis** untuk seluruh service (bukan hanya pilot) — jalankan `<svc>-pipeline` target-env=sit→uat→preprod→prod saat tag baru dirilis; mekanik sudah terbukti | Pilot account-service selesai |
+
 | TXN-HARDEN-002 | transaction-service / ADR-0060 | **Domain vs Entity split (Q5/BUG-ARCH-003)** — ponytail: `TransactionEntity` keep JPA, `domain/model/Transaction` VO when strict hex needed (ArchUnit forbids `jakarta.persistence` in domain, upgrade: add `TransactionDomain` + `TransactionPersistencePort` return domain + `Money` via `api-commons`) | ArchUnit deferred, 142/142 green after split |
 | TXN-HARDEN-003 | transaction-service / ADR-0060 + ADR-0041 | **Inbox + Result Table + Outbox outside-TX (Q4/Q6)** — ponytail: `FOR UPDATE` keep, inbox `referenceNo` dedup via `idempotency_key` unique already; add `inbox_events` + `aggregate_results` + outbox outside-TX when rail replay scale needed | Replay 2× same `referenceNo` → 1 commit deferred |
 | TXN-HARDEN-004 | transaction-service / ADR-0060 + PADG 14/2025 | **Reconciliation job (Q4)** — ponytail: `ShedLock` `usingDbTime` via existing `shedlock` table; add `ReconciliationScheduler` `@SchedulerLock` + `GET /snap/v1.0/transfer/status` when BI-FAST prod creds live | Scheduler lock log deferred |
