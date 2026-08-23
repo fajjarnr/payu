@@ -44,6 +44,15 @@ spec:
         - -ceu
         - |
           mkdir -p "$XDG_CACHE_HOME" "$TMPDIR"
+          # A service may ship a .grype.yaml documenting targeted suppressions
+          # (e.g. framework-vendored copies under next/dist/compiled).
+          cfg="$(find "$(workspaces.source.path)" -maxdepth 3 -name .grype.yaml -type f -print -quit 2>/dev/null)"
+          if [ -n "$cfg" ]; then
+            cp "$cfg" "$TMPDIR/grype-config.yaml"
+            echo "[grype] using project suppressions: $cfg"
+          else
+            printf 'ignore: []\n' > "$TMPDIR/grype-config.yaml"
+          fi
     - name: update-db
       image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
       command:
@@ -55,13 +64,10 @@ spec:
       image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
       workingDir: $(workspaces.source.path)
       command:
-        - /bin/sh
+        - /grype
       args:
-        - -ceu
-        - |
-          # Project may ship a .grype.yaml to document targeted suppressions
-          # (e.g. framework-vendored copies under next/dist/compiled).
-          if [ -f .grype.yaml ]; then
-            exec /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)" --config .grype.yaml
-          fi
-          exec /grype "$(params.TARGET)" --fail-on "$(params.FAIL_ON)"
+        - $(params.TARGET)
+        - --fail-on
+        - $(params.FAIL_ON)
+        - --config
+        - /tekton/home/tmp/grype-config.yaml
