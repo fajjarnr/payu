@@ -20,28 +20,36 @@ UAT tetap harus production-like dalam security dan promotion semantics. Kapasita
 lab, single-zone scheduling, dan Ceph-backed PVC bukan bukti availability
 production/multi-AZ.
 
+## As-built 1.18.0 (2026-08-23)
+
+Profil lab sama dengan [SIT](INFRASTRUCTURE_DEPLOYMENT_SIT.md) §As-built: secret
+plain (bukan VSS), Infinispan standalone StatefulSet plaintext, Kafka :9092
+plaintext, SSO bersama dev, gate chaos skip bila agent absen. Stack live:
+CNPG + Kafka + Artemis + Keycloak + 31 workload, semua Running. Promotion
+terbukti via per-service pipeline (`target-env=uat`, `push-changes=true`;
+pilot `account-service-promote-uat-mgq6f` hijau).
+
 ## Preflight: infrastructure and secrets
 
 ```bash
 rtk oc get applications.argoproj.io data-uat messaging-uat identity-uat payu-uat -n openshift-gitops
-rtk oc get vaultstaticsecret -n payu-uat
-rtk oc get vaultstaticsecret -n payu-uat -o json | rtk jq -r '.items[] | [.metadata.name, (.status.conditions // [] | map(select(.type=="SecretSynced") | .status) | first // "missing"), (.status.conditions // [] | map(select(.type=="SecretSynced") | .message) | first // "")] | @tsv'
-rtk oc get secret payu-cache-client-ca payu-cache-server-tls payu-cache-credentials -n payu-uat
+rtk oc get secret payu-database-app payu-database-superuser -n payu-uat
 rtk oc get cluster.postgresql.cnpg.io payu-database -n payu-uat
-rtk oc get infinispan payu-cache -n payu-uat
+rtk oc get sts payu-cache -n payu-uat
 rtk oc get pods -n payu-uat | rtk rg 'payu-cache|gateway-service|auth-service|account-service'
 rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/platform/data/overlays/uat
 rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/platform/messaging/overlays/uat
 rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/workloads/overlays/payu-uat
 ```
 
-Required cache secret contract: `truststore.p12` adalah binary PKCS#12 yang
-valid dan `truststore-password` adalah password string. VSO transformation
-harus decode value yang disimpan di Vault; raw base64 text yang dipasang sebagai
-keystore adalah invalid. Jangan mencetak nilai Secret.
+Cache mTLS secret contract di atas berlaku untuk profil production-grade; pada
+as-built 1.18.0 cache berjalan plaintext (Hot Rod tanpa SSL) sehingga secret
+`payu-cache-client-tls` hanya disiapkan, belum dipakai workload. Jangan mencetak
+nilai Secret.
 
-Do not promote while any required VSS is unsynced, cache `WellFormed`/pods are
-not ready, gateway health fails, or Argo is still reconciling a failed revision.
+Do not promote while required plain secrets (cnpg/keycloak) are missing, cache
+pods are not ready, gateway health fails, or Argo is still reconciling a failed
+revision.
 
 The UAT validation PipelineRun `account-service-deploy-uat-rjj9s` completed,
 but it is not sufficient to waive this preflight. The run's functional gates

@@ -18,14 +18,23 @@ Preprod harus mirror production security semantics. Profil single-zone/Ceph
 cluster pada lab hanya membuktikan manifest dapat dirender dan dijalankan;
 tidak membuktikan node failure, multi-AZ storage, atau regional DR.
 
+## As-built 1.18.0 (2026-08-23)
+
+Profil lab sama dengan [SIT](INFRASTRUCTURE_DEPLOYMENT_SIT.md) §As-built (secret
+plain, Infinispan standalone, Kafka :9092 plaintext, SSO bersama). Stack live:
+CNPG + Kafka + Artemis + Keycloak + 31 workload Running. Kraken/Cerberus belum
+ter-deploy → gate `kraken-chaos-gate` skip eksplisit (cek deployment sebelum
+apply; fail-closed tetap berlaku setelah infra live — CHAOS-ENV-001).
+Promotion terbukti: `account-service-promote-preprod-p9fcg` hijau.
+
 ## Preflight
 
 ```bash
 rtk oc get applications.argoproj.io data-preprod messaging-preprod identity-preprod payu-preprod -n openshift-gitops
-rtk oc get vaultstaticsecret -n payu-preprod
+rtk oc get secret payu-database-app payu-database-superuser -n payu-preprod
 rtk oc get cluster.postgresql.cnpg.io payu-database -n payu-preprod
 rtk oc get kafka payu-kafka -n payu-preprod
-rtk oc get infinispan payu-cache -n payu-preprod
+rtk oc get sts payu-cache -n payu-preprod
 rtk oc get deployments,pods -n payu-preprod
 rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/platform/data/overlays/preprod
 rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/platform/messaging/overlays/preprod

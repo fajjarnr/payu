@@ -3,6 +3,22 @@
 `payu-sit` adalah system-integration gate setelah `payu-dev`. Kontraknya
 diturunkan dari [shared MOP](INFRASTRUCTURE_DEPLOYMENT.md) dan [DevSecOps architecture](../architecture/DEVSECOPS_ARCHITECTURE.md).
 
+## As-built 1.18.0 (2026-08-23) — baca dulu
+
+Stack **hidup dan terverifikasi** dengan profil lab berikut (menunggu Vault/VSO,
+lihat DEVSECOPS-017):
+
+- Secret **plain**, bukan VaultStaticSecret: `cnpg-secrets.yaml`,
+  `console-oidc-secret.yaml` (messaging), `keycloak-secrets.yaml` (identity).
+- Cache = **Infinispan standalone StatefulSet** (Hot Rod plaintext, operator CR
+  di-skip karena webhook panics); workload `PAYU_CACHE_HOTROD_USE_SSL=false`.
+- Kafka listener **plaintext :9092** (patch TLS-only dilepas dari common).
+- SSO = Keycloak bersama dev (`sso-dev.apps…` issuer + JWK internal payu-sso);
+  Keycloak sit tetap ter-deploy untuk isolasi mendatang (SSO-ENV-002).
+- Gate chaos (Litmus/Kraken) **skip eksplisit** selama agent belum terpasang di
+  namespace (CHAOS-ENV-001). Schemathesis mengecek 5xx; conformance penuh
+  menunggu kredensial uji (SX-AUTH-001).
+
 ## Environment contract
 
 | Item | Kontrak saat ini |
@@ -24,10 +40,10 @@ tetapi bukan bukti production capacity atau multi-zone resilience.
 
 ```bash
 rtk oc get applications.argoproj.io data-sit messaging-sit identity-sit payu-sit -n openshift-gitops
-rtk oc get vaultstaticsecret -n payu-sit
+rtk oc get secret payu-database-app payu-database-superuser -n payu-sit
 rtk oc get cluster.postgresql.cnpg.io payu-database -n payu-sit
 rtk oc get kafka payu-kafka -n payu-sit
-rtk oc get infinispan payu-cache -n payu-sit
+rtk oc get sts payu-cache -n payu-sit
 rtk oc get deployments,pods -n payu-sit
 rtk oc get route gateway-sit -n payu-sit
 rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/platform/data/overlays/sit
@@ -35,13 +51,23 @@ rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --
 rtk oc apply --server-side --dry-run=server --field-manager=argocd-controller --force-conflicts -k infrastructure/workloads/overlays/payu-sit
 ```
 
-Jangan mulai promotion bila Application `OutOfSync` karena error, required
-VaultStaticSecret belum synced, gateway belum ready, atau warning baru belum
-dijelaskan.
+Jangan mulai promotion bila Application `OutOfSync` karena error, secret plain
+(cnpg/keycloak/console-oidc) tidak lengkap, gateway belum ready, atau warning
+baru belum dijelaskan.
 
 ## Promotion procedure
 
-Pipeline harus menerima digest dari image `payu-dev`, bukan tag:
+**Jalur terbukti (v1.18.0)**: per-service pipeline dengan `target-env` — lihat
+`account-service-promote-sit-*` (run `q92mw`, 17/17 task hijau). Buat
+PipelineRun dari template `infrastructure/platform/cicd/tekton/pipeline-runs/`
+dengan parameter: `target-env=sit`, `image=…/payu-sit/<service>`,
+`image-tag=<SemVer>`, `push-changes=true`. Rantai tugas:
+clone→gitleaks→trufflehog→semgrep→compile→build→syft→grype→trivy→rhacs-scan→
+cosign-sign→argocd-sync→zap-baseline→schemathesis→k6-smoke→litmus(skip bila
+tanpa agent)→gitops-writeback (commit+push overlay `payu-sit`).
+
+Mode digest `payu-deploy-gitops-pipeline` di bawah tetap valid sebagai alternatif
+production-grade setelah Vault/Rollouts live:
 
 ```bash
 rtk tkn pipeline start payu-deploy-gitops-pipeline -n payu-cicd \

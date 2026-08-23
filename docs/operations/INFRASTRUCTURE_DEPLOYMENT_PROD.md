@@ -31,6 +31,15 @@ Production **belum release-ready** bila salah satu berikut belum terbukti:
 | Security | mTLS/zero-trust, RHACS admission, Vault/VSO, backup/audit |
 | Storage | Approved production class only; lab Ceph/RBD/GP3 is not production evidence |
 
+## As-built 1.18.0 (2026-08-23) — status lab, bukan release-ready
+
+Namespace `payu` **hidup** dengan profil lab identik
+[SIT §As-built](INFRASTRUCTURE_DEPLOYMENT_SIT.md): secret plain (bukan VSS),
+Infinispan standalone plaintext, Kafka :9092, SSO bersama dev, plain Deployment
+(belum Rollouts), RHACS admission belum Enforce. 31 workload Running — ini
+bukti bring-up mekanik (`account-service-promote-prod-4l2nd` hijau), BUKAN
+memenuhi hard gates di bawah. Semua persyaratan release tetap berlaku.
+
 ## Read-only readiness audit
 
 ```bash
@@ -39,7 +48,7 @@ rtk oc get clusterversion
 rtk oc get applications.argoproj.io data-prod messaging-prod identity-prod payu-prod -n openshift-gitops
 rtk oc get appproject payu -n openshift-gitops
 rtk oc get applications.argoproj.io payu-prod -n openshift-gitops -o jsonpath='{.spec.syncPolicy}{"\n"}'
-rtk oc get vaultstaticsecret -n payu
+rtk oc get secret payu-database-app payu-database-superuser -n payu
 rtk oc get networkpolicy -n payu
 rtk oc get crd rollouts.argoproj.io analysistemplates.argoproj.io
 rtk oc get rollout,analysisrun -n payu

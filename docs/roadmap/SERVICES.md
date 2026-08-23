@@ -1,8 +1,8 @@
 # PayU Backend Services Status
 
-> **Last Updated**: August 11, 2026
+> **Last Updated**: August 23, 2026
 > **Total Services**: 28 (23 microservices + 5 simulators) + 1 frontend (web-app)
-> **OpenShift Status**: 🟢 `payu-dev` 33 deployments + infra all 1/1 Running (snapshot 2026-08-11); lab `cluster-nkk8q` sit/uat/preprod live via ArgoCD. prod belum ada (ACCOUNT-007).
+> **OpenShift Status**: 🟢 **5 environment hidup penuh** (v1.18.0, snapshot 2026-08-23): `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, dan `payu` (prod, profil lab) — masing-masing menjalankan 25 microservices + 5 simulators + web-app + CNPG PostgreSQL + Kafka + DataGrid + Artemis + Keycloak, semua pod Running Ready, 0 ERROR log. Tekton: 31/31 per-service pipeline hijau di dev; promotion chain dev→sit→uat→preprod→prod terbukti hijau (pilot account-service).
 >
 > **Sumber kebenaran status kerja**: [`TODOS.md`](./TODOS.md) — file ini ringkasan arsitektur; angka test terverifikasi per 2026-08-11.
 
