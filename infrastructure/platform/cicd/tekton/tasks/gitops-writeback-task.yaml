@@ -48,12 +48,20 @@ spec:
         set -eu
 
         cd "$(workspaces.source.path)"
+        # Must precede every other git invocation (dubious-ownership guard).
+        git config --global --add safe.directory "$(workspaces.source.path)"
+        git config --global user.email "gitops-bot@payu.internal"
+        git config --global user.name "Tekton GitOps Bot"
         if [ -f "$GIT_SSH_KEY_PATH/ssh-privatekey" ]; then
           cp "$GIT_SSH_KEY_PATH/ssh-privatekey" /tmp/gitkey
           chmod 600 /tmp/gitkey
           export GIT_SSH_COMMAND="ssh -i /tmp/gitkey -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-          git remote set-url origin "git@github.com:fajjarnr/payu.git" || true
-          echo "[*] SSH write credentials configured for GitOps push"
+          if git remote set-url origin "git@github.com:fajjarnr/payu.git"; then
+            echo "[*] SSH write credentials configured for GitOps push"
+          else
+            echo "[X] failed to rewrite origin to SSH" >&2
+            exit 1
+          fi
         fi
         case "$(params.environment)" in
           dev|sit|uat|preprod|prod)
@@ -151,9 +159,6 @@ spec:
           fi
         fi
 
-        git config --global --add safe.directory "$(workspaces.source.path)"
-        git config --global user.email "gitops-bot@payu.internal"
-        git config --global user.name "Tekton GitOps Bot"
         git add kustomization.yaml
         if git diff --cached --quiet; then
           echo "[*] No image change for $(params.service-name) in $(params.environment)"
