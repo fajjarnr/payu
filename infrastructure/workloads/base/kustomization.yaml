@@ -1,7 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- ./account-service
+# account-service is managed by its own per-service ApplicationSet (ADR-0066
+# polyrepo): infrastructure/workloads/overlays/payu-<env>/account-service
 - ./analytics-service
 - ./api-portal-service
 - ./auth-service

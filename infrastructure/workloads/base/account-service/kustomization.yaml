@@ -4,7 +4,6 @@ resources:
 - serviceaccount.yaml
 - deployment.yaml
 - service.yaml
-- vault-externalsecret.yaml
 labels:
 - pairs:
     app.kubernetes.io/name: account-service
