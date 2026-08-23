@@ -51,12 +51,14 @@ spec:
           exit 0
         fi
 
-        oc apply -k "$(workspaces.source.path)/$(params.KUSTOMIZE_DIR)"
-
+        # Check infra BEFORE apply: applying cross-namespace needs RBAC that
+        # ships with the chaos stack itself (TODOS: CHAOS-RBAC-001).
         if ! oc get deployment cerberus -n "$(params.NAMESPACE)" >/dev/null 2>&1; then
           echo "[!] Cerberus/Kraken infra not deployed in $(params.NAMESPACE) - skipping gate"
           exit 0
         fi
+
+        oc apply -k "$(workspaces.source.path)/$(params.KUSTOMIZE_DIR)"
         oc wait --for=condition=available deployment/cerberus -n "$(params.NAMESPACE)" --timeout=5m
         oc wait --for=condition=complete job/$(params.JOB_NAME) -n "$(params.NAMESPACE)" --timeout="$(params.TIMEOUT)"
         echo "[✓] Kraken job completed successfully"
