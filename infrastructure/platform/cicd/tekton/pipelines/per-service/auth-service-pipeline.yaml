@@ -33,6 +33,10 @@ spec:
       type: string
       default: "dev"
       description: dev|sit|uat|preprod|prod — gates per NS matrix §3.1
+    - name: push-changes
+      type: string
+      default: "false"
+      description: "git push the GitOps write-back commit (required true for prod)"
     - name: catalog-revision
       type: string
       default: payu-catalog-v1
@@ -168,4 +172,4 @@ spec:
         name: gitops-writeback
         kind: Task
       workspaces: [{name: source, workspace: source}]
-      params: [{name: service-name, value: $(params.service-name)}, {name: environment, value: $(params.target-env)}, {name: image-digest, value: $(tasks.build.results.BUILT_IMAGE_DIGEST)}]
+      params: [{name: service-name, value: $(params.service-name)}, {name: environment, value: $(params.target-env)}, {name: image-digest, value: $(tasks.build.results.BUILT_IMAGE_DIGEST)}, {name: image-tag, value: $(params.image-tag)}, {name: push-changes, value: $(params.push-changes)}]

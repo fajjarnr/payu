@@ -15,6 +15,10 @@ spec:
     - name: image-digest
       type: string
       description: Immutable sha256 digest to promote
+    - name: image-tag
+      type: string
+      description: "Optional SemVer tag to pin instead of the digest (repo standard: SemVer tags matching git tags)"
+      default: ""
     - name: registry-url
       type: string
       default: image-registry.openshift-image-registry.svc:5000
@@ -67,41 +71,71 @@ spec:
 
         cd "$TARGET_DIR"
         if ! grep -Fq -- "- name: $IMAGE_NAME" kustomization.yaml; then
-          echo "[X] Image entry not found for $IMAGE_NAME" >&2
-          exit 1
+          # Polyrepo (ADR-0066): service may live in its own per-service overlay.
+          if [ -f "$(params.service-name)/kustomization.yaml" ] && grep -Fq -- "- name: $IMAGE_NAME" "$(params.service-name)/kustomization.yaml"; then
+            cd "$(params.service-name)"
+          else
+            echo "[X] Image entry not found for $IMAGE_NAME in $TARGET_DIR" >&2
+            exit 1
+          fi
         fi
 
-        # Keep the repository in newName and store the immutable reference in
-        # Kustomize's digest field. A digest embedded in newName is not a
-        # portable Kustomization image transform.
-        awk -v name="$IMAGE_NAME" -v target="$IMAGE_NAME" -v digest="$(params.image-digest)" '
-          $0 ~ ("- name: " name "$") { found=1; print; next }
-          found && /newTag:/ {
-            match($0, /^[[:space:]]*/)
-            print substr($0, RSTART, RLENGTH) "digest: " digest
-            found=0
-            next
-          }
-          found && /digest:/ {
-            sub(/digest:.*/, "digest: " digest)
-            print
-            found=0
-            next
-          }
-          found && /newName:/ {
-            sub(/newName:.*/, "newName: " target)
-            print
-            match($0, /^[[:space:]]*/)
-            print substr($0, RSTART, RLENGTH) "digest: " digest
-            found=0
-            next
-          }
-          { print }
-        ' kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+        if [ -n "$(params.image-tag)" ]; then
+          # Repo standard: SemVer image tag matching the git tag.
+          if ! printf '%s' "$(params.image-tag)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$'; then
+            echo "[X] image-tag must be SemVer (MAJOR.MINOR.PATCH)" >&2
+            exit 1
+          fi
+          awk -v name="$IMAGE_NAME" -v tag="$(params.image-tag)" '
+            $0 ~ ("- name: " name "$") { found=1; print; next }
+            found && /newTag:/ {
+              sub(/newTag:.*/, "newTag: \"" tag "\"")
+              found=0
+            }
+            found && /digest:/ {
+              sub(/digest:.*/, "newTag: \"" tag "\"")
+              found=0
+            }
+            { print }
+          ' kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
 
-        if ! grep -Fq -- "digest: $(params.image-digest)" kustomization.yaml; then
-          echo "[X] Failed to write digest for $IMAGE_NAME" >&2
-          exit 1
+          if ! grep -Fq -- "newTag: \"$(params.image-tag)\"" kustomization.yaml; then
+            echo "[X] Failed to write newTag for $IMAGE_NAME" >&2
+            exit 1
+          fi
+        else
+          # Keep the repository in newName and store the immutable reference in
+          # Kustomize's digest field. A digest embedded in newName is not a
+          # portable Kustomization image transform.
+          awk -v name="$IMAGE_NAME" -v target="$IMAGE_NAME" -v digest="$(params.image-digest)" '
+            $0 ~ ("- name: " name "$") { found=1; print; next }
+            found && /newTag:/ {
+              match($0, /^[[:space:]]*/)
+              print substr($0, RSTART, RLENGTH) "digest: " digest
+              found=0
+              next
+            }
+            found && /digest:/ {
+              sub(/digest:.*/, "digest: " digest)
+              print
+              found=0
+              next
+            }
+            found && /newName:/ {
+              sub(/newName:.*/, "newName: " target)
+              print
+              match($0, /^[[:space:]]*/)
+              print substr($0, RSTART, RLENGTH) "digest: " digest
+              found=0
+              next
+            }
+            { print }
+          ' kustomization.yaml > kustomization.yaml.tmp && mv kustomization.yaml.tmp kustomization.yaml
+
+          if ! grep -Fq -- "digest: $(params.image-digest)" kustomization.yaml; then
+            echo "[X] Failed to write digest for $IMAGE_NAME" >&2
+            exit 1
+          fi
         fi
 
         git config --global --add safe.directory "$(workspaces.source.path)"
