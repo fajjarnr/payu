@@ -47,6 +47,8 @@ spec:
     - name: m2-cache
     - name: dockerconfig
     - name: signing-secrets
+    - name: git-ssh
+      optional: true
   tasks:
     - name: clone
       taskRef: {resolver: cluster, params: [{name: kind, value: task}, {name: name, value: git-clone}, {name: namespace, value: openshift-pipelines}]}
@@ -171,5 +173,5 @@ spec:
       taskRef:
         name: gitops-writeback
         kind: Task
-      workspaces: [{name: source, workspace: source}]
+      workspaces: [{name: source, workspace: source}, {name: git-ssh, workspace: git-ssh, optional: true}]
       params: [{name: service-name, value: $(params.service-name)}, {name: environment, value: $(params.target-env)}, {name: image-digest, value: $(tasks.build.results.BUILT_IMAGE_DIGEST)}, {name: image-tag, value: $(params.image-tag)}, {name: push-changes, value: $(params.push-changes)}]

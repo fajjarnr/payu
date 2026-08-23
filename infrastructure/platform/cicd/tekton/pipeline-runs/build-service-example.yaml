@@ -48,6 +48,9 @@ spec:
     - name: signing-secrets
       secret:
         secretName: signing-secrets
+    - name: git-ssh
+      secret:
+        secretName: git-ssh-credentials
     - name: maven-settings
       secret:
         secretName: maven-settings

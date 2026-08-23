@@ -34,14 +34,27 @@ spec:
   workspaces:
     - name: source
       description: "Cloned GitOps repository"
+    - name: git-ssh
+      description: "Optional SSH key (ssh-privatekey) + known_hosts for GitOps push"
+      optional: true
   steps:
     - name: writeback
       image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:cbd89c531953a43b8055bda72f7696be80f57fd1d782567a91d82e0fbcb3d26d
+      env:
+        - name: GIT_SSH_KEY_PATH
+          value: $(workspaces.git-ssh.path)
       script: |
         #!/bin/sh
         set -eu
 
         cd "$(workspaces.source.path)"
+        if [ -f "$GIT_SSH_KEY_PATH/ssh-privatekey" ]; then
+          cp "$GIT_SSH_KEY_PATH/ssh-privatekey" /tmp/gitkey
+          chmod 600 /tmp/gitkey
+          export GIT_SSH_COMMAND="ssh -i /tmp/gitkey -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          git remote set-url origin "git@github.com:fajjarnr/payu.git" || true
+          echo "[*] SSH write credentials configured for GitOps push"
+        fi
         case "$(params.environment)" in
           dev|sit|uat|preprod|prod)
             OVERLAY_DIR="payu-$(params.environment)"
