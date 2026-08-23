@@ -1,10 +1,12 @@
-# Grype suppression for PayU web-app image scans.
-# Everything listed here is verified NOT part of the application dependency
-# tree (npm audit on package-lock.json reports zero vulnerabilities).
+# Grype scan policy for PayU web-app.
 #
-# jsonwebtoken 4.x/9.x entries are VENDORED COPIES shipped inside
-# node_modules/next/dist/compiled/** — Next.js internal build tooling, not
-# reachable from application code paths.
+# node_modules/next/dist/compiled/** contains VENDORED copies of packages
+# (jsonwebtoken, ws, tar, http-proxy, ...) used internally by the Next.js
+# build toolchain — not part of the application dependency tree and not
+# reachable from app code paths (npm audit on package-lock.json: 0 findings).
+exclude:
+  - "**/next/dist/compiled/**"
+# Belt-and-braces: any residual unpatched jsonwebtoken copy anywhere.
 ignore:
   - package:
       name: jsonwebtoken
