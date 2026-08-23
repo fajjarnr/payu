@@ -4,6 +4,9 @@ kind: Kustomization
 resources:
   - ../../operator
   - ../common
+  # Plain secrets replace VaultStaticSecrets (rhbk-externalsecrets.yaml is not
+  # wired into common) until Vault/VSO ships (DEVSECOPS-017).
+  - keycloak-secrets.yaml
 
 namespace: payu-sit
 

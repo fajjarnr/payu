@@ -149,7 +149,7 @@ spec:
               name: payu-cache-client-tls
               key: keystore-password
         - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
-          value: payu-cache.payu-dev.svc.cluster.local
+          value: payu-cache
         - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
           value: '3'
         - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE

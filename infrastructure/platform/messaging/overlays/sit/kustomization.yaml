@@ -3,7 +3,32 @@ kind: Kustomization
 namespace: payu-sit
 resources:
   - ../common
+  # Plain secret replaces the VaultStaticSecret pair from common
+  # (external-secrets.yaml) until Vault/VSO ships (DEVSECOPS-017).
+  - console-oidc-secret.yaml
 patches:
+  - target:
+      group: secrets.hashicorp.com
+      version: v1beta1
+      kind: VaultStaticSecret
+      name: payu-kafka-console-oidc
+    patch: |-
+      apiVersion: secrets.hashicorp.com/v1beta1
+      kind: VaultStaticSecret
+      metadata:
+        name: payu-kafka-console-oidc
+      $patch: delete
+  - target:
+      group: secrets.hashicorp.com
+      version: v1beta1
+      kind: VaultStaticSecret
+      name: payu-broker-credentials
+    patch: |-
+      apiVersion: secrets.hashicorp.com/v1beta1
+      kind: VaultStaticSecret
+      metadata:
+        name: payu-broker-credentials
+      $patch: delete
   - target:
       group: kafka.strimzi.io
       version: v1

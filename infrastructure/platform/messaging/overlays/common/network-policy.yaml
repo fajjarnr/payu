@@ -18,10 +18,10 @@ spec:
     - Egress
   ingress:
     - from:
-        - podSelector: {}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: payu-environment
+        - podSelector: {}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: openshift-operators
@@ -33,10 +33,10 @@ spec:
               kubernetes.io/metadata.name: openshift-monitoring
   egress:
     - to:
-        - podSelector: {}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: payu-environment
+        - podSelector: {}
     - to:
         - namespaceSelector:
             matchLabels:
@@ -93,10 +93,10 @@ spec:
     - Egress
   ingress:
     - from:
-        - podSelector: {}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: payu-environment
+        - podSelector: {}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: openshift-operators
@@ -105,10 +105,10 @@ spec:
               kubernetes.io/metadata.name: openshift-monitoring
   egress:
     - to:
-        - podSelector: {}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: payu-environment
+        - podSelector: {}
     - to:
         - namespaceSelector:
             matchLabels:

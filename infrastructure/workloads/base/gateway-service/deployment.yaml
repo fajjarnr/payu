@@ -146,7 +146,7 @@ spec:
               name: payu-cache-client-tls
               key: keystore-password
         - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
-          value: payu-cache.payu-dev.svc.cluster.local
+          value: payu-cache
         - name: KAFKA_BOOTSTRAP_SERVERS
           valueFrom:
             configMapKeyRef:

@@ -115,7 +115,7 @@ spec:
               name: db-secrets
               key: DB_PASSWORD
         - name: PAYU_CACHE_REDIS_HOST
-          value: payu-cache-resp.payu-dev.svc.cluster.local
+          value: payu-cache-resp
         - name: PAYU_CACHE_REDIS_PORT
           value: '11222'
         - name: PAYU_CACHE_REDIS_PASSWORD
@@ -128,7 +128,7 @@ spec:
         - name: SPRING_DATA_REDIS_USERNAME
           value: developer
         - name: REDIS_HOST
-          value: payu-cache-resp.payu-dev.svc.cluster.local
+          value: payu-cache-resp
         - name: REDIS_PORT
           value: '11222'
         - name: REDIS_PASSWORD
@@ -137,7 +137,7 @@ spec:
               name: payu-cache-credentials
               key: password
         - name: SPRING_DATA_REDIS_HOST
-          value: payu-cache-resp.payu-dev.svc.cluster.local
+          value: payu-cache-resp
         - name: SPRING_DATA_REDIS_PORT
           value: '11222'
         - name: SPRING_DATA_REDIS_PASSWORD

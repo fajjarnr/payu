@@ -125,7 +125,7 @@ patches:
                   - name: QRIS_SIMULATOR_URL
                     value: http://qris-simulator:8080
                   - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
-                    value: payu-cache.payu-dev.svc.cluster.local
+                    value: payu-cache
                   - name: PAYU_CACHE_REDIS_HOST
                     $patch: delete
                   - name: PAYU_CACHE_REDIS_PORT

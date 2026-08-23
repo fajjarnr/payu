@@ -26,9 +26,9 @@ spec:
           key: KAFKA_URL
           name: service-endpoints
     - name: LENDING_RULES_URL
-      value: http://lending-rules.payu-dev.svc:8080
+      value: http://lending-rules:8080
     - name: DATABASE_URL
-      value: jdbc:postgresql://payu-database-rw.payu-dev.svc.cluster.local:5432/payu_loan_origination
+      value: jdbc:postgresql://payu-database-rw:5432/payu_loan_origination
     - name: DATABASE_USER
       valueFrom:
         secretKeyRef:
