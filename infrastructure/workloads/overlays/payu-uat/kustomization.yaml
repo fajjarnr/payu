@@ -871,3 +871,22 @@ patches:
       value:
         name: QUARKUS_OTEL_SDK_DISABLED
         value: "true"
+# Non-prod: expose OpenAPI docs for contract testing (Schemathesis gate)
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-rules|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service)$"
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: springdoc-enabled
+    spec:
+      template:
+        spec:
+          containers:
+            - name: app
+              env:
+                - name: SPRINGDOC_API_DOCS_ENABLED
+                  value: "true"

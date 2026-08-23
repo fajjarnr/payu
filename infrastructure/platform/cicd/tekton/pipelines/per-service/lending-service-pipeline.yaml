@@ -143,7 +143,7 @@ spec:
         name: schemathesis-scan
         kind: Task
       workspaces: [{name: source, workspace: source}]
-      params: [{name: BASE_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}, {name: SCHEMA_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080/v3/api-docs}]
+      params: [{name: BASE_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080}, {name: SCHEMA_URL, value: http://$(params.service-name).payu-$(params.target-env).svc:8080/api-docs}]
     - name: k6-smoke
       runAfter: [schemathesis]
       when: [{input: $(params.target-env), operator: in, values: ["dev", "sit"]}]
