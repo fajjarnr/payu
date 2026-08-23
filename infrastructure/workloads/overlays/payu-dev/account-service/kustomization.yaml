@@ -26,6 +26,8 @@ patches:
             containers:
               - name: app
                 env:
+                  - name: SPRINGDOC_API_DOCS_ENABLED
+                    value: "true"
                   # Dev-only: expose Hot Rod round-trip latency for the ARCH-007
                   # 24-hour canary p95 evidence.
                   - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS

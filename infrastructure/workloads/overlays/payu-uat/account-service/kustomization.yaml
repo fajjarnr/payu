@@ -26,6 +26,8 @@ patches:
             containers:
               - name: app
                 env:
+                  - name: SPRINGDOC_API_DOCS_ENABLED
+                    value: "true"
                   - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
                     value: payu-cache.payu-uat.svc.cluster.local
                   - name: OIDC_ISSUER
