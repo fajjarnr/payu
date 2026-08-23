@@ -173,5 +173,5 @@ spec:
       taskRef:
         name: gitops-writeback
         kind: Task
-      workspaces: [{name: source, workspace: source}, {name: git-ssh, workspace: git-ssh, optional: true}]
+      workspaces: [{name: source, workspace: source}, {name: git-ssh, workspace: git-ssh}]
       params: [{name: service-name, value: $(params.service-name)}, {name: environment, value: $(params.target-env)}, {name: image-digest, value: $(tasks.build.results.BUILT_IMAGE_DIGEST)}, {name: image-tag, value: $(params.image-tag)}, {name: push-changes, value: $(params.push-changes)}]
