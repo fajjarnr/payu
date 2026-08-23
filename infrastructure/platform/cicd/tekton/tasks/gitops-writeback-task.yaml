@@ -169,7 +169,7 @@ spec:
         if [ "$(params.push-changes)" = "true" ]; then
           # Rebase on latest remote so concurrent writebacks/pushes do not race.
           git fetch origin "$(params.git-revision)"
-          git rebase "origin/$(params.git-revision)"
+          git rebase FETCH_HEAD
           git push origin HEAD:$(params.git-revision)
           echo "[✓] GitOps write-back pushed to $(params.git-revision)"
         else
