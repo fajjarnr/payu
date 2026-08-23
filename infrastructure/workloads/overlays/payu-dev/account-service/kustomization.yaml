@@ -10,3 +10,27 @@ images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newTag: "1.15.1"
+
+patches:
+  - target:
+      kind: Deployment
+      name: account-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: account-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  # Dev-only: expose Hot Rod round-trip latency for the ARCH-007
+                  # 24-hour canary p95 evidence.
+                  - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+                    value: "always"
+                  - name: OIDC_ISSUER
+                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                  - name: OIDC_JWK_SET_URI
+                    value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"

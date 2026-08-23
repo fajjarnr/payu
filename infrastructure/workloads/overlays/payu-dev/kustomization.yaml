@@ -8,8 +8,6 @@ resources:
   - keycloak-client-secret-generator.yaml
   - network-policy-payu-sso-postgres.yaml
 replicas:
-- name: account-service
-  count: 1
 - name: analytics-service
   count: 1
 - name: api-portal-service
@@ -72,9 +70,6 @@ replicas:
   count: 1
 # ponytail: scale 1 dev single replica; HPA/PDB disabled via patch delete for quota
 images:
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
-  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newTag: "1.15.1"
@@ -250,28 +245,6 @@ patches:
 # Replica count patches
 - target:
     kind: Deployment
-    name: account-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
-- target:
-    kind: Deployment
-    name: account-service
-  patch: |
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: account-service
-    spec:
-      template:
-        spec:
-          containers:
-          - name: app
-            env:
-            # Dev-only: expose Hot Rod round-trip latency for the ARCH-007
-            # 24-hour canary p95 evidence.
-            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
-              value: "always"
-- target:
-    kind: Deployment
     name: analytics-service
   patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
@@ -390,24 +363,6 @@ patches:
         type: Recreate
 
 # OIDC Issuer patches - Spring Boot services (OIDC_ISSUER + OIDC_JWK_SET_URI)
-- target:
-    kind: Deployment
-    name: account-service
-  patch: |
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: account-service
-    spec:
-      template:
-        spec:
-          containers:
-          - name: app
-            env:
-            - name: OIDC_ISSUER
-              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
-            - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: auth-service

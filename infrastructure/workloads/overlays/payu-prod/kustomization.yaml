@@ -28,8 +28,6 @@ replacements:
       delimiter: /
       index: 1
 images:
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu/account-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newName: image-registry.openshift-image-registry.svc:5000/payu/analytics-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service

@@ -29,8 +29,6 @@ replacements:
       delimiter: /
       index: 1
 images:
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-sit/account-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/analytics-service
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
@@ -132,10 +130,6 @@ patches:
         ingress.payu.io/class: shared
     spec:
       host: app-sit.apps.fajjjar.my.id
-- target:
-    kind: Deployment
-    name: account-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: analytics-service
