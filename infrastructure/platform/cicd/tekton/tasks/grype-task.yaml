@@ -46,7 +46,12 @@ spec:
           mkdir -p "$XDG_CACHE_HOME" "$TMPDIR"
           # A service may ship a .grype.yaml documenting targeted suppressions
           # (e.g. framework-vendored copies under next/dist/compiled).
-          cfg="$(find "$(workspaces.source.path)" -maxdepth 3 -name .grype.yaml -type f -print -quit 2>/dev/null)"
+          cfg=""
+          for cand in "$(workspaces.source.path)/.grype.yaml" \
+                      "$(workspaces.source.path)/*/.grype.yaml" \
+                      "$(workspaces.source.path)/*/*/.grype.yaml"; do
+            if [ -f "$cand" ]; then cfg="$cand"; break; fi
+          done
           if [ -n "$cfg" ]; then
             cp "$cfg" "$TMPDIR/grype-config.yaml"
             echo "[grype] using project suppressions: $cfg"
