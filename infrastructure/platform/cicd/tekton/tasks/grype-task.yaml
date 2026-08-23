@@ -47,9 +47,10 @@ spec:
           # A service may ship a .grype.yaml documenting targeted suppressions
           # (e.g. framework-vendored copies under next/dist/compiled).
           cfg=""
-          for cand in "$(workspaces.source.path)/.grype.yaml" \
-                      "$(workspaces.source.path)/*/.grype.yaml" \
-                      "$(workspaces.source.path)/*/*/.grype.yaml"; do
+          base="$(workspaces.source.path)"
+          for cand in "$base/.grype.yaml" \
+                      "$base"/*"/.grype.yaml" \
+                      "$base"/*/*"/.grype.yaml"; do
             if [ -f "$cand" ]; then cfg="$cand"; break; fi
           done
           if [ -n "$cfg" ]; then
