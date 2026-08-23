@@ -34,7 +34,7 @@ spec:
               storage: 5Gi
     - name: dockerconfig
       secret:
-        secretName: redhat-registry-pull
+        secretName: dockerconfig
     - name: m2-cache
       volumeClaimTemplate:
         spec:
