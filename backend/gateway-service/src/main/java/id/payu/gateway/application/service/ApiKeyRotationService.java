@@ -34,7 +34,7 @@ public class ApiKeyRotationService {
     HotRodCacheClient cache;
 
     @Inject
-    GatewaySchedulerLock schedulerLock;
+    GatewaySchedulerLockService schedulerLock;
 
     private boolean enabled;
 

@@ -19,6 +19,13 @@ public class JdbcTransformationRuleRepository implements TransformationRuleRepos
 
     private static final String SELECT = "SELECT id, name, description, priority, active "
         + "FROM gateway_transformation_rules";
+    private static final String SELECT_BY_ID =
+        "SELECT id, name, description, priority, active FROM gateway_transformation_rules WHERE id = ?";
+    private static final String SELECT_ACTIVE_ORDERED_BY_PRIORITY =
+        "SELECT id, name, description, priority, active FROM gateway_transformation_rules "
+        + "WHERE active = TRUE ORDER BY priority";
+    private static final String SELECT_ALL_ORDERED_BY_PRIORITY =
+        "SELECT id, name, description, priority, active FROM gateway_transformation_rules ORDER BY priority";
 
     @Inject
     JdbcGatewayStore store;
@@ -26,7 +33,7 @@ public class JdbcTransformationRuleRepository implements TransformationRuleRepos
     @Override
     public Uni<Optional<TransformationRule>> findById(String id) {
         return store.query(connection -> {
-            try (PreparedStatement statement = connection.prepareStatement(SELECT + " WHERE id = ?")) {
+            try (PreparedStatement statement = connection.prepareStatement(SELECT_BY_ID)) {
                 statement.setString(1, id);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     return resultSet.next() ? Optional.of(read(resultSet)) : Optional.empty();
@@ -37,12 +44,12 @@ public class JdbcTransformationRuleRepository implements TransformationRuleRepos
 
     @Override
     public Multi<TransformationRule> findAllActiveOrderedByPriority() {
-        return find(" WHERE active = TRUE ORDER BY priority");
+        return find(SELECT_ACTIVE_ORDERED_BY_PRIORITY);
     }
 
     @Override
     public Multi<TransformationRule> findAll() {
-        return find(" ORDER BY priority");
+        return find(SELECT_ALL_ORDERED_BY_PRIORITY);
     }
 
     @Override
@@ -92,10 +99,10 @@ public class JdbcTransformationRuleRepository implements TransformationRuleRepos
         return findById(id).map(Optional::isPresent);
     }
 
-    private Multi<TransformationRule> find(String suffix) {
+    private Multi<TransformationRule> find(String sql) {
         return store.query(connection -> {
             List<TransformationRule> rules = new ArrayList<>();
-            try (PreparedStatement statement = connection.prepareStatement(SELECT + suffix);
+            try (PreparedStatement statement = connection.prepareStatement(sql);
                  ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     rules.add(read(resultSet));

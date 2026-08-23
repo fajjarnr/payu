@@ -48,7 +48,7 @@ public class PersistentAnalyticsService {
     ApiAnalyticsRepository analyticsRepository;
 
     @Inject
-    GatewaySchedulerLock schedulerLock;
+    GatewaySchedulerLockService schedulerLock;
 
     private boolean enabled;
     private int batchSize;

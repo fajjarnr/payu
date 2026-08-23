@@ -20,6 +20,16 @@ public class JdbcPartnerRatePlanRepository implements PartnerRatePlanRepository 
 
     private static final String SELECT = "SELECT id, partner_id, rate_plan_id, assigned_at, effective_from, "
         + "effective_until, active FROM gateway_partner_rate_plans";
+    private static final String SELECT_EFFECTIVE_BY_PARTNER =
+        "SELECT id, partner_id, rate_plan_id, assigned_at, effective_from, effective_until, active "
+        + "FROM gateway_partner_rate_plans WHERE partner_id = ? AND active = TRUE AND effective_from <= ? "
+        + "AND (effective_until IS NULL OR effective_until >= ?) ORDER BY effective_from DESC LIMIT 1";
+    private static final String SELECT_BY_PARTNER =
+        "SELECT id, partner_id, rate_plan_id, assigned_at, effective_from, effective_until, active "
+        + "FROM gateway_partner_rate_plans WHERE partner_id = ?";
+    private static final String SELECT_BY_RATE_PLAN =
+        "SELECT id, partner_id, rate_plan_id, assigned_at, effective_from, effective_until, active "
+        + "FROM gateway_partner_rate_plans WHERE rate_plan_id = ?";
 
     @Inject
     JdbcGatewayStore store;
@@ -27,9 +37,7 @@ public class JdbcPartnerRatePlanRepository implements PartnerRatePlanRepository 
     @Override
     public Uni<Optional<PartnerRatePlan>> findEffectiveByPartnerId(String partnerId, Instant timestamp) {
         return store.query(connection -> {
-            String sql = SELECT + " WHERE partner_id = ? AND active = TRUE AND effective_from <= ? "
-                + "AND (effective_until IS NULL OR effective_until >= ?) ORDER BY effective_from DESC LIMIT 1";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (PreparedStatement statement = connection.prepareStatement(SELECT_EFFECTIVE_BY_PARTNER)) {
                 statement.setString(1, partnerId);
                 JdbcGatewayStore.setInstant(statement, 2, timestamp);
                 JdbcGatewayStore.setInstant(statement, 3, timestamp);
@@ -42,12 +50,12 @@ public class JdbcPartnerRatePlanRepository implements PartnerRatePlanRepository 
 
     @Override
     public Multi<PartnerRatePlan> findByPartnerId(String partnerId) {
-        return find("partner_id = ?", partnerId);
+        return find(SELECT_BY_PARTNER, partnerId);
     }
 
     @Override
     public Multi<PartnerRatePlan> findByRatePlanId(String ratePlanId) {
-        return find("rate_plan_id = ?", ratePlanId);
+        return find(SELECT_BY_RATE_PLAN, ratePlanId);
     }
 
     @Override
@@ -64,8 +72,7 @@ public class JdbcPartnerRatePlanRepository implements PartnerRatePlanRepository 
                     }
                 }
                 try (PreparedStatement deactivate = connection.prepareStatement(
-                    "UPDATE gateway_partner_rate_plans SET active = FALSE, active_partner_key = NULL "
-                        + "WHERE partner_id = ? AND active = TRUE")) {
+                    "UPDATE gateway_partner_rate_plans SET active = FALSE, active_partner_key = NULL WHERE partner_id = ? AND active = TRUE")) {
                     deactivate.setString(1, assignment.getPartnerId());
                     deactivate.executeUpdate();
                 }
@@ -143,10 +150,10 @@ public class JdbcPartnerRatePlanRepository implements PartnerRatePlanRepository 
         });
     }
 
-    private Multi<PartnerRatePlan> find(String predicate, String value) {
+    private Multi<PartnerRatePlan> find(String sql, String value) {
         return store.query(connection -> {
             List<PartnerRatePlan> assignments = new ArrayList<>();
-            try (PreparedStatement statement = connection.prepareStatement(SELECT + " WHERE " + predicate)) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, value);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     while (resultSet.next()) {

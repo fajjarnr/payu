@@ -1,6 +1,6 @@
 package id.payu.gateway.application.service;
 
-import id.payu.gateway.application.service.GatewaySchedulerLock;
+import id.payu.gateway.application.service.GatewaySchedulerLockService;
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -27,7 +27,7 @@ public class CheckoutService {
     private final ConcurrentHashMap<String, CheckoutSession> sessions = new ConcurrentHashMap<>();
 
     @Inject
-    GatewaySchedulerLock schedulerLock;
+    GatewaySchedulerLockService schedulerLock;
 
     /**
      * Cleanup expired sessions every 10 minutes to prevent unbounded memory growth.

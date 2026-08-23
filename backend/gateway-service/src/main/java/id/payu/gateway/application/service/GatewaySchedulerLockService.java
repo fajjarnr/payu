@@ -12,7 +12,7 @@ import java.time.Duration;
  * TTL = lockAtMostFor; upgrade to ShedLock JdbcTemplate(usingDbTime) if DB lock needed
  */
 @ApplicationScoped
-public class GatewaySchedulerLock {
+public class GatewaySchedulerLockService {
 
     @Inject
     HotRodCacheClient cache;
