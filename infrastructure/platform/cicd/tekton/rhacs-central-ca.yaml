@@ -8,17 +8,18 @@ metadata:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: supply-chain-security
 data:
+  # Central service CA — refresh from the live cluster after any Central
+  # reinstall: oc get secret central-tls -n stackrox -o jsonpath='{.data.ca\.pem}'
   ca.pem: |
     -----BEGIN CERTIFICATE-----
-    MIIB0DCCAXagAwIBAgIUS2b1jMRs5NCw3l/lHBpMXTyan/cwCgYIKoZIzj0EAwIw
-    RjEnMCUGA1UEAxMeU3RhY2tSb3ggQ2VydGlmaWNhdGUgQXV0aG9yaXR5MRswGQYD
-    VQQFExIxOTc3NjM3NjI4NTMxMDA2OTcwHhcNMjYwODIxMTMwNjAwWhcNMzEwODIw
-    MTMwNjAwWjBGMScwJQYDVQQDEx5TdGFja1JveCBDZXJ0aWZpY2F0ZSBBdXRob3Jp
-    dHkxGzAZBgNVBAUTEjE5Nzc2Mzc2Mjg1MzEwMDY5NzBZMBMGByqGSM49AgEGCCqG
-    SM49AwEHA0IABB6drrOVuisyPzIOuPuY/9bXuj6Tyq+pge5/9RAMrvpiwmNtaeJs
-    vH1rcPok23kszDpnclEpDSDTBFEtNbIodm2jQjBAMA4GA1UdDwEB/wQEAwIBBjAP
-    BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQ+7Z+fwNFN5hhcyux08FOQgNk6YzAK
-    BggqhkjOPQQDAgNIADBFAiEApn/zBR9vQ0qevl06F8hi3mXG9KmX6wS4AUTzlwxD
-    ax4CIDdUOZXNMTx/7pnnET0wm3RJIMgkZw/qdKQmEaCU09FP
+    MIIB0zCCAXqgAwIBAgIUB7urDkIUwMOF31yiVd1sgAbKg0wwCgYIKoZIzj0EAwIw
+    SDEnMCUGA1UEAxMeU3RhY2tSb3ggQ2VydGlmaWNhdGUgQXV0aG9yaXR5MR0wGwYD
+    VQQFExQxMDk3Nzk5NjE1MTczMjIxMTI4NDAeFw0yNjA4MjIyMDI0MDBaFw0zMTA4
+    MjEyMDI0MDBaMEgxJzAlBgNVBAMTHlN0YWNrUm94IENlcnRpZmljYXRlIEF1dGhv
+    cml0eTEdMBsGA1UEBRMUMTA5Nzc5OTYxNTE3MzIyMTEyODQwWTATBgcqhkjOPQIB
+    BggqhkjOPQMBBwNCAARZefGUqA/XYBYY6ur/YPZr66/WDRKpYVocEHtvA/l0pu+b
+    EpkfyMsFyxqEYoeiUfOfOQRMaESakFS9EOXOyou6o0IwQDAOBgNVHQ8BAf8EBAMC
+    AQYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUVNlXyQbq3NPfKDG6U8MMxsQX
+    2CgwCgYIKoZIzj0EAwIDRwAwRAIgRTodLHAoQ9ifJpf54ODQYeDu2uMi5uoKVrOT
+    dZVCLEQCIHdmNwk1+/ErIGV2zqz1R2ATHvszoUeWbuXnJQejl00Y
     -----END CERTIFICATE-----
-

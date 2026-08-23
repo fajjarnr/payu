@@ -117,7 +117,7 @@ subjects:
     name: external-secrets
     namespace: external-secrets
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: payu-vault-sit
@@ -149,7 +149,7 @@ spec:
             audiences:
               - vault
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: payu-vault-uat
@@ -181,7 +181,7 @@ spec:
             audiences:
               - vault
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: payu-vault-preprod
@@ -213,7 +213,7 @@ spec:
             audiences:
               - vault
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: payu-vault-prod

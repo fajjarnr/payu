@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Per-service Tekton pipelines (31 services + web-app), polyrepo stage model
+# per DEVSECOPS_ARCHITECTURE v1.4.0.
+
+resources:
+  - account-service-pipeline.yaml
+  - analytics-service-pipeline.yaml
+  - api-portal-service-pipeline.yaml
+  - auth-service-pipeline.yaml
+  - backoffice-service-pipeline.yaml
+  - bi-fast-simulator-pipeline.yaml
+  - biller-simulator-pipeline.yaml
+  - billing-service-pipeline.yaml
+  - cms-service-pipeline.yaml
+  - compliance-service-pipeline.yaml
+  - dispute-service-pipeline.yaml
+  - dukcapil-simulator-pipeline.yaml
+  - fx-service-pipeline.yaml
+  - gateway-service-pipeline.yaml
+  - integration-service-pipeline.yaml
+  - investment-service-pipeline.yaml
+  - kyc-service-pipeline.yaml
+  - lending-rules-pipeline.yaml
+  - lending-service-pipeline.yaml
+  - loan-origination-process-pipeline.yaml
+  - notification-service-pipeline.yaml
+  - partner-service-pipeline.yaml
+  - product-catalog-service-pipeline.yaml
+  - promotion-service-pipeline.yaml
+  - qris-simulator-pipeline.yaml
+  - statement-service-pipeline.yaml
+  - support-service-pipeline.yaml
+  - transaction-service-pipeline.yaml
+  - va-simulator-pipeline.yaml
+  - wallet-service-pipeline.yaml
+  - web-app-pipeline.yaml

@@ -44,7 +44,6 @@ spec:
     - Ingress
   ingress:
     - from:
-        - podSelector: {}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: payu-dev
@@ -54,6 +53,7 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: payu-api-management
+        - podSelector: {}
       ports:
         - protocol: TCP
           port: 5432

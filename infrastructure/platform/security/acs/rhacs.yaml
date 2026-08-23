@@ -9,6 +9,13 @@ metadata:
   namespace: stackrox
 spec:
   central:
+    # M2M short-lived access: validates pipeline service-account tokens
+    # (audience rhacs-ci, see payu-cicd tekton task rhacs-image-scan) against
+    # the cluster SA issuer. Secret content follows RHACS declarative config
+    # schema (short-lived-token type GENERIC).
+    declarativeConfiguration:
+      secrets:
+        - name: rhacs-m2m-config
     exposure:
       route:
         enabled: true

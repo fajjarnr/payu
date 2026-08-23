@@ -1,11 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: payu-cicd
 
 resources:
   # OpenShift Pipelines operator configuration
   - pipelines.yaml
   - rhacs-central-ca.yaml
-  - vault-ci-credentials.yaml
+  # vault-ci-credentials.yaml is applied separately AFTER VSO/Vault is live:
+  # it declares VaultStaticSecret CRs and fails the whole root otherwise.
 
   # Tasks
   - tasks/argocd-sync-task.yaml
@@ -43,6 +45,7 @@ resources:
   - test-pipeline.yaml
   - rollback-pipeline.yaml
   - quality-gates/quality-gate-pipeline.yaml
+  - pipelines/per-service
 
   # ConfigMaps
   - k6-scripts-configmap.yaml

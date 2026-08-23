@@ -6,3 +6,6 @@ metadata:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: security
     openshift.io/cluster-monitoring: "true"
+    # RHACS admission webhook exempts only namespaces carrying this label;
+    # without it sensor/admission-control pods deadlock on their own webhook
+    namespace.metadata.stackrox.io/name: stackrox

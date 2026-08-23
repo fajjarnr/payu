@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# PayU CNPG PostgreSQL stack: cluster, per-service databases, network policy,
+# bootstrap/grants jobs. Shared root referenced by base/ (promoted overlays)
+# and overlays/dev directly.
+
+resources:
+  - cnpg-cluster.yaml
+  - cnpg-databases.yaml
+  - cnpg-network-policy.yaml
+  - outbox-bootstrap-job.yaml
+  - shedlock-bootstrap-job.yaml
+  - post-deploy-db-grants.yaml

@@ -5,12 +5,7 @@ kind: Kustomization
 # Apply with: oc apply -k infrastructure/platform/data/base/
 
 resources:
-  - cnpg-cluster.yaml
-  - cnpg-databases.yaml
-  - cnpg-network-policy.yaml
-  - outbox-bootstrap-job.yaml
-  - shedlock-bootstrap-job.yaml
-  - post-deploy-db-grants.yaml
+  - ../cnpg
   - datagrid.yaml
   - datagrid-network-policy.yaml
   - network-policy-egress.yaml

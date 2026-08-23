@@ -11,6 +11,16 @@ data:
                                   https://maven.apache.org/xsd/settings-1.0.0.xsd">
       <localRepository>/workspace/source/.m2/repository</localRepository>
       <interactiveMode>false</interactiveMode>
+      <!-- central -> repo1 mirror avoids 429 per-hostname throttle during
+           parallel pipeline waves (L-320 / CHANGELOG 1.17.1) -->
+      <mirrors>
+        <mirror>
+          <id>central-repo1</id>
+          <name>repo1.maven.org mirror of central</name>
+          <url>https://repo1.maven.org/maven2</url>
+          <mirrorOf>central</mirrorOf>
+        </mirror>
+      </mirrors>
       <profiles>
         <profile>
           <id>default</id>

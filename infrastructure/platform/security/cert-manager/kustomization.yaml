@@ -6,8 +6,11 @@ kind: Kustomization
 
 resources:
   # Shared
+  # NOTE: letsencrypt/2-secret.yaml + production/route53-credentials.yaml are
+  # runtime Secrets (envsubst before apply, values from Vault/AWS profile) —
+  # never apply them via this kustomization or they land with literal
+  # "${AWS_*}" placeholders.
   - letsencrypt/1-cluster.yaml
-  - letsencrypt/2-secret.yaml
   - letsencrypt/5-ingressController.yaml
 
   # Staging
@@ -17,7 +20,6 @@ resources:
 
   # Production
   - letsencrypt/production/cluster-issuer.yaml
-  - letsencrypt/production/route53-credentials.yaml
   - letsencrypt/production/certificate.api.yaml
   - letsencrypt/production/certificate.shared-ingress.yaml
   - letsencrypt/production/default-ingress-cert.yaml

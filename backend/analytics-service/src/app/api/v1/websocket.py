@@ -25,22 +25,19 @@ async def _validate_ws_token(websocket: WebSocket) -> bool:
     Expects a token as a query parameter or in the first message.
     Returns True if valid, False otherwise.
     """
-    from jose import jwt
     from jose.exceptions import JWTError
+
+    from app.jwt_auth import verify_jwt
 
     token = websocket.query_params.get("token")
     if not token:
         return False
 
     try:
-        # Gateway-level auth has already validated the signature.
-        # Downstream services only need to decode claims.
-        jwt.decode(
-            token,
-            key="",
-            options={"verify_signature": False, "verify_exp": True},
-        )
-        return True
+        # Cryptographically verify against Keycloak JWKS (AI-AUTH-001):
+        # never authorize on an unverified decode, even behind the gateway.
+        payload = await verify_jwt(token)
+        return bool(payload.get("sub"))
     except JWTError as e:
         logger.warning("WebSocket token validation failed", error=str(e))
         return False

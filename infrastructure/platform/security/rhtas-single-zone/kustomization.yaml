@@ -9,7 +9,7 @@ patches:
     patch: |-
       - op: replace
         path: /spec/storageClassName
-        value: ocs-storagecluster-cephfs
+        value: efs-csi
   - target:
       group: rhtas.redhat.com
       version: v1alpha1
@@ -18,7 +18,7 @@ patches:
     patch: |-
       - op: replace
         path: /spec/tuf/pvc/storageClass
-        value: ocs-storagecluster-cephfs
+        value: efs-csi
   - target:
       kind: StatefulSet
       name: rhtas-redis
