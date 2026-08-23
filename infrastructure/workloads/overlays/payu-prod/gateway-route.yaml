@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/component: gateway
     ingress.payu.io/class: shared
 spec:
-  host: gateway-uat.apps.fajjjar.my.id
+  host: gateway.payu.fajjjar.my.id
   port:
     targetPort: http
   to:

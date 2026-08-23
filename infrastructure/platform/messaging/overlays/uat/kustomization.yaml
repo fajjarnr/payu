@@ -3,6 +3,85 @@ kind: Kustomization
 namespace: payu-uat
 resources:
   - ../common
+  # Plain secret replaces the VaultStaticSecret pair from common
+  # (external-secrets.yaml) until Vault/VSO ships (DEVSECOPS-017).
+  - console-oidc-secret.yaml
+patches:
+  - target:
+      group: secrets.hashicorp.com
+      version: v1beta1
+      kind: VaultStaticSecret
+      name: payu-kafka-console-oidc
+    patch: |-
+      apiVersion: secrets.hashicorp.com/v1beta1
+      kind: VaultStaticSecret
+      metadata:
+        name: payu-kafka-console-oidc
+      $patch: delete
+  - target:
+      group: secrets.hashicorp.com
+      version: v1beta1
+      kind: VaultStaticSecret
+      name: payu-broker-credentials
+    patch: |-
+      apiVersion: secrets.hashicorp.com/v1beta1
+      kind: VaultStaticSecret
+      metadata:
+        name: payu-broker-credentials
+      $patch: delete
+  - target:
+      group: kafka.strimzi.io
+      version: v1
+      kind: KafkaNodePool
+      name: "^(controller|broker)$"
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/resources/requests/cpu
+        value: 50m
+  - target:
+      group: broker.amq.io
+      version: v1beta1
+      kind: ActiveMQArtemis
+      name: payu-broker
+    patch: |-
+      - op: replace
+        path: /spec/deploymentPlan/size
+        value: 1
+      - op: replace
+        path: /spec/deploymentPlan/resources/requests/cpu
+        value: 50m
+  - target:
+      group: kafka.strimzi.io
+      version: v1
+      kind: Kafka
+      name: payu-kafka
+    patch: |-
+      - op: replace
+        path: /spec/kafka/config/default.replication.factor
+        value: 1
+      - op: replace
+        path: /spec/kafka/config/min.insync.replicas
+        value: 1
+      - op: replace
+        path: /spec/kafka/config/offsets.topic.replication.factor
+        value: 1
+      - op: replace
+        path: /spec/kafka/config/transaction.state.log.min.isr
+        value: 1
+      - op: replace
+        path: /spec/kafka/config/transaction.state.log.replication.factor
+        value: 1
+  - target:
+      group: kafka.strimzi.io
+      version: v1
+      kind: KafkaTopic
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:

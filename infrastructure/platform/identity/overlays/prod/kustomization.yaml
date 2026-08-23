@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
   - ../../operator
   - ../common
+  # Plain secrets replace VaultStaticSecrets until Vault/VSO ships (DEVSECOPS-017).
+  - keycloak-secrets.yaml
 
 namespace: payu
 

@@ -1,5 +1,5 @@
-# Gateway route for preprod — used by DAST (ZAP), API fuzzing (Schemathesis)
-# and E2E integration tests. Edge TLS, restricted to preprod hostname.
+# Gateway route for SIT — used by DAST (ZAP), API fuzzing (Schemathesis)
+# and E2E integration tests. Edge TLS, restricted to SIT hostname.
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:

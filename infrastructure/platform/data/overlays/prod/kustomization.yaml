@@ -1,43 +1,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+# PayU Data Services - SIT Overlay
+# Same proven pattern as dev: standalone Infinispan StatefulSet (plain Hot Rod)
+# because the Data Grid 8.6.5 operator webhook (vinfinispan.kb.io) panics on the
+# operator-managed CR in this sandbox cluster. Plain cnpg bootstrap secrets
+# replace VaultStaticSecrets until Vault/VSO ships (DEVSECOPS-017).
+
 namespace: payu
 resources:
-  - ../common
-generatorOptions:
-  disableNameSuffixHash: true
-configMapGenerator:
-  - name: promotion-environment
-    literals:
-      - environment=prod
-      - namespace=payu
-patches:
-  - target:
-      group: networking.k8s.io
-      version: v1
-      kind: NetworkPolicy
-      name: allow-all-egress
-    patch: |-
-      apiVersion: networking.k8s.io/v1
-      kind: NetworkPolicy
-      metadata:
-        name: allow-all-egress
-      $patch: delete
+  - ../../cnpg
+  - cnpg-secrets.yaml
+  - infinispan-standalone.yaml
+
 replacements:
-  - source:
-      kind: ConfigMap
-      name: promotion-environment
-      fieldPath: data.environment
-    targets:
-      - select:
-          group: secrets.hashicorp.com
-          version: v1beta1
-          kind: VaultStaticSecret
-          labelSelector: payu.io/vault-environment-path=true
-        fieldPaths:
-          - spec.path
-        options:
-          delimiter: /
-          index: 1
+  # Bootstrap jobs hardcode the dev FQDN; retarget the namespace segment.
   - source:
       kind: ConfigMap
       name: promotion-environment
@@ -73,22 +50,31 @@ replacements:
         options:
           delimiter: .
           index: 1
-      - select:
-          group: networking.k8s.io
-          version: v1
-          kind: NetworkPolicy
-          name: allow-payu-namespaces-to-cnpg
-        fieldPaths:
-          - spec.ingress.0.from.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
-      - select:
-          group: networking.k8s.io
-          version: v1
-          kind: NetworkPolicy
-          labelSelector: payu.io/environment-selector=true
-        fieldPaths:
-          - spec.ingress.0.from.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
-          - spec.egress.0.to.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
-labels:
-  - pairs:
-      environment: prod
-    includeSelectors: false
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: promotion-environment
+    literals:
+      - environment=sit
+      - namespace=payu
+patches:
+  - target:
+      group: infinispan.org
+      version: v1
+      kind: Infinispan
+      name: payu-cache
+    patch: |-
+      - op: add
+        path: /metadata/annotations/payu.io~1dev-cache-revision
+        value: "2026-08-04-plain-tx-log"
+      - op: replace
+        path: /spec/security
+        value:
+          endpointAuthentication: false
+          endpointEncryption:
+            type: None
+      - op: add
+        path: /spec/logging
+        value:
+          categories:
+            org.infinispan.commons.util.StringPropertyReplacer: error

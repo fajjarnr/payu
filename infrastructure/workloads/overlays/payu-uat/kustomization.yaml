@@ -2,122 +2,235 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: payu-uat
 resources:
+  - payu-secrets.yaml
   - namespace.yaml
-  - gateway-route.yaml
   - ../../base
-components:
-- ../promotion-common
-generatorOptions:
-  disableNameSuffixHash: true
-configMapGenerator:
-- name: workload-environment
-  literals:
-  - environment=uat
-replacements:
-- source:
-    kind: ConfigMap
-    name: workload-environment
-    fieldPath: data.environment
-  targets:
-  - select:
-      group: secrets.hashicorp.com
-      version: v1beta1
-      kind: VaultStaticSecret
-    fieldPaths:
-    - spec.path
-    options:
-      delimiter: /
-      index: 1
+  - keycloak-client-secret-generator.yaml
+  - network-policy-payu-sso-postgres.yaml
+  - gateway-route.yaml
+replicas:
+- name: analytics-service
+  count: 1
+- name: api-portal-service
+  count: 1
+- name: auth-service
+  count: 1
+- name: backoffice-service
+  count: 1
+- name: bi-fast-simulator
+  count: 1
+- name: biller-simulator
+  count: 1
+- name: billing-service
+  count: 1
+- name: cms-service
+  count: 1
+- name: compliance-service
+  count: 1
+- name: dispute-service
+  count: 1
+- name: dukcapil-simulator
+  count: 1
+- name: fx-service
+  count: 1
+- name: gateway-service
+  count: 1
+- name: integration-service
+  count: 1
+- name: investment-service
+  count: 1
+- name: kyc-service
+  count: 1
+- name: lending-rules
+  count: 1
+- name: lending-service
+  count: 1
+- name: loan-origination-process
+  count: 1
+- name: notification-service
+  count: 1
+- name: partner-service
+  count: 1
+- name: product-catalog-service
+  count: 1
+- name: promotion-service
+  count: 1
+- name: qris-simulator
+  count: 1
+- name: statement-service
+  count: 1
+- name: support-service
+  count: 1
+- name: transaction-service
+  count: 1
+- name: va-simulator
+  count: 1
+- name: wallet-service
+  count: 1
+- name: web-app
+  count: 1
+# ponytail: scale 1 dev single replica; HPA/PDB disabled via patch delete for quota
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/analytics-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/api-portal-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/auth-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/backoffice-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/billing-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/cms-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/compliance-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/dispute-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/fx-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/gateway-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/integration-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/investment-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/kyc-service
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/lending-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/notification-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/partner-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/product-catalog-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/promotion-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/statement-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/support-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/transaction-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/wallet-service
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/web-app
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/bi-fast-simulator
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/biller-simulator
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/dukcapil-simulator
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/qris-simulator
-- name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
-  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/va-simulator
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-rules
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/lending-rules
+  newTag: "1.15.1"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/loan-origination-process
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/notification-service
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/partner-service
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/product-catalog-service
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/promotion-service
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/statement-service
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/support-service
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/transaction-service
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/wallet-service
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/web-app
+  newTag: "1.17.0"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/bi-fast-simulator
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/biller-simulator
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/dukcapil-simulator
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/qris-simulator
+  newTag: "1.15.1"
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/va-simulator
+  newTag: "1.15.1"
 patches:
+# Dev cache is an internal, non-TLS Hot Rod endpoint. Keep mTLS in promoted
+# environments; do not make dev depend on Vault-provisioned client material.
 - target:
     group: apps
     version: v1
     kind: Deployment
-    name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-rules|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service|web-app)$"
-  patch: |-
+    name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-rules|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service)$"
+  patch: |
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name: environment-endpoints
+      name: dev-cache-client
     spec:
       template:
         spec:
           containers:
-            - name: app
-              env:
-                - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
-                  value: payu-cache.payu-uat.svc.cluster.local
-                - name: OIDC_ISSUER
-                  value: https://sso.uat.payu.fajjjar.my.id/realms/payu
-                - name: OIDC_JWK_SET_URI
-                  value: https://sso.uat.payu.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
-                - name: QUARKUS_OIDC_AUTH_SERVER_URL
-                  value: https://sso.uat.payu.fajjjar.my.id/realms/payu
-                - name: QUARKUS_OIDC_TOKEN_ISSUER
-                  value: https://sso.uat.payu.fajjjar.my.id/realms/payu
-                - name: PAYU_KEYCLOAK_SERVER_URL
-                  value: https://sso.uat.payu.fajjjar.my.id
+          - name: app
+            env:
+            - name: PAYU_CACHE_HOTROD_AUTH_USERNAME
+              $patch: delete
+            - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
+              $patch: delete
+            - name: PAYU_CACHE_HOTROD_USE_SSL
+              value: "false"
+            - name: PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME
+              $patch: delete
+            - name: PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD
+              $patch: delete
+            - name: PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME
+              $patch: delete
+            - name: PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD
+              $patch: delete
+
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-rules|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service)$"
+  patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/volumeMounts/1
+    - op: remove
+      path: /spec/template/spec/volumes/1
+
+# Dev runs fixed single replicas; do not let inherited HPAs consume the namespace quota.
+- target:
+    group: autoscaling
+    version: v2
+    kind: HorizontalPodAutoscaler
+    name: .*-hpa
+  patch: |-
+    $patch: delete
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      name: dev-hpa
+# Development still consumes the shared Keycloak instance in payu-sso.
+- target:
+    kind: ConfigMap
+    name: service-endpoints
+  patch: |-
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: service-endpoints
+    data:
+      KEYCLOAK_SERVER_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
+      KEYCLOAK_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
+# Web app route uses shared ingress domain (apps.fajjjar.my.id)
 - target:
     kind: Route
     name: web-app
@@ -130,103 +243,631 @@ patches:
         ingress.payu.io/class: shared
     spec:
       host: app-uat.apps.fajjjar.my.id
+# Env-aligned database credentials + FQDNs (matches data layer CNPG app secret)
 - target:
-    kind: Deployment
-    name: account-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+    kind: Secret
+    name: db-secrets
+  patch: |-
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: db-secrets
+    stringData:
+      ANALYTICS_DATABASE_URL: "postgresql+asyncpg://payu:payu-uat-app-pass-2026@payu-database-rw:5432/payu_analytics"
+      KYC_DATABASE_URL: "postgresql+asyncpg://payu:payu-uat-app-pass-2026@payu-database-rw:5432/payu_kyc"
+      DB_USERNAME: "payu"
+      DB_PASSWORD: "payu-uat-app-pass-2026"
+# Replica count patches
 - target:
     kind: Deployment
     name: analytics-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: api-portal-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: auth-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
+- target:
+    kind: Deployment
+    name: auth-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: auth-service
+    spec:
+      template:
+        metadata:
+          annotations:
+            payu.io/keycloak-client-secret-revision: "2026-08-04"
 - target:
     kind: Deployment
     name: backoffice-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: billing-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: cms-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: compliance-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: dispute-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: fx-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: gateway-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: integration-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: investment-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: kyc-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: lending-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: notification-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: partner-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: product-catalog-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: promotion-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: statement-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: support-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: transaction-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: wallet-service
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
 - target:
     kind: Deployment
     name: web-app
-  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 2}]'
-labels:
-- pairs:
-    environment: uat
-  includeSelectors: false
+  patch: '[{"op": "replace", "path": "/spec/replicas", "value": 1}]'
+
+# Keep the single dev replica deployable when the namespace CPU quota has no surge capacity.
+- target:
+    kind: Deployment
+    name: web-app
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web-app
+    spec:
+      strategy:
+        type: Recreate
+
+# OIDC Issuer patches - Spring Boot services (OIDC_ISSUER + OIDC_JWK_SET_URI)
+- target:
+    kind: Deployment
+    name: auth-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: auth-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: backoffice-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: backoffice-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: billing-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: billing-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: cms-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: cms-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: compliance-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: compliance-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: dispute-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: dispute-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: fx-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: fx-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: integration-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: integration-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+            # ponytail: dev has no OJK network path; keep report generation off to avoid daily DNS errors
+            - name: PAYU_INTEGRATION_OJK_DAILY_REPORT_ENABLED
+              value: "false"
+            - name: PAYU_INTEGRATION_OJK_MONTHLY_REPORT_ENABLED
+              value: "false"
+- target:
+    kind: Deployment
+    name: investment-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: investment-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: lending-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: lending-service
+    spec:
+      template:
+        metadata:
+          annotations:
+            payu.io/lending-repayment-fix: "2026-08-04"
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: partner-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: partner-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+            # PARTNER-PROD-005: run SNAP reconciliation every 5 minutes in dev so
+            # unmatched cases surface quickly; production keeps the hourly default.
+            - name: PAYU_RECONCILIATION_SNAP_INTERVAL_MS
+              value: "300000"
+- target:
+    kind: Deployment
+    name: product-catalog-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: product-catalog-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: promotion-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: promotion-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: statement-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: statement-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: support-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: support-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: transaction-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: transaction-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: wallet-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: wallet-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+
+# OIDC Issuer patches - Quarkus services
+# Note: Quarkus reads QUARKUS_OIDC_TOKEN_ISSUER, not OIDC_ISSUER.
+# OIDC_ISSUER/JWK_SET_URI in base deployments are unused by Quarkus.
+- target:
+    kind: Deployment
+    name: api-portal-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: api-portal-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: QUARKUS_OIDC_TOKEN_ISSUER
+              value: "any"
+            - name: QUARKUS_TLS_TRUST_ALL
+              value: "true"
+            - name: QUARKUS_OIDC_DISCOVERY_ENABLED
+              value: "false"
+            - name: QUARKUS_OIDC_JWKS_PATH
+              value: "/protocol/openid-connect/certs"
+- target:
+    kind: Deployment
+    name: gateway-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: gateway-service
+    spec:
+      template:
+        metadata:
+          annotations:
+            payu.io/cache-protocol: "plain-2026-08-04"
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: QUARKUS_OIDC_TOKEN_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: QUARKUS_TLS_TRUST_ALL
+              value: "true"
+- target:
+    kind: Deployment
+    name: notification-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: notification-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: QUARKUS_OIDC_TOKEN_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: QUARKUS_TLS_TRUST_ALL
+              value: "true"
+            - name: OIDC_ISSUER
+              value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+            - name: QUARKUS_OIDC_DISCOVERY_ENABLED
+              value: "false"
+            - name: QUARKUS_OIDC_JWKS_PATH
+              value: "/protocol/openid-connect/certs"
+
+# Dev simulators use the profile's local OTLP endpoint; no collector is required.
+- target:
+    kind: Deployment
+    name: bi-fast-simulator
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: OTEL_ENDPOINT
+        value: "http://localhost:4317"
+- target:
+    kind: Deployment
+    name: qris-simulator
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: OTEL_ENDPOINT
+        value: "http://localhost:4317"
+- target:
+    kind: Deployment
+    name: dukcapil-simulator
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: OTEL_ENDPOINT
+        value: "http://localhost:4317"
+
+# OIDC Issuer patch - web-app (Next.js)
+- target:
+    kind: Deployment
+    name: web-app
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/0/value
+      value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+    - op: replace
+      path: /spec/template/spec/containers/0/env/1/value
+      value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+    # WEB-004: sitemap/robots must advertise the dev domain, not prod.
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: NEXT_PUBLIC_BASE_URL
+        value: "https://payu-dev.apps.fajjjar.my.id"
+
+# Dev-only: use the pre-provisioned runtime key in payu-dev.
+- target:
+    kind: Deployment
+    name: web-app
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: web-app
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env-secrets
+                  key: encryption-key
+                  optional: false
+
+# Dev-only: Enable rate limit test mode for e2e testing
+- target:
+    kind: Deployment
+    name: gateway-service
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: gateway-service
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: GATEWAY_RATE_LIMIT_TEST_MODE
+              value: "true"
+
+- target:
+    kind: Deployment
+    name: gateway-service
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT
+        value: "http://otel-collector.payu-dev.svc.cluster.local:4317"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: QUARKUS_OTEL_SDK_DISABLED
+        value: "true"
