@@ -117,8 +117,6 @@ spec:
   productCR:
     name: payu-api
   applicationPlanName: "basic"
-  providerAccountRef:
-    name: threescale-provider-account
 ---
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
@@ -215,5 +213,3 @@ metadata:
 spec:
   productCRName: payu-api
   production: true
-  providerAccountRef:
-    name: threescale-provider-account

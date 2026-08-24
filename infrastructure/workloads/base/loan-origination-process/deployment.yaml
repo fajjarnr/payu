@@ -52,16 +52,18 @@ spec:
           mountPath: /tmp
         readinessProbe:
           httpGet:
-            path: /actuator/health/liveness
+            path: /actuator/health/readiness
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
+          timeoutSeconds: 5
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
             port: 8080
           initialDelaySeconds: 60
           periodSeconds: 15
+          timeoutSeconds: 5
         startupProbe:
           httpGet:
             path: /actuator/health/liveness
@@ -69,6 +71,7 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 5
           failureThreshold: 90
+          timeoutSeconds: 5
         resources:
           requests:
             cpu: 100m

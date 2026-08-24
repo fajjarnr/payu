@@ -376,6 +376,7 @@ patches:
     spec:
       strategy:
         type: Recreate
+        rollingUpdate: null
 
 # OIDC Issuer patches - Spring Boot services (OIDC_ISSUER + OIDC_JWK_SET_URI)
 - target:

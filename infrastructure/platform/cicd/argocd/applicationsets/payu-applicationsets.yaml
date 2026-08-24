@@ -158,8 +158,6 @@ spec:
           - CreateNamespace=true
           - PrunePropagationPolicy=foreground
           - PruneLast=true
-          - RespectIgnoreDifferences=true
----
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -169,13 +167,16 @@ metadata:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: identity
 spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
   generators:
     - list:
         elements:
           - name: dev
             path: infrastructure/platform/identity/overlays/dev
-            namespace: payu-dev
-            project: payu-dev
+            namespace: payu-sso
+            project: payu-platform
             promotionOrder: "0"
           - name: sit
             path: infrastructure/platform/identity/overlays/sit
@@ -200,23 +201,23 @@ spec:
 
   template:
     metadata:
-      name: "identity-{{name}}"
+      name: "identity-{{.name}}"
       labels:
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: identity
-        payu.io/environment: "{{name}}"
+        payu.io/environment: "{{.name}}"
       annotations:
         payu.io/deployment-stage: platform
         payu.io/promotion-mode: manual
-        payu.io/promotion-order: "{{promotionOrder}}"
+        payu.io/promotion-order: "{{.promotionOrder}}"
     spec:
-      project: "{{project}}"
+      project: "{{.project}}"
       source:
         repoURL: https://github.com/fajjarnr/payu.git
         targetRevision: main
-        path: "{{path}}"
+        path: "{{.path}}"
       destination:
-        namespace: "{{namespace}}"
+        namespace: "{{.namespace}}"
         server: https://kubernetes.default.svc
       syncPolicy:
         automated:
