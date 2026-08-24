@@ -17,11 +17,11 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) **5/5 Healthy** `payu-database-1 Running` + Kafka dev `payu-kafka` 6/6 Running (was sit/uat only) + DataGrid `payu-cache-0 Running` 5/5 env, ArgoCD 1/1 Running, Tekton 31/31 per-service pipeline **dev 30/31 Succeeded 1 Failed (account 429) + 1 Running** `account-service-build-wmtfl Succeeded 15/18 3 Skipped` `zap 66 PASS k6 4780 0 failed` `cosign/rhacs non-blocking chain false` `analytics 1.18.5 1/1 Running` `billing 1/1` `30 imagestreams 1.18.5` `oc get pods -n payu-dev 40 1/1 Running` `payu-kafka 1/1` `payu-cache-client-tls` `session-secrets` `payu-keycloak-client-secrets` fixed, 0 ERROR log (kafka `Unable to bootstrap` now `Running`). Platform: cert-manager 5/5 True, 3scale Available, RHACS Healthy, EFS 4/4, Litmus 1/1. |
-| **Last Release** | `1.18.5` (2026-08-24) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG 5/5 Healthy, Litmus live, Tekton dev 30/31 Succeeded (k6 76% threshold, argocd-sync Progressing Startup probe, account 429 retry), sit/uat/preprod/prod Health proven, partner prod credentials queue remains. |
-| **Backlog Aktif** | Chaos agent per-env (Litmus now Running but ChaosEngine per env pending), Schemathesis credentials, SSO per-env isolation (lihat Platform Backlog) |
-| **Last Updated** | 2026-08-24 — v1.18.5: Tekton 31/31 dev builds `oc tag` 1.18.5 + Workloads payu-dev 1.18.5 + Secrets `payu-cache-client-tls` `session-secrets` `payu-keycloak-client-secrets` + Kafka `payu-kafka` 6/6 Running + payu-broker 1/1 + CNPG 5/5 Healthy sustained + Litmus/RHACS/3scale/EFS verified + `oc get pods -n payu-dev 40 1/1 Running` `kyc 76%` `account 429` pending retry. |
+| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) **5/5 Healthy** `payu-database-1 Running` + Kafka dev `6/6 Running` + DataGrid `payu-cache-0 Running` 5/5 env, ArgoCD 1/1 Running, Tekton 31/31 per-service pipeline **dev 37 1/1 Running** `30 1.18.6` `sit 25 1/1` `uat 21` `preprod 24` `prod 26` `oc get is 31 1.18.6` `5 envs` `oc get pods -n payu-dev 37 1/1` `payu-cache-client-tls 6 keys` `session-secrets` `db-secrets` fixed, 0 ERROR log. Platform: cert-manager 5/5 True, 3scale Available, RHACS Healthy, EFS 4/4, Litmus 1/1. |
+| **Last Release** | `1.18.6` (2026-08-24) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG 5/5 Healthy, Litmus live, Tekton dev 30/31 + per-service image name fix, sit/uat/preprod/prod 1.18.6 `25/21/24/26` 1/1, partner prod credentials queue remains. |
+| **Backlog Aktif** | Chaos agent per-env, Schemathesis credentials, SSO per-env isolation |
+| **Last Updated** | 2026-08-24 — v1.18.6: Per-service image name `payu-dev` base fix `223 files` + Secrets `payu-keycloak-admin` `db-secrets` `6` `5 envs` + Promotion `oc tag` `124` `1.18.6` + Workloads `61` `per-service` `dev 37` `sit 25` `uat 21` `preprod 24` `prod 26` `Kafka 6/6` `CNPG 5/5` `EFS/3scale/RHACS/Litmus` verified. |
 
 ---
 

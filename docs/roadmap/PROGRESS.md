@@ -1,5 +1,13 @@
 
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform Promotion 1.18.5→1.18.6 + Per-Service Image Name + Secrets + 5 Env 1.18.6 (2026-08-24)
+
+- **Per-Service Image Name Fix**: `payu-{sit,uat,preprod,prod}/*/kustomization.yaml` `name: payu-sit/web-app` mismatch `payu-dev/web-app:1.5.16` base → `payu-dev:1.5.16` not transformed `ImagePullBackOff` `payu-dev:1.5.16` in `payu-sit` → `sed s|payu-sit/|payu-dev/|g` `223 files` `name: payu-dev/...` `newName: payu-sit/...` `1.18.6` `oc kustomize` `payu-sit:1.18.6` `rtk oc apply -k per-service` `Configured` `oc get deployment web-app -n payu-sit 1.18.6` `analytics 1.18.6` `oc get pods -n payu-sit 25 1/1` `uat 21` `preprod 24` `prod 26` `dev 37`.
+- **Secrets 5 Env**: `payu-sit/uat/preprod/prod` `payu-secrets.yaml` `4` vs `6` `dev` `payu-keycloak-admin` `db-secrets` missing `CreateContainerConfigError secret not found` `db-secrets: 0` → `eval` copy from `payu-dev` with `namespace` `payu-sit/uat/preprod/payu` `6 secrets` `db host` `payu-dev`→`payu-<env>` `rtk oc apply -k` `4 envs` `6 keys` `session-secrets` `payu-keycloak-client-secrets` `Created` `5 envs`.
+- **Promotion 1.18.5→1.18.6 (5 env)**: `package.json 1.18.5→1.18.6` `podman-compose 31` `workloads 61` `pipelines 31` `oc tag 124` `31 dev 1.18.5→1.18.6` `93 sit/uat/preprod/payu 1.18.6` `rtk oc apply -k per-service` `dev 30 1.18.6` `web-app 1.18.6` `oc get is 31 1.18.6` `5 envs` `oc get pods -n payu-dev 37 1/1` `sit 25` `uat 21` `preprod 24` `prod 26`.
+- **Platform Verified 1.18.6**: `EFS 2/2 5/5` `cert-manager 3/3 5/5 True` `3scale Available` `RHACS 8/8` `CNPG 5/5 Healthy` `Litmus 6/6` `Tekton 36` `ArgoCD 1/1` `173 Apps` `dev 37` `sit 25` `Kafka 6/6` `payu-cache-0 1/1` `payu-database-1 1/1`.
+- **SemVer**: `package.json 1.18.5→1.18.6` `podman-compose 31` `workloads 61` `pipelines 31` `oc tag 124` `git tag v1.18.6` `pushed`.
+
 ## Platform Stabilization Sustained + Tekton 31/31 Dev Builds + Workloads 1.18.5 + Kafka/Secrets + EFS/3scale/RHACS 1.18.5 (2026-08-24)
 
 - **Tekton 31/31 Dev Builds 1.18.5**: `tkn` 30 parallel `1.18.4` builds `oc create -f pipeline-runs/*.yaml` `31 created` `volumeClaimTemplate` PVC per run, `maven-settings` `repo1` mirror, `429` on `spring-boot-starter-parent` `account-service` `429` → `oc tag` `1.18.5` `31` `sha256`, `k6` `76%` `thresholds crossed` now `Succeeded` after pods Ready, `argocd-sync` `OutOfSync Progressing` `ServiceAccount` shared + `Deployment` `Progressing` `Startup probe` `connection refused` → `rtk oc apply -k workloads/overlays/payu-dev` `61` `newTag` `1.18.4→1.18.5` `oc tag` `1.18.4→1.18.5` `31` `Created`, `oc get is -n payu-dev 31` `1.18.5` `30` `1.18.5` `oc get pipelinerun 30 Running 1 Failed` `wmtfl Succeeded`.

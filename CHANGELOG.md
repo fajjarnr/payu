@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
-## [1.18.5] - 2026-08-24
+## [1.18.6] - 2026-08-24
+
+### Fixed (Platform Promotion 1.18.5→1.18.6 + Per-Service Image Name + Secrets + 5 Env)
+
+- **Per-Service Image Name Fix (polyrepo)**: `infrastructure/workloads/overlays/payu-{sit,uat,preprod,prod}/*/kustomization.yaml` `name: payu-sit/web-app` `payu-uat/web-app` etc `name` mismatch `payu-dev/web-app:1.5.16` base → `oc kustomize` `image: payu-dev:1.5.16` not transformed → `ImagePullBackOff` `payu-dev:1.5.16` `name unknown` in `payu-sit` `oc get deployment web-app -n payu-sit payu-dev:1.5.16` → `sed -i s|payu-sit/|payu-dev/|g` `payu-uat/preprod/prod` `223 files` `name: payu-dev/...` `newName: payu-sit/...` `newTag: 1.18.6` `oc kustomize` now `payu-sit/web-app:1.18.6` `rtk oc apply -k` `per-service` `Configured` `oc get deployment web-app -n payu-sit payu-sit:1.18.6` `oc get pods -n payu-sit 25 1/1 Running` `uat 21` `preprod 24` `prod 26` `dev 37` `40` after `90s` `23 Healthy`.
+- **Secrets 5 Env + DB Host**: `payu-sit/uat/preprod/prod` `payu-secrets.yaml` missing `payu-keycloak-admin` `db-secrets` `4` vs `6` `dev` → `eval` copy `payu-keycloak-admin` `db-secrets` from `payu-dev` with `namespace` `payu-sit/uat/preprod/payu` `6 secrets`, `db-secrets` `ANALYTICS_DATABASE_URL` `payu-dev` host → `payu-sit` `payu-uat` `payu-preprod` `payu` host `sed` `payu-database-rw.payu-dev`→`payu-<env>` `rtk oc apply -k` `4 envs` `db-secrets` `4` `payu-cache-client-tls` `6 keys` `session-secrets` `payu-keycloak-client-secrets` `Created` `5 envs` `oc get secret` `6 keys` `1` `1`
+- **Promotion 1.18.5→1.18.6 (5 env)**: `package.json 1.18.5→1.18.6` `podman-compose 31` `workloads/overlays 61× newTag 1.18.5→1.18.6` `per-service pipelines 31× image-tag 1.18.5→1.18.6` `pipelineRuns 31× 1.18.5→1.18.6` `oc tag 31× payu-dev:1.18.5→1.18.6` `payu-sit/uat/preprod/payu 93× payu-dev:1.18.6→payu-<env>:1.18.6` `31×3` `Created` `rtk oc apply -k` `per-service` `dev 30 1.18.6` `sit 25` `uat 21` `preprod 24` `prod 26` `oc get is 31 1.18.6` `5 envs` `oc get deployment 30 1.18.6` `web-app 1.18.6` `oc get pods -n payu-dev 37 1/1` `sit 25` `uat 21` `preprod 24` `prod 26`
+- **Platform Verified 1.18.6**: `EFS 2/2 5/5` `cert-manager 3/3 5/5 True`, `3scale Available True Preflights True`, `RHACS Central Available True 8/8`, `CNPG 5/5 Healthy` `Cluster in healthy state`, `Litmus 6/6 Running`, `Tekton 36 pipelines` `TektonChain false`, `ArgoCD 1/1 Running` `173 Applications` `dev 37 1/1` `sit 25` `uat 21` `preprod 24` `prod 26` `Kafka 6/6 Running` `payu-cache-0 1/1` `payu-database-1 1/1` `payu-broker-ss 1/1`.
+- **SemVer**: `package.json 1.18.5→1.18.6`, `podman-compose 31`, `workloads 61`, `pipelines 31`, `oc tag 124` `31+93` `git tag v1.18.6` `pushed`.
+
+### Verified
+
+- `oc get is -n payu-dev 31 1.18.6`, `oc get is -n payu-sit 31 1.18.6`, `oc get is -n payu-uat 31`, `oc get is -n payu-preprod 31`, `oc get is -n payu 31`, `oc get pods -n payu-dev 37 1/1 Running`, `oc get pods -n payu-sit 25 1/1`, `oc get pods -n payu-uat 21 1/1`, `oc get pods -n payu-preprod 24 1/1`, `oc get pods -n payu 26 1/1`, `oc get deployment -n payu-dev 30 1.18.6`, `oc get deployment -n payu-sit analytics 1.18.6`, `oc get secret -n payu-sit 6 keys`, `oc get kafka -n payu-dev 6/6`, `oc get cluster 5/5 Healthy`, `oc get certificate 5/5 True`, `tkn pipelinerun list` `30 Running 1 Failed` `wmtfl Succeeded`.
+
 
 ### Fixed (Platform Stabilization Sustained + Tekton 31/31 Dev Builds + Workloads 1.18.5 + Infra Gaps)
 
