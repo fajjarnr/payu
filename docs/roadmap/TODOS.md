@@ -154,19 +154,25 @@ Drift ditemukan audit sweep 2026-08-24 (70 ADR vs repo): 3 klaim bukti salah dik
 
 ### 2. 🔴 ADR yang Sudah Ada tapi Belum / Sebagian Diimplementasikan
 
-| Key | ADR Terkait | Domain | Ref Backlog Tunggal |
-|:---|:---|:---|:---|
-| ADR-GAP-003..009 | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) s/d [ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md) | auth/wallet/risk/platform/security/data/observability | → **HARDEN backlog P1** (TXN/ACC/AUTH/COMPLIANCE/GATEWAY/PORTAL) — jangan duplikasi deskripsi di sini |
-| ADR-GAP-015 | [ADR-0015](../adr/0015-process-automation-rhpam.md) | lending/process | Phase 1 embedded Drools live (`rules-starter` + `credit_scoring.drl`); BPMN/Kogito runtime *not applied* (`kogito-runtime.yaml`), `TaskInboxController:40` proxy `/usertasks` tanpa target; fork `lending-rules` duplikat |
-| ADR-GAP-019 | [ADR-0019](../adr/0019-statement-dual-format.md) | statement | PDF + JSON partner API live; **ekspor CSV absen** padahal judul ADR "PDF + JSON/CSV" |
-| ADR-GAP-028W | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) | auth/txn | Step-up engine live di auth-service (`StepUpController`, Argon2id PIN, lockout); **belum di-wire ke flow transaksi**; dynamic linking belum ada |
-| ADR-GAP-029 | [ADR-0029](../adr/0029-iso20022-interbank-clearing-and-suspense-ledgering.md) | wallet/integration | COA suspense seeded (V115); `WalletClearingService` **stub in-memory, 0 caller**, tanpa persist; tanpa mapping `pacs.008/pain.001`; COA 1500-series menyimpang spesifikasi liability UUID |
-| ADR-GAP-030E | [ADR-0030](../adr/0030-realtime-transaction-velocity-and-aml-risk-scoring.md) | risk | Detection live (`analytics-service fraud_detection.py`); **enforcement stub**: `VelocityGuard.isAllowed()` selalu `true`, `RiskEvaluationPort` tanpa adapter |
-| ADR-GAP-032W | [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md) | security | Wazuh helm + CLF RFC5424 sink live; **Coraza cuma stub ConfigMap** (`coraza-waf.yaml:2`), tanpa ingress/SPOA; AWS WAF tier absen |
-| ADR-GAP-047 | [ADR-0047](../adr/0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md) | frontend/web-app | Branded types ada tapi deviasi spek: `__brand?` optional, `Money` = plain string alias, tanpa eslint enforcement |
-| ADR-GAP-048 | [ADR-0048](../adr/0048-lending-eligibility-and-pricing-via-dmn-decision-tables.md) | lending | **0 file `.dmn` repo-wide**; eligibility/pricing hardcode (`LoanPreApprovalService.java:41,144`); modul fork `lending-rules` belum didelete (step 6 ADR) |
-| ADR-GAP-054C | [ADR-0054](../adr/0054-dispute-and-chargeback-standard.md) | dispute | Refund + dispute state machine live; **chargeback 0 kode** di dispute-service (hanya deskripsi katalog) |
-| ADR-GAP-056 | [ADR-0056](../adr/0056-simulator-fidelity-and-contract-testing-standard.md) | qa/simulators | Idempotency dedup + Pact broker & `pact-verify` task CI wired; **0 kontrak Pact**, `FAIL_ON_NO_PACTS=false`; header `X-Simulate` & QR EMVCo TLV CRC16 absen |
+| Key | ADR Terkait | Domain | Ref Backlog Tunggal | Pri |
+|:---|:---|:---|:---|:---:|
+| ADR-GAP-003..009 | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) s/d [ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md) | auth/wallet/risk/platform/security/data/observability | → **HARDEN backlog P1** (TXN/ACC/AUTH/COMPLIANCE/GATEWAY/PORTAL) — jangan duplikasi deskripsi di sini | B1–B3 |
+| ADR-GAP-015 | [ADR-0015](../adr/0015-process-automation-rhpam.md) | lending/process | Phase 1 embedded Drools live (`rules-starter` + `credit_scoring.drl`); BPMN/Kogito runtime *not applied* (`kogito-runtime.yaml`), `TaskInboxController:40` proxy `/usertasks` tanpa target; fork `lending-rules` duplikat | B3 |
+| ADR-GAP-019 | [ADR-0019](../adr/0019-statement-dual-format.md) | statement | PDF + JSON partner API live; **ekspor CSV absen** padahal judul ADR "PDF + JSON/CSV" | B4 |
+| ADR-GAP-028W | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) | auth/txn | Step-up engine live di auth-service (`StepUpController`, Argon2id PIN, lockout); **belum di-wire ke flow transaksi**; dynamic linking belum ada | B2 |
+| ADR-GAP-029 | [ADR-0029](../adr/0029-iso20022-interbank-clearing-and-suspense-ledgering.md) | wallet/integration | COA suspense seeded (V115); `WalletClearingService` **stub in-memory, 0 caller**, tanpa persist; tanpa mapping `pacs.008/pain.001`; COA 1500-series menyimpang spesifikasi liability UUID | **B1** |
+| ADR-GAP-030E | [ADR-0030](../adr/0030-realtime-transaction-velocity-and-aml-risk-scoring.md) | risk | Detection live (`analytics-service fraud_detection.py`); **enforcement stub**: `VelocityGuard.isAllowed()` selalu `true`, `RiskEvaluationPort` tanpa adapter | **B1** |
+| ADR-GAP-032W | [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md) | security | Wazuh helm + CLF RFC5424 sink live; **Coraza cuma stub ConfigMap** (`coraza-waf.yaml:2`), tanpa ingress/SPOA; AWS WAF tier absen | B2 |
+| ADR-GAP-047 | [ADR-0047](../adr/0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md) | frontend/web-app | Branded types ada tapi deviasi spek: `__brand?` optional, `Money` = plain string alias, tanpa eslint enforcement | B4 |
+| ADR-GAP-048 | [ADR-0048](../adr/0048-lending-eligibility-and-pricing-via-dmn-decision-tables.md) | lending | **0 file `.dmn` repo-wide**; eligibility/pricing hardcode (`LoanPreApprovalService.java:41,144`); modul fork `lending-rules` belum didelete (step 6 ADR) | B3 |
+| ADR-GAP-054C | [ADR-0054](../adr/0054-dispute-and-chargeback-standard.md) | dispute | Refund + dispute state machine live; **chargeback 0 kode** di dispute-service (hanya deskripsi katalog) | B4 |
+| ADR-GAP-056 | [ADR-0056](../adr/0056-simulator-fidelity-and-contract-testing-standard.md) | qa/simulators | Idempotency dedup + Pact broker & `pact-verify` task CI wired; **0 kontrak Pact**, `FAIL_ON_NO_PACTS=false`; header `X-Simulate` & QR EMVCo TLV CRC16 absen | B3 |
+
+> **Urutan eksekusi sweep 2026-08-24** (blast radius × ireversibilitas × dependensi):
+> **B1 — sebelum uang nyata mengalir (BI-FAST/partner prod):** fix PITR barman+S3+restore drill ([ADR-0031] → PARTNER-PROD-008 P0) · suspense ledger persist + wire ke transfer ([ADR-0029], GAP-029) · risk enforcement wire ([ADR-0030], GAP-030E) · migration `REVOKE UPDATE,DELETE` audit ([ADR-0063] → COMPLIANCE-HARDEN-001)
+> **B2 — sebelum onboarding publik melebar:** step-up wiring + dynamic linking ([ADR-0028], GAP-028W) · dual-control onboarding ([ADR-0035] → PARTNER-PROD-011) · Coraza WAF deploy nyata (GAP-032W)
+> **B3 — correctness infra:** reconciliation job + inbox_events (TXN-HARDEN-003/004) · isi kontrak Pact lalu `FAIL_ON_NO_PACTS=true` (GAP-056) · RLS FORCE rollout sisa service · cleanup/wire Kogito TaskInbox (GAP-015) · DMN lending (GAP-048)
+> **B4 — menunggu trigger / keputusan:** CSV export (GAP-019) · branded types ketat + lint (GAP-047) · chargeback (GAP-054C) · verifikasi SLO live (PARTNER-PROD-009) · apply topik cluster (blokir OCP creds) · go/no-go [ADR-0067]/[ADR-0068]
 
 ### 3. 📝 Backlog ADR Baru yang Perlu Dibuat
 
