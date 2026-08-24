@@ -75,7 +75,7 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 
 | Layer                     | Red Hat Product                      | Portable Alternative       |
 | ------------------------- | ------------------------------------ | -------------------------- |
-| **Container Platform**    | Red Hat OpenShift 4.20+              | Kubernetes (EKS/GKE/AKS)   |
+| **Container Platform**    | Red Hat OpenShift 4.22+              | Kubernetes (EKS/GKE/AKS)   |
 | **Core Banking Services** | Red Hat Runtimes (Spring Boot 4.1)   | Spring Boot                |
 | **Supporting Services**   | Red Hat Build of Quarkus 3.x         | Quarkus                    |
 | **ML/Data Services**      | Python 3.12 (UBI-based)              | Python FastAPI             |
@@ -98,7 +98,7 @@ PayU adalah platform digital banking modern yang dibangun dengan arsitektur **mi
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                  RED HAT OPENSHIFT 4.20+ ECOSYSTEM                          │
+│                  RED HAT OPENSHIFT 4.22+ ECOSYSTEM                          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  CORE BANKING (Spring Boot 4.1)        SUPPORTING (Spring Boot 4.1)         │
@@ -1066,7 +1066,7 @@ C4Deployment
     Container(mtls, "Service Mesh mTLS", "Istio (UAT+)", "PeerAuthentication STRICT")
   }
 
-  Deployment_Node(platform, "Application Platform", "OpenShift 4.20+") {
+  Deployment_Node(platform, "Application Platform", "OpenShift 4.22+") {
     Deployment_Node(gateway_zone, "Gateway Zone") {
       Container(api_gateway, "Gateway Service", "Quarkus", "JWT validation, SNAP-BI, idempotency, rate limiting")
     }
@@ -1370,7 +1370,7 @@ Full chain proven: APIcast (user_key) → backend authrep (provider_key) → gat
 
 ```mermaid
 C4Deployment
-  title PayU on OpenShift 4.20+ - Deployment
+  title PayU on OpenShift 4.22+ - Deployment
 
   Deployment_Node(aws_region, "AWS Region: ap-southeast-1", "OpenShift cluster, 3 AZ (3 control-plane + 5 workers)") {
 
@@ -1752,7 +1752,7 @@ Testing Native Features (5% of time):
 
 | Component    | Realita saat ini (lab/prod-target)                          |
 | ------------ | ----------------------------------------------------------- |
-| Cluster      | OCP 4.20+, 8 nodes (3 control-plane + 5 workers) tersebar 3 AZ |
+| Cluster      | OCP 4.22+, 8 nodes (3 control-plane + 5 workers) tersebar 3 AZ |
 | PostgreSQL   | CNPG `payu-database` 3 instance (primary + 2 replica), `walStorage` WAL, Barman Cloud backup (S3-compatible) |
 | Vault        | Raft 3/3 + AWS KMS auto-unseal, snapshot S3 tiap 6 jam      |
 | Data Grid    | `payu-cache` operator-managed, `WellFormed`                 |
@@ -1918,7 +1918,7 @@ Features:
 | -------------------- | ------------------------------ | ------------------------------- |
 | **Cloud Provider**   | AWS                            | Region: ap-southeast-1          |
 | **Cluster**          | Single cluster, Multi-AZ       | 3 AZ, cost-effective untuk lab  |
-| **Platform**         | Red Hat OpenShift 4.20+        | Full ecosystem                  |
+| **Platform**         | Red Hat OpenShift 4.22+        | Full ecosystem                  |
 | **PostgreSQL**       | CNPG (CloudNativePG)           | Production target: AWS RDS      |
 | **Block Storage**    | EBS gp3 (RWO)                  | Per-instance volumes            |
 | **Shared Storage**   | EFS CSI (RWX)                  | 3scale system file storage      |
@@ -2039,7 +2039,7 @@ Phase 7: Integration
 | Kafka           | AMQ Streams (Strimzi CRD) |
 | PostgreSQL      | 16.x (CNPG 1.30) |
 | Data Grid       | 8.x (Hot Rod / REST v2) |
-| OpenShift       | 4.20+     |
+| OpenShift       | 4.22+     |
 | Service Mesh    | Istio (OSSM 3.4, UAT+) |
 
 ### B. Compliance Checklist

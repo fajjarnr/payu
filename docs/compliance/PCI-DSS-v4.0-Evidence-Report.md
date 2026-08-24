@@ -1,7 +1,7 @@
 # PCI-DSS v4.0 Evidence Report
 ## PayU Digital Banking Platform
 **Generated:** 2026-05-02  
-**Scope:** OpenShift Container Platform (OCP) 4.20+  
+**Scope:** OpenShift Container Platform (OCP) 4.22+
 **Environment:** payu-dev, payu-sit, payu-uat, payu-preprod, payu  
 
 ---

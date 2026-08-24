@@ -13,7 +13,7 @@ structure, platform registration, CI/CD, and observability. Orchestrated by **@p
 
 ## Context7 gate
 
-Resolve frameworks and platform components via Context7 with exact version: Spring Boot 4.1.0/Quarkus/FastAPI/Next.js (as scaffolder), plus ArgoCD/Tekton/Kustomize/Helm, OpenShift 4.20+, observability (Prometheus/Grafana/OTel). Compare with `backend/pom.xml` `4.1.0` parent/operator version, record mismatch.
+Resolve frameworks and platform components via Context7 with exact version: Spring Boot 4.1.0/Quarkus/FastAPI/Next.js (as scaffolder), plus ArgoCD/Tekton/Kustomize/Helm, OpenShift 4.22+, observability (Prometheus/Grafana/OTel). Compare with `backend/pom.xml` `4.1.0` parent/operator version, record mismatch.
 
 ## Scaffolding phases
 

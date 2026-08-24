@@ -15,7 +15,7 @@ metadata:
   title: PayU Digital Banking Platform
   description: |
     Core banking & payment gateway platform built with microservices architecture
-    on Red Hat OpenShift 4.20+. Serves as payment infrastructure for TokoBapak,
+    on Red Hat OpenShift 4.22+. Serves as payment infrastructure for TokoBapak,
     Nobar, Dolan, Sinau, and Maca.
   annotations:
     backstage.io/techdocs-ref: dir:.

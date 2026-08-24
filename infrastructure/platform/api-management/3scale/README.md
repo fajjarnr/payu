@@ -40,7 +40,7 @@ Partner Apps
 
 ## Prerequisites
 
-- OpenShift 4.20+ cluster with admin access
+- OpenShift 4.22+ cluster with admin access
 - Red Hat 3scale Operator installed from OperatorHub
 - External PostgreSQL and Redis
 - ODF CephFS StorageClass `ocs-storagecluster-cephfs`

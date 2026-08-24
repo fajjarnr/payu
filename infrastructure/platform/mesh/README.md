@@ -1,6 +1,6 @@
 # OpenShift Service Mesh Configuration
 
-> Istio-based service mesh configuration for PayU Digital Banking Platform on Red Hat OpenShift 4.20+
+> Istio-based service mesh configuration for PayU Digital Banking Platform on Red Hat OpenShift 4.22+
 
 ## Overview
 
@@ -66,7 +66,7 @@ This directory contains the complete Service Mesh (Istio) configuration for the 
 
 Before deploying the service mesh, ensure:
 
-1. **OpenShift 4.20+** is installed and running
+1. **OpenShift 4.22+** is installed and running
 2. **OpenShift Service Mesh Operator** is installed from OperatorHub
 3. **Sufficient Resources**:
    - Control Plane: 2 CPU, 4 GB RAM minimum
@@ -470,7 +470,7 @@ oc apply -f backup-mesh-config.yaml
 
 ## References
 
-- [Red Hat OpenShift Service Mesh Documentation](https://docs.openshift.com/container-platform/4.20/service_mesh/index.html)
+- [Red Hat OpenShift Service Mesh Documentation](https://docs.openshift.com/container-platform/4.22/service_mesh/index.html)
 - [Istio Documentation](https://istio.io/latest/docs/)
 - [Istio Security Best Practices](https://istio.io/latest/docs/concepts/security/)
 - [OpenShift Service Mesh Architecture](https://www.redhat.com/en/topics/microservices/what-is-a-service-mesh)

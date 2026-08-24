@@ -78,7 +78,7 @@
 
 | Component | Technology | Security Certification | Regulatory Compliance |
 |-----------|------------|------------------------|----------------------|
-| **Container Platform** | Red Hat OpenShift 4.20+ | NIST 800-190 | POJK 12/POJK.01/2017 |
+| **Container Platform** | Red Hat OpenShift 4.22+ | NIST 800-190 | POJK 12/POJK.01/2017 |
 | **Core Banking Services** | Java 21, Spring Boot 3.4.x | Java Verified | POJK 12/POJK.01/2017 |
 | **ML/Analytics Services** | Python 3.12 FastAPI (UBI9) | Secure Coding | POJK 12/POJK.01/2017 |
 | **Database** | PostgreSQL 16 | FIPS 140-2 | POJK 12/POJK.01/2017 |

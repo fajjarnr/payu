@@ -3,10 +3,10 @@
 > **Deployment Mode**: Installer-Provisioned Infrastructure (IPI) on AWS (Existing VPC/Subnets)
 > **Credentials Mode**: AWS STS (Security Token Service) via Manual Mode
 > **Platform**: AWS ap-southeast-1 (Singapore)
-> **OCP Version**: 4.20+
+> **OCP Version**: 4.22+
 > **CNI**: OVN-Kubernetes (default)
 > **Last Updated**: 2026-06-11
-> **References**: [OCP 4.20 AWS STS Installation Docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/authentication_and_authorization/manually-creating-iam-roles-for-aws) | [Cloud Credential Operator & ccoctl](https://docs.redhat.com/en/documentation/openshift_container_platform/4.20/html/authentication_and_authorization/preparing-to-install-with-sts)
+> **References**: [OCP 4.22 AWS STS Installation Docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/authentication_and_authorization/manually-creating-iam-roles-for-aws) | [Cloud Credential Operator & ccoctl](https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/authentication_and_authorization/preparing-to-install-with-sts)
 
 ---
 
@@ -29,8 +29,8 @@ Untuk arsitektur perbankan enterprise **PayU** yang aman dan mematuhi regulasi Z
 |:----------------|:-----------------|:------------------|:-------|
 | **AWS CLI** | `2.x+` | Konfigurasi awal & AWS API communication (`aws configure`) | PENDING |
 | **AWS IAM Permissions** | `AdministratorAccess` | Dibutuhkan untuk menjalankan CLI `ccoctl` yang membuat IAM Policy/Roles, OIDC Provider, dan S3 Bucket | PENDING |
-| **openshift-install** | `4.20.x` | Installer CLI untuk men-deploy cluster | PENDING |
-| **oc CLI** | `4.20.x` | Client CLI untuk berinteraksi dengan cluster & mengekstrak resource dari release image | PENDING |
+| **openshift-install** | `4.22.x` | Installer CLI untuk men-deploy cluster | PENDING |
+| **oc CLI** | `4.22.x` | Client CLI untuk berinteraksi dengan cluster & mengekstrak resource dari release image | PENDING |
 | **Pull Secret** | Valid Red Hat pull secret | Mengunduh container image resmi dari Red Hat Registry | PENDING |
 | **SSH Key** | `ssh-rsa` or `ed25519` | Akses debugging SSH ke node RHCOS jika diperlukan | PENDING |
 

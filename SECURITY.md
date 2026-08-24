@@ -61,7 +61,7 @@ If you discover a security vulnerability within PayU, please follow these steps:
 - OWASP Top 10 compliance
 
 ### Infrastructure Security
-- Red Hat OpenShift 4.20+ with built-in security
+- Red Hat OpenShift 4.22+ with built-in security
 - Network policies for service isolation
 - Pod Security Standards (Restricted)
 - Regular security scanning (Trivy, Snyk)

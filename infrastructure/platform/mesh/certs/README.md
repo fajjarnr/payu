@@ -203,5 +203,5 @@ oc get secret payu-ingress-cert -n istio-system
 ## References
 
 - [Istio Certificate Management](https://istio.io/latest/docs/tasks/security/cert-management/)
-- [OpenShift Certificate Management](https://docs.openshift.com/container-platform/4.20/security/certificates/service-serving-cert.html)
+- [OpenShift Certificate Management](https://docs.openshift.com/container-platform/4.22/security/certificates/service-serving-cert.html)
 - [cert-manager Documentation](https://cert-manager.io/docs/)

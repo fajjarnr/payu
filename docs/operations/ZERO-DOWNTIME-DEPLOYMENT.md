@@ -2,7 +2,7 @@
 
 > **Version**: 1.0 | **Last Updated**: February 20, 2026 | **Status**: Production Ready
 >
-> **Scope**: OpenShift 4.20+ | ArgoCD GitOps | 22 Microservices
+> **Scope**: OpenShift 4.22+ | ArgoCD GitOps | 22 Microservices
 
 ---
 

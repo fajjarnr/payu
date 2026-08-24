@@ -1,4 +1,4 @@
-# LitmusChaos Helm values for OpenShift 4.20+
+# LitmusChaos Helm values for OpenShift 4.22+
 # Chart: litmuschaos/litmus v3.28.0
 # Namespace: litmus
 #

@@ -377,7 +377,7 @@ PayU adalah platform digital banking modern yang memberikan pengalaman perbankan
 
 | Component | Technology |
 |-----------|------------|
-| Container Orchestration | Red Hat OpenShift 4.20+ (on-prem/multi-cloud) |
+| Container Orchestration | Red Hat OpenShift 4.22+ (on-prem/multi-cloud) |
 | Message Broker | AMQ Streams (Apache Kafka) |
 | Message Queue | AMQ Broker (ActiveMQ Artemis) |
 | Database | Crunchy PostgreSQL 16 (Standard SQL + JSONB) |

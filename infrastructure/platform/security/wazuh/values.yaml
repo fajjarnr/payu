@@ -1,4 +1,4 @@
-# Wazuh Helm Chart values for OpenShift 4.20+
+# Wazuh Helm Chart values for OpenShift 4.22+
 # Chart: morgoved/wazuh-helm v1.0.22 (appVersion 4.14.1)
 #
 # OpenShift SCC Strategy:

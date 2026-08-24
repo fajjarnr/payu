@@ -13,7 +13,7 @@
 ## Executive Summary
 
 ### Platform Overview
-PayU is a comprehensive digital banking platform built on Red Hat OpenShift 4.20+ with 22 microservices supporting core banking operations, digital payments, and financial services in Indonesia.
+PayU is a comprehensive digital banking platform built on Red Hat OpenShift 4.22+ with 22 microservices supporting core banking operations, digital payments, and financial services in Indonesia.
 
 ### Audit Scope
 - **Services Audited**: 22 microservices (16 Spring Boot, 3 Quarkus, 2 Python, 1 Next.js frontend)

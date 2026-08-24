@@ -75,6 +75,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0066](0066-polyrepo-pipeline-per-service-devsecops-standard.md) | Polyrepo Per-Service DevSecOps Pipeline (Monorepo→Polyrepo, 6 stages, SLSA) | Accepted | 2026-08-22 |
 | [0067](0067-llm-integration-for-payu-services-standard.md) | LLM Integration for PayU Services — RAG, Guardrails & Private Deployment (BPPD, FinRAG-12B) | Proposed | 2026-08-22 |
 | [0068](0068-keda-autoscaling-kafka-and-prometheus-standard.md) | KEDA Autoscaling — Kafka Lag & Prometheus Triggers (HPA++) | Proposed | 2026-08-22 |
+| [0069](0069-openshift-4-22-platform-standard.md) | Red Hat OpenShift 4.22 Platform Standard | Accepted | 2026-08-24 |
 
 
 ## 🚀 How to Create a New ADR

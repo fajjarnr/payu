@@ -4,9 +4,9 @@
   <img src="frontend/web-app/public/logo.png" alt="PayU Logo" width="120" height="120" />
   <h1>PayU</h1>
   <p><strong>Platform digital banking modern untuk generasi digital Indonesia</strong></p>
-  <p>Built on <strong>Red Hat OpenShift 4.20+</strong> ecosystem</p>
+  <p>Built on <strong>Red Hat OpenShift 4.22+</strong> ecosystem</p>
 
-[![Platform](https://img.shields.io/badge/platform-OpenShift%204.20+-EE0000?logo=redhat)]()
+[![Platform](https://img.shields.io/badge/platform-OpenShift%204.22+-EE0000?logo=redhat)]()
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)]()
 [![Status](https://img.shields.io/badge/status-Active%20Development-green.svg)]()
 
@@ -30,11 +30,11 @@
 
 ## 🏗️ Technology Stack
 
-### Red Hat OpenShift 4.20+ Ecosystem
+### Red Hat OpenShift 4.22+ Ecosystem
 
 | Layer                   | Red Hat Product                    | Portable Alternative | Purpose |
 | ----------------------- | ---------------------------------- | -------------------- | ------- |
-| **Container Platform**  | OpenShift 4.20+                    | Kubernetes           | Container orchestration, auto-scaling |
+| **Container Platform**  | OpenShift 4.22+                    | Kubernetes           | Container orchestration, auto-scaling |
 | **Core Banking**        | Red Hat Runtimes (Spring Boot 3.4) | Spring Boot          | Microservices framework (account, transaction, wallet) |
 | **Supporting Services** | Red Hat Build of Quarkus 3.x       | Quarkus              | Native-compiled services (gateway, billing, notification) |
 | **API Management**      | Red Hat 3scale                     | Kong, Apigee         | Partner API gateway, rate limiting, developer portal |
@@ -53,7 +53,7 @@
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         RED HAT OPENSHIFT 4.20+                           │
+│                         RED HAT OPENSHIFT 4.22+                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                           │
 │  EXTERNAL TRAFFIC                                                         │
@@ -108,7 +108,7 @@
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    RED HAT OPENSHIFT 4.20+ ECOSYSTEM                   │
+│                    RED HAT OPENSHIFT 4.22+ ECOSYSTEM                   │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  CORE BANKING (Spring Boot)         SUPPORTING (Quarkus Native)        │

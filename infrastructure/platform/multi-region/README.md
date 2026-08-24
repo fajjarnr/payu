@@ -197,7 +197,7 @@ Included in the monitoring config:
 
 ### Prerequisites
 
-1. Two OpenShift 4.20+ clusters (primary and secondary regions)
+1. Two OpenShift 4.22+ clusters (primary and secondary regions)
 2. Network connectivity between clusters (VPN or VPC peering)
 3. External DNS/LB for routing (AWS Route53, Azure Traffic Manager, etc.)
 4. S3-compatible storage for backups (optional)
@@ -502,10 +502,10 @@ oc scale deployment/account-service --replicas=3 -n payu
 
 ## References
 
-- [OpenShift Multi-Cluster Documentation](https://docs.openshift.com/container-platform/4.20/architecture/control_plane.html)
+- [OpenShift Multi-Cluster Documentation](https://docs.openshift.com/container-platform/4.22/architecture/control_plane.html)
 - [PostgreSQL Logical Replication](https://www.postgresql.org/docs/16/logical-replication.html)
 - [Kafka MirrorMaker2](https://kafka.apache.org/documentation/#mirrormaker)
-- [Disaster Recovery Best Practices](https://docs.openshift.com/container-platform/4.20/backup_and_restore/index.html)
+- [Disaster Recovery Best Practices](https://docs.openshift.com/container-platform/4.22/backup_and_restore/index.html)
 
 ## Support
 

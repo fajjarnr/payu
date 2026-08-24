@@ -1,4 +1,4 @@
-# Falco Helm Values for OpenShift 4.20+
+# Falco Helm Values for OpenShift 4.22+
 # Chart: falcosecurity/falco
 # NOTE: OpenShift requires privileged SCC. Ensure falco-system namespace
 # is excluded from Kyverno disallow-root-user policy.

@@ -26,7 +26,7 @@ different environment.
 | Field | Value |
 |:---|:---|
 | Scope | Infrastructure bootstrap, platform services, workload deployment, verification, rollback |
-| Target platform | Red Hat OpenShift 4.20+ |
+| Target platform | Red Hat OpenShift 4.22+ |
 | Last verified cluster | OCP 4.22.7, Kubernetes v1.35.6, 8 Ready nodes (3 control-plane + 5 workers, 3 AZs) |
 | Last verified date | 2026-08-06 |
 | Primary namespaces | `payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`, and `payu-cicd` |

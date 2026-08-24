@@ -7,7 +7,7 @@
 | **Versi**           | **1.4.0**                                           |
 | **Status**          | Implementasi berjalan — dev gates + SIT promotion live; UAT/preprod/prod pending (2026-08-06) |
 | **Tanggal**         | 2026-08-06                                          |
-| **Target Cluster**  | `payu.ocp.fajjjar.my.id` (OCP 4.20.x) — production platform; sandbox/lab cluster (mis. `cluster-*` OpenTLC) hanya untuk development dan tidak mencerminkan status di dokumen ini |
+| **Target Cluster**  | `payu.ocp.fajjjar.my.id` (OCP 4.22.x) — production platform; sandbox/lab cluster (mis. `cluster-*` OpenTLC) hanya untuk development dan tidak mencerminkan status di dokumen ini |
 | **Author**          | Platform Engineering Team                           |
 | **Klasifikasi**     | CONFIDENTIAL _(Internal Personal Project Use Only)_ |
 | **Target Audience** | Engineering Lead, CISO, Platform Team               |
@@ -347,9 +347,9 @@ graph LR
 
 #### 4.5.1 Cloud Workload Protection Platform (CWPP)
 
-> ⚠️ **OVN-Kubernetes & Kernel Conflict Avoidance**: Karena Red Hat OpenShift 4.20 secara default menggunakan **OVN-Kubernetes**, fungsionalitas Tetragon berpotensi rentan bentrokan tanpa Cilium. Runtime security dihandle oleh **RHACS SecuredCluster** (eBPF-based Collector) yang native terintegrasi dengan OpenShift.
+> ⚠️ **OVN-Kubernetes & Kernel Conflict Avoidance**: Karena Red Hat OpenShift 4.22 secara default menggunakan **OVN-Kubernetes**, fungsionalitas Tetragon berpotensi rentan bentrokan tanpa Cilium. Runtime security dihandle oleh **RHACS SecuredCluster** (eBPF-based Collector) yang native terintegrasi dengan OpenShift.
 
-> ⚠️ **RHCOS Immutable OS**: Red Hat Enterprise Linux CoreOS (RHCOS) yang digunakan oleh OpenShift 4.20+ adalah immutable operating system dengan read-only filesystem (kecuali `/var` dan `/etc`). Ini secara signifikan mengurangi attack surface di node level, sehingga syscall-level monitoring tambahan menjadi less critical.
+> ⚠️ **RHCOS Immutable OS**: Red Hat Enterprise Linux CoreOS (RHCOS) yang digunakan oleh OpenShift 4.22+ adalah immutable operating system dengan read-only filesystem (kecuali `/var` dan `/etc`). Ini secara signifikan mengurangi attack surface di node level, sehingga syscall-level monitoring tambahan menjadi less critical.
 
 | Tool                  | Tipe          | Deteksi                                               | Integrasi                      | Rekomendasi                                                    |
 | --------------------- | ------------- | ----------------------------------------------------- | ------------------------------ | -------------------------------------------------------------- |

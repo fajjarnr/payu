@@ -39,7 +39,7 @@ Partner Apps
 
 ## Prerequisites
 
-- OpenShift 4.20+ or Kubernetes cluster
+- OpenShift 4.22+ or Kubernetes cluster
 - Helm 3.x installed
 - `kong` Helm chart repo added
 - PostgreSQL for Kong datastore (or DB-less mode for declarative config)

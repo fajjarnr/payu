@@ -2,7 +2,7 @@
 
 > **Version**: 2.0 | **Last Updated**: February 20, 2026 | **Status**: Production Ready
 >
-> **Scope**: OpenShift 4.20+ | 22 Microservices | Multi-AZ Deployment
+> **Scope**: OpenShift 4.22+ | 22 Microservices | Multi-AZ Deployment
 
 ---
 
@@ -28,7 +28,7 @@
 
 ## Executive Summary
 
-This Disaster Recovery (DR) Runbook provides comprehensive procedures for recovering the PayU Digital Banking Platform running on OpenShift 4.20+. The platform consists of:
+This Disaster Recovery (DR) Runbook provides comprehensive procedures for recovering the PayU Digital Banking Platform running on OpenShift 4.22+. The platform consists of:
 
 - **22 microservices** (Spring Boot 3.4, Quarkus 3.x, Python FastAPI)
 - **PostgreSQL 16** with Crunchy PGO (primary/standby)
@@ -85,7 +85,7 @@ This Disaster Recovery (DR) Runbook provides comprehensive procedures for recove
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           OpenShift Cluster 4.20+                           │
+│                           OpenShift Cluster 4.22+                           │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                         Multi-AZ Deployment                          │   │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │   │

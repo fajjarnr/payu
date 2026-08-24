@@ -4,7 +4,7 @@
 
 ## Overview
 
-This guide documents the comprehensive CI/CD pipelines and monitoring infrastructure implemented for the PayU platform on Red Hat OpenShift 4.20+.
+This guide documents the comprehensive CI/CD pipelines and monitoring infrastructure implemented for the PayU platform on Red Hat OpenShift 4.22+.
 
 ## Table of Contents
 
@@ -623,7 +623,7 @@ oc get prometheusrule -n openshift-monitoring
 - [ArgoCD Documentation](https://argoproj.github.io/argo-cd/)
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
-- [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.20/pipelines/)
+- [OpenShift Pipelines](https://docs.openshift.com/container-platform/4.22/pipelines/)
 
 ---
 

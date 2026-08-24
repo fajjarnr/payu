@@ -4,7 +4,7 @@
 
 ## What is PayU
 
-Core banking & payment gateway (microservices, event-driven, hexagonal) di Red Hat OpenShift 4.20+. Melayani integrator eksternal (TokoBapak, Nobar) dengan standar **SNAP-BI**. Stack: Java (Spring Boot), Quarkus, Python (FastAPI), TypeScript (Next.js/Expo), PostgreSQL, Kafka.
+Core banking & payment gateway (microservices, event-driven, hexagonal) di Red Hat OpenShift 4.22+. Melayani integrator eksternal (TokoBapak, Nobar) dengan standar **SNAP-BI**. Stack: Java (Spring Boot), Quarkus, Python (FastAPI), TypeScript (Next.js/Expo), PostgreSQL, Kafka.
 
 ## Commands
 

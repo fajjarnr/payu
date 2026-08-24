@@ -1,4 +1,4 @@
-# LitmusChaos OpenShift 4.20 + CRI-O Compatibility Report
+# LitmusChaos OpenShift 4.22 + CRI-O Compatibility Report (updated from 4.20 — retain history below)
 
 > **Status**: Documented — Known upstream limitation
 > **Date**: 2026-05-02
@@ -153,5 +153,5 @@ Track [Litmus GitHub Issues](https://github.com/litmuschaos/litmus/issues) for O
 
 - [Litmus OpenShift Docs](https://docs.litmuschaos.io/docs/platform/openshift)
 - [Litmus Experiment Hub](https://hub.litmuschaos.io/)
-- [OpenShift SCC Documentation](https://docs.openshift.com/container-platform/4.20/authentication/managing-security-context-constraints.html)
+- [OpenShift SCC Documentation](https://docs.openshift.com/container-platform/4.22/authentication/managing-security-context-constraints.html)
 - [CRI-O Architecture](https://github.com/cri-o/cri-o/blob/main/docs/crio.8.md)

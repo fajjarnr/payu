@@ -17,7 +17,7 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) **5/5 Healthy** `payu-database-1 Running` + Kafka dev `6/6 Running` + DataGrid `payu-cache-0 Running` 5/5 env, ArgoCD 1/1 Running, Tekton 31/31 per-service pipeline **dev 37 1/1 Running** `30 1.18.6` `sit 25 1/1` `uat 21` `preprod 24` `prod 26` `oc get is 31 1.18.6` `5 envs` `oc get pods -n payu-dev 37 1/1` `payu-cache-client-tls 6 keys` `session-secrets` `db-secrets` fixed, 0 ERROR log. Platform: cert-manager 5/5 True, 3scale Available, RHACS Healthy, EFS 4/4, Litmus 1/1. |
+| **Cluster Status** | 🟢 OCP 4.22.7, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) **5/5 Healthy** `payu-database-1 Running` + Kafka dev `6/6 Running` + DataGrid `payu-cache-0 Running` 5/5 env, ArgoCD 1/1 Running, Tekton 31/31 per-service pipeline **dev 37 1/1 Running** `30 1.18.6` `sit 25 1/1` `uat 21` `preprod 24` `prod 26` `oc get is 31 1.18.6` `5 envs` `oc get pods -n payu-dev 37 1/1` `payu-cache-client-tls 6 keys` `session-secrets` `db-secrets` fixed, 0 ERROR log. Platform: cert-manager 5/5 True, 3scale Available, RHACS Healthy, EFS 4/4, Litmus 1/1. |
 | **Last Release** | `1.18.6` (2026-08-24) |
 | **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG 5/5 Healthy, Litmus live, Tekton dev 30/31 + per-service image name fix, sit/uat/preprod/prod 1.18.6 `25/21/24/26` 1/1, partner prod credentials queue remains. |
 | **Backlog Aktif** | Chaos agent per-env, Schemathesis credentials, SSO per-env isolation |
