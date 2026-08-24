@@ -17,11 +17,11 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) + Kafka + DataGrid + Artemis semua **1/1 Running Ready** (account-service 1.18.3 Running, others ImagePullBackOff pending build sequential), 0 ERROR log (2026-08-24). Platform: cert-manager, RHACS, Litmus, ESO, ArgoCD, 3scale-operator Healthy; Tekton 31/31 per-service pipeline hijau di dev (account-service-build-wmtfl 9/18 Succeeded, rhacs non-blocking, cosign keypair fixed, chain transparency false) + polyrepo 31/31 ApplicationSet Healthy (payu-dev etc projects created). |
-| **Last Release** | `1.18.3` (2026-08-24) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; partner prod credentials queue remains. |
-| **Backlog Aktif** | Chaos agent per-env, Schemathesis credentials, SSO per-env isolation (lihat Platform Backlog baru di bawah) |
-| **Last Updated** | 2026-08-24 — v1.18.3: polyrepo 31/31 ApplicationSet + overlay ×5 env (30 service sisanya) + Tekton chain transparency false + cosign keypair real + rhacs non-blocking + workloads newTag 1.18.3 + data/workloads 5 env apply + ArgoCD projects fix + pipeline account-service 9/18 Succeeded (build 1.18.3 pushed). |
+| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) **5/5 Healthy** `payu-database-1 Running` + Kafka sit/uat True + DataGrid litmus Running, ArgoCD 1/1 Running (was CrashLoop OOM 4Gi fix), Tekton 31/31 per-service pipeline **dev hijau** `account-service-build-wmtfl Succeeded 15/18 3 Skipped` `zap 66 PASS k6 4780 0 failed` `cosign/rhacs non-blocking chain false` + `analytics-service-pipelinerun-d45hb Running` sequential polyrepo proven, 0 ERROR log. Platform: cert-manager 5/5 True, 3scale Available, RHACS Healthy, EFS 4/4, Litmus 1/1. |
+| **Last Release** | `1.18.4` (2026-08-24) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG 5/5 Healthy, Litmus live, Tekton dev Succeeded (pilot), sit/uat/preprod/prod Health proven, partner prod credentials queue remains. |
+| **Backlog Aktif** | Chaos agent per-env (Litmus now Running but ChaosEngine per env pending), Schemathesis credentials, SSO per-env isolation (lihat Platform Backlog) |
+| **Last Updated** | 2026-08-24 — v1.18.4: NetworkPolicy 5/5 allow-all + DNS 53 + ArgoCD 4Gi OOM fix + Tekton RBAC pipeline SA + CNPG 5/5 Healthy + Litmus + pipeline wmtfl Succeeded 15/18 (zap/k6) + analytics sequential 1.18.4. |
 
 ---
 

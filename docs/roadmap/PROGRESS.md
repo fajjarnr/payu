@@ -1,4 +1,13 @@
+
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform Stabilization + Tekton RBAC + CNPG 5/5 Healthy + Litmus + Pipeline Succeeded 1.18.4 (2026-08-24)
+
+- **NetworkPolicy Egress Fix (5 envs)**: `allow-all-egress` `payu-dev` only → `payu-sit/uat/preprod/payu` `4 Created` `oc apply -k base` `networkpolicy 4/5 AllowAll`, `allow-dns-egress.yaml` `5353→53` `oc apply -k shared` `allow-dns 5/5`, `allow-api-egress` `Created` `5/5 env allowAll` `ponytail: dev allowAll for CNPG/DNS prod restrict via mTLS later` `oc get networkpolicy -n payu-sit 10` `2s`. Fixed `initdb dial tcp 172.30.0.1:443 i/o timeout` `psql host not known` → `Cluster in healthy state 1` `5/5 Healthy` `payu-database-1 Running` `CNPG 5/5`.
+- **ArgoCD OOM 2Gi→4Gi**: `application-controller-0` `CrashLoopBackOff 7 OOMKilled 137` `173 Apps` `limit 2Gi` → `argocd-cr.yaml` `request 1Gi→2Gi limit 2Gi→4Gi` `oc apply -f` `oc delete pod` `1/1 Running 29s` `sync succeeded` `89 Healthy` `oc get cluster 5/5 Healthy` `apps 156→173`.
+- **Tekton RBAC (pipeline SA)**: `wmtfl argocd-sync` `Tasks 11 Incomplete 7` `[!] Application not found` `oc auth can-i no` → `kustomization namespace: payu-cicd` overrides `openshift-gitops` wrong + not applied `NotFound` → `rtk oc apply -f argocd-sync-rbac.yaml` `Role Created` `Binding Created` `can-i yes`, `litmus-gate-rbac` `Created`, `ClusterRole deployment-reader` `Created` `can-i yes` `task argocd-sync-wait configured` `[✓] Deployment rolled out` `Tasks 12→15 Succeeded`.
+- **Pipeline Succeeded (dev)**: `account-service-build-wmtfl` `Tasks 15 Succeeded 3 Skipped 0 Failed` `argocd-sync 4m54s` `zap 66 PASS` `k6 4780 req 0 failed` `gitops-writeback 27s` `True Completed` `tkn list Succeeded`, `analytics-service-pipeline-run-d45hb` `Running` `tkn pipeline start 1.18.4` sequential avoids `429`.
+- **Platform Verified**: `EFS 2/2 5/5`, `cert-manager 3/3 5/5 True`, `3scale Available`, `RHACS 8/8`, `CNPG 5/5 Healthy`, `Litmus 1/1 frontend chaos-operator 25s`, `Tekton 36 pipelines`, `ArgoCD 1/1 Running`, `account-service 1/1 Running` `CNPG Healthy`.
+- **SemVer**: `package.json 1.18.3→1.18.4` `podman-compose 31` `per-service pipelines 31` `pipelineRuns 31` `git tag v1.18.4` `pushed`.
 
 ## Tekton Pipeline Hardening + Polyrepo 31/31 + SemVer 1.18.3 (2026-08-24)
 

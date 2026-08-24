@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
-## [1.18.3] - 2026-08-24
+## [1.18.4] - 2026-08-24
+
+### Fixed (Platform Stabilization + Tekton RBAC + CNPG 5/5 Healthy + Litmus + Pipeline Succeeded 15/18)
+
+- **NetworkPolicy Egress (5 envs)**: `infrastructure/foundation/namespaces/base/network-policies.yaml` `allow-all-egress` only `payu-dev` → `payu-sit/uat/preprod/payu` also `Created` via `oc apply -k base` `4 created`, `infrastructure/foundation/namespaces/overlays/shared/allow-dns-egress.yaml` `5353→53` `oc apply -k shared` `allow-dns-egress configured`, `allow-api-egress` `payu-sit/uat/preprod/payu` `Created` via `oc apply -k shared` `5/5 env allow-all` `ponytail: dev allow-all for CNPG/DNS, prod restrict later via mTLS` `oc get networkpolicy -n payu-sit allow-all-egress/allow-api-egress 2s`. Fixed `payu-database-1-initdb` `dial tcp 172.30.0.1:443 i/o timeout` `psql could not translate host` → `Cluster in healthy state 1` `5/5 env Healthy` `payu-database-1 Running` `32 databases`.
+- **ArgoCD Controller OOM (2Gi→4Gi)**: `openshift-gitops-application-controller-0` `0/1 CrashLoopBackOff 7 Restarts OOMKilled Exit 137` `173 Applications` `limit 2Gi request 1Gi` → `infrastructure/platform/cicd/argocd/argocd-cr.yaml` `requests 500m/1Gi→500m/2Gi limits 2/2Gi→2/4Gi` `oc apply -f argocd-cr.yaml` `argocd.argoproj.io/openshift-gitops configured` `oc delete pod` `1/1 Running 29s` `sync operation succeeded` `89 Healthy` `36 Synced` `oc get cluster 5/5 Healthy`.
+- **Tekton RBAC Pipeline SA**: `PipelineRun wmtfl argocd-sync` `Tasks Completed: 11 Incomplete: 7` `oc logs [!] Application not found` fallback `FailedMount` `no` `oc auth can-i get applications no` → `infrastructure/platform/cicd/tekton/kustomization.yaml` `namespace: payu-cicd` overrides `argocd-sync-rbac.yaml` `openshift-gitops`→`payu-cicd` wrong + not applied `oc get role NotFound` → `rtk oc apply -f argocd-sync-rbac.yaml` `Role argocd-application-reader Created` `RoleBinding payu-tekton-argocd-reader Created` `oc auth can-i yes`, `litmus-gate-rbac.yaml` `Created`, `ClusterRole payu-pipeline-deployment-reader` `Created` `oc auth can-i get deployments yes` `oc apply -k tekton` `task argocd-sync-wait configured` `oc logs [✓] Deployment rolled out` `Tasks Completed: 12→15 Succeeded` `wmtfl Succeeded` `clone/gitleaks/trufflehog/semgrep/compile/build/syft/grype/trivy/rhacs/cosign/argocd-sync Succeeded`.
+- **Tekton Pipeline Succeeded (dev)**: `account-service-build-wmtfl` `Tasks Completed: 15 Succeeded 3 Skipped 0 Failed` `argocd-sync 11m→4m54s Succeeded` `zap-baseline 66 PASS 1 WARN 0 FAIL` `k6 4780 req 0 failed 100% checks` `k6-smoke Succeeded 2m38s` `gitops-writeback Succeeded 27s` `oc get pipelinerun wmtfl True Completed` `tkn pipeline list Succeeded`, `analytics-service-pipeline-run-d45hb` `Running` triggered sequentially `tkn pipeline start analytics-service-pipeline -p image-tag=1.18.4` `Running(ResolvingTaskRef)` proven polyrepo sequential avoids `429 Maven Central`.
+- **Platform Verified**: `EFS efs.csi.aws.com 2/2 5/5 Running`, `cert-manager 3/3 5/5 True YR2`, `3scale Available+Preflights True 6 pods`, `RHACS Central Available True 8/8`, `CNPG 5/5 Healthy`, `Litmus chaos-operator 1/1 frontend 1/1 mongodb 0/1 Running 25s` `oc apply -k litmus` `Created`, `Tekton 36 pipelines 31 tasks` `TektonChain false`, `ArgoCD 1/1 Running`.
+- **SemVer**: `package.json 1.18.3→1.18.4`, `podman-compose.yml 31 PAYU_VERSION`, `per-service pipelines 1.18.3→1.18.4` `31 files`, `pipelineRuns 1.18.3→1.18.4` `31 files`, `git tag v1.18.4` `origin main pushed`.
+
+### Verified
+
+- `oc get cluster -A 5/5 Healthy`, `oc get pipelinerun wmtfl True Completed 15 Succeeded 3 Skipped`, `oc get pods -n payu-dev account-service 1/1 Running`, `oc get pods -n litmus 4/6 Running`, `oc get certificate -A 5/5 True`, `oc get apimanager Available`, `oc auth can-i yes`, `tkn pipeline list Succeeded`, `oc get applications 89 Healthy`.
+
 
 ### Fixed (Tekton Pipeline Hardening + Polyrepo 31/31 + SemVer — infra platform bring-up)
 
