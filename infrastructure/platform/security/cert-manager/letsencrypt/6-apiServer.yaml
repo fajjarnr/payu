@@ -9,7 +9,7 @@ spec:
   servingCerts:
     namedCertificates:
       - names:
-          - api.cluster.ocp.fajjjar.my.id
+          - api.payu.ocp.fajjjar.my.id
         servingCertificate:
           name: api-server-tls-secret
   ###

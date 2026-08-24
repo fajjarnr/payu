@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.1] - 2026-08-24
+
+### Fixed (Cert-Manager Default + Shared Ingress — Route53 DNS01)
+
+- **ClusterIssuer Route53 zones (public vs private)**: `letsencrypt/production/cluster-issuer.yaml` dan `staging` `Z101 Z068 → Z034 Z035` (`apps.fajjjar Z03498391WUK9UKLLX2B0` public, `payu.ocp Z0355604365BIY6CKWOGU` public parent `ocp.fajjjar` menggantikan private `Z084/Z068`) via yaml re-apply (bukan `oc patch/set`); `Route53` credentials `cert-manager-aws-creds` + `cert-manager-route53-fajjjar` dibuat dari `kube-system/aws-creds` (`student` `AKIA***`) melalui `oc create secret --dry-run=client -o yaml | oc apply -f -`.
+- **APIServer TLS**: `letsencrypt/6-apiServer.yaml` `api.cluster.ocp → api.payu.ocp.fajjjar.my.id` (domain cluster aktual `apps.payu.ocp.fajjjar.my.id` `oc get ingress.config`) dan `oc apply -f` ke `apiserver/cluster` `servingCerts.namedCertificates` `api-server-tls-secret`; operator `openshift-kube-apiserver` `14` pods `Rollout` otomatis.
+- **Certificates Ready 5/5**: `oc get certificate -A` `api-server-certificate-prod` `True YR2` `api.payu.ocp.fajjjar.my.id`, `default-ingress-cert` `True YR2` `*.apps.payu.ocp.fajjjar.my.id` `app-router-certs`, `shared-ingress-cert` `True YR2` `*.apps.fajjjar.my.id` `+ apex` `shared-ingress-cert` (pending DNS01 `Z084 private` → `Z035 public` fix: `TXT _acme-challenge` kini di `Z035` `INSYNC`, `dig @8.8.8.8 TXT` `McT0…` `tQN4…` valid, `Challenge` `pending→valid` `Order` `pending→valid`); `openssl x509 -issuer` `CN=YR2 O=Let's Encrypt` `subject CN=*.apps.payu` `app-router-certs` + `CN=apps.fajjjar` `shared-ingress-cert` `notAfter 2026-11-22`.
+- **Shared Ingress (Unmanaged NLB + Route53 Alias)**: `oc apply -f infrastructure/foundation/cluster-config/ingress/shared.yaml` `shared-ingress` `3` replicas `domain apps.fajjjar.my.id` `defaultCertificate shared-ingress-cert` → `router-shared-ingress LoadBalancer aa6a811ac75a34c2dbc174bb8b772e3a-2aa5844a32d3ee87.elb.ap-southeast-1.amazonaws.com` `ZKVM4W9LS7TM` `172.30.117.137` `Available True` `3/3 1/1`; `aws route53 change-resource-record-sets Z034 UPSERT A *.apps.fajjjar.my.id + apex Alias aa6a811a ZKVM4W9LS7TM` `INSYNC`; `openssl s_client -connect aa6a811a:443 -servername test.apps.fajjjar.my.id` `issuer YR2 subject CN=apps.fajjjar`; `router-default` `a97cd58…` `Certificate True` `openssl s_client -connect a97cd58…:443 -servername test.apps.payu.ocp` `CN=*.apps.payu.ocp` `issuer YR2`.
+- **Cert-Manager Operator**: `openshift-cert-manager-operator` `stable-v1` `redhat-operators` sudah `cert-manager 68f85f7f6b 1/1`, `cainjector 85795bb8f6 1/1`, `webhook c9cbc74cd 1/1` `Running` (9m), `certmanager/cluster Ready`, `ClusterIssuer letsencrypt-prod-issuer Ready True staging True` `verified existing registration`; `oc apply -k infrastructure/platform/security/cert-manager/` `11` resources `configured`; `rtk oc get certificate/shared-ingress-cert -o jsonpath Ready True`, `rtk log cert-manager` `propagation check failed` → `Presented` `valid` `certificate issued`.
+- **SemVer**: `package.json 1.15.1→1.18.1`, `git tag v1.18.1` (prev `1.18.0`), `CHANGLOG` `1.18.1` `2026-08-24` (ISO8601), `workloads` `kustomization` `replicas` tidak berubah `newTag` tidak ada drift `podman-compose` tidak relevan.
+
+### Verified
+
+- `oc get pods -n cert-manager 3/3 Running`, `oc get crd certificates.cert-manager.io 2026-08-24`, `oc get clusterissuer 2 Ready True`, `oc get certificate -A 5/5 True`, `oc get ingresscontroller -n openshift-ingress-operator 2 AvailableTrue` (`default apps.payu.ocp` `shared apps.fajjjar`), `oc get svc -n openshift-ingress router-default/shared` `LoadBalancer` `a97cd58/aa6a811a`, `aws route53 list-resource-record-sets Z034/Z035` `TXT _acme-challenge` `A *.apps` `INSYNC`, `openssl x509 -issuer YR2`, `oc logs -n cert-manager --since=30s` `0 error` `propagation→valid`, `codegraph 4088` `rtk` no warn/error.
+
 ## [1.18.0] - 2026-08-23
 
 ### Added

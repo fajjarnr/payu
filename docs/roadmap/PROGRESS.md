@@ -1,5 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## Cert-Manager Default + Shared Ingress TLS — Route53 DNS01 Proven (2026-08-24)
+
+- **Cert-Manager 5/5 Ready**: `letsencrypt-prod-issuer`/`staging` `Ready True` (Route53 `Z034`/`Z035` public), `Certificate` `default-ingress-cert` `app-router-certs` `*.apps.payu.ocp` `YR2` `Ready True`, `shared-ingress-cert` `*.apps.fajjjar` `YR2` `Ready True`, `api-server-certificate-prod` `api.payu.ocp` `YR2` `Ready True` (via `6-apiServer.yaml` `api.payu.ocp` `api-server-tls-secret`), `oc get certificate -A 5/5 True`, `openssl x509 -issuer YR2`.
+- **Shared Ingress NLB + Route53 Alias**: `shared-ingress` `3` replicas `Unmanaged` `domain apps.fajjjar.my.id` `defaultCertificate shared-ingress-cert` → `router-shared-ingress` `aa6a811ac75a34c2dbc174bb8b772e3a.elb.ap-southeast-1.amazonaws.com` `ZKVM4W9LS7TM` `1/1 Running 3/3`, `Z034` `A *.apps.fajjjar + apex` `INSYNC` `openssl s_client` valid.
+- **Evidence**: `oc get clusterissuer 2 True`, `oc get ingresscontroller 2 Available True`, `oc get pods -n cert-manager 3/3`, `oc get svc router-default/shared LoadBalancer`, `aws route53 TXT _acme-challenge INSYNC`, `dig @8.8.8.8 TXT` valid, `oc logs cert-manager 0 error`.
+
 ## 5-Environment Bring-Up + Dev→Prod Promotion Proven (2026-08-23)
 
 - **4 environment baru hidup penuh** (sit/uat/preprod/prod): data (CNPG + Infinispan standalone + bootstrap jobs hijau), messaging (Kafka Strimzi 1-broker + Artemis + console), identity (Keycloak + realm import), workloads (31 workload/env). Verifikasi: pod `1/1 Running` di kelima namespace, **0 baris ERROR** pada scan log 20 menit terakhir, seluruh Application ArgoCD Healthy.
