@@ -27,7 +27,7 @@ spec:
       description: registry/namespace/name (no tag)
     - name: image-tag
       type: string
-      default: "1.18.4"
+      default: "1.18.5"
       description: semver tag, promote by digest @sha256
     - name: target-env
       type: string
