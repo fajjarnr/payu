@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.2] - 2026-08-24
+
+### Fixed (EFS + CNPG + 3scale + Tekton — infra platform bring-up)
+
+- **EFS CSI (AWS admin)**: `aws efs create-file-system` `fs-015fc6dcf98d37db0` `payu-efs` `available` (old `fs-0d9d… NotFound`) `sg-0efa58e312f989540` `10.0.0.0/16:2049`, `3 mount-targets` `available` per AZ `vpc-032a0f85a7fc61443`, `infrastructure/foundation/cluster-config/efs-storage.yaml:17` `fileSystemId fs-0d9…→fs-015…` `ClusterCSIDriver efs.csi.aws.com Managed Created` + `StorageClass efs-csi Created` (`efs-ap /payu`) `controller 2/2 Running` `node 5/5 Running` (was `FailedMount secret aws-efs-cloud-credentials not found` `3 data` auto).
+- **CNPG PostgreSQL**: `oc apply -k infrastructure/platform/data/overlays/dev` `42` resources `payu-database Setting up primary → Cluster in healthy state 1` `payu-database-1 Running` `payu-cache-0 Running` `PVC data-payu-cache-0/pay… Bound gp3-csi`, `allow-all-egress` `NetworkPolicy payu-dev` `ponytail: dev allow-all for kube-apiserver/DNS` fix `initdb` `dial tcp 172.30.0.1:443 i/o timeout` → `postgres LOG aborting` `available`; `Database payu_3scale_system` missing `does not exist` → `Database CR payu-3scale-system` `created` `32 dbs` `SELECT 1` ok, `infrastructure/platform/data/cnpg/cnpg-databases.yaml` added `payu_3scale_system` `owner payu`; `outbox/shedlock/post-deploy` `Succeeded`.
+- **3scale API Management**: `payu-api-management` `APIManager payu-apimanager` `preflights Failed password authentication failed for user payu` (`system-database URL payu_dev_secret_2026` vs `payu-database-app payu-dev-app-pass-2026`) → `infrastructure/platform/api-management/3scale/secrets-3scale-dev.yaml` `URL payu_dev…→payu-dev-app-pass-2026` `oc apply -f` `system-database configured` `payu-dev-app-pass-2026`, `oc delete apimanager && oc apply -f apimanager.yaml` `Preflights False→True` `Available False` (now `starting` `system/backend` `deployments` creating, `minio 1/1 redis 1/1 operator 1/1`).
+- **Tekton Pipelines (polyrepo)**: `oc apply -k infrastructure/platform/cicd/tekton` `75` `36 pipelines 31 tasks → 31` (added missing `tasks/cosign-task.yaml` `cosign-sign` to `kustomization.yaml:11` `buildah→cosign`), `PipelineRun account-service-build-pqs8v CouldntGetTask cosign-sign` → `oc delete && oc create -f /tmp/account-pipelinerun.yaml` `image-tag 1.15.1→1.18.1` `Running` `Tasks Completed: 6/18` `clone/gitleaks/trufflehog/semgrep/compile/build Succeeded`, `syft Running`, `oc apply -f ci-secrets.yaml` `maven-settings` + dummy `dockerconfig/git-ssh/signing-secrets` `8 secrets`; `rtk` `codegraph` used, `polyrepo per-service pipeline` `account-service-pipeline` `git-url https://github.com/fajjarnr/payu.git` `target-env dev`.
+- **SemVer**: `package.json 1.18.1→1.18.2`, `git tag v1.18.2`.
+
+### Verified
+
+- `aws efs describe-file-systems fs-015 Available`, `aws efs describe-mount-targets 3 available`, `oc get csidrivers/storageclass efs.csi.aws.com/eFs-csi Created`, `oc get cluster payu-database Healthy 1`, `oc get pods -n payu-dev 5` `payu-database-1/cache Running` `outbox/shedlock Succeeded`, `oc get database payu-3scale-system true`, `oc get apimanager Preflights True`, `oc get pipelines 36 tasks 31`, `oc get pipelineruns 1 Running` `6 Succeeded`, `oc get networkpolicy -n payu-dev 7 allow-all-egress`.
+
 ## [1.18.1] - 2026-08-24
 
 ### Fixed (Cert-Manager Default + Shared Ingress — Route53 DNS01)

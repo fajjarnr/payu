@@ -13,6 +13,7 @@ resources:
   - tasks/argocd-sync-task.yaml
   - tasks/gitops-writeback-task.yaml
   - tasks/buildah-task.yaml
+  - tasks/cosign-task.yaml
   - tasks/promote-image-task.yaml
   - tasks/deploy-task.yaml
   - tasks/gitleaks-task.yaml

@@ -462,3 +462,18 @@ spec:
   name: payu_va_simulator
   owner: payu
   ensure: present
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: payu-3scale-system
+  labels:
+    app.kubernetes.io/name: payu-3scale
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: database
+spec:
+  cluster:
+    name: payu-database
+  name: payu_3scale_system
+  owner: payu
+  ensure: present

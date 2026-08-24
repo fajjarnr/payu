@@ -22,7 +22,7 @@ mountOptions:
   - iam
 parameters:
   provisioningMode: efs-ap
-  fileSystemId: fs-0d9d043856c24fe96
+  fileSystemId: fs-015fc6dcf98d37db0
   directoryPerms: "750"
   basePath: /payu
   ensureUniqueDirectory: "true"

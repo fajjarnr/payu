@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
 
+## EFS + CNPG + 3scale + Tekton Polyrepo Bring-Up (2026-08-24)
+
+- **EFS**: `fs-015 Available` `3 MT available` `efs.csi.aws.com/eFs-csi` `Running`.
+- **CNPG**: `payu-database Healthy 1` `payu-database-1 Running` `payu-cache-0 Running` `32 databases` `payu_3scale_system` `allow-all-egress` fix dial timeout.
+- **3scale**: `APIManager Preflights True` (DB `payu-dev-app-pass-2026` fix) `6 pods` `operator/minio/redis Running`.
+- **Tekton**: `36 pipelines 31 tasks` `cosign-sign` added `account-service-build Running 6/18 Succeeded` `polyrepo per-service` `rtk/codegraph`.
+
 ## Cert-Manager Default + Shared Ingress TLS — Route53 DNS01 Proven (2026-08-24)
 
 - **Cert-Manager 5/5 Ready**: `letsencrypt-prod-issuer`/`staging` `Ready True` (Route53 `Z034`/`Z035` public), `Certificate` `default-ingress-cert` `app-router-certs` `*.apps.payu.ocp` `YR2` `Ready True`, `shared-ingress-cert` `*.apps.fajjjar` `YR2` `Ready True`, `api-server-certificate-prod` `api.payu.ocp` `YR2` `Ready True` (via `6-apiServer.yaml` `api.payu.ocp` `api-server-tls-secret`), `oc get certificate -A 5/5 True`, `openssl x509 -issuer YR2`.
