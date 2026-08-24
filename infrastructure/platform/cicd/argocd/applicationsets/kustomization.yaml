@@ -4,3 +4,33 @@ kind: Kustomization
 resources:
   - payu-applicationsets.yaml
   - payu-account-service-applicationset.yaml
+  - payu-analytics-service-applicationset.yaml
+  - payu-api-portal-service-applicationset.yaml
+  - payu-auth-service-applicationset.yaml
+  - payu-backoffice-service-applicationset.yaml
+  - payu-bi-fast-simulator-applicationset.yaml
+  - payu-biller-simulator-applicationset.yaml
+  - payu-billing-service-applicationset.yaml
+  - payu-cms-service-applicationset.yaml
+  - payu-compliance-service-applicationset.yaml
+  - payu-dispute-service-applicationset.yaml
+  - payu-dukcapil-simulator-applicationset.yaml
+  - payu-fx-service-applicationset.yaml
+  - payu-gateway-service-applicationset.yaml
+  - payu-integration-service-applicationset.yaml
+  - payu-investment-service-applicationset.yaml
+  - payu-kyc-service-applicationset.yaml
+  - payu-lending-rules-applicationset.yaml
+  - payu-lending-service-applicationset.yaml
+  - payu-loan-origination-process-applicationset.yaml
+  - payu-notification-service-applicationset.yaml
+  - payu-partner-service-applicationset.yaml
+  - payu-product-catalog-service-applicationset.yaml
+  - payu-promotion-service-applicationset.yaml
+  - payu-qris-simulator-applicationset.yaml
+  - payu-statement-service-applicationset.yaml
+  - payu-support-service-applicationset.yaml
+  - payu-transaction-service-applicationset.yaml
+  - payu-va-simulator-applicationset.yaml
+  - payu-wallet-service-applicationset.yaml
+  - payu-web-app-applicationset.yaml

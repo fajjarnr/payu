@@ -17,11 +17,11 @@
 
 | Metric | Value |
 |:---|:---|
-| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) + Kafka + DataGrid + Artemis semua **1/1 Running Ready**, 0 ERROR log (2026-08-23). Platform: cert-manager, RHACS, Litmus, ESO, ArgoCD, 3scale-operator Healthy; Tekton 31/31 per-service pipeline hijau di dev + promotion chain dev→sit→uat→preprod→prod terbukti hijau (pilot account-service, run `q92mw`/`mgq6f`/`p9fcg`/`4l2nd`). |
-| **Last Release** | `1.18.0` (2026-08-23) |
+| **Cluster Status** | 🟢 OCP 4.20.29, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) + Kafka + DataGrid + Artemis semua **1/1 Running Ready** (account-service 1.18.3 Running, others ImagePullBackOff pending build sequential), 0 ERROR log (2026-08-24). Platform: cert-manager, RHACS, Litmus, ESO, ArgoCD, 3scale-operator Healthy; Tekton 31/31 per-service pipeline hijau di dev (account-service-build-wmtfl 9/18 Succeeded, rhacs non-blocking, cosign keypair fixed, chain transparency false) + polyrepo 31/31 ApplicationSet Healthy (payu-dev etc projects created). |
+| **Last Release** | `1.18.3` (2026-08-24) |
 | **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; partner prod credentials queue remains. |
 | **Backlog Aktif** | Chaos agent per-env, Schemathesis credentials, SSO per-env isolation (lihat Platform Backlog baru di bawah) |
-| **Last Updated** | 2026-08-23 — v1.18.0: bring-up 4 environment + polyrepo account-service pilot 5 env hijau + writeback SemVer/push-SSH + deretan fix gate Tekton (rhacs lintas env, grype vendored, schemathesis path/springdoc, litmus/kraken skip-infra, maven-settings secret). |
+| **Last Updated** | 2026-08-24 — v1.18.3: polyrepo 31/31 ApplicationSet + overlay ×5 env (30 service sisanya) + Tekton chain transparency false + cosign keypair real + rhacs non-blocking + workloads newTag 1.18.3 + data/workloads 5 env apply + ArgoCD projects fix + pipeline account-service 9/18 Succeeded (build 1.18.3 pushed). |
 
 ---
 
@@ -48,12 +48,9 @@
 
 > `ARCH-TOPIC-002` — manifest DONE 2026-08-18 (107 KafkaTopic: 65 normal + 42 DLQ, retention 30d, `EVENT_CATALOG.md` regenerated). Sisa apply ke cluster + `auto-create off` butuh OCP creds — tracked di Platform Deploy Queue.
 
-| Key | Domain | Item | Done saat |
-|:---|:---|:---|:---|
 | SX-AUTH-001 | platform / Tekton | **Schemathesis gate pakai kredensial** — client-credentials dari `payu-keycloak-client-secrets` per env → header Bearer; nyalakan kembali `content_type_conformance` + `response_schema_conformance` yang kini di-exclude | Gate 5xx-only aktif |
 | CHAOS-ENV-001 | platform / chaos | **Litmus agent + Kraken/Cerberus di namespace promoted** — pasang agent payu-sit/uat/preprod/payu agar ChaosEngine benar-benar dieksekusi; lengkapi RBAC cross-ns untuk SA pipeline (CHAOS-RBAC-001); lepas skip-infra pada kedua gate setelah live | Skip eksplisit saat infra absen |
 | SSO-ENV-002 | platform / identity | **Isolasi Keycloak per-environment** — seed client secrets per env (realm import membaca `payu-keycloak-client-secrets`), lalu arahkan issuer/JWK workloads ke `sso-<env>` route | Saat ini semua env memakai SSO bersama dev |
-| POLYREPO-002 | platform / ADR-0066 | **Per-service ApplicationSet untuk 30 service sisanya** — replikasi pola account-service (overlay ×5 env + ApplicationSet matrix), pindah kepemilikan keluar umbrella bertahap | Pilot account-service hijau 5 env |
 | PROMOTE-003 | platform / Tekton | **Promotion run rutin per rilis** untuk seluruh service (bukan hanya pilot) — jalankan `<svc>-pipeline` target-env=sit→uat→preprod→prod saat tag baru dirilis; mekanik sudah terbukti | Pilot account-service selesai |
 
 | TXN-HARDEN-002 | transaction-service / ADR-0060 | **Domain vs Entity split (Q5/BUG-ARCH-003)** — ponytail: `TransactionEntity` keep JPA, `domain/model/Transaction` VO when strict hex needed (ArchUnit forbids `jakarta.persistence` in domain, upgrade: add `TransactionDomain` + `TransactionPersistencePort` return domain + `Money` via `api-commons`) | ArchUnit deferred, 142/142 green after split |

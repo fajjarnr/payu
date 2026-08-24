@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: payu
+resources:
+  - ../../../base/kyc-service
+images:
+  - name: image-registry.openshift-image-registry.svc:5000/payu/kyc-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu/kyc-service
+    newTag: "1.18.3"

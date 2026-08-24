@@ -1,0 +1,69 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: payu-bi-fast-simulator
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: gitops
+    payu.io/service: bi-fast-simulator
+    payu.io/catalog-version: payu-catalog-v1
+  annotations:
+    payu.io/description: "Per-service ApplicationSet for bi-fast-simulator (ADR-0066 polyrepo) — generates 5 env Apps"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: payu-dev
+            project: payu-dev
+            path: infrastructure/workloads/overlays/payu-dev/bi-fast-simulator
+          - env: sit
+            namespace: payu-sit
+            project: payu-sit
+            path: infrastructure/workloads/overlays/payu-sit/bi-fast-simulator
+          - env: uat
+            namespace: payu-uat
+            project: payu-uat
+            path: infrastructure/workloads/overlays/payu-uat/bi-fast-simulator
+          - env: preprod
+            namespace: payu-preprod
+            project: payu-preprod
+            path: infrastructure/workloads/overlays/payu-preprod/bi-fast-simulator
+          - env: prod
+            namespace: payu
+            project: payu
+            path: infrastructure/workloads/overlays/payu-prod/bi-fast-simulator
+  template:
+    metadata:
+      name: "bi-fast-simulator-{{.env}}"
+      labels:
+        app.kubernetes.io/name: bi-fast-simulator
+        app.kubernetes.io/part-of: payu
+        payu.io/environment: "{{.env}}"
+      annotations:
+        payu.io/promotion-mode: digest
+    spec:
+      project: "{{.project}}"
+      source:
+        repoURL: https://github.com/fajjarnr/payu.git
+        targetRevision: main
+        path: "{{.path}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m

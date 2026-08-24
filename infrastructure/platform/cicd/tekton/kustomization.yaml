@@ -4,6 +4,7 @@ namespace: payu-cicd
 
 resources:
   # OpenShift Pipelines operator configuration
+  - signing-secrets.yaml
   - pipelines.yaml
   - rhacs-central-ca.yaml
   # vault-ci-credentials.yaml is applied separately AFTER VSO/Vault is live:

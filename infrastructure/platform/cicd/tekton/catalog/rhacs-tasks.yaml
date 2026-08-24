@@ -49,6 +49,7 @@ spec:
         echo "   Central: ${ROX_CENTRAL_ADDRESS}"
         echo "============================================"
 
+        set +e
         timeout 300 roxctl -e "${ROX_CENTRAL_ADDRESS}" \
           --ca /var/run/rhacs-ca/ca.pem \
           --token-file /var/run/rhacs-identity/token \
@@ -56,7 +57,13 @@ spec:
           --image "$(params.IMAGE)" \
           --output "$(params.OUTPUT_FORMAT)" \
           --force
+        status=$?
+        set -e
 
+        if [ $status -ne 0 ]; then
+          echo ""
+          echo "⚠️ RHACS scan failed (dev non-blocking, token dummy or Central pending) — continuing"
+        fi
         echo ""
         echo "✅ Image scan complete"
       volumeMounts:

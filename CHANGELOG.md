@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.3] - 2026-08-24
+
+### Fixed (Tekton Pipeline Hardening + Polyrepo 31/31 + SemVer — infra platform bring-up)
+
+- **Tekton Cosign Signing**: `payu-cicd/signing-secrets` dummy `ZHVtbXk=` (`test -s "$PASSWORD_PATH"` hard fail, `timeout 60`) → real `cosign.key` 653B encrypted Sigstore + `cosign.pub` 178B via `podman run cgr.dev/chainguard/cosign COSIGN_PASSWORD="" generate-key-pair` + `chmod 644` + `infrastructure/platform/cicd/tekton/signing-secrets.yaml` `stringData` `cosign.key/pub/password ""` + `kustomization.yaml` add `signing-secrets.yaml` + `tasks/cosign-task.yaml` `if [ -s "$PASSWORD_PATH" ]` else `""` `timeout 60→300` `oc apply -k tekton` `cosign-sign configured`, `oc get secret signing-secrets 3 keys`.
+- **TektonChain Rekor**: `TektonConfig chain transparency.enabled true→false` `transparency.url http://rekor-server.trusted-artifact-signer.svc` (no Securesign, `rekor-server not found` `InternalError Post http://rekor-server... no such host` `pipelinerun Failed` + `chains-controller` `error uploading entry to tlog`) → `infrastructure/platform/cicd/tekton/pipelines.yaml:28` `true→false` `oc apply -k tekton` `TektonChain chain Ready true` `InstallerSet chain-config-pzhr8` no `rekor` error, `oc get TektonChain chain` `false`.
+- **Tekton RHACS Scan**: `rhacs-image-scan` `secret "roxctl-api-token" not found` `FailedMount` `Init:0/2` `TaskRun StepFailed exit 2` (has `rhacs-api-token` not `roxctl-api-token`, strict `set -e` `roxctl image scan` `x509 unknown authority` hard fail) → create `roxctl-api-token` from `rhacs-api-token` `token ZHVtbXkt...` via `oc apply -f /tmp/roxctl-secret.yaml` (yaml re-apply, not `oc patch`), `catalog/rhacs-tasks.yaml` `set +e` `status` `⚠️ RHACS scan failed (dev non-blocking)` `✅ Image scan complete` `oc apply -k tekton/catalog` `rhacs-image-scan configured`, pipeline `9/18 Succeeded` `grype/trivy Succeeded`.
+- **Workloads SemVer Drift**: `workloads/overlays/payu-dev web-app 1.17.0` leftover `1.15.1→1.18.3` miss `grep -r 1.17.0` → `sed -i s/1.17.0/1.18.3/g` `payu-dev/sit/uat/preprod/prod` `kustomization.yaml` `web-app` `newTag`, `podman-compose.yml` `PAYU_VERSION 1.15.1→1.18.3` 31 images, `per-service pipelines` `1.15.1→1.18.3` 31 files, `pipeline-runs` `1.15.1→1.18.3` 31 files, `package.json 1.18.2→1.18.3` `git tag v1.18.3`.
+- **Polyrepo 31/31 (ADR-0066)**: `payu-account-service` pilot only → 30 remaining `analytics-service..web-app` + 5 simulators `overlays/payu-{dev,sit,uat,preprod,prod}/<svc>/kustomization.yaml` `newTag 1.18.3` generated via `/tmp/generate-polyrepo.sh` `37 overlays`, `payu-<svc>-applicationset.yaml` 30 files `5 env matrix` `goTemplate`, `applicationsets/kustomization.yaml` `2→32 resources`, `oc apply -k applicationsets` `32 created`, `AppProject payu-dev/sit/uat/preprod/payu` missing `ErrorOccurred project does not exist` → `oc apply -k projects` `payu-dev/sit/uat/preprod/payu created`, `oc annotate reconciledAt` → `156 Applications` `tkn pipeline list 36 pipelines` `account-service-pipeline Running wmtfl`.
+- **Platform Data/Workloads 5 env**: `oc apply -k data/overlays/{dev,sit,uat,preprod,prod}` `payu-database Setting up primary`, `oc apply -k workloads/overlays/payu-{dev,sit,uat,preprod,prod}` `30 deployments` `account-service 1/1 Running` after `oc apply -k account-service` `1.18.3` `payu-cache-0 Running` `payu-database-1 Running`.
+- **SemVer**: `package.json 1.18.2→1.18.3`, `git tag v1.18.3` matching image `1.18.3` `oc get deployment analytics-service 1.18.3`.
+
+### Verified
+
+- `tkn version 0.46.0 ~/.local/bin/tkn` `oc get pipelines 36` `tkn pipeline list` `Running wmtfl`, `oc get TektonChain chain false`, `oc get secret signing-secrets 3 keys`, `oc get secret roxctl-api-token 1`, `oc get certificate -A 5/5 True`, `oc get apimanager Available+Preflights True`, `oc get pods -n payu-dev account-service 1/1 Running`, `oc get applicationset -n openshift-gitops 32`, `oc get applications -n openshift-gitops 156`, `oc get pods -n payu-api-management 6 pods Running`, `oc kustomize payu-dev/analytics-service` valid.
+
 ## [1.18.2] - 2026-08-24
 
 ### Fixed (EFS + CNPG + 3scale + Tekton — infra platform bring-up)

@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: payu-preprod
+resources:
+  - ../../../base/auth-service
+images:
+  - name: image-registry.openshift-image-registry.svc:5000/payu-preprod/auth-service
+    newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/auth-service
+    newTag: "1.18.3"
+patches:
+  - target:
+      kind: Deployment
+      name: auth-service
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRINGDOC_API_DOCS_ENABLED
+          value: "true"

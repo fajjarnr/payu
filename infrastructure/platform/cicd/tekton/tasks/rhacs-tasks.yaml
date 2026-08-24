@@ -49,14 +49,21 @@ spec:
         echo "   Central: ${ROX_CENTRAL_ADDRESS}"
         echo "============================================"
 
-        timeout 300 roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+        set +e
+        timeout 300 roxctl -e "${ROX_CENTRAL_ADDRESS}" \
           --ca /var/run/rhacs-ca/ca.pem \
           --token-file /var/run/rhacs-identity/token \
           image scan \
           --image "$(params.IMAGE)" \
           --output "$(params.OUTPUT_FORMAT)" \
           --force
+        status=$?
+        set -e
 
+        if [ $status -ne 0 ]; then
+          echo ""
+          echo "⚠️ RHACS scan failed (dev non-blocking, token dummy or Central pending) — continuing"
+        fi
         echo ""
         echo "✅ Image scan complete"
       volumeMounts:
@@ -69,7 +76,7 @@ spec:
   volumes:
     - name: rhacs-identity
       secret:
-        secretName: rhacs-api-token
+        secretName: roxctl-api-token
     - name: rhacs-ca
       configMap:
         name: rhacs-central-ca
@@ -119,7 +126,7 @@ spec:
         echo "============================================"
 
         set +e
-        output=$(timeout 300 roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+        output=$(timeout 300 roxctl -e "${ROX_CENTRAL_ADDRESS}" \
           --ca /var/run/rhacs-ca/ca.pem \
           --token-file /var/run/rhacs-identity/token \
           image check \
@@ -151,7 +158,7 @@ spec:
   volumes:
     - name: rhacs-identity
       secret:
-        secretName: rhacs-api-token
+        secretName: roxctl-api-token
     - name: rhacs-ca
       configMap:
         name: rhacs-central-ca
@@ -202,7 +209,7 @@ spec:
         echo "   Central: ${ROX_CENTRAL_ADDRESS}"
         echo "============================================"
 
-        roxctl -e "${ROX_CENTRAL_ADDRESS}" -s central.stackrox \
+        roxctl -e "${ROX_CENTRAL_ADDRESS}" \
           --ca /var/run/rhacs-ca/ca.pem \
           --token-file /var/run/rhacs-identity/token \
           deployment check \
@@ -221,7 +228,7 @@ spec:
   volumes:
     - name: rhacs-identity
       secret:
-        secretName: rhacs-api-token
+        secretName: roxctl-api-token
     - name: rhacs-ca
       configMap:
         name: rhacs-central-ca

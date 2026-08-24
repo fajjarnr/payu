@@ -43,17 +43,21 @@ spec:
         KEY_PATH="$(workspaces.signing-secrets.path)/cosign.key"
         PASSWORD_PATH="$(workspaces.signing-secrets.path)/cosign.password"
         test -s "$KEY_PATH"
-        test -s "$PASSWORD_PATH"
-        export COSIGN_PASSWORD="$(cat "$PASSWORD_PATH")"
+        # ponytail: empty-password keypair (lab) - tolerate missing/empty password file
+        if [ -s "$PASSWORD_PATH" ]; then
+          export COSIGN_PASSWORD="$(cat "$PASSWORD_PATH")"
+        else
+          export COSIGN_PASSWORD=""
+        fi
 
         echo "[*] Attesting CycloneDX SBOM from $(params.SBOM_PATH)"
-        timeout 60 cosign attest --yes --key "$KEY_PATH" --predicate "$(params.SBOM_PATH)" --type cyclonedx "$(params.IMAGE)"
+        timeout 300 cosign attest --yes --key "$KEY_PATH" --predicate "$(params.SBOM_PATH)" --type cyclonedx "$(params.IMAGE)"
 
         echo "[*] Signing with required key pair"
         # --registry-referrers-mode legacy: OCP internal registry Image API
         # rejects v3 referrers-fallback OCI index (dockerImageManifests needs
         # arch/os); legacy writes classic .sig/.att tags (L-318)
-        timeout 60 cosign sign --yes --key "$KEY_PATH" --tlog-upload=$(params.TLOG_UPLOAD) --registry-referrers-mode legacy "$(params.IMAGE)"
+        timeout 300 cosign sign --yes --key "$KEY_PATH" --tlog-upload=$(params.TLOG_UPLOAD) --registry-referrers-mode legacy "$(params.IMAGE)"
         echo -n "keypair" | tee $(results.SIGN_MODE.path)
 
         echo "[✓] Sign step completed for $(params.IMAGE)"
