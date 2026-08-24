@@ -1,24 +1,60 @@
 # ADR-0032 Perimeter Security — Coraza WAF (OWASP CRS v4.x, PL1/PL2, SNAP-BI exclusions)
-# ponytail: stub ConfigMap, real WAF needs Ingress annotation + Coraza SPOA + CRS tuning
+# Real deployment: infrastructure/platform/security/coraza/ (Kustomize).
+# This file is kept for ArgoCD backward-compat — payu-dev ConfigMap mirrors coraza-waf namespace.
+# Primary manifests: coraza/configmap.yaml, coraza/deployment.yaml (SPOA), coraza/service.yaml, coraza/route.yaml, coraza/envoyfilter.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coraza-waf-config
+  namespace: coraza-waf
+  labels:
+    app.kubernetes.io/name: coraza-waf
+    app.kubernetes.io/part-of: payu
+data:
+  coraza.conf: |
+    # Coraza OWASP CRS v4.x PL1/PL2 — see coraza/configmap.yaml for canonical source
+    Include @crs-setup.conf
+    Include @owasp_crs/*.conf
+    SecRuleEngine On
+    SecRequestBodyAccess On
+    SecRequestBodyLimit 131072
+    SecRequestBodyNoFilesLimit 131072
+    SecResponseBodyAccess Off
+    SecDefaultAction "phase:1,log,auditlog,deny,status:403"
+    SecDefaultAction "phase:2,log,auditlog,deny,status:403"
+    SecRule REQUEST_HEADERS:X-SIGNATURE "@rx ^[A-Za-z0-9+/=]{20,}$" "id:1001,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-xss;ARGS:X-SIGNATURE,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:X-SIGNATURE"
+    SecRule REQUEST_HEADERS:X-CLIENT-KEY "@rx ^[A-Za-z0-9-_]+$" "id:1002,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:X-CLIENT-KEY,ctl:ruleRemoveTargetByTag=attack-rce;ARGS:X-CLIENT-KEY"
+    SecRule REQUEST_HEADERS:X-TIMESTAMP "@rx ^[0-9T:\-+Z\.]+$" "id:1003,phase:1,pass,nolog,ctl:ruleRemoveByTag=attack-injection"
+    SecRule REQUEST_URI "@beginsWith /api/v1/kyc/documents" "id:1004,phase:1,pass,nolog,ctl:ruleRemoveByTag=attack-xss,ctl:requestBodyAccess=Off"
+    SecRule REQUEST_URI "@beginsWith /v1/partner" "id:1005,phase:1,pass,nolog,tag:financial-api"
+  crs-setup.conf: |
+    SecDefaultAction "phase:1,log,auditlog,pass"
+    SecDefaultAction "phase:2,log,auditlog,pass"
+    SecAction "id:900110,phase:1,pass,nolog,setvar:tx.inbound_anomaly_score_threshold=5"
+    SecAction "id:900200,phase:1,pass,nolog,setvar:tx.paranoia_level=1"
+    SecAction "id:900220,phase:1,pass,nolog,setvar:tx.crs_paranoia_level=1"
+    SecAction "id:900100,phase:1,pass,nolog,setvar:tx.blocking_paranoia_level=1"
+    SecRule REQUEST_URI "@rx ^/(v1\.0/access-token|internal/v1/auth|api/v1/wallets|api/v1/transactions|v1/partner)" "id:901100,phase:1,pass,nolog,setvar:tx.paranoia_level=2,setvar:tx.crs_paranoia_level=2"
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: coraza-waf-config
   namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: coraza-waf
 data:
   coraza.conf: |
-    # Coraza OWASP CRS v4.x PL1/PL2
     Include @crs-setup.conf
     Include @owasp_crs/*.conf
-    # SNAP-BI exclusions
-    SecRule REQUEST_URI "@beginsWith /v1/partner" "id:1001,phase:1,pass,nolog,ctl:ruleRemoveByTag=attack-xss,ctl:ruleRemoveByTag=attack-sqli"
-    SecRule REQUEST_HEADERS:X-SIGNATURE "@rx .+" "id:1002,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-xss;ARGS:X-SIGNATURE"
-    SecRule REQUEST_HEADERS:X-CLIENT-KEY "@rx .+" "id:1003,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:X-CLIENT-KEY"
+    SecRuleEngine On
     SecRequestBodyAccess On
     SecRequestBodyLimit 131072
-    SecRuleEngine On
     SecDefaultAction "phase:1,log,auditlog,deny,status:403"
     SecDefaultAction "phase:2,log,auditlog,deny,status:403"
+    SecRule REQUEST_HEADERS:X-SIGNATURE "@rx ^[A-Za-z0-9+/=]{20,}$" "id:1001,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-xss;ARGS:X-SIGNATURE"
+    SecRule REQUEST_HEADERS:X-CLIENT-KEY "@rx ^[A-Za-z0-9-_]+$" "id:1002,phase:1,pass,nolog,ctl:ruleRemoveTargetByTag=attack-sqli;ARGS:X-CLIENT-KEY"
   crs-setup.conf: |
     SecDefaultAction "phase:1,log,auditlog,pass"
     SecDefaultAction "phase:2,log,auditlog,pass"

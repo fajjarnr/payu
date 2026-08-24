@@ -116,6 +116,17 @@ spec:
         ca:
           configMapName: loki-gateway-ca-bundle
           key: service-ca.crt
+    - name: wazuh-syslog
+      type: syslog
+      syslog:
+        rfc: RFC5424
+        facility: local0
+        severity: informational
+        appName: coraza-waf
+        procName: coraza
+        addLogSource: true
+        payloadKey: message
+      url: tcp://wazuh-manager.wazuh.svc.cluster.local:514
   pipelines:
     - name: audit-logs
       inputRefs:
@@ -124,3 +135,18 @@ spec:
         log_type: audit
       outputRefs:
         - loki
+    - name: audit-to-wazuh-siem
+      inputRefs:
+        - audit
+      labels:
+        security_zone: perimeter
+        compliance: pci-dss-v4.0
+      outputRefs:
+        - wazuh-syslog
+    - name: app-to-wazuh-siem
+      inputRefs:
+        - application
+      labels:
+        security_zone: perimeter
+      outputRefs:
+        - wazuh-syslog

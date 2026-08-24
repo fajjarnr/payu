@@ -53,36 +53,27 @@ data:
     url: tcp://wazuh-manager.wazuh.svc.cluster.local:514
     addLogSource: true
     payloadKey: message
-  # Python reverse-proxy WAF (used by Deployment — implements same rules without native Coraza binary)
   waf-proxy.py: |
     #!/usr/bin/env python3
     import os, re, json, time, socket, traceback, urllib.parse, http.client, http.server, threading
-    UPSTREAM_HOST = os.getenv("UPSTREAM_HOST", "gateway-service.payu-dev.svc.cluster.local")
-    UPSTREAM_PORT = int(os.getenv("UPSTREAM_PORT", "8080"))
+    UPSTREAM_HOST = os.getenv("UPSTREAM_HOST", "127.0.0.1")
+    UPSTREAM_PORT = int(os.getenv("UPSTREAM_PORT", "8081"))
     WAZUH_HOST = os.getenv("WAZUH_HOST", "wazuh-manager.wazuh.svc.cluster.local")
     WAZUH_PORT = int(os.getenv("WAZUH_PORT", "514"))
     ANOMALY_THRESHOLD = 5
     BODY_LIMIT = 131072
-
-    # CRS-like patterns (OWASP Top 10)
     SQLI_RE = re.compile(r"(union\s+select|select\s+\*|'\s*or\s*'?\d|'\s*or\s+1\s*=\s*1|;\s*drop\s+table|--|/\*|xp_cmdshell|information_schema|sleep\s*\(|benchmark\s*\()", re.I)
     XSS_RE = re.compile(r"(<script|<svg|javascript:|onerror\s*=|onload\s*=|<iframe|<img\s+src\s*=|eval\s*\(|alert\s*\(|document\.cookie)", re.I)
-    RCE_RE = re.compile(r"(;\s*cat\s|;\s*ls\s|\|\s*cat|&&\s*cat|`.*`|\\$\\(|\\$\\{.*\\}|\\bexec\\b|\\bpassthru\\b|\\bshell_exec\\b|\\bproc_open\\b)", re.I)
-    LFI_RE = re.compile(r"(\\.\\./|\\.\\.\\\\|/etc/passwd|/etc/shadow|/proc/self|file://|php://|expect://)", re.I)
-    CMDI_RE = re.compile(r"(;\\s*id\\b|;\\s*whoami|;\\s*uname|\\|\\s*id|&&\\s*id|\\bnslookup\\b|\\bcurl\\b.*\\bhttp)", re.I)
-
+    RCE_RE = re.compile(r"(;\s*cat\s|;\s*ls\s|\|\s*cat|&&\s*cat|`.*`|\$\(|exec\b|passthru\b|shell_exec\b|proc_open\b)", re.I)
+    LFI_RE = re.compile(r"(\.\./|\.\.\\|/etc/passwd|/etc/shadow|/proc/self|file://|php://|expect://)", re.I)
+    CMDI_RE = re.compile(r"(;\s*id\b|;\s*whoami|;\s*uname|\|\s*id|&&\s*id|nslookup\b|curl\b.*http)", re.I)
     def score_request(path, query, headers, body):
         score = 0
         triggered = []
         full = path + ("?" + query if query else "") + " " + body[:2048]
-        # KYC bypass
         if path.startswith("/api/v1/kyc/documents"):
             return 0, []
-        # SNAP-BI header exclusions — X-SIGNATURE/X-CLIENT-KEY values are not scored for sqli/xss
-        # So we score only path+query+body, not those header values
-        low = full.lower()
         if SQLI_RE.search(full):
-            # exclude if only match is inside X-SIGNATURE base64 (88 chars) — we already excluded headers
             score += 5; triggered.append("942100-SQLi")
         if XSS_RE.search(full):
             score += 5; triggered.append("941100-XSS")
@@ -92,33 +83,25 @@ data:
             score += 5; triggered.append("930100-LFI")
         if CMDI_RE.search(full):
             score += 5; triggered.append("932130-CMDi")
-        # PL2 extra: financial endpoints use stricter scoring (PL2 already 5, but we add protocol enforcement)
         if re.match(r"^/(v1\.0/access-token|internal/v1/auth|api/v1/wallets|api/v1/transactions)", path):
-            # PL2: empty user-agent or missing content-type on POST is suspicious (score 2)
             ua = headers.get("user-agent","")
             if not ua:
                 score += 2; triggered.append("920300-Missing-UA-PL2")
         return score, triggered
-
     def syslog_rfc5424(msg_json):
-        # Best-effort RFC5424 TCP 514
         try:
             ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             hostname = socket.gethostname()
-            # facility local0 (16)*8 + severity informational (6) = 134
             line = f"<134>1 {ts} {hostname} coraza-waf - - - {msg_json}\n"
             s = socket.create_connection((WAZUH_HOST, WAZUH_PORT), timeout=1)
             s.sendall(line.encode())
             s.close()
         except Exception:
             pass
-
     class Handler(http.server.BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
-            # JSON access log for Loki/CLF
             rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "msg": fmt % args, "remote": self.client_address[0]}
             print(json.dumps(rec), flush=True)
-
         def do_common(self):
             parsed = urllib.parse.urlparse(self.path)
             path = parsed.path
@@ -131,11 +114,9 @@ data:
                         n = BODY_LIMIT
                     body = self.rfile.read(n).decode(errors="ignore") if n>0 else ""
                 except: body = ""
-            # Health probes bypass WAF
             if path in ("/health", "/ready", "/healthz", "/livez"):
                 self.send_response(200); self.send_header("Content-Type","application/json"); self.end_headers(); self.wfile.write(b'{"status":"ok"}'); return
             headers_lc = {k.lower(): v for k, v in self.headers.items()}
-            # SNAP-BI header bypass is already handled by not scoring header values
             score, triggered = score_request(path, query, headers_lc, body)
             audit = {"timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "client_ip": self.client_address[0], "method": self.command, "path": self.path, "headers": dict(self.headers), "body_trunc": body[:512], "anomaly_score": score, "threshold": ANOMALY_THRESHOLD, "triggered_rules": triggered, "paranoia_level": 2 if re.match(r"^/(v1\.0/access-token|internal/v1/auth|api/v1/wallets|api/v1/transactions)", path) else 1, "compliance": "pci-dss-v4.0", "security_zone": "perimeter"}
             if score >= ANOMALY_THRESHOLD:
@@ -151,15 +132,12 @@ data:
                 resp = {"type":"https://payu.co.id/errors/SEC_WAF_BLOCK","title":"WAF Block","status":403,"detail":f"Request blocked by Coraza WAF (CRS PL{2 if path.startswith('/api/v1') else 1}) anomaly score {score} >= {ANOMALY_THRESHOLD}","triggered":triggered,"instance":self.path}
                 self.wfile.write(json.dumps(resp).encode())
                 return
-            # Passed — proxy to upstream
             audit["action"] = "passed"
             print(json.dumps({"type":"waf_audit","severity":"info","msg":audit}), flush=True)
-            # Async syslog for passed (low volume, sampled) — only blocked goes to Wazuh for PCI
             if score>0:
                 syslog_rfc5424(json.dumps(audit))
             try:
                 conn = http.client.HTTPConnection(UPSTREAM_HOST, UPSTREAM_PORT, timeout=10)
-                # Forward headers sans hop-by-hop
                 fwd_headers = {}
                 for k,v in self.headers.items():
                     lk=k.lower()
@@ -183,7 +161,6 @@ data:
                 traceback.print_exc()
                 self.send_response(502); self.send_header("Content-Type","application/json"); self.end_headers()
                 self.wfile.write(json.dumps({"type":"https://payu.co.id/errors/BAD_GATEWAY","title":"Bad Gateway","status":502,"detail":str(e)}).encode())
-
         def do_GET(self): self.do_common()
         def do_POST(self): self.do_common()
         def do_PUT(self): self.do_common()
@@ -191,10 +168,24 @@ data:
         def do_PATCH(self): self.do_common()
         def do_OPTIONS(self): self.do_common()
         def do_HEAD(self): self.do_common()
-
     if __name__ == "__main__":
         port = int(os.getenv("PORT","8080"))
-        # ponytail: single-threaded is fine, p99 <5ms invariant holds for lab throughput
         server = http.server.ThreadingHTTPServer(("0.0.0.0", port), Handler)
         print(f"Coraza WAF proxy listening 0.0.0.0:{port} upstream {UPSTREAM_HOST}:{UPSTREAM_PORT} threshold {ANOMALY_THRESHOLD}", flush=True)
         server.serve_forever()
+  echo-upstream.py: |
+    #!/usr/bin/env python3
+    import http.server, json
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header('Content-Type','application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'status':'ok','upstream':'echo','path':self.path}).encode())
+        def do_POST(self): self.do_GET()
+        def do_PUT(self): self.do_GET()
+        def do_DELETE(self): self.do_GET()
+        def do_PATCH(self): self.do_GET()
+        def do_OPTIONS(self): self.do_GET()
+        def log_message(self, *a): pass
+    http.server.ThreadingHTTPServer(('0.0.0.0',8081), H).serve_forever()

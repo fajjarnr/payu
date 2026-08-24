@@ -65,9 +65,11 @@ class PartnerIsolationMatrixTest {
         partnerA = new PartnerEntity("Partner A", "MERCHANT", "a@payu.dev", "08111", "key-a");
         partnerA.setId(1L);
         partnerA.setActive(true);
+        partnerA.setStatus(id.payu.partner.domain.PartnerStatus.ACTIVE);
         partnerB = new PartnerEntity("Partner B", "MERCHANT", "b@payu.dev", "08122", "key-b");
         partnerB.setId(2L);
         partnerB.setActive(true);
+        partnerB.setStatus(id.payu.partner.domain.PartnerStatus.ACTIVE);
 
         apiKeyService = new ApiKeyService(apiKeyRepository, partnerRepository);
         webhookService = new WebhookService(subscriptionRepository, deliveryRepository,

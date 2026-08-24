@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.10] - 2026-08-24
+
+### Added (B2 Closed — Before Public Onboarding Widens: Step-Up + Dual-Control + Coraza WAF)
+
+- **Step-Up Wiring (ADR-0028 GAP-028W)**: `StepUpVerificationPort` `StepUpDecision BYPASS/REQUIRED/VERIFIED` `TransactionStatus PENDING_STEP_UP` `StepUpVerificationPayload amount|currency|payee|reference|token` `StepUpVerificationAdapter RestTemplate POST /internal/v1/auth/step-up/verify {challengeId,pin,payloadDigest}` `SHA-256 sender|recipient|amount|currency` `CircuitBreaker authService` manual wrap, `InitiateTransferCommand stepUpChallengeId` `Handler requiresStepUp 40-70 or >10M payu.step-up.amount-threshold` `enforceStepUp 403 STEP_UP_REQUIRED` `tampered 400 AUTH_CHALLENGE_TAMPERED` `locked 423 AUTH_PIN_LOCKED` `19 green` `StepUpWiringTest 5`.
+- **Dual-Control Onboarding (ADR-0035 PARTNER-PROD-011 P1)**: `PartnerStatus PENDING_APPROVAL/REJECTED` `PartnerType` `PartnerEntity maker_id/checker_id` `V21 dual_control_maker_checker` `CHECK maker<>checker` `idx status_requested` `PartnerService create PENDING_APPROVAL approve ACTIVE reject REJECTED resubmit` `PartnerController` `PartnerSlaScheduler @Scheduled 15m @SchedulerLock T+4j Telegram T+24j Page payu.partner.sla-*.v1` `PartnerOnboardingMetrics` `356 green` `runbook PARTNER_ONBOARDING_RUNBOOK.md` `SLO p95<4j p99<24j SLA 1×24j`.
+- **Coraza WAF Live (ADR-0032 GAP-032W)**: `coraza-waf stub` → `coraza/ Namespace` `ConfigMap coraza.conf CRS PL1 threshold5 PL2 financial SNAP-BI exclusions KYC bypass BodyLimit 131072` `Deployment 2 replicas python waf-proxy.py 8080 echo-upstream 8081` `Service ClusterIP` `Route coraza-waf-payu-dev` `EnvoyFilter WasmPlugin coraza-wasm:0.3.0` `NetworkPolicy` `2/2 Running` `WAF 403 XSS/SQLi` `200 normal` `syslog RFC5424 wazuh-manager:514` `Loki` `PDB 1`.
+
+### Fixed
+
+- **Workloads**: revert non-B1 28 services `1.18.9→1.18.8` keep tx/wallet/compliance at `1.18.9` `35/52 Ready` pending B1 builds.
+
+### Verified
+
+- `oc get pods -n coraza-waf 2/2 Running` `curl port-forward 403/200` `WAF 403 XSS` `SQLi` `Loki` `syslog` `356 green` `19 green` `oc get cluster payu-database 3/3 Healthy`.
+- **SemVer**: `package.json 1.18.9→1.18.10` `podman-compose 31` `pipelines 31` `workloads tx+partner 10× 1.18.9→1.18.10` `git tag v1.18.10` pending.
+
 ## [1.18.9] - 2026-08-24
 
 ### Added (B1 Closed — Before Real Money Flows: PITR + Suspense + Risk + Audit REVOKE)

@@ -145,7 +145,8 @@ public class PartnerServiceIntegrationTest {
         );
 
         PartnerDTO created = partnerService.createPartner(dto);
-
+        // ADR-0035: only REJECTED can be deleted — reject first
+        partnerService.rejectPartner(created.id, "checker-1", "test cleanup");
         assertTrue(partnerService.deletePartner(created.id));
         assertFalse(partnerService.deletePartner(999L));
     }

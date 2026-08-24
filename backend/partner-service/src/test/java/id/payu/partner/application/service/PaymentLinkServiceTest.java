@@ -55,6 +55,7 @@ class PaymentLinkServiceTest {
         activePartner = new PartnerEntity("Test PartnerEntity", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);
         activePartner.setActive(true);
+        activePartner.setStatus(id.payu.partner.domain.PartnerStatus.ACTIVE);
     }
 
     @Nested

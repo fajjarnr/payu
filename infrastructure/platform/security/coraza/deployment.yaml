@@ -29,9 +29,6 @@ spec:
     spec:
       serviceAccountName: default
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        fsGroup: 1001
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -43,16 +40,13 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
-            - name: metrics
-              containerPort: 9090
-              protocol: TCP
           env:
             - name: PORT
               value: "8080"
             - name: UPSTREAM_HOST
-              value: gateway-service.payu-dev.svc.cluster.local
+              value: "127.0.0.1"
             - name: UPSTREAM_PORT
-              value: "8080"
+              value: "8081"
             - name: WAZUH_HOST
               value: wazuh-manager.wazuh.svc.cluster.local
             - name: WAZUH_PORT
@@ -99,11 +93,39 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-            runAsUser: 1001
             capabilities:
               drop: ["ALL"]
             seccompProfile:
               type: RuntimeDefault
+        - name: echo-upstream
+          image: python:3.12-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "/etc/coraza/echo-upstream.py"]
+          ports:
+            - name: http-echo
+              containerPort: 8081
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: coraza-config
+              mountPath: /etc/coraza
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
       volumes:
         - name: coraza-config
           configMap:

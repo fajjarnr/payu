@@ -53,6 +53,7 @@ class WebhookDispatcherServiceTest {
         partner.setId(1L);
         partner.setName("TokoBapak");
         partner.setActive(true);
+        partner.setStatus(id.payu.partner.domain.PartnerStatus.ACTIVE);
 
         subscription = new WebhookSubscriptionEntity(
                 partner,

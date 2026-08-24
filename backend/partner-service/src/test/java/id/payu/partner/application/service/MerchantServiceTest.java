@@ -65,6 +65,7 @@ class MerchantServiceTest {
         activePartner = new PartnerEntity("Test PartnerEntity", "MERCHANT", "test@partner.com", "08123456789", "api-key-1");
         activePartner.setId(1L);
         activePartner.setActive(true);
+        activePartner.setStatus(id.payu.partner.domain.PartnerStatus.ACTIVE);
 
         activeMerchant = new MerchantEntity(activePartner, "MCH001TEST", "Warung Kopi",
                 MerchantCategory.FOOD_BEVERAGE, "Jl. Test 1");

@@ -41,6 +41,7 @@ public class PartnerServiceTest {
         testPartner.setEmail("test@example.com");
         testPartner.setPhone("+62123456789");
         testPartner.setActive(true);
+        testPartner.setStatus(id.payu.partner.domain.PartnerStatus.ACTIVE);
         testPartner.setApiKey("test-api-key");
         testPartner.setClientId("test-client-id");
         testPartner.setClientSecret("test-client-secret");

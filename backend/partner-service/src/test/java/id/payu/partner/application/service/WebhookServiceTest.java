@@ -60,6 +60,7 @@ class WebhookServiceTest {
         activePartner.setType("MERCHANT");
         activePartner.setEmail("partner@tokobapak.com");
         activePartner.setActive(true);
+        activePartner.setStatus(id.payu.partner.domain.PartnerStatus.ACTIVE);
 
         inactivePartner = new PartnerEntity();
         inactivePartner.setId(2L);

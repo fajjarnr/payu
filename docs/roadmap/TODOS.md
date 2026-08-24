@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.9` (2026-08-24) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore payu-database-backup` `S3 WAL 9 archived` `RPO=0` (was 1/1), other env 1/1 pending HA promote, Tekton **1.18.8 31/31 Succeeded**, workloads `44/44 1/1` `1.18.9` `CNPG/Kafka/EFS/3scale/RHACS` verified, partner prod credentials queue remains. |
-| **Backlog Aktif** | B1 CLOSED 1.18.9 (PITR 3× HA + S3, suspense double-entry, risk VelocityGuard+RiskAdapter fail-closed HOLD, audit REVOKE) • sisa B2 chaos Schemathesis SSO, B3/B4 |
-| **Last Updated** | 2026-08-24 — v1.18.9: B1 CLOSED `PITR 3/3 + barman TLS + S3 9 WAL` `V115→119/120` `VelocityGuard Redis lua + RiskAdapter` `V5 REVOKE` `22 green` `4 green` `71 green` + `barman-cloud 1/1` `payu-dev 44/44 1/1` `CNPG 3/3 Healthy`. |
+| **Last Release** | `1.18.10` (2026-08-24) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **1.18.9 3/3 Running** (txn/wallet/compliance), workloads `35/52 1/1` `1.18.10` `coraza-waf 2/2` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | B1 CLOSED 1.18.9 • **B2 CLOSED 1.18.10** (step-up dynamic linking, dual-control maker-checker, Coraza WAF 2/2) • sisa B3 chaos Pact RLS DMN, B4 CSV branded chargeback SLO |
+| **Last Updated** | 2026-08-24 — v1.18.10: B2 CLOSED `step-up 19 green` `dual-control 356 green` `coraza 2/2` + `1.18.9 pipelines 3 Running` `payu-dev 35/52` `coraza 2/2` `WAF 403/200` |
 
 ---
 
@@ -84,7 +84,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 | PARTNER-PROD-008 | P0 | ✅ Selesai 1.18.9 | PG HA+PITR via CNPG Barman Cloud ([ADR-0031](../adr/0031-database-resilience-pitr-and-disaster-recovery.md)), restore drill, RPO=0/RTO<5m — `payu-dev 3/3 2/2 Healthy` `barman-cloud 1/1` `ObjectStore payu-database-backup` `s3://payu-backups-368694075944/payu-database 9 WAL` `ContinuousArchiving True` `LimitRange 20Gi + ResourceQuota 150` `S3 bucket + IAM payu-backup` |
 | PARTNER-PROD-009 | P1 | ⏸️ Belum | SLI/SLO, dashboard+alert, traces E2E ([ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md)) |
 | PARTNER-PROD-010 | P0 | ⏸️ Belum | Contract/k6/chaos ([ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)), pentest, sign-off |
-| PARTNER-PROD-011 | P1 | ⏸️ Belum | Dual-control (Maker-Checker) onboarding, SLA/escalation, runbook & on-call — spec di [ADR-0035](../adr/0035-dual-control-partner-onboarding-and-sla-runbook.md): `PENDING_APPROVAL`/`REJECTED`, roles `PARTNER_MAKER`/`PARTNER_CHECKER` (`maker≠checker` DB CHECK), Flyway V19, SLO `p95<4j` jam kerja / `p99<24j` kalender & SLA `1×24j`, Telegram `T+4j` / page `T+24j`, audit+outbox `payu.partner.*.v1`, runbook `docs/operations/PARTNER_ONBOARDING_RUNBOOK.md` |
+| PARTNER-PROD-011 | P1 | ✅ Selesai 1.18.10 | Dual-control (Maker-Checker) onboarding — `V21 dual_control_maker_checker` `maker_id<>checker_id CHECK` `PENDING_APPROVAL→ACTIVE/REJECTED` `356 green` `SlaScheduler T+4j Telegram T+24j Page payu.partner.sla-*.v1` `runbook PARTNER_ONBOARDING_RUNBOOK.md` |
 
 > Local APIcast (profile `api-management`) tidak bisa authless — public edge butuh APIManager (cluster-level).
 
@@ -158,10 +158,10 @@ Drift ditemukan audit sweep 2026-08-24 (70 ADR vs repo): 3 klaim bukti salah dik
 | ADR-GAP-003..009 | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) s/d [ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md) | auth/wallet/risk/platform/security/data/observability | → **HARDEN backlog P1** (TXN/ACC/AUTH/COMPLIANCE/GATEWAY/PORTAL) — jangan duplikasi deskripsi di sini | B1–B3 |
 | ADR-GAP-015 | [ADR-0015](../adr/0015-process-automation-rhpam.md) | lending/process | Phase 1 embedded Drools live (`rules-starter` + `credit_scoring.drl`); BPMN/Kogito runtime *not applied* (`kogito-runtime.yaml`), `TaskInboxController:40` proxy `/usertasks` tanpa target; fork `lending-rules` duplikat | B3 |
 | ADR-GAP-019 | [ADR-0019](../adr/0019-statement-dual-format.md) | statement | PDF + JSON partner API live; **ekspor CSV absen** padahal judul ADR "PDF + JSON/CSV" | B4 |
-| ADR-GAP-028W | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) | auth/txn | Step-up engine live di auth-service (`StepUpController`, Argon2id PIN, lockout); **belum di-wire ke flow transaksi**; dynamic linking belum ada | B2 |
+| ADR-GAP-028W | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) | auth/txn | Step-up engine live di auth-service; **wired to transaction flow** `StepUpVerificationPort` `StepUpVerificationAdapter` `POST /internal/v1/auth/step-up/verify` `SHA-256 digest` `payloadDigest` `challengeId+pin` `PENDING_STEP_UP` `19 green` `requiresStepUp 40-70 or >10M` `dynamic linking` live | **B2 CLOSED 1.18.10** |
 | ADR-GAP-029 | [ADR-0029](../adr/0029-iso20022-interbank-clearing-and-suspense-ledgering.md) | wallet/integration | COA suspense seeded (V115); `WalletClearingService` **persisted double-entry** via `JournalPersistencePort` `V119/V120` `4 green` (hold/settle/reverse balanced + idempotent), wire ke transfer pending next rail iteration; `pacs.008/pain.001` mapping deferred (ponytail) | **B1 CLOSED 1.18.9** |
 | ADR-GAP-030E | [ADR-0030](../adr/0030-realtime-transaction-velocity-and-aml-risk-scoring.md) | risk | Detection live (`analytics-service fraud_detection.py`); **enforcement live**: `VelocityGuard` Redis lua ZSET `5/10m 50M/day` `isAllowed` fail-secure `false` + `RiskEvaluationAdapter` `POST /fraud/score` `22 green` fail-closed HOLD (80) → `PENDING_COMPLIANCE_REVIEW` | **B1 CLOSED 1.18.9** |
-| ADR-GAP-032W | [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md) | security | Wazuh helm + CLF RFC5424 sink live; **Coraza cuma stub ConfigMap** (`coraza-waf.yaml:2`), tanpa ingress/SPOA; AWS WAF tier absen | B2 |
+| ADR-GAP-032W | [ADR-0032](../adr/0032-perimeter-security-waf-coraza-and-siem-wazuh.md) | security | Wazuh helm + CLF RFC5424 sink live; **Coraza live** `coraza-waf 2/2 Running` `ConfigMap coraza.conf CRS PL1/PL2 threshold 5` `waf-proxy.py` `XSS 403` `SQLi 403` `Loki+Wazuh syslog <134> RFC5424` `Route coraza-waf-payu-dev` `Service coraza-waf:8080` `PDB 1` | **B2 CLOSED 1.18.10** |
 | ADR-GAP-047 | [ADR-0047](../adr/0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md) | frontend/web-app | Branded types ada tapi deviasi spek: `__brand?` optional, `Money` = plain string alias, tanpa eslint enforcement | B4 |
 | ADR-GAP-048 | [ADR-0048](../adr/0048-lending-eligibility-and-pricing-via-dmn-decision-tables.md) | lending | **0 file `.dmn` repo-wide**; eligibility/pricing hardcode (`LoanPreApprovalService.java:41,144`); modul fork `lending-rules` belum didelete (step 6 ADR) | B3 |
 | ADR-GAP-054C | [ADR-0054](../adr/0054-dispute-and-chargeback-standard.md) | dispute | Refund + dispute state machine live; **chargeback 0 kode** di dispute-service (hanya deskripsi katalog) | B4 |
@@ -169,7 +169,7 @@ Drift ditemukan audit sweep 2026-08-24 (70 ADR vs repo): 3 klaim bukti salah dik
 
 > **Urutan eksekusi sweep 2026-08-24** (blast radius × ireversibilitas × dependensi):
 > **B1 — SELESAI 1.18.9:** fix PITR barman+S3+restore drill ([ADR-0031] → PARTNER-PROD-008 P0) · suspense ledger persist + wire ke transfer ([ADR-0029], GAP-029) · risk enforcement wire ([ADR-0030], GAP-030E) · migration `REVOKE UPDATE,DELETE` audit ([ADR-0063] → COMPLIANCE-HARDEN-001) — **4/4 CLOSED**
-> **B2 — sebelum onboarding publik melebar:** step-up wiring + dynamic linking ([ADR-0028], GAP-028W) · dual-control onboarding ([ADR-0035] → PARTNER-PROD-011) · Coraza WAF deploy nyata (GAP-032W)
+> **B2 — SELESAI 1.18.10:** step-up wiring + dynamic linking ([ADR-0028], GAP-028W) · dual-control onboarding ([ADR-0035] → PARTNER-PROD-011) · Coraza WAF deploy nyata (GAP-032W) — **3/3 CLOSED**
 > **B3 — correctness infra:** reconciliation job + inbox_events (TXN-HARDEN-003/004) · isi kontrak Pact lalu `FAIL_ON_NO_PACTS=true` (GAP-056) · RLS FORCE rollout sisa service · cleanup/wire Kogito TaskInbox (GAP-015) · DMN lending (GAP-048)
 > **B4 — menunggu trigger / keputusan:** CSV export (GAP-019) · branded types ketat + lint (GAP-047) · chargeback (GAP-054C) · verifikasi SLO live (PARTNER-PROD-009) · apply topik cluster (blokir OCP creds) · go/no-go [ADR-0067]/[ADR-0068]
 
