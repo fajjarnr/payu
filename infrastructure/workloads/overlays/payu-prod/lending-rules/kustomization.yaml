@@ -4,6 +4,6 @@ namespace: payu
 resources:
   - ../../../base/lending-rules
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu/lending-rules
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-rules
     newName: image-registry.openshift-image-registry.svc:5000/payu/lending-rules
-    newTag: "1.18.5"
+    newTag: "1.18.6"

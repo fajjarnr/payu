@@ -4,6 +4,6 @@ namespace: payu
 resources:
   - ../../../base/gateway-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu/gateway-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/gateway-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"

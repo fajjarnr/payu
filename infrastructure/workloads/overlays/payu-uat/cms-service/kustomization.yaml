@@ -4,9 +4,9 @@ namespace: payu-uat
 resources:
   - ../../../base/cms-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-uat/cms-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-uat/cms-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"
 patches:
   - target:
       kind: Deployment

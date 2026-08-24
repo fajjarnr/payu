@@ -4,6 +4,6 @@ namespace: payu
 resources:
   - ../../../base/web-app
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu/web-app
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newName: image-registry.openshift-image-registry.svc:5000/payu/web-app
-    newTag: "1.18.5"
+    newTag: "1.18.6"

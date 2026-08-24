@@ -4,6 +4,6 @@ namespace: payu
 resources:
   - ../../../base/wallet-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu/wallet-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/wallet-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"

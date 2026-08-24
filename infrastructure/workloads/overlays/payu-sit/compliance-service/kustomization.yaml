@@ -4,9 +4,9 @@ namespace: payu-sit
 resources:
   - ../../../base/compliance-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-sit/compliance-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/compliance-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"
 patches:
   - target:
       kind: Deployment

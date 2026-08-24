@@ -4,6 +4,6 @@ namespace: payu
 resources:
   - ../../../base/analytics-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu/analytics-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/analytics-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"

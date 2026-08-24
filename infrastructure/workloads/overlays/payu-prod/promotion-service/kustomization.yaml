@@ -4,6 +4,6 @@ namespace: payu
 resources:
   - ../../../base/promotion-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu/promotion-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/promotion-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"

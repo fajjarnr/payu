@@ -4,9 +4,9 @@ namespace: payu-sit
 resources:
   - ../../../base/partner-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-sit/partner-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/partner-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"
 patches:
   - target:
       kind: Deployment

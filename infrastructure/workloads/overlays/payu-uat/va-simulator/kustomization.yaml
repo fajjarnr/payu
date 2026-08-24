@@ -4,6 +4,6 @@ namespace: payu-uat
 resources:
   - ../../../base/va-simulator.yaml
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-uat/va-simulator
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-uat/va-simulator
-    newTag: "1.18.5"
+    newTag: "1.18.6"

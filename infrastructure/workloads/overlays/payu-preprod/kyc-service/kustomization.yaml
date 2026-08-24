@@ -4,9 +4,9 @@ namespace: payu-preprod
 resources:
   - ../../../base/kyc-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-preprod/kyc-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/kyc-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"
 patches:
   - target:
       kind: Deployment

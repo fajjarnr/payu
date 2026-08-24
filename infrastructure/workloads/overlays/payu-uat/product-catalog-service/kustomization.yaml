@@ -4,9 +4,9 @@ namespace: payu-uat
 resources:
   - ../../../base/product-catalog-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-uat/product-catalog-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-uat/product-catalog-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"
 patches:
   - target:
       kind: Deployment

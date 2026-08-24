@@ -4,6 +4,6 @@ namespace: payu
 resources:
   - ../../../base/dispute-service
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu/dispute-service
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/dispute-service
-    newTag: "1.18.5"
+    newTag: "1.18.6"

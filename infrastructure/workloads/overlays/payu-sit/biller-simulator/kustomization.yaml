@@ -4,6 +4,6 @@ namespace: payu-sit
 resources:
   - ../../../base/biller-simulator.yaml
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-sit/biller-simulator
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/biller-simulator
-    newTag: "1.18.5"
+    newTag: "1.18.6"

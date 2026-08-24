@@ -4,6 +4,6 @@ namespace: payu-uat
 resources:
   - ../../../base/bi-fast-simulator.yaml
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-uat/bi-fast-simulator
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-uat/bi-fast-simulator
-    newTag: "1.18.5"
+    newTag: "1.18.6"

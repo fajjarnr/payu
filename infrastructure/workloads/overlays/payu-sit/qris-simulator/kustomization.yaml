@@ -4,6 +4,6 @@ namespace: payu-sit
 resources:
   - ../../../base/qris-simulator.yaml
 images:
-  - name: image-registry.openshift-image-registry.svc:5000/payu-sit/qris-simulator
+  - name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/qris-simulator
-    newTag: "1.18.5"
+    newTag: "1.18.6"
