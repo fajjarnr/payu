@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# PayU KEDA Autoscaling — Kafka + Prometheus (ADR-0068)
+# GO decision B4.6 2026-08-24 — ponytail minimal: 2 templates (core min3 + sim min0) + TriggerAuthentication Vault
+# Apply: oc apply -k infrastructure/platform/keda/base
+# Prod overlay tightens maxReplicaCount 10; dev overlay relaxes min 1 for idle testing
+# Pre-req: Strimzi Kafka 3.7 (payu-kafka-kafka-bootstrap:9092), prometheus-operated:9090, VSO payu-vault
+
+commonLabels:
+  app.kubernetes.io/part-of: payu
+  app.kubernetes.io/component: autoscaling
+
+resources:
+  - namespace.yaml
+  - keda-operator.yaml
+  - trigger-authentication.yaml
+  - scaledobject-core.yaml
+  - scaledobject-sim.yaml

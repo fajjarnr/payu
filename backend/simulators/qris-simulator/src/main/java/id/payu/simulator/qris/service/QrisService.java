@@ -38,15 +38,15 @@ public class QrisService {
      * Generate QRIS code for payment.
      */
     @Transactional
-    public GenerateQrResponse generateQr(GenerateQrRequest request) {
+    public GenerateQrResponse generateQr(GenerateQrRequest request, String simulate) {
+        String mode = simulate != null ? simulate.trim().toLowerCase() : null;
+        if ("blocked".equals(mode)) return GenerateQrResponse.merchantBlocked(request.merchantId());
+        if ("timeout".equals(mode)) { try{ Thread.sleep(5000);}catch(Exception e){ Thread.currentThread().interrupt();} return GenerateQrResponse.error("Request timeout"); }
+        if ("success".equals(mode)) { /* deterministic success - skip random failure */ } else if (shouldSimulateFailure()) { return GenerateQrResponse.error("Simulated random failure"); }
         Log.infof("Generating QRIS for merchant=%s, amount=%s", 
                   request.merchantId(), request.amount());
-
         simulateLatency();
-
-        if (shouldSimulateFailure()) {
-            return GenerateQrResponse.error("Simulated random failure");
-        }
+        // duplicate random check removed - already handled
 
         // Find merchant
         Merchant merchant = Merchant.findByMerchantId(request.merchantId());
@@ -89,18 +89,20 @@ public class QrisService {
 
         return GenerateQrResponse.fromEntity(payment);
     }
+    public GenerateQrResponse generateQr(GenerateQrRequest request) { return generateQr(request, null); }
 
     /**
      * Simulate payment for a QR code.
      */
     @Transactional
-    public PaymentResponse payQr(PayQrRequest request) {
+    public PaymentResponse payQr(PayQrRequest request, String simulate) {
+        String mode = simulate != null ? simulate.trim().toLowerCase() : null;
+        if ("blocked".equals(mode)) return PaymentResponse.error("Simulated blocked");
+        if ("timeout".equals(mode)) { try{ Thread.sleep(5000);}catch(Exception e){ Thread.currentThread().interrupt();} return PaymentResponse.error("Payment timeout"); }
         Log.infof("Processing payment for qrId=%s, payer=%s", 
                   request.qrId(), request.payerName());
-
         simulateLatency();
-
-        if (shouldSimulateFailure() || request.simulateFailure()) {
+        if (!"success".equals(mode) && (shouldSimulateFailure() || request.simulateFailure())) {
             return PaymentResponse.error("Simulated payment failure");
         }
 
@@ -140,6 +142,7 @@ public class QrisService {
 
         return PaymentResponse.success(payment);
     }
+    public PaymentResponse payQr(PayQrRequest request) { return payQr(request, null); }
 
     /**
      * Get payment status by QR ID.

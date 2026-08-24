@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.11] - 2026-08-24
+
+### Added (B3+B4 Closed — Reconciliation + Pact + RLS + DMN/Kogito + CSV/Chargeback + Money + SLO + KEDA)
+
+- **Reconciliation Inbox (TXN-HARDEN-003/004)**: `V29 inbox_events/aggregate_results` `InboxService` `AggregateResultService` `DeferredOutboxService afterCommit` `TransferStatusPort GET /snap/v1.0/transfer/status` `ReconciliationScheduler @SchedulerLock` `ShedLockConfig UTC usingDbTime` `InboxDedupTest` `OutboxOutsideTxTest`.
+- **Pact 5 Sims (GAP-056)**: `bi-fast/va/qris/biller/dukcapil` `X-Simulate` `X-Idempotency-Key` `QR CRC16` `40 Pact interactions` `pact-verify FAIL_ON_NO_PACTS=true`.
+- **RLS 39 FORCE (B3.3)**: `8 migrations` `billing dispute lending partner transaction wallet account support` `FORCE+PERMISSIVE` `billing 5 green`.
+- **DMN/Kogito (GAP-048/015)**: `pricing.dmn eligibility.dmn` `LendingDmnService` `lending-rules deleted` `137 green`.
+- **CSV + Chargeback (GAP-019/054C)**: `Statement CSV RFC4180` `68 green` `ChargebackStatus` `V8` `109 green`.
+- **Money Strict + SLO + KEDA (GAP-047/009/KEDA)**: `Money __brand required` `eslint` `8 green` `PrometheusRule 4-tier` `OTel tail_sampling` `KEDA ScaledObject` `LLM DEFERRED`.
+
+### Verified
+
+- `oc get pods -n coraza-waf 2/2` `WAF 403` `356+19+137+68+109+8 green` `19/52 Ready` `pipelines 5 Running`.
+- **SemVer**: `package.json 1.18.10→1.18.11` `pipelines 31` `workloads 16×` `git tag v1.18.11` pending.
+
 ## [1.18.10] - 2026-08-24
 
 ### Added (B2 Closed — Before Public Onboarding Widens: Step-Up + Dual-Control + Coraza WAF)

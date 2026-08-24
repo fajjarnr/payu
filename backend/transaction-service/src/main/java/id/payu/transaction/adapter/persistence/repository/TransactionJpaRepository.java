@@ -119,4 +119,9 @@ public interface TransactionJpaRepository extends JpaRepository<TransactionEntit
     @Query("SELECT t FROM TransactionEntity t WHERE t.status IN ('PENDING', 'PROCESSING') " +
            "AND t.expiresAt IS NOT NULL AND t.expiresAt < :now")
     List<TransactionEntity> findExpiredPendingTransactions(@Param("now") java.time.Instant now);
+
+    // TXN-HARDEN-004: reconciliation watermark — PENDING >5m
+    List<TransactionEntity> findByStatusAndCreatedAtBefore(TransactionStatus status, java.time.Instant before);
+    @Query("SELECT t FROM TransactionEntity t WHERE t.status = :status AND t.createdAt < :before")
+    List<TransactionEntity> findReconcileCandidates(@Param("status") TransactionStatus status, @Param("before") java.time.Instant before);
 }

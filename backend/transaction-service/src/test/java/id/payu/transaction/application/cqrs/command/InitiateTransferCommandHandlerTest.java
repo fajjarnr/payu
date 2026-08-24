@@ -63,6 +63,13 @@ class InitiateTransferCommandHandlerTest {
     private VelocityGuard velocityGuard;
     @Mock(strictness = org.mockito.Mock.Strictness.LENIENT)
     private RiskEvaluationPort riskEvaluationPort;
+    @Mock(strictness = org.mockito.Mock.Strictness.LENIENT)
+    private id.payu.transaction.application.service.InboxService inboxService;
+    @Mock(strictness = org.mockito.Mock.Strictness.LENIENT)
+    private id.payu.transaction.application.service.AggregateResultService aggregateResultService;
+
+    @Mock(strictness = org.mockito.Mock.Strictness.LENIENT)
+    private id.payu.transaction.domain.port.out.StepUpVerificationPort stepUpVerificationPort;
 
     @InjectMocks
     private InitiateTransferCommandHandler handler;
@@ -71,11 +78,11 @@ class InitiateTransferCommandHandlerTest {
     void allowRiskPathByDefault() {
         when(velocityGuard.isAllowed(anyString(), any(java.math.BigDecimal.class))).thenReturn(true);
         when(riskEvaluationPort.score(anyString(), any(java.math.BigDecimal.class), any())).thenReturn(0);
+        when(inboxService.tryMarkProcessed(anyString(), anyString())).thenReturn(true);
     }
 
     @Test
     void completesInterbankTransferFromProviderCallback() {
-
         UUID transactionId = UUID.randomUUID();
         UUID senderAccountId = UUID.randomUUID();
         TransactionEntity transaction = TransactionEntity.builder()

@@ -39,9 +39,10 @@ export default function LendingPage() {
 
   const handleApplyLoan = async (productName: string) => {
     try {
+      // eslint-disable-next-line react-hooks/purity -- externalId generated per user action, not render
+      const externalId = `ext-${Date.now()}`;
       await applyLoan.mutateAsync({
-        externalId: `ext-${Date.now()}`,
-        loanType: 'PERSONAL',
+        externalId,
         principalAmount: '10000000',
         tenureMonths: 12,
         purpose: productName,

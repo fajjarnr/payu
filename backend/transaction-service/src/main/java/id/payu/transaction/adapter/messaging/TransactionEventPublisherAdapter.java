@@ -2,8 +2,8 @@ package id.payu.transaction.adapter.messaging;
 
 import id.payu.events.cloudevents.CloudEventBuilder;
 import id.payu.events.cloudevents.CloudEventEnvelope;
-import id.payu.outbox.service.OutboxService;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import id.payu.transaction.application.service.DeferredOutboxService;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,8 +14,7 @@ import java.util.Map;
 /**
  * Outbox-backed adapter for publishing transaction events using CloudEvents 1.0 envelopes.
  * <p>
- * Events are written to the outbox_events table within the same DB transaction
- * as the business operation, guaranteeing at-least-once delivery to Kafka.
+ * TXN-HARDEN-003: publish outbox outside the business TX via DeferredOutboxService (afterCommit + REQUIRES_NEW).
  * The OutboxPublisher polls and publishes them asynchronously.
  * <p>
  * All events conform to CloudEvents 1.0 spec via the events-starter CloudEventEnvelope.
@@ -26,10 +25,10 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
 
 
 
-    private final OutboxService outboxService;
+    private final DeferredOutboxService deferredOutboxService;
 
-    public TransactionEventPublisherAdapter(OutboxService outboxService) {
-        this.outboxService = outboxService;
+    public TransactionEventPublisherAdapter(DeferredOutboxService deferredOutboxService) {
+        this.deferredOutboxService = deferredOutboxService;
     }
 
     private static final String AGGREGATE_TYPE = "TransactionEntity";
@@ -55,12 +54,11 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
                 .data(payload)
                 .build();
 
-        outboxService.createEvent(
+        deferredOutboxService.publishAfterCommit(
                 AGGREGATE_TYPE,
                 transaction.getId().toString(),
                 "TransactionInitiated",
                 envelopeToMap(envelope),
-                null,
                 TOPIC_TRANSACTION + ".initiated.v1"
         );
         log.info("Created CloudEvent outbox event for transaction-initiated: {}", transaction.getId());
@@ -81,12 +79,11 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
                 .data(payload)
                 .build();
 
-        outboxService.createEvent(
+        deferredOutboxService.publishAfterCommit(
                 AGGREGATE_TYPE,
                 transaction.getId().toString(),
                 "TransactionValidated",
                 envelopeToMap(envelope),
-                null,
                 TOPIC_TRANSACTION + ".validated.v1"
         );
         log.info("Created CloudEvent outbox event for transaction-validated: {}", transaction.getId());
@@ -111,12 +108,11 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
                 .data(payload)
                 .build();
 
-        outboxService.createEvent(
+        deferredOutboxService.publishAfterCommit(
                 AGGREGATE_TYPE,
                 transaction.getId().toString(),
                 "TransactionCompleted",
                 envelopeToMap(envelope),
-                null,
                 TOPIC_TRANSACTION + ".completed.v1"
         );
         log.info("Created CloudEvent outbox event for transaction-completed: {}", transaction.getId());
@@ -141,12 +137,11 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
                 .data(payload)
                 .build();
 
-        outboxService.createEvent(
+        deferredOutboxService.publishAfterCommit(
                 AGGREGATE_TYPE,
                 transaction.getId().toString(),
                 "TransactionFailed",
                 envelopeToMap(envelope),
-                null,
                 TOPIC_TRANSACTION + ".failed.v1"
         );
         log.info("Created CloudEvent outbox event for transaction-failed: {} - Reason: {}", transaction.getId(), reason);

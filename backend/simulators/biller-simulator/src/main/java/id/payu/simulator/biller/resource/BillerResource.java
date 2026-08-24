@@ -27,22 +27,34 @@ public class BillerResource {
 
     @POST
     @Path("/inquiry")
-    public Response inquiry(@Valid InquiryRequest request) {
-        InquiryResponse response = billerService.inquiry(request);
-        int status = "00".equals(response.responseCode()) ? 200 : 400;
-        return Response.status(status).entity(response).build();
+    public Response inquiry(@Valid InquiryRequest request, @HeaderParam("X-Simulate") String simulate) {
+        if (simulate != null && !simulate.isBlank()) {
+            String m = simulate.trim().toLowerCase();
+            if ("rate-limit".equals(m)) return Response.status(429).entity(InquiryResponse.error("Rate limit exceeded")).header("X-Simulate", simulate).build();
+            if ("5xx".equals(m)) return Response.status(500).entity(InquiryResponse.error("Simulated internal error")).header("X-Simulate", simulate).build();
+        }
+        InquiryResponse response = billerService.inquiry(request, simulate);
+        int status = switch (response.responseCode()) { case "00" -> 200; case "62" -> 403; case "42" -> 429; case "96" -> 500; default -> 400; };
+        return Response.status(status).entity(response).header("X-Simulate", simulate != null ? simulate : "success").build();
     }
 
     @POST
     @Path("/pay")
-    public Response pay(@Valid PaymentRequest request) {
-        PaymentResponse response = billerService.pay(request);
+    public Response pay(@Valid PaymentRequest request, @HeaderParam("X-Simulate") String simulate, @HeaderParam("X-Idempotency-Key") String idempotencyKey, @HeaderParam("X-External-Id") String externalId) {
+        if (simulate != null && !simulate.isBlank()) {
+            String m = simulate.trim().toLowerCase();
+            if ("rate-limit".equals(m)) return Response.status(429).entity(PaymentResponse.error("Rate limit exceeded")).header("X-Simulate", simulate).build();
+            if ("5xx".equals(m)) return Response.status(500).entity(PaymentResponse.error("Simulated internal error")).header("X-Simulate", simulate).build();
+        }
+        PaymentResponse response = billerService.pay(request, simulate);
         int status = switch (response.responseCode()) {
             case "00" -> 200;
-            case "94" -> 409; // Duplicate
+            case "94" -> 409;
+            case "42" -> 429;
+            case "96" -> 500;
             default -> 400;
         };
-        return Response.status(status).entity(response).build();
+        return Response.status(status).entity(response).header("X-Simulate", simulate != null ? simulate : "success").header("X-Idempotency-Key", idempotencyKey != null ? idempotencyKey : externalId).build();
     }
 
     @GET

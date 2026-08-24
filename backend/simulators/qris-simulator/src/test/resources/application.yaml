@@ -1,3 +1,4 @@
+OTEL_ENDPOINT: http://localhost:4317
 # Disable DevServices for tests (no container runtime required)
 quarkus:
   datasource:
@@ -15,8 +16,14 @@ quarkus:
       strategy: drop-and-create
     log:
       sql: false
-  simulator:
-    failure-rate: 0
-    latency:
-      min: 1
-      max: 2
+  otel:
+    sdk:
+      disabled: true
+    exporter:
+      otlp:
+        endpoint: http://localhost:4317
+simulator:
+  failure-rate: 0
+  latency:
+    min: 1
+    max: 2

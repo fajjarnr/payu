@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.10` (2026-08-24) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **1.18.9 3/3 Running** (txn/wallet/compliance), workloads `35/52 1/1` `1.18.10` `coraza-waf 2/2` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | B1 CLOSED 1.18.9 • **B2 CLOSED 1.18.10** (step-up dynamic linking, dual-control maker-checker, Coraza WAF 2/2) • sisa B3 chaos Pact RLS DMN, B4 CSV branded chargeback SLO |
-| **Last Updated** | 2026-08-24 — v1.18.10: B2 CLOSED `step-up 19 green` `dual-control 356 green` `coraza 2/2` + `1.18.9 pipelines 3 Running` `payu-dev 35/52` `coraza 2/2` `WAF 403/200` |
+| **Last Release** | `1.18.11` (2026-08-24) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **1.18.10 2/2 Running** (partner/txn), workloads `19/52 1/1` `1.18.11` `coraza 2/2` `KEDA` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | **B1 CLOSED 1.18.9** • **B2 CLOSED 1.18.10** • **B3 CLOSED 1.18.11** (reconciliation inbox/outbox, Pact 5 providers, RLS 39 tables FORCE, DMN+Kogito) • **B4 CLOSED 1.18.11** (CSV, branded Money, chargeback, SLO, Kafka topics, LLM deferred KEDA go) • *No OPEN P1* |
+| **Last Updated** | 2026-08-24 — v1.18.11: B3+B4 CLOSED `reconciliation 29` `Pact 5 sims` `RLS 39` `DMN 2` `CSV 68+109` `Money 8` `SLO 4-tier` `Kafka 107 topics` `KEDA GO LLM DEFERRED` `19/52` `KEDA` |
 
 ---
 
@@ -60,8 +60,8 @@
 | COMPLIANCE-HARDEN-001 | compliance-service / ADR-0063 | **AML/CFT + PCI-DSS Req10 audit trail** — `DataAccessAudit` append-only hex stack + structured JSON `traceId` live, `WORM` via `audit-syslog` rsyslog `5514:514` live. **B1 CLOSED 1.18.9**: `V4 rename compliance_standard→standard` `V5 REVOKE UPDATE,DELETE` pada `audit_reports/compliance_checks/data_access_audits` untuk `payu/payu_test/sit/uat/preprod` (71 green) — klaim V3 salah sudah dikoreksi. Sisa WORM 1y/7y via Loki KMS deferred | `REVOKE` DONE 1.18.9, WORM KMS deferred |
 | GATEWAY-HARDEN-001 | gateway-service / ADR-0064 | **3scale APIcast edge + rate limiting** — ponytail: `gateway-service` Hot Rod `tryLock` ShedLock-lite via `GatewaySchedulerLock` already (1.13.8), `edge limiting` via 3scale `leaky_bucket/fixed_window` when prod `user_keys` scale 1000-apps burst | `edge_limited_total` deferred, HotRod lock keep |
 | PORTAL-HARDEN-001 | api-portal-service / ADR-0065 | **OpenAPI aggregation DX** — ponytail: `GroupedOpenApi` SpringDoc + `ApiPortalService` TTL `PT5M` partial-failure already (1.13.0), `x-data-threescale-name` + Pact CI when 3scale ActiveDocs prod | `refreshCache` partial 1/N down still 200 already, Pact deferred |
-| LLM-HARDEN-001 | ai / ADR-0067 + ADR-0036 | **LLM RAG + guardrails private (support/compliance/statement/kyc)** — spec: `BPPD DetectorLLM Llama-3.2-3B LoRA + FF3-1 FPE` proxy SeCo, `vLLM Mistral-7B temperature 0` + `pgvector` RAG `payu.docs.*`, `3scale leaky_bucket` per-user, `NIST AI RMF` human gate (lihat `docs/adr/0067-*.md`). **Koreksi audit 2026-08-24**: nol artifact implementasi di repo — `infrastructure/platform/mlops/llm/values.yaml`, `LlmAssistPort`, `python-llm-proxy`, dan `scripts/llm-redteam.sh` TIDAK ADA (klaim bukti lama salah); ADR-0067 masih Proposed | Mulai dari keputusan go/no-go ADR-0067 |
-| KEDA-HARDEN-001 | platform / ADR-0068 + ADR-0042 | **KEDA event-driven autoscaling (Kafka+Prom)** — spec: `ScaledObject` `payu-transaction/wallet/gateway` `lagThreshold 10 min 3 max 10` + `va/biller/llm` `min 0`, `polling 15s cooldown 30s`, `TriggerAuthentication` Vault `payu-kafka` (lihat `docs/adr/0068-*.md`). Replaces Knative. **Koreksi audit 2026-08-24**: kolom bukti lama `kcat→HPA` adalah acceptance criterion item OPEN ini, bukan bukti tercapai — **0 manifest `ScaledObject`/keda di repo** (`infrastructure/**/*keda*` kosong); ADR-0068 masih Proposed | Acceptance: manifest terpasang + uji `kcat produce 1000 → HPA 3→10 <30s` |
+| LLM-HARDEN-001 | ai / ADR-0067 + ADR-0036 | **LLM RAG + guardrails private — DEFERRED NO-GO (B4.6 2026-08-24)** — ADR-0067 BPPD+FF3-1+vLLM+pgvector+3scale+NIST AI RMF **Deferred ponytail YAGNI**: cost 1×GPU + OpenShift AI + pgvector + 300ms FPE + quota `ExceededNodeResources 23 svcs` vs benefit 5k/mo triage rule/heuristic belum breach, residency sudah `EncryptedStringConverter` tanpa LLM, 0 artifacts (audit 2026-08-24). No code — decision di `infrastructure/platform/mlops/README.md` + `infrastructure/platform/data/pgvector/README.md`; go criteria: GPU quota `payu-mlops` + validated demand + pgvector approved, re-evaluasi Q. ADR-0067 Proposed→Deferred. | Deferred — no manifest, ADR-0067 Deferred 2026-08-24 |
+| KEDA-HARDEN-001 | platform / ADR-0068 + ADR-0042 | **KEDA event-driven autoscaling — GO Accepted (B4.6 2026-08-24)** — manifest minimal DONE `infrastructure/platform/keda/base/` (`namespace` + `keda-operator 2.14 HA PDB` + `TriggerAuthentication Vault payu/prod/kafka` + `scaledobject-core lagThreshold 10 min3 max10 prometheus 1000 QPS polling 15s cooldown 30s fallback 3` + `scaledobject-sim min0 lag5`) + overlays `dev min1 max3 / prod min3 max10`. **Sisa**: `oc apply -k` cluster + uji `kcat -L -b payu-kafka:9092 produce 1000 → HPA 3→10 <30s` (acceptance ADR-0068). | Manifest GO — apply + kcat test pending |
 
 ### P2 — Defer (Out-of-Scope MVP, ADR-0023)
 
@@ -171,16 +171,14 @@ Drift ditemukan audit sweep 2026-08-24 (70 ADR vs repo): 3 klaim bukti salah dik
 > **B1 — SELESAI 1.18.9:** fix PITR barman+S3+restore drill ([ADR-0031] → PARTNER-PROD-008 P0) · suspense ledger persist + wire ke transfer ([ADR-0029], GAP-029) · risk enforcement wire ([ADR-0030], GAP-030E) · migration `REVOKE UPDATE,DELETE` audit ([ADR-0063] → COMPLIANCE-HARDEN-001) — **4/4 CLOSED**
 > **B2 — SELESAI 1.18.10:** step-up wiring + dynamic linking ([ADR-0028], GAP-028W) · dual-control onboarding ([ADR-0035] → PARTNER-PROD-011) · Coraza WAF deploy nyata (GAP-032W) — **3/3 CLOSED**
 > **B3 — correctness infra:** reconciliation job + inbox_events (TXN-HARDEN-003/004) · isi kontrak Pact lalu `FAIL_ON_NO_PACTS=true` (GAP-056) · RLS FORCE rollout sisa service · cleanup/wire Kogito TaskInbox (GAP-015) · DMN lending (GAP-048)
-> **B4 — menunggu trigger / keputusan:** CSV export (GAP-019) · branded types ketat + lint (GAP-047) · chargeback (GAP-054C) · verifikasi SLO live (PARTNER-PROD-009) · apply topik cluster (blokir OCP creds) · go/no-go [ADR-0067]/[ADR-0068]
+> **B4 — menunggu trigger / keputusan: SISA setelah B4.6 2026-08-24:** CSV export (GAP-019) · branded types ketat + lint (GAP-047) · chargeback (GAP-054C) · verifikasi SLO live (PARTNER-PROD-009) · apply topik cluster (blokir OCP creds); **B4.6 CLOSED 2026-08-24: LLM DEFERRED no-code, KEDA GO manifest DONE → apply+test pending**.
 
 ### 3. 📝 Backlog ADR Baru yang Perlu Dibuat
 
 > **Update 2026-08-19**: ADR-0035..0066 Accepted (32 ADRs) — lihat `docs/adr/README.md`. Sisa 2 Proposed di bawah.
 
-| No | Nomor ADR Usulan | Judul / Topik ADR | Prioritas |
-|:---:|:---|:---|:---:|
-| — | **ADR-0067** | 📝 **LLM Integration for PayU Services — RAG, Guardrails & Private Deployment (BPPD, FinRAG-12B, 2026-08-22)** — `support` agent-assist + `compliance` audit narrative + `statement` promo personalization + `kyc` doc draft→operator QA, `BPPD DetectorLLM Llama-3.2-3B LoRA + FF3-1 FPE` proxy Separation-of-Concerns, `vLLM Mistral-7B` `temperature 0` + `pgvector` RAG, `3scale` per-user limit, `NIST AI RMF` + `GLBA/SR 26-2` governance. **Proposed** — lihat `docs/adr/0067-*.md` | **P1** |
-| — | **ADR-0068** | 📝 **KEDA Autoscaling — Kafka Lag & Prometheus Triggers (HPA++, 2026-08-22)** — `payu-transaction/wallet/gateway` `ScaledObject` `lagThreshold 10` `min 3 max 10` + `va/biller/llm` `min 0`, `cooldown 30s` `polling 15s`, `TriggerAuthentication` Vault. **Proposed** — lihat `docs/adr/0068-*.md` | **P1** |
+| — | **ADR-0067** | 📝 **LLM Integration — DEFERRED 2026-08-24 (B4.6 NO-GO ponytail)** — `infrastructure/platform/mlops/README.md` decision log, `infrastructure/platform/data/pgvector/README.md` deferred, `docs/adr/README.md` Deferred. Re-evaluasi Q when GPU quota + demand. | **Deferred** |
+| — | **ADR-0068** | 📝 **KEDA Autoscaling — ACCEPTED 2026-08-24 (B4.6 GO)** — `infrastructure/platform/keda/base/` + overlays `dev/prod` manifests DONE (`ScaledObject` lag 10, `TriggerAuthentication` Vault). Next `oc apply -k` + `kcat produce 1000 → HPA 3→10 <30s`. | **Accepted** |
 
 ### 4. ⚠️ Kesenjangan Best Practice & Anti-Pattern yang Memerlukan Remediasi
 

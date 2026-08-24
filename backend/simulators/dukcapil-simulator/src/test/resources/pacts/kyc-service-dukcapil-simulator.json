@@ -1,0 +1,158 @@
+{
+  "consumer": {
+    "name": "kyc-service"
+  },
+  "provider": {
+    "name": "dukcapil-simulator"
+  },
+  "interactions": [
+    {
+      "description": "verify success",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/verify",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "nik": "3201234567890001",
+          "fullName": "JOHN DOE"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "responseCode": "00",
+          "verified": true,
+          "nik": "3201234567890001"
+        }
+      }
+    },
+    {
+      "description": "verify not found",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/verify",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "nik": "9999999999999999",
+          "fullName": "NONEXISTENT"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "14"
+        }
+      }
+    },
+    {
+      "description": "verify blocked via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/verify",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "blocked"
+        },
+        "body": {
+          "nik": "3201234567890001",
+          "fullName": "JOHN DOE"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "62"
+        }
+      }
+    },
+    {
+      "description": "verify rate-limit via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/verify",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "rate-limit"
+        },
+        "body": {
+          "nik": "3201234567890001",
+          "fullName": "JOHN DOE"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "96"
+        }
+      }
+    },
+    {
+      "description": "match face success",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/match-photo",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "nik": "3201234567890001",
+          "ktpPhotoBase64": "abc",
+          "selfiePhotoBase64": "def",
+          "livenessCheck": true
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "00",
+          "matched": true
+        }
+      }
+    },
+    {
+      "description": "get citizen data",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/nik/3201234567890001",
+        "headers": {}
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "00",
+          "nik": "3201234567890001",
+          "fullName": "JOHN DOE"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}

@@ -42,10 +42,12 @@ class LoanPreApprovalServiceTest {
 
     @BeforeEach
     void setUp() {
+        LendingDmnService lendingDmnService = new LendingDmnService();
         loanPreApprovalService = new LoanPreApprovalService(
                 creditScorePersistencePort,
                 preApprovalPersistencePort,
-                enhancedCreditScoringService
+                enhancedCreditScoringService,
+                lendingDmnService
         );
     }
 

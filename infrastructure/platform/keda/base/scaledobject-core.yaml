@@ -1,0 +1,108 @@
+# ScaledObject core — transaction/wallet/gateway (ADR-0068 Option A)
+# ponytail: 2 templates cover 23 services; per-service ScaledObject overlays only when lag semantics differ
+# Covers: transaction-service, wallet-service, gateway-service (min 3 max 10, lag 10)
+# Kafka lag + Prometheus QPS dual trigger, fallback to 3 replicas on scaler failure
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: transaction-service-keda
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: transaction-service
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: transaction-service
+  pollingInterval: 15
+  cooldownPeriod: 30
+  minReplicaCount: 3
+  maxReplicaCount: 10
+  fallback:
+    failureThreshold: 3
+    replicas: 3
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: payu-kafka-kafka-bootstrap.payu-dev.svc:9092
+        consumerGroup: transaction-service-group
+        topic: payu.transaction.initiated.v1
+        lagThreshold: "10"
+        activationLagThreshold: "50"
+      authenticationRef:
+        name: payu-kafka-auth
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus-operated.payu-dev.svc:9090
+        metricName: http_requests_per_second
+        threshold: "1000"
+        query: sum(rate(http_requests_total{app="transaction-service"}[1m]))
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: wallet-service-keda
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: wallet-service
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wallet-service
+  pollingInterval: 15
+  cooldownPeriod: 30
+  minReplicaCount: 3
+  maxReplicaCount: 10
+  fallback:
+    failureThreshold: 3
+    replicas: 3
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: payu-kafka-kafka-bootstrap.payu-dev.svc:9092
+        consumerGroup: wallet-service-group
+        topic: payu.wallet.ledger.posted.v1
+        lagThreshold: "10"
+        activationLagThreshold: "50"
+      authenticationRef:
+        name: payu-kafka-auth
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus-operated.payu-dev.svc:9090
+        metricName: http_requests_per_second
+        threshold: "1000"
+        query: sum(rate(http_requests_total{app="wallet-service"}[1m]))
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: gateway-service-keda
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: gateway-service
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gateway-service
+  pollingInterval: 15
+  cooldownPeriod: 30
+  minReplicaCount: 3
+  maxReplicaCount: 10
+  fallback:
+    failureThreshold: 3
+    replicas: 3
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus-operated.payu-dev.svc:9090
+        metricName: http_requests_per_second
+        threshold: "1000"
+        query: sum(rate(http_requests_total{app="gateway-service"}[1m]))

@@ -35,12 +35,17 @@ public class DukcapilResource {
      */
     @POST
     @Path("/verify")
-    public Response verifyNik(@Valid VerifyNikRequest request) {
+    public Response verifyNik(@Valid VerifyNikRequest request, @HeaderParam("X-Simulate") String simulate) {
         Log.infof("Received NIK verification request for: %s****", 
                   request.nik().substring(0, 4));
         
         try {
-            VerifyNikResponse response = dukcapilService.verifyNik(request);
+            if (simulate != null && !simulate.isBlank()) {
+                String m = simulate.trim().toLowerCase();
+                if ("rate-limit".equals(m)) return Response.status(429).entity(VerifyNikResponse.error(null, "Rate limit exceeded")).header("X-Simulate", simulate).build();
+                if ("5xx".equals(m)) return Response.status(500).entity(VerifyNikResponse.error(null, "Simulated internal error")).header("X-Simulate", simulate).build();
+            }
+            VerifyNikResponse response = dukcapilService.verifyNik(request, simulate);
             
             int statusCode = switch (response.responseCode()) {
                 case "00" -> response.verified() ? 200 : 200; // Still 200, just not verified
@@ -50,7 +55,7 @@ public class DukcapilResource {
                 default -> 500;
             };
             
-            return Response.status(statusCode).entity(response).build();
+            return Response.status(statusCode).entity(response).header("X-Simulate", simulate != null ? simulate : "success").build();
         } catch (Exception e) {
             Log.errorf(e, "Error processing NIK verification");
             return Response.serverError()
@@ -68,12 +73,17 @@ public class DukcapilResource {
      */
     @POST
     @Path("/match-photo")
-    public Response matchFace(@Valid FaceMatchRequest request) {
+    public Response matchFace(@Valid FaceMatchRequest request, @HeaderParam("X-Simulate") String simulate) {
         Log.infof("Received face match request for NIK: %s****", 
                   request.nik().substring(0, 4));
         
         try {
-            FaceMatchResponse response = dukcapilService.matchFace(request);
+            if (simulate != null && !simulate.isBlank()) {
+                String m = simulate.trim().toLowerCase();
+                if ("rate-limit".equals(m)) return Response.status(429).entity(FaceMatchResponse.error(null, "Rate limit exceeded")).header("X-Simulate", simulate).build();
+                if ("5xx".equals(m)) return Response.status(500).entity(FaceMatchResponse.error(null, "Simulated internal error")).header("X-Simulate", simulate).build();
+            }
+            FaceMatchResponse response = dukcapilService.matchFace(request, simulate);
             
             int statusCode = switch (response.responseCode()) {
                 case "00" -> 200; // Matched
@@ -84,7 +94,7 @@ public class DukcapilResource {
                 default -> 500;
             };
             
-            return Response.status(statusCode).entity(response).build();
+            return Response.status(statusCode).entity(response).header("X-Simulate", simulate != null ? simulate : "success").build();
         } catch (Exception e) {
             Log.errorf(e, "Error processing face match");
             return Response.serverError()

@@ -1,0 +1,183 @@
+{
+  "consumer": {
+    "name": "wallet-service"
+  },
+  "provider": {
+    "name": "qris-simulator"
+  },
+  "interactions": [
+    {
+      "description": "generate qr success",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/generate",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "merchantId": "MCH001",
+          "amount": 15000
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "responseCode": "00",
+          "qrContent": "0002010101021252045802ID53033605405150005922Warung Makan Sederhana6220QRIS-123456-ABCD12342606MCH00163047C7C",
+          "status": "PENDING"
+        }
+      }
+    },
+    {
+      "description": "generate qr merchant not found",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/generate",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "merchantId": "UNKNOWN",
+          "amount": 1000
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "14"
+        }
+      }
+    },
+    {
+      "description": "generate qr blocked via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/generate",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "blocked"
+        },
+        "body": {
+          "merchantId": "MCH001",
+          "amount": 1000
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "62"
+        }
+      }
+    },
+    {
+      "description": "generate qr rate-limit via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/generate",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "rate-limit"
+        },
+        "body": {
+          "merchantId": "MCH001",
+          "amount": 1000
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "96"
+        }
+      }
+    },
+    {
+      "description": "pay qr success",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/pay",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": "QR-PAY-001",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "qrId": "QR-123",
+          "payerName": "John Doe",
+          "payerAccount": "1234567890",
+          "payerBank": "BCA"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "00",
+          "status": "PAID"
+        }
+      }
+    },
+    {
+      "description": "pay qr not found",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/pay",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "qrId": "QR-NOTFOUND",
+          "payerName": "John",
+          "payerAccount": "123",
+          "payerBank": "BCA"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "14"
+        }
+      }
+    },
+    {
+      "description": "qr content CRC16 validation",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/status/QR-123",
+        "headers": {}
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "qrContent": "0002010101021252045802ID53033605405150005922Warung Makan Sederhana6220QRIS-123456-ABCD12342606MCH00163047C7C"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}

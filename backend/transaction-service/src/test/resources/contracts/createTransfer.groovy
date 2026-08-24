@@ -15,7 +15,7 @@ Contract.make {
         body([
             senderAccountId: $(c("550e8400-e29b-41d4-a716-446655440000"), p(anyUuid())),
             recipientAccountNumber: "1234567890",
-            amount: $(c(50000.00), p(anyNumber())),
+            amount: $(c(50000.00), p(regex('[0-9]+\\.[0-9]{2}'))),
             currency: "IDR",
             description: $(c("Test internal transfer"), p(anyNonBlankString())),
             type: "INTERNAL_TRANSFER"

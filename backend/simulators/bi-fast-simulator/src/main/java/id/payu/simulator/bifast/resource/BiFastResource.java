@@ -33,27 +33,28 @@ public class BiFastResource {
      */
     @POST
     @Path("/inquiry")
-    public Response inquiry(@Valid InquiryRequest request) {
-        Log.infof("Received inquiry request: bank=%s, account=%s", 
-                  request.bankCode(), request.accountNumber());
-        
+    public Response inquiry(@Valid InquiryRequest request, @HeaderParam("X-Simulate") String simulate) {
+        Log.infof("Received inquiry request: bank=%s, account=%s", request.bankCode(), request.accountNumber());
+        // X-Simulate deterministic override (ADR-0056) — header wins before service random
+        if (simulate != null && !simulate.isBlank()) {
+            String mode = simulate.trim().toLowerCase();
+            if ("rate-limit".equals(mode)) return Response.status(429).entity(new InquiryResponse(request.bankCode(), request.accountNumber(), null, "RATE_LIMIT", "42", "Rate limit exceeded")).header("X-Simulate", simulate).build();
+            if ("5xx".equals(mode)) return Response.status(500).entity(InquiryResponse.error("Simulated internal error")).header("X-Simulate", simulate).build();
+        }
         try {
-            InquiryResponse response = biFastService.inquiry(request);
-            
+            InquiryResponse response = biFastService.inquiry(request, simulate);
             int statusCode = switch (response.responseCode()) {
                 case "00" -> 200;
                 case "14" -> 404;
                 case "62" -> 403;
                 case "68" -> 504;
+                case "42" -> 429;
                 default -> 500;
             };
-            
-            return Response.status(statusCode).entity(response).build();
+            return Response.status(statusCode).entity(response).header("X-Simulate", simulate != null ? simulate : "success").build();
         } catch (Exception e) {
             Log.errorf(e, "Error processing inquiry");
-            return Response.serverError()
-                    .entity(InquiryResponse.error(e.getMessage()))
-                    .build();
+            return Response.serverError().entity(InquiryResponse.error(e.getMessage())).header("X-Simulate", simulate).build();
         }
     }
 
@@ -65,29 +66,32 @@ public class BiFastResource {
      */
     @POST
     @Path("/transfer")
-    public Response transfer(@Valid TransferRequest request) {
-        Log.infof("Received transfer request: %s-%s to %s-%s, amount=%s",
-                  request.sourceBankCode(), request.sourceAccountNumber(),
-                  request.destinationBankCode(), request.destinationAccountNumber(),
-                  request.amount());
-        
+    public Response transfer(@Valid TransferRequest request, @HeaderParam("X-Simulate") String simulate, @HeaderParam("X-External-Id") String externalId, @HeaderParam("X-Idempotency-Key") String idempotencyKey) {
+        Log.infof("Received transfer request: %s-%s to %s-%s, amount=%s", request.sourceBankCode(), request.sourceAccountNumber(), request.destinationBankCode(), request.destinationAccountNumber(), request.amount());
+        if (simulate != null && !simulate.isBlank()) {
+            String mode = simulate.trim().toLowerCase();
+            if ("rate-limit".equals(mode)) return Response.status(429).entity(new TransferResponse(request.referenceNumber(), request.sourceBankCode(), request.sourceAccountNumber(), request.destinationBankCode(), request.destinationAccountNumber(), null, request.amount(), request.currency(), "RATE_LIMIT", "42", "Rate limit exceeded", null, null)).header("X-Simulate", simulate).build();
+            if ("5xx".equals(mode)) return Response.status(500).entity(TransferResponse.error("Simulated internal error")).header("X-Simulate", simulate).build();
+        }
         try {
-            TransferResponse response = biFastService.transfer(request);
-            
+            // Idempotency: prefer header over body referenceNumber
+            String ref = request.referenceNumber();
+            if ((ref == null || ref.isBlank()) && externalId != null && !externalId.isBlank()) ref = externalId;
+            else if ((ref == null || ref.isBlank()) && idempotencyKey != null && !idempotencyKey.isBlank()) ref = idempotencyKey;
+            TransferRequest effective = ref != null && !ref.equals(request.referenceNumber()) ? new TransferRequest(ref, request.sourceBankCode(), request.sourceAccountNumber(), request.sourceAccountName(), request.destinationBankCode(), request.destinationAccountNumber(), request.amount(), request.currency(), request.description(), request.webhookUrl()) : request;
+            TransferResponse response = biFastService.transfer(effective, simulate);
             int statusCode = switch (response.responseCode()) {
                 case "00" -> 200;
-                case "09" -> 202; // Accepted, processing
-                case "51" -> 400; // Failed
-                case "68" -> 504; // Timeout
+                case "09" -> 202;
+                case "51" -> 400;
+                case "68" -> 504;
+                case "42" -> 429;
                 default -> 500;
             };
-            
-            return Response.status(statusCode).entity(response).build();
+            return Response.status(statusCode).entity(response).header("X-Simulate", simulate != null ? simulate : "success").build();
         } catch (Exception e) {
             Log.errorf(e, "Error processing transfer");
-            return Response.serverError()
-                    .entity(TransferResponse.error(e.getMessage()))
-                    .build();
+            return Response.serverError().entity(TransferResponse.error(e.getMessage())).header("X-Simulate", simulate).build();
         }
     }
 

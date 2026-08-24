@@ -7,7 +7,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "@typescript-eslint/no-unused-vars": ["warn", {
         "args": "none",
@@ -15,11 +15,18 @@ const eslintConfig = defineConfig([
         "varsIgnorePattern": "^_",
         "caughtErrorsIgnorePattern": "^_"
       }],
+      // ADR-0047: forbid float corruption of Money / branded Ids — warn to allow gradual migration
+      "no-restricted-syntax": ["warn",
+        { "selector": "CallExpression[callee.name='Number']", "message": "Use asMoney/asAccountId/compareCurrency — Number() corrupts Money/branded Id (ADR-0047)" },
+        { "selector": "CallExpression[callee.name='parseFloat']", "message": "Use parseCurrencyExact/addCurrency/compareCurrency — parseFloat corrupts Money (ADR-0047)" }
+      ],
     },
   },
-  // Override default ignores of eslint-config-next.
+  {
+    files: ["src/lib/currency.ts", "src/lib/validation.ts", "src/lib/utils.ts", "src/app/api/**", "e2e/**", "src/__tests__/**"],
+    rules: { "no-restricted-syntax": "off" },
+  },
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",

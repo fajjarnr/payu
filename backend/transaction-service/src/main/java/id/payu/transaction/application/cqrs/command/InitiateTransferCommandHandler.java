@@ -2,7 +2,9 @@ package id.payu.transaction.application.cqrs.command;
 
 import id.payu.transaction.application.cqrs.CommandHandler;
 import id.payu.api.common.exception.RateLimitExceededException;
+import id.payu.transaction.application.service.AggregateResultService;
 import id.payu.transaction.application.service.AuthorizationService;
+import id.payu.transaction.application.service.InboxService;
 import id.payu.transaction.application.service.VelocityGuard;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
@@ -48,6 +50,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     private final VelocityGuard velocityGuard;
     private final RiskEvaluationPort riskEvaluationPort;
     private final StepUpVerificationPort stepUpVerificationPort;
+    private final InboxService inboxService;
+    private final AggregateResultService aggregateResultService;
 
     @org.springframework.beans.factory.annotation.Value("${payu.step-up.amount-threshold:10000000}")
     private BigDecimal stepUpAmountThreshold = new BigDecimal("10000000");
@@ -61,7 +65,9 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                                           AuthorizationService authorizationService,
                                           VelocityGuard velocityGuard,
                                           RiskEvaluationPort riskEvaluationPort,
-                                          StepUpVerificationPort stepUpVerificationPort) {
+                                          StepUpVerificationPort stepUpVerificationPort,
+                                          InboxService inboxService,
+                                          AggregateResultService aggregateResultService) {
         this.transactionPersistencePort = transactionPersistencePort;
         this.walletServicePort = walletServicePort;
         this.bifastServicePort = bifastServicePort;
@@ -72,6 +78,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         this.velocityGuard = velocityGuard;
         this.riskEvaluationPort = riskEvaluationPort;
         this.stepUpVerificationPort = stepUpVerificationPort;
+        this.inboxService = inboxService;
+        this.aggregateResultService = aggregateResultService;
     }
 
     @Override
@@ -266,6 +274,14 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
     @Transactional
     public TransactionEntity settleInterbankTransfer(String referenceNumber, String status, String failureReason) {
+        // TXN-HARDEN-003: inbox dedup — first claim wins via unique reference_no
+        boolean firstTime = inboxService.tryMarkProcessed(referenceNumber, "{\"status\":\"" + status + "\"}");
+        if (!firstTime) {
+            log.info("Inbox dedup: duplicate callback for referenceNo={} ignored", referenceNumber);
+            // return existing transaction without double-mutating
+            return transactionPersistencePort.findByReferenceNumber(referenceNumber).stream().findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + referenceNumber));
+        }
         // IMP-5: lock the row FOR UPDATE so concurrent callbacks serialize; the
         // terminal check below is then race-free (exactly one callback mutates).
         TransactionEntity transaction = transactionPersistencePort.findByReferenceNumberForUpdate(referenceNumber)
@@ -282,6 +298,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         if (transaction.getStatus() == TransactionStatus.COMPLETED
                 || transaction.getStatus() == TransactionStatus.FAILED
                 || transaction.getStatus() == TransactionStatus.CANCELLED) {
+            // store aggregate result for already-terminal (idempotent replay)
+            aggregateResultService.saveResult(referenceNumber, "{\"status\":\"" + status + "\",\"dedup\":true}", 1);
             return transaction;
         }
 
@@ -313,7 +331,12 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
             default -> throw new IllegalArgumentException("Unsupported interbank status: " + status);
         }
 
-        return transactionPersistencePort.save(transaction);
+        TransactionEntity saved = transactionPersistencePort.save(transaction);
+        // TXN-HARDEN-003: store aggregate result for LIFO compensation tracking
+        int fanoutOrder = saved.getStatus() == TransactionStatus.COMPLETED ? 1 : 2;
+        aggregateResultService.saveResult(referenceNumber,
+                "{\"status\":\"" + status + "\",\"transactionStatus\":\"" + saved.getStatus().name() + "\"}", fanoutOrder);
+        return saved;
     }
 
     private void requireReservation(TransactionEntity transaction) {

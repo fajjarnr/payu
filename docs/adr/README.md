@@ -73,9 +73,18 @@ This directory contains the historical record of architectural decisions made fo
 | [0064](0064-gateway-service-rate-limiting-3scale-and-edge-protection-standard.md) | Gateway Service — 3scale APIcast Edge & Rate Limiting (GATEWAY-HARDEN) | Accepted | 2026-08-22 |
 | [0065](0065-api-portal-service-openapi-aggregation-and-developer-experience-standard.md) | API Portal Service — OpenAPI Aggregation & DX (PORTAL-HARDEN) | Accepted | 2026-08-22 |
 | [0066](0066-polyrepo-pipeline-per-service-devsecops-standard.md) | Polyrepo Per-Service DevSecOps Pipeline (Monorepo→Polyrepo, 6 stages, SLSA) | Accepted | 2026-08-22 |
-| [0067](0067-llm-integration-for-payu-services-standard.md) | LLM Integration for PayU Services — RAG, Guardrails & Private Deployment (BPPD, FinRAG-12B) | Proposed | 2026-08-22 |
-| [0068](0068-keda-autoscaling-kafka-and-prometheus-standard.md) | KEDA Autoscaling — Kafka Lag & Prometheus Triggers (HPA++) | Proposed | 2026-08-22 |
+| [0067](0067-llm-integration-for-payu-services-standard.md) | LLM Integration for PayU Services — RAG, Guardrails & Private Deployment (BPPD, FinRAG-12B) | Deferred | 2026-08-24 |
+| [0068](0068-keda-autoscaling-kafka-and-prometheus-standard.md) | KEDA Autoscaling — Kafka Lag & Prometheus Triggers (HPA++) | Accepted | 2026-08-24 |
 | [0069](0069-openshift-4-22-platform-standard.md) | Red Hat OpenShift 4.22 Platform Standard | Accepted | 2026-08-24 |
+
+### B4.6 Go/No-Go Decision 2026-08-24 (ADR-0067 / ADR-0068)
+
+> Evaluasi cost vs benefit + infra check (LLM 0 artifacts, KEDA 0 manifests) per B4.6 — ponytail.
+
+| ADR | Decision | Rationale (cost vs benefit) | Artifacts |
+|:---|:---|:---|:---|
+| **ADR-0067 LLM RAG + BPPD guardrails** | **DEFERRED (NO-GO)** | Cost: 1× GPU (RTX 4090/ROCm) + OpenShift AI ServingRuntime vLLM + pgvector on CNPG `payu_analytics` + FPE 300ms + Wazuh 1y/7y + drift review 12-24m, lab `ExceededNodeResources 23 svcs` no GPU quota, 0 manifests (`values.yaml`, `LlmAssistPort`, `python-llm-proxy`, `llm-redteam.sh` absent audit 2026-08-24). Benefit: 5k tickets/mo triage + compliance narrative + statement/promo + kyc draft — semua masih rule/heuristic tanpa SLA breach, no validated KPI LLM > rules, residency sudah `EncryptedStringConverter` + blind index + RLS tanpa LLM, vLLM 20-50× cheaper baru scale 40 FIs. | No code — `infrastructure/platform/mlops/README.md` decision log, `infrastructure/platform/data/pgvector/README.md` deferred, ADR stays Proposed→Deferred; re-evaluasi Q when GPU quota + validated demand. |
+| **ADR-0068 KEDA Kafka lagThreshold 10** | **GO (Accepted)** | Cost: KEDA 2.14 operator HA 2 replicas + PDB tiny, cluster-wide `watchNamespace=""`, no GPU. Benefit: langsung solves `ExceededNodeResources` via scale-to-zero `va/biller` idle 90% + lag-aware burst `transaction/wallet/gateway` (BI-FAST 1000 req/s) yang HPA CPU 80% gagal `P95 <500ms`; Strimzi 3.7 + `prometheus-operated:9090` sudah live, CNCF best practice, no Knative Istio. | Minimal manifests created: `infrastructure/platform/keda/base/` (`namespace`, `keda-operator`, `TriggerAuthentication` Vault VSO, `scaledobject-core` lag 10 min3 max10 + prometheus 1000 QPS, `scaledobject-sim` min0 lag5) + overlays `dev (min1 max3)` / `prod (min3 max10)` + kustomizations. Next: `oc apply -k` + `kcat produce 1000 → HPA 3→10 <30s` (acceptance). |
 
 
 ## 🚀 How to Create a New ADR

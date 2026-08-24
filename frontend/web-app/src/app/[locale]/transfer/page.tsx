@@ -4,6 +4,7 @@ import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { transferSchema, TransferRequest, TransferType, TransferScheduleType } from '@/types';
+import { compareCurrency } from '@/lib/currency';
 import { useState, useCallback, useMemo } from 'react';
 import { useInitiateTransfer } from '@/hooks';
 import { useAuthStore } from '@/stores';
@@ -179,7 +180,7 @@ export default function TransferPage() {
   }), [amount, toAccountId, description, scheduleType, scheduledAt, recurringDay, recurringMonth, accountId]);
 
   const handleReview = useCallback(() => {
-    if (!formValues.toAccountId || Number(formValues.amount) <= 0) {
+    if (!formValues.toAccountId || compareCurrency((formValues.amount ?? '0') as string, '0' as string) <= 0) {
       addToast('Silakan pilih penerima dan masukkan jumlah transfer', 'warning');
       return;
     }

@@ -47,13 +47,29 @@ export interface LoginResponse {
 // IMP-011 Fix: Consolidated pocket types to match backend API
 // Backend uses: SAVINGS, SHARED, GOAL (no MAIN/SAVING singular)
 export type PocketType = 'SAVINGS' | 'SHARED' | 'GOAL';
-// ADR-0047: branded nominal types to prevent ID mismatch (BE-PARTNER-001/BE-INVEST-001)
-// ponytail: optional __brand for gradual adoption — plain string still assignable, strict via `as` when needed
-export type AccountId = string & { readonly __brand?: 'AccountId' };
-export type UserId = string & { readonly __brand?: 'UserId' };
-export type TransactionId = string & { readonly __brand?: 'TransactionId' };
-export type PocketId = string & { readonly __brand?: 'PocketId' };
-export type Money = string & { readonly __brand?: 'Money' };
+// ADR-0047: strict nominal branded types — required __brand prevents plain string assign (GAP-047)
+export type AccountId = string & { readonly __brand: 'AccountId' };
+export type UserId = string & { readonly __brand: 'UserId' };
+export type TransactionId = string & { readonly __brand: 'TransactionId' };
+export type PocketId = string & { readonly __brand: 'PocketId' };
+export type Money = string & { readonly __brand: 'Money' };
+
+// Money validation: DECIMAL(19,4) HALF_EVEN — up to 4 decimal digits, canonical "0" or "0.00"
+const MONEY_RE = /^-?\d+(?:\.\d{1,4})?$/;
+export function isMoney(value: string): boolean {
+  return MONEY_RE.test(value);
+}
+export function assertMoney(value: string): asserts value is Money {
+  if (!MONEY_RE.test(value)) throw new Error(`Invalid Money: ${value}`);
+}
+export function asMoney(value: string): Money {
+  if (!MONEY_RE.test(value)) throw new Error(`Invalid Money: ${value}`);
+  return value as Money;
+}
+export function asAccountId(value: string): AccountId { return value as AccountId; }
+export function asUserId(value: string): UserId { return value as UserId; }
+export function asTransactionId(value: string): TransactionId { return value as TransactionId; }
+export function asPocketId(value: string): PocketId { return value as PocketId; }
 
 export interface Pocket {
   id: string;
@@ -93,7 +109,7 @@ export type TransferScheduleType = 'NOW' | 'SCHEDULED' | 'RECURRING';
 export const transferSchema = z.object({
   fromAccountId: z.string().min(1, 'Source account is required'),
   toAccountId: z.string().min(1, 'Destination account is required'),
-  amount: z.string().regex(/^\d+(?:\.\d+)?$/, 'Amount must be a decimal string').refine((value) => Number(value) > 0, 'Amount must be positive'),
+  amount: z.string().regex(/^\d+(?:\.\d+)?$/, 'Amount must be a decimal string').refine((value) => !/^0+(\.0+)?$/.test(value), 'Amount must be positive'),
   description: z.string().optional(),
   transferType: z.enum(['INTERNAL_TRANSFER', 'BIFAST_TRANSFER', 'SKN_TRANSFER', 'RTGS_TRANSFER'] as const).optional().default('INTERNAL_TRANSFER'),
   scheduleType: z.enum(['NOW', 'SCHEDULED', 'RECURRING'] as const).optional().default('NOW'),

@@ -69,7 +69,16 @@ public class VaSimulatorService {
      * Returns VA details if valid and pending.
      */
     @Transactional
-    public VaInquiryResponse inquiry(VaInquiryRequest request) {
+    public VaInquiryResponse inquiry(VaInquiryRequest request, String simulate) {
+        String mode = simulate != null ? simulate.trim().toLowerCase() : null;
+        if (mode != null) {
+            switch (mode) {
+                case "blocked" -> { return new VaInquiryResponse("62","Account is blocked", request.vaNumber(), request.bankCode(), null, null, null, null, "BLOCKED", null); }
+                case "timeout" -> { try{ Thread.sleep(5000);}catch(Exception e){ Thread.currentThread().interrupt();} return new VaInquiryResponse("68","Request timeout", request.vaNumber(), request.bankCode(), null, null, null, null, "TIMEOUT", null); }
+                case "success" -> { /* fall through */ }
+                default -> {}
+            }
+        }
         Log.infof("VA Inquiry: vaNumber=%s, bank=%s", request.vaNumber(), request.bankCode());
 
         VirtualAccount va = VirtualAccount.findByVaNumber(request.vaNumber());
@@ -105,12 +114,23 @@ public class VaSimulatorService {
         );
     }
 
+    public VaInquiryResponse inquiry(VaInquiryRequest request) { return inquiry(request, null); }
+
     /**
      * Process payment to a Virtual Account.
      * Validates, records payment, and sends callback to PayU.
      */
     @Transactional
-    public VaPaymentResponse processPayment(VaPaymentRequest request) {
+    public VaPaymentResponse processPayment(VaPaymentRequest request, String simulate) {
+        String mode = simulate != null ? simulate.trim().toLowerCase() : null;
+        if (mode != null) {
+            switch (mode) {
+                case "blocked" -> { return VaPaymentResponse.notFound(request.vaNumber()); }
+                case "timeout" -> { try{ Thread.sleep(5000);}catch(Exception e){ Thread.currentThread().interrupt();} return new VaPaymentResponse("68","Payment timeout", request.vaNumber(), null, null, null, null, null, null); }
+                case "success" -> {}
+                default -> {}
+            }
+        }
         Log.infof("VA Payment: vaNumber=%s, amount=%s %s",
             request.vaNumber(), request.amount(), request.currency());
 
@@ -163,6 +183,8 @@ public class VaSimulatorService {
             callbackStatus
         );
     }
+
+    public VaPaymentResponse processPayment(VaPaymentRequest request) { return processPayment(request, null); }
 
     /**
      * Register a new Virtual Account (called by PayU to simulate bank VA creation).

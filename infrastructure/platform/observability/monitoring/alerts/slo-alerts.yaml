@@ -1,192 +1,194 @@
-apiVersion: v1
-kind: ConfigMap
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
 metadata:
-  name: slo-alert-rules
-  namespace: openshift-monitoring
+  name: payu-slo-alerts
+  namespace: payu-dev
   labels:
-    app: payu
-    type: slo-alerts
-data:
-  slo-alerts.yaml: |
-    groups:
-      - name: payu_slo_alerts
-        interval: 30s
-        rules:
-          # Availability SLO: 99.9% (43.2 minutes downtime per month)
-          - alert: SLOAvailabilityBreached
-            expr: |
-              (
-                sum(rate(up{job=~"payu-.*"}[30d]))
-                /
-                count(up{job=~"payu-.*"})
-              ) < 0.999
-            for: 5m
-            labels:
-              severity: critical
-              slo_type: availability
-              team: platform
-            annotations:
-              summary: "Availability SLO breached (99.9%)"
-              description: "Service availability has dropped below 99.9% over the last 30 days. Current value: {{ $value | humanizePercentage }}"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability"
+    role: alert-rules
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: observability
+spec:
+  groups:
+    - name: payu.slo.availability.burn
+      interval: 30s
+      rules:
+        # ADR-0034 §3 Multi-Window Multi-Burn-Rate (SLO 99.9% => error budget 0.1%)
+        # Page-1 Fast Burn: 2% budget in 1h (burn 14.4x) — PagerDuty P1
+        - alert: ApiAvailabilityFastBurnCritical
+          expr: |
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[1h]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[1h]))
+            ) > (14.4 * 0.001)
+            and
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[5m]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[5m]))
+            ) > (14.4 * 0.001)
+          for: 2m
+          labels:
+            severity: critical
+            tier: page
+            slo: availability
+            burn_rate: "14.4"
+          annotations:
+            summary: "Fast Error Budget Burn (14.4x) — 2% budget in 1h"
+            description: "Error rate {{ $value | humanizePercentage }} burning monthly budget in ~2 days. Immediate triage."
+            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability-burn"
 
-          # Error Budget Remaining
-          - alert: ErrorBudgetExhausted
-            expr: |
-              (
-                (1 - avg(rate(up{job=~"payu-.*"}[30d]))) / 0.001
-              ) * 100 < 10
-            for: 5m
-            labels:
-              severity: critical
-              slo_type: error_budget
-              team: platform
-            annotations:
-              summary: "Error budget nearly exhausted"
-              description: "Less than 10% error budget remaining. Immediate action required!"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/error-budget"
+        # Page-2 Medium Burn: 5% budget in 6h (burn 6x) — PagerDuty
+        - alert: ApiAvailabilityMediumBurn
+          expr: |
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[6h]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[6h]))
+            ) > (6 * 0.001)
+            and
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[30m]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[30m]))
+            ) > (6 * 0.001)
+          for: 5m
+          labels:
+            severity: critical
+            tier: page
+            slo: availability
+            burn_rate: "6"
+          annotations:
+            summary: "Medium Burn (6x) — 5% budget in 6h"
+            description: "Sustained error rate {{ $value | humanizePercentage }}. PagerDuty SRE."
+            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability-burn"
 
-          # Latency SLO: p95 < 1s
-          - alert: SLOLatencyBreached
-            expr: |
-              (
-                histogram_quantile(0.95,
-                  sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*",status!~"5.."}[7d])) by (job, le)
-                )
-              ) > 1
-            for: 10m
-            labels:
-              severity: warning
-              slo_type: latency
-              team: platform
-            annotations:
-              summary: "Latency SLO breached (p95 < 1s)"
-              description: "95th percentile latency has exceeded 1 second over the last 7 days. Current: {{ $value }}s"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-latency"
+        # Ticket-1 Slow Burn: 10% budget in 24h (burn 3x) — Slack
+        - alert: ApiAvailabilitySlowBurn
+          expr: |
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[24h]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[24h]))
+            ) > (3 * 0.001)
+            and
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[2h]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[2h]))
+            ) > (3 * 0.001)
+          for: 15m
+          labels:
+            severity: warning
+            tier: ticket
+            slo: availability
+            burn_rate: "3"
+          annotations:
+            summary: "Slow Burn (3x) — 10% budget in 24h"
+            description: "Gradual burn {{ $value | humanizePercentage }} — Slack #alerts-reliability."
+            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability-burn"
 
-          # Freshness SLO for critical data
-          - alert: SLOFreshnessBreached
-            expr: |
-              time() - payu_last_successful_update_seconds{critical="true"} > 300
-            for: 5m
-            labels:
-              severity: warning
-              slo_type: freshness
-              team: backend
-            annotations:
-              summary: "Data freshness SLO breached"
-              description: "Critical data has not been updated for more than 5 minutes. Last update: {{ $value | humanizeDuration }} ago"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/data-freshness"
+        # Ticket-2 Degradation: 10% budget in 3d (burn 1x) — Jira
+        - alert: ApiAvailabilityDegradation
+          expr: |
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[3d]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[3d]))
+            ) > (1 * 0.001)
+            and
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[6h]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[6h]))
+            ) > (1 * 0.001)
+          for: 30m
+          labels:
+            severity: info
+            tier: ticket
+            slo: availability
+            burn_rate: "1"
+          annotations:
+            summary: "Degradation Burn (1x) — 10% budget in 3d"
+            description: "Low-grade burn {{ $value | humanizePercentage }} — weekly review."
+            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability-burn"
 
-          # Correctness SLO: Transaction reconciliation
-          - alert: SLOCorrectnessBreached
-            expr: |
-              (
-                sum(rate(payu_transactions_reconciled_total{status="mismatch"}[1h]))
-                /
-                sum(rate(payu_transactions_total[1h]))
-              ) > 0.001
-            for: 5m
-            labels:
-              severity: critical
-              slo_type: correctness
-              team: backend
-            annotations:
-              summary: "Correctness SLO breached"
-              description: "Transaction mismatch rate exceeds 0.1%. Current: {{ $value | humanizePercentage }}"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/transaction-reconciliation"
+    - name: payu.slo.latency
+      interval: 30s
+      rules:
+        - alert: SnapBiInHouseLatencyP95Breached
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*",uri=~"/v1/snap-bi.*"}[5m])) by (le)
+            ) > 0.5
+          for: 5m
+          labels:
+            severity: critical
+            slo: latency
+            tier: p1
+          annotations:
+            summary: "SNAP-BI in-house P95 > 500ms"
+            description: "P95 latency {{ $value }}s exceeds 500ms SLO (ADR-0034)."
+            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-latency"
 
-          # API Success Rate SLO: 99.9%
-          - alert: SLOAPISuccessRateBreached
-            expr: |
-              (
-                sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status!~"5.."}[24h]))
-                /
-                sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[24h]))
-              ) < 0.999
-            for: 10m
-            labels:
-              severity: critical
-              slo_type: api_success_rate
-              team: platform
-            annotations:
-              summary: "API Success Rate SLO breached (99.9%)"
-              description: "API success rate has dropped below 99.9% over the last 24 hours. Current: {{ $value | humanizePercentage }}"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/api-success-rate"
+        - alert: InterbankLatencyP95Breached
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*",uri=~"/v1/transfers|/v1/payments.*"}[5m])) by (le)
+            ) > 1.5
+          for: 10m
+          labels:
+            severity: warning
+            slo: latency
+            tier: p2
+          annotations:
+            summary: "Interbank P95 > 1500ms"
+            description: "P95 interbank latency {{ $value }}s exceeds 1500ms SLO."
+            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-latency"
 
-          # SLO Tracking - Monthly Burn Rate
-          - alert: SLOBurnRateHigh
-            expr: |
-              (
-                (1 - avg(rate(up{job=~"payu-.*"}[1h])))
-                /
-                (1 - 0.999)
-              ) > 720  # 30 days * 24 hours
-            for: 1h
-            labels:
-              severity: critical
-              slo_type: burn_rate
-              team: platform
-            annotations:
-              summary: "SLO burn rate is critical"
-              description: "At current burn rate, error budget will be exhausted in less than 1 hour!"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-burn-rate"
+    - name: payu.slo.correctness
+      interval: 30s
+      rules:
+        - alert: LedgerInvariantBreached
+          expr: |
+            sum(rate(payu_transactions_reconciled_total{status="mismatch"}[1h]))
+            /
+            sum(rate(payu_transactions_total[1h])) > 0
+          for: 1m
+          labels:
+            severity: critical
+            slo: correctness
+            tier: p0
+          annotations:
+            summary: "Ledger invariant 100% breached — mismatch detected"
+            description: "Reconciliation mismatch rate {{ $value | humanizePercentage }} — zero-tolerance SLO."
+            runbook: "https://docs.payu.fajjjar.my.id/runbooks/ledger-invariant"
 
-      - name: payu_slo_performance
-        interval: 1m
-        rules:
-          # Response Time Budget Tracking
-          - alert: ResponseTimeBudgetWarning
-            expr: |
-              (
-                histogram_quantile(0.95,
-                  sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*"}[1h])) by (job, le)
-                )
-              ) > 0.8
-            for: 15m
-            labels:
-              severity: warning
-              slo_type: latency_budget
-              team: platform
-            annotations:
-              summary: "Response time approaching SLO limit"
-              description: "95th percentile response time is approaching the 1s SLO limit. Current: {{ $value }}s"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/response-time-budget"
+    - name: payu.slo.outbox
+      interval: 30s
+      rules:
+        - alert: OutboxLagBreached
+          expr: |
+            histogram_quantile(0.999,
+              sum(rate(outbox_publish_duration_seconds_bucket[5m])) by (le)
+            ) > 1
+          for: 5m
+          labels:
+            severity: critical
+            slo: outbox
+          annotations:
+            summary: "Outbox publish P99.9 > 1000ms (ADR-0034)"
+            description: "Outbox lag {{ $value }}s exceeds 1000ms SLO."
 
-          # Throughput SLO Tracking
-          - alert: ThroughputSLOWarning
-            expr: |
-              sum(rate(payu_transactions_total[5m])) < 10
-            for: 10m
-            labels:
-              severity: warning
-              slo_type: throughput
-              team: backend
-            annotations:
-              summary: "Transaction throughput below SLO target"
-              description: "Transaction throughput has dropped below minimum target of 10 TPS. Current: {{ $value }} TPS"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/throughput"
+    - name: payu.slo.recording
+      interval: 30s
+      rules:
+        - record: payu:slo:availability:ratio30d
+          expr: |
+            sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status!~"5.."}[30d]))
+            /
+            sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[30d]))
+        - record: payu:slo:error_budget_remaining
+          expr: |
+            100 * payu:slo:availability:ratio30d
 
-      - name: payu_slo_composite
-        interval: 5m
-        rules:
-          # Composite SLO Score
-          - record: payu_slo_composite_score
-            expr: |
-              (
-                (avg(rate(up{job=~"payu-.*"}[30d])) * 0.4) +
-                (avg(http_server_requests_seconds_count{job=~"payu-.*",status!~"5.."} / http_server_requests_seconds_count{job=~"payu-.*"}) * 0.3) +
-                (1 - (histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*"}[1h])) by (job, le)) / 1)) * 0.3
-              ) * 100
-
-          - alert: CompositeSLOLow
-            expr: payu_slo_composite_score < 90
-            for: 15m
-            labels:
-              severity: warning
-              slo_type: composite
-              team: platform
-            annotations:
-              summary: "Composite SLO score is below target"
-              description: "Overall SLO score is {{ $value }}%, below the 90% target"
-              runbook: "https://docs.payu.fajjjar.my.id/runbooks/composite-slo"

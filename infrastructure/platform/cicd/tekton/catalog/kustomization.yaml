@@ -20,6 +20,7 @@ resources:
   - rhacs-tasks.yaml
   - maven-task.yaml
   - maven-java21-task.yaml
+  - pact-verify-task.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: payu

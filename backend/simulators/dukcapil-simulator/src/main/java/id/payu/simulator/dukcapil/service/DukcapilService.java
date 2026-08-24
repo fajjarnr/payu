@@ -29,13 +29,14 @@ public class DukcapilService {
      * Verify NIK and compare with provided data.
      */
     @Transactional
-    public VerifyNikResponse verifyNik(VerifyNikRequest request) {
+    public VerifyNikResponse verifyNik(VerifyNikRequest request, String simulate) {
+        String mode = simulate != null ? simulate.trim().toLowerCase() : null;
+        if ("blocked".equals(mode)) { String rid=generateRequestId(); Citizen c=Citizen.findByNik(request.nik()); if(c==null){ c=new Citizen(); c.nik=request.nik(); c.fullName=request.fullName(); c.status=CitizenStatus.BLOCKED; } return VerifyNikResponse.blocked(rid,c); }
+        if ("timeout".equals(mode)) { try{ Thread.sleep(5000);}catch(Exception e){ Thread.currentThread().interrupt();} return VerifyNikResponse.error(generateRequestId(),"Simulated timeout"); }
         String requestId = generateRequestId();
         Log.infof("[%s] Processing NIK verification for: %s", requestId, maskNik(request.nik()));
-
         simulateLatency();
-
-        if (shouldSimulateFailure()) {
+        if (!"success".equals(mode) && shouldSimulateFailure()) {
             logVerification(requestId, request.nik(), 
                 VerificationType.NIK_VERIFICATION,
                 VerificationResult.ERROR, null, "Simulated failure");
@@ -89,13 +90,14 @@ public class DukcapilService {
      * Match face between KTP photo and selfie.
      */
     @Transactional
-    public FaceMatchResponse matchFace(FaceMatchRequest request) {
+    public FaceMatchResponse matchFace(FaceMatchRequest request, String simulate) {
+        String mode = simulate != null ? simulate.trim().toLowerCase() : null;
+        if ("blocked".equals(mode)) return FaceMatchResponse.blocked(generateRequestId(), request.nik());
+        if ("timeout".equals(mode)) { try{ Thread.sleep(5000);}catch(Exception e){ Thread.currentThread().interrupt();} return FaceMatchResponse.error(generateRequestId(),"Simulated timeout"); }
         String requestId = generateRequestId();
         Log.infof("[%s] Processing face matching for NIK: %s", requestId, maskNik(request.nik()));
-
         simulateLatency();
-
-        if (shouldSimulateFailure()) {
+        if (!"success".equals(mode) && shouldSimulateFailure()) {
             logVerification(requestId, request.nik(),
                 VerificationType.FACE_MATCHING,
                 VerificationResult.ERROR, null, "Simulated failure");
@@ -136,9 +138,10 @@ public class DukcapilService {
             VerificationType.FACE_MATCHING,
             matched ? VerificationResult.SUCCESS : VerificationResult.FAILED,
             matchScore, String.format("Score: %d, Threshold: %d", matchScore, threshold));
-
         return FaceMatchResponse.success(requestId, request.nik(), matchScore, threshold, livenessDetected);
     }
+    public VerifyNikResponse verifyNik(VerifyNikRequest request) { return verifyNik(request, null); }
+    public FaceMatchResponse matchFace(FaceMatchRequest request) { return matchFace(request, null); }
 
     /**
      * Get citizen data by NIK.

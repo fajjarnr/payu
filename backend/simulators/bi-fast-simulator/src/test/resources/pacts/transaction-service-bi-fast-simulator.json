@@ -1,0 +1,267 @@
+{
+  "consumer": {
+    "name": "transaction-service"
+  },
+  "provider": {
+    "name": "bi-fast-simulator"
+  },
+  "interactions": [
+    {
+      "description": "inquiry success",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/inquiry",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "bankCode": "BCA",
+          "accountNumber": "1234567890"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "bankCode": "BCA",
+          "accountNumber": "1234567890",
+          "responseCode": "00",
+          "responseMessage": "Success",
+          "status": "ACTIVE"
+        }
+      }
+    },
+    {
+      "description": "inquiry not found",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/inquiry",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "bankCode": "BCA",
+          "accountNumber": "9999999999"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "14",
+          "responseMessage": "Account not found"
+        }
+      }
+    },
+    {
+      "description": "inquiry blocked via X-Simulate blocked",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/inquiry",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "blocked"
+        },
+        "body": {
+          "bankCode": "BCA",
+          "accountNumber": "1234567890"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "62"
+        }
+      }
+    },
+    {
+      "description": "inquiry rate-limit via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/inquiry",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "rate-limit"
+        },
+        "body": {
+          "bankCode": "BCA",
+          "accountNumber": "1234567890"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "42"
+        }
+      }
+    },
+    {
+      "description": "inquiry 5xx via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/inquiry",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "5xx"
+        },
+        "body": {
+          "bankCode": "BCA",
+          "accountNumber": "1234567890"
+        }
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "96"
+        }
+      }
+    },
+    {
+      "description": "transfer success with idempotency",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/transfer",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": "TX-0001",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "referenceNumber": "TX-0001",
+          "sourceBankCode": "BCA",
+          "sourceAccountNumber": "1234567890",
+          "sourceAccountName": "John Doe",
+          "destinationBankCode": "BRI",
+          "destinationAccountNumber": "0987654321",
+          "amount": 100000,
+          "currency": "IDR"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "referenceNumber": "TX-0001",
+          "responseCode": "00",
+          "status": "COMPLETED"
+        }
+      }
+    },
+    {
+      "description": "transfer duplicate idempotency returns same reference",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/transfer",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": "TX-0001",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "referenceNumber": "TX-0001",
+          "sourceBankCode": "BCA",
+          "sourceAccountNumber": "1234567890",
+          "sourceAccountName": "John Doe",
+          "destinationBankCode": "BRI",
+          "destinationAccountNumber": "0987654321",
+          "amount": 100000,
+          "currency": "IDR"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "referenceNumber": "TX-0001",
+          "responseCode": "00"
+        }
+      }
+    },
+    {
+      "description": "transfer timeout via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/transfer",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "timeout"
+        },
+        "body": {
+          "referenceNumber": "TX-TIMEOUT-1",
+          "sourceBankCode": "BCA",
+          "sourceAccountNumber": "1234567890",
+          "sourceAccountName": "John Doe",
+          "destinationBankCode": "BNI",
+          "destinationAccountNumber": "9999888877",
+          "amount": 50000,
+          "currency": "IDR"
+        }
+      },
+      "response": {
+        "status": 504,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "68"
+        }
+      }
+    },
+    {
+      "description": "transfer 5xx via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/transfer",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "5xx"
+        },
+        "body": {
+          "referenceNumber": "TX-5XX-1",
+          "sourceBankCode": "BCA",
+          "sourceAccountNumber": "1234567890",
+          "sourceAccountName": "John Doe",
+          "destinationBankCode": "BRI",
+          "destinationAccountNumber": "0987654321",
+          "amount": 1000,
+          "currency": "IDR"
+        }
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "96"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    },
+    "pact-jvm": {
+      "version": "4.6.0"
+    }
+  }
+}

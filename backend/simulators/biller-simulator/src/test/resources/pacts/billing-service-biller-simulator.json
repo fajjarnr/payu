@@ -1,0 +1,190 @@
+{
+  "consumer": {
+    "name": "billing-service"
+  },
+  "provider": {
+    "name": "biller-simulator"
+  },
+  "interactions": [
+    {
+      "description": "inquiry success",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/biller/inquiry",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "billerCode": "PLN",
+          "customerNumber": "PLN-001234567890"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "00",
+          "billerCode": "PLN",
+          "outstandingAmount": 350000
+        }
+      }
+    },
+    {
+      "description": "inquiry not found",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/biller/inquiry",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "billerCode": "PLN",
+          "customerNumber": "PLN-000000000000"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "14"
+        }
+      }
+    },
+    {
+      "description": "inquiry blocked via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/biller/inquiry",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "blocked"
+        },
+        "body": {
+          "billerCode": "PLN",
+          "customerNumber": "PLN-001234567890"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "62"
+        }
+      }
+    },
+    {
+      "description": "inquiry rate-limit via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/biller/inquiry",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "rate-limit"
+        },
+        "body": {
+          "billerCode": "PLN",
+          "customerNumber": "PLN-001234567890"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "42"
+        }
+      }
+    },
+    {
+      "description": "pay success with idempotency",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/biller/pay",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": "BILL-001"
+        },
+        "body": {
+          "billerCode": "PLN",
+          "customerNumber": "PLN-001234567890",
+          "amount": 350000,
+          "referenceNumber": "BILL-001"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "00",
+          "status": "COMPLETED"
+        }
+      }
+    },
+    {
+      "description": "pay duplicate returns same id",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/biller/pay",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": "BILL-001"
+        },
+        "body": {
+          "billerCode": "PLN",
+          "customerNumber": "PLN-001234567890",
+          "amount": 350000,
+          "referenceNumber": "BILL-001"
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "94"
+        }
+      }
+    },
+    {
+      "description": "pay timeout via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/biller/pay",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "timeout"
+        },
+        "body": {
+          "billerCode": "PLN",
+          "customerNumber": "PLN-001234567890",
+          "amount": 1000,
+          "referenceNumber": "BILL-TIMEOUT-1"
+        }
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "96"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}

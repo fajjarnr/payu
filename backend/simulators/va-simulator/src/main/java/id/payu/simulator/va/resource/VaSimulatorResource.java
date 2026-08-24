@@ -46,21 +46,29 @@ public class VaSimulatorResource {
      */
     @POST
     @Path("/va/inquiry")
-    public Response inquiry(@Valid VaInquiryRequest request) {
+    public Response inquiry(@Valid VaInquiryRequest request, @HeaderParam("X-Simulate") String simulate) {
         Log.infof("POST /va/inquiry vaNumber=%s", request.vaNumber());
 
         try {
-            VaInquiryResponse response = vaService.inquiry(request);
+            if (simulate != null && !simulate.isBlank()) {
+                String m = simulate.trim().toLowerCase();
+                if ("rate-limit".equals(m)) return Response.status(429).entity(new VaInquiryResponse("42","Rate limit exceeded", request.vaNumber(), request.bankCode(), null, null, null, null, "RATE_LIMIT", null)).header("X-Simulate", simulate).build();
+                if ("5xx".equals(m)) return Response.status(500).entity(new VaInquiryResponse("99","Simulated internal error", request.vaNumber(), request.bankCode(), null, null, null, null, "ERROR", null)).header("X-Simulate", simulate).build();
+            }
+            VaInquiryResponse response = vaService.inquiry(request, simulate);
 
             int statusCode = switch (response.responseCode()) {
                 case "00" -> 200;
                 case "14" -> 404;
                 case "54" -> 410; // Gone - expired
                 case "94" -> 409; // Conflict - already paid
+                case "62" -> 403;
+                case "42" -> 429;
+                case "99" -> 500;
                 default -> 500;
             };
 
-            return Response.status(statusCode).entity(response).build();
+            return Response.status(statusCode).entity(response).header("X-Simulate", simulate != null ? simulate : "success").build();
         } catch (Exception e) {
             Log.errorf(e, "Error processing VA inquiry");
             return Response.serverError()
@@ -75,11 +83,16 @@ public class VaSimulatorResource {
      */
     @POST
     @Path("/va/pay")
-    public Response pay(@Valid VaPaymentRequest request) {
+    public Response pay(@Valid VaPaymentRequest request, @HeaderParam("X-Simulate") String simulate, @HeaderParam("X-Idempotency-Key") String idempotencyKey) {
         Log.infof("POST /va/pay vaNumber=%s, amount=%s", request.vaNumber(), request.amount());
 
         try {
-            VaPaymentResponse response = vaService.processPayment(request);
+            if (simulate != null && !simulate.isBlank()) {
+                String m = simulate.trim().toLowerCase();
+                if ("rate-limit".equals(m)) return Response.status(429).entity(new VaPaymentResponse("42","Rate limit exceeded", request.vaNumber(), null, null, null, null, null, null)).header("X-Simulate", simulate).build();
+                if ("5xx".equals(m)) return Response.status(500).entity(new VaPaymentResponse("99","Simulated internal error", request.vaNumber(), null, null, null, null, null, null)).header("X-Simulate", simulate).build();
+            }
+            VaPaymentResponse response = vaService.processPayment(request, simulate);
 
             int statusCode = switch (response.responseCode()) {
                 case "00" -> 200;
@@ -87,11 +100,13 @@ public class VaSimulatorResource {
                 case "54" -> 410; // Gone - expired
                 case "94" -> 409; // Conflict - already paid
                 case "13" -> 400; // Bad request - amount mismatch
-                case "68" -> 202; // Accepted - payment recorded but callback failed
+                case "68" -> 202; // Accepted
+                case "42" -> 429;
+                case "99" -> 500;
                 default -> 500;
             };
 
-            return Response.status(statusCode).entity(response).build();
+            return Response.status(statusCode).entity(response).header("X-Simulate", simulate != null ? simulate : "success").header("X-Idempotency-Key", idempotencyKey).build();
         } catch (Exception e) {
             Log.errorf(e, "Error processing VA payment");
             return Response.serverError()

@@ -1,0 +1,198 @@
+{
+  "consumer": {
+    "name": "payment-service"
+  },
+  "provider": {
+    "name": "va-simulator"
+  },
+  "interactions": [
+    {
+      "description": "inquiry success",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/va/inquiry",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "vaNumber": "123456789012",
+          "bankCode": "BCA"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "00",
+          "vaNumber": "123456789012",
+          "status": "ACTIVE"
+        }
+      }
+    },
+    {
+      "description": "inquiry not found",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/va/inquiry",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "vaNumber": "999999999999",
+          "bankCode": "BCA"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "14"
+        }
+      }
+    },
+    {
+      "description": "inquiry blocked via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/va/inquiry",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "blocked"
+        },
+        "body": {
+          "vaNumber": "123456789012",
+          "bankCode": "BCA"
+        }
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "62"
+        }
+      }
+    },
+    {
+      "description": "inquiry rate-limit via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/va/inquiry",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "rate-limit"
+        },
+        "body": {
+          "vaNumber": "123456789012",
+          "bankCode": "BCA"
+        }
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "42"
+        }
+      }
+    },
+    {
+      "description": "pay success with idempotency",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/va/pay",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": "VA-PAY-001",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "vaNumber": "123456789012",
+          "bankCode": "BCA",
+          "amount": 100000,
+          "currency": "IDR",
+          "customerAccountNumber": "9876543210",
+          "customerAccountName": "Jane Doe"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "success"
+        },
+        "body": {
+          "responseCode": "00",
+          "vaNumber": "123456789012",
+          "status": "PAID"
+        }
+      }
+    },
+    {
+      "description": "pay already paid",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/va/pay",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "vaNumber": "123456789012",
+          "bankCode": "BCA",
+          "amount": 100000,
+          "currency": "IDR",
+          "customerAccountNumber": "9876543210",
+          "customerAccountName": "Jane Doe"
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "94"
+        }
+      }
+    },
+    {
+      "description": "pay timeout via X-Simulate",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/va/pay",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Simulate": "timeout"
+        },
+        "body": {
+          "vaNumber": "123456789012",
+          "bankCode": "BCA",
+          "amount": 100000,
+          "currency": "IDR",
+          "customerAccountNumber": "9876543210",
+          "customerAccountName": "Jane Doe"
+        }
+      },
+      "response": {
+        "status": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "responseCode": "68"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}

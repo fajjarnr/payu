@@ -7,21 +7,26 @@ import id.payu.statement.interfaces.dto.StatementResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -64,11 +69,19 @@ public class PartnerStatementController {
     @GetMapping
     @PreAuthorize("hasAnyRole('PARTNER', 'ADMIN')")
     @Operation(summary = "Query partner statements (JSON)",
-            description = "Returns statements for a customer in a date range (ADR-0019).")
-    public ResponseEntity<ApiResponse<List<StatementResponse>>> listStatements(
+            description = "Returns statements for a customer in a date range (ADR-0019). Supports CSV via Accept: text/csv or ?format=csv")
+    public Object listStatements(
             @RequestParam String customerId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String format,
+            @RequestHeader(value = HttpHeaders.ACCEPT, required = false) String accept,
+            HttpServletResponse response) throws IOException {
+        boolean wantsCsv = "csv".equalsIgnoreCase(format)
+                || (accept != null && accept.contains("text/csv"));
+        if (wantsCsv) {
+            return exportCsvInternal(customerId, from, to, response);
+        }
         verifyPartnerAccess(customerId);
         log.info("Partner statement query for customerId={}, from={}, to={}", customerId, from, to);
 
@@ -80,6 +93,28 @@ public class PartnerStatementController {
                 .toList();
 
         return ResponseEntity.ok(ApiResponse.success(filtered));
+    }
+
+    @GetMapping(value = "/export", produces = "text/csv")
+    @PreAuthorize("hasAnyRole('PARTNER', 'ADMIN')")
+    @Operation(summary = "Export partner statements as CSV (RFC4180)",
+            description = "Streams statements as text/csv with header row, RFC4180 escaping, HALF_EVEN money (ADR-0019).")
+    public void exportStatementsCsv(
+            @RequestParam String customerId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            HttpServletResponse response) throws IOException {
+        exportCsvInternal(customerId, from, to, response);
+    }
+
+    private ResponseEntity<Void> exportCsvInternal(String customerId, LocalDate from, LocalDate to, HttpServletResponse response) throws IOException {
+        verifyPartnerAccess(customerId);
+        log.info("Partner CSV export for customerId={}, from={}, to={}", customerId, from, to);
+        response.setContentType("text/csv");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"statements.csv\"");
+        statementService.exportStatementsCsv(customerId, from, to, response.getOutputStream());
+        return null;
     }
 
     @PostMapping("/generate")

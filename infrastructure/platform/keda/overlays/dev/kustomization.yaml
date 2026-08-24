@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Dev overlay — relaxed for resource quota testing (ExceededNodeResources lab)
+# Core min 1 max 3 (vs prod 3/10), sim min 0 stays zero
+# Namespace stays payu-dev for ScaledObjects, keda for operator — no top-level namespace override
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: ScaledObject
+      name: transaction-service-keda
+    patch: |
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 1
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 3
+  - target:
+      kind: ScaledObject
+      name: wallet-service-keda
+    patch: |
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 1
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 3
+  - target:
+      kind: ScaledObject
+      name: gateway-service-keda
+    patch: |
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 1
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 3

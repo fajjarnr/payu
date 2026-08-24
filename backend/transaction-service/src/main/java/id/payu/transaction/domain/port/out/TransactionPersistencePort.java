@@ -25,4 +25,5 @@ public interface TransactionPersistencePort {
     Optional<TransactionEntity> findByIdempotencyKey(String idempotencyKey);
     List<TransactionEntity> findExpiredPendingTransactions(Instant now);
     List<TransactionEntity> saveAll(Iterable<TransactionEntity> transactions);
+    List<TransactionEntity> findPendingOlderThan(Instant cutoff);
 }

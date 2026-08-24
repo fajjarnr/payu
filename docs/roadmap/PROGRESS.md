@@ -1,4 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.11 B3+B4 Closed — Reconciliation Inbox/Outbox + Pact 5 Sims + RLS 39 FORCE + DMN/Kogito + CSV/Chargeback + Money Strict + SLO + KEDA GO (2026-08-24)
+
+- **Reconciliation Inbox/Outbox (TXN-HARDEN-003/004 → B3.1)**: `V29 inbox_events/aggregate_results` `InboxEventEntity` `AggregateResultEntity` `InboxPersistencePort` `InboxService` `DeferredOutboxService afterCommit REQUIRES_NEW` `TransferStatusPort Adapter GET /snap/v1.0/transfer/status` `ReconciliationScheduler @SchedulerLock 9m/30s 5m cutoff` `ShedLockConfig usingDbTime UTC` `InboxDedupTest` `OutboxOutsideTxTest` `ReconciliationSchedulerTest`.
+- **Pact 5 Sims + FAIL_ON_NO_PACTS (GAP-056 → B3.2)**: `bi-fast/va/qris/biller/dukcapil simulators` `X-Simulate 429/500` `X-Idempotency-Key` `QR CRC16-CCITT` `Pact provider tests 10+7+8+8+7=40` `pact-verify-task FAIL_ON_NO_PACTS=true` `broker + kustomize`.
+- **RLS 39 FORCE (B3.3)**: `8 migrations` `billing V10` `dispute V7` `lending V12` `partner V22` `transaction V29` `wallet V121` `account V112` `support V5` `billing Testcontainers 5 green` `tenantA 2/2 tenantB 1/1 null 0/0 SYSTEM 3/3` `PERMISSIVE USING`.
+- **DMN+Kogito Lending (GAP-048+015 → B3.4/5)**: `pricing.dmn eligibility.dmn` `LendingDmnService` `LoanPreApprovalService` `Kogito TaskInboxController` `lending-rules fork deleted` `137/137 green`.
+- **CSV + Chargeback (GAP-019+054C → B4.1/3)**: `StatementService CSV RFC4180 HALF_EVEN` `PartnerStatementController` `68 green` `ChargebackStatus OPEN->SUBMITTED->UNDER_REVIEW->ACCEPTED/REJECTED->REVERSED->CLOSED` `V8 chargebacks` `109 green`.
+- **Money Strict + SLO + KEDA (GAP-047 + PROD-009 + KEDA GO → B4.2/4/6)**: `Money branded __brand required` `eslint no-restricted-syntax Number` `8 green` `SLO PrometheusRule 4-tier` `tracing OTel` `KEDA ScaledObject core lag10 sim lag5 TriggerAuthentication` `LLM DEFERRED`.
+- **SemVer 1.18.11**: `package.json 1.18.10→1.18.11` `pipelines 31` `workloads 16× 1.18.11` `git tag v1.18.11` pending `19/52 Ready` `pipelines 5 Running` `coraza 2/2` `DB 3/3`.
+
 ## Platform 1.18.10 B2 Closed — Step-Up Dynamic Linking + Dual-Control Maker-Checker + Coraza WAF 2/2 (2026-08-24)
 
 - **Step-Up Wiring (ADR-0028 GAP-028W → B2.1)**: `auth StepUpController` live `Argon2id PIN` `lockout 3/15m` `challenge 180s` `payloadDigest` not wired → `StepUpVerificationPort` `domain/port/out` + `StepUpVerificationAdapter` `RestTemplate POST /internal/v1/auth/step-up/verify {challengeId,pin,payloadDigest}` `SHA-256 sender|recipient|amount|currency` `CircuitBreaker authService` manual wrap, `StepUpDecision BYPASS/REQUIRED/VERIFIED` `TransactionStatus PENDING_STEP_UP` `InitiateTransferCommand stepUpChallengeId` `Handler requiresStepUp risk 40-70 or amount>10M` `enforceStepUp throws STEP_UP_REQUIRED 403` else verify `AUTH_CHALLENGE_TAMPERED 400` `AUTH_PIN_LOCKED 423` `Rfc9457` `19 green` `StepUpWiringTest 5` `HandlerTest 14` `216 green`.

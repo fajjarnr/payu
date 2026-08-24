@@ -1,0 +1,34 @@
+OTEL_ENDPOINT: http://localhost:4317
+# Test config - disable DevServices and Otel
+quarkus:
+  datasource:
+    devservices:
+      enabled: false
+    db-kind: h2
+    jdbc:
+      url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;IGNORE_UNKNOWN_SETTINGS=TRUE
+    username: sa
+    password: ""
+  http:
+    test-port: 0
+  hibernate-orm:
+    schema-management:
+      strategy: drop-and-create
+    log:
+      sql: false
+  otel:
+    sdk:
+      disabled: true
+    exporter:
+      otlp:
+        endpoint: http://localhost:4317
+  log:
+    level: WARN
+simulator:
+  failure-rate: 0
+  latency:
+    min: 1
+    max: 2
+  webhook:
+    secret: test-secret
+    enabled: false

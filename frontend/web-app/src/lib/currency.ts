@@ -1,11 +1,16 @@
 /**
  * Currency Utility Functions for PayU Digital Banking
  * Handles Indonesian Rupiah (IDR) formatting and parsing
+ * ADR-0047: Money is branded string "0.00" HALF_EVEN, never float (GAP-047)
  */
-
-export type Money = string;
-type CurrencyInput = number | string;
-
+export type Money = string & { readonly __brand: 'Money' };
+const MONEY_RE = /^-?\d+(?:\.\d{1,4})?$/;
+export function isMoney(value: string): value is Money { return MONEY_RE.test(value); }
+export function asMoney(value: string): Money {
+  if (!MONEY_RE.test(value)) throw new Error(`Invalid Money: ${value}`);
+  return value as Money;
+}
+type CurrencyInput = Money | number | string;
 function expandExponential(value: string): string {
   const match = value.toLowerCase().match(/^(-?)(\d+)(?:\.(\d+))?e([+-]?\d+)$/);
   if (!match) return value;

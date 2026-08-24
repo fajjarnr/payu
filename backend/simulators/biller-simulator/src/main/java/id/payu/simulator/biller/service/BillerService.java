@@ -18,6 +18,7 @@ import id.payu.simulator.biller.entity.TransactionStatus;
 /**
  * Core service for biller simulation — inquiry, payment, status check.
  * Simulates realistic biller behavior with configurable latency & failure rates.
+ * Supports X-Simulate header per ADR-0056.
  */
 @ApplicationScoped
 public class BillerService {
@@ -30,82 +31,63 @@ public class BillerService {
     /**
      * Inquiry — look up customer's outstanding bill at a biller.
      */
-    public InquiryResponse inquiry(InquiryRequest request) {
+    public InquiryResponse inquiry(InquiryRequest request, String simulate) {
+        String mode = simulate != null ? simulate.trim().toLowerCase() : null;
+        if ("blocked".equals(mode)) return InquiryResponse.blocked(request.billerCode(), request.customerNumber());
+        if ("timeout".equals(mode)) { try { Thread.sleep(5000); } catch (Exception e) { Thread.currentThread().interrupt(); } return InquiryResponse.error("Biller timeout"); }
         Log.infof("Biller inquiry: code=%s, customer=%s", request.billerCode(), request.customerNumber());
-
         simulateLatency();
-
-        if (shouldSimulateFailure()) {
+        if (!"success".equals(mode) && shouldSimulateFailure()) {
             Log.warn("Simulating random biller failure for inquiry");
             return InquiryResponse.error("Biller system temporarily unavailable");
         }
-
-        BillerAccount account = BillerAccount.findByBillerAndCustomer(
-                request.billerCode(), request.customerNumber());
-
+        BillerAccount account = BillerAccount.findByBillerAndCustomer(request.billerCode(), request.customerNumber());
         if (account == null) {
             return InquiryResponse.notFound(request.billerCode(), request.customerNumber());
         }
-
         return switch (account.status) {
-            case ACTIVE -> InquiryResponse.success(account.billerCode, account.customerNumber,
-                    account.customerName, account.outstandingAmount);
+            case ACTIVE -> InquiryResponse.success(account.billerCode, account.customerNumber, account.customerName, account.outstandingAmount);
             case BLOCKED -> InquiryResponse.blocked(account.billerCode, account.customerNumber);
             case NOT_FOUND -> InquiryResponse.notFound(account.billerCode, account.customerNumber);
         };
     }
 
+    public InquiryResponse inquiry(InquiryRequest request) { return inquiry(request, null); }
+
     /**
-     * Payment — process a bill payment. Validates customer, checks amount, 
+     * Payment — process a bill payment. Validates customer, checks amount,
      * deducts from outstanding, and returns a biller transaction ID.
+     * Idempotent on referenceNumber (duplicate returns original).
      */
     @Transactional
-    public PaymentResponse pay(PaymentRequest request) {
-        Log.infof("Biller payment: code=%s, customer=%s, amount=%s, ref=%s",
-                request.billerCode(), request.customerNumber(),
-                request.amount(), request.referenceNumber());
-
+    public PaymentResponse pay(PaymentRequest request, String simulate) {
+        String mode = simulate != null ? simulate.trim().toLowerCase() : null;
+        if ("blocked".equals(mode)) return PaymentResponse.error("Simulated blocked");
+        if ("timeout".equals(mode)) { try { Thread.sleep(5000); } catch (Exception e) { Thread.currentThread().interrupt(); } return PaymentResponse.error("Biller timeout"); }
+        Log.infof("Biller payment: code=%s, customer=%s, amount=%s, ref=%s", request.billerCode(), request.customerNumber(), request.amount(), request.referenceNumber());
         simulateLatency();
-
-        // Check for duplicate reference (idempotency)
         BillerTransaction existing = BillerTransaction.findByReference(request.referenceNumber());
         if (existing != null) {
-            Log.infof("Duplicate reference detected: %s → returning existing txId=%s",
-                    request.referenceNumber(), existing.billerTransactionId);
+            Log.infof("Duplicate reference detected: %s -> returning existing txId=%s", request.referenceNumber(), existing.billerTransactionId);
             return PaymentResponse.duplicate(existing.billerTransactionId);
         }
-
-        if (shouldSimulateFailure()) {
+        if (!"success".equals(mode) && shouldSimulateFailure()) {
             Log.warn("Simulating random biller failure for payment");
             return PaymentResponse.error("Biller system temporarily unavailable");
         }
-
-        // Find biller account
-        BillerAccount account = BillerAccount.findByBillerAndCustomer(
-                request.billerCode(), request.customerNumber());
+        BillerAccount account = BillerAccount.findByBillerAndCustomer(request.billerCode(), request.customerNumber());
         if (account == null) {
             return PaymentResponse.customerNotFound(request.billerCode(), request.customerNumber());
         }
-
-        // For billers with outstanding amounts (PLN, PDAM), validate amount
         if (account.outstandingAmount != null && request.amount().compareTo(account.outstandingAmount) > 0) {
             return PaymentResponse.insufficientBill(request.billerCode(), request.customerNumber());
         }
-
-        // Process payment
-        String billerTxId = "BILLER-" + UUID.randomUUID().toString().replace("-", "")
-                .substring(0, 16).toUpperCase();
-
-        // Deduct outstanding amount (for utility bills)
+        String billerTxId = "BILLER-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
         if (account.outstandingAmount != null) {
             account.outstandingAmount = account.outstandingAmount.subtract(request.amount());
-            if (account.outstandingAmount.compareTo(BigDecimal.ZERO) < 0) {
-                account.outstandingAmount = BigDecimal.ZERO;
-            }
+            if (account.outstandingAmount.compareTo(BigDecimal.ZERO) < 0) account.outstandingAmount = BigDecimal.ZERO;
             account.persist();
         }
-
-        // Record transaction
         BillerTransaction tx = new BillerTransaction();
         tx.billerCode = request.billerCode();
         tx.customerNumber = request.customerNumber();
@@ -116,38 +98,29 @@ public class BillerService {
         tx.createdAt = Instant.now();
         tx.completedAt = Instant.now();
         tx.persist();
-
-        Log.infof("Biller payment completed: ref=%s, billerTxId=%s",
-                request.referenceNumber(), billerTxId);
-
-        return PaymentResponse.success(billerTxId, request.billerCode(),
-                request.customerNumber(), request.amount());
+        Log.infof("Biller payment completed: ref=%s, billerTxId=%s", request.referenceNumber(), billerTxId);
+        return PaymentResponse.success(billerTxId, request.billerCode(), request.customerNumber(), request.amount());
     }
+
+    @Transactional
+    public PaymentResponse pay(PaymentRequest request) { return pay(request, null); }
 
     /**
      * Status check — look up a payment by reference number.
      */
     public PaymentResponse status(String referenceNumber) {
         Log.infof("Biller status check: ref=%s", referenceNumber);
-
         simulateLatency();
-
         BillerTransaction tx = BillerTransaction.findByReference(referenceNumber);
         if (tx == null) {
             return PaymentResponse.error("Transaction not found");
         }
-
-        return new PaymentResponse(
-                "00", "SUCCESS",
-                tx.billerTransactionId, tx.billerCode, tx.customerNumber,
-                tx.amount, tx.status.name(), tx.completedAt
-        );
+        return new PaymentResponse("00", "SUCCESS", tx.billerTransactionId, tx.billerCode, tx.customerNumber, tx.amount, tx.status.name(), tx.completedAt);
     }
 
     private void simulateLatency() {
         try {
-            int latency = config.latency().min() +
-                    random.nextInt(config.latency().max() - config.latency().min());
+            int latency = config.latency().min() + random.nextInt(config.latency().max() - config.latency().min());
             Thread.sleep(latency);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

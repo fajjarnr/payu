@@ -28,59 +28,79 @@ public class BiFastService {
     WebhookDispatcher webhookDispatcher;
 
     /**
-     * Simulate account inquiry.
+     * Simulate account inquiry — supports X-Simulate header for deterministic chaos (ADR-0056).
      */
     @Transactional
-    public InquiryResponse inquiry(InquiryRequest request) {
-        Log.infof("Processing inquiry for bank=%s, account=%s", 
-                  request.bankCode(), request.accountNumber());
-
+    public InquiryResponse inquiry(InquiryRequest request, String simulate) {
+        String mode = normalizeSimulate(simulate);
+        if (mode != null) {
+            switch (mode) {
+                case "blocked" -> {
+                    BankAccount acc = BankAccount.findByBankAndAccount(request.bankCode(), request.accountNumber());
+                    if (acc != null) return InquiryResponse.blocked(acc);
+                    return new InquiryResponse(request.bankCode(), request.accountNumber(), null, "BLOCKED", "62", "Account is blocked");
+                }
+                case "timeout" -> { simulateTimeout(); return InquiryResponse.timeout(); }
+                case "rate-limit" -> { return new InquiryResponse(request.bankCode(), request.accountNumber(), null, "RATE_LIMIT", "42", "Rate limit exceeded"); }
+                case "5xx" -> { return InquiryResponse.error("Simulated internal error"); }
+                case "success" -> { /* fall through to normal without random failure */ }
+                default -> { /* unknown mode ignore */ }
+            }
+        }
         // Simulate network latency
         simulateLatency();
-
-        // Check for random failure
-        if (shouldSimulateFailure()) {
+        // Check for random failure only when not forced success
+        if (!"success".equals(mode) && shouldSimulateFailure()) {
             Log.warn("Simulating random failure for inquiry");
             return InquiryResponse.error("Simulated random failure");
         }
-
-        // Find account
-        BankAccount account = BankAccount.findByBankAndAccount(
-            request.bankCode(), 
-            request.accountNumber()
-        );
-
+        BankAccount account = BankAccount.findByBankAndAccount(request.bankCode(), request.accountNumber());
         if (account == null) {
             Log.infof("Account not found: %s-%s", request.bankCode(), request.accountNumber());
             return InquiryResponse.notFound(request.bankCode(), request.accountNumber());
         }
-
-        // Handle special statuses
         return switch (account.status) {
             case ACTIVE -> InquiryResponse.success(account);
             case BLOCKED, DORMANT -> InquiryResponse.blocked(account);
-            case TIMEOUT -> {
-                simulateTimeout();
-                yield InquiryResponse.timeout();
-            }
+            case TIMEOUT -> { simulateTimeout(); yield InquiryResponse.timeout(); }
         };
     }
 
+    @Transactional
+    public InquiryResponse inquiry(InquiryRequest request) { return inquiry(request, null); }
+
+
     /**
-     * Initiate a fund transfer.
+     * Initiate a fund transfer — idempotent on referenceNumber + X-Simulate aware.
      */
     @Transactional
-    public TransferResponse transfer(TransferRequest request) {
-        Log.infof("Processing transfer from %s-%s to %s-%s, amount=%s",
-                  request.sourceBankCode(), request.sourceAccountNumber(),
-                  request.destinationBankCode(), request.destinationAccountNumber(),
-                  request.amount());
-
-        // Simulate network latency
+    public TransferResponse transfer(TransferRequest request, String simulate) {
+        String mode = normalizeSimulate(simulate);
+        if (mode != null) {
+            switch (mode) {
+                case "blocked" -> {
+                    Transfer blocked = createTransfer(request);
+                    blocked.fail("Destination account is blocked");
+                    blocked.persist();
+                    return TransferResponse.fromEntity(blocked);
+                }
+                case "timeout" -> { simulateTimeout(); Transfer t = createTransfer(request); t.status = TransferStatus.TIMEOUT; t.persist(); return TransferResponse.fromEntity(t); }
+                case "rate-limit" -> { return new TransferResponse(request.referenceNumber(), request.sourceBankCode(), request.sourceAccountNumber(), request.destinationBankCode(), request.destinationAccountNumber(), null, request.amount(), request.currency(), "RATE_LIMIT", "42", "Rate limit exceeded", null, null); }
+                case "5xx" -> { return TransferResponse.error("Simulated internal error"); }
+                case "success" -> { /* fall through */ }
+                default -> {}
+            }
+        }
+        // Idempotency: duplicate referenceNumber returns original without second persist
+        if (request.referenceNumber() != null && !request.referenceNumber().isBlank()) {
+            Transfer existing = Transfer.findByReference(request.referenceNumber());
+            if (existing != null) {
+                Log.infof("Duplicate reference detected: %s -> returning existing", request.referenceNumber());
+                return TransferResponse.fromEntity(existing);
+            }
+        }
         simulateLatency();
-
-        // Check for random failure
-        if (shouldSimulateFailure()) {
+        if (!"success".equals(mode) && shouldSimulateFailure()) {
             Log.warn("Simulating random failure for transfer");
             Transfer failed = createTransfer(request);
             failed.fail("Simulated random failure");
@@ -88,13 +108,7 @@ public class BiFastService {
             webhookDispatcher.dispatch(failed);
             return TransferResponse.fromEntity(failed);
         }
-
-        // Validate destination account
-        BankAccount destAccount = BankAccount.findByBankAndAccount(
-            request.destinationBankCode(),
-            request.destinationAccountNumber()
-        );
-
+        BankAccount destAccount = BankAccount.findByBankAndAccount(request.destinationBankCode(), request.destinationAccountNumber());
         if (destAccount == null) {
             Transfer failed = createTransfer(request);
             failed.fail("Destination account not found");
@@ -102,7 +116,6 @@ public class BiFastService {
             webhookDispatcher.dispatch(failed);
             return TransferResponse.fromEntity(failed);
         }
-
         if (destAccount.status == AccountStatus.BLOCKED) {
             Transfer failed = createTransfer(request);
             failed.fail("Destination account is blocked");
@@ -110,7 +123,6 @@ public class BiFastService {
             webhookDispatcher.dispatch(failed);
             return TransferResponse.fromEntity(failed);
         }
-
         if (destAccount.status == AccountStatus.TIMEOUT) {
             simulateTimeout();
             Transfer timeout = createTransfer(request);
@@ -118,17 +130,18 @@ public class BiFastService {
             timeout.persist();
             return TransferResponse.fromEntity(timeout);
         }
-
-        // Create successful transfer
         Transfer transfer = createTransfer(request);
         transfer.destinationAccountName = destAccount.accountName;
         transfer.complete();
         transfer.persist();
         webhookDispatcher.dispatch(transfer);
-
         Log.infof("Transfer completed: ref=%s", transfer.referenceNumber);
         return TransferResponse.fromEntity(transfer);
     }
+
+    @Transactional
+    public TransferResponse transfer(TransferRequest request) { return transfer(request, null); }
+
 
     /**
      * Get transfer status by reference number.
@@ -172,7 +185,6 @@ public class BiFastService {
         int minLatency = config.latency().min();
         int maxLatency = config.latency().max();
         int latency = minLatency + random.nextInt(maxLatency - minLatency + 1);
-        
         try {
             Thread.sleep(latency);
         } catch (InterruptedException e) {
@@ -182,7 +194,7 @@ public class BiFastService {
 
     private void simulateTimeout() {
         try {
-            Thread.sleep(5000); // 5 second timeout
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -190,5 +202,11 @@ public class BiFastService {
 
     private boolean shouldSimulateFailure() {
         return random.nextInt(100) < config.failureRate();
+    }
+
+    static String normalizeSimulate(String v) {
+        if (v == null) return null;
+        String s = v.trim().toLowerCase();
+        return s.isEmpty() ? null : s;
     }
 }

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+             id="eligibility"
+             name="Eligibility"
+             namespace="http://payu.id/dmn">
+  <description>Eligibility decision table: maps creditScore + pricing to PreApprovalStatus, maxApprovedAmount, maxTenureMonths. Invokes Pricing(creditScore). ADR-0048.</description>
+
+  <import name="Pricing" namespace="http://payu.id/dmn" locationURI="pricing.dmn"/>
+
+  <decision id="Eligibility" name="Eligibility">
+    <variable name="EligibilityOutput" typeRef="feel:context"/>
+    <informationRequirement>
+      <requiredInput href="#creditScore"/>
+    </informationRequirement>
+    <informationRequirement>
+      <requiredInput href="#requestedAmount"/>
+    </informationRequirement>
+    <informationRequirement>
+      <requiredInput href="#requestedTenure"/>
+    </informationRequirement>
+    <informationRequirement>
+      <requiredDecision href="#Pricing"/>
+    </informationRequirement>
+
+    <decisionTable id="EligibilityTable" hitPolicy="UNIQUE" preferredOrientation="Rule-as-Row">
+      <input id="inScore" label="Credit Score">
+        <inputExpression typeRef="number"><text>creditScore</text></inputExpression>
+      </input>
+      <output id="outStatus" label="Status" name="status" typeRef="string"/>
+      <output id="outMaxAmount" label="Max Approved Amount" name="maxApprovedAmount" typeRef="string"/>
+      <output id="outMaxTenure" label="Max Tenure Months" name="maxTenureMonths" typeRef="number"/>
+      <output id="outReason" label="Reason" name="reason" typeRef="string"/>
+
+      <!-- ≥650 APPROVED: full amount, full tenure -->
+      <rule id="e1">
+        <inputEntry><text>&gt;= 650</text></inputEntry>
+        <outputEntry><text>"APPROVED"</text></outputEntry>
+        <outputEntry><text>requestedAmount</text></outputEntry>
+        <outputEntry><text>requestedTenure</text></outputEntry>
+        <outputEntry><text>null</text></outputEntry>
+      </rule>
+      <!-- 600-649 CONDITIONALLY_APPROVED: 0.85 if ≥640 else 0.70, min(tenure,24) -->
+      <rule id="e2">
+        <inputEntry><text>[600..649]</text></inputEntry>
+        <outputEntry><text>"CONDITIONALLY_APPROVED"</text></outputEntry>
+        <outputEntry><text>if creditScore &gt;= 640 then requestedAmount * 0.85 else requestedAmount * 0.70</text></outputEntry>
+        <outputEntry><text>if requestedTenure &gt; 24 then 24 else requestedTenure</text></outputEntry>
+        <outputEntry><text>"Conditional approval: Higher interest rate and lower loan amount may apply"</text></outputEntry>
+      </rule>
+      <!-- &lt;600 REJECTED: 0, 0 -->
+      <rule id="e3">
+        <inputEntry><text>&lt; 600</text></inputEntry>
+        <outputEntry><text>"REJECTED"</text></outputEntry>
+        <outputEntry><text>0</text></outputEntry>
+        <outputEntry><text>0</text></outputEntry>
+        <outputEntry><text>"Credit score does not meet minimum requirements for loan approval"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+
+  <inputData id="creditScore" name="creditScore">
+    <variable name="creditScore" typeRef="number"/>
+  </inputData>
+  <inputData id="requestedAmount" name="requestedAmount">
+    <variable name="requestedAmount" typeRef="number"/>
+  </inputData>
+  <inputData id="requestedTenure" name="requestedTenure">
+    <variable name="requestedTenure" typeRef="number"/>
+  </inputData>
+</definitions>

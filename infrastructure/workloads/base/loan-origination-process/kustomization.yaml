@@ -4,8 +4,7 @@ resources:
 - serviceaccount.yaml
 - deployment.yaml
 - service.yaml
-# KogitoRuntime is kept as an operator-specific reference, not applied by default.
-# The standard Deployment path avoids requiring rhpam.kiegroup.org CRDs for all workloads.
+- kogito-runtime.yaml
 labels:
 - pairs:
     app.kubernetes.io/name: loan-origination-process

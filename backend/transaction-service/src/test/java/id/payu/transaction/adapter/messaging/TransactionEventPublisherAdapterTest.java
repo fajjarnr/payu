@@ -1,6 +1,6 @@
 package id.payu.transaction.adapter.messaging;
 
-import id.payu.outbox.service.OutboxService;
+import id.payu.transaction.application.service.DeferredOutboxService;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.model.TransactionStatus;
@@ -15,14 +15,13 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionEventPublisherAdapterTest {
 
     @Mock
-    private OutboxService outboxService;
+    private DeferredOutboxService deferredOutboxService;
 
     @Test
     void publishesInitiatedTransactionToVersionedDomainTopic() {
@@ -37,14 +36,13 @@ class TransactionEventPublisherAdapterTest {
                 .createdAt(Instant.parse("2026-08-04T00:00:00Z"))
                 .build();
 
-        new TransactionEventPublisherAdapter(outboxService).publishTransactionInitiated(transaction);
+        new TransactionEventPublisherAdapter(deferredOutboxService).publishTransactionInitiated(transaction);
 
-        verify(outboxService).createEvent(
+        verify(deferredOutboxService).publishAfterCommit(
                 eq("TransactionEntity"),
                 eq(transactionId.toString()),
                 eq("TransactionInitiated"),
                 anyMap(),
-                isNull(),
                 eq("payu.transaction.initiated.v1"));
     }
 }

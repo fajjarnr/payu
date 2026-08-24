@@ -1,0 +1,60 @@
+# ScaledObject sim — va-simulator / biller-simulator / llm (ADR-0068)
+# ponytail: scale-to-zero idle 90% → saves ResourceQuota, saves ExceededNodeResources for core
+# min 0, lag 5, cpu trigger for vLLM when GPU available
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: va-simulator-keda
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: va-simulator
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: va-simulator
+  pollingInterval: 15
+  cooldownPeriod: 30
+  minReplicaCount: 0
+  maxReplicaCount: 3
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: payu-kafka-kafka-bootstrap.payu-dev.svc:9092
+        consumerGroup: va-simulator-group
+        topic: payu.va.payment.simulated.v1
+        lagThreshold: "5"
+        activationLagThreshold: "10"
+      authenticationRef:
+        name: payu-kafka-auth
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: biller-simulator-keda
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: biller-simulator
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: biller-simulator
+  pollingInterval: 15
+  cooldownPeriod: 30
+  minReplicaCount: 0
+  maxReplicaCount: 3
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: payu-kafka-kafka-bootstrap.payu-dev.svc:9092
+        consumerGroup: biller-simulator-group
+        topic: payu.billing.payment.simulated.v1
+        lagThreshold: "5"
+        activationLagThreshold: "10"
+      authenticationRef:
+        name: payu-kafka-auth

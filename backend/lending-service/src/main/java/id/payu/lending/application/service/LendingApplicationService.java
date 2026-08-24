@@ -44,18 +44,21 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
     private final id.payu.lending.adapter.messaging.KafkaLoanEventPublisherAdapter loanEventPublisherPort;
     // BUG-BE-176 FIX: Inject EnhancedCreditScoringService for real credit scoring
     private final EnhancedCreditScoringService enhancedCreditScoringService;
+    private final LendingDmnService lendingDmnService;
 
     public LendingApplicationService(
             id.payu.lending.adapter.persistence.LoanPersistenceAdapter loanPersistenceAdapter,
             id.payu.lending.adapter.persistence.PayLaterPersistenceAdapter payLaterPersistenceAdapter,
             id.payu.lending.adapter.persistence.CreditScorePersistenceAdapter creditScorePersistenceAdapter,
             id.payu.lending.adapter.messaging.KafkaLoanEventPublisherAdapter loanEventPublisherPort,
-            EnhancedCreditScoringService enhancedCreditScoringService) {
+            EnhancedCreditScoringService enhancedCreditScoringService,
+            LendingDmnService lendingDmnService) {
         this.loanPersistenceAdapter = loanPersistenceAdapter;
         this.payLaterPersistenceAdapter = payLaterPersistenceAdapter;
         this.creditScorePersistenceAdapter = creditScorePersistenceAdapter;
         this.loanEventPublisherPort = loanEventPublisherPort;
         this.enhancedCreditScoringService = enhancedCreditScoringService;
+        this.lendingDmnService = lendingDmnService;
     }
 
     @Override
@@ -223,7 +226,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
             // Update existing credit score
             creditScore = existingScore.get();
             creditScore.setScore(score);
-            creditScore.setRiskCategory(determineRiskCategory(score));
+            creditScore.setRiskCategory(lendingDmnService.evaluatePricing(score).riskCategory());
             creditScore.setLastCalculatedAt(LocalDateTime.now());
             creditScore.setUpdatedAt(LocalDateTime.now());
         } else {
@@ -231,7 +234,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
             creditScore = new CreditScore();
             creditScore.setUserId(userId);
             creditScore.setScore(score);
-            creditScore.setRiskCategory(determineRiskCategory(score));
+            creditScore.setRiskCategory(lendingDmnService.evaluatePricing(score).riskCategory());
             creditScore.setLastCalculatedAt(LocalDateTime.now());
             creditScore.setCreatedAt(LocalDateTime.now());
             creditScore.setUpdatedAt(LocalDateTime.now());
@@ -259,23 +262,16 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
     }
 
     private boolean isEligibleForLoan(BigDecimal creditScore, BigDecimal loanAmount) {
-        BigDecimal minimumScore = new BigDecimal("600");
+        // DMN-backed eligibility: score ≥600 and amount ≤50M (pricing DMN gives POOR at 600 threshold)
+        LendingDmnService.PricingOutput pricing = lendingDmnService.evaluatePricing(creditScore);
+        boolean scoreOk = pricing.riskCategory() != RiskCategory.VERY_POOR;
         BigDecimal maxLoanAmount = new BigDecimal("50000000");
-        
-        return creditScore.compareTo(minimumScore) >= 0 && 
-               loanAmount.compareTo(maxLoanAmount) <= 0;
+        return scoreOk && loanAmount.compareTo(maxLoanAmount) <= 0;
     }
 
     private BigDecimal calculateInterestRate(BigDecimal creditScore) {
-        if (creditScore.compareTo(new BigDecimal("750")) >= 0) {
-            return new BigDecimal("0.12");
-        } else if (creditScore.compareTo(new BigDecimal("700")) >= 0) {
-            return new BigDecimal("0.14");
-        } else if (creditScore.compareTo(new BigDecimal("650")) >= 0) {
-            return new BigDecimal("0.16");
-        } else {
-            return new BigDecimal("0.18");
-        }
+        // Delegates to DMN pricing table (pricing.dmn)
+        return lendingDmnService.evaluatePricing(creditScore).interestRate();
     }
 
     private BigDecimal calculateMonthlyInstallment(BigDecimal principal, BigDecimal annualRate, int months) {
@@ -294,16 +290,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
     }
 
     private RiskCategory determineRiskCategory(BigDecimal score) {
-        if (score.compareTo(new BigDecimal("750")) >= 0) {
-            return RiskCategory.EXCELLENT;
-        } else if (score.compareTo(new BigDecimal("700")) >= 0) {
-            return RiskCategory.GOOD;
-        } else if (score.compareTo(new BigDecimal("650")) >= 0) {
-            return RiskCategory.FAIR;
-        } else if (score.compareTo(new BigDecimal("600")) >= 0) {
-            return RiskCategory.POOR;
-        } else {
-            return RiskCategory.VERY_POOR;
-        }
+        // Delegates to DMN pricing table
+        return lendingDmnService.evaluatePricing(score).riskCategory();
     }
 }

@@ -52,12 +52,14 @@ class LendingApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
+        LendingDmnService lendingDmnService = new LendingDmnService();
         lendingApplicationService = new LendingApplicationService(
                 loanPersistenceAdapter,
                 payLaterPersistenceAdapter,
                 creditScorePersistenceAdapter,
                 loanEventPublisherPort,
-                enhancedCreditScoringService
+                enhancedCreditScoringService,
+                lendingDmnService
         );
     }
 

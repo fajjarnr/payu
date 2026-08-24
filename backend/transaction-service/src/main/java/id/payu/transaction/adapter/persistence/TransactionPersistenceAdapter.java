@@ -111,6 +111,11 @@ public class TransactionPersistenceAdapter implements TransactionPersistencePort
         return transactionJpaRepository.saveAll(transactions);
     }
 
+    @Override
+    public List<TransactionEntity> findPendingOlderThan(Instant cutoff) {
+        return transactionJpaRepository.findByStatusAndCreatedAtBefore(id.payu.transaction.domain.model.TransactionStatus.PENDING, cutoff);
+    }
+
     /**
      * Find transactions by sender account ID (partition-aware).
      * When sharding is enabled, this query benefits from partition pruning.

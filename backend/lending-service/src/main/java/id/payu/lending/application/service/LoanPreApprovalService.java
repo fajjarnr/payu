@@ -29,17 +29,18 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
     private final CreditScorePersistencePort creditScorePersistencePort;
     private final LoanPreApprovalPersistencePort preApprovalPersistencePort;
     private final EnhancedCreditScoringService enhancedCreditScoringService;
+    private final LendingDmnService lendingDmnService;
 
     public LoanPreApprovalService(CreditScorePersistencePort creditScorePersistencePort, 
                                    LoanPreApprovalPersistencePort preApprovalPersistencePort, 
-                                   EnhancedCreditScoringService enhancedCreditScoringService) {
+                                   EnhancedCreditScoringService enhancedCreditScoringService,
+                                   LendingDmnService lendingDmnService) {
         this.creditScorePersistencePort = creditScorePersistencePort;
         this.preApprovalPersistencePort = preApprovalPersistencePort;
         this.enhancedCreditScoringService = enhancedCreditScoringService;
+        this.lendingDmnService = lendingDmnService;
     }
 
-    private static final BigDecimal MIN_CREDIT_SCORE_FOR_APPROVAL = new BigDecimal("650");
-    private static final BigDecimal MIN_CREDIT_SCORE_FOR_CONDITIONAL = new BigDecimal("600");
     private static final int PRE_APPROVAL_VALIDITY_DAYS = 30;
 
     @Override
@@ -88,37 +89,23 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
     }
 
     private PreApprovalDecision evaluateEligibility(BigDecimal creditScore, LoanPreApprovalRequest request) {
+        LendingDmnService.EligibilityOutput out = lendingDmnService.evaluateEligibility(
+                creditScore, request.principalAmount(), request.tenureMonths());
         PreApprovalDecision decision = new PreApprovalDecision();
-
-        if (creditScore.compareTo(MIN_CREDIT_SCORE_FOR_APPROVAL) >= 0) {
-            decision.status = PreApprovalStatus.APPROVED;
-            decision.maxApprovedAmount = request.principalAmount();
-            decision.minInterestRate = calculateInterestRate(creditScore);
-            decision.maxTenureMonths = request.tenureMonths();
-            decision.reason = null;
-        } else if (creditScore.compareTo(MIN_CREDIT_SCORE_FOR_CONDITIONAL) >= 0) {
-            decision.status = PreApprovalStatus.CONDITIONALLY_APPROVED;
-            decision.maxApprovedAmount = calculateConditionalAmount(creditScore, request.principalAmount());
-            decision.minInterestRate = calculateInterestRate(creditScore);
-            decision.maxTenureMonths = Math.min(request.tenureMonths(), 24);
-            decision.reason = "Conditional approval: Higher interest rate and lower loan amount may apply";
-        } else {
-            decision.status = PreApprovalStatus.REJECTED;
-            decision.maxApprovedAmount = BigDecimal.ZERO;
-            decision.minInterestRate = BigDecimal.ZERO;
-            decision.maxTenureMonths = 0;
-            decision.reason = "Credit score does not meet minimum requirements for loan approval";
-        }
-
+        decision.status = out.status();
+        decision.maxApprovedAmount = out.maxApprovedAmount();
+        decision.maxTenureMonths = out.maxTenureMonths();
+        decision.reason = out.reason();
+        decision.riskCategory = out.riskCategory();
+        // Pricing via DMN pricing table; REJECTED uses ZERO rate per previous contract
+        decision.minInterestRate = out.status() == PreApprovalStatus.REJECTED ? BigDecimal.ZERO : out.interestRate();
         decision.estimatedMonthlyPayment = calculateMonthlyInstallment(
                 decision.maxApprovedAmount,
                 decision.minInterestRate,
                 decision.maxTenureMonths
         );
-
         return decision;
     }
-
     private LoanPreApproval createPreApproval(LoanPreApprovalRequest request,
                                                BigDecimal creditScore,
                                                PreApprovalDecision decision) {
@@ -132,33 +119,13 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
         preApproval.setEstimatedMonthlyPayment(decision.estimatedMonthlyPayment);
         preApproval.setStatus(decision.status);
         preApproval.setCreditScore(creditScore);
-        preApproval.setRiskCategory(determineRiskCategory(creditScore));
+        preApproval.setRiskCategory(decision.riskCategory);
         preApproval.setReason(decision.reason);
         preApproval.setValidUntil(LocalDate.now().plusDays(PRE_APPROVAL_VALIDITY_DAYS));
         preApproval.setCreatedAt(LocalDateTime.now());
         preApproval.setUpdatedAt(LocalDateTime.now());
 
         return preApproval;
-    }
-
-    private BigDecimal calculateInterestRate(BigDecimal creditScore) {
-        if (creditScore.compareTo(new BigDecimal("750")) >= 0) {
-            return new BigDecimal("0.12");
-        } else if (creditScore.compareTo(new BigDecimal("700")) >= 0) {
-            return new BigDecimal("0.14");
-        } else if (creditScore.compareTo(new BigDecimal("650")) >= 0) {
-            return new BigDecimal("0.16");
-        } else {
-            return new BigDecimal("0.18");
-        }
-    }
-
-    private BigDecimal calculateConditionalAmount(BigDecimal creditScore, BigDecimal requestedAmount) {
-        if (creditScore.compareTo(new BigDecimal("640")) >= 0) {
-            return requestedAmount.multiply(new BigDecimal("0.85"));
-        } else {
-            return requestedAmount.multiply(new BigDecimal("0.70"));
-        }
     }
 
     private BigDecimal calculateMonthlyInstallment(BigDecimal principal, BigDecimal annualRate, int months) {
@@ -178,20 +145,6 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
         );
 
         return numerator.divide(denominator, 2, RoundingMode.HALF_EVEN);
-    }
-
-    private RiskCategory determineRiskCategory(BigDecimal score) {
-        if (score.compareTo(new BigDecimal("750")) >= 0) {
-            return RiskCategory.EXCELLENT;
-        } else if (score.compareTo(new BigDecimal("700")) >= 0) {
-            return RiskCategory.GOOD;
-        } else if (score.compareTo(new BigDecimal("650")) >= 0) {
-            return RiskCategory.FAIR;
-        } else if (score.compareTo(new BigDecimal("600")) >= 0) {
-            return RiskCategory.POOR;
-        } else {
-            return RiskCategory.VERY_POOR;
-        }
     }
 
     private LoanPreApprovalResponse mapToResponse(LoanPreApproval preApproval) {
@@ -220,5 +173,6 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
         Integer maxTenureMonths;
         BigDecimal estimatedMonthlyPayment;
         String reason;
+        RiskCategory riskCategory;
     }
 }

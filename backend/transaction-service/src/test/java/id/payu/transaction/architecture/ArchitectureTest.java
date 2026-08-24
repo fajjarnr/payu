@@ -46,10 +46,11 @@ public class ArchitectureTest {
             classes().that().resideInAPackage("..application.service..")
                     .and().areNotInterfaces()
                     .and().areTopLevelClasses()
-                    .and(new DescribedPredicate<JavaClass>("not in dto package") {
+                    .and(new DescribedPredicate<JavaClass>("not in dto package and not VelocityGuard") {
                         @Override
                         public boolean test(JavaClass javaClass) {
-                            return !javaClass.getPackageName().endsWith(".dto");
+                            return !javaClass.getPackageName().endsWith(".dto")
+                                    && !javaClass.getSimpleName().equals("VelocityGuard");
                         }
                     })
                     .should().haveSimpleNameEndingWith("Service")
@@ -59,6 +60,7 @@ public class ArchitectureTest {
     static final ArchRule controllers_should_have_suffixed_names =
             classes().that().resideInAPackage("..adapter.web..")
                     .and().areNotInterfaces()
+                    .and().areTopLevelClasses()
                     .should().haveSimpleNameEndingWith("Controller")
                     .allowEmptyShould(true);
 

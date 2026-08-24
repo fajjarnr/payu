@@ -23,20 +23,25 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import id.payu.outbox.service.OutboxService;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -651,6 +656,68 @@ public class StatementService {
             .replaceAll("\\B(?=(\\d{3})+(?!\\d))", ".");
     }
 
+    // ═══════════════════════════════════════════════════════
+    //  CSV Export — ADR-0019 dual format (JSON/CSV, RFC4180)
+    // ═══════════════════════════════════════════════════════
+
+    private static final String CSV_HEADER = "id,customerId,accountNumber,statementPeriod,openingBalance,closingBalance,totalCredits,totalDebits,transactionCount,status,generatedAt";
+
+    /**
+     * Streams statements as RFC4180 CSV to the given OutputStream.
+     * Money fields formatted with HALF_EVEN scale 2.
+     */
+    public void exportStatementsCsv(String customerId, LocalDate from, LocalDate to, OutputStream outputStream) throws IOException {
+        List<Statement> statements;
+        if (from != null && to != null) {
+            statements = statementRepository.findByCustomerIdAndStatementPeriodBetween(customerId, from, to);
+        } else if (from != null || to != null) {
+            // partial range: fetch all then filter
+            Page<Statement> page = statementRepository.findAllByCustomerId(customerId, PageRequest.of(0, 500));
+            statements = page.getContent().stream()
+                    .filter(s -> from == null || !s.getStatementPeriod().isBefore(from))
+                    .filter(s -> to == null || !s.getStatementPeriod().isAfter(to))
+                    .toList();
+        } else {
+            Page<Statement> page = statementRepository.findAllByCustomerId(customerId, PageRequest.of(0, 500));
+            statements = page.getContent();
+        }
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+        writer.write(CSV_HEADER);
+        writer.newLine();
+        for (Statement s : statements) {
+            writer.write(toCsvRow(s));
+            writer.newLine();
+        }
+        writer.flush();
+    }
+
+    private String toCsvRow(Statement s) {
+        return String.join(",",
+                escapeCsv(s.getId() != null ? s.getId().toString() : ""),
+                escapeCsv(s.getCustomerId()),
+                escapeCsv(s.getAccountNumber()),
+                escapeCsv(s.getStatementPeriod() != null ? s.getStatementPeriod().toString() : ""),
+                escapeCsv(formatMoneyCsv(s.getOpeningBalance())),
+                escapeCsv(formatMoneyCsv(s.getClosingBalance())),
+                escapeCsv(formatMoneyCsv(s.getTotalCredits())),
+                escapeCsv(formatMoneyCsv(s.getTotalDebits())),
+                escapeCsv(s.getTransactionCount() != null ? s.getTransactionCount().toString() : "0"),
+                escapeCsv(s.getStatus() != null ? s.getStatus().name() : ""),
+                escapeCsv(s.getGeneratedAt() != null ? s.getGeneratedAt().toString() : "")
+        );
+    }
+
+    public static String formatMoneyCsv(BigDecimal amount) {
+        if (amount == null) return "0.00";
+        return amount.setScale(2, RoundingMode.HALF_EVEN).toPlainString();
+    }
+
+    public static String escapeCsv(String field) {
+        if (field == null) return "";
+        boolean needsQuoting = field.contains(",") || field.contains("\"") || field.contains("\n") || field.contains("\r");
+        if (!needsQuoting) return field;
+        return "\"" + field.replace("\"", "\"\"") + "\"";
+    }
     /**
      * Store PDF - uses S3 in production, local filesystem for development.
      * BUG-BE-050 Fix: PDFs in /tmp are ephemeral in Kubernetes (lost on pod restart).

@@ -1,0 +1,53 @@
+# TriggerAuthentication — Vault-backed Kafka credentials (ADR-0044)
+# Secret payu-kafka-credentials synced by VSO from Vault payu/prod/kafka
+# Strimzi bootstrap: payu-kafka-kafka-bootstrap:9092 (ADR-0005)
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: payu-kafka-credentials
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: autoscaling
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    name: payu-vault
+    kind: ClusterSecretStore
+  target:
+    name: payu-kafka-credentials
+    creationPolicy: Owner
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/part-of: payu
+      data:
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+        bootstrapServers: "payu-kafka-kafka-bootstrap.payu-dev.svc:9092"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: payu/prod/kafka
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: payu/prod/kafka
+        property: password
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: payu-kafka-auth
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: autoscaling
+spec:
+  secretTargetRef:
+    - parameter: username
+      name: payu-kafka-credentials
+      key: username
+    - parameter: password
+      name: payu-kafka-credentials
+      key: password

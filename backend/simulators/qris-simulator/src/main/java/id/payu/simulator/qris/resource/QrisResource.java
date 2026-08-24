@@ -34,11 +34,16 @@ public class QrisResource {
      */
     @POST
     @Path("/generate")
-    public Response generateQr(@Valid GenerateQrRequest request) {
+    public Response generateQr(@Valid GenerateQrRequest request, @HeaderParam("X-Simulate") String simulate) {
         Log.infof("Received QR generation request for merchant=%s", request.merchantId());
         
         try {
-            GenerateQrResponse response = qrisService.generateQr(request);
+            if (simulate != null && !simulate.isBlank()) {
+                String m = simulate.trim().toLowerCase();
+                if ("rate-limit".equals(m)) return Response.status(429).entity(GenerateQrResponse.error("Rate limit exceeded")).header("X-Simulate", simulate).build();
+                if ("5xx".equals(m)) return Response.status(500).entity(GenerateQrResponse.error("Simulated internal error")).header("X-Simulate", simulate).build();
+            }
+            GenerateQrResponse response = qrisService.generateQr(request, simulate);
             
             int statusCode = switch (response.responseCode()) {
                 case "00" -> 201; // Created
@@ -47,7 +52,7 @@ public class QrisResource {
                 default -> 500;
             };
             
-            return Response.status(statusCode).entity(response).build();
+            return Response.status(statusCode).entity(response).header("X-Simulate", simulate != null ? simulate : "success").build();
         } catch (Exception e) {
             Log.errorf(e, "Error generating QR code");
             return Response.serverError()
@@ -65,11 +70,13 @@ public class QrisResource {
      */
     @POST
     @Path("/pay")
-    public Response payQr(@Valid PayQrRequest request) {
+    public Response payQr(@Valid PayQrRequest request, @HeaderParam("X-Simulate") String simulate, @HeaderParam("X-Idempotency-Key") String idempotencyKey) {
         Log.infof("Received payment request for qrId=%s", request.qrId());
         
         try {
-            PaymentResponse response = qrisService.payQr(request);
+            if (simulate != null && "5xx".equals(simulate.trim().toLowerCase())) return Response.status(500).entity(PaymentResponse.error("Simulated internal error")).header("X-Simulate", simulate).build();
+            if (simulate != null && "rate-limit".equals(simulate.trim().toLowerCase())) return Response.status(429).entity(PaymentResponse.error("Rate limit exceeded")).header("X-Simulate", simulate).build();
+            PaymentResponse response = qrisService.payQr(request, simulate);
             
             int statusCode = switch (response.responseCode()) {
                 case "00" -> 200; // Success
@@ -80,7 +87,7 @@ public class QrisResource {
                 default -> 500;
             };
             
-            return Response.status(statusCode).entity(response).build();
+            return Response.status(statusCode).entity(response).header("X-Simulate", simulate != null ? simulate : "success").header("X-Idempotency-Key", idempotencyKey).build();
         } catch (Exception e) {
             Log.errorf(e, "Error processing payment");
             return Response.serverError()
