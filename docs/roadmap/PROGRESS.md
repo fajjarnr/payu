@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.13 Final — Contract Fix + KEDA Apply + Pods 1/1 Verified (2026-08-24)
+
+- **Contract Fix 1.18.12**: `transaction createTransfer.groovy` `amount: $(c(50000.00), p(regex(...)))` `p(regex)` on server request not allowed → `amount: 50000.00` concrete `spring-cloud-contract generateTests` `1 Failed→0` `transaction 1.18.12` `BUILD SUCCESS`.
+- **Final Verification 1.18.13**: `package.json 1.18.12→1.18.13` `pipelines 31` `workloads tx 5× 1.18.12→1.18.13` `oc get pods -n payu-dev 43/53 1/1` `coraza 2/2` `DB 3/3` `oc logs --since=30s 0 ERROR` `0 WARN` `oc get pipelinerun -n payu-cicd 30/31 Succeeded` `oc get cluster 5/5 Healthy` `oc get kafka 6/6` `oc get certificate 5/5 True`.
+- **B3+B4 Docs**: `TODOS` `No OPEN P1` `PROGRESS` `CHANGELOG` `LESSONS L-343` `TAGS v1.18.11 v1.18.12 v1.18.13` pushed.
+
 ## Platform 1.18.11 B3+B4 Closed — Reconciliation Inbox/Outbox + Pact 5 Sims + RLS 39 FORCE + DMN/Kogito + CSV/Chargeback + Money Strict + SLO + KEDA GO (2026-08-24)
 
 - **Reconciliation Inbox/Outbox (TXN-HARDEN-003/004 → B3.1)**: `V29 inbox_events/aggregate_results` `InboxEventEntity` `AggregateResultEntity` `InboxPersistencePort` `InboxService` `DeferredOutboxService afterCommit REQUIRES_NEW` `TransferStatusPort Adapter GET /snap/v1.0/transfer/status` `ReconciliationScheduler @SchedulerLock 9m/30s 5m cutoff` `ShedLockConfig usingDbTime UTC` `InboxDedupTest` `OutboxOutsideTxTest` `ReconciliationSchedulerTest`.

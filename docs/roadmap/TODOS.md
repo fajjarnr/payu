@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.11` (2026-08-24) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **1.18.10 2/2 Running** (partner/txn), workloads `19/52 1/1` `1.18.11` `coraza 2/2` `KEDA` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | **B1 CLOSED 1.18.9** • **B2 CLOSED 1.18.10** • **B3 CLOSED 1.18.11** (reconciliation inbox/outbox, Pact 5 providers, RLS 39 tables FORCE, DMN+Kogito) • **B4 CLOSED 1.18.11** (CSV, branded Money, chargeback, SLO, Kafka topics, LLM deferred KEDA go) • *No OPEN P1* |
-| **Last Updated** | 2026-08-24 — v1.18.11: B3+B4 CLOSED `reconciliation 29` `Pact 5 sims` `RLS 39` `DMN 2` `CSV 68+109` `Money 8` `SLO 4-tier` `Kafka 107 topics` `KEDA GO LLM DEFERRED` `19/52` `KEDA` |
+| **Last Release** | `1.18.13` (2026-08-24) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **30/31 Succeeded** (1 Failed contract fixed 1.18.12), workloads `43/53 1/1` `1.18.13` `coraza 2/2` `KEDA` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.13** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO, KEDA) • *Next: promotion sit→prod + SLO drill* |
+| **Last Updated** | 2026-08-24 — v1.18.13: B3+B4 CLOSED `reconciliation` `Pact` `RLS` `DMN` `CSV` `chargeback` `Money` `SLO` `KEDA` `contract fix 1.18.12` `43/53` `KEDA` `No OPEN P1`. |
 
 ---
 

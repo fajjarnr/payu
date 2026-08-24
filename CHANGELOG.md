@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.13] - 2026-08-24
+
+### Fixed
+
+- **Final Verification**: `transaction 1.18.12` `createTransfer.groovy` `p(regex)` → `50000.00` concrete `generateTests` `BUILD SUCCESS` `oc get pods -n payu-dev 43/53 1/1` `coraza 2/2` `DB 3/3` `0 ERROR` `0 WARN` `30/31 Succeeded`.
+
+### Added
+
+- **Docs**: `TODOS` `No OPEN P1` `PROGRESS 1.18.13` `LESSONS L-343` `TAGS v1.18.11 v1.18.12 v1.18.13`.
+
+## [1.18.12] - 2026-08-24
+
+### Fixed
+
+- **Contract**: `transaction createTransfer.groovy` `amount: $(c(50000.00), p(regex(...)))` `You can't have regex for request on server side` → `amount: 50000.00` `spring-cloud-contract generateTests` `FAIL→PASS` `1.18.11→1.18.12`.
+
 ## [1.18.11] - 2026-08-24
 
 ### Added (B3+B4 Closed — Reconciliation + Pact + RLS + DMN/Kogito + CSV/Chargeback + Money + SLO + KEDA)
