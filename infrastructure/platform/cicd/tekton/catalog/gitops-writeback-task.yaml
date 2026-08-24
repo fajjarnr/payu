@@ -55,7 +55,7 @@ spec:
           exit 1
         fi
 
-        TARGET_DIR="infrastructure/workloads/overlays/${OVERLAY_DIR}"
+        TARGET_DIR="infrastructure/workloads/overlays/${OVERLAY_DIR}/$(params.service-name)"
         if [ ! -d "$TARGET_DIR" ]; then
           echo "[X] Overlay directory $TARGET_DIR not found!"
           exit 1

@@ -35,7 +35,7 @@ spec:
       description: Maven settings.xml
       optional: true
     - name: m2-cache
-      description: Maven local repository cache
+      description: Maven local repository cache (shared PVC, fsGroup-writable)
       mountPath: /root/.m2
       optional: true
   stepTemplate:
@@ -59,14 +59,17 @@ spec:
         - /usr/bin/mvn
       args:
         - "$(params.GOALS[*])"
+        # ponytail: shared m2-cache PVC + podTemplate fsGroup grants group-write,
+        # so deps persist across runs instead of fresh download per PipelineRun
         - -Dmaven.repo.local=$(workspaces.source.path)/.m2
         - -Duser.home=/tekton/home
         - -Dmaven.resolver.transport=wagon
-        - -Dmaven.wagon.http.retryHandler.count=3
+        - -Dmaven.wagon.http.retryHandler.count=5
         - -Dmaven.wagon.http.retryHandler.requestSentEnabled=true
-        - -Daether.connector.http.retryHandler.count=3
+        # ponytail: sleepTime 60s between retries so repo1/aliyun throttle window can clear
+        - -Dmaven.wagon.http.retryHandler.sleepTime=60
         # ponytail: maven-settings secret carries settings.xml (mirror central ->
-        # repo1.maven.org) so a Central 429 throttle on one hostname cannot stop builds
+        # aliyun public) so a Central/repo1 429 throttle cannot stop builds
         - -s
         - $(workspaces.maven-settings.path)/settings.xml
       resources:

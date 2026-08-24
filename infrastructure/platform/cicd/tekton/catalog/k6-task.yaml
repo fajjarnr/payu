@@ -52,7 +52,7 @@ spec:
         # ponytail: wait 120s for service readiness before load (106s startup; dev non-blocking via warn, prod blocking via strict profile)
         echo "[*] waiting for $BASE_URL readiness (max 120s)"
         for i in $(seq 1 24); do
-          if curl -sf "$BASE_URL/actuator/health/liveness" >/dev/null 2>&1 || curl -sf "$BASE_URL/q/health/live" >/dev/null 2>&1 || curl -sf "$BASE_URL/health" >/dev/null 2>&1 || curl -sf "$BASE_URL/api/health" >/dev/null 2>&1; then
+          if curl -sf --max-time 3 "$BASE_URL/actuator/health/liveness" >/dev/null 2>&1 || curl -sf --max-time 3 "$BASE_URL/q/health/live" >/dev/null 2>&1 || curl -sf --max-time 3 "$BASE_URL/health" >/dev/null 2>&1 || curl -sf --max-time 3 "$BASE_URL/api/health" >/dev/null 2>&1; then
             echo "[✓] service ready after $((i*5))s"
             break
           fi
