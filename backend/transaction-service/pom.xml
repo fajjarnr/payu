@@ -128,6 +128,12 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- ADR-0030: Redis ZSET sliding-window velocity store (StringRedisTemplate + lua) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- PayU Resilience Starter -->
         <dependency>
             <groupId>id.payu</groupId>

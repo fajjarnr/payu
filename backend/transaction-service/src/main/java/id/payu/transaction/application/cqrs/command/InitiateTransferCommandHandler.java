@@ -1,9 +1,13 @@
 package id.payu.transaction.application.cqrs.command;
 
 import id.payu.transaction.application.cqrs.CommandHandler;
+import id.payu.api.common.exception.RateLimitExceededException;
 import id.payu.transaction.application.service.AuthorizationService;
+import id.payu.transaction.application.service.VelocityGuard;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
+import id.payu.transaction.exception.TransactionDomainException.AmlHighRiskBlockedException;
+import id.payu.transaction.exception.TransactionDomainException.RiskEvaluationUnavailableException;
 import id.payu.transaction.interfaces.dto.BifastTransferRequest;
 import id.payu.transaction.interfaces.dto.InitiateTransferRequest;
 import id.payu.transaction.interfaces.dto.QrisPaymentRequest;
@@ -39,6 +43,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     private final RgsServicePort rgsServicePort;
     private final TransactionEventPublisherPort eventPublisherPort;
     private final AuthorizationService authorizationService;
+    private final VelocityGuard velocityGuard;
+    private final RiskEvaluationPort riskEvaluationPort;
 
     public InitiateTransferCommandHandler(TransactionPersistencePort transactionPersistencePort,
                                           WalletServicePort walletServicePort,
@@ -46,7 +52,9 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                                           SknServicePort sknServicePort,
                                           RgsServicePort rgsServicePort,
                                           TransactionEventPublisherPort eventPublisherPort,
-                                          AuthorizationService authorizationService) {
+                                          AuthorizationService authorizationService,
+                                          VelocityGuard velocityGuard,
+                                          RiskEvaluationPort riskEvaluationPort) {
         this.transactionPersistencePort = transactionPersistencePort;
         this.walletServicePort = walletServicePort;
         this.bifastServicePort = bifastServicePort;
@@ -54,6 +62,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         this.rgsServicePort = rgsServicePort;
         this.eventPublisherPort = eventPublisherPort;
         this.authorizationService = authorizationService;
+        this.velocityGuard = velocityGuard;
+        this.riskEvaluationPort = riskEvaluationPort;
     }
 
     @Override
@@ -73,6 +83,28 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
             }
         }
 
+        // ADR-0030 Step 1: fast-path Redis sliding-window velocity check (< 5ms) -> 429 on breach
+        if (!velocityGuard.isAllowed(command.userId(), command.amount().getAmount())) {
+            throw new RateLimitExceededException("AML_VELOCITY_LIMIT_EXCEEDED",
+                    "AML_VELOCITY: Transfer frequency or daily accumulation limit exceeded (ADR-0030)", 600);
+        }
+
+        // ADR-0030 Step 2: real-time fraud & AML scoring (< 25ms), before any funds move
+        int riskScore = evaluateRisk(command);
+        if (riskScore > 85) {
+            // ADR-0030 decision matrix: score > 85 (CRITICAL_RISK) -> block, HTTP 403
+            throw new AmlHighRiskBlockedException(riskScore);
+        }
+        if (riskScore >= 71) {
+            // ADR-0030 decision matrix: score 71-85 (HIGH_RISK) -> hold for compliance review, no reservation
+            return holdForComplianceReview(command,
+                    "HOLD_FOR_REVIEW: fraud risk score " + riskScore + " in band [71,85]");
+        }
+
+        // ADR-0030: ponytail: score 40-70 mandates step-up auth (ADR-0028) — not wired yet; passes with warn
+        if (riskScore >= 40) {
+            log.warn("Risk score {} for user {} in STEP_UP band; step-up auth (ADR-0028) not yet enforced", riskScore, command.userId());
+        }
         // Create and persist the transaction
         TransactionEntity transaction = createTransaction(command);
         transaction = transactionPersistencePort.save(transaction);
@@ -125,6 +157,38 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         log.info("Transfer initiated successfully: {}", transaction.getId());
         return buildResult(transaction);
     }
+
+    /**
+     * ADR-0030 Step 2 with fail-closed policy: analytics outage never silently allows —
+     * the transfer is held for compliance review (fail-safe to STEP_UP per ADR-0030).
+     */
+    private int evaluateRisk(InitiateTransferCommand command) {
+        String currency = command.amount().getCurrency() != null
+                ? command.amount().getCurrency().getCurrencyCode()
+                : "IDR";
+        try {
+            return riskEvaluationPort.score(command.userId(), command.amount().getAmount(), currency);
+        } catch (RiskEvaluationUnavailableException e) {
+            log.warn("Analytics fraud scoring unavailable, failing closed to HOLD for user {}: {}", command.userId(), e.getMessage());
+            // ponytail: return 80 (HIGH_RISK HOLD band 71-85) not 100 (CRITICAL block)
+            // so handle() will route to holdForComplianceReview, not AmlHighRiskBlocked.
+            return 80;
+        }
+    }
+
+    /**
+     * ADR-0030: persist transaction as PENDING_COMPLIANCE_REVIEW and return without reserving funds.
+     * ponytail: payu.compliance.transaction-held.v1 event publish (roadmap item 3) not yet wired.
+     */
+    private InitiateTransferCommandResult holdForComplianceReview(InitiateTransferCommand command, String reason) {
+        TransactionEntity transaction = createTransaction(command);
+        transaction.setStatus(TransactionStatus.PENDING_COMPLIANCE_REVIEW);
+        transaction.setFailureReason(reason);
+        transaction = transactionPersistencePort.save(transaction);
+        log.warn("Transfer {} held for AML compliance review: {}", transaction.getReferenceNumber(), reason);
+        return buildResult(transaction);
+    }
+
 
     private TransactionEntity createTransaction(InitiateTransferCommand command) {
         String referenceNumber = generateReferenceNumber();

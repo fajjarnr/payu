@@ -48,11 +48,11 @@ spec:
 
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "250m"
-    limits:
       memory: "1Gi"
-      cpu: "1000m"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
 
   postgresql:
     parameters:
@@ -73,12 +73,32 @@ spec:
       autovacuum_naptime: "30s"
       autovacuum_vacuum_scale_factor: "0.05"
       autovacuum_analyze_scale_factor: "0.02"
+      archive_timeout: "60s"
       synchronous_commit: "local"
+      # ponytail: synchronous quorum (ADR-0031 RPO=0: method any/1 + failoverQuorum)
+      # deferred — CNPG 1.30 instance-manager queries cnpg.synchronous_standby_names_metadata
+      # but PG16.8 image lacks that GUC until CNPG operator + sidecar both upgraded;
+      # enabling now puts cluster into ContinuousArchiving=False + reconciler loop.
+      # Upgrade path: after CNPG operator syncs, re-enable postgresql.synchronous block.
+
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: payu-database-backup
+
+  backup:
+    target: prefer-standby
+    volumeSnapshot:
+      className: csi-aws-vsc
+      walClassName: csi-aws-vsc
+      online: true
+      snapshotOwnerReference: backup
 
   affinity:
     enablePodAntiAffinity: true
-    topologyKey: kubernetes.io/hostname
-    podAntiAffinityType: preferred
+    topologyKey: topology.kubernetes.io/zone
+    podAntiAffinityType: required
 
   monitoring:
     enablePodMonitor: false

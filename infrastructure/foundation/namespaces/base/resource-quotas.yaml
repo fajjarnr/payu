@@ -19,8 +19,9 @@ spec:
     requests.storage: 200Gi
     pods: "100"
     services: "50"
-    secrets: "100"
+    secrets: "150"
     configmaps: "100"
+    # ponytail: see comment above dev quota — secrets 100→150 for barman HA
 ---
 # --- payu-sit ---
 apiVersion: v1

@@ -2,6 +2,7 @@ package id.payu.wallet.adapter.persistence.repository;
 
 import id.payu.wallet.adapter.persistence.entity.JournalEntryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,6 +18,7 @@ public interface JournalEntryJpaRepository extends JpaRepository<JournalEntryEnt
 
     Optional<JournalEntryEntity> findByJournalNumber(String journalNumber);
 
+    @EntityGraph(attributePaths = "entries")
     @Query("SELECT j FROM JournalEntryEntity j WHERE j.referenceType = :refType AND j.referenceId = :refId")
     List<JournalEntryEntity> findByReference(@Param("refType") String referenceType,
                                              @Param("refId") String referenceId);

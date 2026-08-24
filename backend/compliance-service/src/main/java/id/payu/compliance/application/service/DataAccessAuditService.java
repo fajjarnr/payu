@@ -61,7 +61,6 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
                 serviceName, resourceType, operationType);
 
         DataAccessAudit audit = DataAccessAudit.builder()
-                .id(UUID.randomUUID())
                 .userId(userId)
                 .accessedBy(accessedBy)
                 .serviceName(serviceName)

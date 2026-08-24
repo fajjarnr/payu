@@ -1,17 +1,22 @@
 package id.payu.transaction.application.cqrs.command;
 
+import id.payu.api.common.exception.RateLimitExceededException;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
+import id.payu.transaction.application.service.VelocityGuard;
 import id.payu.transaction.domain.model.Money;
 import id.payu.transaction.domain.model.TransactionStatus;
 import id.payu.transaction.domain.model.TransactionType;
 import id.payu.transaction.domain.port.out.BifastServicePort;
+import id.payu.transaction.domain.port.out.RiskEvaluationPort;
 import id.payu.transaction.domain.port.out.RgsServicePort;
 import id.payu.transaction.domain.port.out.SknServicePort;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
 import id.payu.transaction.application.service.AuthorizationService;
+import id.payu.transaction.exception.TransactionDomainException;
 import id.payu.transaction.interfaces.dto.ReserveBalanceResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,15 +38,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 class InitiateTransferCommandHandlerTest {
 
     @Mock
     private TransactionPersistencePort transactionPersistencePort;
     @Mock
-    private WalletServicePort walletServicePort;
-    @Mock
     private BifastServicePort bifastServicePort;
+    @Mock
+    private WalletServicePort walletServicePort;
     @Mock
     private SknServicePort sknServicePort;
     @Mock
@@ -50,11 +58,24 @@ class InitiateTransferCommandHandlerTest {
     @Mock
     private AuthorizationService authorizationService;
 
+    // ADR-0030 enforcement collaborators — lenient: not every test exercises the guard path
+    @Mock(strictness = org.mockito.Mock.Strictness.LENIENT)
+    private VelocityGuard velocityGuard;
+    @Mock(strictness = org.mockito.Mock.Strictness.LENIENT)
+    private RiskEvaluationPort riskEvaluationPort;
+
     @InjectMocks
     private InitiateTransferCommandHandler handler;
 
+    @BeforeEach
+    void allowRiskPathByDefault() {
+        when(velocityGuard.isAllowed(anyString(), any(java.math.BigDecimal.class))).thenReturn(true);
+        when(riskEvaluationPort.score(anyString(), any(java.math.BigDecimal.class), any())).thenReturn(0);
+    }
+
     @Test
     void completesInterbankTransferFromProviderCallback() {
+
         UUID transactionId = UUID.randomUUID();
         UUID senderAccountId = UUID.randomUUID();
         TransactionEntity transaction = TransactionEntity.builder()
@@ -385,5 +406,90 @@ class InitiateTransferCommandHandlerTest {
         assertThat(savedTransactions.getAllValues())
                 .anyMatch(transaction -> transaction.getMetadata() != null
                         && transaction.getMetadata().contains("\"recipientAccountNumber\":\"1234567890\""));
+    }
+
+    // === ADR-0030: real-time velocity & AML risk enforcement (B1.3) ===
+
+    @Test
+    void rejectsTransferWhenVelocityLimitExceeded() {
+        InitiateTransferCommand command = bifastCommand("idem-vel-001");
+        when(velocityGuard.isAllowed(eq("user-001"), eq(Money.idr("100000").getAmount()))).thenReturn(false);
+
+        assertThatThrownBy(() -> handler.handle(command))
+                .isInstanceOf(RateLimitExceededException.class)
+                .hasMessageContaining("AML_VELOCITY");
+        verify(walletServicePort, never()).reserveBalance(any(UUID.class), anyString(), any(java.math.BigDecimal.class));
+        verify(transactionPersistencePort, never()).save(any(TransactionEntity.class));
+    }
+
+    @Test
+    void blocksTransferWhenFraudScoreCritical() {
+        InitiateTransferCommand command = bifastCommand("idem-risk-block-001");
+        when(riskEvaluationPort.score(eq("user-001"), any(java.math.BigDecimal.class), any())).thenReturn(90);
+
+        assertThatThrownBy(() -> handler.handle(command))
+                .isInstanceOf(TransactionDomainException.AmlHighRiskBlockedException.class);
+        verify(transactionPersistencePort, never()).save(any(TransactionEntity.class));
+        verify(walletServicePort, never()).reserveBalance(any(UUID.class), anyString(), any(java.math.BigDecimal.class));
+    }
+
+    @Test
+    void holdsTransferForComplianceReviewWhenScoreHigh() {
+        UUID transactionId = UUID.randomUUID();
+        InitiateTransferCommand command = bifastCommand("idem-risk-hold-001");
+        when(riskEvaluationPort.score(eq("user-001"), any(java.math.BigDecimal.class), any())).thenReturn(78);
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        InitiateTransferCommandResult result = handler.handle(command);
+
+        assertThat(result.status()).isEqualTo(TransactionStatus.PENDING_COMPLIANCE_REVIEW.name());
+        verify(walletServicePort, never()).reserveBalance(any(UUID.class), anyString(), any(java.math.BigDecimal.class));
+        var saved = org.mockito.ArgumentCaptor.forClass(TransactionEntity.class);
+        verify(transactionPersistencePort).save(saved.capture());
+        assertThat(saved.getValue().getStatus()).isEqualTo(TransactionStatus.PENDING_COMPLIANCE_REVIEW);
+    }
+
+    @Test
+    void failsClosedHoldingTransferWhenAnalyticsUnavailable() {
+        // ADR-0030: analytics timeout is fail-safe to STEP_UP; with step-up unwired the transfer is held, never silently allowed
+        UUID transactionId = UUID.randomUUID();
+        InitiateTransferCommand command = bifastCommand("idem-risk-down-001");
+        when(riskEvaluationPort.score(anyString(), any(java.math.BigDecimal.class), any()))
+                .thenThrow(new TransactionDomainException.RiskEvaluationUnavailableException(
+                        new java.net.ConnectException("analytics down")));
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        InitiateTransferCommandResult result = handler.handle(command);
+
+        assertThat(result.status()).isEqualTo(TransactionStatus.PENDING_COMPLIANCE_REVIEW.name());
+        verify(walletServicePort, never()).reserveBalance(any(UUID.class), anyString(), any(java.math.BigDecimal.class));
+    }
+
+    private InitiateTransferCommand bifastCommand(String idempotencyKey) {
+        return new InitiateTransferCommand(
+                UUID.randomUUID(),
+                "1234567890",
+                Money.idr("100000"),
+                "test transfer",
+                id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER,
+                null,
+                null,
+                idempotencyKey,
+                "user-001",
+                null);
     }
 }

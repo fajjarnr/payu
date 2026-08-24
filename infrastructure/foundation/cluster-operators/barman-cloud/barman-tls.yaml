@@ -1,0 +1,49 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: barman-selfsigned
+  namespace: openshift-operators
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: barman-cloud-server-tls
+  namespace: openshift-operators
+spec:
+  secretName: barman-cloud-server-tls
+  issuerRef:
+    name: barman-selfsigned
+    kind: Issuer
+  commonName: barman-cloud.openshift-operators.svc
+  dnsNames:
+    - barman-cloud
+    - barman-cloud.openshift-operators.svc
+    - barman-cloud.openshift-operators.svc.cluster.local
+  duration: 8760h
+  renewBefore: 720h
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: barman-cloud-client-tls
+  namespace: openshift-operators
+spec:
+  secretName: barman-cloud-client-tls
+  issuerRef:
+    name: barman-selfsigned
+    kind: Issuer
+  commonName: barman-cloud-client
+  duration: 8760h
+  renewBefore: 720h
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+    - client auth

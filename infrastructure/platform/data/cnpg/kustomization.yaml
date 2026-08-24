@@ -8,6 +8,7 @@ kind: Kustomization
 resources:
   - cnpg-cluster.yaml
   - cnpg-databases.yaml
+  - objectstore.yaml
   - cnpg-network-policy.yaml
   - outbox-bootstrap-job.yaml
   - shedlock-bootstrap-job.yaml

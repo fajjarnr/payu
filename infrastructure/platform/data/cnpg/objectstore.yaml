@@ -1,0 +1,27 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: payu-database-backup
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/name: payu-database
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: backup
+spec:
+  retentionPolicy: 30d
+  configuration:
+    destinationPath: s3://payu-backups-368694075944/payu-database
+    endpointURL: https://s3.ap-southeast-1.amazonaws.com
+    s3Credentials:
+      accessKeyId:
+        name: payu-backup-s3
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: payu-backup-s3
+        key: SECRET_ACCESS_KEY
+    wal:
+      compression: gzip
+      maxParallel: 8
+    data:
+      compression: gzip
+      jobs: 2

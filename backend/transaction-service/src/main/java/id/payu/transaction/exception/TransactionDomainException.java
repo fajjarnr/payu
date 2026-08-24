@@ -197,6 +197,32 @@ public abstract class TransactionDomainException extends BusinessException {
         }
     }
 
+    // === AML / Risk (ADR-0030, 6400-6499) ===
+
+    /**
+     * ADR-0030: fraud risk score &gt; 85 (CRITICAL_RISK) — transfer auto-blocked (HTTP 403).
+     */
+    public static class AmlHighRiskBlockedException extends TransactionDomainException {
+        public AmlHighRiskBlockedException(int riskScore) {
+            super("AML_HIGH_RISK_BLOCKED",
+                  "Transfer blocked by fraud prevention: risk score " + riskScore + " exceeds threshold 85",
+                  "Transaksi diblokir oleh sistem pencegahan fraud");
+        }
+    }
+
+    /**
+     * ADR-0030: analytics-service fraud scoring unavailable. Fail-safe policy is
+     * fail-closed — the caller must hold the transaction for review, never silently allow.
+     */
+    public static class RiskEvaluationUnavailableException extends ExternalServiceException {
+        public RiskEvaluationUnavailableException(Throwable cause) {
+            super("TXN_EXT_006",
+                  "Risk evaluation service is unavailable",
+                  cause,
+                  "AnalyticsService");
+        }
+    }
+
     // === System Errors (6900-6999) ===
 
     public static class TransactionProcessingException extends TransactionDomainException {

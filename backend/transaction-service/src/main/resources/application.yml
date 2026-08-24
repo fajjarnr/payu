@@ -177,6 +177,16 @@ resilience4j:
         wait-duration-in-open-state: 5s
         failure-rate-threshold: 50
         event-consumer-buffer-size: 10
+      # ADR-0030: fraud scoring latency budget < 25ms — open fast, no retry
+      analyticsService:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
   retry:
     instances:
       walletService:

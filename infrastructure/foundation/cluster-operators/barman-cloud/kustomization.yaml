@@ -2,9 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # CloudNativePG 1.30 deprecates its in-tree Barman integration. Keep the
-# release URL and runtime image immutable; the image itself is UBI9-based.
 namespace: openshift-operators
 resources:
+  - barman-tls.yaml
   - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.13.0/manifest.yaml
 
 images:

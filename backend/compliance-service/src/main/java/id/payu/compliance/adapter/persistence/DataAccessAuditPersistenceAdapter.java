@@ -103,7 +103,7 @@ public class DataAccessAuditPersistenceAdapter implements DataAccessAuditPersist
                 .errorMessage(audit.getErrorMessage())
                 .accessedAt(audit.getAccessedAt())
                 .createdAt(audit.getCreatedAt())
-                .version(audit.getVersion())
+                .version(audit.getVersion() != null ? audit.getVersion() : 0L)
                 .build();
     }
 

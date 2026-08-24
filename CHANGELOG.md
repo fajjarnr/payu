@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.9] - 2026-08-24
+
+### Added (B1 Closed — Before Real Money Flows: PITR + Suspense + Risk + Audit REVOKE)
+
+- **PITR HA + Barman S3 (ADR-0031 PARTNER-PROD-008 P0)**: fix `barman-cloud 0/1 ContainerCreating` `secret not found` → `Issuer barman-selfsigned` `Certificate server/client-tls` `dnsNames [barman-cloud, .svc, .cluster.local]` `1/1 Running` `S3 payu-backups-368694075944 ap-southeast-1 versioning` `IAM payu-backup` `secret payu-backup-s3/cnpg-s3-credentials ×6` `ObjectStore payu-database-backup` `cnpg-cluster instances 1→3 storage 10Gi→20Gi resources 1Gi/4Gi affinity zone required plugins barman-cloud isWALArchiver` `ha-patch barmanObjectStore→plugins` `ResourceQuota 100→150` `LimitRange 10Gi→20Gi` `force delete` sidecar inject `2/2 Running` `ContinuousArchiving True 9 WAL` `payu-database-1/2/3 2/2` `Cluster Healthy 3/3` `44/44 1/1`.
+- **Suspense Ledger Persist (ADR-0029 GAP-029)**: `WalletClearingService` in-memory 0 caller → `WalletClearingUseCase` `JournalPersistencePort` `V119 uq journal per (stage,referenceId)` `V120 defer check` `clearingCode 1500 suspense 1510-1540 rail 1550 NOSTRO` `COA 1500-series keep` `UUID deferred` `reserveAndHoldClearing debit CASA amount+fee credit suspense+fee` `settle/reverse` `4 green` `ClearingLedgerDoubleEntryInvariantTest` balanced + idempotent.
+- **Risk Enforcement Wire (ADR-0030 GAP-030E)**: `VelocityGuard` stub true → `StringRedisTemplate` `lua evaluate_velocity.lua` `ZSET 5/10m 50M/day` `fail-secure false` `RiskEvaluationAdapter` `POST fraud/score` `risk_score` `CircuitBreaker` + manual wrap `RiskEvaluationUnavailable` `InitiateTransferCommandHandler` `velocity 429 AML_VELOCITY` `score>85 BLOCK 71-85 HOLD PENDING_COMPLIANCE_REVIEW` `unavailable→80 HOLD` `application.yml analytics.url` `Rfc9457TransactionExceptionHandler` `22 green`.
+- **Audit REVOKE (ADR-0063 COMPLIANCE-HARDEN-001)**: `V3 false` → `V4 rename compliance_standard→standard` `V5 REVOKE UPDATE,DELETE ON audit_reports/compliance_checks/data_access_audits FROM payu/pay_u_test/sit/uat/preprod` `DataAccessAuditService id GeneratedValue` `version 0L` `AuditTrailImmutabilityIntegrationTest 7 green` `71 green` full.
+
+### Fixed
+
+- **Transaction Tests**: `velocity 429` message now contains `AML_VELOCITY` + `evaluateRisk unavailable→80` not `100` so `failsClosedHoldingTransferWhenAnalyticsUnavailable` returns `PENDING_COMPLIANCE_REVIEW` not `AmlHighRiskBlocked` `22/22 green` `RiskEvaluationAdapter` wraps `HttpServerErrorException` → `RiskEvaluationUnavailable`.
+- **Platform**: `barman-cloud` TLS SAN `barman-cloud` bare, `LimitRange` dev PVC `10Gi→20Gi`, `ResourceQuota` secrets `100→150`.
+
+### Verified
+
+- `oc get cluster payu-database -n payu-dev phase Healthy ready 3/3 spec 3` `oc get pods -n payu-dev -l cnpg.io/cluster=payu-database 3×2/2 Running` `ContinuousArchiving True` `aws s3 ls s3://payu-backups-368694075944/payu-database/wals 9 files` `oc get pods -n payu-dev 44/44 1/1` `0/1` → `1/1` `web-app 1/1` `simulators 5/5` `kafka 6/6` `oc logs --since=30s | grep -i error 0` `mvn -pl transaction-service test 22 green` `wallet 4 green` `compliance 71 green`.
+- **SemVer**: `package.json 1.18.8→1.18.9` `podman-compose 31` `pipelines 31` `pipelineRuns 31` `workloads 124` `git tag v1.18.9` pending.
+
 ## [1.18.8] - 2026-08-24
 
 ### Added (Auth Service ADR-0062 — OAuth2 DPoP RFC 9449 + Refresh Rotation Strict + Device Grant + PKCE)
