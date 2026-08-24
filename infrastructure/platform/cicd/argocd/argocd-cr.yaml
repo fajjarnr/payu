@@ -13,7 +13,10 @@ spec:
     resources:
       requests:
         cpu: 500m
-        memory: 1Gi
+        memory: 2Gi
+      limits:
+        cpu: 2
+        memory: 4Gi
   # ExtraConfig merges these keys into the operator-managed argocd-cm.
   # HPA health: wave -1 HPAs whose Deployment target does not exist yet
   # must be Progressing, not Degraded — Degraded flags the sync wave as
