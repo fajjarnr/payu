@@ -18,6 +18,7 @@ import id.payu.auth.adapter.security.KeycloakService;
 import id.payu.auth.application.service.RefreshTokenService;
 import id.payu.auth.application.service.RiskEvaluationService;
 import id.payu.auth.application.service.SessionValidationService;
+import id.payu.auth.application.metrics.BusinessMetrics;
 import id.payu.security.annotation.Audited;
 import id.payu.security.annotation.AuditLevel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,13 +56,13 @@ import id.payu.security.annotation.AuditOperation;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Authentication", description = "User authentication and MFA endpoints")
 public class AuthController extends BaseController {
 
     private final KeycloakService keycloakService;
     private final RiskEvaluationService riskEvaluationService;
     private final RefreshTokenService refreshTokenService;
     private final SessionValidationService sessionValidationService;
+    private final BusinessMetrics businessMetrics;
 
     /**
      * Authenticate user with username and password.
@@ -310,54 +311,111 @@ public class AuthController extends BaseController {
             HttpServletRequest httpRequest
     ) {
         try {
-            // Step 1: Use Keycloak to get new access token using the provided refresh token
-            LoginResponse keycloakResponse = keycloakService.refreshTokenBlocking(request.refreshToken());
-
-            // Step 2: Build response with new tokens
+            String dpopProof = httpRequest.getHeader("DPoP");
+            LoginResponse keycloakResponse;
+            if (dpopProof != null && !dpopProof.isBlank()) {
+                keycloakResponse = keycloakService.refreshTokenBlocking(request.refreshToken(), dpopProof);
+            } else {
+                keycloakResponse = keycloakService.refreshTokenBlocking(request.refreshToken());
+            }
             RefreshTokenResponse response = new RefreshTokenResponse(
                     keycloakResponse.accessToken(),
                     keycloakResponse.refreshToken(),
                     keycloakResponse.expiresIn(),
-                    7 * 24 * 3600L, // default 7 days for new refresh token lifetime
+                    7 * 24 * 3600L,
                     keycloakResponse.tokenType()
             );
-
-            log.info("Successfully refreshed token for client IP: {}", getClientIpAddress(httpRequest));
+            businessMetrics.recordTokenRefresh();
+            log.info("Successfully refreshed token for client IP: {} DPoP={}", getClientIpAddress(httpRequest), dpopProof != null ? "present" : "none");
             return ResponseEntity.ok(ApiResponse.success(response));
 
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
-            log.warn("Refresh token validation failed for IP: {} - {}",
-                    getClientIpAddress(httpRequest), e.getMessage());
+            businessMetrics.recordRevokedRefresh();
+            log.warn("Refresh token validation failed for IP: {} - {}", getClientIpAddress(httpRequest), e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(
-                            ErrorCode.AUTH_BUS_006.getCode(),
-                            ErrorCode.AUTH_BUS_006.getMessage()
-                    ));
+                    .body(ApiResponse.error(ErrorCode.AUTH_BUS_006.getCode(), ErrorCode.AUTH_BUS_006.getMessage()));
         } catch (IllegalArgumentException e) {
-            // LOGIN-002: a revoked/rotated/expired refresh token (Keycloak
-            // invalid_grant) is a deterministic 400, not a 500
-            log.warn("Refresh token rejected for IP: {} - {}",
-                    getClientIpAddress(httpRequest), e.getMessage());
+            businessMetrics.recordRevokedRefresh();
+            log.warn("Refresh token rejected for IP: {} - {}", getClientIpAddress(httpRequest), e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(
-                            ErrorCode.AUTH_BUS_006.getCode(),
-                            ErrorCode.AUTH_BUS_006.getMessage()
-                    ));
+                    .body(ApiResponse.error(ErrorCode.AUTH_BUS_006.getCode(), ErrorCode.AUTH_BUS_006.getMessage()));
         } catch (id.payu.api.common.exception.RateLimitExceededException e) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(ApiResponse.error(
-                            ErrorCode.RATE_LIMIT_EXCEEDED.getCode(),
-                            ErrorCode.RATE_LIMIT_EXCEEDED.getMessage()
-                    ));
+                    .body(ApiResponse.error(ErrorCode.RATE_LIMIT_EXCEEDED.getCode(), ErrorCode.RATE_LIMIT_EXCEEDED.getMessage()));
         } catch (Exception e) {
-            // SECURITY: Don't log full stack trace to prevent information disclosure
-            log.error("Token refresh failed for IP: {} - {}",
-                    getClientIpAddress(httpRequest), e.getClass().getSimpleName(), e);
+            log.error("Token refresh failed for IP: {} - {}", getClientIpAddress(httpRequest), e.getClass().getSimpleName(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(
-                            ErrorCode.INTERNAL_ERROR.getCode(),
-                            ErrorCode.INTERNAL_ERROR.getMessage()
-                    ));
+                    .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR.getCode(), ErrorCode.INTERNAL_ERROR.getMessage()));
+        }
+    }
+    /**
+     * ADR-0062 Device Authorization Grant — initiate (RFC 8628).
+     * Public endpoint for constrained devices (TV, IoT) — returns device_code + user_code.
+     * Supports DPoP binding: client sends DPoP header signed with same key that will be used for polling.
+     */
+    @PostMapping("/device")
+    @SecurityRequirements
+    @RateLimit(requests = 10, windowSeconds = 60, keyPrefix = "device-init")
+    @Operation(summary = "Initiate device authorization", description = "RFC 8628 device_code + user_code. DPoP-bound if DPoP header present.")
+    public ResponseEntity<ApiResponse<?>> initiateDeviceAuthorization(HttpServletRequest httpRequest) {
+        try {
+            String dpopProof = httpRequest.getHeader("DPoP");
+            java.util.Map<String, Object> result = keycloakService.initiateDeviceAuthorization(dpopProof);
+            businessMetrics.recordDeviceCodeIssued();
+            // propagate device fingerprint for risk telemetry if present
+            String deviceId = httpRequest.getHeader("X-Device-ID");
+            if (deviceId != null) log.debug("Device auth initiated deviceId={}", deviceId);
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (IllegalArgumentException e) {
+            log.warn("Device authorization rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(ErrorCode.AUTH_BUS_009.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("Device authorization failed: {}", e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR.getCode(), ErrorCode.INTERNAL_ERROR.getMessage()));
+        }
+    }
+
+    /**
+     * ADR-0062 Device Authorization Grant — poll token endpoint with device_code.
+     * Client must reuse same DPoP key as initiation.
+     */
+    @PostMapping("/device/token")
+    @SecurityRequirements
+    @RateLimit(requests = 20, windowSeconds = 60, keyPrefix = "device-poll")
+    @Operation(summary = "Poll device token", description = "RFC 8628 polling. Returns 200 with tokens when approved, 202 when pending.")
+    public ResponseEntity<ApiResponse<?>> pollDeviceToken(@RequestBody Map<String, String> payload, HttpServletRequest httpRequest) {
+        String deviceCode = payload != null ? payload.get("device_code") : null;
+        if (deviceCode == null || deviceCode.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(ErrorCode.AUTH_BUS_009.getCode(), "device_code is required"));
+        }
+        try {
+            String dpopProof = httpRequest.getHeader("DPoP");
+            LoginResponse tokens = keycloakService.pollDeviceToken(deviceCode, dpopProof);
+            businessMetrics.recordDeviceTokenPolled();
+            businessMetrics.recordLoginSuccess();
+            return ResponseEntity.ok(ApiResponse.success(tokens));
+        } catch (IllegalStateException ise) {
+            String msg = ise.getMessage();
+            if ("authorization_pending".equals(msg)) {
+                return ResponseEntity.status(HttpStatus.ACCEPTED)
+                        .body(ApiResponse.error("AUTH_DEVICE_PENDING", "authorization_pending"));
+            }
+            if ("slow_down".equals(msg)) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(ApiResponse.error(ErrorCode.RATE_LIMIT_EXCEEDED.getCode(), "slow_down"));
+            }
+            return ResponseEntity.badRequest().body(ApiResponse.error(ErrorCode.AUTH_BUS_009.getCode(), msg));
+        } catch (IllegalArgumentException e) {
+            if ("expired_token".equals(e.getMessage())) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(ErrorCode.AUTH_BUS_009.getCode(), "expired_token"));
+            }
+            log.warn("Device token poll rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(ErrorCode.AUTH_BUS_009.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("Device token poll failed: {}", e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR.getCode(), ErrorCode.INTERNAL_ERROR.getMessage()));
         }
     }
 

@@ -141,17 +141,25 @@ public class KeycloakService {
     /**
      * Blocking version of refresh for the web session (BFF refresh endpoint).
      * Uses the web client because the refresh token was issued to it.
+     * ADR-0062: forwards DPoP proof when bound token (public client requires same key).
      *
      * @param refreshToken the refresh token
      * @return LoginResponse containing new access tokens
      * @throws IllegalArgumentException if refresh fails
      */
     public LoginResponse refreshTokenBlocking(String refreshToken) {
+        return refreshTokenBlocking(refreshToken, null);
+    }
+
+    public LoginResponse refreshTokenBlocking(String refreshToken, String dpopProof) {
         String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
                 keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        if (dpopProof != null && !dpopProof.isBlank()) {
+            headers.set("DPoP", dpopProof);
+        }
         HttpEntity<MultiValueMap<String, String>> request =
                 new HttpEntity<>(buildRefreshForm(refreshToken), headers);
 
@@ -169,6 +177,89 @@ public class KeycloakService {
         } catch (Exception e) {
             log.error("Token refresh failed (blocking): {}", e.getMessage());
             throw new IllegalArgumentException("Failed to parse refresh response or server error: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * ADR-0062 Device Authorization Grant — step 1: request device_code + user_code.
+     * Public client (payu-mobile) uses PKCE-like flow for constrained devices (RFC 8628).
+     * Forwards DPoP proof if present (same key must be reused for token polling).
+     */
+    public java.util.Map<String, Object> initiateDeviceAuthorization(String dpopProof) {
+        String deviceEndpoint = String.format("%s/realms/%s/protocol/openid-connect/auth/device",
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        if (dpopProof != null && !dpopProof.isBlank()) headers.set("DPoP", dpopProof);
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        // Device flow is for public client payu-mobile — no secret
+        form.add("client_id", "payu-mobile");
+        form.add("scope", "openid");
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(deviceEndpoint, request, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("device_code", root.get("device_code").asText());
+            result.put("user_code", root.get("user_code").asText());
+            result.put("verification_uri", root.get("verification_uri").asText());
+            result.put("verification_uri_complete", root.has("verification_uri_complete") ? root.get("verification_uri_complete").asText() : null);
+            result.put("expires_in", root.get("expires_in").asLong());
+            result.put("interval", root.has("interval") ? root.get("interval").asLong() : 5);
+            log.info("Device authorization initiated");
+            return result;
+        } catch (HttpClientErrorException e) {
+            log.warn("Device authorization rejected: {}", e.getStatusCode());
+            throw new IllegalArgumentException("Device authorization failed: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Device authorization error: {}", e.getMessage());
+            throw new IllegalArgumentException("Device authorization error: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * ADR-0062 Device Authorization Grant — step 2: poll token endpoint with device_code.
+     */
+    public LoginResponse pollDeviceToken(String deviceCode, String dpopProof) {
+        String tokenEndpoint = String.format("%s/realms/%s/protocol/openid-connect/token",
+                keycloakConfig.getServerUrl(), keycloakConfig.getRealm());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        if (dpopProof != null && !dpopProof.isBlank()) headers.set("DPoP", dpopProof);
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "urn:ietf:params:oauth:grant-type:device_code");
+        form.add("client_id", "payu-mobile");
+        form.add("device_code", deviceCode);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(tokenEndpoint, request, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+            // Keycloak returns 200 only when user approved; 400 pending/expired otherwise — map to exception
+            String accessToken = root.get("access_token").asText();
+            String refreshToken = root.has("refresh_token") ? root.get("refresh_token").asText() : null;
+            long expiresIn = root.get("expires_in").asLong();
+            String tokenType = root.has("token_type") ? root.get("token_type").asText() : "Bearer";
+            log.info("Device token polled successfully");
+            return new LoginResponse(accessToken, refreshToken, expiresIn, tokenType);
+        } catch (HttpClientErrorException e) {
+            String body = e.getResponseBodyAsString();
+            // Map Keycloak's error JSON: {"error":"authorization_pending"} etc
+            if (body != null && body.contains("authorization_pending")) {
+                throw new IllegalStateException("authorization_pending");
+            }
+            if (body != null && body.contains("slow_down")) {
+                throw new IllegalStateException("slow_down");
+            }
+            if (body != null && body.contains("expired_token")) {
+                throw new IllegalArgumentException("expired_token");
+            }
+            log.warn("Device token poll rejected: {}", e.getStatusCode());
+            throw new IllegalArgumentException("Device token poll failed: " + body, e);
+        } catch (IllegalStateException ise) {
+            throw ise;
+        } catch (Exception e) {
+            log.error("Device token poll error: {}", e.getMessage());
+            throw new IllegalArgumentException("Device token poll error: " + e.getMessage(), e);
         }
     }
 

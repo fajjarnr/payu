@@ -75,6 +75,8 @@ class SecurityConfigTest {
     @MockitoBean
     private SessionValidationService sessionValidationService;
 
+    @MockitoBean
+    private id.payu.auth.application.metrics.BusinessMetrics businessMetrics;
     // Public endpoint tests
 
     @Test

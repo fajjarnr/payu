@@ -4,6 +4,14 @@
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "sslRequired": "external",
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 43200,
+  "ssoSessionIdleTimeoutRememberMe": 0,
+  "ssoSessionMaxLifespanRememberMe": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "accessTokenLifespan": 300,
   "roles": {
     "realm": [
       {
@@ -37,10 +45,34 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
       "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
       "webOrigins": ["*"],
-      "redirectUris": ["*"]
+      "redirectUris": ["*"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "dpop.bound.access.tokens": "true",
+        "DPoPBound": "true",
+        "oauth2.device.authorization.grant.enabled": "true"
+      }
+    },
+    {
+      "clientId": "payu-web-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "webOrigins": ["https://payu.co.id", "*"],
+      "redirectUris": ["https://payu.co.id/api/v1/auth/callback", "*"],
+      "attributes": {
+        "access.token.lifespan": "300",
+        "pkce.code.challenge.method": "S256",
+        "dpop.bound.access.tokens": "true",
+        "DPoPBound": "true"
+      }
     }
   ],
   "users": [

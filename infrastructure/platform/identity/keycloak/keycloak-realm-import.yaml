@@ -26,7 +26,15 @@ spec:
     editUsernameAllowed: true
     bruteForceProtected: true
     rememberMe: true
-
+    revokeRefreshToken: true
+    refreshTokenMaxReuse: 0
+    ssoSessionIdleTimeout: 1800
+    ssoSessionMaxLifespan: 43200
+    ssoSessionIdleTimeoutRememberMe: 0
+    ssoSessionMaxLifespanRememberMe: 0
+    offlineSessionIdleTimeout: 2592000
+    accessTokenLifespan: 300
+    accessTokenLifespanForImplicitFlow: 900
     # --- Realm Roles ---
     roles:
       realm:
@@ -137,23 +145,31 @@ spec:
     clients:
       - clientId: payu-web-app
         name: PayU Web Application
-        description: "Next.js 15 web application for PayU Digital Banking"
+        description: "Next.js 15 web application for PayU Digital Banking — BFF + DPoP RFC9449 + PKCE S256"
         enabled: true
         clientAuthenticatorType: client-secret
         secret: payu-web-secret-dev-only
         redirectUris:
+          - "https://payu.co.id/api/v1/auth/callback"
           - "https://payu.fajjjar.my.id/*"
+          - "http://localhost:3001/*"
         webOrigins:
+          - "https://payu.co.id"
           - "https://payu.fajjjar.my.id"
+          - "http://localhost:3001"
           - "+"
-        publicClient: false
+        publicClient: true
         standardFlowEnabled: true
         implicitFlowEnabled: false
-        directAccessGrantsEnabled: true
+        directAccessGrantsEnabled: false
         serviceAccountsEnabled: false
         protocol: openid-connect
         attributes:
-          access.token.lifespan: "3600"
+          access.token.lifespan: "300"
+          pkce.code.challenge.method: "S256"
+          dpop.bound.access.tokens: "true"
+          DPoPBound: "true"
+          oauth2.device.authorization.grant.enabled: "false"
         protocolMappers:
           - name: preferred_username
             protocol: openid-connect
@@ -188,7 +204,6 @@ spec:
               access.token.claim: "true"
               claim.name: nik
               jsonType.label: String
-
       - clientId: payu-backend
         name: PayU Backend Services
         description: "Backend microservices for PayU platform"
@@ -224,13 +239,10 @@ spec:
         directAccessGrantsEnabled: true
         serviceAccountsEnabled: false
         protocol: openid-connect
-
       - clientId: payu-mobile
         name: PayU Mobile App
-        description: "React Native mobile application"
+        description: "React Native mobile application — DPoP RFC9449 + PKCE S256"
         enabled: true
-        clientAuthenticatorType: client-secret
-        secret: payu-mobile-secret-dev-only
         redirectUris:
           - "payu://auth/*"
           - "exp://payu.auth/*"
@@ -240,10 +252,14 @@ spec:
         publicClient: true
         standardFlowEnabled: true
         implicitFlowEnabled: false
-        directAccessGrantsEnabled: true
+        directAccessGrantsEnabled: false
         serviceAccountsEnabled: false
         protocol: openid-connect
-
+        attributes:
+          pkce.code.challenge.method: "S256"
+          dpop.bound.access.tokens: "true"
+          DPoPBound: "true"
+          oauth2.device.authorization.grant.enabled: "true"
     # --- Browser Security Headers ---
     browserSecurityHeaders:
       contentSecurityPolicyReportOnly: ""

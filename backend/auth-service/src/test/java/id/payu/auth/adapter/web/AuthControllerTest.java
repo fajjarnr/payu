@@ -51,9 +51,9 @@ class AuthControllerTest {
         riskEvaluationService = mock(RiskEvaluationService.class);
         RefreshTokenService refreshTokenService = mock(RefreshTokenService.class);
         SessionValidationService sessionValidationService = mock(SessionValidationService.class);
+        id.payu.auth.application.metrics.BusinessMetrics businessMetrics = mock(id.payu.auth.application.metrics.BusinessMetrics.class);
         AuthController controller = new AuthController(
-                keycloakService, riskEvaluationService, refreshTokenService, sessionValidationService);
-
+                keycloakService, riskEvaluationService, refreshTokenService, sessionValidationService, businessMetrics);
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
 

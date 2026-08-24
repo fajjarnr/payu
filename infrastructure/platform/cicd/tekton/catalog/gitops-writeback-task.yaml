@@ -30,6 +30,9 @@ spec:
   workspaces:
     - name: source
       description: "Cloned GitOps repository"
+    - name: git-ssh
+      optional: true
+      description: "SSH credentials for git push (prod)"
   steps:
     - name: writeback
       image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9@sha256:cbd89c531953a43b8055bda72f7696be80f57fd1d782567a91d82e0fbcb3d26d

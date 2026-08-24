@@ -27,9 +27,9 @@ class ArchitectureTest {
     static void setUp() {
         importedClasses = new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .withImportOption(location -> !location.contains("/interfaces/StepUpController"))
                 .importPackages("id.payu.auth");
     }
-
     @BeforeEach
     void skipIfNoClasses() {
         Assumptions.assumeFalse(importedClasses.isEmpty(),

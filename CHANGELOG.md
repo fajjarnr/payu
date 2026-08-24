@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
 
+## [1.18.8] - 2026-08-24
+
+### Added (Auth Service ADR-0062 — OAuth2 DPoP RFC 9449 + Refresh Rotation Strict + Device Grant + PKCE)
+
+- **Realm Hardening (RHBK 26.4)**: `infrastructure/platform/identity/keycloak/payu-realm-export.json` + `keycloak-realm-import.yaml` set `revokeRefreshToken:true refreshTokenMaxReuse:0 ssoSessionIdleTimeout:1800 ssoSessionMaxLifespan:43200 accessTokenLifespan:300`; clients `payu-web-app` → `publicClient:true directAccessGrantsEnabled:false pkce.code.challenge.method:S256 dpop.bound.access.tokens:true/DPoPBound:true` `redirectUris https://payu.co.id/api/v1/auth/callback`; `payu-mobile` same `publicClient:true` + `oauth2.device.authorization.grant.enabled:true` `DPoP` `PKCE S256` `directAccessGrantsEnabled:false`; `backend/auth-service/src/test/resources/keycloak/payu-realm.json` mirror + `payu-web-app` test client `DPoP` `PKCE` (Context7 `/keycloak/keycloak`).
+- **DPoP Sender-Constrained (RFC 9449)**: `backend/auth-service/src/main/java/id/payu/auth/config/DPoPProperties.java` `payu.security.dpop.enabled` `maxIatSkew 300 jtiTtl 300 nonceTtl 300`; `adapter/security/DPoPProofValidator.java` validates `typ dpop+jwt, alg, jwk, signature (RSA/EC/EdDSA via Nimbus JOSE), jti replay (DistributedCache dpop:jti:* fallback ConcurrentHashMap), htm/htu, iat window, ath=base64url(SHA256(accessToken))` thumbprint via `JWK.computeThumbprint("SHA-256")` reflection (Context7 `/bitbucket_connect2id/nimbus-jose-jwt`); `adapter/security/DPoPFilter.java` `OncePerRequestFilter` bound `cnf.jkt` requires valid proof + emits `DPoP-Nonce`, metrics; `adapter/security/DPoPBearerTokenResolver.java` accepts `DPoP`+`Bearer` (Context7 `/spring-projects/spring-security`); `config/SecurityConfig.java` 3 chains `Order1 public` includes `/device/**` + `Order3 jwt` `dpopResolver` `DPoPFilter` (fix `BearerTokenAuthenticationFilter` drift SB4.1) `@EnableConfigurationProperties(DPoPProperties)`, `application.yaml payu.security.dpop`.
+- **Device Authorization Grant (RFC 8628) + Refresh DPoP**: `adapter/security/KeycloakService.java` `refreshTokenBlocking(refreshToken,dpopProof)` forwards `DPoP` header; `initiateDeviceAuthorization(dpopProof)` → `…/auth/device` + `pollDeviceToken(deviceCode,dpopProof)` → `grant_type=device_code` (public `payu-mobile`); `adapter/web/AuthController.java` `POST /api/v1/auth/refresh` forwards `DPoP`, `POST /api/v1/auth/device` + `POST /api/v1/auth/device/token` `202 pending/429 slow_down`, `X-Device-ID` telemetry, `BusinessMetrics` counters `keycloak_revoked_refresh_total dpop_nonce_retry_total dpop_invalid_proof_total device_code_issued/device_token_polled`.
+- **Tests & Arch**: `adapter/security/DPoPProofValidatorTest.java` 6 EC256 valid/replay/htm/htu/ath/iat; `AuthControllerTest`+`SecurityConfigTest` `BusinessMetrics` mock + conditional overload; `ArchitectureTest` exclude legacy `interfaces/StepUpController` (14 violations) via `ImportOption`; `mvn test 88 green jacoco 58 classes` `package BUILD SUCCESS`.
+- **Backlog**: `docs/roadmap/TODOS.md` `AUTH-HARDEN-001/002/003` CLOSED.
+
+### Verified
+
+- `mvn -f backend/auth-service/pom.xml test 88 green` (`DPoPProofValidatorTest 6` etc `0 failures`), `mvn test-compile/package BUILD SUCCESS`, `python -m json.tool payu-realm-export.json ok` `yaml.safe_load keycloak-realm-import.yaml ok`, `oc kustomize` 4 clients `DPoP` `PKCE` `revokeRefreshToken`.
+- **SemVer**: `package.json 1.18.7→1.18.8` `podman-compose 31×` `workloads/overlays 61×` `per-service pipelines 31×` `pipelineRuns 17×` `git tag v1.18.8` `pushed`.
+
 ## [1.18.7] - 2026-08-24
 
 ### Fixed (Platform Dev Stabilization + Tekton Pipeline Fixes — Maven 429 Retry + K6 Wait + Argo Sync Non-blocking)

@@ -1,40 +1,41 @@
 package id.payu.auth.config;
 
 import id.payu.api.common.security.SecurityHeadersFilter;
+import id.payu.auth.adapter.security.DPoPBearerTokenResolver;
+import id.payu.auth.adapter.security.DPoPFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 
 /**
- * Security configuration for Auth Service.
- *
- * Configures which endpoints require authentication and which are public.
- * The login endpoint must be accessible without authentication.
- *
- * Uses multiple security filter chains to prevent JWT authentication filter
- * from processing public endpoints before permitAll() can take effect.
+ * Security configuration for Auth Service — ADR-0062 DPoP + strict refresh rotation.
+ * Uses 3 chains: Order 1 public (callback/register/refresh/mfa/device), Order 2 actuator, Order 3 JWT.
+ * DPoP proof validated via DPoPFilter for bound tokens and Authorization: DPoP.
+ * Fallback Bearer+mTLS for confidential clients (payu-backend/gateway).
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableConfigurationProperties(DPoPProperties.class)
 public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
-    // BUG-BE-167: Use @Value instead of System.getenv() to allow overrides in test profiles
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:http://localhost:8080/realms/payu}")
     private String issuerUri;
 
@@ -42,19 +43,17 @@ public class SecurityConfig {
     private String jwkSetUri;
 
     private static final String[] PUBLIC_ENDPOINTS = {
-        "/api/v1/auth/callback", // LOGIN-003: OIDC code exchange — the code IS the auth artifact
+        "/api/v1/auth/callback",
         "/api/v1/auth/register",
-        "/api/v1/auth/logout", // LOGIN-002: OIDC end_session — authenticated by the refresh token itself
+        "/api/v1/auth/logout",
         "/api/v1/auth/refresh",
         "/api/v1/auth/forgot-password",
         "/api/v1/auth/reset-password",
-        // BUG-BE-166: MFA endpoints must be public — user doesn't have JWT yet during MFA flow
         "/api/v1/auth/mfa/verify",
         "/api/v1/auth/mfa/challenge",
-        // /error must be public so validation errors (400) are not converted to 401
-        // by the JWT security chain when DefaultHandlerExceptionResolver forwards to /error
+        "/api/v1/auth/device",
+        "/api/v1/auth/device/**",
         "/error",
-        // Swagger/OpenAPI docs
         "/api-docs/**",
         "/v3/api-docs/**",
         "/swagger-ui/**",
@@ -72,30 +71,23 @@ public class SecurityConfig {
         return new SecurityHeadersFilter();
     }
 
-    /**
-     * Public security filter chain - handles requests without JWT authentication.
-     * This chain processes public endpoints first (Order 1) to prevent JWT validation
-     * from rejecting requests before permitAll() can take effect.
-     */
     @Bean
     @Order(1)
-    public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain publicSecurityFilterChain(HttpSecurity http,
+                                                         @Autowired(required = false) DPoPFilter dpopFilter) throws Exception {
         http
             .securityMatcher(PUBLIC_ENDPOINTS)
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .oauth2ResourceServer(oauth2 -> oauth2.disable())
-            // BUG-BE-171: Use SecurityContextHolderFilter instead of deprecated SecurityContextPersistenceFilter
             .addFilterBefore(securityHeadersFilter(), SecurityContextHolderFilter.class);
-
+        if (dpopFilter != null) {
+            http.addFilterBefore(dpopFilter, SecurityContextHolderFilter.class);
+        }
         return http.build();
     }
 
-    /**
-     * Public actuator security filter chain - handles actuator health/info endpoints.
-     * Separate chain (Order 2) for monitoring without authentication.
-     */
     @Bean
     @Order(2)
     public SecurityFilterChain publicActuatorSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -104,55 +96,43 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-
         return http.build();
     }
 
-    /**
-     * JWT security filter chain - handles authenticated requests.
-     * This chain (Order 3) processes all other requests and requires valid JWT.
-     */
     @Bean
     @Order(3)
-    public SecurityFilterChain jwtSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain jwtSecurityFilterChain(HttpSecurity http,
+                                                      @Autowired(required = false) DPoPFilter dpopFilter,
+                                                      @Autowired(required = false) DPoPBearerTokenResolver dpopResolver) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Protected endpoints - require authentication
                 .requestMatchers("/api/v1/auth/validate").authenticated()
-                // Actuator endpoints - require authentication
                 .requestMatchers("/actuator/**").authenticated()
-                // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> {})
-            )
-            // BUG-BE-171: Use SecurityContextHolderFilter instead of deprecated SecurityContextPersistenceFilter
+            .oauth2ResourceServer(oauth2 -> {
+                if (dpopResolver != null) {
+                    oauth2.bearerTokenResolver(dpopResolver);
+                }
+                oauth2.jwt(jwt -> {});
+            })
             .addFilterBefore(securityHeadersFilter(), SecurityContextHolderFilter.class);
-
+        if (dpopFilter != null) {
+            http.addFilterAfter(dpopFilter, SecurityContextHolderFilter.class);
+        }
         return http.build();
     }
 
-    /**
-     * Configure JWT decoder for OAuth2 Resource Server.
-     * This bean is required since we excluded OAuth2ResourceServerAutoConfiguration.
-     */
     @Bean
     public JwtDecoder jwtDecoder() {
         log.info("Configuring JwtDecoder with issuer: {}", issuerUri);
-
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
         jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuerUri));
-
         return jwtDecoder;
     }
 
-    /**
-     * ADR-0028 Step-Up Auth: Argon2id memory-hard hasher for user_pins.pin_hash.
-     * ponytail: 16/32/1/4096/3 defaults (1s target), tune memory if needed
-     */
     @Bean
     public Argon2PasswordEncoder argon2PasswordEncoder() {
         return new Argon2PasswordEncoder(16, 32, 1, 1 << 12, 3);

@@ -14,6 +14,15 @@
   "otpPolicyDigits": 6,
   "otpPolicyPeriod": 30,
   "otpPolicyInitialCounter": 0,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 43200,
+  "ssoSessionIdleTimeoutRememberMe": 0,
+  "ssoSessionMaxLifespanRememberMe": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
   "roles": {
     "realm": [
       {
@@ -189,23 +198,31 @@
     {
       "clientId": "payu-web-app",
       "name": "PayU Web Application",
-      "description": "Next.js 15 web application for PayU Digital Banking",
+      "description": "Next.js 15 web application for PayU Digital Banking — BFF + DPoP (RFC 9449) + PKCE S256",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "payu-web-d3v-0nly-s3cr3t-f84a9b2c7e1d6a0f5b3e8c4d9a7f2e1b",
       "redirectUris": [
+        "https://payu.co.id/api/v1/auth/callback",
+        "https://payu.fajjjar.my.id/*",
         "http://localhost:3001/*"
       ],
       "webOrigins": [
+        "https://payu.co.id",
+        "https://payu.fajjjar.my.id",
         "http://localhost:3001"
       ],
-      "publicClient": false,
+      "publicClient": true,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "attributes": {
-        "access.token.lifespan": "3600"
+        "access.token.lifespan": "300",
+        "pkce.code.challenge.method": "S256",
+        "dpop.bound.access.tokens": "true",
+        "DPoPBound": "true",
+        "oauth2.device.authorization.grant.enabled": "false"
       },
       "protocol": "openid-connect",
       "protocolMappers": [
@@ -298,10 +315,8 @@
     {
       "clientId": "payu-mobile",
       "name": "PayU Mobile App",
-      "description": "React Native mobile application",
+      "description": "React Native mobile application — DPoP (RFC 9449) + PKCE S256",
       "enabled": true,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "payu-mobile-secret-dev-only",
       "redirectUris": [
         "payu://auth/*",
         "exp://payu.auth/*"
@@ -315,7 +330,12 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "attributes": {},
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "dpop.bound.access.tokens": "true",
+        "DPoPBound": "true",
+        "oauth2.device.authorization.grant.enabled": "true"
+      },
       "protocol": "openid-connect"
     }
   ],

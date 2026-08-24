@@ -114,6 +114,13 @@ payu:
       require-lowercase: true
       require-digit: true
       require-special-char: true
+    dpop:
+      enabled: ${PAYU_DPOP_ENABLED:true}
+      max-iat-skew-seconds: 300
+      jti-ttl-seconds: 300
+      nonce-ttl-seconds: 300
+      require-for-bound-tokens: true
+      allowed-algs: "ES256,ES384,ES512,PS256,PS384,PS512,RS256,RS384,RS512,EdDSA"
   biometric:
     challenge-expiry-seconds: 300
     max-registrations-per-user: 5
