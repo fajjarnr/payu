@@ -211,7 +211,7 @@ public abstract class TransactionDomainException extends BusinessException {
     }
 
     /**
-     * ADR-0030: analytics-service fraud scoring unavailable. Fail-safe policy is
+     * ADR-0028: analytics-service fraud scoring unavailable. Fail-safe policy is
      * fail-closed — the caller must hold the transaction for review, never silently allow.
      */
     public static class RiskEvaluationUnavailableException extends ExternalServiceException {
@@ -222,6 +222,41 @@ public abstract class TransactionDomainException extends BusinessException {
                   "AnalyticsService");
         }
     }
+
+    // === Step-Up & Dynamic Linking (ADR-0028, 6500-6599) ===
+
+    /**
+     * ADR-0028: step-up required — risk 40-70 or amount > threshold and no proof supplied.
+     * Maps to 403 Forbidden / STEP_UP_REQUIRED per task acceptance (a).
+     */
+    public static class StepUpRequiredException extends TransactionDomainException {
+        public StepUpRequiredException(String reason) {
+            super("STEP_UP_REQUIRED",
+                  "Step-up authentication required: " + reason,
+                  "Otentikasi step-up diperlukan");
+        }
+    }
+
+    /**
+     * ADR-0028: dynamic linking failure — amount/payee tampered or PIN invalid/locked.
+     * Covers AUTH_CHALLENGE_TAMPERED, AUTH_PIN_INVALID, AUTH_PIN_LOCKED.
+     */
+    public static class StepUpVerificationFailedException extends TransactionDomainException {
+        public StepUpVerificationFailedException(String code, String reason) {
+            super(code,
+                  "Step-up verification failed: " + reason,
+                  "Verifikasi step-up gagal");
+        }
+    }
+
+    public static class StepUpChallengeExpiredException extends TransactionDomainException {
+        public StepUpChallengeExpiredException(String reason) {
+            super("AUTH_CHALLENGE_EXPIRED",
+                  "Step-up challenge expired: " + reason,
+                  "Challenge step-up kedaluwarsa");
+        }
+    }
+
 
     // === System Errors (6900-6999) ===
 

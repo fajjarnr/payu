@@ -1,0 +1,105 @@
+# ADR-0032 EnvoyFilter / WasmPlugin for Istio ingressgateway (future mesh activation)
+# When payu-mesh (Sail OSSM 3.x) is live, this enforces Coraza at the gateway.
+# Until then, the SPOA Deployment (coraza-waf) serves traffic via OpenShift Route.
+# Both layers satisfy defense-in-depth; SPOA is portable to bare-metal DR.
+---
+apiVersion: extensions.istio.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: coraza-waf
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/name: coraza-waf
+spec:
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  url: oci://ghcr.io/corazawaf/coraza-wasm:0.3.0
+  phase: AUTHN
+  priority: 10
+  pluginConfig:
+    directives_map:
+      default: |
+        Include @crs-setup.conf
+        Include @owasp_crs/*.conf
+        SecRuleEngine On
+        SecRequestBodyAccess On
+        SecRequestBodyLimit 131072
+        SecDefaultAction "phase:1,log,auditlog,deny,status:403"
+        SecDefaultAction "phase:2,log,auditlog,deny,status:403"
+    default_directives: default
+    metric_labels:
+      identifier: coraza_waf
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: coraza-waf-logging
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/name: coraza-waf
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+    - applyTo: NETWORK_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+            access_log:
+              - name: envoy.access_loggers.stdout
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                  log_format:
+                    json_format:
+                      waf: coraza
+                      anomaly_score: "%REQ(X-WAF-Score)%"
+                      authority: "%REQ(:AUTHORITY)%"
+                      path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+                      response_code: "%RESPONSE_CODE%"
+---
+# NGINX ingress annotation fallback (if cluster uses NGINX instead of HAProxy Router)
+# Annotate the gateway Service's Ingress with:
+# nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+# nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+# nginx.ingress.kubernetes.io/modsecurity-transaction-id: "$request_id"
+# nginx.ingress.kubernetes.io/modsecurity-snippet: |
+#   Include /etc/nginx/modsec/coraza.conf
+#   SecRuleEngine On
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: coraza-waf-nginx-example
+  namespace: coraza-waf
+  annotations:
+    nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+    nginx.ingress.kubernetes.io/modsecurity-snippet: |
+      Include /etc/nginx/modsec/coraza.conf
+      SecRuleEngine On
+      SecRequestBodyLimit 131072
+    argocd.argoproj.io/sync-options: Prune=false
+  labels:
+    app.kubernetes.io/name: coraza-waf
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: coraza-waf-nginx-payu-dev.apps.fajjjar.my.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: coraza-waf
+                port:
+                  number: 8080

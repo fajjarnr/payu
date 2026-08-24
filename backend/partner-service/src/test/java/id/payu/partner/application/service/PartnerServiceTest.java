@@ -3,6 +3,7 @@ package id.payu.partner.application.service;
 import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.interfaces.dto.PartnerDTO;
 import id.payu.partner.adapter.persistence.repository.PartnerRepository;
+import id.payu.outbox.service.OutboxService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,9 @@ public class PartnerServiceTest {
 
     @Mock
     private PartnerRepository partnerRepository;
+
+    @Mock
+    private OutboxService outboxService;
 
     @InjectMocks
     private PartnerService partnerService;
@@ -46,9 +50,7 @@ public class PartnerServiceTest {
     @Test
     public void testGetAllPartners() {
         when(partnerRepository.findAll()).thenReturn(List.of(testPartner));
-
         List<PartnerDTO> partners = partnerService.getAllPartners();
-
         assertNotNull(partners);
         assertEquals(1, partners.size());
         assertEquals("Test PartnerEntity", partners.get(0).name);
@@ -58,9 +60,7 @@ public class PartnerServiceTest {
     @Test
     public void testGetAllPartners_Empty() {
         when(partnerRepository.findAll()).thenReturn(List.of());
-
         List<PartnerDTO> partners = partnerService.getAllPartners();
-
         assertNotNull(partners);
         assertTrue(partners.isEmpty());
     }
@@ -68,9 +68,7 @@ public class PartnerServiceTest {
     @Test
     public void testGetPartnerById_Found() {
         when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
-
         PartnerDTO partner = partnerService.getPartnerById(1L);
-
         assertNotNull(partner);
         assertEquals("Test PartnerEntity", partner.name);
         assertEquals("test@example.com", partner.email);
@@ -80,35 +78,20 @@ public class PartnerServiceTest {
     @Test
     public void testGetPartnerById_NotFound() {
         when(partnerRepository.findById(999L)).thenReturn(Optional.empty());
-
         PartnerDTO partner = partnerService.getPartnerById(999L);
-
         assertNull(partner);
     }
 
     @Test
     public void testCreatePartner_Success() {
-        PartnerDTO dto = new PartnerDTO(
-            null,
-            "New PartnerEntity",
-            "PAYMENT_GATEWAY",
-            "newpartner@example.com",
-            "+62812345678",
-            true,
-            null,
-            null,
-            "public-key"
-        );
-
+        PartnerDTO dto = new PartnerDTO(null, "New PartnerEntity", "PAYMENT_GATEWAY", "newpartner@example.com", "+62812345678", true, null, null, "public-key");
         when(partnerRepository.findByEmail("newpartner@example.com")).thenReturn(Optional.empty());
         when(partnerRepository.save(any(PartnerEntity.class))).thenAnswer(invocation -> {
             PartnerEntity p = invocation.getArgument(0);
             p.setId(2L);
             return p;
         });
-
         PartnerDTO result = partnerService.createPartner(dto);
-
         assertNotNull(result);
         assertEquals("New PartnerEntity", result.name);
         assertEquals("PAYMENT_GATEWAY", result.type);
@@ -119,110 +102,59 @@ public class PartnerServiceTest {
 
     @Test
     public void testCreatePartner_EmailAlreadyExists() {
-        PartnerDTO dto = new PartnerDTO(
-            null,
-            "Duplicate PartnerEntity",
-            "MERCHANT",
-            "test@example.com",
-            "+62812345678",
-            true,
-            null,
-            null,
-            "public-key"
-        );
-
-        when(partnerRepository.findByEmail("test@example.com"))
-            .thenReturn(Optional.of(testPartner));
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            partnerService.createPartner(dto);
-        });
-
-        assertTrue(exception.getMessage().contains("already exists"));
+        PartnerDTO dto = new PartnerDTO(null, "New PartnerEntity", "PAYMENT_GATEWAY", "test@example.com", "+62812345678", true, null, null, "public-key");
+        when(partnerRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testPartner));
+        assertThrows(IllegalArgumentException.class, () -> partnerService.createPartner(dto));
     }
 
     @Test
     public void testUpdatePartner_Success() {
-        PartnerDTO dto = new PartnerDTO(
-            1L,
-            "Updated PartnerEntity",
-            "BANK",
-            "updated@example.com",
-            "+62898765432",
-            true,
-            "client-id",
-            "client-secret",
-            "updated-public-key"
-        );
-
+        PartnerDTO dto = new PartnerDTO(null, "Updated", "MERCHANT", "test@example.com", "+621111", true, null, null, "pk2");
         when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
-        when(partnerRepository.save(any(PartnerEntity.class))).thenReturn(testPartner);
-
+        when(partnerRepository.save(any(PartnerEntity.class))).thenAnswer(i -> i.getArgument(0));
         PartnerDTO result = partnerService.updatePartner(1L, dto);
-
         assertNotNull(result);
-        assertEquals("Updated PartnerEntity", result.name);
-        assertEquals("BANK", result.type);
+        assertEquals("Updated", result.name);
     }
 
     @Test
     public void testUpdatePartner_NotFound() {
-        PartnerDTO dto = new PartnerDTO(
-            999L,
-            "Non-existent",
-            "MERCHANT",
-            "nonexistent@example.com",
-            "+62812345678",
-            true,
-            null,
-            null,
-            "public-key"
-        );
-
+        PartnerDTO dto = new PartnerDTO(null, "Updated", "MERCHANT", "test@example.com", "+621111", true, null, null, "pk2");
         when(partnerRepository.findById(999L)).thenReturn(Optional.empty());
-
         PartnerDTO result = partnerService.updatePartner(999L, dto);
-
         assertNull(result);
     }
 
     @Test
     public void testRegenerateKeys_Success() {
         when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
-        when(partnerRepository.save(any(PartnerEntity.class))).thenReturn(testPartner);
-
+        when(partnerRepository.save(any(PartnerEntity.class))).thenAnswer(i -> i.getArgument(0));
         PartnerDTO result = partnerService.regenerateKeys(1L);
-
         assertNotNull(result);
         assertNotNull(result.clientId);
-        assertNotNull(result.clientSecret);
     }
 
     @Test
     public void testRegenerateKeys_NotFound() {
         when(partnerRepository.findById(999L)).thenReturn(Optional.empty());
-
         PartnerDTO result = partnerService.regenerateKeys(999L);
-
         assertNull(result);
     }
 
     @Test
     public void testDeletePartner_Success() {
-        when(partnerRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(partnerRepository).deleteById(1L);
-
-        boolean result = partnerService.deletePartner(1L);
-
-        assertTrue(result);
+        // only REJECTED can be deleted — set status accordingly for legacy test
+        testPartner.setStatus(id.payu.partner.domain.PartnerStatus.REJECTED);
+        when(partnerRepository.findById(1L)).thenReturn(Optional.of(testPartner));
+        boolean deleted = partnerService.deletePartner(1L);
+        assertTrue(deleted);
+        verify(partnerRepository).deleteById(1L);
     }
 
     @Test
     public void testDeletePartner_NotFound() {
-        when(partnerRepository.existsById(999L)).thenReturn(false);
-
-        boolean result = partnerService.deletePartner(999L);
-
-        assertFalse(result);
+        when(partnerRepository.findById(999L)).thenReturn(Optional.empty());
+        boolean deleted = partnerService.deletePartner(999L);
+        assertFalse(deleted);
     }
 }

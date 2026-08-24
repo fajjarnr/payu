@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import id.payu.security.annotation.SensitivityLevel;
 
@@ -68,17 +69,32 @@ public class PartnerEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private PartnerStatus status = PartnerStatus.PENDING_VERIFICATION;
+    private PartnerStatus status = PartnerStatus.PENDING_APPROVAL;
 
     @Column(name = "webhook_url", length = 500)
     private String webhookUrl;
 
     /**
      * Tenant identifier for multi-tenancy data isolation.
-     * Each partner belongs to a tenant scope (typically their own clientId or org grouping).
      */
     @Column(name = "tenant_id", length = 64)
     private String tenantId;
+
+    // ADR-0035 dual-control columns
+    @Column(name = "maker_id", length = 64)
+    private String makerId;
+
+    @Column(name = "checker_id", length = 64)
+    private String checkerId;
+
+    @Column(name = "requested_at")
+    private Instant requestedAt;
+
+    @Column(name = "decided_at")
+    private Instant decidedAt;
+
+    @Column(name = "rejection_reason", length = 512)
+    private String rejectionReason;
 
     @Version
     private Long version;
@@ -120,7 +136,7 @@ public class PartnerEntity {
     public void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
     public String getPublicKey() { return publicKey; }
     public void setPublicKey(String publicKey) { this.publicKey = publicKey; }
-    public boolean isActive() { return active || status == PartnerStatus.ACTIVE; }
+    public boolean isActive() { return status == PartnerStatus.ACTIVE; }
     public void setActive(boolean active) { this.active = active; }
     public PartnerStatus getStatus() { return status; }
     public void setStatus(PartnerStatus status) { this.status = status; }
@@ -128,6 +144,18 @@ public class PartnerEntity {
     public void setWebhookUrl(String webhookUrl) { this.webhookUrl = webhookUrl; }
     public String getTenantId() { return tenantId; }
     public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+    public String getMakerId() { return makerId; }
+    public void setMakerId(String makerId) { this.makerId = makerId; }
+    public String getCheckerId() { return checkerId; }
+    public void setCheckerId(String checkerId) { this.checkerId = checkerId; }
+    public Instant getRequestedAt() { return requestedAt; }
+    public void setRequestedAt(Instant requestedAt) { this.requestedAt = requestedAt; }
+    public Instant getDecidedAt() { return decidedAt; }
+    public void setDecidedAt(Instant decidedAt) { this.decidedAt = decidedAt; }
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

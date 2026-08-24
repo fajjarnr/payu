@@ -1,9 +1,13 @@
 package id.payu.partner.interfaces.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+import java.time.Instant;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PartnerDTO {
     
     public Long id;
@@ -26,6 +30,14 @@ public class PartnerDTO {
     public String clientId;
     public String clientSecret;
     public String publicKey;
+
+    // ADR-0035 dual-control fields (read-only from API)
+    public String status;
+    public String makerId;
+    public String checkerId;
+    public Instant requestedAt;
+    public Instant decidedAt;
+    public String rejectionReason;
 
     public PartnerDTO() {
     }

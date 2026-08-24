@@ -62,7 +62,10 @@ public record InitiateTransferCommand(
 
         @Size(min = 3, max = 3, message = "Bank code must be exactly 3 digits")
         @Pattern(regexp = "^[0-9]+$", message = "Bank code must contain only digits")
-        String bankCode
+        String bankCode,
+
+        @Size(max = 100, message = "Step-up challenge ID is too long")
+        String stepUpChallengeId
 ) implements Command<InitiateTransferCommandResult> {
 
     /**
@@ -83,6 +86,11 @@ public record InitiateTransferCommand(
     /**
      * Factory method to create command from DTO.
      */
+    /** Legacy constructor without step-up challenge — defaults to null for backward compat */
+    public InitiateTransferCommand(UUID senderAccountId, String recipientAccountNumber, Money amount, String description, TransactionType type, String transactionPin, String deviceId, String idempotencyKey, String userId, String bankCode) {
+        this(senderAccountId, recipientAccountNumber, amount, description, type, transactionPin, deviceId, idempotencyKey, userId, bankCode, null);
+    }
+
     public static InitiateTransferCommand from(InitiateTransferRequest request, String userId) {
         // Convert BigDecimal amount to Money Value Object
         Money money = request.getCurrency() != null
@@ -99,7 +107,8 @@ public record InitiateTransferCommand(
                 request.getDeviceId(),
                 request.getIdempotencyKey(),
                 userId,
-                request.getBankCode()
+                request.getBankCode(),
+                request.getStepUpChallengeId()
         );
     }
 }

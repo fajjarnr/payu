@@ -25,7 +25,7 @@ public class InitiateTransferRequest {
     public InitiateTransferRequest() {
     }
 
-    public InitiateTransferRequest(UUID senderAccountId, String recipientAccountNumber, BigDecimal amount, String currency, String description, TransactionType type, String transactionPin, String deviceId, String idempotencyKey, String memo, String bankCode) {
+    public InitiateTransferRequest(UUID senderAccountId, String recipientAccountNumber, BigDecimal amount, String currency, String description, TransactionType type, String transactionPin, String deviceId, String idempotencyKey, String memo, String bankCode, String stepUpChallengeId) {
         this.senderAccountId = senderAccountId;
         this.recipientAccountNumber = recipientAccountNumber;
         this.amount = amount;
@@ -37,6 +37,11 @@ public class InitiateTransferRequest {
         this.idempotencyKey = idempotencyKey;
         this.memo = memo;
         this.bankCode = bankCode;
+        this.stepUpChallengeId = stepUpChallengeId;
+    }
+
+    public InitiateTransferRequest(UUID senderAccountId, String recipientAccountNumber, BigDecimal amount, String currency, String description, TransactionType type, String transactionPin, String deviceId, String idempotencyKey, String memo, String bankCode) {
+        this(senderAccountId, recipientAccountNumber, amount, currency, description, type, transactionPin, deviceId, idempotencyKey, memo, bankCode, null);
     }
 
     public static InitiateTransferRequestBuilder builder() {
@@ -55,6 +60,7 @@ public class InitiateTransferRequest {
         private String idempotencyKey;
         private String memo;
         private String bankCode;
+        private String stepUpChallengeId;
 
         public InitiateTransferRequestBuilder senderAccountId(UUID senderAccountId) {
             this.senderAccountId = senderAccountId;
@@ -100,9 +106,13 @@ public class InitiateTransferRequest {
             this.bankCode = bankCode;
             return this;
         }
+        public InitiateTransferRequestBuilder stepUpChallengeId(String stepUpChallengeId) {
+            this.stepUpChallengeId = stepUpChallengeId;
+            return this;
+        }
 
         public InitiateTransferRequest build() {
-            return new InitiateTransferRequest(senderAccountId, recipientAccountNumber, amount, currency, description, type, transactionPin, deviceId, idempotencyKey, memo, bankCode);
+            return new InitiateTransferRequest(senderAccountId, recipientAccountNumber, amount, currency, description, type, transactionPin, deviceId, idempotencyKey, memo, bankCode, stepUpChallengeId);
         }
     }
 
@@ -194,6 +204,14 @@ public class InitiateTransferRequest {
         this.bankCode = bankCode;
     }
 
+    public String getStepUpChallengeId() {
+        return stepUpChallengeId;
+    }
+
+    public void setStepUpChallengeId(String stepUpChallengeId) {
+        this.stepUpChallengeId = stepUpChallengeId;
+    }
+
 
     @NotNull(message = "Sender account ID is required")
     private UUID senderAccountId;
@@ -237,4 +255,7 @@ public class InitiateTransferRequest {
     @Size(min = 3, max = 3, message = "Bank code must be exactly 3 digits")
     @Pattern(regexp = "^[0-9]+$", message = "Bank code must contain only digits")
     private String bankCode;
+
+    @Size(max = 100, message = "Step-up challenge ID is too long")
+    private String stepUpChallengeId;
 }

@@ -8,6 +8,8 @@ import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
 import id.payu.transaction.exception.TransactionDomainException.AmlHighRiskBlockedException;
 import id.payu.transaction.exception.TransactionDomainException.RiskEvaluationUnavailableException;
+import id.payu.transaction.exception.TransactionDomainException.StepUpRequiredException;
+import id.payu.transaction.exception.TransactionDomainException.StepUpVerificationFailedException;
 import id.payu.transaction.interfaces.dto.BifastTransferRequest;
 import id.payu.transaction.interfaces.dto.InitiateTransferRequest;
 import id.payu.transaction.interfaces.dto.QrisPaymentRequest;
@@ -45,6 +47,10 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     private final AuthorizationService authorizationService;
     private final VelocityGuard velocityGuard;
     private final RiskEvaluationPort riskEvaluationPort;
+    private final StepUpVerificationPort stepUpVerificationPort;
+
+    @org.springframework.beans.factory.annotation.Value("${payu.step-up.amount-threshold:10000000}")
+    private BigDecimal stepUpAmountThreshold = new BigDecimal("10000000");
 
     public InitiateTransferCommandHandler(TransactionPersistencePort transactionPersistencePort,
                                           WalletServicePort walletServicePort,
@@ -54,7 +60,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                                           TransactionEventPublisherPort eventPublisherPort,
                                           AuthorizationService authorizationService,
                                           VelocityGuard velocityGuard,
-                                          RiskEvaluationPort riskEvaluationPort) {
+                                          RiskEvaluationPort riskEvaluationPort,
+                                          StepUpVerificationPort stepUpVerificationPort) {
         this.transactionPersistencePort = transactionPersistencePort;
         this.walletServicePort = walletServicePort;
         this.bifastServicePort = bifastServicePort;
@@ -64,6 +71,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         this.authorizationService = authorizationService;
         this.velocityGuard = velocityGuard;
         this.riskEvaluationPort = riskEvaluationPort;
+        this.stepUpVerificationPort = stepUpVerificationPort;
     }
 
     @Override
@@ -101,9 +109,9 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                     "HOLD_FOR_REVIEW: fraud risk score " + riskScore + " in band [71,85]");
         }
 
-        // ADR-0030: ponytail: score 40-70 mandates step-up auth (ADR-0028) — not wired yet; passes with warn
-        if (riskScore >= 40) {
-            log.warn("Risk score {} for user {} in STEP_UP band; step-up auth (ADR-0028) not yet enforced", riskScore, command.userId());
+        // ADR-0028 + ADR-0030 decision matrix: score 40-70 (STEP_UP) or amount > threshold requires dynamic linking step-up
+        if (requiresStepUp(riskScore, command.amount().getAmount())) {
+            enforceStepUp(command, riskScore);
         }
         // Create and persist the transaction
         TransactionEntity transaction = createTransaction(command);
@@ -189,6 +197,37 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         return buildResult(transaction);
     }
 
+    /**
+     * ADR-0028: step-up required when risk 40-70 or amount exceeds threshold; bypass otherwise.
+     */
+    boolean requiresStepUp(int riskScore, BigDecimal amount) {
+        boolean riskBand = riskScore >= 40 && riskScore <= 70;
+        boolean amountRule = amount != null && amount.compareTo(stepUpAmountThreshold) > 0;
+        return riskBand || amountRule;
+    }
+
+    /**
+     * Enforce dynamic-linking step-up: require challengeId+PIN, verify via StepUpVerificationPort
+     * with amount/currency/payee binding. Throws StepUpRequiredException (403 STEP_UP_REQUIRED)
+     * when proof missing, StepUpVerificationFailedException (AUTH_CHALLENGE_TAMPERED) on tampering.
+     */
+    void enforceStepUp(InitiateTransferCommand command, int riskScore) {
+        String challengeId = command.stepUpChallengeId();
+        String pin = command.transactionPin();
+        if (challengeId == null || challengeId.isBlank() || pin == null || pin.isBlank()) {
+            throw new StepUpRequiredException("riskScore=" + riskScore
+                    + " amount=" + command.amount().getAmount()
+                    + " requires step-up; missing challengeId or PIN (dynamic linking: amount+payee bound)");
+        }
+        String currency = command.amount().getCurrency() != null
+                ? command.amount().getCurrency().getCurrencyCode() : "IDR";
+        // dynamic linking payload: amount, currency, payeeAccountId, reference is implicit in digest
+        stepUpVerificationPort.verify(command.userId(), challengeId, pin,
+                command.senderAccountId(), command.recipientAccountNumber(),
+                command.amount().getAmount(), currency);
+        log.info("Step-up verified for user {} challenge {} (risk {} amount {} payee {})",
+                command.userId(), challengeId, riskScore, command.amount().getAmount(), command.recipientAccountNumber());
+    }
 
     private TransactionEntity createTransaction(InitiateTransferCommand command) {
         String referenceNumber = generateReferenceNumber();

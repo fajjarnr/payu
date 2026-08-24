@@ -9,7 +9,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/account-service
-    newTag: "1.18.9"
+    newTag: "1.18.8"
 
 patches:
   - target:

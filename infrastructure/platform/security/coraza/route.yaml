@@ -1,0 +1,46 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: coraza-waf
+  namespace: coraza-waf
+  labels:
+    app.kubernetes.io/name: coraza-waf
+    app.kubernetes.io/part-of: payu
+  annotations:
+    haproxy.router.openshift.io/timeout: 30s
+    haproxy.router.openshift.io/balance: roundrobin
+spec:
+  host: coraza-waf-payu-dev.apps.fajjjar.my.id
+  to:
+    kind: Service
+    name: coraza-waf
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+---
+# Alternative: WAF-fronted gateway route (optional — when cutover, point gateway host to WAF)
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gateway-waf
+  namespace: coraza-waf
+  labels:
+    app.kubernetes.io/name: coraza-waf
+  annotations:
+    haproxy.router.openshift.io/timeout: 30s
+spec:
+  host: gateway-waf-payu-dev.apps.fajjjar.my.id
+  to:
+    kind: Service
+    name: coraza-waf
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

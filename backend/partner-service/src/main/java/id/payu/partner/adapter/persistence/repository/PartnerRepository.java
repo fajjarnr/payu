@@ -19,8 +19,9 @@ public interface PartnerRepository extends JpaRepository<PartnerEntity, Long> {
     Optional<PartnerEntity> findByEmail(String email);
 
     Optional<PartnerEntity> findByClientId(String clientId);
-
     Optional<PartnerEntity> findByPartnerCode(String partnerCode);
+
+    List<PartnerEntity> findByStatus(id.payu.partner.domain.PartnerStatus status);
 
     /**
      * PARTNER-PROD-002: lock a batch of partners whose client_secret or api_key

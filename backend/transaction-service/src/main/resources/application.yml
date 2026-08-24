@@ -187,6 +187,15 @@ resilience4j:
         wait-duration-in-open-state: 5s
         failure-rate-threshold: 50
         event-consumer-buffer-size: 10
+      authService:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
   retry:
     instances:
       walletService:
@@ -205,8 +214,20 @@ resilience4j:
         retry-exceptions:
           - org.springframework.web.client.HttpServerErrorException
           - java.net.ConnectException
+services:
+  auth:
+    url: ${SERVICES_AUTH_URL:http://localhost:8083}
+  analytics:
+    url: ${SERVICES_ANALYTICS_URL:http://localhost:8082}
+  wallet:
+    url: ${SERVICES_WALLET_URL:http://localhost:8084}
+
 # PayU Configuration
 payu:
+  step-up:
+    amount-threshold: ${PAYU_STEP_UP_AMOUNT_THRESHOLD:10000000}
+
+
   disbursement:
     callback-url: ${PAYU_DISBURSEMENT_CALLBACK_URL:}
   events:

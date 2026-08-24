@@ -3,6 +3,9 @@ package id.payu.transaction.config;
 import id.payu.api.common.exception.problem.ProblemDetail;
 import id.payu.api.common.exception.problem.Rfc9457GlobalExceptionHandler;
 import id.payu.transaction.exception.TransactionDomainException.AmlHighRiskBlockedException;
+import id.payu.transaction.exception.TransactionDomainException.StepUpChallengeExpiredException;
+import id.payu.transaction.exception.TransactionDomainException.StepUpRequiredException;
+import id.payu.transaction.exception.TransactionDomainException.StepUpVerificationFailedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,5 +35,30 @@ public class Rfc9457TransactionExceptionHandler extends Rfc9457GlobalExceptionHa
     public ResponseEntity<ProblemDetail> handleAmlHighRiskBlocked(
             AmlHighRiskBlockedException ex, HttpServletRequest request) {
         return respondWith(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage(), ex.getCode(), request);
+    }
+
+    @ExceptionHandler(StepUpRequiredException.class)
+    public ResponseEntity<ProblemDetail> handleStepUpRequired(
+            StepUpRequiredException ex, HttpServletRequest request) {
+        return respondWith(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage(), ex.getCode(), request);
+    }
+
+    @ExceptionHandler(StepUpVerificationFailedException.class)
+    public ResponseEntity<ProblemDetail> handleStepUpVerificationFailed(
+            StepUpVerificationFailedException ex, HttpServletRequest request) {
+        // AUTH_CHALLENGE_TAMPERED -> 400, AUTH_PIN_LOCKED -> 423, others -> 403
+        HttpStatus status = switch (ex.getCode()) {
+            case "AUTH_CHALLENGE_TAMPERED" -> HttpStatus.BAD_REQUEST;
+            case "AUTH_PIN_LOCKED" -> HttpStatus.LOCKED;
+            case "AUTH_CHALLENGE_EXPIRED" -> HttpStatus.BAD_REQUEST;
+            default -> HttpStatus.FORBIDDEN;
+        };
+        return respondWith(status, status.getReasonPhrase(), ex.getMessage(), ex.getCode(), request);
+    }
+
+    @ExceptionHandler(StepUpChallengeExpiredException.class)
+    public ResponseEntity<ProblemDetail> handleStepUpExpired(
+            StepUpChallengeExpiredException ex, HttpServletRequest request) {
+        return respondWith(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), ex.getCode(), request);
     }
 }
