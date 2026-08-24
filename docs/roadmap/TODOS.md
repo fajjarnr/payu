@@ -15,13 +15,11 @@
 
 ## 📊 Board Summary
 
-| Metric | Value |
-|:---|:---|
-| **Cluster Status** | 🟢 OCP 4.22.7, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) **5/5 Healthy** `payu-database-1 Running` + Kafka dev `6/6 Running` + DataGrid `payu-cache-0 Running` 5/5 env, ArgoCD 1/1 Running, Tekton 31/31 per-service pipeline **dev 37 1/1 Running** `30 1.18.6` `sit 25 1/1` `uat 21` `preprod 24` `prod 26` `oc get is 31 1.18.6` `5 envs` `oc get pods -n payu-dev 37 1/1` `payu-cache-client-tls 6 keys` `session-secrets` `db-secrets` fixed, 0 ERROR log. Platform: cert-manager 5/5 True, 3scale Available, RHACS Healthy, EFS 4/4, Litmus 1/1. |
-| **Last Release** | `1.18.6` (2026-08-24) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG 5/5 Healthy, Litmus live, Tekton dev 30/31 + per-service image name fix, sit/uat/preprod/prod 1.18.6 `25/21/24/26` 1/1, partner prod credentials queue remains. |
+| **Cluster Status** | 🟢 OCP 4.22.7, 8 nodes Ready. **5 environment hidup penuh** (dev/sit/uat/preprod/prod): 25 microservices + 5 simulators + web-app + Keycloak + PostgreSQL (CNPG) **5/5 Healthy** `payu-database-1 Running` + Kafka `6/6 Running` + DataGrid `payu-cache-0 Running` 5/5 env, ArgoCD 1/1 Running, Tekton 31/31 per-service pipeline **dev 48 pods 31/31 1/1 Running 1.18.7** `sit 25 1/1` `uat 21` `preprod 24` `prod 26` `oc get is 31 1.18.7 dev` `oc get pods -n payu-dev 1/1` `payu-cache-client-tls 6 keys` `session-secrets` `db-secrets` fixed, 0 ERROR log. Platform: cert-manager 5/5 True, 3scale Available, RHACS Healthy, EFS 4/4, Litmus 1/1. |
+| **Last Release** | `1.18.7` (2026-08-24) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG 5/5 Healthy, Litmus live, Tekton **1.18.7 dev 17 Running + 15 Succeeded 1.18.6** (account compile `BUILD SUCCESS` 2m15s via `repo1` mirror + retry, `k6` wait 60s + `rate>0.90`, `argocd-sync` dev non-blocking), workloads `1/1` 1.18.7, partner prod credentials queue remains. |
 | **Backlog Aktif** | Chaos agent per-env, Schemathesis credentials, SSO per-env isolation |
-| **Last Updated** | 2026-08-24 — v1.18.6: Per-service image name `payu-dev` base fix `223 files` + Secrets `payu-keycloak-admin` `db-secrets` `6` `5 envs` + Promotion `oc tag` `124` `1.18.6` + Workloads `61` `per-service` `dev 37` `sit 25` `uat 21` `preprod 24` `prod 26` `Kafka 6/6` `CNPG 5/5` `EFS/3scale/RHACS/Litmus` verified. |
+| **Last Updated** | 2026-08-24 — v1.18.7: Tekton catalog fixes `maven retry 3` `k6 wait 60s threshold 0.90` `argocd dev non-blocking` + per-service `1.18.6→1.18.7` `31` `pipeline-runs 17 requeued` `account BUILD SUCCESS` `payu-dev 48 pods 31/31 1/1` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
 
 ---
 

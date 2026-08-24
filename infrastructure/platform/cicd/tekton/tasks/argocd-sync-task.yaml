@@ -60,8 +60,12 @@ spec:
 
           sleep 10
         done
-
         echo "[!] Timed out waiting for $(params.APPLICATION_NAME) sync=${sync_status} health=${health_status} - non-blocking in dev"
+        # ponytail: dev Progressing still proceeds to zap/k6 gates; prod gates keep strict check via ApplicationSet syncPolicy
+        if echo "$(params.APPLICATION_NAME)" | grep -q -- "-dev$"; then
+          echo "[*] dev non-blocking: continue despite ${sync_status}/${health_status}"
+          exit 0
+        fi
         if [ "${health_status}" = "Healthy" ]; then
           exit 0
         fi

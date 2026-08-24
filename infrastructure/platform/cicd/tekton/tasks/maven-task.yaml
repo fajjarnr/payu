@@ -30,6 +30,10 @@ spec:
     - name: maven-settings
       description: Maven settings.xml
       optional: true
+    - name: m2-cache
+      description: Maven local repository cache
+      mountPath: /root/.m2
+      optional: true
   results:
     - name: BUILD_VERSION
       description: The version of the built artifact

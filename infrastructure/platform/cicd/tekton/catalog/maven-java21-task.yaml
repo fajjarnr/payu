@@ -62,6 +62,9 @@ spec:
         - -Dmaven.repo.local=$(workspaces.source.path)/.m2
         - -Duser.home=/tekton/home
         - -Dmaven.resolver.transport=wagon
+        - -Dmaven.wagon.http.retryHandler.count=3
+        - -Dmaven.wagon.http.retryHandler.requestSentEnabled=true
+        - -Daether.connector.http.retryHandler.count=3
         # ponytail: maven-settings secret carries settings.xml (mirror central ->
         # repo1.maven.org) so a Central 429 throttle on one hostname cannot stop builds
         - -s
