@@ -3,8 +3,8 @@ locals {
 
   ubuntu_name_pattern = (
     var.instance_architecture == "arm64"
-    ? "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-*"
-    : "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
+    ? "ubuntu/images/hvm-ssd-gp3/ubuntu-*-26.04-arm64-server-*"
+    : "ubuntu/images/hvm-ssd-gp3/ubuntu-*-26.04-amd64-server-*"
   )
 
   al2023_name_pattern = (
