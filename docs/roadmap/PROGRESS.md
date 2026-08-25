@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.29 B3/B4 RLS+Kogito+DMN+CSV 1.18.29 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.30 DEVSECOPS-017 Vault ESO + Pipelines-as-Code 1.18.30 50/50 1/1 Verified (2026-08-25)
+
+- **DEVSECOPS-017 Vault ESO (P0)**: `infrastructure/platform/security/vault/vault.yaml` `Deployment vault 1/1` `ClusterSecretStore payu-vault` `ExternalSecrets payu-kafka-credentials payu-keycloak-client-secrets` `vault-bootstrap Secret payu-dev` `oc apply -k vault` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `oc get externalsecret -A` `Vault dev mode inmem` `NetworkPolicy allow-external-secrets-to-vault` `Context7 external-secrets.io/v1` `ponytail: Vault via ESO ClusterSecretStore`.
+- **Pipelines-as-Code (P0)**: `Pipelines-as-Code Repository/webhook` `changed-service dispatch` `Vault Git credential` `payu-vault` `ClusterSecretStore` `ExternalSecret` `payu-kafka-credentials` `oc get pipelinerun -n payu-cicd` `31/31 Succeeded` `vault-eso` `pipelines-as-code` `ponytail: Vault Git credential via ESO`.
+- **SemVer Sync 1.18.30**: `package.json 1.18.29→1.18.30` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.30` `oc tag -n payu-dev 31 1.18.30` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.30` `oc get deployment 31 1.18.30`.
+- **Verification 1.18.30**: `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `oc get externalsecret -A` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.30` `rtk gain 86.2%` `codegraph`.
+- **Docs**: `TODOS DEVSECOPS-017 Vault ESO CLOSED 1.18.30` `PROGRESS 1.18.30` `CHANGELOG 1.18.30` `LESSONS L-359` `TAGS v1.18.30`.
+
 
 - **B3/B4 RLS+Kogito+DMN+CSV (P1)**: `RLS 31 HPA 24 PDB` `Kogito TaskInbox` `DMN eligibility.dmn pricing.dmn` `CSV` `chargeback` `Pact` `RLS FORCE` `Kogito` `DMN` `CSV` `RLS 31` `HPA 31` `PDB 24` `Kogito` `DMN` `CSV` `ponytail: RLS via HPA/PDB, Kogito via TaskInbox, DMN via dmn`.
 - **SemVer Sync 1.18.29**: `package.json 1.18.28→1.18.29` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.29` `oc tag -n payu-dev 31 1.18.29` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.29` `oc get deployment 31 1.18.29`.

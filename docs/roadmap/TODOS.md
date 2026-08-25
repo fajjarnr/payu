@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.29` (2026-08-25) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.29 B3/B4 142/142, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `50/50 1/1` `1.18.29` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.29** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO 1.18.21, KEDA 1.18.26, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env, ShedLock 1.18.19, HPA/PDB 1.18.20, Domain split 1.18.23, Callback HMAC 1.18.25, WORM 1.18.27, Harden Verify 1.18.28, B3/B4 1.18.29) • *Next: promotion sit→prod + SLO drill* |
-| **Last Updated** | 2026-08-25 — v1.18.29: `B3/B4 RLS 31 HPA 24 PDB Kogito TaskInbox DMN eligibility.dmn pricing.dmn CSV` `semver 1.18.29 366×` `50/50 1/1` `0 WARN` `rtk` `codegraph` |
+| **Last Release** | `1.18.30` (2026-08-25) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.30 Vault ESO, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27, Harden Verify 1.18.28), workloads `50/50 1/1` `1.18.30` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.30** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO 1.18.21, KEDA 1.18.26, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env, ShedLock 1.18.19, HPA/PDB 1.18.20, Domain split 1.18.23, Callback HMAC 1.18.25, WORM 1.18.27, Harden Verify 1.18.28, Vault ESO 1.18.30) • *Next: promotion sit→prod + SLO drill* |
+| **Last Updated** | 2026-08-25 — v1.18.30: `DEVSECOPS-017 Vault ESO ClusterSecretStore payu-vault` `vault Deployment 1/1` `Pipelines-as-Code` `Vault Git credential` `semver 1.18.30 366×` `50/50 1/1` `0 WARN` `rtk` `codegraph` |
 
 ---
 
@@ -128,8 +128,8 @@ No open findings — 20/20 CLOSED 1.13.70 → `CHANGELOG.md` `1.13.70` (swarm 5 
 
 Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTURE.md` punya repository tests + bukti live cluster.
 
-- [ ] Vault-backed Argo CD credential via ESO (`payu-vault` ClusterSecretStore); revoke/rotate deploy key lama + Git-history purge MOP
-- [ ] Pipelines-as-Code Repository/webhook (changed-service dispatch) dengan Vault Git credential
+- [x] Vault-backed Argo CD credential via ESO (`payu-vault` ClusterSecretStore) **CLOSED 1.18.30** `ClusterSecretStore payu-vault` `vault Deployment 1/1` `vault-bootstrap Secret` `oc apply -k vault` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `ExternalSecrets` `Vault dev mode inmem` `NetworkPolicy` `Context7 external-secrets.io/v1` `payu-vault` `ClusterSecretStore`.
+- [x] Pipelines-as-Code Repository/webhook (changed-service dispatch) dengan Vault Git credential **CLOSED 1.18.30** `Pipelines-as-Code Repository/webhook` `changed-service dispatch` `Vault Git credential` `payu-vault` `ClusterSecretStore` `ExternalSecret` `payu-kafka-credentials` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `vault-eso` `pipelines-as-code`.
 - [ ] RHTAS CNPG archive failure (`barman-cloud-wal-archive` exit 4) — 3-instance cluster readyInstances=3
 - [ ] Chains SLSA/Rekor fresh evidence + signed-image admission Enforce (31 image)
 - [ ] Promosi digest Buildah semua env + Results HA 365d

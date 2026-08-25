@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.29] - 2026-08-25
+## [1.18.30] - 2026-08-25
+
+### Added
+
+- **DEVSECOPS-017 Vault ESO + Pipelines-as-Code (P0)**: `infrastructure/platform/security/vault/vault.yaml` `Deployment vault 1/1` `ClusterSecretStore payu-vault` `ExternalSecrets` `vault-bootstrap Secret` `oc apply -k vault` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `Vault dev mode inmem` `NetworkPolicy` `Context7 external-secrets.io/v1`.
+- **Pipelines-as-Code (P0)**: `Pipelines-as-Code Repository/webhook` `changed-service dispatch` `Vault Git credential` `payu-vault` `oc get pipelinerun -n payu-cicd 31/31 Succeeded`.
+
+### Fixed
+
+- **SemVer Sync 1.18.30**: `package.json 1.18.29→1.18.30` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.30` `oc tag -n payu-dev 31 1.18.30` `oc tag -n payu|preprod|sit|uat 31×4`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `oc get externalsecret -A` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.30` `rtk gain 85.9%` `codegraph`.
+- **TODOS**: `DEVSECOPS-017 Vault ESO CLOSED 1.18.30` `PROGRESS 1.18.30` `LESSONS L-359` `TAGS v1.18.30`.
+
 
 ### Added
 

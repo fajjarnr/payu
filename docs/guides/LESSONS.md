@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-358: B3/B4 RLS+Kogito+DMN+CSV 1.18.29 (2026-08-25)
+## L-359: DEVSECOPS-017 Vault ESO + Pipelines-as-Code 1.18.30 (2026-08-25)
+
+**Context**: `payu-vault` `ClusterSecretStore` `vault-bootstrap` `Secret payu-dev` `vault Deployment 1/1` `ClusterSecretStore payu-vault` `ExternalSecrets` `vault.yaml` `vault-externalsecrets.yaml` `vault-init-job.yaml` `ClusterSecretStore payu-vault` `ExternalSecrets` `Vault dev mode inmem` `NetworkPolicy` `Context7 external-secrets.io/v1` `payu-vault` `ClusterSecretStore` `payu-vault` `ClusterSecretStore` `payu-vault` `ClusterSecretStore`.
+
+**Fix**: `infrastructure/platform/security/vault/vault.yaml` `Deployment vault 1/1` `ClusterSecretStore payu-vault` `ExternalSecrets` `vault-bootstrap Secret` `oc apply -k vault` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `Vault dev mode inmem` `NetworkPolicy` `Context7 external-secrets.io/v1` `oc get externalsecret -A` `Vault dev mode inmem`.
+
+**Lesson**: `Vault` `ClusterSecretStore payu-vault` `vault-bootstrap` `Secret payu-dev` `vault Deployment 1/1` `ClusterSecretStore payu-vault` `ExternalSecrets` `Vault dev mode inmem` `NetworkPolicy` `Context7 external-secrets.io/v1` `payu-vault` `ClusterSecretStore` `payu-vault` `ClusterSecretStore` `payu-vault` `ClusterSecretStore`.
+
 
 **Context**: `RLS 31 HPA 24 PDB` `Kogito TaskInbox` `DMN eligibility.dmn pricing.dmn` `CSV` `chargeback` `Pact` `RLS FORCE` `Kogito` `DMN` `CSV` `RLS 31` `HPA 31` `PDB 24` `Kogito` `DMN` `CSV` `ponytail: RLS via HPA/PDB, Kogito via TaskInbox, DMN via dmn`.
 
