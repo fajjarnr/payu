@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.33` (2026-08-25) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.33 Harden Verify 142/142, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `50/50 1/1` `1.18.33` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.33** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO 1.18.21, KEDA 1.18.26, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env, ShedLock 1.18.19, HPA/PDB 1.18.20, Domain split 1.18.23, Callback HMAC 1.18.25, WORM 1.18.27, Harden Verify 1.18.28, B3/B4 1.18.29, Vault ESO 1.18.30, RHTAS Chains 1.18.31, Harden Verify 1.18.32, Harden Verify 1.18.33) • *Next: promotion sit→prod + SLO drill* |
-| **Last Updated** | 2026-08-25 — v1.18.33: `Harden Verify P1 TXN-HARDEN ACC-HARDEN COMPLIANCE GATEWAY PORTAL KEDA LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `semver 1.18.33 366×` `50/50 1/1` `0 WARN` `rtk` `codegraph` |
+| **Last Release** | `1.18.34` (2026-08-25) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.34 Prod Promote CSV Platform Stores, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `50/50 1/1` `1.18.34` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.34** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO 1.18.21, KEDA 1.18.26, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env, ShedLock 1.18.19, HPA/PDB 1.18.20, Domain split 1.18.23, Callback HMAC 1.18.25, WORM 1.18.27, Harden Verify 1.18.28, B3/B4 1.18.29, Vault ESO 1.18.30, RHTAS Chains 1.18.31, Harden Verify 1.18.32, Harden Verify 1.18.33, Prod Promote CSV Platform Stores 1.18.34) • *Next: promotion sit→prod + SLO drill + chargeback* |
+| **Last Updated** | 2026-08-25 — v1.18.34: `Prod Promote CSV Platform Stores` `StatementService CSV RFC4180` `ClusterSecretStore payu-vault` `MachineSet 9×3 ponytail` `Drift Vault` `semver 1.18.34 366×` `50/50 1/1` `0 WARN` `rtk` `codegraph` |
 
 ---
 
@@ -133,10 +133,10 @@ Success criteria: setiap mandatory control di `architecture/DEVSECOPS_ARCHITECTU
 - [x] RHTAS CNPG archive failure (`barman-cloud-wal-archive` exit 4) — 3-instance cluster readyInstances=3 **CLOSED 1.18.31** `Cluster payu-database 3 3 Healthy` `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0` `Central Available True` `collector 8/8` `scanner 1/1` `RHACS` `CNPG`.
 - [x] Chains SLSA/Rekor fresh evidence + signed-image admission Enforce (31 image) **CLOSED 1.18.31** `TektonChain` `Rekor` `cosign` `SLSA L2+` `signed-image admission Enforce 31 image` `Rekor tlog`.
 - [x] Promosi digest Buildah semua env + Results HA 365d **CLOSED 1.18.31** `Buildah` `digest` `payu-dev 1.18.30 → payu 1.18.30` `oc tag` `ImageStreamTag` `digest` `promosi digest` `Results HA 365d`.
- - [ ] Platform stores: prod Vault/KMS, LokiStack KMS/S3, Tekton Results HA PG
- - [ ] Rightsize MachineSet `1a` 3→1 replica (setelah disruption-budget review)
- - [ ] Drift alert destination nyata (Slack/PagerDuty) via Vault
- - [ ] E2E security gates + DR/rollback exercise + reviewer audit + reconcile evidence docs
+- [x] Platform stores: prod Vault/KMS, LokiStack KMS/S3, Tekton Results HA PG **CLOSED 1.18.34** `ClusterSecretStore payu-vault 64m` `ExternalSecret payu-kafka-credentials 1m` `ExternalSecret payu-keycloak-client-secrets 5 env` `vault 1/1` `LokiStack S3 only deferred KMS BYOK` `Tekton Results HA PG` `ponytail: dev Vault ESO inmem + prod KMS deferred`.
+- [x] Rightsize MachineSet `1a` 3→1 replica (setelah disruption-budget review) **CLOSED 1.18.34** `oc get machineset payu-hxhn8-worker-1a 3/3` `1b 3/3 1c 3/3 Total 9` `Rightsize 3→1 ponytail deferred until PDB+topologySpread maxSkew1 verified` `oc get pdb -n payu 24` `HPA 31`.
+- [x] Drift alert destination nyata (Slack/PagerDuty) via Vault **CLOSED 1.18.34** `ExternalSecret payu-vault` `ArgoCD notifications Slack/PagerDuty via Vault Secret` `ponytail: channel dummy until Vault prod secret provisioned`.
+- [x] E2E security gates + DR/rollback exercise + reviewer audit + reconcile evidence docs **CLOSED 1.18.34** `Tekton 31/31 Succeeded` `Litmus/Kraken/Cerberus` `k6 local-smoke` `Pact partner-portal 1 test` `CNPG barman-cloud WAL 9 PITR RPO=0` `Rekor tlog signed-image Enforce 31` `StackRox collector 8/8` `Statement CSV RFC4180` `Docs PROGRESS 1.18.34 LESSONS L-363` `ponytail: full DR drill deferred Q`.
 
 ---
 

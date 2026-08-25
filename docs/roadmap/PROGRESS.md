@@ -1,5 +1,14 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.33 Harden Verify + 50/50 1.18.33 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.34 Prod Promote + CSV Verify + Platform Stores + 50/50 1.18.34 50/50 1/1 Verified (2026-08-25)
+
+- **Prod Promote (P1)**: `payu-dev 1.18.33→1.18.34` `payu 1.18.33→1.18.34` `payu-preprod/sit/uat 31×4` `oc tag -n payu-dev 31 1.18.34` `oc apply -k payu-dev 31 services` `oc apply -k payu-prod` `51/51 1/1` `payu-prod workloads 1.18.34` `payu-dev 51/51` `KogitoRuntime CRD deferred`.
+- **CSV Verify (ADR-0019 GAP-019)**: `StatementService.exportStatementsCsv RFC4180` `CSV_HEADER id,customerId,accountNumber,...` `PartnerStatementController /export text/csv` `Accept: text/csv or ?format=csv` `RFC4180 escaping HALF_EVEN` `PartnerStatementControllerTest` `StatementServiceTest` `Already live 1.18.27` `No code changeVerifyOnly`.
+- **Platform Stores (DEVSECOPS-017)**: `ClusterSecretStore payu-vault 64m` `ExternalSecret payu-kafka-credentials 1m` `ExternalSecret payu-keycloak-client-secrets 5 env` `vault 1/1` `vault-bootstrap Secret` `NetworkPolicy allow-external-secrets-to-vault` `ponytail: Vault via ESO` `LokiStack KMS/S3 deferred S3 only` `Tekton Results HA PG` `Platform stores: prod Vault/KMS deferred inmem + KMS BYOK later`.
+- **Rightsize MachineSet + Drift Alert (DEVSECOPS-017)**: `oc get machineset -n openshift-machine-api payu-hxhn8-worker-1a 3 replicas available 3` `payu-hxhn8-worker-1b 3` `1c 3` `Total 9 workers` `Rightsize 3→1 deferred ponytail` `Until PDB review + topologySpread maxSkew 1` `ArgoCD drift destination Slack/PagerDuty via Vault ExternalSecret payu-vault` `Watcher disabled ponytail`.
+- **SemVer Sync 1.18.34**: `package.json 1.18.33→1.18.34` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.34` `oc tag -n payu-dev 31 1.18.34` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.34` `oc get deployment 31 1.18.34`.
+- **Verification 1.18.34**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `rtk oc get pods -n payu 38/38 +3 Completed (payu namespace chaos-degraded deferred)` `oc get Cluster payu-database 5/5 Healthy` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs --since=60s 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.34` `rtk gain 86.2%` `codegraph`.
+- **Docs**: `TODOS Prod Promote+CSV+PlatformStores CLOSED 1.18.34` `PROGRESS 1.18.34` `CHANGELOG 1.18.34` `LESSONS L-363` `TAGS v1.18.34`.
+
 
 - **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
 - **SemVer Sync 1.18.33**: `package.json 1.18.32→1.18.33` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.33` `oc tag -n payu-dev 31 1.18.33` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.33` `oc get deployment 31 1.18.33`.

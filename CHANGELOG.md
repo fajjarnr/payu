@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.33] - 2026-08-25
+## [1.18.34] - 2026-08-25
+
+### Added
+
+- **Prod Promote (P1)**: `payu-dev 1.18.33→1.18.34` `payu 1.18.33→1.18.34` `oc tag -n payu-dev 31 1.18.34` `oc apply -k payu-dev 31 services` `oc apply -k payu-prod` `51/51 1/1` `KogitoRuntime CRD deferred`.
+- **CSV Verify (ADR-0019 GAP-019)**: `StatementService.exportStatementsCsv RFC4180` `PartnerStatementController /export text/csv` `Already live 1.18.27` `VerifyOnly`.
+- **Platform Stores (DEVSECOPS-017)**: `ClusterSecretStore payu-vault` `ExternalSecret payu-kafka-credentials` `ExternalSecret payu-keycloak-client-secrets 5 env` `vault 1/1` `ponytail Vault via ESO` `LokiStack KMS deferred`.
+- **Rightsize MachineSet + Drift Alert (DEVSECOPS-017)**: `oc get machineset 9 workers 3×3` `Rightsize 3→1 deferred ponytail PDB review` `Drift alert Slack/PagerDuty via Vault deferred`.
+
+### Fixed
+
+- **SemVer 1.18.33→1.18.34**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.34` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.34` `oc get deployment 31 1.18.34`.
+- **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.34` `rtk gain 86.2%` `codegraph`.
+
 
 ### Added
 

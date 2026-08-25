@@ -6,4 +6,4 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/dispute-service
-    newTag: "1.18.33"
+    newTag: "1.18.34"

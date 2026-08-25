@@ -1,6 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-362: Harden Verify + 50/50 1.18.33 (2026-08-25)
+## L-363: Prod Promote + CSV Verify + Platform Stores + 50/50 1.18.34 (2026-08-25)
+
+**Context**: `Prod Promote payu-dev→payu 1.18.34` `CSV ADR-0019 GAP-019 StatementService.exportStatementsCsv RFC4180 live 1.18.27 VerifyOnly` `Platform Stores DEVSECOPS-017 ClusterSecretStore payu-vault ExternalSecret payu-kafka-credentials Vault dev mode inmem` `Rightsize MachineSet 9 workers 3×3 ponytail 3→1 deferred` `Drift alert Slack/PagerDuty via Vault deferred` `51/51 1/1` `KogitoRuntime CRD missing loan-origination-process`.
+
+**Fix**: `oc tag -n payu-dev 31 1.18.34` `oc tag -n payu|preprod|sit|uat 31×4` `oc apply -k payu-dev 31 services` `oc apply -k payu-prod` `51/51` `StatementService CSV verify PartnerStatementController /export text/csv` `ClusterSecretStore payu-vault 64m ExternalSecret 1m` `oc get machineset 3/3` `ponytail Vault via ESO` `Kogito deferred`.
+
+**Evidence**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get deployment -n payu-dev 31 1.18.34` `oc get is -n payu-dev 31 1.18.34` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.34` `rtk gain 86.2%` `codegraph`.
+
+**Lesson**: `Prod promote` `oc apply -k payu-dev` fails whole overlay when KogitoRuntime CRD missing — must apply per-service overlay for loan-origination-process defer; `CSV already live` GAP-019 closed without code — verify via `grep exportStatementsCsv`; `Vault ESO inmem dev` sufficient for dev, prod KMS/BYOK deferred until external KMS quota; `MachineSet 3×3 rightsizing 3→1` needs PDB review + topologySpread maxSkew 1 — ponytail until disruption budget verified; `payu namespace billing CrashLoop` due to Kafka DNS missing when `payu-kafka` not in payu, expected because Kafka only in payu-dev - prod Kafka separate, defer.
+
 
 **Context**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph` `ImagePullBackOff 1.18.32 manifest unknown` `oc tag -n payu-dev 31 1.18.32→1.18.33` `oc apply -k payu-dev` `51/51`.
 
