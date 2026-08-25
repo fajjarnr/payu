@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.23] - 2026-08-25
+## [1.18.24] - 2026-08-25
+
+### Added
+
+- **TXN-HARDEN-003 Inbox+Result+Outbox (Q4/Q6)**: `InboxEventEntity inbox_events reference_no unique` `AggregateResultEntity` `InboxPersistenceAdapter` `DeferredOutboxService afterCommit REQUIRES_NEW` `FOR UPDATE` `replay 2× same referenceNo →1 commit`.
+- **TXN-HARDEN-004 Reconciliation (Q4)**: `ReconciliationScheduler @SchedulerLock biFastReconciliation 9m/30s 5m cutoff` `ShedLock usingDbTime` `TransferStatusPort GET /snap/v1.0/transfer/status` `ReconciliationSchedulerTest`.
+
+### Fixed
+
+- **SemVer Sync 1.18.24**: `package.json 1.18.23→1.18.24` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.24` `oc tag -n payu-dev 31 1.18.24` `oc tag -n payu|preprod|sit|uat 31×4`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl transaction-service -Dtest Inbox/Reconciliation/Outbox 0 failures` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.24` `rtk gain 85.9%` `codegraph`.
+- **TODOS**: `TXN-HARDEN-003/004 CLOSED 1.18.24` `PROGRESS 1.18.24` `LESSONS L-353` `TAGS v1.18.24`.
+
 
 ### Added
 

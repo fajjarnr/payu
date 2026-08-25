@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-352: TXN-HARDEN-002 Domain vs Entity Split + ArchUnit (2026-08-25)
+## L-353: TXN-HARDEN-003/004 Inbox+Result+Outbox + Reconciliation (2026-08-25)
+
+**Context**: `InboxEventEntity inbox_events reference_no unique` `AggregateResultEntity` `FOR UPDATE` `DeferredOutboxService afterCommit REQUIRES_NEW` `OutboxOutsideTxTest` `InboxDedupTest` `ReconciliationScheduler @SchedulerLock biFastReconciliation 9m/30s 5m cutoff` `ShedLock usingDbTime` `shedlock table` `TransferStatusPort GET /snap/v1.0/transfer/status` `Outbox` `Inbox` `replay 2× same referenceNo →1 commit` `Scheduler lock log` `ponytail: FOR UPDATE keep, inbox via idempotency_key unique`.
+
+**Fix**: `InboxEventEntity` `AggregateResultEntity` `InboxPersistenceAdapter` `DeferredOutboxService afterCommit REQUIRES_NEW` `mvn -pl transaction-service -Dtest Inbox/Reconciliation/Outbox 0 failures` `ReconciliationSchedulerTest` `OutboxOutsideTxTest` `InboxDedupTest` `oc logs ReconciliationScheduler 9m/30s` `TransferStatusPort` `ShedLock usingDbTime` `codegraph`.
+
+**Lesson**: `Inbox` `reference_no unique` `idempotency_key unique` already dedup via `idempotency_key` `referenceNo` `inbox_events` `aggregate_results` `outbox` `outside-TX` `afterCommit` `REQUIRES_NEW` ensures `replay 2× →1 commit` `FOR UPDATE` serializes callbacks `ReconciliationScheduler` `@SchedulerLock` `9m/30s` `5m cutoff` `ShedLock usingDbTime` via `shedlock` table `TransferStatusPort GET /snap/v1.0/transfer/status` when `BI-FAST` prod creds live `Scheduler lock log` deferred `ponytail: ShedLock usingDbTime via shedlock table`.
+
 
 **Context**: `TransactionEntity` `JPA` `domain/model` `ArchUnit forbids jakarta.persistence in domain` `Transaction.java` missing `Money` `TransactionPersistencePort` returns `TransactionEntity` not domain `BUG-ARCH-003` `TransactionEntity TODO` `ArchitectureTest` `9 tests` `domain` `Money HALF_EVEN 19,4` `TransactionEntity builder` `getVersion` missing `id.payu` shadowing `mvn test` `ContractVerifierTest` `400` `createTransfer` `50000.00`.
 

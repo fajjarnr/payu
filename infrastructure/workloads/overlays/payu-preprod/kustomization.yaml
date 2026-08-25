@@ -73,94 +73,94 @@ replicas:
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/analytics-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/api-portal-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/auth-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/backoffice-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/billing-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/cms-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/compliance-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/dispute-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/fx-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/gateway-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/integration-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/investment-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/kyc-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/lending-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-rules
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/lending-rules
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/loan-origination-process
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/notification-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/partner-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/product-catalog-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/promotion-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/statement-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/support-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/transaction-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/wallet-service
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/web-app
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/bi-fast-simulator
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/biller-simulator
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/dukcapil-simulator
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/qris-simulator
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/va-simulator
-  newTag: "1.18.23"
+  newTag: "1.18.24"
 patches:
 # Dev cache is an internal, non-TLS Hot Rod endpoint. Keep mTLS in promoted
 # environments; do not make dev depend on Vault-provisioned client material.

@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.23 TXN-HARDEN-002 Domain vs Entity Split 1.18.23 142/142 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.24 TXN-HARDEN-003/004 Inbox+Result+Outbox + Reconciliation 1.18.24 50/50 1/1 Verified (2026-08-25)
+
+- **TXN-HARDEN-003 Inbox+Result+Outbox (Q4/Q6)**: `InboxEventEntity inbox_events reference_no unique` `AggregateResultEntity aggregate_results` `FOR UPDATE` `idempotency_key unique` `referenceNo dedup` `InboxPersistenceAdapter` `DeferredOutboxService afterCommit REQUIRES_NEW` `OutboxOutsideTxTest` `InboxDedupTest` `replay 2× same referenceNo →1 commit` `ponytail: FOR UPDATE keep, inbox via idempotency_key unique`.
+- **TXN-HARDEN-004 Reconciliation (Q4)**: `ReconciliationScheduler @SchedulerLock biFastReconciliation 9m/30s 5m cutoff` `ShedLock usingDbTime` `shedlock table` `TransferStatusPort GET /snap/v1.0/transfer/status` `ReconciliationSchedulerTest` `OutboxOutsideTxTest` `InboxDedupTest` `Scheduler lock log` `ponytail: ShedLock usingDbTime via shedlock table`.
+- **SemVer Sync 1.18.24**: `package.json 1.18.23→1.18.24` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.24` `oc tag -n payu-dev 31 1.18.24` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.24` `oc get deployment 31 1.18.24`.
+- **Verification 1.18.24**: `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl transaction-service -Dtest Inbox/Reconciliation/Outbox 0 failures` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.24` `rtk gain 85.9%` `codegraph`.
+- **Docs**: `TODOS TXN-HARDEN-003/004 CLOSED 1.18.24` `PROGRESS 1.18.24` `CHANGELOG 1.18.24` `LESSONS L-353` `TAGS v1.18.24`.
+
 
 - **TXN-HARDEN-002 Domain vs Entity Split (Q5/BUG-ARCH-003)**: `backend/transaction-service/src/main/java/id/payu/transaction/domain/model/Transaction.java` `pure domain VO` `hex no JPA` `Money HALF_EVEN 19,4` `TransactionEntity keep JPA` `TransactionPersistencePort return domain` `Transaction.builder()` `fromEntity/toEntity` `ArchUnit forbids jakarta.persistence in domain` `ArchitectureTest 9 tests 0 failures` `mvn -pl transaction-service -am test 233 tests 0 failures (1 ContractVerifier 400 pre-existing)` `142/142 green after split` `codegraph`.
 - **TXN-HARDEN-003 Inbox+Result+Outbox**: `InboxEventEntity AggregateResultEntity` `InboxPersistencePort` `DeferredOutboxService afterCommit REQUIRES_NEW` `FOR UPDATE` `idempotency_key unique` `referenceNo dedup` `replay 2× →1 commit` `ReconciliationScheduler 9m/30s` `ShedLock usingDbTime` `TransferStatusPort GET /snap/v1.0/transfer/status` `OutboxOutsideTxTest` `ReconciliationSchedulerTest` `InboxDedupTest`.
