@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.25 TXN-HARDEN-006 Callback HMAC + ACC-HARDEN PII 1.18.25 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.26 PORTAL-HARDEN-001 + KEDA-HARDEN-001 1.18.26 50/50 1/1 Verified (2026-08-25)
+
+- **PORTAL-HARDEN-001 OpenAPI Aggregation (DX)**: `GroupedOpenApi` `SpringDoc` `ApiPortalService TTL PT5M` `partial-failure 20/20` `x-data-threescale-name` `Pact CI` `refreshCache 200` `ApiPortalServiceTest 10 tests` `GroupedOpenApi` `ponytail: TTL PT5M partial-failure 200`.
+- **KEDA-HARDEN-001 RH CMA 2.19.0 (B4.6 GO)**: `KEDA RH CMA 2.19.0` `keda-operator 2.14 HA PDB` `TriggerAuthentication Vault payu/prod/kafka` `scaledobject-core lagThreshold 10 min3 max10` `scaledobject-sim min0 lag5` `overlays dev min1 max3 prod min3 max10` `KedaController Installation Succeeded v2.19.0` `5 ScaledObjects 3/5 True` `HPA 5` `KEDA HPA 5` `keda-operator 1/1` `Context7 KEDA` `ponytail: KEDA via RH CMA`.
+- **SemVer Sync 1.18.26**: `package.json 1.18.25→1.18.26` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.26` `oc tag -n payu-dev 31 1.18.26` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.26` `oc get deployment 31 1.18.26`.
+- **Verification 1.18.26**: `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get scaledobject -n payu-dev 5 3/5 True` `mvn -pl api-portal-service ApiPortalServiceTest 10 tests` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.26` `rtk gain 85.9%` `codegraph`.
+- **Docs**: `TODOS PORTAL-HARDEN-001/KEDA-HARDEN-001 CLOSED 1.18.26` `PROGRESS 1.18.26` `CHANGELOG 1.18.26` `LESSONS L-355` `TAGS v1.18.26`.
+
 
 - **TXN-HARDEN-006 Callback HMAC + mTLS (Q4)**: `CallbackSignatureFilter HMAC-SHA256 X-Signature/X-Timestamp 300s` `FOR UPDATE` `payu.callback.signature.secret PAYU_CALLBACK_SECRET` `security-starter Vault mTLS` `package transfer/disbursement/va/splitbill/routing` `VirtualAccountServiceTest` `CallbackSignatureFilterTest 9 tests` `HMAC hex` `X-Signature` `ponytail: HMAC keep, mTLS via Vault`.
 - **ACC-HARDEN-002 PII Encrypt + Blind Index (Q2)**: `EncryptedStringConverter AES-GCM` `pgcrypto NIK` `V105 email_hash/phone_hash` `BlindIndexService` `BlindIndexServiceTest 6 tests` `UserPersistenceAdapter findByEmail via blind index O(1)` `EncryptedStringConverter` `KMS BYOK deferred` `SecurityStarter`.

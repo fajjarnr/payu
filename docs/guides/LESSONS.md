@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-354: TXN-HARDEN-006 Callback HMAC + ACC-HARDEN PII 1.18.25 (2026-08-25)
+## L-355: PORTAL-HARDEN-001 OpenAPI + KEDA-HARDEN-001 RH CMA 1.18.26 (2026-08-25)
+
+**Context**: `ApiPortalService TTL PT5M` `GroupedOpenApi SpringDoc` `partial-failure 20/20` `x-data-threescale-name` `Pact CI` `KEDA RH CMA 2.19.0` `keda-operator 2.14 HA PDB` `TriggerAuthentication Vault payu/prod/kafka` `scaledobject-core lag10 min3 max10` `scaledobject-sim min0 lag5` `overlays dev min1 max3 prod min3 max10` `KedaController Installation Succeeded v2.19.0` `5 ScaledObjects 3/5 True` `HPA 5` `Context7 KEDA` `ponytail: TTL PT5M partial-failure 200`.
+
+**Fix**: `GroupedOpenApi` `SpringDoc` `ApiPortalService TTL PT5M` `ApiPortalServiceTest 10 tests` `KEDA RH CMA 2.19.0` `keda-operator 2.14 HA PDB` `TriggerAuthentication Vault` `scaledobject-core lag10` `scaledobject-sim min0 lag5` `dev min1 max3 prod min3 max10` `KedaController Installation Succeeded` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `codegraph`.
+
+**Lesson**: `ApiPortalService` `TTL PT5M` `GroupedOpenApi` `SpringDoc` `partial-failure 20/20` `x-data-threescale-name` `Pact CI` `KEDA` `RH CMA 2.19.0` `keda-operator 2.14 HA PDB` `TriggerAuthentication Vault payu/prod/kafka` `scaledobject-core lag10` `scaledobject-sim min0 lag5` `dev min1 max3 prod min3 max10` `KedaController Installation Succeeded` `5 ScaledObjects 3/5 True` `HPA 5` `ponytail: KEDA via RH CMA`.
+
 
 **Context**: `CallbackSignatureFilter HMAC-SHA256 X-Signature/X-Timestamp 300s` `FOR UPDATE` `payu.callback.signature.secret` `security-starter Vault mTLS` `EncryptedStringConverter AES-GCM` `pgcrypto NIK` `BlindIndexService` `V105 email_hash/phone_hash` `AccountStatus Pocket` `balance==0` `accounts.balance 19,4` `SUM(ledger)` `ArchUnit` `CallbackSignatureFilterTest 9 tests` `BlindIndexServiceTest 6 tests` `KMS BYOK` `reconciler deferred`.
 

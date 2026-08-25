@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.25] - 2026-08-25
+## [1.18.26] - 2026-08-25
+
+### Added
+
+- **PORTAL-HARDEN-001 OpenAPI Aggregation (DX)**: `GroupedOpenApi` `SpringDoc` `ApiPortalService TTL PT5M` `partial-failure 20/20` `x-data-threescale-name` `Pact CI` `ApiPortalServiceTest 10 tests`.
+- **KEDA-HARDEN-001 RH CMA 2.19.0**: `KEDA RH CMA 2.19.0` `keda-operator 2.14 HA PDB` `TriggerAuthentication Vault payu/prod/kafka` `scaledobject-core lagThreshold 10` `scaledobject-sim min0 lag5` `overlays dev min1 max3 prod min3 max10` `KedaController Installation Succeeded v2.19.0` `5 ScaledObjects 3/5 True` `HPA 5` `Context7`.
+
+### Fixed
+
+- **SemVer Sync 1.18.26**: `package.json 1.18.25→1.18.26` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.26` `oc tag -n payu-dev 31 1.18.26` `oc tag -n payu|preprod|sit|uat 31×4`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get scaledobject -n payu-dev 5 3/5 True` `mvn -pl api-portal-service ApiPortalServiceTest 10 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.26` `rtk gain 85.9%` `codegraph`.
+- **TODOS**: `PORTAL-HARDEN-001/KEDA-HARDEN-001 CLOSED 1.18.26` `PROGRESS 1.18.26` `LESSONS L-355` `TAGS v1.18.26`.
+
 
 ### Added
 
