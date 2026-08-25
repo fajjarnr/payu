@@ -17,3 +17,12 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
+  - target:
+      kind: Deployment
+      name: gateway-service
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: QUARKUS_OTEL_SDK_DISABLED
+          value: "true"
