@@ -42,11 +42,11 @@ class ReconciliationSchedulerTest {
         assertThat(lock.name()).isEqualTo("biFastReconciliation");
         assertThat(lock.lockAtMostFor()).isEqualTo("9m");
         assertThat(lock.lockAtLeastFor()).isEqualTo("30s");
-        // verify ShedLockConfig uses usingDbTime + UTC
+        // verify ShedLockConfig uses usingDbTime (without withTimeZone — ShedLock forbids both)
         String src = new String(java.nio.file.Files.readAllBytes(
                 java.nio.file.Paths.get("src/main/java/id/payu/transaction/config/ShedLockConfig.java")));
         assertThat(src).contains("usingDbTime()");
-        assertThat(src).contains("withTimeZone");
+        assertThat(src).doesNotContain("withTimeZone");
     }
 
     @Test

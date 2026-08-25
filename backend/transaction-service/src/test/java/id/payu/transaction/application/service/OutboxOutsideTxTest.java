@@ -45,13 +45,12 @@ class OutboxOutsideTxTest {
 
     @Test
     void shedLockConfigUsesDbTimeAndUtcZone() {
-        // verify configuration class has usingDbTime + withTimeZone(UTC)
+        // verify configuration class has usingDbTime (without withTimeZone — ShedLock forbids both)
         try {
             var src = new String(java.nio.file.Files.readAllBytes(
                     java.nio.file.Paths.get("src/main/java/id/payu/transaction/config/ShedLockConfig.java")));
             assertThat(src).contains("usingDbTime()");
-            assertThat(src).contains("withTimeZone");
-            assertThat(src).contains("UTC");
+            assertThat(src).doesNotContain("withTimeZone");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

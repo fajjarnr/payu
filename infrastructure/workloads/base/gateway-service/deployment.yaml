@@ -38,9 +38,6 @@ spec:
       volumes:
       - name: tmp
         emptyDir: {}
-      - name: datagrid-client-tls
-        secret:
-          secretName: payu-cache-client-tls
       containers:
       - name: app
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service:1.9.9
@@ -60,9 +57,6 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
-        - name: datagrid-client-tls
-          mountPath: /var/run/payu-cache/tls
-          readOnly: true
         readinessProbe:
           httpGet:
             path: /q/health/live
@@ -130,21 +124,7 @@ spec:
               name: payu-cache-credentials
               key: password
         - name: PAYU_CACHE_HOTROD_USE_SSL
-          value: 'true'
-        - name: PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME
-          value: /var/run/payu-cache/tls/truststore.p12
-        - name: PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: payu-cache-client-tls
-              key: truststore-password
-        - name: PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME
-          value: /var/run/payu-cache/tls/keystore.p12
-        - name: PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: payu-cache-client-tls
-              key: keystore-password
+          value: 'false'
         - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
           value: payu-cache
         - name: KAFKA_BOOTSTRAP_SERVERS
