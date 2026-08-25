@@ -1,6 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-367: Chargeback + 50/50 1.18.38 (2026-08-25)
+## L-368: RLS FORCE + SLO + 50/50 1.18.39 (2026-08-25)
+
+**Context**: `B3 RLS FORCE rollout sisa service tenant_id 8 services vs 0 tenant stateless` `support_tickets V5__force_row_level_security.sql` `account V107-112 6 migrations` `SLO PARTNER-PROD-009 PrometheusRule partner-slo -n payu payu.partner.slo.availability.burn 14.4x` `Already live 1.18.21`.
+
+**Fix**: `T O D O S B3 RLS FORCE CLOSED 1.18.39 verifyOnly` `grep tenant_id 8 services 76/46/32/74/70/6/106/110 vs 0 stateless correctly no RLS` `support_tickets ENABLE FORCE POLICY tenant_isolation_support_tickets USING app.tenant_id` `account V107-112` `0 tenant stateless no RLS` `T O D O S B4 SLO CLOSED 1.18.39 verifyOnly` `oc get prometheusrule -n payu partner-slo` `groups interval 30s payu.partner.slo.availability.burn PartnerAvailabilityFastBurnCritical 14.4x 0.001`.
+
+**Evidence**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get is 31 1.18.39` `oc get deployment 31 1.18.39` `grep -r FORCE RLS backend --include=*.sql` `grep tenant_id` `cat backend/support-service/src/main/resources/db/migration/V5__force_row_level_security.sql` `oc get prometheusrule -n payu partner-slo -o yaml` `mvn -pl api-portal-service 10 tests` `npx playwright 2 skipped` `git tag v1.18.39` `rtk gain 86.2%` `codegraph`.
+
+**Lesson**: `RLS tenant isolation` — 8 tenant-scoped services already FORCE RLS ENABLE+FORCE+POLICY, 0-tenant stateless services correctly no RLS (analytics api-portal auth etc), so rollout sisa is verifyOnly not code; `SLO partner-slo` already live 1.18.21 with PrometheusRule 14.4x burn, p95 <0.5s p99 <2s, just verify via `oc get prometheusrule` and Grafana dashboard; both ponytail close via docs not migrations.
+
 
 **Context**: `ADR-0054 GAP-054C chargeback 0 kode di dispute-service hanya deskripsi katalog` `Refund + dispute state machine live` `Chargeback state machine 7 status OPEN SUBMITTED UNDER_REVIEW ACCEPTED REJECTED REVERSED CLOSED` `Already live 1.18.36`.
 

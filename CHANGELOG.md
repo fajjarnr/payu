@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.38] - 2026-08-25
+## [1.18.39] - 2026-08-25
+
+### Added
+
+- **RLS FORCE (B3 CLOSED 1.18.39)**: `RLS tenant isolation 8 services account billing dispute lending partner support transaction wallet` `FORCE RLS ENABLE + FORCE + POLICY tenant_isolation` `support_tickets V5` `account V107-112` `0 tenant stateless correctly no RLS` `Already live verifyOnly`.
+- **SLO Verify (PARTNER-PROD-009 B4 CLOSED 1.18.39)**: `PrometheusRule partner-slo -n payu` `payu.partner.slo.availability.burn` `PartnerAvailabilityFastBurnCritical 14.4x` `Already live 1.18.21 verifyOnly`.
+
+### Fixed
+
+- **SemVer 1.18.38→1.18.39**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.39` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.39` `oc get deployment 31 1.18.39` `kogito-crd.yaml 1.18.39`.
+- **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `CRD kognitoruntimes.rhpam.kiegroup.org` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.39` `rtk gain 86.2%` `codegraph`.
+
 
 ### Added
 
