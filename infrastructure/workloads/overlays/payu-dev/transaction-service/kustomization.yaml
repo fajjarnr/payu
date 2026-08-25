@@ -11,9 +11,16 @@ patches:
   - target:
       kind: Deployment
       name: transaction-service
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/env/-
-        value:
-          name: SPRINGDOC_API_DOCS_ENABLED
-          value: "true"
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: transaction-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: SPRINGDOC_API_DOCS_ENABLED
+                    value: "true"
