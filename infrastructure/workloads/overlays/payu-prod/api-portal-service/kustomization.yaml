@@ -6,4 +6,4 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/api-portal-service
-    newTag: "1.18.40"
+    newTag: "1.18.41"

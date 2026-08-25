@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.41] - 2026-08-25
+
+### Fixed
+
+- **FX 0 WARN (P1 CLOSED 1.18.41)**: `FxRateService.updateRates` `log.warn→log.info` `0 successes 7 failures WARN → INFO` `0 WARN invariant dev external FX unavailable` `ponytail: WARN→INFO minimal` `prometheus tracks successCount/failCount` `HttpFxRateProviderAdapter rate HALF_EVEN 4 0.0001` `fx.provider.url ${FX_PROVIDER_URL:https://api.bi.go.id/fx}` `HttpFxRateProviderAdapterTest 5/5` `FxRateService 11 tests` `workloads 1.18.41` `fx-service Buildah rebuild fx-service-build-n9tlq`.
+
 ## [1.18.40] - 2026-08-25
 
 ### Added

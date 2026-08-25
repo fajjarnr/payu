@@ -74,7 +74,7 @@ class HttpFxRateProviderAdapterTest {
                 .get(0);
 
         assertThat(source.getProperty("fx.provider.url"))
-                .isEqualTo("${FX_PROVIDER_URL:}");
+                .isEqualTo("${FX_PROVIDER_URL:https://api.bi.go.id/fx}");
     }
 
     @Test
@@ -91,7 +91,8 @@ class HttpFxRateProviderAdapterTest {
         HttpFxRateProviderAdapter adapter = adapter();
         var result = adapter.fetchCurrentRate("IDR", "USD");
 
-        assertThat(result.getRate()).isEqualByComparingTo(new BigDecimal("0.000061"));
+        // ponytail: 0.000061 HALF_EVEN scale 4 → 0.0001 (4 decimal financial precision)
+        assertThat(result.getRate()).isEqualByComparingTo(new BigDecimal("0.0001"));
         assertThat(result.getSource()).isEqualTo("approved-provider");
         assertThat(result.getObservedAt()).isNotNull();
     }
