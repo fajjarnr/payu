@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-356: COMPLIANCE WORM + GATEWAY 3scale + Harden Verify 1.18.27 (2026-08-25)
+## L-357: Harden Verify + 50/50 1.18.28 (2026-08-25)
+
+**Context**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
+
+**Fix**: `TXN-HARDEN` `ACC-HARDEN` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `codegraph`.
+
+**Lesson**: `Harden Verify` `P1` `TXN-HARDEN` `ACC-HARDEN` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
+
 
 **Context**: `DataAccessAudit` `WORM` `audit-syslog rsyslog 5514:514` `LokiStack KMS S3 1y/7y` `vector-audit-daemonset` `payu-audit-syslog` `GatewaySchedulerLock HotRod tryLock` `3scale leaky_bucket` `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling`.
 

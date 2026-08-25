@@ -1,5 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.27 COMPLIANCE WORM + GATEWAY 3scale + Harden Verify 1.18.27 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.28 Harden Verify + 50/50 1.18.28 50/50 1/1 Verified (2026-08-25)
+
+- **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
+- **SemVer Sync 1.18.28**: `package.json 1.18.27→1.18.28` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.28` `oc tag -n payu-dev 31 1.18.28` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.28` `oc get deployment 31 1.18.28`.
+- **Verification 1.18.28**: `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get scaledobject -n payu-dev 5 3/5 True` `mvn -pl api-portal-service 10 tests` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.28` `rtk gain 85.9%` `codegraph`.
+- **Docs**: `TODOS Harden Verify CLOSED 1.18.28` `PROGRESS 1.18.28` `CHANGELOG 1.18.28` `LESSONS L-357` `TAGS v1.18.28`.
+
 
 - **COMPLIANCE-HARDEN-001 WORM + GATEWAY-HARDEN-001 3scale (P1)**: `DataAccessAudit` `WORM` `audit-syslog rsyslog 5514:514` `LokiStack KMS S3 1y/7y via loki-storage glacier` `vector-audit-daemonset` `payu-audit-syslog` `ComplianceService` `DataAccessAudit` `append-only` `REVOKE DONE 1.18.9` `WORM KMS deferred` `GatewaySchedulerLock HotRod tryLock` `3scale leaky_bucket` `edge_limited_total` `ponytail: WORM via Loki KMS deferred, 3scale via 3scale`.
 - **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling`.

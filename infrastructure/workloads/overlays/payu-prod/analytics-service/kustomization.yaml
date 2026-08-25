@@ -6,4 +6,4 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/analytics-service
-    newTag: "1.18.27"
+    newTag: "1.18.28"
