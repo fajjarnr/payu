@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.31] - 2026-08-25
+## [1.18.32] - 2026-08-25
+
+### Added
+
+- **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
+
+### Fixed
+
+- **SemVer Sync 1.18.32**: `package.json 1.18.31→1.18.32` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.32` `oc tag -n payu-dev 31 1.18.32` `oc tag -n payu|preprod|sit|uat 31×4`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get Cluster payu-database 3 3 Healthy` `oc get pods -n stackrox 8/8` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.32` `rtk gain 86.2%` `codegraph`.
+- **TODOS**: `Harden Verify CLOSED 1.18.32` `PROGRESS 1.18.32` `LESSONS L-361` `TAGS v1.18.32`.
+
 
 ### Added
 

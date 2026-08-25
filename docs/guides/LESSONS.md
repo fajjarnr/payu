@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-360: DEVSECOPS RHTAS + Chains + Promosi Digest 1.18.31 (2026-08-25)
+## L-361: Harden Verify + 50/50 1.18.32 (2026-08-25)
+
+**Context**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
+
+**Fix**: `TXN-HARDEN` `ACC-HARDEN` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `codegraph`.
+
+**Lesson**: `Harden Verify` `P1` `TXN-HARDEN` `ACC-HARDEN` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
+
 
 **Context**: `Cluster payu-database 3 3 Healthy` `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0` `Central Available True` `collector 8/8` `scanner 1/1` `RHACS` `CNPG` `barman-cloud-wal-archive` `TektonChain` `Rekor` `cosign` `SLSA L2+` `Buildah` `digest` `payu-dev 1.18.30 → payu 1.18.30` `oc tag` `ImageStreamTag` `digest`.
 
