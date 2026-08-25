@@ -16,6 +16,8 @@ spec:
       app.kubernetes.io/name: fx-service
   template:
     metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-08-25T09:04:00Z"
       labels:
         app.kubernetes.io/name: fx-service
         app.kubernetes.io/part-of: payu
