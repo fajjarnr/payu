@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/billing-service
-    newTag: "1.18.35"
+    newTag: "1.18.36"
 patches:
   - target:
       kind: Deployment

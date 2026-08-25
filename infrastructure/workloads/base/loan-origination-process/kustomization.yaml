@@ -4,6 +4,7 @@ resources:
 - serviceaccount.yaml
 - deployment.yaml
 - service.yaml
+- kogito-crd.yaml
 - kogito-runtime.yaml
 labels:
 - pairs:

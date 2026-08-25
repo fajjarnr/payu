@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "payu-root",
-  "version": "1.18.35",
+  "version": "1.18.36",
   "description": "PayU root - git hooks for backend/web/infra/docs (DX-HOOKS-001)",
   "scripts": {
     "prepare": "husky"

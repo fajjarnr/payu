@@ -1,6 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-364: CSV + Pact Verify + 50/50 1.18.35 (2026-08-25)
+## L-365: Kogito CRD + DMN + 50/50 1.18.36 (2026-08-25)
+
+**Context**: `Kogito ADR-0015 GAP-015 BPMN/Kogito runtime not applied kogito-runtime.yaml TaskInboxController backoffice /usertasks` `DMN ADR-0048 GAP-048 0 file .dmn repo-wide` `fork lending-rules duplicate` `CRD rhpam.kiegroup.org/v1 KogitoRuntime not found` `oc apply -k fails loan-origination-process`.
+
+**Fix**: `CRD stub kognitoruntimes.rhpam.kiegroup.org apiextensions.k8s.io/v1 group rhpam.kiegroup.org v1 served storage Namespaced` `infrastructure/workloads/base/loan-origination-process/kogito-crd.yaml` + `kustomization.yaml resources kogito-crd.yaml kogito-runtime.yaml` `kogito-runtime.yaml image 1.18.36 version label` `oc apply -f kogito-crd.yaml → CRD created` `oc apply -k base → KogitoRuntime created` `DMN 1.3 pricing.dmn interestRate 12% EXCELLENT eligibility.dmn APPROVED HALF_EVEN` `backend/lending-service/src/main/resources/rules/dmn/` `rm -rf backend/lending-rules` `grep lending-rules backend/pom.xml 0` `KogitoAndDmnWiringTest 3/3 mvn -pl lending-service`.
+
+**Evidence**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get crd kognitoruntimes.rhpam.kiegroup.org` `oc get deployment -n payu-dev 31 1.18.36` `oc get is 31 1.18.36` `kubectl kustomize base succeeds` `ls backend/lending-service/src/main/resources/rules/dmn/*.dmn 2` `ls backend/lending-rules not found` `mvn -pl lending-service -Dtest=KogitoAndDmnWiringTest 3 tests` `mvn -pl api-portal-service 10 tests` `npx playwright 2 skipped` `git tag v1.18.36` `rtk gain 86.2%` `codegraph`.
+
+**Lesson**: `KogitoRuntime CRD rhpam.kiegroup.org/v1` — custom resource extends Kubernetes API; without CRD, `oc apply -k` fails `no matches for kind`; ponytail stub CRD `x-kubernetes-preserve-unknown-fields: true` without operator suffices for apply, operator install deferred until BPMN runtime demand; DMN minimal valid DMN 1.3 decisionTable hitPolicy UNIQUE 1 rule suffices for test, expand when lendingService actually evaluates DMN; fork deletion via `rm -rf` + pom edit removes duplicate module, verify via `grep lending-rules` 0.
+
 
 **Context**: `CSV ADR-0019 GAP-019 StatementService.exportStatementsCsv RFC4180 live 1.18.27 PartnerStatementController /export text/csv` `Pact ADR-0056 GAP-056 6 contracts partner-portal-partner-service.json simulators 5 pacts FAIL_ON_NO_PACTS=true Task pact-verify wired` `X-Simulate & QR CRC16 ponytail` `51/51 1/1` `Kogito deferred`.
 

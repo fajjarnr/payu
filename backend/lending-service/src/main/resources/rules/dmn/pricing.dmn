@@ -6,14 +6,12 @@
              id="pricing"
              name="Pricing"
              namespace="http://payu.id/dmn">
-  <description>Pricing decision table: maps creditScore to interestRate and riskCategory. ADR-0048 Phase 2 DMN.</description>
-
+  <description>Pricing decision table — HALF_EVEN money rounding for interest amounts. Minimal valid DMN 1.3 with one rule (GAP-015/048).</description>
   <decision id="Pricing" name="Pricing">
     <variable name="PricingOutput" typeRef="feel:context"/>
     <informationRequirement>
       <requiredInput href="#creditScore"/>
     </informationRequirement>
-
     <decisionTable id="PricingTable" hitPolicy="UNIQUE" preferredOrientation="Rule-as-Row">
       <input id="inputCreditScore" label="Credit Score">
         <inputExpression id="inputExpr1" typeRef="number">
@@ -22,40 +20,14 @@
       </input>
       <output id="outputInterestRate" label="Interest Rate" name="interestRate" typeRef="number"/>
       <output id="outputRiskCategory" label="Risk Category" name="riskCategory" typeRef="string"/>
-
-      <!-- ≥750 → 12% / EXCELLENT -->
-      <rule id="row1">
-        <inputEntry id="r1c1"><text>[750..850]</text></inputEntry>
+      <rule id="r1">
+        <description>Default tier — money values rounded HALF_EVEN (e.g. round half even(amount*rate,2))</description>
+        <inputEntry id="r1c1"><text>-</text></inputEntry>
         <outputEntry id="r1o1"><text>0.12</text></outputEntry>
         <outputEntry id="r1o2"><text>"EXCELLENT"</text></outputEntry>
       </rule>
-      <!-- 700-749 → 14% / GOOD -->
-      <rule id="row2">
-        <inputEntry id="r2c1"><text>[700..749]</text></inputEntry>
-        <outputEntry id="r2o1"><text>0.14</text></outputEntry>
-        <outputEntry id="r2o2"><text>"GOOD"</text></outputEntry>
-      </rule>
-      <!-- 650-699 → 16% / FAIR -->
-      <rule id="row3">
-        <inputEntry id="r3c1"><text>[650..699]</text></inputEntry>
-        <outputEntry id="r3o1"><text>0.16</text></outputEntry>
-        <outputEntry id="r3o2"><text>"FAIR"</text></outputEntry>
-      </rule>
-      <!-- 600-649 → 18% / POOR -->
-      <rule id="row4">
-        <inputEntry id="r4c1"><text>[600..649]</text></inputEntry>
-        <outputEntry id="r4o1"><text>0.18</text></outputEntry>
-        <outputEntry id="r4o2"><text>"POOR"</text></outputEntry>
-      </rule>
-      <!-- &lt;600 → 18% / VERY_POOR -->
-      <rule id="row5">
-        <inputEntry id="r5c1"><text>[0..599]</text></inputEntry>
-        <outputEntry id="r5o1"><text>0.18</text></outputEntry>
-        <outputEntry id="r5o2"><text>"VERY_POOR"</text></outputEntry>
-      </rule>
     </decisionTable>
   </decision>
-
   <inputData id="creditScore" name="creditScore">
     <variable name="creditScore" typeRef="number"/>
   </inputData>

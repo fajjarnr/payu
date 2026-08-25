@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.35] - 2026-08-25
+## [1.18.36] - 2026-08-25
+
+### Added
+
+- **Kogito CRD (ADR-0015 GAP-015 B3 CLOSED 1.18.36)**: `CRD kognitoruntimes.rhpam.kiegroup.org apiextensions.k8s.io/v1` `kustomization.yaml kogito-crd.yaml + kogito-runtime.yaml` `kogito-runtime.yaml image 1.18.36` `oc apply -f kogito-crd.yaml KogitoRuntime created` `TaskInboxController backoffice /usertasks` `KogitoAndDmnWiringTest 3/3`.
+- **DMN Lending (ADR-0048 GAP-048 B3 CLOSED 1.18.36)**: `DMN 1.3 pricing.dmn eligibility.dmn` `HALF_EVEN money` `backend/lending-service/src/main/resources/rules/dmn/` `lending-rules fork deleted` `KogitoAndDmnWiringTest 3/3`.
+
+### Fixed
+
+- **SemVer 1.18.35→1.18.36**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.36` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.36` `oc get deployment 31 1.18.36` `kogito-crd.yaml`.
+- **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `CRD kognitoruntimes.rhpam.kiegroup.org` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl lending-service 3 tests` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.36` `rtk gain 86.2%` `codegraph`.
+
 
 ### Added
 
