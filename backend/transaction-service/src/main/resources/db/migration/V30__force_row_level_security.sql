@@ -1,4 +1,4 @@
--- V29__force_row_level_security.sql
+-- V30__force_row_level_security.sql
 -- B3.3 RLS FORCE rollout: upgrade V27 ENABLE-only to FORCE per ADR-0033
 ALTER TABLE batch_disbursements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE batch_disbursements FORCE ROW LEVEL SECURITY;
