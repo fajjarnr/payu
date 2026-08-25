@@ -45,6 +45,9 @@ patches:
       - op: replace
         path: /spec/triggers/0/metadata/bootstrapServers
         value: payu-kafka-kafka-bootstrap.payu-prod.svc:9092
+      - op: replace
+        path: /spec/triggers/1/metadata/serverAddress
+        value: http://prometheus-operated.payu-prod.svc:9090
   - target:
       kind: ScaledObject
       name: gateway-service-keda
@@ -62,6 +65,9 @@ patches:
       - op: replace
         path: /metadata/namespace
         value: payu-prod
+      - op: replace
+        path: /spec/triggers/0/metadata/bootstrapServers
+        value: payu-kafka-kafka-bootstrap.payu-prod.svc:9092
   - target:
       kind: ScaledObject
       name: biller-simulator-keda
@@ -69,3 +75,6 @@ patches:
       - op: replace
         path: /metadata/namespace
         value: payu-prod
+      - op: replace
+        path: /spec/triggers/0/metadata/bootstrapServers
+        value: payu-kafka-kafka-bootstrap.payu-prod.svc:9092
