@@ -1,6 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-365: Kogito CRD + DMN + 50/50 1.18.36 (2026-08-25)
+## L-366: Branded Types Strict + 50/50 1.18.37 (2026-08-25)
+
+**Context**: `ADR-0047 GAP-047 Branded types deviasi __brand? optional Money plain string alias tanpa eslint` `frontend/web-app src/types/index.ts Money string & {readonly __brand: 'Money'} required not optional AccountId UserId TransactionId PocketId` `currency.ts Money branded HALF_EVEN addCurrency compareCurrency` `eslint no-restricted-syntax Number parseFloat warn`.
+
+**Fix**: `T O D O S GAP-047 B4 CLOSED 1.18.37 verifyOnly Already live 1.18.35` `src/types/index.ts required __brand` `src/lib/currency.ts asMoney/isMoney/assertMoney MONEY_RE ^-?\\d+(?:\\.\\d{1,4})?$` `eslint.config.mjs no-restricted-syntax CallExpression Number parseFloat message Use asMoney/parseCurrencyExact` `src/__tests__/lib/money-branded.test.ts 8 tests asMoney isMoney addCurrency divideCurrency compareCurrency parseCurrencyExact formatExactDecimal` `npm test 8/8`.
+
+**Evidence**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get is 31 1.18.37` `oc get deployment 31 1.18.37` `grep __brand frontend/web-app/src/types/index.ts 5 required` `grep Money frontend/web-app/src/lib/currency.ts branded` `cat frontend/web-app/eslint.config.mjs no-restricted-syntax Number parseFloat` `npm test money-branded 8 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.37` `rtk gain 86.2%` `codegraph`.
+
+**Lesson**: `Money branded string & {readonly __brand: 'Money'}` — required __brand prevents plain string assign, caught via @ts-expect-error in test; isMoney guard + asMoney assert ensures DECIMAL(19,4) HALF_EVEN; addCurrency/compareCurrency never Number/parseFloat, preserved via decimalString/roundDecimal HALF_EVEN; eslint no-restricted-syntax warn for Number() parseFloat() with allowlist src/lib/currency.ts exception ensures gradual migration; 8 tests verify string precision 0.1+0.2=0.3 not 0.3000000004; gap already live 1.18.35, close via docs verifyOnly ponytail.
+
 
 **Context**: `Kogito ADR-0015 GAP-015 BPMN/Kogito runtime not applied kogito-runtime.yaml TaskInboxController backoffice /usertasks` `DMN ADR-0048 GAP-048 0 file .dmn repo-wide` `fork lending-rules duplicate` `CRD rhpam.kiegroup.org/v1 KogitoRuntime not found` `oc apply -k fails loan-origination-process`.
 

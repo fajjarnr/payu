@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/loan-origination-process
-    newTag: "1.18.36"
+    newTag: "1.18.37"
 patches:
   - target:
       kind: Deployment
