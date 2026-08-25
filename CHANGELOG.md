@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.43] - 2026-08-25
+
+### Fixed
+
+- **Gateway OTEL 0 WARN (P1 CLOSED 1.18.43)**: `gateway-service` `VertxGrpcSender Failed to export TraceRequestMarshaler otel-collector: Name or service not known` `QUARKUS_OTEL_SDK_DISABLED=true` `infrastructure/workloads/overlays/payu-sit|uat|preprod|prod/gateway-service/kustomization.yaml` `per-service ArgoCD gateway-service-sit|uat|preprod|prod Synced 86a1622` `oc apply -k` `rtk oc logs --since=60s 0 WARN` across 5 envs `payu-dev/sit/uat/preprod/payu` `ponytail: disable OTEL not deploy collector` `oc get pods gateway-service 1/1` `workloads 1.18.43` `SemVer 1.18.42→1.18.43`.
+
 ## [1.18.42] - 2026-08-25
 
 ### Fixed

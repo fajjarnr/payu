@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
-    newTag: "1.18.42"
+    newTag: "1.18.43"
 patches:
   - target:
       kind: Deployment

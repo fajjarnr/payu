@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.43 Gateway OTEL 0 WARN + 5 Env Synced (2026-08-25)
+
+- **Gateway OTEL FIX (P1 1.18.43)**: `gateway-service` `VertxGrpcSender otel-collector: Name or service not known` `QUARKUS_OTEL_SDK_DISABLED=true` `overlays/payu-sit|uat|preprod|prod/gateway-service/kustomization.yaml` `per-service ArgoCD gateway-service-sit|uat|preprod|prod 86a1622 Synced` `oc apply -k` `rtk oc logs --since=60s 0 WARN` `payu-dev/sit/uat/preprod/payu 0 WARN` `oc get pods gateway-service 1/1` `oc get application gateway-service-sit 86a1622 Synced`.
+- **SemVer Sync 1.18.43**: `package.json 1.18.42→1.18.43` `workloads 1.18.43` `oc tag 31 1.18.43` `ArgoCD 5 envs Synced`.
+- **Verification 1.18.43**: `rtk oc get pods -n payu-dev 45/49 1/1` `oc get cluster 5/5 Healthy` `oc get kafka 5/5 True` `rtk oc logs 0 WARN` `mvn -pl fx-service 73 tests` `npm test 95 files 1221` `git tag v1.18.43` `rtk gain`.
+
 ## Platform 1.18.42 CNPG WAL 5Gi→10Gi + ObjectStore 5/5 + 49/49 1/1 Verified (2026-08-25)
 
 - **CNPG Storage FIX (P0 1.18.42)**: `cnpg-cluster.yaml storage 10Gi→20Gi walStorage 5Gi→10Gi` `pvc payu-database-1 10Gi→20Gi FileSystemResizeSuccessful` `pvc payu-database-1-wal 5Gi→10Gi 4.9G 100%→43%` `ObjectStore barmancloud.cnpg.io/v1 payu-database-backup 5/5 payu-dev/sit/uat/preprod/payu 1/1` `barman-cloud Unknown plugin → ContinuousArchiving False→True` `oc get cluster Ready True ContinuousArchiving True` `oc get pvc 20Gi/10Gi` `Cluster 2/2 Running` `wal-archive failed too many times resolved` `disk 100%→2%` `oc delete pod payu-database-1` `49/49→51/51 1/1`.
