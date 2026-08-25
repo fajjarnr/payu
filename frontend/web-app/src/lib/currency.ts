@@ -166,8 +166,8 @@ export function formatCurrencyWithoutSymbol(
 
 /** Parse a formatted amount while retaining its decimal string representation. */
 export function parseCurrencyExact(value: CurrencyInput | null | undefined): Money {
-  if (value === null || value === undefined) return '0';
-  return decimalString(value) ?? '0';
+  if (value === null || value === undefined) return asMoney('0');
+  return asMoney(decimalString(value) ?? '0');
 }
 
 /** Add decimal money values without passing through IEEE-754 numbers. */
@@ -187,7 +187,7 @@ export function addCurrency(left: CurrencyInput, right: CurrencyInput): Money {
   const digits = (negative ? -sum : sum).toString().padStart(scale + 1, '0');
   const integer = scale ? digits.slice(0, -scale) : digits;
   const fraction = scale ? digits.slice(-scale).replace(/0+$/, '') : '';
-  return `${negative ? '-' : ''}${integer}${fraction ? `.${fraction}` : ''}`;
+  return asMoney(`${negative ? '-' : ''}${integer}${fraction ? `.${fraction}` : ''}`);
 }
 
 /** Compare decimal money values without passing through IEEE-754 numbers. */
@@ -212,7 +212,7 @@ export function compareCurrency(left: CurrencyInput, right: CurrencyInput): -1 |
  */
 export function divideCurrency(value: CurrencyInput, divisor: number, decimals = 4): Money {
   const normalized = decimalString(value) ?? '0';
-  if (divisor === 0) return '0';
+  if (divisor === 0) return asMoney('0');
   const negative = normalized.startsWith('-');
   const unsigned = negative ? normalized.slice(1) : normalized;
   const [integer, fraction = ''] = unsigned.split('.');
@@ -228,7 +228,7 @@ export function divideCurrency(value: CurrencyInput, divisor: number, decimals =
   let resultFraction = decimals ? digits.slice(-decimals) : '';
   resultFraction = resultFraction.replace(/0+$/, '');
   const result = `${resultInteger}${resultFraction ? `.${resultFraction}` : ''}`;
-  return negative && result !== '0' ? `-${result}` : result;
+  return asMoney(negative && result !== '0' ? `-${result}` : result);
 }
 
 /**

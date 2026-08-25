@@ -47,7 +47,7 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import type { ScheduledTransfer } from '@/services/TransactionService';
-import type { Money } from '@/types';
+import { parseCurrencyExact } from '@/lib/currency';
 
 export default function ScheduledTransfersPage() {
   const { accountId: storeAccountId } = useAuthStore();
@@ -67,7 +67,7 @@ export default function ScheduledTransfersPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const [editForm, setEditForm] = useState<{
-    amount: Money;
+    amount: string;
     description: string;
     scheduleType: 'ONE_TIME' | 'RECURRING_DAILY' | 'RECURRING_WEEKLY' | 'RECURRING_MONTHLY' | 'RECURRING_CUSTOM';
   }>({
@@ -97,7 +97,7 @@ export default function ScheduledTransfersPage() {
     await updateTransfer.mutateAsync({
       id: selectedTransfer.id,
       data: {
-        amount: editForm.amount,
+        amount: parseCurrencyExact(editForm.amount),
         description: editForm.description,
         scheduleType: editForm.scheduleType,
       },

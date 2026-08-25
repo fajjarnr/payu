@@ -25,7 +25,7 @@ import {
   useActivateSplitBill,
 } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
-import { addCurrency, divideCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
+import { addCurrency, asMoney, divideCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
 import type { SplitBillParticipant } from '@/services/TransactionService';
 
 export default function SplitBillPage() {
@@ -175,7 +175,7 @@ export default function SplitBillPage() {
                   <div>
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total</p>
                     <p className="text-2xl font-bold text-foreground mt-0.5">
-                      {formatCurrency(splitBills.reduce((sum, b) => addCurrency(sum, b.totalAmount), '0'))}
+                      {formatCurrency(splitBills.reduce((sum, b) => addCurrency(sum, b.totalAmount), asMoney('0')))}
                     </p>
                   </div>
                 </div>

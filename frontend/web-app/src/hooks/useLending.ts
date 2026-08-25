@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import LendingService from '@/services/LendingService';
+import { parseCurrencyExact } from '@/lib/currency';
 import type { LoanApplicationRequest, PayLaterLimitRequest, PreApprovalCheckRequest } from '@/services/LendingService';
 
 export function useCreditScore(userId: string) {
@@ -99,7 +100,7 @@ export function usePayLaterPayment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, amount }: { userId: string; amount: string }) =>
-      LendingService.recordPayment(userId, amount),
+      LendingService.recordPayment(userId, parseCurrencyExact(amount)),
     ...MutationPresets.financial,
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['paylater', vars.userId] });

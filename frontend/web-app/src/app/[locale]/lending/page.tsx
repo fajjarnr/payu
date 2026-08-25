@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreApprovals, useActivatePayLater, useApplyLoan, usePayLaterPayment } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
-import { formatCurrency } from '@/lib/currency';
+import { asMoney, formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
 
 export default function LendingPage() {
@@ -29,7 +29,7 @@ export default function LendingPage() {
     try {
       await activatePayLater.mutateAsync({
         userId,
-        request: { monthlyIncome: '5000000', employmentType: 'FULL_TIME', employmentDurationMonths: 12 },
+        request: { monthlyIncome: asMoney('5000000'), employmentType: 'FULL_TIME', employmentDurationMonths: 12 },
       });
       toast.success('PayLater berhasil diaktifkan');
     } catch (e: unknown) {
@@ -43,7 +43,8 @@ export default function LendingPage() {
       const externalId = `ext-${Date.now()}`;
       await applyLoan.mutateAsync({
         externalId,
-        principalAmount: '10000000',
+        loanType: 'PERSONAL',
+        principalAmount: asMoney('10000000'),
         tenureMonths: 12,
         purpose: productName,
       });

@@ -18,7 +18,7 @@ import { exchangeSchema, type ExchangeRequest } from '@/types';
 import { useFxRate, useFxEstimate, useFxConversion, useFxConversions } from '@/hooks';
 import { useAuthStore, useUIStore } from '@/stores';
 import { SUPPORTED_CURRENCIES } from '@/services/FxService';
-import { compareCurrency, formatExactDecimal, type Money } from '@/lib/currency';
+import { compareCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
 import DashboardLayout from "@/components/DashboardLayout";
 import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import clsx from 'clsx';
@@ -79,7 +79,7 @@ export default function ExchangePage() {
           const result = await estimateMutationRef.current.mutateAsync({
             fromCurrency,
             toCurrency,
-            amount,
+            amount: parseCurrencyExact(amount),
           });
           setEstimatedAmount(result.toAmount);
         } catch {
@@ -122,10 +122,10 @@ export default function ExchangePage() {
     conversionMutation.mutate({
       fromCurrency: data.fromCurrency,
       toCurrency: data.toCurrency,
-      amount: data.amount,
+      amount: parseCurrencyExact(data.amount),
     }, {
       onSuccess: () => {
-        addToast(`Successfully exchanged ${formatCurrency(data.amount, data.fromCurrency)} to ${data.toCurrency}`, 'success');
+        addToast(`Successfully exchanged ${formatCurrency(parseCurrencyExact(data.amount), data.fromCurrency)} to ${data.toCurrency}`, 'success');
         setValue('amount', '');
         setEstimatedAmount(null);
       },

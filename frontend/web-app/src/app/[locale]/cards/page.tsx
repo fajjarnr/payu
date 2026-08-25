@@ -26,6 +26,7 @@ import {
   useUpdateCard
 } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
+import { asMoney, parseCurrencyExact } from '@/lib/currency';
 import type { VirtualCard } from '@/services/WalletService';
 
 // Extended card properties that may come from backend but aren't in the base interface yet
@@ -91,12 +92,12 @@ export default function CardsPage() {
   };
 
   const handleUpdateLimit = async () => {
-    if (!selectedCard) return;
+    if (!selectedCard || parseCurrencyExact(limitForm.dailyLimit) === '0') return;
 
     await updateCard.mutateAsync({
       cardId: selectedCard.id,
       data: {
-        dailyLimit: String(limitForm.dailyLimit),
+        dailyLimit: parseCurrencyExact(limitForm.dailyLimit),
       },
     });
 
@@ -128,7 +129,7 @@ export default function CardsPage() {
                     onClick={() => createCard.mutate({
                       accountId: authAccountId ?? '',
                       cardHolderName: cardOwner,
-                      dailyLimit: '25000000.0000',
+                      dailyLimit: asMoney('25000000.0000'),
                     })}
                     disabled={createCard.isPending}
                   >

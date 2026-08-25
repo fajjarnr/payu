@@ -40,7 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from 'sonner';
-import { addCurrency, formatCurrency, formatCurrencyWithoutSymbol, parseCurrencyExact } from '@/lib/currency';
+import { addCurrency, asMoney, formatCurrency, formatCurrencyWithoutSymbol, parseCurrencyExact } from '@/lib/currency';
 
 interface SharedMember {
   accountId: string;
@@ -236,7 +236,7 @@ export default function PocketsPage() {
             id: 'shared-1',
             accountId: accountId,
             name: 'Tabungan Keluarga',
-            balance: '15000000',
+            balance: asMoney('15000000'),
             target: 50000000,
             type: 'SHARED',
             isShared: true,
@@ -252,7 +252,7 @@ export default function PocketsPage() {
             id: 'shared-2',
             accountId: accountId,
             name: 'Dana Rekreasi Kantor',
-            balance: '8500000',
+            balance: asMoney('8500000'),
             target: 30000000,
             type: 'SHARED',
             isShared: true,

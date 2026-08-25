@@ -4,7 +4,7 @@ import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { transferSchema, TransferRequest, TransferType, TransferScheduleType } from '@/types';
-import { compareCurrency } from '@/lib/currency';
+import { compareCurrency, parseCurrencyExact } from '@/lib/currency';
 import { useState, useCallback, useMemo } from 'react';
 import { useInitiateTransfer } from '@/hooks';
 import { useAuthStore } from '@/stores';
@@ -140,7 +140,7 @@ export default function TransferPage() {
       {
         senderAccountId: data.fromAccountId || accountId || '',
         recipientAccountNumber: data.toAccountId,
-        amount: data.amount,
+        amount: parseCurrencyExact(data.amount),
         description: data.description || '',
         type: data.transferType || 'INTERNAL_TRANSFER',
         scheduledAt,

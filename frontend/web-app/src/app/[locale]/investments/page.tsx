@@ -4,7 +4,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { useInvestmentAccount, useBuyDeposit, useSellInvestment, useCreateInvestmentAccount } from '@/hooks';
 import { useTranslations } from 'next-intl';
-import { formatCurrency } from '@/lib/currency';
+import { asMoney, formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
 
 export default function InvestmentsPage() {
@@ -23,7 +23,7 @@ export default function InvestmentsPage() {
       if (!acc) {
         acc = await createAccount.mutateAsync();
       }
-      await buyDeposit.mutateAsync({ accountId: acc.id, amount: '1000000', tenure: 12 });
+      await buyDeposit.mutateAsync({ accountId: acc.id, amount: asMoney('1000000'), tenure: 12 });
       toast.success('Pembelian deposit berhasil');
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Gagal membeli produk');
@@ -36,7 +36,7 @@ export default function InvestmentsPage() {
         toast.error('Belum ada akun investasi');
         return;
       }
-      await sellInvestment.mutateAsync({ accountId: account.id, transactionId: account.id, amount: '500000' });
+      await sellInvestment.mutateAsync({ accountId: account.id, transactionId: account.id, amount: asMoney('500000') });
       toast.success('Penjualan berhasil');
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Gagal menjual produk');
