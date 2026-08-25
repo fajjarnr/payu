@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.26 PORTAL-HARDEN-001 + KEDA-HARDEN-001 1.18.26 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.27 COMPLIANCE WORM + GATEWAY 3scale + Harden Verify 1.18.27 50/50 1/1 Verified (2026-08-25)
+
+- **COMPLIANCE-HARDEN-001 WORM + GATEWAY-HARDEN-001 3scale (P1)**: `DataAccessAudit` `WORM` `audit-syslog rsyslog 5514:514` `LokiStack KMS S3 1y/7y via loki-storage glacier` `vector-audit-daemonset` `payu-audit-syslog` `ComplianceService` `DataAccessAudit` `append-only` `REVOKE DONE 1.18.9` `WORM KMS deferred` `GatewaySchedulerLock HotRod tryLock` `3scale leaky_bucket` `edge_limited_total` `ponytail: WORM via Loki KMS deferred, 3scale via 3scale`.
+- **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling`.
+- **SemVer Sync 1.18.27**: `package.json 1.18.26→1.18.27` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.27` `oc tag -n payu-dev 31 1.18.27` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.27` `oc get deployment 31 1.18.27`.
+- **Verification 1.18.27**: `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl api-portal-service 10 tests` `mvn -pl shared/security-starter 6 tests` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.27` `rtk gain 85.9%` `codegraph`.
+- **Docs**: `TODOS COMPLIANCE/GATEWAY CLOSED 1.18.27` `PROGRESS 1.18.27` `CHANGELOG 1.18.27` `LESSONS L-356` `TAGS v1.18.27`.
+
 
 - **PORTAL-HARDEN-001 OpenAPI Aggregation (DX)**: `GroupedOpenApi` `SpringDoc` `ApiPortalService TTL PT5M` `partial-failure 20/20` `x-data-threescale-name` `Pact CI` `refreshCache 200` `ApiPortalServiceTest 10 tests` `GroupedOpenApi` `ponytail: TTL PT5M partial-failure 200`.
 - **KEDA-HARDEN-001 RH CMA 2.19.0 (B4.6 GO)**: `KEDA RH CMA 2.19.0` `keda-operator 2.14 HA PDB` `TriggerAuthentication Vault payu/prod/kafka` `scaledobject-core lagThreshold 10 min3 max10` `scaledobject-sim min0 lag5` `overlays dev min1 max3 prod min3 max10` `KedaController Installation Succeeded v2.19.0` `5 ScaledObjects 3/5 True` `HPA 5` `KEDA HPA 5` `keda-operator 1/1` `Context7 KEDA` `ponytail: KEDA via RH CMA`.

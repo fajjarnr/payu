@@ -6,4 +6,4 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-uat/biller-simulator
-    newTag: "1.18.26"
+    newTag: "1.18.27"

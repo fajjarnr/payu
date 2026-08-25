@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-355: PORTAL-HARDEN-001 OpenAPI + KEDA-HARDEN-001 RH CMA 1.18.26 (2026-08-25)
+## L-356: COMPLIANCE WORM + GATEWAY 3scale + Harden Verify 1.18.27 (2026-08-25)
+
+**Context**: `DataAccessAudit` `WORM` `audit-syslog rsyslog 5514:514` `LokiStack KMS S3 1y/7y` `vector-audit-daemonset` `payu-audit-syslog` `GatewaySchedulerLock HotRod tryLock` `3scale leaky_bucket` `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling`.
+
+**Fix**: `DataAccessAudit` `WORM` `audit-syslog` `LokiStack` `GatewaySchedulerLock` `3scale` `TXN-HARDEN` `ACC-HARDEN` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `codegraph`.
+
+**Lesson**: `COMPLIANCE` `WORM` `audit-syslog 5514:514` `LokiStack KMS S3 1y/7y` `vector-audit-daemonset` `payu-audit-syslog` `GATEWAY` `HotRod tryLock` `3scale leaky_bucket` `TXN-HARDEN` `ACC-HARDEN` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling`.
+
 
 **Context**: `ApiPortalService TTL PT5M` `GroupedOpenApi SpringDoc` `partial-failure 20/20` `x-data-threescale-name` `Pact CI` `KEDA RH CMA 2.19.0` `keda-operator 2.14 HA PDB` `TriggerAuthentication Vault payu/prod/kafka` `scaledobject-core lag10 min3 max10` `scaledobject-sim min0 lag5` `overlays dev min1 max3 prod min3 max10` `KedaController Installation Succeeded v2.19.0` `5 ScaledObjects 3/5 True` `HPA 5` `Context7 KEDA` `ponytail: TTL PT5M partial-failure 200`.
 
