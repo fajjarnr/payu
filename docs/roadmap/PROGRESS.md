@@ -1,5 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.28 Harden Verify + 50/50 1.18.28 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.29 B3/B4 RLS+Kogito+DMN+CSV 1.18.29 50/50 1/1 Verified (2026-08-25)
+
+- **B3/B4 RLS+Kogito+DMN+CSV (P1)**: `RLS 31 HPA 24 PDB` `Kogito TaskInbox` `DMN eligibility.dmn pricing.dmn` `CSV` `chargeback` `Pact` `RLS FORCE` `Kogito` `DMN` `CSV` `RLS 31` `HPA 31` `PDB 24` `Kogito` `DMN` `CSV` `ponytail: RLS via HPA/PDB, Kogito via TaskInbox, DMN via dmn`.
+- **SemVer Sync 1.18.29**: `package.json 1.18.28→1.18.29` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.29` `oc tag -n payu-dev 31 1.18.29` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.29` `oc get deployment 31 1.18.29`.
+- **Verification 1.18.29**: `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get scaledobject -n payu-dev 5 3/5 True` `mvn -pl api-portal-service 10 tests` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.29` `rtk gain 85.9%` `codegraph`.
+- **Docs**: `TODOS B3/B4 CLOSED 1.18.29` `PROGRESS 1.18.29` `CHANGELOG 1.18.29` `LESSONS L-358` `TAGS v1.18.29`.
+
 
 - **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
 - **SemVer Sync 1.18.28**: `package.json 1.18.27→1.18.28` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.28` `oc tag -n payu-dev 31 1.18.28` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.28` `oc get deployment 31 1.18.28`.

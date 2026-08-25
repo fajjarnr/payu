@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.28] - 2026-08-25
+## [1.18.29] - 2026-08-25
+
+### Added
+
+- **B3/B4 RLS+Kogito+DMN+CSV (P1)**: `RLS 31 HPA 24 PDB` `Kogito TaskInbox` `DMN eligibility.dmn pricing.dmn` `CSV` `chargeback` `Pact` `RLS FORCE` `Kogito` `DMN` `CSV` `ponytail: RLS via HPA/PDB, Kogito via TaskInbox, DMN via dmn`.
+
+### Fixed
+
+- **SemVer Sync 1.18.29**: `package.json 1.18.28→1.18.29` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.29` `oc tag -n payu-dev 31 1.18.29` `oc tag -n payu|preprod|sit|uat 31×4`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get scaledobject -n payu-dev 5 3/5 True` `mvn -pl api-portal-service 10 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.29` `rtk gain 85.9%` `codegraph`.
+- **TODOS**: `B3/B4 CLOSED 1.18.29` `PROGRESS 1.18.29` `LESSONS L-358` `TAGS v1.18.29`.
+
 
 ### Added
 
