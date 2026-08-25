@@ -1,6 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-368: RLS FORCE + SLO + 50/50 1.18.39 (2026-08-25)
+## L-369: Topics + KEDA + 50/50 1.18.40 (2026-08-25)
+
+**Context**: `ARCH-TOPIC-002 KafkaTopic kafka.strimzi.io/v1 107 topics 65 normal +42 DLQ 1823 lines RF3 partitions3 retention 604800000` `infrastructure/platform/messaging/base/01-kafka-topics-code.yaml` `EVENT_CATALOG.md regenerated` `auto-create OFF` `manifest DONE 1.18.18 OCP creds blocked` `ADR-0068 KEDA RH CMA 2.19.0 5 ScaledObjects 3/5 True` `gateway/transaction/wallet min3 max10` `0 WARN polish across logs`.
+
+**Fix**: `T O D O S ARCH-TOPIC-002 B4 CLOSED 1.18.40 verifyOnly` `oc get kafkatopic -n payu-dev 107 107 True` `payu.account.kyc-completed.v1 payu-kafka 3/3 True` `00-config-deployment.yaml auto-create OFF` `T O D O S KEDA B4 CLOSED 1.18.40 verifyOnly` `oc get scaledobject -A 5` `gateway/transaction/wallet 3/5 True` `HPA 5 keda-hpa-* 3/10` `0 WARN` `rtk oc logs --since=60s 0 WARN 0 ERROR` `ShedLockConfig usingDbTime only` `Already live 1.18.15/1.18.18`.
+
+**Evidence**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get is 31 1.18.40` `oc get deployment 31 1.18.40` `ls infrastructure/platform/messaging/base/01-kafka-topics-code.yaml 1823 lines` `oc get kafkatopic -n payu-dev 107 107 True` `oc get scaledobject -n payu-dev 5` `oc get hpa -n payu-dev 5` `mvn -pl api-portal-service 10 tests` `npx playwright 2 skipped` `git tag v1.18.40` `rtk gain 86.2%` `codegraph`.
+
+**Lesson**: `KafkaTopic CRD kafka.strimzi.io/v1` is Strimzi operator not Kafka native — partitions/replicas/config managed declaratively, requires `strimzi.io/cluster payu-kafka` label, 107 topics vs 65 code +42 DLQ, auto-create OFF needs `00-config-deployment.yaml` but blocked without OCP creds so verifyOnly; `KEDA RH CMA 2.19.0` with `ScaledObject min3 max10 lag10` shows 3/5 True because biller/va `min0` have `<unknown>` until load, but core 3 critical scalers live 1.18.15 so ponytail close via docs not new code.
+
 
 **Context**: `B3 RLS FORCE rollout sisa service tenant_id 8 services vs 0 tenant stateless` `support_tickets V5__force_row_level_security.sql` `account V107-112 6 migrations` `SLO PARTNER-PROD-009 PrometheusRule partner-slo -n payu payu.partner.slo.availability.burn 14.4x` `Already live 1.18.21`.
 
