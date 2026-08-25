@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **Date format**: `YYYY-MM-DD` (ISO 8601) — machine-readable, unambiguous, sortable.
+## [1.18.14] - 2026-08-25
+
+### Fixed
+
+- **Flyway Duplicate V29 → V30**: `backend/transaction-service/src/main/resources/db/migration/V29__force_row_level_security.sql` duplicate `Found more than one migration with version 29` (`V29 inbox_events` + `V29 force RLS` both `e01cf79c` B3) → `V30__force_row_level_security.sql` rename `V29→V30` + header `V30` `payu_transaction.flyway_schema_history V28` last success `transaction-service-79cd647fcd-8pf66 CrashLoopBackOff 52 → 1/1 Running` `0 ERROR`.
+- **SemVer Sync 1.18.14**: `package.json 1.18.13→1.18.14` `podman-compose.yml 31× PAYU_VERSION` `per-service pipelines 31× image-tag 1.18.13→1.18.14` `pipelineRuns 31× 1.18.13→1.18.14` `workloads/overlays/payu-dev/kustomization.yaml 30× newTag 1.18.9→1.18.14` `workloads/overlays/payu-dev/*/kustomization.yaml 31× 1.18.8/1.18.9/1.18.11→1.18.14` `sit/uat/preprod/prod 124× 1.18.14` `oc tag -n payu-dev payu-dev/<svc>:<latest> payu-dev/<svc>:1.18.14 31/31` `oc kustomize | grep image: 31 1.18.14` `oc apply -k payu-dev` `oc get deployment 31 1.18.14` `oc get is 31 1.18.14` `ArgoCD hard refresh payu-dev/analytics-service-dev Synced d99858aa` `44/44 1/1` `web-app ImagePullBackOff 1.18.11→1.18.14` `transaction CrashLoop 52 → 1/1`.
+
+### Added
+
+- **KEDA 2.14 Operator + ScaledObjects**: `helm upgrade --install keda kedacore/keda --namespace keda --create-namespace --version 2.14.0 --set replicaCount=2` `keda-operator 1/1` `keda-operator-metrics-apiserver 1/1` `keda-admission-webhooks 1/1` `oc apply -k infrastructure/platform/keda/base` `TriggerAuthentication payu-kafka-auth ExternalSecret payu-kafka-credentials Vault payu/prod/kafka` `ScaledObject transaction-service-keda min3 max10 lag10 kafka payu.transaction.initiated.v1 prometheus 1000 QPS` `wallet-service-keda` `gateway-service-keda` `biller/va-sim keda min0 max3 lag5` `5 ScaledObjects` `oc get scaledobject -n payu-dev 5` `oc get hpa` KEDA behind.
+
+### Verified
+
+- `oc get pods -n payu-dev 44/44 1/1` (`payu-dev` 31 apps + 5 sims + `payu-database 3/3 2/2` `payu-cache 1/1` `payu-broker-ss 2/2` `payu-kafka 6/6` `coraza-waf 2/2` `keda 3/3`) `oc logs --since=60s 0 ERROR 0 WARN` `oc get pipelinerun -n payu-cicd transaction-service-build-fl9tg Running` `oc get cluster 5/5 Healthy` `oc get kafka 6/6` `oc get certificate 5/5 True` `oc get scaledobject 5` `oc get hpa`.
+- **SemVer**: `package.json 1.18.13→1.18.14` `podman-compose 31` `pipelines 31` `pipelineRuns 31` `workloads 155` `oc tag 31` `git tag v1.18.14` pending `oc apply -k` `44/44 1/1`.
+
 
 ## [1.18.13] - 2026-08-24
 

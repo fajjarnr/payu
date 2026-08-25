@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.13` (2026-08-24) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **30/31 Succeeded** (1 Failed contract fixed 1.18.12), workloads `43/53 1/1` `1.18.13` `coraza 2/2` `KEDA` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.13** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO, KEDA) • *Next: promotion sit→prod + SLO drill* |
-| **Last Updated** | 2026-08-24 — v1.18.13: B3+B4 CLOSED `reconciliation` `Pact` `RLS` `DMN` `CSV` `chargeback` `Money` `SLO` `KEDA` `contract fix 1.18.12` `43/53` `KEDA` `No OPEN P1`. |
+| **Last Release** | `1.18.14` (2026-08-25) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction flyway V29→V30 fix 1.18.14), workloads `44/44 1/1` `1.18.14` `coraza 2/2` `KEDA 2.14 5 ScaledObjects` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.14** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO, KEDA, flyway fix) • *Next: promotion sit→prod + SLO drill* |
+| **Last Updated** | 2026-08-25 — v1.18.14: `flyway V29 duplicate → V30` `semver 1.18.14 sync 31 workloads` `KEDA 2.14 operator 2 replicas + 5 ScaledObjects applied` `oc tag 31 1.18.14` `44/44 1/1` `0 ERROR 0 WARN`. |
 
 ---
 
