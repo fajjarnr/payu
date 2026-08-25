@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
-    newTag: "1.18.14"
+    newTag: "1.18.15"
 patches:
   - target:
       kind: Deployment

@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.18.14] - 2026-08-25
+## [1.18.15] - 2026-08-25
+
+### Added
+
+- **Red Hat Custom Metrics Autoscaler Operator (RH-CMA 2.19.0)**: `helm uninstall keda -n keda` `namespace/keda deleted` → `infrastructure/platform/keda/rh-custom-metrics-autoscaler/` `Namespace openshift-keda` `OperatorGroup` `Subscription openshift-custom-metrics-autoscaler-operator redhat-operators stable Automatic` `custom-metrics-autoscaler.v2.19.0-2 Installing → Succeeded` `KedaController keda openshift-keda Installation Succeeded v2.19.0` `keda-operator-7588c9f867-q96mw 1/1` `keda-operator-metrics-apiserver 1/1` `keda-admission 1/1` `custom-metrics-autoscaler-operator 1/1` `CRDs kedacontrollers.keda.sh scaledobjects.keda.sh triggerauthentications.keda.sh` `oc apply -k infrastructure/platform/keda/base` `5 ScaledObjects` `biller/va min0 max3 lag5 → Ready False (Vault NotFound)` `gateway/transaction/wallet min3 max10 lag10 QPS1000 polling 15s cooldown 30s fallback 3 → Ready True` `oc get hpa -n payu-dev 5` `keda-hpa-* <unknown>/5 <unknown>/10 <unknown>/1k` `oc get scaledobject -n payu-dev 5 3/5 True`.
+- **KEDA Prod Overlay Fix**: `infrastructure/platform/keda/overlays/prod/kustomization.yaml` missing `wallet-service-keda` `spec/triggers/1/serverAddress payu-prod` + `va-simulator-keda` `spec/triggers/0/bootstrapServers payu-prod` + `biller-simulator-keda` `bootstrapServers payu-prod` → patched `overlays/prod` `JSON6902` `3 patches` `base` `payu-dev` stays, `prod` now `payu-kafka-kafka-bootstrap.payu-prod.svc:9092` `prometheus-operated.payu-prod.svc:9090`.
+
+### Fixed
+
+- **SemVer Sync 1.18.15 (RH-CMA)**: `package.json 1.18.14→1.18.15` `podman-compose.yml 31× PAYU_VERSION` `per-service pipelines 31× image-tag` `pipelineRuns 31×` `workloads/overlays/payu-dev/kustomization.yaml 30× newTag 1.18.14→1.18.15` `workloads/*/kustomization.yaml 155× 1.18.14→1.18.15` `oc tag -n payu-dev payu-dev/<svc>:1.18.14 payu-dev/<svc>:1.18.15 31/31` `oc kustomize payu-dev | grep image: 31 1.18.15` `oc kustomize payu-dev/account-service | oc apply -f -` `oc get deployment 31 1.18.15` `oc get is 31 1.18.15` `oc get pods -n payu-dev 50/50 1/1||2/2` `oc logs --since=60s 0 ERROR 0 WARN` `oc get pods -n openshift-keda 4/4` `oc get scaledobject 5` `oc get hpa 5`.
+- **CRD Explain**: `KedaController` (`keda.sh/v1alpha1`, RH CMA operand, `spec operator/metricsServer/admissionWebhooks`, `status Installation Succeeded v2.19.0` `namespace openshift-keda`), `ScaledObject` (`keda.sh/v1alpha1`, `spec scaleTargetRef Deployment/transaction-service` `pollingInterval 15` `cooldownPeriod 30` `minReplicaCount 3 maxReplicaCount 10` `triggers kafka lagThreshold 10 activationLagThreshold 50` `prometheus threshold 1000 query sum(rate(http_requests_total))`), `TriggerAuthentication` (`spec secretTargetRef` `name payu-kafka-credentials` `ExternalSecret` `ClusterSecretStore payu-vault`), `KogitoRuntime` (`rhpam.kiegroup.org/v1`, RHPAM loan-origination-process BPMN, `CRD not installed` `no matches for kind KogitoRuntime` `oc apply` `loan-origination-process` `KogitoRuntime` ignored, `Deployment` via `workloads/base/loan-origination-process` handles process).
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50` `rtk oc get is 31 1.18.15` `rtk oc logs 0 ERROR 0 WARN` `oc get pods -n openshift-keda 4/4` `oc get scaledobject -n payu-dev 5 3/5 True` `oc get hpa -n payu-dev 5` `oc get kedaController -n openshift-keda keda Installation Succeeded` `oc get crd scaledobjects.keda.sh kedacontrollers.keda.sh triggerauthentications.keda.sh` `oc get cluster 5/5 Healthy` `oc get kafka True 4.1.0` `oc get certificate 5/5 True` `git tag v1.18.15` `rtk gain 79%` `codegraph 4051 files`.
+- **SemVer**: `package.json 1.18.14→1.18.15` `podman-compose 31` `pipelines 31` `pipelineRuns 31` `workloads 155` `oc tag 31` `git tag v1.18.15` `oc apply -k` `50/50 1/1`.
+
 
 ### Fixed
 
