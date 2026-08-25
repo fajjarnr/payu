@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.44] - 2026-08-25
+
+### Fixed
+
+- **Kafka Topics 109 (P0 FIX 1.18.44)**: `payu.transaction.disbursement-batch.v1` `UNKNOWN_TOPIC_OR_PARTITION` `transaction-service` `payu` 127 WARN → 0 `infrastructure/platform/messaging/base/01-kafka-topics-code.yaml` `payu.transaction.disbursement-batch.v1` + `.dlq` 107→109 `oc apply -k overlays/payu-dev|sit|uat|preprod|prod` `payu-dev 107→109` `payu 44→109` `payu-sit 109` `payu-uat 109` `payu-preprod 109` `oc get kafkatopic -n payu 109` `oc get kafka 5/5 True` `auto.create false` `replicas 3→1 prod patch` `sync window blocked` → manual `oc apply -k` `transaction-service 0 WARN` `109 topics` `ponytail: declarative topic not auto-create, prod replica patch`.
+
 ## [1.18.43] - 2026-08-25
 
 ### Fixed

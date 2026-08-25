@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.44 Kafka Topics 109 + Transaction 0 WARN (2026-08-25)
+
+- **Kafka Topics FIX (P0 1.18.44)**: `payu.transaction.disbursement-batch.v1` `UNKNOWN_TOPIC_OR_PARTITION` `transaction-service` `payu` 127 WARN `01-kafka-topics-code.yaml` `payu.transaction.disbursement-batch.v1` + `.dlq` 107→109 `oc apply -k overlays/payu-dev|sit|uat|preprod|prod` `payu-dev 109` `payu 44→109` `payu-sit 109` `payu-uat 109` `payu-preprod 109` `oc get kafkatopic 109` `oc get kafka 5/5 True` `transaction-service 0 WARN`.
+- **SemVer Sync 1.18.44**: `package.json 1.18.43→1.18.44` `workloads 305× 1.18.44` `oc tag 31 1.18.44` `ArgoCD 5 envs Synced`.
+- **Verification 1.18.44**: `rtk oc get pods -n payu-dev 48/49 1/1` `oc get cluster 5/5 Healthy` `oc get kafka 5/5 True` `rtk oc logs 0 WARN` `mvn -pl fx-service 73 tests` `npm test 95 files 1221` `git tag v1.18.44` `rtk gain`.
+
 ## Platform 1.18.43 Gateway OTEL 0 WARN + 5 Env Synced (2026-08-25)
 
 - **Gateway OTEL FIX (P1 1.18.43)**: `gateway-service` `VertxGrpcSender otel-collector: Name or service not known` `QUARKUS_OTEL_SDK_DISABLED=true` `overlays/payu-sit|uat|preprod|prod/gateway-service/kustomization.yaml` `per-service ArgoCD gateway-service-sit|uat|preprod|prod 86a1622 Synced` `oc apply -k` `rtk oc logs --since=60s 0 WARN` `payu-dev/sit/uat/preprod/payu 0 WARN` `oc get pods gateway-service 1/1` `oc get application gateway-service-sit 86a1622 Synced`.
