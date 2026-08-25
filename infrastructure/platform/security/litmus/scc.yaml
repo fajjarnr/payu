@@ -44,6 +44,22 @@ users:
   - system:serviceaccount:litmus:litmus
   - system:serviceaccount:litmus:litmus-admin
   - system:serviceaccount:litmus:litmus-agent
+  - system:serviceaccount:payu-sit:litmus-admin
+  - system:serviceaccount:payu-sit:litmus
+  - system:serviceaccount:payu-uat:litmus-admin
+  - system:serviceaccount:payu-uat:litmus
+  - system:serviceaccount:payu-preprod:litmus-admin
+  - system:serviceaccount:payu-preprod:litmus
+  - system:serviceaccount:payu-preprod:cerberus
+  - system:serviceaccount:payu-preprod:kraken-chaos
+  - system:serviceaccount:payu:litmus-admin
+  - system:serviceaccount:payu:litmus
+  - system:serviceaccount:payu:cerberus
+  - system:serviceaccount:payu:kraken-chaos
+  - system:serviceaccount:payu-cid:litmus-admin
+  - system:serviceaccount:payu-cid:litmus
+  - system:serviceaccount:payu-cid:cerberus
+  - system:serviceaccount:payu-cid:kraken-chaos
 volumes:
   - configMap
   - downwardAPI

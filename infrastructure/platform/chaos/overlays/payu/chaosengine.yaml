@@ -1,0 +1,125 @@
+# ChaosEngine for payu — derived from infrastructure/platform/chaos/litmus-chaos-engines.yaml (pod-delete)
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-chaos
+  namespace: payu
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  engineState: active
+  chaosServiceAccount: litmus-admin
+  jobCleanUpPolicy: retain
+  monitoring: true
+  components:
+    runner:
+      runnerLabels:
+        app.kubernetes.io/component: chaos-engineering
+        app.kubernetes.io/part-of: payu
+  appinfo:
+    appns: 'payu'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  experiments:
+    - name: pod-delete
+      spec:
+        probe:
+          - name: healthcheck
+            type: httpProbe
+            mode: Continuous
+            httpProbe/inputs:
+              url: "http://gateway-service.payu:8080/q/health"
+              insecureSkipVerify: false
+              method:
+                get:
+                  criteria: ==
+                  responseCode: "200"
+            runProperties:
+              probeTimeout: 5s
+              interval: 5s
+              retry: 3
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "30"
+            - name: CHAOS_INTERVAL
+              value: "10"
+            - name: FORCE
+              value: "false"
+            - name: PODS_AFFECTED_PERC
+              value: "50"
+---
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosExperiment
+metadata:
+  name: pod-delete
+  namespace: payu
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  definition:
+    scope: Namespaced
+    permissions:
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["create","delete","get","list","patch","update"]
+      - apiGroups: ["apps"]
+        resources: ["deployments","replicasets"]
+        verbs: ["get","list"]
+    image: mirror.gcr.io/litmuschaos/go-runner@sha256:ac859acc9ae965afa1822b427b13c46a768e2fef8ee1273302b0907f1ae885ff
+    args: ["-c","./experiments -name pod-delete"]
+    command: ["/bin/bash"]
+    env:
+      - name: TOTAL_CHAOS_DURATION
+        value: "30"
+      - name: CHAOS_INTERVAL
+        value: "10"
+      - name: FORCE
+        value: "false"
+    labels:
+      name: pod-delete
+      app.kubernetes.io/part-of: litmus
+      app.kubernetes.io/component: chaos-engineering
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-chaos-platform-traffic
+  namespace: payu
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: chaos-engineering
+  policyTypes: ["Ingress","Egress"]
+  ingress:
+    - from:
+        - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - ipBlock:
+            cidr: 172.30.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 6443

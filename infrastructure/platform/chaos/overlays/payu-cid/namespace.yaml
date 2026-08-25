@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-cid
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+    payu-cid-alias: "true"

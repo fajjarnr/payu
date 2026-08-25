@@ -383,3 +383,247 @@ spec:
                   get:
                     criteria: '=='
                     responseCode: '200'
+
+---
+# CHAOS-ENV-001: Promoted namespaces — Litmus agent active (pod-delete working)
+# Derived from payu-dev pod-delete engine, adapted per env with litmus-admin SA.
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-sit-chaos
+  namespace: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  engineState: active
+  chaosServiceAccount: litmus-admin
+  jobCleanUpPolicy: retain
+  monitoring: true
+  appinfo:
+    appns: 'payu-sit'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: '30'
+            - name: CHAOS_INTERVAL
+              value: '10'
+            - name: FORCE
+              value: 'false'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-sit.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+---
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-uat-chaos
+  namespace: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  engineState: active
+  chaosServiceAccount: litmus-admin
+  jobCleanUpPolicy: retain
+  monitoring: true
+  appinfo:
+    appns: 'payu-uat'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: '30'
+            - name: CHAOS_INTERVAL
+              value: '10'
+            - name: FORCE
+              value: 'false'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-uat.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+---
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-preprod-chaos
+  namespace: payu-preprod
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  engineState: active
+  chaosServiceAccount: litmus-admin
+  jobCleanUpPolicy: retain
+  monitoring: true
+  appinfo:
+    appns: 'payu-preprod'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: '30'
+            - name: CHAOS_INTERVAL
+              value: '10'
+            - name: FORCE
+              value: 'false'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-preprod.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+---
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-chaos
+  namespace: payu
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  engineState: active
+  chaosServiceAccount: litmus-admin
+  jobCleanUpPolicy: retain
+  monitoring: true
+  appinfo:
+    appns: 'payu'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: '30'
+            - name: CHAOS_INTERVAL
+              value: '10'
+            - name: FORCE
+              value: 'false'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'
+---
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: payu-cid-chaos
+  namespace: payu-cid
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+    payu-cid-alias: "true"
+spec:
+  engineState: active
+  chaosServiceAccount: litmus-admin
+  jobCleanUpPolicy: retain
+  monitoring: true
+  appinfo:
+    appns: 'payu-cid'
+    applabel: 'app.kubernetes.io/name=account-service'
+    appkind: 'deployment'
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: '30'
+            - name: CHAOS_INTERVAL
+              value: '10'
+            - name: FORCE
+              value: 'false'
+            - name: PODS_AFFECTED_PERC
+              value: '50'
+          probe:
+            - name: 'check-account-service-health'
+              type: 'httpProbe'
+              mode: 'Continuous'
+              runProperties:
+                probeTimeout: '5s'
+                retry: 2
+                interval: '5s'
+                probePollingInterval: '2s'
+                initialDelay: '2s'
+              httpProbe/inputs:
+                url: 'http://account-service.payu-cid.svc.cluster.local:8080/actuator/health/liveness'
+                insecureSkipVerify: false
+                method:
+                  get:
+                    criteria: '=='
+                    responseCode: '200'

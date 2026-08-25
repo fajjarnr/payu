@@ -1,0 +1,25 @@
+# ClusterRole for LitmusChaos execution — used by litmus-admin SA per CHAOS-ENV-001
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: chaos
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "pods/exec", "events", "configmaps", "secrets", "services", "serviceaccounts"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets", "deployments/scale"]
+    verbs: ["get", "list", "patch", "update", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["litmuschaos.io"]
+    resources: ["chaosengines", "chaosexperiments", "chaosresults"]
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["security.openshift.io"]
+    resources: ["securitycontextconstraints"]
+    resourceNames: ["litmus-chaos", "litmus-portal"]
+    verbs: ["use"]

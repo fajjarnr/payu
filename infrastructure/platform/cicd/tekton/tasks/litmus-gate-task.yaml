@@ -56,11 +56,5 @@ spec:
           sleep 10
         done
 
-        if [ -z "$engine_status" ]; then
-          # No chaos agent installed in this namespace: the operator never
-          # picks the engine up, so engineStatus stays empty.
-          echo "[!] Chaos infra unavailable in $(params.NAMESPACE) - skipping gate"
-          exit 0
-        fi
         echo "[✗] Timed out waiting for Litmus verdict"
         exit 1

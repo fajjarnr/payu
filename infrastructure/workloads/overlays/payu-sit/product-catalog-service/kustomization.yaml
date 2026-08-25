@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/product-catalog-service
-    newTag: "1.18.16"
+    newTag: "1.18.17"
 patches:
   - target:
       kind: Deployment

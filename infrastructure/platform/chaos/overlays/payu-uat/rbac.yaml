@@ -1,0 +1,122 @@
+# RBAC per CHAOS-ENV-001 / CHAOS-RBAC-001 for payu-uat
+# - litmus-admin SA bound to ClusterRole chaos (created via ../../clusterrole-chaos.yaml)
+# - pipeline SA (payu-cicd) cross-namespace access via RoleBinding in payu-uat
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: litmus-admin-chaos-payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: chaos
+subjects:
+  - kind: ServiceAccount
+    name: litmus-admin
+    namespace: payu-uat
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: litmus-chaos-payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: chaos
+subjects:
+  - kind: ServiceAccount
+    name: litmus
+    namespace: payu-uat
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: litmus-admin
+  namespace: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+rules:
+  - apiGroups: [""]
+    resources: ["pods","pods/log","events","configmaps","secrets","services"]
+    verbs: ["create","delete","get","list","patch","update","watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments","replicasets","statefulsets","daemonsets"]
+    verbs: ["get","list","patch","update","watch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create","delete","get","list","patch","update","watch"]
+  - apiGroups: ["litmuschaos.io"]
+    resources: ["chaosengines","chaosexperiments","chaosresults"]
+    verbs: ["create","delete","get","list","patch","update","watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: litmus-admin
+  namespace: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: litmus-admin
+subjects:
+  - kind: ServiceAccount
+    name: litmus-admin
+    namespace: payu-uat
+---
+# Cross-namespace pipeline access — CHAOS-RBAC-001
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pipeline-chaos-access
+  namespace: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cicd
+rules:
+  - apiGroups: [""]
+    resources: ["pods","pods/log","events","configmaps","secrets","services","serviceaccounts"]
+    verbs: ["get","list","watch","create","update","patch","delete"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles","rolebindings"]
+    verbs: ["get","list","watch","create","update","patch","delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments","replicasets","statefulsets","daemonsets"]
+    verbs: ["get","list","watch","patch","update"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get","list","watch","create","update","patch","delete"]
+  - apiGroups: ["litmuschaos.io"]
+    resources: ["chaosengines","chaosexperiments","chaosresults"]
+    verbs: ["get","list","watch","create","update","patch","delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get","list","watch","create","update","patch","delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pipeline-chaos-access
+  namespace: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cicd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pipeline-chaos-access
+subjects:
+  - kind: ServiceAccount
+    name: pipeline
+    namespace: payu-cicd
+  - kind: ServiceAccount
+    name: pipeline-sa
+    namespace: payu-cicd

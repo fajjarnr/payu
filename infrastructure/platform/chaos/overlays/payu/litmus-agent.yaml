@@ -1,0 +1,78 @@
+# Litmus agent (execution plane) for payu — CHAOS-ENV-001
+# Uses chaos-operator image (mirrored), watches its own namespace.
+# Label app=litmus required for verification: oc get pods -n payu -l app=litmus
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: litmus-admin
+  namespace: payu
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: litmus
+  namespace: payu
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litmus-agent
+  namespace: payu
+  labels:
+    app: litmus
+    app.kubernetes.io/name: litmus-agent
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: chaos-engineering
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litmus
+  template:
+    metadata:
+      labels:
+        app: litmus
+        app.kubernetes.io/name: litmus-agent
+        app.kubernetes.io/part-of: payu
+        app.kubernetes.io/component: chaos-engineering
+    spec:
+      serviceAccountName: litmus-admin
+      containers:
+        - name: litmus-agent
+          image: mirror.gcr.io/litmuschaos/chaos-operator@sha256:0d76845f4edd44ed046187a45c5d7f4e80dc0d6fbc43dc3c7a2158f74487ac01
+          command:
+            - chaos-operator
+          env:
+            - name: CHAOS_RUNNER_IMAGE
+              value: mirror.gcr.io/litmuschaos/chaos-runner@sha256:c605d2cbd7917ea49e41834d5ed500c3a1e2c162d33e98cf2be4cd659cc07801
+            - name: WATCH_NAMESPACE
+              value: "payu"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPERATOR_NAME
+              value: chaos-operator
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true

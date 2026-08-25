@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.17] - 2026-08-25
+
+### Added
+
+- **CHAOS-ENV-001 Litmus Agent + Kraken/Cerberus + RBAC CHAOS-RBAC-001**: `infrastructure/platform/security/litmus` `ClusterRole litmus` `ServiceAccount litmus -n litmus` `chaos-operator-ce 1/1` `CRDs chaosengines/experiments/results` `infrastructure/platform/security/chaos/litmus` `ServiceAccount litmus-admin -n payu-sit/uat/preprod/payu` `Role litmus-admin` `RoleBinding litmus-admin` `NetworkPolicy allow-chaos-platform-traffic` `ChaosEngine payu-sit-chaos active` `ChaosExperiment pod-delete/network-latency` `litmus 6/6 1/1 mongodb/auth/frontend/server/operator` `oc explain chaosengine` `infrastructure/platform/security/chaos/kraken` `ConfigMap kraken-config/cerberus-config -n payu-preprod/payu` `Deployment cerberus 1/1 quay.io/redhat-chaos/cerberus:latest` `Job kraken-run quay.io/krkn-chaos/krkn:latest` `Service cerberus 8080` `ClusterRoleBinding cerberus-cluster-reader/kraken-chaos-admin` `infrastructure/platform/chaos/clusterrole-chaos.yaml` `infrastructure/platform/cicd/tekton/litmus-gate-rbac.yaml` `Role payu-tekton-litmus-gate -n payu-sit/uat/preprod/payu` `pipeline SA payu-cicd` `Context7 litmuschaos.io/v1alpha1 krkn-chaos`.
+- **Scripts chaos-verify.sh (keda-verify style)**: `scripts/chaos-verify.sh` `+x` `reports/chaos` `oc get pods -n litmus 6 Running` `oc get crd` `oc explain chaosengine` `for NS payu-sit/uat/preprod/payu litmus-admin SA/Role/Binding NetworkPolicy` `pipeline SA Role payu-tekton-litmus-gate` `for NS payu-preprod/payu cerberus/kraken-config deployment` `oc apply --dry-run=client -k chaos/litmus|kraken --validate=true` `oc get pods -n payu-sit/uat/preprod/payu/payu-dev --no-headers rtk` `oc logs --since=60s 0 ERROR/WARN rtk` `skip-infra removed → hard-fail` `codegraph 4051`.
+- **Gate skip-infra Removed**: `catalog/litmus-gate-task.yaml` `tasks/litmus-gate-task.yaml` `catalog/kraken-gate-task.yaml` `tasks/kraken-gate-task.yaml` `skip gate when infra missing → removed` `now fail-closed: deadline 900 verdict Pass/Fail engineStatus stopped oc wait cerberus 5m kraken-run 30m`.
+
+### Fixed
+
+- **SemVer Sync 1.18.17**: `package.json 1.18.16→1.18.17` `podman-compose.yml 31× PAYU_VERSION` `pipelines/per-service 31× image-tag 1.18.16→1.18.17` `pipelineRuns 31× 1.18.16→1.18.17` `workloads/overlays/payu-dev/kustomization.yaml 30× newTag 1.18.16→1.18.17` `workloads/overlays/payu-sit|uat|preprod|prod/kustomization.yaml 30× 1.18.8→1.18.17` `workloads/overlays/pay*/service/kustomization.yaml 155× 1.18.16→1.18.17` `total 366× 1.18.17` `oc tag -n payu-dev payu-dev/<svc>:1.18.16 payu-dev/<svc>:1.18.17 31/31` `oc kustomize payu-dev | grep image: 31 1.18.17` `oc kustomize payu-dev/account-service | oc apply -f -` `oc get deployment 31 1.18.17` `oc get is 31 1.18.17` `rtk oc get pods -n payu-dev 50/50 1/1||2/2` `rtk oc logs 0 ERROR 0 WARN` `codegraph`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50 1/1` (`payu-dev` 31 + `sim 5` + `DB 3/3` `cache 1/1` `broker 2/2` `kafka 6/6` `coraza 2/2` `openshift-keda 4/4` `HPA 5` `litmus 6/6` `cerberus 1/1`) `rtk oc get is 31 1.18.17` `rtk oc get deployment 31 1.18.17` `rtk oc logs --since=60s 0 ERROR 0 WARN` `oc get pods -n litmus 6/6 1/1` `oc get chaosengine -n payu-sit dry-run` `oc get pods -n payu-sit -l app.kubernetes.io/component=chaos-engineering` `oc get crd chaosengines.litmuschaos.io` `oc explain chaosengine` `reports/chaos` `git tag v1.18.17` `rtk gain 80%` `codegraph`.
+- **TODOS**: `CHAOS-ENV-001` row deleted `PROGRESS 1.18.17` `LESSONS L-347` `TAGS v1.18.17`.
+
 ## [1.18.16] - 2026-08-25
 
 ### Added
