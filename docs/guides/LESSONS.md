@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-350: PARTNER-PROD-007 HPA≥3 PDB 2 + PDB Enable + Gateway HotRod BASIC (2026-08-25)
+## L-352: TXN-HARDEN-002 Domain vs Entity Split + ArchUnit (2026-08-25)
+
+**Context**: `TransactionEntity` `JPA` `domain/model` `ArchUnit forbids jakarta.persistence in domain` `Transaction.java` missing `Money` `TransactionPersistencePort` returns `TransactionEntity` not domain `BUG-ARCH-003` `TransactionEntity TODO` `ArchitectureTest` `9 tests` `domain` `Money HALF_EVEN 19,4` `TransactionEntity builder` `getVersion` missing `id.payu` shadowing `mvn test` `ContractVerifierTest` `400` `createTransfer` `50000.00`.
+
+**Fix**: `domain/model/Transaction.java` `pure VO` `hex no JPA` `Money` `Transaction.builder() fromEntity/toEntity` `import TransactionEntity` `version` removed `id` field shadowing package `id.payu` → use imported `TransactionEntity` `fromEntity remove version` `toEntity use TransactionEntity.builder()` `mvn -pl transaction-service ArchitectureTest 9 tests 0 failures` `233 tests 1 ContractVerifier 400 pre-existing` `142/142 green` `codegraph`.
+
+**Lesson**: `Domain` `Transaction` must be pure `VO` without `jakarta.persistence`, `Entity` stays in `adapter/persistence/entity` with `JPA`; `ArchUnit` `noClasses().that().resideInAPackage("..domain..").should().dependOnClassesThat().resideInAPackage("jakarta.persistence")` fails if domain imports `jakarta.persistence`. `TransactionPersistencePort` should return `domain` `Transaction` not `Entity` for hex, but keep `Entity` for now with `fromEntity/toEntity` helper `ponytail: minimal mapping`. `id` field shadows `id` package `id.payu` → use imported `TransactionEntity` not fully qualified `id.payu...` with `id` field. `getVersion()` missing on `TransactionEntity` (no getter) → remove version mapping. `ContractVerifierTest` `400` pre-existing not due to domain split, `mvn -pl transaction-service -Dtest=ArchitectureTest` passes.
+
 
 **Context**: `partner-service` `Deployment replicas 1` `hpa.yaml partner-service-hpa min1 max3` `pdb.yaml partner-service-pdb minAvailable 1` `payu-prod kustomization.yaml partner-service count 1` `payu-preprod 1` `payu HPA 0` `payu-dev HPA delete via patch payu-dev only` `payu-prod HPA 0` `payu PDB 0` `base kustomization.yaml # - ./pdb.yaml commented` `24 PDB` `payu-cache` `gateway HotRod` `ISPN004007 unknown operation` `HashDistributionAware` single-node dev `payu-cache 1/1` `gateway log suppression` `quarkus-jacoco missing aliyun-central`.
 

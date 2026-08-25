@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.21` (2026-08-25) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.19 ShedLock fix, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19), workloads `50/50 1/1` `1.18.21` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.21** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO 1.18.21, KEDA, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env, ShedLock 1.18.19, HPA/PDB 1.18.20) • *Next: promotion sit→prod + SLO drill* |
-| **Last Updated** | 2026-08-25 — v1.18.21: `PARTNER-PROD-009 SLO partner-slo.yaml payu.partner.slo 99.9% p95<0.5s p99<2s` `partner-dashboard Grafana` `Pact partner-portal-partner-service 1 test 0 failures` `HPA/PDB 1.18.20 3/10 2` `ShedLock 1.18.19` `semver 1.18.21 366×` `50/50 1/1` `0 WARN` `rtk` `codegraph` |
+| **Last Release** | `1.18.23` (2026-08-25) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.23 Domain split 142/142, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19), workloads `50/50 1/1` `1.18.23` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.23** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO 1.18.21, KEDA, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env, ShedLock 1.18.19, HPA/PDB 1.18.20, Domain split 1.18.23) • *Next: promotion sit→prod + SLO drill* |
+| **Last Updated** | 2026-08-25 — v1.18.23: `TXN-HARDEN-002 Domain Transaction pure VO fromEntity/toEntity ArchUnit 9 tests` `233 tests` `Inbox/Outbox deferred` `semver 1.18.23 366×` `50/50 1/1` `0 WARN` `rtk` `codegraph` |
 
 ---
 
@@ -47,7 +47,7 @@
 
 
 
-| TXN-HARDEN-002 | transaction-service / ADR-0060 | **Domain vs Entity split (Q5/BUG-ARCH-003)** — ponytail: `TransactionEntity` keep JPA, `domain/model/Transaction` VO when strict hex needed (ArchUnit forbids `jakarta.persistence` in domain, upgrade: add `TransactionDomain` + `TransactionPersistencePort` return domain + `Money` via `api-commons`) | ArchUnit deferred, 142/142 green after split |
+| TXN-HARDEN-002 | transaction-service / ADR-0060 | **Domain vs Entity split (Q5/BUG-ARCH-003)** — ponytail: `Transaction` pure domain VO `TransactionEntity` keep JPA `domain/model/Transaction` `fromEntity/toEntity` `Money HALF_EVEN 19,4` `TransactionPersistencePort` return domain **FIXED 1.18.23** `ArchitectureTest 9 tests` `233 tests` `142/142 green` `ArchUnit` `Transaction.java` `import TransactionEntity` `version` removed | ArchUnit deferred, 142/142 green after split **CLOSED 1.18.23** |
 | TXN-HARDEN-003 | transaction-service / ADR-0060 + ADR-0041 | **Inbox + Result Table + Outbox outside-TX (Q4/Q6)** — ponytail: `FOR UPDATE` keep, inbox `referenceNo` dedup via `idempotency_key` unique already; add `inbox_events` + `aggregate_results` + outbox outside-TX when rail replay scale needed | Replay 2× same `referenceNo` → 1 commit deferred |
 | TXN-HARDEN-004 | transaction-service / ADR-0060 + PADG 14/2025 | **Reconciliation job (Q4)** — ponytail: `ShedLock` `usingDbTime` via existing `shedlock` table; add `ReconciliationScheduler` `@SchedulerLock` + `GET /snap/v1.0/transfer/status` when BI-FAST prod creds live | Scheduler lock log deferred |
 | TXN-HARDEN-005 | transaction-service / ADR-0060 + ADR-0042 | **Resilience & scheduling correctness** — ponytail: `Resilience4j` per-rail `CircuitBreaker/Retry/Bulkhead` via `resilience-starter` when rail latency observed; `ShedLockConfig usingDbTime()` only **FIXED 1.18.19** (was `usingDbTime()+withTimeZone(UTC)` illegal `Can not set both` → removed `withTimeZone`, `ReconciliationSchedulerTest` now `doesNotContain`) | `actuator/metrics` per-rail deferred, ShedLock fixed 1.18.19 |

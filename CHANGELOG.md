@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.21] - 2026-08-25
+## [1.18.23] - 2026-08-25
+
+### Added
+
+- **TXN-HARDEN-002 Domain vs Entity Split (Q5/BUG-ARCH-003)**: `backend/transaction-service/src/main/java/id/payu/transaction/domain/model/Transaction.java` `pure domain VO` `hex no JPA` `Money HALF_EVEN 19,4` `TransactionEntity keep JPA` `TransactionPersistencePort domain` `ArchitectureTest 9 tests 0 failures` `233 tests 1 ContractVerifier 400 pre-existing` `142/142 green`.
+- **TXN-HARDEN-003 Inbox+Result+Outbox**: `InboxEventEntity AggregateResultEntity` `DeferredOutboxService afterCommit REQUIRES_NEW` `FOR UPDATE` `ShedLock usingDbTime` `TransferStatusPort` `OutboxOutsideTxTest` `ReconciliationSchedulerTest`.
+
+### Fixed
+
+- **SemVer Sync 1.18.23**: `package.json 1.18.21→1.18.23` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.23` `oc tag -n payu-dev 31 1.18.23` `oc tag -n payu|preprod|sit|uat 31×4`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl transaction-service ArchitectureTest 9 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.23` `rtk gain 85.9%` `codegraph`.
+- **TODOS**: `TXN-HARDEN-002 CLOSED 1.18.23` `PROGRESS 1.18.23` `LESSONS L-352` `TAGS v1.18.23`.
+
 
 ### Added
 

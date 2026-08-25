@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/investment-service
-    newTag: "1.18.20"
+    newTag: "1.18.23"
 patches:
   - target:
       kind: Deployment
