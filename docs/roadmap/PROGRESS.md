@@ -1,5 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.37 Branded Types Strict + 50/50 1.18.37 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.38 Chargeback + 50/50 1.18.38 50/50 1/1 Verified (2026-08-25)
+
+- **Chargeback (ADR-0054 GAP-054C B4 CLOSED 1.18.38)**: `Chargeback 7 status OPEN→SUBMITTED→UNDER_REVIEW→ACCEPTED/REJECTED→REVERSED→CLOSED` `Chargeback.java transitions 64/72/78/84/92/98` `ChargebackService create/submit/review/accept/reject/reverse/close` `ChargebackController /api/v1/chargebacks POST` `ChargebackEntity chargebacks V8__create_chargebacks_table.sql` `ChargebackTest 5 tests state machine` `Already live 1.18.36 verifyOnly` `codegraph`.
+- **SemVer Sync 1.18.38**: `package.json 1.18.37→1.18.38` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.38` `oc tag -n payu-dev 31 1.18.38` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.38` `oc get deployment 31 1.18.38` `kogito-crd.yaml 1.18.38`.
+- **Verification 1.18.38**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get Cluster 5/5 Healthy` `rtk oc logs --since=60s 0 WARN` `mvn -pl dispute-service 5 tests` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.38` `rtk gain 86.2%` `codegraph`.
+- **Docs**: `TODOS GAP-054C CLOSED 1.18.38` `PROGRESS 1.18.38` `CHANGELOG 1.18.38` `LESSONS L-367` `TAGS v1.18.38`.
+
 
 - **Branded Types (ADR-0047 GAP-047 B4 CLOSED 1.18.37)**: `AccountId UserId TransactionId PocketId Money string & {readonly __brand}` `required __brand not optional` `Money plain string alias → branded 1.18.37` `isMoney/assertMoney/asMoney HALF_EVEN DECIMAL(19,4)` `currency.ts asMoney/isMoney/addCurrency/compareCurrency divideCurrency parseCurrencyExact formatExactDecimal` `eslint no-restricted-syntax Number parseFloat warn + exception src/lib/currency.ts` `money-branded.test.ts 8 tests isMoney addCurrency divideCurrency` `Already live 1.18.35 verifyOnly` `codegraph`.
 - **SemVer Sync 1.18.37**: `package.json 1.18.36→1.18.37` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.37` `oc tag -n payu-dev 31 1.18.37` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.37` `oc get deployment 31 1.18.37` `kogito-crd.yaml 1.18.37`.

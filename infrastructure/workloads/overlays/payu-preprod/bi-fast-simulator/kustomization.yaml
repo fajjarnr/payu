@@ -6,4 +6,4 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/bi-fast-simulator
-    newTag: "1.18.37"
+    newTag: "1.18.38"

@@ -1,6 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-366: Branded Types Strict + 50/50 1.18.37 (2026-08-25)
+## L-367: Chargeback + 50/50 1.18.38 (2026-08-25)
+
+**Context**: `ADR-0054 GAP-054C chargeback 0 kode di dispute-service hanya deskripsi katalog` `Refund + dispute state machine live` `Chargeback state machine 7 status OPEN SUBMITTED UNDER_REVIEW ACCEPTED REJECTED REVERSED CLOSED` `Already live 1.18.36`.
+
+**Fix**: `T O D O S GAP-054C B4 CLOSED 1.18.38 verifyOnly` `Chargeback.java transitions 64/72/78/84/92/98 OPEN→SUBMITTED→UNDER_REVIEW→ACCEPTED/REJECTED→REVERSED→CLOSED` `ChargebackService create/submit/review/accept/reject/reverse/close` `ChargebackController /api/v1/chargebacks POST/{id}/submit/review/accept/reject/reverse/close GET` `ChargebackEntity chargebacks V8__create_chargebacks_table.sql DECIMAL(19,4) HALF_EVEN` `ChargebackTest 5 tests state machine` `Already live verifyOnly`.
+
+**Evidence**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get is 31 1.18.38` `oc get deployment 31 1.18.38` `cat backend/dispute-service/src/main/java/id/payu/dispute/domain/model/Chargeback.java state transitions` `cat ChargebackController /api/v1/chargebacks` `ls backend/dispute-service/src/main/resources/db/migration/V8__create_chargebacks_table.sql` `mvn -pl dispute-service -Dtest=ChargebackTest 5 tests` `mvn -pl api-portal-service 10 tests` `npx playwright 2 skipped` `git tag v1.18.38` `rtk gain 86.2%` `codegraph`.
+
+**Lesson**: `Chargeback state machine 7 status` — separate from internal Dispute REFUND, scheme via card network requires schemeCaseId on submit, review ACCEPTED→REVERSED→CLOSED; domain transitions enforce IllegalStateException if wrong status, ensuring idempotency; already live 1.18.36 via domain + service + controller + entity + migration + test, close gap via docs verifyOnly ponytail — no new code, just evidence that refund+dispute already covered; next SISA SLO + RLS + topics.
+
 
 **Context**: `ADR-0047 GAP-047 Branded types deviasi __brand? optional Money plain string alias tanpa eslint` `frontend/web-app src/types/index.ts Money string & {readonly __brand: 'Money'} required not optional AccountId UserId TransactionId PocketId` `currency.ts Money branded HALF_EVEN addCurrency compareCurrency` `eslint no-restricted-syntax Number parseFloat warn`.
 

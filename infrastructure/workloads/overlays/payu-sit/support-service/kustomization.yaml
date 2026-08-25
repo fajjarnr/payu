@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/support-service
-    newTag: "1.18.37"
+    newTag: "1.18.38"
 patches:
   - target:
       kind: Deployment

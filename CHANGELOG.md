@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.37] - 2026-08-25
+## [1.18.38] - 2026-08-25
+
+### Added
+
+- **Chargeback (ADR-0054 GAP-054C B4 CLOSED 1.18.38)**: `Chargeback 7 status OPEN→SUBMITTED→UNDER_REVIEW→ACCEPTED/REJECTED→REVERSED→CLOSED` `Chargeback.java` `ChargebackService` `ChargebackController /api/v1/chargebacks` `chargebacks V8` `ChargebackTest 5 tests` `Already live 1.18.36 verifyOnly`.
+
+### Fixed
+
+- **SemVer 1.18.37→1.18.38**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.38` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.38` `oc get deployment 31 1.18.38` `kogito-crd.yaml 1.18.38`.
+- **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `CRD kognitoruntimes.rhpam.kiegroup.org` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl dispute-service 5 tests` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.38` `rtk gain 86.2%` `codegraph`.
+
 
 ### Added
 
