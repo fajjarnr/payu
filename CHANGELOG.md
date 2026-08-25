@@ -5,9 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.18.19] - 2026-08-25
+## [1.18.20] - 2026-08-25
 
 ### Added
+
+- **PARTNER-PROD-007 HPA/PDB Production (P1)**: `infrastructure/workloads/base/kustomization.yaml` `# - ./pdb.yaml → - ./pdb.yaml` `24 PDB` `hpa.yaml partner-service-hpa min1 max3 → prod patch min3 max10 cpu 70%` `pdb partner-service-pdb minAvailable 1→2` `overlays/payu-prod,preprod partner-service count 1→3` `patches HPA min3 max10 PDB minAvailable 2` `oc kustomize payu-prod 31 HPA 24 PDB` `oc apply -k payu-prod 31 HPA` `oc get hpa -n payu partner-service-hpa 3 10` `oc get pdb -n payu partner-service-pdb 2` `oc get deployment partner-service -n payu 3 3` `topologySpread maxSkew 1`.
+- **Gateway HotRod Fix**: `backend/gateway-service/src/main/java/id/payu/gateway/adapter/cache/HotRodCacheClient.java` `HASH_DISTRIBUTION_AWARE→BASIC` `GatewaySchedulerLockService WARN→DEBUG` `base gateway/cms plain without AUTH` `QUARKUS_LOG_CATEGORY__ORG_INFINISPAN__LEVEL OFF` `gateway-service-pipeline compile -Dmaven.test.skip=true` `quarkus-jacoco missing aliyun`.
+
+### Fixed
+
+- **SemVer Sync 1.18.20**: `package.json 1.18.19→1.18.20` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.20` `oc tag -n payu-dev 31 1.18.20` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.20`.
+- **PDB Enable**: `base kustomization uncomment pdb.yaml` `24 PDB` `oc get pdb -n payu 24` `payu-preprod 24`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get hpa -n payu partner-service-hpa 3 10` `oc get pdb -n payu partner-service-pdb 2` `oc get deployment partner-service -n payu 3 3` `rtk oc logs --since=60s 0 WARN` `oc get pipelinerun transaction-service-build-2x7pd Succeeded` `gateway-service-build-d78wt Running` `git tag v1.18.20` `rtk gain` `codegraph`.
+- **TODOS**: `PARTNER-PROD-007 CLOSED 1.18.20` `PROGRESS 1.18.20` `LESSONS L-350` `TAGS v1.18.20`.
+
+
+## [1.18.19] - 2026-08-25
+
 
 - **ShedLock Fix TXN-HARDEN-005 (CrashLoopBackOff)**: `backend/transaction-service/src/main/java/id/payu/transaction/config/ShedLockConfig.java` `usingDbTime()+withTimeZone(UTC)` illegal `Can not set both useDbTime and timeZone` → `usingDbTime()` only `import TimeZone removed` `ReconciliationSchedulerTest/OutboxOutsideTxTest` `doesNotContain withTimeZone` `mvn -pl transaction-service -am package BUILD SUCCESS`.
 - **Cache Plain**: `infrastructure/workloads/base/gateway-service,cms-service/deployment.yaml` `PAYU_CACHE_HOTROD_USE_SSL true→false` `remove TRUST/KEY store + volumeMounts/datagrid-client-tls` `payu-cache infinispan.xml plain no TLS` `payu-dev/gateway-service/kustomization.yaml` `QUARKUS_OTEL_SDK_DISABLED true` `QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT` `oc kustomize` `0 WARN`.

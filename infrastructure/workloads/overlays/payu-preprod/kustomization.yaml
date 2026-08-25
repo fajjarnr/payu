@@ -50,7 +50,7 @@ replicas:
 - name: notification-service
   count: 1
 - name: partner-service
-  count: 1
+  count: 3
 - name: product-catalog-service
   count: 1
 - name: promotion-service
@@ -73,94 +73,94 @@ replicas:
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/analytics-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/api-portal-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/auth-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/backoffice-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/billing-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/cms-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/compliance-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/dispute-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/fx-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/gateway-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/integration-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/investment-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/kyc-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/lending-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-rules
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/lending-rules
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/loan-origination-process
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/notification-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/partner-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/product-catalog-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/promotion-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/statement-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/support-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/transaction-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/wallet-service
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/web-app
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/bi-fast-simulator
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/biller-simulator
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/dukcapil-simulator
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/qris-simulator
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/va-simulator
-  newTag: "1.18.19"
+  newTag: "1.18.20"
 patches:
 # Dev cache is an internal, non-TLS Hot Rod endpoint. Keep mTLS in promoted
 # environments; do not make dev depend on Vault-provisioned client material.
@@ -206,18 +206,6 @@ patches:
     - op: remove
       path: /spec/template/spec/volumes/1
 
-# Dev runs fixed single replicas; do not let inherited HPAs consume the namespace quota.
-- target:
-    group: autoscaling
-    version: v2
-    kind: HorizontalPodAutoscaler
-    name: .*-hpa
-  patch: |-
-    $patch: delete
-    apiVersion: autoscaling/v2
-    kind: HorizontalPodAutoscaler
-    metadata:
-      name: dev-hpa
 # Development still consumes the shared Keycloak instance in payu-sso.
 - target:
     kind: ConfigMap
@@ -943,4 +931,35 @@ patches:
       path: /spec/template/spec/containers/0/env/-
       value:
         name: QUARKUS_OTEL_SDK_DISABLED
-        value: "true"
+# PARTNER-PROD-007: HPA min 3 max 10, PDB minAvailable 2 for preprod
+- target:
+    kind: HorizontalPodAutoscaler
+    name: partner-service-hpa
+  patch: |
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      name: partner-service-hpa
+    spec:
+      minReplicas: 3
+      maxReplicas: 10
+      metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 70
+- target:
+    kind: PodDisruptionBudget
+    name: partner-service-pdb
+  patch: |
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: partner-service-pdb
+    spec:
+      minAvailable: 2
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: partner-service

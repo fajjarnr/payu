@@ -77,7 +77,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 
 | Gate | Pri | Status | Sisa |
 |:---|:---:|:---|:---|
-| PARTNER-PROD-007 | P1 | ⏸️ Belum | HPA≥3, PDB minAvailable 2, topology spread, bounded timeout — locks via [ADR-0042](../adr/0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md) |
+| PARTNER-PROD-007 | P1 | ✅ Selesai 1.18.20 | HPA≥3, PDB minAvailable 2, topology spread, bounded timeout — `payu-prod HPA partner-service-hpa 3 10` `payu-preprod 3 10` `payu PDB 24` `partner-service 3/3 1/1` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `topologySpread maxSkew 1` |
 | PARTNER-PROD-008 | P0 | ✅ Selesai 1.18.9 | PG HA+PITR via CNPG Barman Cloud ([ADR-0031](../adr/0031-database-resilience-pitr-and-disaster-recovery.md)), restore drill, RPO=0/RTO<5m — `payu-dev 3/3 2/2 Healthy` `barman-cloud 1/1` `ObjectStore payu-database-backup` `s3://payu-backups-368694075944/payu-database 9 WAL` `ContinuousArchiving True` `LimitRange 20Gi + ResourceQuota 150` `S3 bucket + IAM payu-backup` |
 | PARTNER-PROD-009 | P1 | ⏸️ Belum | SLI/SLO, dashboard+alert, traces E2E ([ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md)) |
 | PARTNER-PROD-010 | P0 | ⏸️ Belum | Contract/k6/chaos ([ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)), pentest, sign-off |

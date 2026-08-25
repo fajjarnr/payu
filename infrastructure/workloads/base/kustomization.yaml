@@ -29,7 +29,7 @@ resources:
 - ./wallet-service
 - ./web-app
 - ./hpa.yaml
-# - ./pdb.yaml
+- ./pdb.yaml
 - ./resource-budget.yaml
 - ./bi-fast-simulator.yaml
 - ./biller-simulator.yaml

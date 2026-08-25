@@ -27,7 +27,7 @@ spec:
       description: registry/namespace/name (no tag)
     - name: image-tag
       type: string
-      default: "1.18.19"
+      default: "1.18.20"
       description: semver tag, promote by digest @sha256
     - name: target-env
       type: string
@@ -80,7 +80,7 @@ spec:
         name: maven-java25
         kind: Task
       workspaces: [{name: source, workspace: source}, {name: maven-settings, workspace: maven-settings}]
-      params: [{name: SUBDIRECTORY, value: backend}, {name: GOALS, value: ["-T1", "-pl", "gateway-service", "-am", "package", "-DskipTests"]}]
+      params: [{name: SUBDIRECTORY, value: backend}, {name: GOALS, value: ["-T1", "-pl", "gateway-service", "-am", "package", "-DskipTests", "-Dmaven.test.skip=true"]}]
     - name: build
       runAfter: [compile]
       taskRef:
