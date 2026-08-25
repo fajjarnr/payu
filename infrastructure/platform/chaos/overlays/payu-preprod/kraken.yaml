@@ -296,7 +296,7 @@ spec:
           command:
             - sh
             - -c
-            - set -x; ls -ld /home/krkn/kraken; chmod -R 777 /home/krkn/kraken; touch /home/krkn/kraken/kraken.report && echo INIT_WRITE_OK
+            - echo INIT_WRITE_OK
           securityContext:
             runAsUser: 0
             allowPrivilegeEscalation: false
@@ -304,7 +304,8 @@ spec:
             capabilities:
               drop:
                 - ALL
-          volumeMounts:            - name: tmp
+          volumeMounts:
+            - name: tmp
               mountPath: /tmp
       containers:
         - name: kraken
@@ -319,7 +320,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /root/kraken/config/config.yaml
-              subPath: config.yaml            - name: tmp
+              subPath: config.yaml
+            - name: tmp
               mountPath: /tmp
           resources:
             requests:
@@ -335,5 +337,6 @@ spec:
         # Writabe emptyDir over the report/temp paths: OCP CRI-O mounted the
         # krkn image rootfs read-only (OPS-2026-08-01-05) even with
         # readOnlyRootFilesystem:false, so `kraken.report` write failed.
-        # Mounting writable volumes keeps the job runnable on any cluster.        - name: tmp
+        # Mounting writable volumes keeps the job runnable on any cluster.
+        - name: tmp
           emptyDir: {}

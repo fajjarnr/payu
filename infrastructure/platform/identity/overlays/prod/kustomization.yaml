@@ -45,7 +45,7 @@ patches:
     patch: |
       - op: add
         path: /spec/hostname/hostname
-        value: https://sso.payu.fajjjar.my.id
+        value: https://sso-prod.apps.fajjjar.my.id
   - target:
       kind: Keycloak
       name: payu-keycloak

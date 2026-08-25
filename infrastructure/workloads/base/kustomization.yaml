@@ -151,3 +151,4 @@ patches:
                     $patch: delete
                   - name: SPRING_DATA_REDIS_PASSWORD
                     $patch: delete
+

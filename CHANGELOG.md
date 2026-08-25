@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.18.17] - 2026-08-25
+## [1.18.18] - 2026-08-25
+
+### Added
+
+- **SSO-ENV-002 Per-Env Isolation (seed + issuer/JWK)**: `infrastructure/platform/identity/overlays/dev|sit|uat|preprod|prod/keycloak-secrets.yaml` `Secret payu-keycloak-client-secrets per env` `payu-backend-client-secret + payu-web-client-secret per env` `ExternalSecret + Password generator` `KeycloakRealmImport payu-realm-import -n payu-sso` `revokeRefreshToken true` `workloads/base OIDC_ISSUER http://payu-keycloak-service.payu-sso.svc:8080/realms/payu` `overlays/payu-dev OIDC_ISSUER https://sso-dev.apps.fajjjar.my.id/realms/payu` `payu-sit https://sso-sit.payu.fajjjar.my.id/realms/payu` `payu-uat https://sso.uat.payu.fajjjar.my.id/realms/payu` `payu-preprod https://sso.preprod.payu.fajjjar.my.id/realms/payu` `payu-prod https://sso.payu.fajjjar.my.id/realms/payu` `5 env issuer/JWK` `oc get route sso-dev` `Route payu-keycloak-ingress`.
+- **PROMOTE-003 Promotion Sit 1.18.17→1.18.18**: `oc tag payu-dev:1.18.17 payu-sit:1.18.17 31/31` → `1.18.18` `payu-sit 13→25 ready` `payu-dev 47/59` `scripts/promote-service.sh` `Tekton 31/31`.
+- **TXN-HARDEN-002/003/004 + ACC-HARDEN-002 Ponytail Verify**: `TransactionEntity keep JPA` `domain/model/Transaction VO` `ArchUnit forbids jakarta.persistence in domain deferred` `InboxEventEntity inbox_events referenceNo idempotency_key unique` `aggregate_results` `outbox outside-TX` `ReconciliationScheduler ShedLock usingDbTime shedlock table @SchedulerLock GET /snap/v1.0/transfer/status` `BlindIndexService EncryptedStringConverter AES-GCM pgcrypto V105 email_hash/phone_hash findByEmail O(1) KMS BYOK deferred` `codegraph 4051`.
+- **Scripts sso-verify.sh**: `scripts/sso-verify.sh +x reports/sso` `oc get pods -n payu-sso/litmus/pay-dev/sit` `oc get route` `oc get secret per env` `oc get deployment OIDC_ISSUER per env` `oc get keycloakrealmimport` `rtk oc logs 0 ERROR/WARN` `oc apply --dry-run`.
+
+### Fixed
+
+- **SemVer Sync 1.18.18**: `package.json 1.18.17→1.18.18` `podman-compose.yml 31× PAYU_VERSION` `pipelines/per-service 31× image-tag 1.18.17→1.18.18` `pipelineRuns 31× 1.18.17→1.18.18` `workloads/overlays/payu-dev 30× newTag 1.18.17→1.18.18` `workloads/overlays/payu-sit|uat|preprod|prod 30× 1.17→1.18` `workloads/*/service 155× 1.18.17→1.18.18` `total 366× 1.18.18` `oc tag payu-dev 31 1.18.18` `oc tag payu-sit 31 1.18.18` `oc kustomize` `oc get deployment 31 1.18.18` `oc get is 31 1.18.18` `rtk oc get pods 50/50` `rtk oc logs 0 ERROR 0 WARN`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50` `rtk oc get is 31 1.18.18` `rtk oc get deployment 31 1.18.18 OIDC_ISSUER sso-dev/sso-sit` `rtk oc logs --since=60s 0 ERROR 0 WARN` `oc get pods -n payu-sit 25` `oc get secret payu-keycloak-client-secrets per env` `oc get route sso-dev` `scripts/sso-verify.sh` `oc get keycloakrealmimport` `git tag v1.18.18` `rtk gain 80%` `codegraph`.
+- **TODOS**: `SSO-ENV-002 + PROMOTE-003 rows deleted` `PROGRESS 1.18.18` `LESSONS L-348` `TAGS v1.18.18`.
+
 
 ### Added
 

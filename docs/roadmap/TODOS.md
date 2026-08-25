@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.17` (2026-08-25) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **28/31 Succeeded** (transaction 1.18.15 RH-CMA, Schemathesis Bearer 1.18.16, Chaos Litmus/Kraken 1.18.17), workloads `50/50 1/1` `1.18.17` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.17** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO, KEDA, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus) • *Next: promotion sit→prod + SLO drill* |
-| **Last Updated** | 2026-08-25 — v1.18.17: `CHAOS-ENV-001 Litmus payu-sit/uat/preprod/payu + Kraken/Cerberus preprod/payu` `RBAC CHAOS-RBAC-001 cross-ns pipeline SA` `skip-infra removed` `scripts/chaos-verify.sh` `semver 1.18.17 sync 31` `50/50 1/1` `0 ERROR 0 WARN` `rtk 80%` `codegraph` `oc tag 31` `oc apply -k` |
+| **Last Release** | `1.18.18` (2026-08-25) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.15 RH-CMA, Schemathesis Bearer 1.18.16, Chaos 1.18.17, SSO per-env 1.18.18), workloads `50/50 1/1` `1.18.18` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.18** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO, KEDA, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env) • *Next: promotion sit→prod + SLO drill* |
+| **Last Updated** | 2026-08-25 — v1.18.18: `SSO-ENV-002 per-env issuer sso-dev/sso-sit/sso.uat/payU sso.preprod/sso.payu 5 env` `payu-keycloak-client-secrets per env` `workloads OIDC_ISSUER/JWK per env` `PROMOTE-003 sit 1.18.17→1.18.18 31/31 Succeeded` `scripts/sso-verify.sh keda/chaos style` `TXN-HARDEN-002/003/004 + ACC-HARDEN-002 ponytail verify` `semver 1.18.18 sync 31` `50/50 1/1` `0 ERROR 0 WARN` `rtk 80%` `codegraph` `oc tag 31` `oc apply -k` |
 
 ---
 
@@ -45,8 +45,7 @@
 
 > `ARCH-TOPIC-002` — manifest DONE 2026-08-18 (107 KafkaTopic: 65 normal + 42 DLQ, retention 30d, `EVENT_CATALOG.md` regenerated). Sisa apply ke cluster + `auto-create off` butuh OCP creds — tracked di Platform Deploy Queue.
 
-| SSO-ENV-002 | platform / identity | **Isolasi Keycloak per-environment** — seed client secrets per env (realm import membaca `payu-keycloak-client-secrets`), lalu arahkan issuer/JWK workloads ke `sso-<env>` route | Saat ini semua env memakai SSO bersama dev |
-| PROMOTE-003 | platform / Tekton | **Promotion run rutin per rilis** untuk seluruh service (bukan hanya pilot) — jalankan `<svc>-pipeline` target-env=sit→uat→preprod→prod saat tag baru dirilis; mekanik sudah terbukti | **30/31 dev Succeeded 1.18.5** (`wmtfl 15/18`, `30` `1.18.5` `oc tag` `1.18.4→1.18.5`, `kyc` `76%` `k6` threshold, `account 429` retry, `argocd-sync` `Progressing` `Startup probe` pending) — next `sit` promo after dev `Healthy` `23/31` → `31/31` |
+
 
 | TXN-HARDEN-002 | transaction-service / ADR-0060 | **Domain vs Entity split (Q5/BUG-ARCH-003)** — ponytail: `TransactionEntity` keep JPA, `domain/model/Transaction` VO when strict hex needed (ArchUnit forbids `jakarta.persistence` in domain, upgrade: add `TransactionDomain` + `TransactionPersistencePort` return domain + `Money` via `api-commons`) | ArchUnit deferred, 142/142 green after split |
 | TXN-HARDEN-003 | transaction-service / ADR-0060 + ADR-0041 | **Inbox + Result Table + Outbox outside-TX (Q4/Q6)** — ponytail: `FOR UPDATE` keep, inbox `referenceNo` dedup via `idempotency_key` unique already; add `inbox_events` + `aggregate_results` + outbox outside-TX when rail replay scale needed | Replay 2× same `referenceNo` → 1 commit deferred |

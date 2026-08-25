@@ -46,7 +46,7 @@ patches:
     patch: |
       - op: add
         path: /spec/hostname/hostname
-        value: https://sso-sit.payu.fajjjar.my.id
+        value: https://sso-sit.apps.fajjjar.my.id
   - target:
       kind: KeycloakRealmImport
       name: payu-realm-import
