@@ -1,5 +1,13 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.24 TXN-HARDEN-003/004 Inbox+Result+Outbox + Reconciliation 1.18.24 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.25 TXN-HARDEN-006 Callback HMAC + ACC-HARDEN PII 1.18.25 50/50 1/1 Verified (2026-08-25)
+
+- **TXN-HARDEN-006 Callback HMAC + mTLS (Q4)**: `CallbackSignatureFilter HMAC-SHA256 X-Signature/X-Timestamp 300s` `FOR UPDATE` `payu.callback.signature.secret PAYU_CALLBACK_SECRET` `security-starter Vault mTLS` `package transfer/disbursement/va/splitbill/routing` `VirtualAccountServiceTest` `CallbackSignatureFilterTest 9 tests` `HMAC hex` `X-Signature` `ponytail: HMAC keep, mTLS via Vault`.
+- **ACC-HARDEN-002 PII Encrypt + Blind Index (Q2)**: `EncryptedStringConverter AES-GCM` `pgcrypto NIK` `V105 email_hash/phone_hash` `BlindIndexService` `BlindIndexServiceTest 6 tests` `UserPersistenceAdapter findByEmail via blind index O(1)` `EncryptedStringConverter` `KMS BYOK deferred` `SecurityStarter`.
+- **ACC-HARDEN-003 Lifecycle + Reconcile (Q3)**: `AccountStatus Pocket close balance==0` `accounts.balance 19,4` `SUM(ledger) vs accounts.balance` `ArchUnit top-level enum` `reconciler deferred` `Pocket` `AccountStatus`.
+- **SemVer Sync 1.18.25**: `package.json 1.18.24→1.18.25` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.25` `oc tag -n payu-dev 31 1.18.25` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.25` `oc get deployment 31 1.18.25`.
+- **Verification 1.18.25**: `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl transaction-service CallbackSignatureFilterTest 9 tests` `mvn -pl shared/security-starter BlindIndexServiceTest 6 tests` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.25` `rtk gain 85.9%` `codegraph`.
+- **Docs**: `TODOS TXN-HARDEN-006/ACC-HARDEN CLOSED 1.18.25` `PROGRESS 1.18.25` `CHANGELOG 1.18.25` `LESSONS L-354` `TAGS v1.18.25`.
+
 
 - **TXN-HARDEN-003 Inbox+Result+Outbox (Q4/Q6)**: `InboxEventEntity inbox_events reference_no unique` `AggregateResultEntity aggregate_results` `FOR UPDATE` `idempotency_key unique` `referenceNo dedup` `InboxPersistenceAdapter` `DeferredOutboxService afterCommit REQUIRES_NEW` `OutboxOutsideTxTest` `InboxDedupTest` `replay 2× same referenceNo →1 commit` `ponytail: FOR UPDATE keep, inbox via idempotency_key unique`.
 - **TXN-HARDEN-004 Reconciliation (Q4)**: `ReconciliationScheduler @SchedulerLock biFastReconciliation 9m/30s 5m cutoff` `ShedLock usingDbTime` `shedlock table` `TransferStatusPort GET /snap/v1.0/transfer/status` `ReconciliationSchedulerTest` `OutboxOutsideTxTest` `InboxDedupTest` `Scheduler lock log` `ponytail: ShedLock usingDbTime via shedlock table`.

@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-353: TXN-HARDEN-003/004 Inbox+Result+Outbox + Reconciliation (2026-08-25)
+## L-354: TXN-HARDEN-006 Callback HMAC + ACC-HARDEN PII 1.18.25 (2026-08-25)
+
+**Context**: `CallbackSignatureFilter HMAC-SHA256 X-Signature/X-Timestamp 300s` `FOR UPDATE` `payu.callback.signature.secret` `security-starter Vault mTLS` `EncryptedStringConverter AES-GCM` `pgcrypto NIK` `BlindIndexService` `V105 email_hash/phone_hash` `AccountStatus Pocket` `balance==0` `accounts.balance 19,4` `SUM(ledger)` `ArchUnit` `CallbackSignatureFilterTest 9 tests` `BlindIndexServiceTest 6 tests` `KMS BYOK` `reconciler deferred`.
+
+**Fix**: `CallbackSignatureFilter HMAC X-Signature/X-Timestamp 300s` `FOR UPDATE` `payu.callback.signature.secret` `security-starter Vault` `EncryptedStringConverter AES-GCM` `pgcrypto` `BlindIndexService` `V105` `AccountStatus Pocket` `close balance==0` `accounts.balance` `ArchUnit` `CallbackSignatureFilterTest` `BlindIndexServiceTest` `codegraph`.
+
+**Lesson**: `Callback` `HMAC-SHA256` `X-Signature` `X-Timestamp` `300s` `FOR UPDATE` `payu.callback.signature.secret` `Vault mTLS` `EncryptedStringConverter` `AES-GCM` `pgcrypto` `BlindIndexService` `V105` `AccountStatus` `Pocket` `close balance==0` `accounts.balance 19,4` `SUM(ledger)` `KMS BYOK` `reconciler deferred` `ponytail: HMAC keep, mTLS via Vault, PII encrypt + blind index`.
+
 
 **Context**: `InboxEventEntity inbox_events reference_no unique` `AggregateResultEntity` `FOR UPDATE` `DeferredOutboxService afterCommit REQUIRES_NEW` `OutboxOutsideTxTest` `InboxDedupTest` `ReconciliationScheduler @SchedulerLock biFastReconciliation 9m/30s 5m cutoff` `ShedLock usingDbTime` `shedlock table` `TransferStatusPort GET /snap/v1.0/transfer/status` `Outbox` `Inbox` `replay 2× same referenceNo →1 commit` `Scheduler lock log` `ponytail: FOR UPDATE keep, inbox via idempotency_key unique`.
 

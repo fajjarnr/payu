@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.24] - 2026-08-25
+## [1.18.25] - 2026-08-25
+
+### Added
+
+- **TXN-HARDEN-006 Callback HMAC + mTLS (Q4)**: `CallbackSignatureFilter HMAC-SHA256 X-Signature/X-Timestamp 300s` `FOR UPDATE` `payu.callback.signature.secret` `security-starter Vault mTLS` `VirtualAccountServiceTest` `CallbackSignatureFilterTest 9 tests`.
+- **ACC-HARDEN-002 PII Encrypt + Blind Index (Q2)**: `EncryptedStringConverter AES-GCM` `pgcrypto NIK` `BlindIndexService` `BlindIndexServiceTest 6 tests` `V105 email_hash/phone_hash` `KMS BYOK deferred`.
+- **ACC-HARDEN-003 Lifecycle + Reconcile (Q3)**: `AccountStatus Pocket close balance==0` `accounts.balance 19,4` `SUM(ledger)` `ArchUnit top-level enum` `reconciler deferred`.
+
+### Fixed
+
+- **SemVer Sync 1.18.25**: `package.json 1.18.24→1.18.25` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.25` `oc tag -n payu-dev 31 1.18.25` `oc tag -n payu|preprod|sit|uat 31×4`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl transaction-service CallbackSignatureFilterTest 9 tests` `mvn -pl shared/security-starter BlindIndexServiceTest 6 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.25` `rtk gain 85.9%` `codegraph`.
+- **TODOS**: `TXN-HARDEN-006/ACC-HARDEN CLOSED 1.18.25` `PROGRESS 1.18.25` `LESSONS L-354` `TAGS v1.18.25`.
+
 
 ### Added
 
