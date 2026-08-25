@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.42] - 2026-08-25
+
+### Fixed
+
+- **CNPG Storage + WAL + ObjectStore (P0 FIX 1.18.42)**: `cnpg-cluster.yaml storage 10Gi→20Gi walStorage 5Gi→10Gi` `pvc payu-database-1 10Gi→20Gi FileSystemResizeSuccessful` `pvc payu-database-1-wal 5Gi→10Gi 100%→43%` `ObjectStore barmancloud.cnpg.io/v1 payu-database-backup per env payu-dev/sit/uat/preprod/payu 5/5` `barman-cloud Unknown plugin resolved via ObjectStore` `ContinuousArchiving False→True` `Cluster Ready True` `oc get pvc 20Gi/10Gi` `oc get cluster 2/2 Running` `ponytail: enlarge PVC not new cluster` `workloads 1.18.42` `SemVer 1.18.41→1.18.42 388×` `oc tag 31 1.18.42`.
+
 ## [1.18.41] - 2026-08-25
 
 ### Fixed

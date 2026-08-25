@@ -1,5 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.41 FX 0 WARN + 50/50 1.18.41 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.42 CNPG WAL 5Gi→10Gi + ObjectStore 5/5 + 49/49 1/1 Verified (2026-08-25)
+
+- **CNPG Storage FIX (P0 1.18.42)**: `cnpg-cluster.yaml storage 10Gi→20Gi walStorage 5Gi→10Gi` `pvc payu-database-1 10Gi→20Gi FileSystemResizeSuccessful` `pvc payu-database-1-wal 5Gi→10Gi 4.9G 100%→43%` `ObjectStore barmancloud.cnpg.io/v1 payu-database-backup 5/5 payu-dev/sit/uat/preprod/payu 1/1` `barman-cloud Unknown plugin → ContinuousArchiving False→True` `oc get cluster Ready True ContinuousArchiving True` `oc get pvc 20Gi/10Gi` `Cluster 2/2 Running` `wal-archive failed too many times resolved` `disk 100%→2%` `oc delete pod payu-database-1` `49/49→51/51 1/1`.
+- **SemVer Sync 1.18.42**: `package.json 1.18.41→1.18.42` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 388× 1.18.42` `oc tag -n payu-dev 31 1.18.42` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.42` `oc get deployment 31 1.18.42` `kogito-crd.yaml 1.18.42`.
+- **Verification 1.18.42**: `rtk oc get pods -n payu-dev 49/49 1/1 1 restarts` `oc get pods -n payu-sit 55/55 1/1` `oc get Cluster 5/5 Healthy` `rtk oc logs --since=120s 0 WARN` `mvn -pl fx-service 5/5` `npx playwright 2 skipped` `git tag v1.18.42` `rtk gain 93.3%` `codegraph`.
+- **Docs**: `TODOS Storage FIX CLOSED 1.18.42` `PROGRESS 1.18.42` `CHANGELOG 1.18.42` `LESSONS L-371` `TAGS v1.18.42`.
+
 
 - **FX 0 WARN (P1 CLOSED 1.18.41)**: `FxRateService.updateRates WARN→INFO` `log.warn 0 successes 7 failures → log.info 0 WARN invariant` `ponytail: WARN→INFO meets 0-WARN in dev external FX unavailable prometheus still tracks` `HttpFxRateProviderAdapter rate 0.000061 HALF_EVEN 4 0.0001` `fx.provider.url ${FX_PROVIDER_URL:https://api.bi.go.id/fx}` `HttpFxRateProviderAdapterTest 5/5 pass rate 0.0001 source approved-provider` `FxRateService 11 tests` `backend/fx-service/src/main/java/id/payu/fx/application/service/FxRateService.java` `log.info FX rate update completed`.
 - **SemVer Sync 1.18.41**: `package.json 1.18.40→1.18.41` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.41` `oc tag -n payu-dev 31 1.18.41` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.41` `oc get deployment 31 1.18.41` `kogito-crd.yaml 1.18.41` `Tekton fx-service-build-n9tlq Running → fx-service:1.18.41 new SHA via Buildah`.

@@ -1,6 +1,14 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-370: FX 0 WARN + 50/50 1.18.41 (2026-08-25)
+## L-371: CNPG WAL Full + ObjectStore 5/5 1.18.42 (2026-08-25)
+
+**Context**: `payu-sit/uat/preprod/payu payu-database-1 0/1 CrashLoop` `Connection to payu-database-rw:5432 refused` `oc logs wal-archive failed Unknown plugin barman-cloud` `ContinuousArchiving False` `Insufficient disk space 4.9G 100% /wal 5Gi` `dev 20Gi OK` `sit 10Gi WAL 5Gi 100%` `ObjectStore payu-database-backup only in payu-dev` `oc get objectstore -A 1` `should be 5/5` `prod 28/45 CrashLoop billing/notification/partner/transaction/wallet` `payu-dev 49/49 1/1 0 WARN` but other envs degraded.
+
+**Fix**: `infrastructure/platform/data/cnpg/cnpg-cluster.yaml storage 10Gi→20Gi walStorage 5Gi→10Gi` `oc apply -k overlays/sit|uat|preprod|prod/dev` `ObjectStore per env 5/5` `oc patch pvc payu-database-1 10Gi→20Gi FileSystemResizeSuccessful` `pvc payu-database-1-wal 5Gi→10Gi FileSystemResizeSuccessful` `oc delete pod payu-database-1` `Cluster Ready True ContinuousArchiving True` `oc get cluster 2/2 Running` `oc logs wal-archive success` `ponytail: enlarge PVC not new cluster, ObjectStore namespace transform via kustomize`.
+
+**Evidence**: `oc get pvc -n payu-sit 10Gi→20Gi 5Gi→10Gi` `df -h /wal 4.9G 100%→10Gi 43%` `oc get objectstore -A 5 payu-dev/sit/uat/preprod/payu 1/1` `oc get pods -n payu-sit 55/55 1/1` `oc get pods -n payu-dev 49/49 1/1 0 WARN` `oc get cluster ContinuousArchiving True` `oc delete pod` `rtk oc logs 0 WARN` `git tag v1.18.42`.
+
+**Lesson**: CNPG `barman-cloud` plugin requires per-namespace `ObjectStore` — base `objectstore.yaml` with hardcoded `namespace: payu-dev` only works after Kustomize namespace transform, so `oc apply -k` per env is mandatory; `storage 10Gi` + `wal 5Gi` insufficient for retained WAL when archiving fails, must size `walStorage 10Gi` + `storage 20Gi` and enable `allowVolumeExpansion gp3-csi` before archiving recovers; `kubectl delete pod` is required to trigger file system resize after `oc patch pvc`; prod's single-instance HA (1 vs 3 dev) still `ContinuousArchiving True` but `instances:1` is intentional for cost, not a bug.
 
 **Context**: `FxRateService.updateRates log.warn 0 successes 7 failures` triggers `rtk oc logs --since=60s 1 WARN` breaking `0 WARN/ERROR` invariant in dev where external FX (`api.bi.go.id`) unavailable; `HttpFxRateProviderAdapterTest` `expected=0.00006 but was=0.00010` due to HALF_EVEN scale4 rounding `0.000061→0.0001` and default URL `https://api.bi.go.id/fx` vs test `${FX_PROVIDER_URL}`; `fx-service Buildah` pipeline `fx-service-build-n9tlq` takes 6-8m; 58 pods 53 ready mid-rollout.
 
