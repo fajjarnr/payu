@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.45] - 2026-08-25
+
+### Fixed
+
+- **Chaos Cerberus + Vault Snapshot (P1 FIX 1.18.45)**: `cerberus-5d66475454 CrashLoopBackOff KeyError: 'label' watch_master_schedulable` `infrastructure/platform/security/chaos/kraken/cerberus-config.yaml` + `infrastructure/platform/chaos/overlays/payu|payu-preprod|payu-cid/kraken.yaml` `watch_master_schedulable.label: node-role.kubernetes.io/master` `oc apply -k` `payu-preprod 44/46 → 44/46 cerberus Running` `vault-raft-snapshot-29793960-nggxf CreateContainerConfigError vault-bootstrap not found` `infrastructure/platform/security/vault/vault-snapshot-cronjob.yaml` `suspend: true` `oc apply -k` `payu vault 0 pods` `payu-dev 49/49` `payu-sit 42/42` `payu-uat 42/42` `0 WARN` `109 topics` `ponytail: suspend cronjob until Vault HA`.
+
 ## [1.18.44] - 2026-08-25
 
 ### Fixed

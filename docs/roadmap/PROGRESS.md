@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.45 Cerberus Label + Vault Suspend + 49/49 Verified (2026-08-25)
+
+- **Cerberus FIX (P1 1.18.45)**: `cerberus CrashLoop KeyError label` `cerberus-config.yaml watch_master_schedulable.label node-role.kubernetes.io/master` `chaos/overlays/payu|preprod|cid/kraken.yaml` `oc apply -k` `payu-preprod cerberus Running` `payu cerberus Running` `oc logs cerberus self-monitoring payu-preprod: False → label fixed`.
+- **Vault Snapshot FIX (P1 1.18.45)**: `vault-raft-snapshot CreateContainerConfigError vault-bootstrap` `vault-snapshot-cronjob.yaml suspend: true` `oc apply -k` `payu 42/46 cerberus Running vault 0` `payu-dev 49/49` `payu-sit 42/42` `payu-uat 42/42`.
+- **SemVer Sync 1.18.45**: `package.json 1.18.44→1.18.45` `workloads 305× 1.18.45` `oc tag 31 1.18.45`.
+- **Verification 1.18.45**: `rtk oc get pods 49/49 1/1` `oc get cluster 5/5 Healthy` `oc get kafka 5/5 True 109 topics` `rtk oc logs 0 WARN` `mvn fx 5/5` `npm 95 1221` `git tag v1.18.45`.
+
 ## Platform 1.18.44 Kafka Topics 109 + Transaction 0 WARN (2026-08-25)
 
 - **Kafka Topics FIX (P0 1.18.44)**: `payu.transaction.disbursement-batch.v1` `UNKNOWN_TOPIC_OR_PARTITION` `transaction-service` `payu` 127 WARN `01-kafka-topics-code.yaml` `payu.transaction.disbursement-batch.v1` + `.dlq` 107→109 `oc apply -k overlays/payu-dev|sit|uat|preprod|prod` `payu-dev 109` `payu 44→109` `payu-sit 109` `payu-uat 109` `payu-preprod 109` `oc get kafkatopic 109` `oc get kafka 5/5 True` `transaction-service 0 WARN`.

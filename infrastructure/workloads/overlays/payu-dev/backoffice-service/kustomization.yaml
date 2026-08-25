@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
-    newTag: "1.18.44"
+    newTag: "1.18.45"
 patches:
   - target:
       kind: Deployment

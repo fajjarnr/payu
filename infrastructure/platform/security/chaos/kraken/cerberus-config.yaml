@@ -24,6 +24,7 @@ data:
         - openshift-kube-apiserver
       watch_master_schedulable:
         enabled: true
+        label: node-role.kubernetes.io/master
       watch_nodes:
         enabled: true
       cerberus_publish_status: true

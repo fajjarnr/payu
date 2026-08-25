@@ -1,5 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-374: Cerberus Label + Vault CronJob Suspend (2026-08-25)
+
+**Context**: `cerberus-5d66475454 CrashLoopBackOff 21 KeyError: 'label' watch_master_schedulable['label']` `infrastructure/platform/security/chaos/kraken/cerberus-config.yaml` `watch_master_schedulable.enabled: true` without `label` `infrastructure/platform/chaos/overlays/payu|preprod|cid/kraken.yaml` same `payu-preprod 44/46 cerberus CrashLoop` `payu 42/46` `vault-raft-snapshot-29793960-nggxf CreateContainerConfigError secret vault-bootstrap not found` `infrastructure/platform/security/vault/vault-snapshot-cronjob.yaml` `namespace: payu` `secretKeyRef vault-bootstrap` only exists in `payu-dev` `vault-5ff97cd76c-6kxq8 1/1` `payu` has no vault pod `payu 42/46` `payu-dev 49/49`.
+
+**Fix**: `cerberus-config.yaml` `watch_master_schedulable.label: node-role.kubernetes.io/master` `chaos/overlays/payu|preprod|cid/kraken.yaml` same `oc apply -k security/chaos/kraken` `oc apply -k chaos/overlays/payu-preprod|payu|payu-cid` `oc rollout restart deployment/cerberus -n payu-preprod|payu` `cerberus Running 0/1` `vault-snapshot-cronjob.yaml` `suspend: true` `oc apply -k security/vault` `oc delete pod vault-raft-snapshot-29793960-nggxf` `payu 42/46 cerberus Running vault 0` `ponytail: suspend cronjob until Vault HA + bootstrap secret via promotion`.
+
+**Evidence**: `oc get configmap cerberus-config -n payu-preprod watch_master_schedulable label node-role` `oc get pods -n payu-preprod cerberus 0/1 Running` `oc logs cerberus previous KeyError gone self-monitoring payu-preprod: False` `oc get cronjob vault-raft-snapshot -n payu suspend: true` `oc get pods -n payu vault 0` `oc get pods payu-dev 49/49` `payu-sit 42/42` `rtk oc logs 0 WARN`.
+
+**Lesson**: `cerberus` `watch_master_schedulable` requires `label: node-role.kubernetes.io/master` when `enabled: true` — missing `label` triggers `KeyError` at `start_cerberus.py:174`; fix via yaml `oc apply -k` not `oc patch`; `vault-raft-snapshot` CronJob in `payu` namespace expects `vault-bootstrap` secret which only exists in `payu-dev` (lab vault), so `suspend: true` via yaml until `promotion/vault-ha.yaml` provisions Vault HA in `payu-vault`; `oc delete pod` required to clear `CreateContainerConfigError` leftover after suspend.
+
 ## L-373: Kafka Topics 109 + Prod Sync Window Manual Apply (2026-08-25)
 
 **Context**: `transaction-service` `payu` 127 WARN `UNKNOWN_TOPIC_OR_PARTITION payu.transaction.disbursement-batch.v1` `payu-dev 107` `payu 44` `payu-sit 109` `payu-uat 109` `payu-preprod 109` `payu` 44→109 missing 63 `infrastructure/platform/messaging/base/01-kafka-topics-code.yaml` 107 `payu.transaction.disbursement-batch.v1` not declared `auto.create false` `payu-kafka` `prod` replication 1 `dev` 3 `01-kafka-topics-code.yaml` `replicas 3` → prod patch `replicas 1` via `overlays/prod/kustomization.yaml` `KafkaTopic patch replicas 1` but `messaging-prod` ArgoCD `OutOfSync Healthy` `Sync operation blocked by sync window` → declarative topics not applied to prod `oc get kafkatopic -n payu 44` `oc get kafka -n payu-dev auto.create false`.

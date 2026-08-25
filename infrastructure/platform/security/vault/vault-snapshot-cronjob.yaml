@@ -37,6 +37,7 @@ metadata:
     cost-center: platform-team
     environment: prod
 spec:
+  suspend: true  # suspended in prod until Vault HA + bootstrap secret provisioned, enable via promotion overlay
   # Every 6 hours: at 00:00, 06:00, 12:00, 18:00 UTC
   schedule: "0 */6 * * *"
   concurrencyPolicy: Forbid              # Prevent overlapping snapshots

@@ -64,6 +64,7 @@ data:
         - openshift-apiserver
         - openshift-kube-apiserver
       watch_master_schedulable:
+        label: node-role.kubernetes.io/master
         enabled: true
       watch_nodes:
         enabled: true
