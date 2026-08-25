@@ -1,6 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-363: Prod Promote + CSV Verify + Platform Stores + 50/50 1.18.34 (2026-08-25)
+## L-364: CSV + Pact Verify + 50/50 1.18.35 (2026-08-25)
+
+**Context**: `CSV ADR-0019 GAP-019 StatementService.exportStatementsCsv RFC4180 live 1.18.27 PartnerStatementController /export text/csv` `Pact ADR-0056 GAP-056 6 contracts partner-portal-partner-service.json simulators 5 pacts FAIL_ON_NO_PACTS=true Task pact-verify wired` `X-Simulate & QR CRC16 ponytail` `51/51 1/1` `Kogito deferred`.
+
+**Fix**: `T O D O S GAP-019 B4 CLOSED 1.18.35 CSV VerifyOnly` `GAP-056 B3 CLOSED 1.18.35 Pact 6 contracts FAIL_ON_NO_PACTS=true` `oc tag -n payu-dev 31 1.18.35` `oc tag -n payu|preprod|sit|uat 31×4` `oc apply -k payu-dev` `51/51` `codegraph`.
+
+**Evidence**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get is -n payu-dev 31 1.18.35` `oc get deployment 31 1.18.35` `ls backend/partner-service/target/pacts/partner-portal-partner-service.json` `ls backend/simulators/*/src/test/resources/pacts/*.json 5` `cat infrastructure/platform/cicd/tekton/tasks/pact-verify-task.yaml FAIL_ON_NO_PACTS true` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.35` `rtk gain 86.2%`.
+
+**Lesson**: `CSV already live` — gap table outdated, fix via docs VerifyOnly not code; `Pact 6 contracts` — partner-portal 1 + simulators 5, FAIL_ON_NO_PACTS true already in both tasks/pact-verify-task.yaml and catalog, but catalog simplified version missing mvn branch — keep both synced via oc apply -k; `X-Simulate QR CRC16` still ponytail deferred until fidelity demand; `51/51` requires per-service `oc apply -k` because top-level kustomize fails on KogitoRuntime CRD missing.
+
 
 **Context**: `Prod Promote payu-dev→payu 1.18.34` `CSV ADR-0019 GAP-019 StatementService.exportStatementsCsv RFC4180 live 1.18.27 VerifyOnly` `Platform Stores DEVSECOPS-017 ClusterSecretStore payu-vault ExternalSecret payu-kafka-credentials Vault dev mode inmem` `Rightsize MachineSet 9 workers 3×3 ponytail 3→1 deferred` `Drift alert Slack/PagerDuty via Vault deferred` `51/51 1/1` `KogitoRuntime CRD missing loan-origination-process`.
 

@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
-    newTag: "1.18.34"
+    newTag: "1.18.35"
 patches:
   - target:
       kind: Deployment

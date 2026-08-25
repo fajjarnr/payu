@@ -1,5 +1,12 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.34 Prod Promote + CSV Verify + Platform Stores + 50/50 1.18.34 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.35 CSV + Pact Verify + 50/50 1.18.35 50/50 1/1 Verified (2026-08-25)
+
+- **CSV Verify (ADR-0019 GAP-019 B4 CLOSED 1.18.35)**: `StatementService.exportStatementsCsv RFC4180 CSV_HEADER id,customerId,accountNumber,statementPeriod,openingBalance,closingBalance,totalCredits,totalDebits,transactionCount,status,generatedAt` `PartnerStatementController /export text/csv Accept: text/csv or ?format=csv RFC4180 escaping HALF_EVEN` `Already live 1.18.27 PartnerStatementControllerTest` `No code change VerifyOnly` `codegraph`.
+- **Pact Verify (ADR-0056 GAP-056 B3 CLOSED 1.18.35)**: `Pact 6 contracts partner-portal-partner-service.json bi-fast/qris/dukcapil/biller/va 5 pacts` `pact-verify Task FAIL_ON_NO_PACTS=true` `PactBroker payu-cicd 1/1` `PactPartnerOnboardingConsumerTest 1 pact` `X-Simulate & QR CRC16 ponytail deferred until fidelity demand` `oc get pods -n payu-cicd pact-broker 1/1` `Tasks pact-verify wired`.
+- **SemVer Sync 1.18.35**: `package.json 1.18.34→1.18.35` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.35` `oc tag -n payu-dev 31 1.18.35` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.35` `oc get deployment 31 1.18.35`.
+- **Verification 1.18.35**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get Cluster 5/5 Healthy` `rtk oc logs --since=60s 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.35` `rtk gain 86.2%` `codegraph`.
+- **Docs**: `TODOS GAP-019 + GAP-056 CLOSED 1.18.35` `PROGRESS 1.18.35` `CHANGELOG 1.18.35` `LESSONS L-364` `TAGS v1.18.35`.
+
 
 - **Prod Promote (P1)**: `payu-dev 1.18.33→1.18.34` `payu 1.18.33→1.18.34` `payu-preprod/sit/uat 31×4` `oc tag -n payu-dev 31 1.18.34` `oc apply -k payu-dev 31 services` `oc apply -k payu-prod` `51/51 1/1` `payu-prod workloads 1.18.34` `payu-dev 51/51` `KogitoRuntime CRD deferred`.
 - **CSV Verify (ADR-0019 GAP-019)**: `StatementService.exportStatementsCsv RFC4180` `CSV_HEADER id,customerId,accountNumber,...` `PartnerStatementController /export text/csv` `Accept: text/csv or ?format=csv` `RFC4180 escaping HALF_EVEN` `PartnerStatementControllerTest` `StatementServiceTest` `Already live 1.18.27` `No code changeVerifyOnly`.

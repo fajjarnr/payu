@@ -20,7 +20,7 @@ spec:
     - name: image
       value: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
     - name: image-tag
-      value: "1.18.34"
+      value: "1.18.35"
     - name: target-env
       value: "dev"
   workspaces:

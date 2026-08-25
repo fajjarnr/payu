@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.34] - 2026-08-25
+## [1.18.35] - 2026-08-25
+
+### Added
+
+- **CSV Verify (ADR-0019 GAP-019 B4 CLOSED 1.18.35)**: `StatementService.exportStatementsCsv RFC4180` `PartnerStatementController /export text/csv` `Already live 1.18.27 VerifyOnly`.
+- **Pact Verify (ADR-0056 GAP-056 B3 CLOSED 1.18.35)**: `Pact 6 contracts partner-portal-partner-service.json bi-fast/qris/dukcapil/biller/va 5 pacts` `pact-verify FAIL_ON_NO_PACTS=true` `PactBroker 1/1` `X-Simulate & QR CRC16 ponytail deferred`.
+
+### Fixed
+
+- **SemVer 1.18.34→1.18.35**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.35` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.35` `oc get deployment 31 1.18.35`.
+- **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.35` `rtk gain 86.2%` `codegraph`.
+
 
 ### Added
 
