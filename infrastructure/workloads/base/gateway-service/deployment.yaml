@@ -116,13 +116,6 @@ spec:
             configMapKeyRef:
               name: service-endpoints
               key: DATAGRID_CACHE_NAME
-        - name: PAYU_CACHE_HOTROD_AUTH_USERNAME
-          value: developer
-        - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: payu-cache-credentials
-              key: password
         - name: PAYU_CACHE_HOTROD_USE_SSL
           value: 'false'
         - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
@@ -152,6 +145,12 @@ spec:
               key: WEBHOOK_SECRET
         - name: JAVA_TOOL_OPTIONS
           value: "--enable-native-access=ALL-UNNAMED"
+        - name: QUARKUS_LOG_CATEGORY__ORG_INFINISPAN__LEVEL
+          value: "OFF"
+        - name: QUARKUS_LOG_CATEGORY__ORG_INFINISPAN_HOTROD__LEVEL
+          value: "OFF"
+        - name: QUARKUS_LOG_CATEGORY__ID_PAYU_GATEWAY__LEVEL
+          value: "ERROR"
         - name: PAYU_SECURITY_ENCRYPTION_SALT
           valueFrom:
             secretKeyRef:

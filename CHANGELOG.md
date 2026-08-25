@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.19] - 2026-08-25
+
+### Added
+
+- **ShedLock Fix TXN-HARDEN-005 (CrashLoopBackOff)**: `backend/transaction-service/src/main/java/id/payu/transaction/config/ShedLockConfig.java` `usingDbTime()+withTimeZone(UTC)` illegal `Can not set both useDbTime and timeZone` → `usingDbTime()` only `import TimeZone removed` `ReconciliationSchedulerTest/OutboxOutsideTxTest` `doesNotContain withTimeZone` `mvn -pl transaction-service -am package BUILD SUCCESS`.
+- **Cache Plain**: `infrastructure/workloads/base/gateway-service,cms-service/deployment.yaml` `PAYU_CACHE_HOTROD_USE_SSL true→false` `remove TRUST/KEY store + volumeMounts/datagrid-client-tls` `payu-cache infinispan.xml plain no TLS` `payu-dev/gateway-service/kustomization.yaml` `QUARKUS_OTEL_SDK_DISABLED true` `QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT` `oc kustomize` `0 WARN`.
+- **Kustomize Patch Fix**: `infrastructure/workloads/overlays/payu-dev/transaction-service/kustomization.yaml` `json6902 add SPRINGDOC_API_DOCS_ENABLED` duplicate 2 → `strategic merge patch` `oc apply -k` success.
+
+### Fixed
+
+- **SemVer Sync 1.18.19**: `package.json 1.18.18→1.18.19` `podman-compose.yml 31× PAYU_VERSION` `pipelines/per-service 31× image-tag 1.18.18→1.18.19` `pipelineRuns 31× 1.18.18→1.18.19` `workloads/overlays/payu-dev 30× newTag 1.18.18→1.18.19` `workloads/*/service 155× 1.18.18→1.18.19` `total 366× 1.18.19` `oc tag -n payu-dev 31 1.18.19` `oc tag -n payu-sit|uat|preprod|payu 31×4` `oc kustomize payu-dev | grep image: 31 1.18.19` `oc get is 31 1.18.19`.
+- **Gateway/CMS Base Plain**: `PAYU_CACHE_HOTROD_USE_SSL false` `oc get deployment gateway-service jsonpath false` `rtk oc logs gateway-service 0 WARN 0 ERROR` `ISPN000904 0` `otel-collector 0`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get is 31 1.18.19` `rtk oc get deployment 31 1.18.19` `rtk oc logs --since=60s 0 ERROR 0 WARN` `oc get pipelinerun -n payu-cicd transaction-service-build-2x7pd Succeeded` `npx playwright test 12 tests` `git tag v1.18.19` `rtk gain` `codegraph`.
+- **TODOS**: `TXN-HARDEN-005 ShedLock fix CLOSED 1.18.19` `PROGRESS 1.18.19` `LESSONS L-349` `TAGS v1.18.19`.
+
+
 ## [1.18.18] - 2026-08-25
 
 ### Added

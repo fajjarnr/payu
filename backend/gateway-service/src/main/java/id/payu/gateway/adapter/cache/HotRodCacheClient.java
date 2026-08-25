@@ -77,7 +77,7 @@ public class HotRodCacheClient {
         ConfigurationBuilder builder = new ConfigurationBuilder()
                 .addServers(serverList)
                 .marshaller(UTF8StringMarshaller.class)
-                .clientIntelligence(ClientIntelligence.HASH_DISTRIBUTION_AWARE);
+                .clientIntelligence(ClientIntelligence.BASIC);
         if (username.isPresent()) {
             builder.security().authentication()
                     .username(username.get())

@@ -28,7 +28,7 @@ public class GatewaySchedulerLockService {
             Log.debugf("Skipped scheduler %s — lock held elsewhere", name);
             return false;
         } catch (Exception e) {
-            Log.warnf("Failed to acquire lock %s, running anyway: %s", name, e.getMessage());
+            Log.debugf("Failed to acquire lock %s, running anyway: %s", name, e.getMessage());
             return true; // fail-open for now — ponytail: fail-closed if lock is safety-critical
         }
     }
