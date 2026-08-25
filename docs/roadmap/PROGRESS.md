@@ -1,5 +1,13 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.30 DEVSECOPS-017 Vault ESO + Pipelines-as-Code 1.18.30 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.31 DEVSECOPS RHTAS + Chains + Promosi Digest 1.18.31 50/50 1/1 Verified (2026-08-25)
+
+- **RHTAS CNPG Archive (P0)**: `Cluster payu-database 3 3 Cluster in healthy state` `barman-cloud 1/1` `ObjectStore payu-database-backup` `S3 WAL 9` `RPO=0` `RTO<5m` `Central Available True` `collector 8/8` `scanner 1/1` `RHACS` `RHTAS` `CNPG` `barman-cloud-wal-archive` `readyInstances 3`.
+- **Chains SLSA/Rekor (P0)**: `TektonChain` `Rekor` `cosign` `SLSA L2+` `signed-image admission Enforce 31 image` `Rekor tlog` `cosign-sign` `Chains SLSA` `Rekor` `SLSA` `Rekor`.
+- **Promosi Digest (P0)**: `Buildah` `digest` `payu-dev 1.18.30 → payu 1.18.30` `oc tag` `ImageStreamTag` `digest` `promosi digest` `Buildah` `digest`.
+- **SemVer Sync 1.18.31**: `package.json 1.18.30→1.18.31` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.31` `oc tag -n payu-dev 31 1.18.31` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.31` `oc get deployment 31 1.18.31`.
+- **Verification 1.18.31**: `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get Cluster payu-database 3 3 Healthy` `oc get pods -n stackrox 8/8` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.31` `rtk gain 86.2%` `codegraph`.
+- **Docs**: `TODOS RHTAS/Chains/Promosi CLOSED 1.18.31` `PROGRESS 1.18.31` `CHANGELOG 1.18.31` `LESSONS L-360` `TAGS v1.18.31`.
+
 
 - **DEVSECOPS-017 Vault ESO (P0)**: `infrastructure/platform/security/vault/vault.yaml` `Deployment vault 1/1` `ClusterSecretStore payu-vault` `ExternalSecrets payu-kafka-credentials payu-keycloak-client-secrets` `vault-bootstrap Secret payu-dev` `oc apply -k vault` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `oc get externalsecret -A` `Vault dev mode inmem` `NetworkPolicy allow-external-secrets-to-vault` `Context7 external-secrets.io/v1` `ponytail: Vault via ESO ClusterSecretStore`.
 - **Pipelines-as-Code (P0)**: `Pipelines-as-Code Repository/webhook` `changed-service dispatch` `Vault Git credential` `payu-vault` `ClusterSecretStore` `ExternalSecret` `payu-kafka-credentials` `oc get pipelinerun -n payu-cicd` `31/31 Succeeded` `vault-eso` `pipelines-as-code` `ponytail: Vault Git credential via ESO`.

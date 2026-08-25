@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.18.30] - 2026-08-25
+## [1.18.31] - 2026-08-25
+
+### Added
+
+- **RHTAS CNPG Archive (P0)**: `Cluster payu-database 3 3 Healthy` `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0` `Central Available True` `collector 8/8` `scanner 1/1` `RHACS` `CNPG` `barman-cloud-wal-archive`.
+- **Chains SLSA/Rekor (P0)**: `TektonChain` `Rekor` `cosign` `SLSA L2+` `signed-image admission Enforce 31 image` `Rekor tlog`.
+- **Promosi Digest (P0)**: `Buildah` `digest` `payu-dev 1.18.30 → payu 1.18.30` `oc tag` `ImageStreamTag` `digest` `promosi digest`.
+
+### Fixed
+
+- **SemVer Sync 1.18.31**: `package.json 1.18.30→1.18.31` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.31` `oc tag -n payu-dev 31 1.18.31` `oc tag -n payu|preprod|sit|uat 31×4`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get Cluster payu-database 3 3 Healthy` `oc get pods -n stackrox 8/8` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.31` `rtk gain 86.2%` `codegraph`.
+- **TODOS**: `RHTAS/Chains/Promosi CLOSED 1.18.31` `PROGRESS 1.18.31` `LESSONS L-360` `TAGS v1.18.31`.
+
 
 ### Added
 

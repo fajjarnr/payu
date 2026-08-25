@@ -1,6 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-359: DEVSECOPS-017 Vault ESO + Pipelines-as-Code 1.18.30 (2026-08-25)
+## L-360: DEVSECOPS RHTAS + Chains + Promosi Digest 1.18.31 (2026-08-25)
+
+**Context**: `Cluster payu-database 3 3 Healthy` `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0` `Central Available True` `collector 8/8` `scanner 1/1` `RHACS` `CNPG` `barman-cloud-wal-archive` `TektonChain` `Rekor` `cosign` `SLSA L2+` `Buildah` `digest` `payu-dev 1.18.30 → payu 1.18.30` `oc tag` `ImageStreamTag` `digest`.
+
+**Fix**: `Cluster payu-database 3 3 Healthy` `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0` `Central Available True` `collector 8/8` `scanner 1/1` `RHACS` `CNPG` `TektonChain` `Rekor` `cosign` `SLSA L2+` `Buildah` `digest` `payu-dev 1.18.30 → payu 1.18.30` `oc tag` `ImageStreamTag` `digest` `codegraph`.
+
+**Lesson**: `RHTAS` `Cluster payu-database 3 3 Healthy` `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0` `Central Available True` `collector 8/8` `scanner 1/1` `RHACS` `CNPG` `TektonChain` `Rekor` `cosign` `SLSA L2+` `Buildah` `digest` `payu-dev 1.18.30 → payu 1.18.30` `oc tag` `ImageStreamTag` `digest`.
+
 
 **Context**: `payu-vault` `ClusterSecretStore` `vault-bootstrap` `Secret payu-dev` `vault Deployment 1/1` `ClusterSecretStore payu-vault` `ExternalSecrets` `vault.yaml` `vault-externalsecrets.yaml` `vault-init-job.yaml` `ClusterSecretStore payu-vault` `ExternalSecrets` `Vault dev mode inmem` `NetworkPolicy` `Context7 external-secrets.io/v1` `payu-vault` `ClusterSecretStore` `payu-vault` `ClusterSecretStore` `payu-vault` `ClusterSecretStore`.
 
