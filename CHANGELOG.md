@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.21] - 2026-08-25
+
+### Added
+
+- **PARTNER-PROD-009 Partner SLO/SLI + Dashboard (P1)**: `infrastructure/platform/observability/monitoring/alerts/partner-slo.yaml` `PrometheusRule partner-slo -n payu` `group payu.partner.slo.availability.burn 99.9% 5xx (0.001 budget)` `4 burn alerts: FastBurn 14.4x 2%/1h, MediumBurn 6x 5%/6h, SlowBurn 3x 10%/24h, Degradation 1x 10%/3d` `job="partner-service"` `group payu.partner.slo.latency p95 <0.5s p99 <2s histogram_quantile` `group payu.partner.slo.recording partner:slo:availability:ratio30d/ratio5m error_budget:remaining burn_rate_5m p95/p99` `infrastructure/platform/observability/monitoring/alerts/slo-alerts.yaml` `+ payu.partner.slo groups (payu-slo-alerts)` `infrastructure/platform/observability/grafana/dashboard-partner.yaml` `ConfigMap grafana-dashboard-payu-partner -n openshift-monitoring grafana_dashboard true` `dashboard PayU - Partner Service SLO panels: request rate, error rate, p95/p99 latency, availability 30d, error budget remaining, burn rate, requests by status` `dashboards/partner-dashboard.yaml` `monitoring.coreos.com/v1 spec.groups expr for labels annotations (Context7 prometheus-operator)` `infrastructure/platform/observability/kustomization.yaml` `+ partner-slo.yaml + dashboard-partner.yaml` `fix tracing/otel-collector.yaml config: | quote filter/drop-healthcheck` `oc kustomize renders partner-slo + payu.partner.slo groups` `oc apply --dry-run=client -f partner-slo.yaml/slo-alerts.yaml/dashboard-partner.yaml success`.
+
+### Fixed
+
+- **SemVer Sync 1.18.21**: `package.json 1.18.20→1.18.21` `oc kustomize 2 PrometheusRule (payu-slo-alerts + partner-slo) + 1 ConfigMap dashboard` `oc get prometheusrule -n payu partner-slo Ready` `rtk oc logs --since=60s 0 WARN`.
+
+### Verified
+
+- `oc kustomize infrastructure/platform/observability | grep -c payu.partner.slo 6` `oc apply --dry-run=client -f partner-slo.yaml created` `oc apply --dry-run=client -f slo-alerts.yaml configured` `oc apply --dry-run=client -f dashboard-partner.yaml created` `oc kustomize renders partner groups` `rtk gain` `codegraph`.
+- **TODOS**: `PARTNER-PROD-009 CLOSED 1.18.21` `PROGRESS 1.18.21` `TAGS v1.18.21`.
 
 ## [1.18.20] - 2026-08-25
 

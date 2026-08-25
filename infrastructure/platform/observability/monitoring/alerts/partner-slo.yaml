@@ -1,199 +1,20 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: payu-slo-alerts
-  namespace: payu-dev
+  name: partner-slo
+  namespace: payu
   labels:
     role: alert-rules
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: observability
+    app.kubernetes.io/name: partner-service
 spec:
   groups:
-    - name: payu.slo.availability.burn
-      interval: 30s
-      rules:
-        # ADR-0034 §3 Multi-Window Multi-Burn-Rate (SLO 99.9% => error budget 0.1%)
-        # Page-1 Fast Burn: 2% budget in 1h (burn 14.4x) — PagerDuty P1
-        - alert: ApiAvailabilityFastBurnCritical
-          expr: |
-            (
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[1h]))
-              /
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[1h]))
-            ) > (14.4 * 0.001)
-            and
-            (
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[5m]))
-              /
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[5m]))
-            ) > (14.4 * 0.001)
-          for: 2m
-          labels:
-            severity: critical
-            tier: page
-            slo: availability
-            burn_rate: "14.4"
-          annotations:
-            summary: "Fast Error Budget Burn (14.4x) — 2% budget in 1h"
-            description: "Error rate {{ $value | humanizePercentage }} burning monthly budget in ~2 days. Immediate triage."
-            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability-burn"
-
-        # Page-2 Medium Burn: 5% budget in 6h (burn 6x) — PagerDuty
-        - alert: ApiAvailabilityMediumBurn
-          expr: |
-            (
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[6h]))
-              /
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[6h]))
-            ) > (6 * 0.001)
-            and
-            (
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[30m]))
-              /
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[30m]))
-            ) > (6 * 0.001)
-          for: 5m
-          labels:
-            severity: critical
-            tier: page
-            slo: availability
-            burn_rate: "6"
-          annotations:
-            summary: "Medium Burn (6x) — 5% budget in 6h"
-            description: "Sustained error rate {{ $value | humanizePercentage }}. PagerDuty SRE."
-            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability-burn"
-
-        # Ticket-1 Slow Burn: 10% budget in 24h (burn 3x) — Slack
-        - alert: ApiAvailabilitySlowBurn
-          expr: |
-            (
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[24h]))
-              /
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[24h]))
-            ) > (3 * 0.001)
-            and
-            (
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[2h]))
-              /
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[2h]))
-            ) > (3 * 0.001)
-          for: 15m
-          labels:
-            severity: warning
-            tier: ticket
-            slo: availability
-            burn_rate: "3"
-          annotations:
-            summary: "Slow Burn (3x) — 10% budget in 24h"
-            description: "Gradual burn {{ $value | humanizePercentage }} — Slack #alerts-reliability."
-            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability-burn"
-
-        # Ticket-2 Degradation: 10% budget in 3d (burn 1x) — Jira
-        - alert: ApiAvailabilityDegradation
-          expr: |
-            (
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[3d]))
-              /
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[3d]))
-            ) > (1 * 0.001)
-            and
-            (
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status=~"5.."}[6h]))
-              /
-              sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[6h]))
-            ) > (1 * 0.001)
-          for: 30m
-          labels:
-            severity: info
-            tier: ticket
-            slo: availability
-            burn_rate: "1"
-          annotations:
-            summary: "Degradation Burn (1x) — 10% budget in 3d"
-            description: "Low-grade burn {{ $value | humanizePercentage }} — weekly review."
-            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-availability-burn"
-
-    - name: payu.slo.latency
-      interval: 30s
-      rules:
-        - alert: SnapBiInHouseLatencyP95Breached
-          expr: |
-            histogram_quantile(0.95,
-              sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*",uri=~"/v1/snap-bi.*"}[5m])) by (le)
-            ) > 0.5
-          for: 5m
-          labels:
-            severity: critical
-            slo: latency
-            tier: p1
-          annotations:
-            summary: "SNAP-BI in-house P95 > 500ms"
-            description: "P95 latency {{ $value }}s exceeds 500ms SLO (ADR-0034)."
-            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-latency"
-
-        - alert: InterbankLatencyP95Breached
-          expr: |
-            histogram_quantile(0.95,
-              sum(rate(http_server_requests_seconds_bucket{job=~"payu-.*",uri=~"/v1/transfers|/v1/payments.*"}[5m])) by (le)
-            ) > 1.5
-          for: 10m
-          labels:
-            severity: warning
-            slo: latency
-            tier: p2
-          annotations:
-            summary: "Interbank P95 > 1500ms"
-            description: "P95 interbank latency {{ $value }}s exceeds 1500ms SLO."
-            runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-latency"
-
-    - name: payu.slo.correctness
-      interval: 30s
-      rules:
-        - alert: LedgerInvariantBreached
-          expr: |
-            sum(rate(payu_transactions_reconciled_total{status="mismatch"}[1h]))
-            /
-            sum(rate(payu_transactions_total[1h])) > 0
-          for: 1m
-          labels:
-            severity: critical
-            slo: correctness
-            tier: p0
-          annotations:
-            summary: "Ledger invariant 100% breached — mismatch detected"
-            description: "Reconciliation mismatch rate {{ $value | humanizePercentage }} — zero-tolerance SLO."
-            runbook: "https://docs.payu.fajjjar.my.id/runbooks/ledger-invariant"
-
-    - name: payu.slo.outbox
-      interval: 30s
-      rules:
-        - alert: OutboxLagBreached
-          expr: |
-            histogram_quantile(0.999,
-              sum(rate(outbox_publish_duration_seconds_bucket[5m])) by (le)
-            ) > 1
-          for: 5m
-          labels:
-            severity: critical
-            slo: outbox
-          annotations:
-            summary: "Outbox publish P99.9 > 1000ms (ADR-0034)"
-            description: "Outbox lag {{ $value }}s exceeds 1000ms SLO."
-
-    - name: payu.slo.recording
-      interval: 30s
-      rules:
-        - record: payu:slo:availability:ratio30d
-          expr: |
-            sum(rate(http_server_requests_seconds_count{job=~"payu-.*",status!~"5.."}[30d]))
-            /
-            sum(rate(http_server_requests_seconds_count{job=~"payu-.*"}[30d]))
-        - record: payu:slo:error_budget_remaining
-          expr: |
-            100 * payu:slo:availability:ratio30d
     - name: payu.partner.slo.availability.burn
       interval: 30s
       rules:
+        # ADR-0034 §3 Multi-Window Multi-Burn-Rate for partner-service (SLO 99.9% => error budget 0.1% = 0.001)
+        # Page-1 Fast Burn: 2% budget in 1h (burn 14.4x)
         - alert: PartnerAvailabilityFastBurnCritical
           expr: |
             (
@@ -218,6 +39,7 @@ spec:
             summary: "Partner Fast Error Budget Burn (14.4x) — 2% budget in 1h"
             description: "Partner-service error rate {{ $value | humanizePercentage }} burning monthly budget in ~2 days. Immediate triage."
             runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-partner-availability-burn"
+        # Page-2 Medium Burn: 5% budget in 6h (burn 6x)
         - alert: PartnerAvailabilityMediumBurn
           expr: |
             (
@@ -242,6 +64,7 @@ spec:
             summary: "Partner Medium Burn (6x) — 5% budget in 6h"
             description: "Partner-service sustained error rate {{ $value | humanizePercentage }}. PagerDuty SRE."
             runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-partner-availability-burn"
+        # Ticket-1 Slow Burn: 10% budget in 24h (burn 3x)
         - alert: PartnerAvailabilitySlowBurn
           expr: |
             (
@@ -266,6 +89,7 @@ spec:
             summary: "Partner Slow Burn (3x) — 10% budget in 24h"
             description: "Partner-service gradual burn {{ $value | humanizePercentage }} — Slack #alerts-reliability."
             runbook: "https://docs.payu.fajjjar.my.id/runbooks/slo-partner-availability-burn"
+        # Ticket-2 Degradation: 10% budget in 3d (burn 1x)
         - alert: PartnerAvailabilityDegradation
           expr: |
             (
@@ -356,4 +180,3 @@ spec:
             histogram_quantile(0.99,
               sum(rate(http_server_requests_seconds_bucket{job="partner-service"}[5m])) by (le)
             )
-

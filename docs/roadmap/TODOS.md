@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.19` (2026-08-25) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.19 ShedLock fix, Schemathesis Bearer 1.18.16, Chaos 1.18.17, SSO per-env 1.18.18, Cache Plain 1.18.19), workloads `50/50 1/1` `1.18.19` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.19** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO, KEDA, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env, ShedLock 1.18.19) • *Next: promotion sit→prod + SLO drill* |
-| **Last Updated** | 2026-08-25 — v1.18.19: `ShedLock TXN-HARDEN-005 fix usingDbTime without withTimeZone CrashLoopBackOff→1/1` `gateway/cms cache plain PAYU_CACHE_HOTROD_USE_SSL true→false ISPN000904 0` `QUARKUS_OTEL_SDK_DISABLED true otel WARN 0` `transaction per-service SPRINGDOC strategic merge` `semver 1.18.19 sync 366×` `oc tag 31×5 1.18.19` `Tekton transaction-service-build-2x7pd Succeeded` `50/50 1/1` `0 ERROR 0 WARN` `rtk 80%` `codegraph` `oc apply -k` |
+| **Last Release** | `1.18.21` (2026-08-25) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction 1.18.19 ShedLock fix, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19), workloads `50/50 1/1` `1.18.21` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.21** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO 1.18.21, KEDA, flyway fix, RH-CMA, Schemathesis, Litmus/Kraken/Cerberus, SSO per-env, ShedLock 1.18.19, HPA/PDB 1.18.20) • *Next: promotion sit→prod + SLO drill* |
+| **Last Updated** | 2026-08-25 — v1.18.21: `PARTNER-PROD-009 SLO partner-slo.yaml payu.partner.slo 99.9% p95<0.5s p99<2s` `partner-dashboard Grafana` `Pact partner-portal-partner-service 1 test 0 failures` `HPA/PDB 1.18.20 3/10 2` `ShedLock 1.18.19` `semver 1.18.21 366×` `50/50 1/1` `0 WARN` `rtk` `codegraph` |
 
 ---
 
@@ -79,7 +79,7 @@ Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bu
 |:---|:---:|:---|:---|
 | PARTNER-PROD-007 | P1 | ✅ Selesai 1.18.20 | HPA≥3, PDB minAvailable 2, topology spread, bounded timeout — `payu-prod HPA partner-service-hpa 3 10` `payu-preprod 3 10` `payu PDB 24` `partner-service 3/3 1/1` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `topologySpread maxSkew 1` |
 | PARTNER-PROD-008 | P0 | ✅ Selesai 1.18.9 | PG HA+PITR via CNPG Barman Cloud ([ADR-0031](../adr/0031-database-resilience-pitr-and-disaster-recovery.md)), restore drill, RPO=0/RTO<5m — `payu-dev 3/3 2/2 Healthy` `barman-cloud 1/1` `ObjectStore payu-database-backup` `s3://payu-backups-368694075944/payu-database 9 WAL` `ContinuousArchiving True` `LimitRange 20Gi + ResourceQuota 150` `S3 bucket + IAM payu-backup` |
-| PARTNER-PROD-009 | P1 | ⏸️ Belum | SLI/SLO, dashboard+alert, traces E2E ([ADR-0034](../adr/0034-end-to-end-observability-slo-sli-and-distributed-tracing-standard.md)) |
+| PARTNER-PROD-009 | P1 | ✅ Selesai 1.18.21 | SLI/SLO PrometheusRule `partner-slo -n payu` `payu.partner.slo.availability.burn 99.9%` `p95 <0.5s p99 <2s` `Grafana dashboard payu-partner` `oc get prometheusrule -n payu partner-slo` `oc get configmap -n openshift-monitoring grafana-dashboard-payu-partner` `Pact partner-portal-partner-service 1 test` |
 | PARTNER-PROD-010 | P0 | ⏸️ Belum | Contract/k6/chaos ([ADR-0024](../adr/0024-chaos-engineering-and-fault-injection-strategy.md)), pentest, sign-off |
 | PARTNER-PROD-011 | P1 | ✅ Selesai 1.18.10 | Dual-control (Maker-Checker) onboarding — `V21 dual_control_maker_checker` `maker_id<>checker_id CHECK` `PENDING_APPROVAL→ACTIVE/REJECTED` `356 green` `SlaScheduler T+4j Telegram T+24j Page payu.partner.sla-*.v1` `runbook PARTNER_ONBOARDING_RUNBOOK.md` |
 

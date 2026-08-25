@@ -5,7 +5,7 @@ metadata:
   namespace: payu-observability
 spec:
   mode: deployment
-  config:
+  config: |
     receivers:
       otlp:
         protocols:
@@ -21,13 +21,11 @@ spec:
         check_interval: 1s
         limit_percentage: 75
         spike_limit_percentage: 15
-      # ADR-0034 §1.4 Sampling Strategy
       tail_sampling:
         decision_wait: 10s
         num_traces: 50000
         expected_new_traces_per_sec: 100
         policies:
-          # Drop healthcheck (0% sampling)
           - name: drop-healthcheck
             properties:
               strategy: always_sample
@@ -36,32 +34,31 @@ spec:
               key: http.target
               values: ["/actuator/health", "/q/health", "/readyz", "/livez", "/health"]
             inverted_match: true
-          # Financial transactions 100% sampling
           - name: financial-100pct
             properties:
               strategy: always_sample
             type: string_attribute
+            string_attribute:
               key: http.target
               values: ["/v1/payments", "/v1/transfers", "/v1/snap-bi", "/v1/escrow"]
-          # Errors 100%
           - name: errors-100pct
             properties:
               strategy: status_code
-              status_code:
-                status_codes: [ERROR]
-          # General reads 5% probabilistic
+            type: status_code
+            status_code:
+              status_codes: [ERROR]
           - name: reads-5pct
             properties:
               strategy: probabilistic
               probabilistic:
                 sampling_percentage: 5
-      filter/drop-healthcheck:
+      "filter/drop-healthcheck":
         traces:
           exclude:
             match_type: regexp
             bodies: [".*health.*"]
     exporters:
-      otlp/tempo:
+      "otlp/tempo":
         endpoint: payu-tempo-distributor.payu-observability.svc:4317
         tls:
           insecure: true
@@ -70,4 +67,4 @@ spec:
         traces:
           receivers: [otlp]
           processors: [memory_limiter, tail_sampling, batch]
-          exporters: [otlp/tempo]
+          exporters: ["otlp/tempo"]

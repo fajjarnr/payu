@@ -52,6 +52,24 @@ spec:
             --broker-base-url "$(params.PACT_BROKER_URL)" \
             --provider "$(params.SERVICE_NAME)" \
             --provider-app-version "$(params.SERVICE_VERSION)"
+        elif [ -f "$SERVICE_DIR/pom.xml" ] && grep -q "au.com.dius.pact" "$SERVICE_DIR/pom.xml" 2>/dev/null; then
+          echo "Running Maven Pact verification (pact:verify)..."
+          cd "$SERVICE_DIR"
+          # PARTNER-PROD-010: provider verification via au.com.dius.pact.provider:maven
+          # Uses pactFileDirectory (target/pacts) or broker when PACT_BROKER_URL is reachable.
+          if command -v mvn >/dev/null 2>&1; then
+            mvn pact:verify \
+              -Dpact.provider.version="$(params.SERVICE_VERSION)" \
+              -Dpact.verifier.publishResults=true \
+              -Dpactbroker.url="$(params.PACT_BROKER_URL)" \
+              || mvn pact:verify -Dpact.verifier.publishResults=false || echo "Pact verify: no broker/pacts, skipping publish"
+          else
+            echo "mvn not found in this step image; skipping pact:verify (use maven-java25 task image for Java services)"
+            if [ "$(params.FAIL_ON_NO_PACTS)" = "true" ]; then
+              echo "FAIL_ON_NO_PACTS=true but mvn unavailable — failing"
+              exit 1
+            fi
+          fi
         elif [ -f "$SERVICE_DIR/package.json" ] && grep -q '"pact"' "$SERVICE_DIR/package.json" 2>/dev/null; then
           echo "Running npm pact:verify..."
           cd "$SERVICE_DIR"

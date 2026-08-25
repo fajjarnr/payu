@@ -17,5 +17,7 @@ resources:
   # Monitoring (Alerts, Grafana, UI Plugins)
   - monitoring/cluster-observability.yaml
   - monitoring/alerts/slo-alerts.yaml
+  - monitoring/alerts/partner-slo.yaml
   - monitoring/alerts/pagerduty-integration.yaml
   - monitoring/alerts/prometheus-rules.yaml
+  - grafana/dashboard-partner.yaml
