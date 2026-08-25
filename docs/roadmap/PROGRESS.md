@@ -1,5 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
-## Platform 1.18.32 Harden Verify + 50/50 1.18.32 50/50 1/1 Verified (2026-08-25)
+## Platform 1.18.33 Harden Verify + 50/50 1.18.33 50/50 1/1 Verified (2026-08-25)
+
+- **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
+- **SemVer Sync 1.18.33**: `package.json 1.18.32→1.18.33` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.33` `oc tag -n payu-dev 31 1.18.33` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.33` `oc get deployment 31 1.18.33`.
+- **Verification 1.18.33**: `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get Cluster payu-database 3 3 Healthy` `oc get pods -n stackrox 8/8` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.33` `rtk gain 86.2%` `codegraph`.
+- **Docs**: `TODOS Harden Verify CLOSED 1.18.33` `PROGRESS 1.18.33` `CHANGELOG 1.18.33` `LESSONS L-362` `TAGS v1.18.33`.
+
 
 - **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
 - **SemVer Sync 1.18.32**: `package.json 1.18.31→1.18.32` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.32` `oc tag -n payu-dev 31 1.18.32` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.32` `oc get deployment 31 1.18.32`.

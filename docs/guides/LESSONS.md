@@ -1,6 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
-## L-361: Harden Verify + 50/50 1.18.32 (2026-08-25)
+## L-362: Harden Verify + 50/50 1.18.33 (2026-08-25)
+
+**Context**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph` `ImagePullBackOff 1.18.32 manifest unknown` `oc tag -n payu-dev 31 1.18.32→1.18.33` `oc apply -k payu-dev` `51/51`.
+
+**Fix**: `TXN-HARDEN` `ACC-HARDEN` `COMPLIANCE` `GATEWAY` `PORTAL` `KEDA` `LLM DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `codegraph` `oc tag -n payu-dev 31 1.18.33` `oc tag -n payu|preprod|sit|uat 31×4` `oc apply -k` `50/50`.
+
+**Evidence**: `rtk oc get pods -n payu-dev 51/51` `oc get pods -n payu-dev 51/51 1/1` `oc get is -n payu-dev 31 1.18.33` `oc get deployment -n payu-dev 31 1.18.33` `mvn -pl api-portal-service 10 tests` `rtk oc logs --since=60s 0 WARN` `npx playwright 2 skipped` `git tag v1.18.33` `rtk gain 86.2%` `codegraph`.
+
+**Lesson**: `1.18.32 ImagePullBackOff manifest unknown` - `oc tag` for 1.18.32 not done for all 31, `oc describe pod` `Failed to pull image` `manifest unknown` - fix `oc tag -n payu-dev payu-dev/<svc>:1.18.30 payu-dev/<svc>:1.18.32 31×` + `oc apply -k` `51/51` - ponytail `global lock` `O(n²)` `ceiling` `per-account` `if throughput matters`.
+
 
 **Context**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
 
