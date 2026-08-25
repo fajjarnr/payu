@@ -13,6 +13,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  // Ignore the duplicate assignment shim at tests/e2e/ — canonical spec lives at e2e/transfer.spec.ts
+  testIgnore: ['**/tests/**', '**/node_modules/**'],
   fullyParallel: false, // Run tests sequentially for better stability
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1, // Add 1 retry for local development

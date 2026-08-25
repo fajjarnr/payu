@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/gateway-service
-    newTag: "1.18.15"
+    newTag: "1.18.16"
 patches:
   - target:
       kind: Deployment

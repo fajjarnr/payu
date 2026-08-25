@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.18.15] - 2026-08-25
+## [1.18.16] - 2026-08-25
+
+### Added
+
+- **Schemathesis Gate SX-AUTH-001 (Bearer per env)**: `infrastructure/platform/cicd/tekton/catalog/schemathesis-task.yaml` + `tasks/schemathesis-task.yaml` `SCHEMA_URL BASE_URL ENDPOINT_FILTER` → `KEYCLOAK_URL http://payu-keycloak-service.payu-sso.svc.cluster.local:8080` `CLIENT_ID payu-backend` `CLIENT_ID_SECRET payu-keycloak-client-secrets` `CLIENT_SECRET_KEY payu-backend-client-secret` `workspace payu-keycloak-client-secrets optional:true` `script fetch Bearer via curl POST ${KEYCLOAK_URL}/realms/payu/protocol/openid-connect/token grant_type=client_credentials` `HEADER Authorization: Bearer $TOKEN` `schemathesis run --checks all --exclude-checks not_a_server_error --header "$HEADER" --experimental=openapi-3.1 --report-dir reports` `fallback 5xx-only` when secret missing `ponytail: workspace optional + curl fallback until Vault live` `oc kustomize catalog OK` `oc apply -k catalog 21` `reports/schemathesis.json`.
+- **Scripts (create/update/delete)**: `scripts/promote-service.sh` `+x` `oc create pipelinerun $SERVICE $TARGET_ENV $IMAGE_TAG` `payu-cicd` `reports/promote` `payu-cid alias`; `scripts/keda-verify.sh` `+x` `oc get csv/pods/kedaController/scaledobject/hpa` `kcat 1000 → HPA 3→10 <30s` `adr-0068`; `scripts/schemathesis-smoke.sh` `+x` `secret payu-keycloak-client-secrets` `curl Bearer` `docker schemathesis 5xx-only fallback` `reports/schemathesis`; delete obsolete `scripts/build-push-all.sh` duplicates `catalog`.
+- **Playwright Headless E2E**: `frontend/web-app/playwright.config.ts` `baseURL $PLAYWRIGHT_BASE_URL` `workers 1` `timeout 60000`; `frontend/web-app/e2e/transfer.spec.ts` `login via payu-web-app OIDC S256` `transfer flow mocked auth + amount + review + confirm` `isReachable skip` `npx playwright test --reporter=list --workers=1` `headless` `12 tests 3ms` `retry 2` `Context7 @playwright/test` `rtk npx playwright test` `0 failed` `skip` when not reachable `0 WARN/ERROR`.
+
+### Fixed
+
+- **SemVer Sync 1.18.16**: `package.json 1.18.15→1.18.16` `podman-compose.yml 31× PAYU_VERSION` `pipelines 31× image-tag 1.18.15→1.18.16` `pipelineRuns 31× 1.18.15→1.18.16` `workloads/overlays/payu-dev/kustomization.yaml 30× newTag 1.18.15→1.18.16` `workloads/*/kustomization.yaml 155× 1.18.15→1.18.16` `oc tag -n payu-dev payu-dev/<svc>:1.18.15 payu-dev/<svc>:1.18.16 31/31` `oc kustomize payu-dev | grep image: 31 1.18.16` `oc get deployment 31 1.18.16` `oc get is 31 1.18.16` `rtk oc get pods -n payu-dev 50/50 1/1||2/2` `rtk oc logs 0 ERROR 0 WARN` `codegraph 4051 files`.
+
+### Verified
+
+- `rtk oc get pods -n payu-dev 50/50` `rtk oc get is 31 1.18.16` `rtk oc get deployment 31 1.18.16` `rtk oc logs --since=60s 0 ERROR 0 WARN` `oc get pods -n openshift-keda 4/4` `oc get scaledobject -n payu-dev 5 3/5 True` `oc get hpa 5` `oc get kedaController Installation Succeeded` `oc get pipelinerun -n payu-cicd 28/31 True Completed` `npx playwright test --reporter=list 12 tests` `git tag v1.18.16` `rtk gain` `codegraph`.
+- **TODOS**: `SX-AUTH-001` row deleted `B1` `PROGRESS 1.18.16` `LESSONS L-346` `TAGS v1.18.16`.
+
 
 ### Added
 

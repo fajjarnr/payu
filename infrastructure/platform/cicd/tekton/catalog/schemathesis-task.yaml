@@ -18,9 +18,28 @@ spec:
       type: string
       description: "Regex filter for endpoints to test (negative lookahead excludes)"
       default: "^(?!.*analytics).*"
+    - name: KEYCLOAK_URL
+      type: string
+      description: "Keycloak base URL for client-credentials grant"
+      default: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
+    - name: CLIENT_ID
+      type: string
+      description: "Keycloak client ID for authenticated fuzzing"
+      default: "payu-backend"
+    - name: CLIENT_ID_SECRET
+      type: string
+      description: "Secret name holding Keycloak client secret (per-env payu-keycloak-client-secrets)"
+      default: "payu-keycloak-client-secrets"
+    - name: CLIENT_SECRET_KEY
+      type: string
+      description: "Key in the secret holding the client secret"
+      default: "payu-backend-client-secret"
   workspaces:
     - name: source
       description: "Workspace used to persist reports"
+    - name: payu-keycloak-client-secrets
+      description: "Optional workspace holding Keycloak client secret (per-env payu-keycloak-client-secrets)"
+      optional: true
   steps:
     - name: run
       image: docker.io/schemathesis/schemathesis@sha256:4ba658e6a309d51d76efb64697b695660fc565e159e5e269633521e9b486d759
@@ -31,11 +50,73 @@ spec:
         REPORT_DIR="$(workspaces.source.path)/reports"
         mkdir -p "$REPORT_DIR"
 
-        schemathesis run \
-          "$(params.SCHEMA_URL)" \
-          --base-url "$(params.BASE_URL)" \
-          --endpoint "$(params.ENDPOINT_FILTER)" \
-          --checks all \
-          --exclude-checks status_code_conformance \
-          --exclude-checks not_a_server_error \
-          --experimental=openapi-3.1
+        # ponytail: when Vault payu-vault live, use ExternalSecret for client secret (VaultStaticSecret payu/environment/keycloak/clients -> payu-keycloak-client-secrets); ceiling: workspace optional + curl fallback until VSO live
+
+        KEYCLOAK_URL="$(params.KEYCLOAK_URL)"
+        CLIENT_ID="$(params.CLIENT_ID)"
+        SECRET_KEY="$(params.CLIENT_SECRET_KEY)"
+
+        CLIENT_SECRET=""
+        if [ "$(workspaces.payu-keycloak-client-secrets.bound)" = "true" ]; then
+          if [ -f "$(workspaces.payu-keycloak-client-secrets.path)/${SECRET_KEY}" ]; then
+            CLIENT_SECRET="$(cat "$(workspaces.payu-keycloak-client-secrets.path)/${SECRET_KEY}")"
+          elif [ -f "$(workspaces.payu-keycloak-client-secrets.path)/payu-backend-client-secret" ]; then
+            CLIENT_SECRET="$(cat "$(workspaces.payu-keycloak-client-secrets.path)/payu-backend-client-secret")"
+          fi
+        fi
+        if [ -z "$CLIENT_SECRET" ] && [ -n "${PAYU_BACKEND_CLIENT_SECRET:-}" ]; then
+          CLIENT_SECRET="$PAYU_BACKEND_CLIENT_SECRET"
+        fi
+
+        TOKEN=""
+        if [ -n "$CLIENT_SECRET" ]; then
+          echo "[*] fetching Bearer via client_credentials ${CLIENT_ID}@${KEYCLOAK_URL}"
+          TOKEN_RESPONSE="$(curl -sf --max-time 10 -X POST "${KEYCLOAK_URL}/realms/payu/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_id=${CLIENT_ID}" \
+            --data-urlencode "client_secret=${CLIENT_SECRET}" 2>&1 || true)"
+          if command -v python3 >/dev/null 2>&1; then
+            TOKEN="$(printf "%s" "$TOKEN_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null || true)"
+          else
+            TOKEN="$(printf "%s" "$TOKEN_RESPONSE" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')"
+          fi
+          if [ -n "$TOKEN" ]; then
+            echo "[✓] Bearer obtained (${#TOKEN} chars)"
+          else
+            echo "[⚠] token fetch failed, fallback to 5xx-only: $TOKEN_RESPONSE"
+          fi
+        else
+          echo "[*] no client secret found (workspace $(params.CLIENT_ID_SECRET) not bound or empty), running 5xx-only"
+        fi
+
+        if [ -n "$TOKEN" ]; then
+          HEADER="Authorization: Bearer $TOKEN"
+          echo "[*] running schemathesis authenticated (full conformance, only not_a_server_error excluded)"
+          schemathesis run \
+            "$(params.SCHEMA_URL)" \
+            --base-url "$(params.BASE_URL)" \
+            --endpoint "$(params.ENDPOINT_FILTER)" \
+            --checks all \
+            --exclude-checks not_a_server_error \
+            --header "$HEADER" \
+            --experimental=openapi-3.1 \
+            --report-dir "$REPORT_DIR" || STATUS=$?
+          STATUS=${STATUS:-0}
+          echo "[*] schemathesis exit $STATUS, reports in $REPORT_DIR"
+          exit $STATUS
+        else
+          echo "[*] running schemathesis unauthenticated fallback (5xx-only)"
+          schemathesis run \
+            "$(params.SCHEMA_URL)" \
+            --base-url "$(params.BASE_URL)" \
+            --endpoint "$(params.ENDPOINT_FILTER)" \
+            --checks all \
+            --exclude-checks status_code_conformance \
+            --exclude-checks not_a_server_error \
+            --experimental=openapi-3.1 \
+            --report-dir "$REPORT_DIR" || STATUS=$?
+          STATUS=${STATUS:-0}
+          echo "[*] schemathesis exit $STATUS (fallback), reports in $REPORT_DIR"
+          exit $STATUS
+        fi

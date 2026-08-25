@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.15` (2026-08-25) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **31/31 Succeeded** (transaction flyway V29→V30 fix 1.18.14, RH-CMA 2.19.0 1.18.15), workloads `50/50 1/1` `1.18.15` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.15** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO, KEDA, flyway fix, RH-CMA) • *Next: promotion sit→prod + SLO drill* |
-| **Last Updated** | 2026-08-25 — v1.18.15: `RH Custom Metrics Autoscaler 2.19.0 openshift-keda` `KedaController Installation Succeeded` `ScaledObjects 5 3/5 True` `prod overlay fix wallet/va/biller` `semver 1.18.15 sync 31` `50/50 1/1` `0 ERROR 0 WARN` `rtk 79%`. |
+| **Last Release** | `1.18.16` (2026-08-25) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0`, Tekton **28/31 Succeeded** (transaction 1.18.15 RH-CMA, Schemathesis Bearer 1.18.16), workloads `50/50 1/1` `1.18.16` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | *No OPEN P1* — **B1-B4 CLOSED 1.18.9-1.18.16** (PITR S3, suspense, risk, audit, step-up, dual-control, WAF, reconciliation, Pact, RLS, DMN, CSV, branded, chargeback, SLO, KEDA, flyway fix, RH-CMA, Schemathesis) • *Next: promotion sit→prod + SLO drill* |
+| **Last Updated** | 2026-08-25 — v1.18.16: `SX-AUTH-001 Bearer per env` `content_type + response_schema re-enabled` `catalog/tasks schemathesis 4 params + workspace` `scripts promote/keda/schemathesis` `playwright transfer.spec.ts headless` `semver 1.18.16 sync 31` `50/50 1/1` `0 ERROR 0 WARN` `rtk 79%` `codegraph`. |
 
 ---
 
@@ -45,7 +45,6 @@
 
 > `ARCH-TOPIC-002` — manifest DONE 2026-08-18 (107 KafkaTopic: 65 normal + 42 DLQ, retention 30d, `EVENT_CATALOG.md` regenerated). Sisa apply ke cluster + `auto-create off` butuh OCP creds — tracked di Platform Deploy Queue.
 
-| SX-AUTH-001 | platform / Tekton | **Schemathesis gate pakai kredensial** — client-credentials dari `payu-keycloak-client-secrets` per env → header Bearer; nyalakan kembali `content_type_conformance` + `response_schema_conformance` yang kini di-exclude | Gate 5xx-only aktif |
 | CHAOS-ENV-001 | platform / chaos | **Litmus agent + Kraken/Cerberus di namespace promoted** — pasang agent payu-sit/uat/preprod/payu agar ChaosEngine benar-benar dieksekusi; lengkapi RBAC cross-ns untuk SA pipeline (CHAOS-RBAC-001); lepas skip-infra pada kedua gate setelah live | Skip eksplisit saat infra absen |
 | SSO-ENV-002 | platform / identity | **Isolasi Keycloak per-environment** — seed client secrets per env (realm import membaca `payu-keycloak-client-secrets`), lalu arahkan issuer/JWK workloads ke `sso-<env>` route | Saat ini semua env memakai SSO bersama dev |
 | PROMOTE-003 | platform / Tekton | **Promotion run rutin per rilis** untuk seluruh service (bukan hanya pilot) — jalankan `<svc>-pipeline` target-env=sit→uat→preprod→prod saat tag baru dirilis; mekanik sudah terbukti | **30/31 dev Succeeded 1.18.5** (`wmtfl 15/18`, `30` `1.18.5` `oc tag` `1.18.4→1.18.5`, `kyc` `76%` `k6` threshold, `account 429` retry, `argocd-sync` `Progressing` `Startup probe` pending) — next `sit` promo after dev `Healthy` `23/31` → `31/31` |
