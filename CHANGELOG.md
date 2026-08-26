@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.46] - 2026-08-26
+
+### Added
+
+- **ADR-0070 E2E Test Environment Strategy**: tiered matrix local podman → SIT canonical automated E2E/K6/DAST (`gateway-sit.apps.fajjjar.my.id`) → UAT smoke+manual acceptance only → preprod migration dry-run → prod read-only synthetic probes; full mutating suites never UAT/preprod/prod `docs/adr/0070-e2e-test-environment-strategy-standard.md` codifies existing wiring (`conftest.py GATEWAY_URL localhost:8080`, Playwright `PLAYWRIGHT_BASE_URL :3001`, INFRASTRUCTURE_DEPLOYMENT §104 SIT route) no code change verifyOnly docs.
 ## [1.18.45] - 2026-08-25
 
 ### Fixed

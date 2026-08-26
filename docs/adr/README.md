@@ -76,6 +76,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0067](0067-llm-integration-for-payu-services-standard.md) | LLM Integration for PayU Services — RAG, Guardrails & Private Deployment (BPPD, FinRAG-12B) | Deferred | 2026-08-24 |
 | [0068](0068-keda-autoscaling-kafka-and-prometheus-standard.md) | KEDA Autoscaling — Kafka Lag & Prometheus Triggers (HPA++) | Accepted | 2026-08-24 |
 | [0069](0069-openshift-4-22-platform-standard.md) | Red Hat OpenShift 4.22 Platform Standard | Accepted | 2026-08-24 |
+| [0070](0070-e2e-test-environment-strategy-standard.md) | E2E Test Environment Strategy — Tiered Local → SIT → Preprod Smoke | Accepted | 2026-08-26 |
 
 ### B4.6 Go/No-Go Decision 2026-08-24 (ADR-0067 / ADR-0068)
 
