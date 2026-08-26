@@ -1,7 +1,7 @@
 # Prerequisite: authenticate Podman to registry.redhat.io with a Red Hat
 # registry service-account token. Never copy a cluster pull-secret into Git.
 # Core: podman compose -f podman-compose.yml up -d payu-database-rw
-#       payu-cache payu-kafka-kafka-bootstrap artemis payu-keycloak-service
+#       payu-cache payu-kafka-kafka-bootstrap payu-broker-hdls-svc payu-keycloak-service
 # Optional example: COMPOSE_PROFILES=api-management podman compose
 #       -f podman-compose.yml up -d apicast
 # Local substitutions are intentional: single-node infrastructure, locally built
@@ -176,7 +176,7 @@ services:
     depends_on:
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
-  artemis:
+  payu-broker-hdls-svc:
     <<: *infra-defaults
     mem_limit: 1g
     cpus: 1.0
@@ -855,8 +855,8 @@ services:
       SERVICES_WALLET_URL: http://wallet-service:8080
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
-      ARTEMIS_URL: tcp://artemis:61616
-      ARTEMIS_HOST: artemis
+      ARTEMIS_URL: tcp://payu-broker-hdls-svc:61616
+      ARTEMIS_HOST: payu-broker-hdls-svc
       ARTEMIS_PORT: "61616"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-admin}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu-local-artemis-2026-x7q}
@@ -883,7 +883,7 @@ services:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
-      artemis:
+      payu-broker-hdls-svc:
         condition: service_healthy
     healthcheck:
       test:
@@ -912,8 +912,8 @@ services:
       QUARKUS_KAFKA_STREAMS_BOOTSTRAP_SERVERS: payu-kafka-kafka-bootstrap:29092
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
-      ARTEMIS_URL: tcp://artemis:61616
-      ARTEMIS_HOST: artemis
+      ARTEMIS_URL: tcp://payu-broker-hdls-svc:61616
+      ARTEMIS_HOST: payu-broker-hdls-svc
       ARTEMIS_PORT: "61616"
       ARTEMIS_USERNAME: ${ARTEMIS_USER:-admin}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-payu-local-artemis-2026-x7q}
@@ -936,7 +936,7 @@ services:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
-      artemis:
+      payu-broker-hdls-svc:
         condition: service_healthy
     healthcheck:
       test:
@@ -1444,7 +1444,7 @@ services:
         condition: service_healthy
       payu-kafka-kafka-bootstrap:
         condition: service_healthy
-      artemis:
+      payu-broker-hdls-svc:
         condition: service_healthy
       payu-cache:
         condition: service_healthy
