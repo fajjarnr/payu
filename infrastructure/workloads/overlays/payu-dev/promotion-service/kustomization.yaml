@@ -17,3 +17,19 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
+  # WEB-CSP-001 issuer alignment: tokens carry the PUBLIC SSO issuer
+  # (https://sso-dev...); validators must expect it. JWK/auth-server URLs stay
+  # internal (in-cluster).
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: promotion-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: OIDC_ISSUER
+                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
