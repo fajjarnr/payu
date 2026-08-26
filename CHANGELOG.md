@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.47] - 2026-08-26
+
+### Added
+
+- **ADR-0071 Test Quality Gate Formalization**: PIT mutation score gate core-money services (transaction/wallet/partner/account/auth) ≥70% others ≥60% nightly via Tekton `payu-cicd` `-Pmutation-testing` off PR path; axe-core WCAG 2.1 AA release gate critical flows after WEB-CSP-001/002 close with baseline burn-down; charter-based exploratory session pre-prod-promotion; canary Argo Rollouts DEFERRED with revisit trigger; **normative: CI execution Tekton in-cluster only, no GitHub Actions (hosted runner minutes billable)** `docs/adr/0071-test-quality-gates-mutation-accessibility-exploratory-canary-standard.md` no new deps verifyOnly docs.
 ## [1.18.46] - 2026-08-26
 
 ### Added
