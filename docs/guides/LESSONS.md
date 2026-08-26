@@ -6714,3 +6714,27 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 - **Catalog via git resolver**: 7 tasks copied to `tekton/catalog` with `payu-catalog-v1` tag; per-service `pipeline.yaml` uses `resolver: git` pathInRepo, not cluster taskRef. Avoids 27-task duplication.
 - **No WARN invariant**: SpringDoc enabled by default caused WARN in prod; fix at trust boundary via deployment env `SPRINGDOC_*=false` + `application.yml` `enabled:false` so running pods fixed without rebuild. FxRateService WARN→INFO with ponytail ceiling.
 
+
+## L-375: RLS FORCE tanpa GUC binding = data plane mati; test superuser buta (2026-08-26)
+
+**Context**: Migrasi RLS V107+ (ARCH-GLOBAL-007/ADR-0033) meng-ENABLE+FORCE RLS dengan policy `tenant_id = current_setting('app.tenant_id', true)` di tabel inti 6+ DB, tanpa satu pun production code yang `SET LOCAL app.tenant_id` — `TenantAwareTransactionSynchronization` dead code (hanya RESET, di koneksi berbeda). Akibat: semua INSERT 42501, semua SELECT 0 baris sebagai role app; register 500 gejala pertama. Test existing lolos karena Testcontainers default **postgres superuser yang bypass RLS sekalipun FORCE**.
+
+**Fix**: (1) mitigasi instan `ALTER ROLE payu SET app.tenant_id='default'` (berlaku saat LOGIN sebagai role, tidak via `SET ROLE`); (2) `TenantDataSource` decorator di security-starter — proxy Connection yang `SET LOCAL app.tenant_id` sebelum statement pertama (bukan saat getConnection: JPA acquire connection sebelum Spring menandai tx aktif), revert otomatis di akhir tx; (3) `TenantDataSourceRlsTest` Testcontainers PG dengan **role non-superuser khusus** — superuser membuat test RLS vacuously green. Pelajaran: test keamanan harus memakai identitas produksi, bukan identitas admin.
+
+## L-376: Dua ArgoCD app mengelola resource sama = drift war (2026-08-26)
+
+**Context**: App monolith `payu-dev` (overlay namespace-wide) DAN per-service apps (`web-app-dev`, dll.) sama-sama mengelola Deployment yang sama — ArgoCD `SharedResourceWarning`, overlay monolith gagal render (Deployment duplikat) sehingga fix env yang dikirim ke sana TIDAK PERNAH land, sementara per-service apps menimpa dengan state git mereka. Gejala: `oc apply` manual langsung di-revert ArgoCD dalam menit.
+
+**Fix**: orphan-delete app monolith (`oc delete application.argoproj.io payu-dev --cascade=orphan` — TANPA cascade, cascade menghapus semua workload!), taruh env patch di per-service overlay yang benar-benar di-apply, commit → ArgoCD sync. Pelajaran: sebelum mendiagnosis "env tak diset", cek dulu app ArgoCD mana yang memegang resource — `oc get applications -A | grep <ns>` + SharedResourceWarning.
+
+## L-377: RHBK Realm Import CR tidak update realm existing (2026-08-26)
+
+**Context**: `keycloakrealmimport` live `users_in_spec=0` (drift dari git) — re-apply CR yang sudah diperbaiki TIDAK mengubah realm; operator hanya import saat realm dibuat (dok RHBK: "existing realms will not be overwritten... does not update"). Juga: `kcadm.sh` di container read-only butuh `--config /tmp/...`; update client via `-s 'attributes={...}'` lewat rtk/oc exec menghasilkan quoting rusak yang MENGHAPUS semua attributes — selalu edit full representation via Admin REST (curl ke route publik) dan verifikasi kembali.
+
+**Fix**: hapus realm + import CR → apply ulang CR dari git (satu sumber kebenaran). Untuk perubahan client kecil: Admin REST PUT full representation, bukan kcadm -s.
+
+## L-378: Keycloak token iss mengikuti frontend URL realm (2026-08-26)
+
+**Context**: Setelah realm di-recreate dari git, token `iss = https://sso-dev.apps.fajjjar.my.id/realms/payu` (publik) padahal validator (gateway `QUARKUS_OIDC_TOKEN_ISSUER`, service `OIDC_ISSUER`) expect URL internal → 401 semua request authenticated meski login sukses. Gejala samar: exchange sukses, cookie ada, dashboard langsung bounce ke /login.
+
+**Fix**: samakan expected issuer di SEMUA validator dengan issuer yang benar-benar ditanam di token (cek dengan decode JWT dari cookie, jangan asumsi). JWK/auth-server URL boleh tetap internal (in-cluster). Sama polanya untuk env lain — audit per env.
