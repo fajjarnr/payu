@@ -45,45 +45,45 @@ sequenceDiagram
 | 4 | Client | — | INSERT `users` + `profiles` (tenant dari JWT claim) |
 | 5 | Client | — | Outbox `payu.account.user-created.v1` — non-PII |
 
-## 2. Login (Web, password grant saat ini)
+## 2. Login (Web — OIDC Authorization Code + PKCE, LOGIN-003)
 
 ```mermaid
 sequenceDiagram
     actor U as User
-    participant B as "web-app BFF"
+    participant B as "web-app BFF (Next.js)"
+    participant KC as Keycloak
     participant G as Gateway
     participant A as "auth-service"
-    participant KC as Keycloak
-    participant CA as "Cache (rate-limit, lockout)"
 
-    U->>B: POST /api/auth/login (username, password)
-    B->>G: POST /api/v1/auth/login
-    G->>CA: rate-limit check (per-account/IP, fail-closed 503)
+    U->>B: GET /login → klik "Masuk dengan PayU"
+    B->>B: generate state + PKCE verifier → cookie httpOnly `oidc_state` + `pkce_verifier` (10 menit)
+    B-->>U: 307 {KEYCLOAK_URL}/realms/payu/protocol/openid-connect/auth?client_id=payu-web-app&code_challenge_method=S256
+    U->>KC: autentikasi (form SSO realm payu)
+    KC-->>U: 302 {BASE_URL}/api/auth/callback?code&state
+    U->>B: GET /api/auth/callback?code&state
+    B->>B: validasi cookie state (mismatch → /login?error=invalid_state)
+    B->>G: POST /api/v1/auth/callback (code, codeVerifier, redirectUri)
     G->>A: forward
-    A->>CA: lockout check (5 attempts, 15 min)
-    alt locked
-        A-->>U: 423 locked
-    else
-        A->>KC: token endpoint (grant_type=password)
-        alt success
-            KC-->>A: access + refresh token
-            A->>CA: clear failed attempts
-            A-->>B: 200 tokens (httpOnly cookie)
-        else
-            KC--x A: 401 invalid credentials
-            A->>CA: record failed attempt (+risk)
-            A-->>U: 401 AUTH_BUS_001 | 429 RATE_LIMIT_EXCEEDED
-        end
+    A->>KC: token endpoint (authorization_code + code_verifier + secret client payu-web-app)
+    alt sukses
+        KC-->>A: access + refresh token
+        A-->>B: 200 tokens
+        B->>B: set cookie httpOnly (access + refresh), konsumsi cookie state/verifier
+        B-->>U: 307 /dashboard
+    else gagal
+        B-->>U: 307 /login?error=authentication_failed
     end
 ```
 
 | Step | Actor | HTTP | Side-effect |
 |:---|:---|:---:|:---|
-| 1 | User | — | Rate-limit count increment (Hot Rod, fail-closed) |
-| 2 | User | — | Lockout state read (cache) |
-| 3 | User | — | Keycloak Direct Access Grant (`grant_type=password`) |
-| 4 | User | — | Failed attempt + risk recorded; sukses → clear |
-| 5 | User | — | Session cookie httpOnly di BFF |
+| 1 | User | 307 | Cookie `oidc_state` + `pkce_verifier` httpOnly, maxAge 10 menit, sameSite lax |
+| 2 | User | 302 | Sesi SSO Keycloak (realm `payu`) |
+| 3 | User | — | Validasi state; verifier cookie dikonsumsi di setiap callback |
+| 4 | User | — | Token exchange confidential client `payu-web-app` (PKCE S256) |
+| 5 | User | 307 | Token di cookie httpOnly — tidak pernah sampai ke JS browser; gagal → `/login?error=authentication_failed` |
+
+> Password grant & `POST /api/v1/auth/login` **dihapus** (LOGIN-003, 1.10.52). Diagram lama (rate-limit/lockout `grant_type=password`) tidak berlaku lagi.
 
 ## 3. Transfer Internal
 
@@ -1573,15 +1573,20 @@ sequenceDiagram
     participant G as Gateway
     participant A as "auth-service"
     participant KC as Keycloak
-
-    Br->>B: POST /api/auth/login (username, password)
-    B->>G: POST /api/v1/auth/login (proxy)
+    Br->>B: GET /login → klik "Masuk dengan PayU" (LOGIN-003, OIDC PKCE)
+    B->>B: buat state + PKCE verifier (cookie httpOnly, 10 menit)
+    B-->>Br: 307 Keycloak /realms/payu/.../auth?client_id=payu-web-app&code_challenge_method=S256
+    Br->>KC: autentikasi SSO
+    KC-->>Br: 302 {BASE_URL}/api/auth/callback?code&state
+    Br->>B: GET /api/auth/callback?code&state
+    B->>B: validasi state cookie (mismatch → /login?error=invalid_state)
+    B->>G: POST /api/v1/auth/callback (code, codeVerifier, redirectUri)
     G->>A: forward
-    A->>KC: password grant (aktual) / PKCE (target IMP)
+    A->>KC: token endpoint (authorization_code + PKCE verifier + secret payu-web-app)
     KC-->>A: access + refresh
     A-->>B: 200 tokens
     B->>B: set httpOnly cookie (access + refresh) — secure prod, sameSite strict
-    B-->>Br: 200 (cookie, bukan token di JS)
+    B-->>Br: 307 /dashboard (cookie, bukan token di JS)
 
     Br->>B: GET /dashboard (cookie)
     B->>B: cookie → bearer (BFF decrypt/attach)
