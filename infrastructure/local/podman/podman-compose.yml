@@ -125,19 +125,9 @@ services:
       retries: 3
       start_period: 20s
 
-  payu-redis:
-    <<: *infra-defaults
-    image: docker.io/library/redis:7.4.1
-    container_name: payu-redis
-    networks:
-      - payu-network
-    ports:
-      - 6379:6379
-    command: redis-server --save "" --appendonly no
-
   payu-kafka-kafka-bootstrap:
     <<: *infra-defaults
-    image: registry.redhat.io/amq-streams/kafka-41-rhel9@sha256:1be81136da130940742f9836d09dadd6100474d943aad2d607c836811931e29e
+    image: registry.redhat.io/amq-streams/kafka-41-rhel9@sha256:7ae5bdd78e89ecfcb8bfb8bb916fa9520326217cadf73d079d9841fa2c58b700
     container_name: payu-kafka
     networks:
       - payu-network
@@ -244,7 +234,7 @@ services:
       start_period: 5s
   payu-keycloak-service:
     <<: *infra-defaults
-    image: registry.redhat.io/rhbk/keycloak-rhel9@sha256:4224e2d27ea23af7b50e15ba6df41fc35c2a550ab1e108dd8debed9f7d23fb45
+    image: registry.redhat.io/rhbk/keycloak-rhel9@sha256:52d3b0a986484ef8428d81b4db512f94741e89761fe47217dbc7529b5bcfa623
     container_name: payu-keycloak
     networks:
       - payu-network

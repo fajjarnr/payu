@@ -1,7 +1,0 @@
-[Unit]
-Description=PayU Redis Target
-After=network.target container.service
-PartOf=podman-payu.service
-
-[Install]
-WantedBy=podman-payu.service
