@@ -25,4 +25,24 @@ public class TenantConfiguration {
     public TenantFilter tenantFilter() {
         return new TenantFilter();
     }
+
+    /**
+     * WEB-RLS-001: wraps every {@link DataSource} so each transaction binds
+     * {@code app.tenant_id} (SET LOCAL) before its first statement — without
+     * this, FORCE ROW LEVEL SECURITY policies evaluate the GUC as NULL and
+     * reject every write / hide every row from the app role. Static bean:
+     * BeanPostProcessors must not depend on other beans.
+     */
+    @Bean
+    public static org.springframework.beans.factory.config.BeanPostProcessor tenantDataSourceDecorator() {
+        return new org.springframework.beans.factory.config.BeanPostProcessor() {
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName) {
+                if (bean instanceof javax.sql.DataSource ds && !(bean instanceof TenantDataSource)) {
+                    return new TenantDataSource(ds);
+                }
+                return bean;
+            }
+        };
+    }
 }

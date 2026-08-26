@@ -20,6 +20,12 @@ const outfit = Outfit({
   variable: '--font-outfit',
 });
 
+// WEB-CSP-002: per-request CSP nonces (src/proxy.ts) require dynamic rendering
+// on every route — statically prerendered pages bake inline flight scripts
+// WITHOUT the nonce, the CSP `script-src 'nonce-…'` directive blocks them, and
+// hydration dies app-wide ("Error: Connection closed.", blank step content on
+// /onboarding). Layout-level config cascades to every child page/route.
+export const dynamic = 'force-dynamic';
 export const dynamicParams = false;
 
 export function generateStaticParams() {

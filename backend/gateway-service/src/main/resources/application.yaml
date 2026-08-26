@@ -181,11 +181,13 @@ gateway:
       requests-per-minute: 100
       burst: 150
     endpoints:
-      # Auth: Higher limits for login attempts (users may retry)
-      # 30/min = 1 attempt every 2 seconds, burst 50 for initial load
+      # Auth: Higher limits for login attempts (users may retry).
+      # WEB-CSP-001 follow-up: ALL browser users share the BFF pod IP, so this
+      # bucket is platform-wide, not per-user — 30/min starved it (429 →
+      # login flakiness). Brute force stays covered by Keycloak + lockout.
       auth:
-        requests-per-minute: 30
-        burst: 50
+        requests-per-minute: 120
+        burst: 200
       # OTP: Strict limits (security critical)
       otp:
         requests-per-minute: 5
@@ -339,10 +341,11 @@ gateway:
       refill-tokens: 100
       refill-duration: "60s"
     endpoints:
-      # Auth endpoints: Allow burst for login retries, but not too high (security)
+      # Auth endpoints: burst for login retries. Same BFF single-IP caveat as
+      # the v1 bucket above — 50/30 per minute 429'd the OIDC code exchange.
       auth:
-        capacity: 50
-        refill-tokens: 30
+        capacity: 200
+        refill-tokens: 120
         refill-duration: "60s"
       # OTP: Very strict (prevent brute force)
       otp:
