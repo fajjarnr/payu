@@ -34,10 +34,14 @@
 
 | # | Fitur | Endpoint utama |
 |:---:|:---|:---|
-| AU1 | Login | `POST /api/v1/auth/login` |
+| AU1 | Login (OIDC auth-code + PKCE, LOGIN-003) | `GET /api/auth/authorize` → `GET /api/auth/callback` (BFF) · `POST /api/v1/auth/callback` |
 | AU2 | Refresh token | `POST /api/v1/auth/refresh` |
 | AU3 | Register | `POST /api/v1/auth/register` |
-| AU4 | Validate session | `POST /api/v1/auth/validate` |
+| AU4 | Validate session | `GET /api/v1/auth/validate` |
+| AU5 | Logout | `POST /api/v1/auth/logout` |
+| AU6 | Device binding | `POST /api/v1/auth/device` · `POST /api/v1/auth/device/token` |
+| AU7 | Biometric | `POST /api/v1/biometric/register` · `POST /api/v1/biometric/authenticate` · `GET /api/v1/biometric/challenge` · `GET /api/v1/biometric/registrations/{username}` |
+| AU8 | Step-up auth (internal) | `POST /internal/v1/auth/step-up` · `POST /internal/v1/auth/step-up/challenge` · `POST /internal/v1/auth/step-up/verify` |
 
 ## wallet-service (8004)
 
