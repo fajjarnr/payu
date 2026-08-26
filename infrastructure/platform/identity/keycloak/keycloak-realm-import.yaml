@@ -148,17 +148,18 @@ spec:
         description: "Next.js 15 web application for PayU Digital Banking — BFF + DPoP RFC9449 + PKCE S256"
         enabled: true
         clientAuthenticatorType: client-secret
-        secret: payu-web-secret-dev-only
+        secret: payu-web-secret-dev-2026!
         redirectUris:
-          - "https://payu.co.id/api/v1/auth/callback"
+          - "https://payu-dev.apps.fajjjar.my.id/api/auth/callback"
+          - "https://payu-dev.apps.fajjjar.my.id/*"
           - "https://payu.fajjjar.my.id/*"
           - "http://localhost:3001/*"
         webOrigins:
-          - "https://payu.co.id"
+          - "https://payu-dev.apps.fajjjar.my.id"
           - "https://payu.fajjjar.my.id"
           - "http://localhost:3001"
           - "+"
-        publicClient: true
+        publicClient: false
         standardFlowEnabled: true
         implicitFlowEnabled: false
         directAccessGrantsEnabled: false
@@ -209,12 +210,11 @@ spec:
         description: "Backend microservices for PayU platform"
         enabled: true
         clientAuthenticatorType: client-secret
-        secret: payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c
+        secret: payu-backend-secret-dev-2026!
         redirectUris:
           - "http://localhost:8080/*"
           - "*"
         webOrigins:
-          - "http://localhost:8080"
           - "+"
         publicClient: false
         standardFlowEnabled: false

@@ -17,3 +17,18 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
+  # WEB-AUTH-001: token-exchange client secret must match live realm client payu-web-app
+  # (dev-only value, same pattern as keycloak-realm-import.yaml).
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: auth-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: PAYU_KEYCLOAK_WEB_CLIENT_SECRET
+                    value: "payu-web-secret-dev-2026!"
