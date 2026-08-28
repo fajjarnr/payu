@@ -1,5 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-400: Wallet Pocket Idempotency — POST /pockets/* X-Idempotency-Key 1.18.68 (2026-08-28)
+
+**Context**: `API_STANDARDS:129` `POST/PUT/PATCH wajib X-Idempotency-Key UUIDv4` + `.spectral.yaml idempotency-header-required` + `BFF route.ts:292` whitelist `x-idempotency-key` 100% — `WalletService:161 creditPocket` `167 debitPocket` `POST /pockets/{id}/credit|debit {amount,referenceId}` tanpa header (financial write 90% → missing 10%), `freeze/unfreeze/close` `POST .../freeze null` tanpa header. `grep api.post WalletService` 5 POST vs `grep X-Idempotency-Key` 3 → `credit/debit` missing. `FEATURES W7 Pocket` `credit/debit/freeze/unfreeze` via `WalletService` → `gateway → wallet-service` dengan `Idempotent` di backend (`@Idempotent` pada `Beneficiary` tapi `Pocket` juga idempotent by `referenceId`).
+
+**Fix**: `WalletService.ts:2` `import { getFinancialMutationHeaders, idempotencyKeyFor }` + `creditPocket: idempotencyKeyFor('pocket:credit', pocketId+':'+referenceId)` deterministic (retry same `referenceId` → same key, prevent double credit) + `debitPocket` `pocket:debit` + `freeze/unfreeze/close` `getFinancialMutationHeaders()` random UUID per intent. BFF sudah forward `x-idempotency-key`. `npm test 95/95` still `WalletService 7/7` (credit/debit not asserted header before, now deterministic). `npm build 86 routes ✓`.
+
+**Evidence**: `grep -n "api.post.*pockets" WalletService.ts` `5` now `5` with header; `grep X-Idempotency-Key WalletService.ts` `5`; `npm test 95/95`; `npm build 86 routes`; `podman tag 1.18.67→1.18.68`.
+
+**Lesson**: `Financial POST` = **always `X-Idempotency-Key`** — `credit/debit` dengan `referenceId` sudah dedup di backend (`referenceId` natural key) tapi client harus kirim `X-Idempotency-Key` deterministic `pocket:credit:{id}:{ref}` untuk idempotency di gateway/BFF (Stripe `idempotency-key ≤64` Context7). `null` body `POST /freeze` tetap butuh header (gateway tidak bedakan body). `grep api.post.*pockets` vs `grep X-Idempotency-Key` harus `1:1`.
+
 ## L-399: BFF OpenAPI + Beneficiary A3 — gateway.json + Spectral Node 24 + AccountService (2026-08-28)
 
 **Context**: `docs/api/API_STANDARDS.md:137` `Generated spec: gateway /q/openapi` + `api-portal-service` allowlist; `docs/openapi/` missing (0 file) → `FEATURES.md` vs code drift tidak tervalidasi; `.spectral.yaml:818` `function: undefined` (graphql) → `spectral lint` `Function is not defined` di Node 24 (6.14.2) meski `gateway.json` valid `openapi:3.1.0`; `FEATURES A3` `Beneficiary` `GET /accounts/{id}/beneficiaries` ada di backend (`BeneficiaryController:33` `@RequestMapping /api/v1/accounts/{accountId}/beneficiaries` `@Idempotent` `BEN_001/002`) tapi `AccountService.ts` hanya `register/verifyNik` (0 beneficiary) → `transfer/page:87` pakai hardcode `Anya/Budi` (bukan API), `settings` tanpa tab beneficiary; BFF `ALLOWED_PATH 44` sudah include `/api/v1/accounts` tapi tidak terdokumentasi untuk `beneficiaries`.

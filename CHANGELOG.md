@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.68] - 2026-08-28
+
+### Fixed
+- **Wallet Pocket Idempotency (1.18.68)**: `frontend/web-app/src/services/WalletService.ts:161-187` `creditPocket/debitPocket` `POST /pockets/{id}/credit|debit {amount,referenceId}` missing `X-Idempotency-Key` (API_STANDARDS:129 idempotency for POST) → `idempotencyKeyFor('pocket:credit', pocketId+':'+referenceId)` deterministic + `freeze/unfreeze/close` `POST .../freeze` `null` + `getFinancialMutationHeaders()` random UUID; BFF `route.ts:292` whitelist already `x-idempotency-key` 100% — now `WalletService` 100% financial writes carry `X-Idempotency-Key` (was 90% due to pocket).
+
+### Added
+- **Local Dev Verify (1.18.68)**: `cd frontend/web-app && npm test` `95/95 1221` `WalletService 7/7` `npm run build` `86 routes ✓` `podman tag 1.18.67→1.18.68 c9dfd8a73a81 672 MB`.
+
 ## [1.18.67] - 2026-08-28
 
 ### Fixed

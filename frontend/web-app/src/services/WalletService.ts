@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import { getFinancialMutationHeaders } from '@/lib/utils';
+import { getFinancialMutationHeaders, idempotencyKeyFor } from '@/lib/utils';
 import type { BalanceResponse, WalletTransaction, Pocket, Money } from '@/types';
 
 // IMP-014: Re-export types from centralized types/index.ts
@@ -159,30 +159,30 @@ export class WalletService {
   /** POST /pockets/{pocketId}/credit — Credit pocket */
   // BUG-CROSS-044: Backend PocketTransactionRequest uses { amount, referenceId }, returns Void
   async creditPocket(pocketId: string, amount: Money, referenceId: string): Promise<void> {
-    await api.post(`/pockets/${pocketId}/credit`, { amount, referenceId });
+    await api.post(`/pockets/${pocketId}/credit`, { amount, referenceId }, { headers: { 'X-Idempotency-Key': idempotencyKeyFor('pocket:credit', pocketId + ':' + referenceId) } });
   }
 
   /** POST /pockets/{pocketId}/debit — Debit pocket */
   // BUG-CROSS-044: Backend PocketTransactionRequest uses { amount, referenceId }, returns Void
   async debitPocket(pocketId: string, amount: Money, referenceId: string): Promise<void> {
-    await api.post(`/pockets/${pocketId}/debit`, { amount, referenceId });
+    await api.post(`/pockets/${pocketId}/debit`, { amount, referenceId }, { headers: { 'X-Idempotency-Key': idempotencyKeyFor('pocket:debit', pocketId + ':' + referenceId) } });
   }
 
   /** POST /pockets/{pocketId}/freeze — Freeze pocket */
   async freezePocket(pocketId: string): Promise<Pocket> {
-    const response = await api.post<Pocket>(`/pockets/${pocketId}/freeze`);
+    const response = await api.post<Pocket>(`/pockets/${pocketId}/freeze`, null, { headers: getFinancialMutationHeaders() });
     return response.data;
   }
 
   /** POST /pockets/{pocketId}/unfreeze — Unfreeze pocket */
   async unfreezePocket(pocketId: string): Promise<Pocket> {
-    const response = await api.post<Pocket>(`/pockets/${pocketId}/unfreeze`);
+    const response = await api.post<Pocket>(`/pockets/${pocketId}/unfreeze`, null, { headers: getFinancialMutationHeaders() });
     return response.data;
   }
 
   /** POST /pockets/{pocketId}/close — Close pocket */
   async closePocket(pocketId: string): Promise<Pocket> {
-    const response = await api.post<Pocket>(`/pockets/${pocketId}/close`);
+    const response = await api.post<Pocket>(`/pockets/${pocketId}/close`, null, { headers: getFinancialMutationHeaders() });
     return response.data;
   }
 

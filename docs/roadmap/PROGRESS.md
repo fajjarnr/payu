@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.68 Wallet Pocket Idempotency + 34 Healthy + Build Verified (2026-08-28)
+
+- **Wallet Fix (1.18.68)**: `WalletService` `creditPocket/debitPocket` `X-Idempotency-Key` deterministic `idempotencyKeyFor` + `freeze/unfreeze/close` `getFinancialMutationHeaders()` — now 100% `POST /pockets/*` idempotent per `API_STANDARDS` `Stripe/Adyen Context7 max64`, BFF `44 prefixes` forward.
+- **SemVer Sync 1.18.68**: `CHANGELOG 1.18.68` `TODOS 1.18.68 0 OPEN` `PROGRESS 1.18.68` `frontend/web-app` `WalletService` `localhost/payu-web-app:1.18.68` `c9dfd8a73a81` `1.18.67→1.18.68`.
+- **Verification 1.18.68**: `npm test 95/95 1221` `WalletService 7/7`; `npm run build 86 routes ✓`; `podman tag 1.18.67→1.18.68`; `podman ps 34 healthy` `curl :3001/api/health healthy`.
+
 ## Platform 1.18.67 BFF OpenAPI + Beneficiary A3 + 34 Healthy + Build Verified (2026-08-28)
 
 - **BFF Fix (1.18.67)**: `docs/openapi/gateway.json` 30K `openapi:3.1.0` `GET /q/openapi` (Quarkus) + `docs/openapi/README.md` generation via `api-portal-service` allowlist; `.spectral.yaml` `graphql function: undefined→truthy` (Spectral Node 24 bug); BFF `ALLOWED_PATH_PREFIXES 44` `sanitizeBackendPath` `X-Idempotency-Key` whitelist 100% POST/PUT/PATCH (`getFinancialMutationHeaders()`), `Money` `string` `inputMode numeric`, `X-Correlation-Id`, `MAX_BODY 10MiB`, `401 auto-refresh`; `FEATURES A3` `AccountService` beneficiary CRUD + `BeneficiaryManager` `useBeneficiaries` `settings` tab + `transfer` recipients.
