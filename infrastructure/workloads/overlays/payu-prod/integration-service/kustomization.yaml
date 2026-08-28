@@ -6,4 +6,20 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/integration-service
-    newTag: "1.18.45"
+    newTag: "1.18.50"
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: integration-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: OIDC_ISSUER
+                    value: "https://sso-prod.apps.fajjjar.my.id/realms/payu"
+                  - name: OIDC_JWK_SET_URI
+                    value: "https://sso-prod.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"

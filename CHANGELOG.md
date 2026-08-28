@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.50] - 2026-08-28
+
+### Fixed
+- **SSO Issuer Alignment 5 Env (SSO-ISSUER-002 FIX 1.18.50)**: `payu-dev` issuer `https://sso-dev.apps.fajjjar.my.id/realms/payu` (WEB-RLS-001) was correct, but `payu-sit/uat/preprod/prod` per-service overlays drifted — `account-service` stale `https://sso-sit.payu.fajjjar.my.id` / `https://sso.uat.payu.fajjjar.my.id` / `https://sso.preprod.payu.fajjjar.my.id` / `https://sso.payu.fajjjar.my.id` (missing `apps` + wrong subdomain) and `web-app`/`gateway-service` per-service missing `OIDC_ISSUER`/`QUARKUS_OIDC_TOKEN_ISSUER` entirely (22 services only `account-service` had OIDC, `web-app`/`gateway` 0), plus monolith `NEXT_PUBLIC_BASE_URL` still `https://payu-dev.apps.fajjjar.my.id` for all non-dev. Fix: `scripts/verify-sso-issuer.sh` audit + per-service sync **31 images `1.18.50`** — update `account-service` issuers to `https://sso-<env>.apps.fajjjar.my.id/realms/payu` (sit/uat/preprod/prod), inject `OIDC_ISSUER`/`OIDC_JWK_SET_URI` (`https://sso-<env>.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs`) for 22 Spring Boot services + `QUARKUS_OIDC_TOKEN_ISSUER` for `gateway-service` + `web-app` (`KEYCLOAK_URL` + `NEXT_PUBLIC_BASE_URL` `https://sit.payu.fajjjar.my.id` / `https://uat.payu.fajjjar.my.id` / `https://preprod.payu.fajjjar.my.id` / `https://payu.fajjjar.my.id`), fix monolith `NEXT_PUBLIC_BASE_URL` per env, bump all per-service `newTag 1.18.45→1.18.50` + monolith `1.18.49→1.18.50`, verify `kustomize build` 5/5 env monolith + 5/5 per-service, `scripts/verify-sso-issuer.sh` PASS, `mvn validate 0` `npm 95/1221` `podman 5 Healthy`. Ponytail: shared verification script beats per-file manual audit; public issuer + public JWK for non-dev matches monolith.
+
+### Added
+- **Local Dev Verify (1.18.50)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy`; `kustomize build` `base` + `payu-dev/sit/uat/preprod/prod` monolith 0 error + per-service `web-app`/`gateway`/`billing` 0 error; `scripts/verify-sso-issuer.sh` PASS (6 checks per env); `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip; `kustomize build` `payu-dev` 1/1.
+
 ## [1.18.49] - 2026-08-28
 
 ### Fixed

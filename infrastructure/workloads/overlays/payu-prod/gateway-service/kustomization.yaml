@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/gateway-service
-    newTag: "1.18.45"
+    newTag: "1.18.50"
 patches:
   - target:
       kind: Deployment
@@ -26,3 +26,16 @@ patches:
         value:
           name: QUARKUS_OTEL_SDK_DISABLED
           value: "true"
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: gateway-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: QUARKUS_OIDC_TOKEN_ISSUER
+                    value: "https://sso-prod.apps.fajjjar.my.id/realms/payu"

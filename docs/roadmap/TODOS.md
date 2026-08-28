@@ -15,17 +15,16 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.49` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.49` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Last Release** | `1.18.50` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.50` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
 | **Backlog Aktif** | *No OPEN item* — seluruh B1–B4 + harden sweep **CLOSED 1.18.9–1.18.48** → [`CHANGELOG.md`](../../CHANGELOG.md). |
-| **Last Updated** | 2026-08-28 — RLS rollout **1.18.49** CLOSED 8 services `TenantDataSource` SET LOCAL `1.18.49` `TenantDataSourceRlsTest 4/4` + pipeline-perf+simulator+spotbugs **1.18.48** 7/8; sisa OPEN: issuer audit env lain, DPoP, rate-limit keying, PERF-004 DEFERRED, Results/ArgoCD tolerance. |
+| **Last Updated** | 2026-08-28 — SSO issuer 5 env **1.18.50** CLOSED `verify-sso-issuer.sh` PASS + RLS rollout **1.18.49**; sisa OPEN: DPoP, rate-limit keying, PERF-004 DEFERRED, Results/ArgoCD tolerance. |
 
 ---
 
 ## ⏸️ Deferred Scope
 
 | Key | Item |
-|:---|:---|
 | READY-061 | Mobile app (seluruh `frontend/mobile`) — ditunda dari MVP/production gate sampai diaktifkan product owner. Jangan kerjakan upgrade/bug/test mobile. |
 | PROD-035 | Mobile idempotency durability (SecureStore 2048B limit) — deferred bersama mobile |
 | PROD-038 | Mobile money precision (JS `number` untuk amount) — deferred bersama mobile |
@@ -35,8 +34,7 @@
 
 ## 🔴 Active Tickets
 
-| Key | Pri | Summary | Status |
-| SSO-ISSUER-002 | P1 | Issuer alignment + realm drift audit untuk sit/uat/preprod/prod — dev terbukti mati oleh pola identik (web-app issuer publik vs backend internal + realm drift); env lain kemungkinan besar sama | Detail di [Open Findings → Audit 2026-08-26] |
+No open P1 — `SSO-ISSUER-002` issuer alignment 5 env **CLOSED 1.18.50** `verify-sso-issuer.sh` PASS → `CHANGELOG.md`.
 
 ---
 
@@ -53,7 +51,6 @@ No open P2 — 8 items CLOSED 2026-08-12 (CB-008/011/017/022/024/025/031/036) �
 ### P3 — Backlog Lanjutan
 
 | Key | Domain | Item |
-|:---|:---|:---|
 
 ---
 
@@ -70,7 +67,6 @@ No open gate — PARTNER-PROD-007..011 ✅ Selesai 1.18.9–1.18.21 → `CHANGEL
 ## 🚀 Platform Deploy Queue
 
 | Key | Pri | Category | Summary |
-|:---|:---:|:---|:---|
 
 ---
 
@@ -105,7 +101,6 @@ No open findings — 20/20 CLOSED 1.13.70 → `CHANGELOG.md` `1.13.70` (swarm 5 
 ### Audit 2026-08-25 — CI/CD & Platform Health (hanya OPEN)
 
 | Key | Pri | Temuan | Bukti | Sisa |
-|:---|:---:|:---|:---|:---|
 | CICD-RESULTS-001 | P2 | **Tekton Results Postgres single-instance rapuh saat node rotation** — `tekton-results-postgres-0` recreate lama ketika 4 worker SchedulingDisabled (rotasi nodeset 2026-08-24/25) → `error upserting record ... dial tcp :5432 connection refused` pada record PipelineRun/TaskRun, plus finalizer `results.tekton.dev/taskrun` macet (TaskRun lama dibersihkan manual via strip finalizer 2026-08-25). Build tetap sehat (`gateway-service/web-app 1.18.46 Completed 15/15`), tapi riwayat Tekton Results bisa bolong tiap rotasi node. | events `tekton-results-postgres statefulset is not ready` · `GetResult ... connection refused` | Evaluasi HA/CNPG untuk results PG atau dokumentasikan tolerance; monitor setelah rotasi selesai |
 | ARGOCD-SYNC-001 | P3 | **4 Application ArgoCD OutOfSync** — `data-preprod/data-prod/data-sit/data-uat` OutOfSync tapi Healthy; banyak app lain sync status `Unknown` selama rotasi node. | `oc get applications.argoproj.io -n openshift-gitops` | Refresh/reconcile setelah rotasi selesai; telusuri sumber drift data-* |
 
@@ -114,8 +109,6 @@ Catatan sesi 2026-08-25: failure PipelineRun lama di `payu-cicd` (gateway-servic
 ### Audit 2026-08-26 — Web Login & Onboarding (sisa OPEN saja; FIXED → CHANGELOG 1.18.47)
 
 | Key | Pri | Temuan | Bukti | Sisa |
-|:---|:---:|:---|:---|:---|
-| SSO-ISSUER-002 | P1 | Pola issuer mismatch + realm drift kemungkinan besar terulang di sit/uat/preprod/prod (web-app issuer publik per-env vs backend internal; realm per env diimpor dari manifest berbeda-beda) | Pola identik terbukti di dev (6 lapis) | Audit per env dengan checklist yang sama: issuer token vs validator, realm users/secret/redirectUris vs git, DPoP attributes |
 | SSO-DPOP-003 | P3 | DPoP (ADR-0062) enforcement dinonaktifkan di client `payu-web-app` karena BFF belum menghasilkan DPoP proof — sender-constrained tokens belum aktif | `GET /admin/realms/payu/clients/…/attributes` dpop=false | Implementasi DPoP proof generation di BFF/auth-service, lalu nyalakan kembali enforcement |
 | NET-RATELIMIT-004 | P3 | Rate-limit auth gateway masih per-IP — seluruh user berbagi IP pod BFF; bump 120/min cukup untuk dev, per-user keying (dari refresh token/session) lebih tepat untuk prod | `gateway-service/application.yaml` rate-limit v1+v2 auth | Keying per-user untuk endpoint auth di gateway |
 
@@ -126,7 +119,6 @@ Catatan sesi 2026-08-26: audit + fix + E2E — login 3/3 stabil → dashboard; r
 > Sumber: grill sesi 2026-08-26. Bukti utama = breakdown per-TaskRun `transaction-service-build-tjwmq` (dev build 18m8s): maven 5m48s + k6 4m9s + rantai scan 3m22s + zap/k6 5m7s. Keputusan grill: changeset perf-only (gate set invariant), hybrid rollout, target lulus p50 ≤10m & p95 ≤12m pada ≥3 run tanpa gate ter-skip. ADR-0072 menyusul saat implementasi.
 
 | Key | Pri | Temuan | Bukti | Sisa |
-|:---|:---:|:---|:---|:---|
 | CICD-PERF-004 | P3 | **Kapasitas batch** — kontensi terbukti (3 build bersamaan = 36–60m vs 18m single-run) tapi profil beban akan berubah total pasca CICD-PERF-001 (download dependency = bottleneck dominan hari ini) | Batch 2026-08-24 21:25 wallet/va-simulator/support; cluster 4 worker | DEFERRED dengan pemicu objektif: pasca-pilot, uji ulang batch 3 build; bila p95 >15m → eval concurrency policy dulu, baru tambah worker |
 ---
 

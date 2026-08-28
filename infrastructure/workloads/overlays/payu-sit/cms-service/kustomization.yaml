@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/cms-service
-    newTag: "1.18.45"
+    newTag: "1.18.50"
 patches:
   - target:
       kind: Deployment
@@ -17,3 +17,18 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: cms-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: OIDC_ISSUER
+                    value: "https://sso-sit.apps.fajjjar.my.id/realms/payu"
+                  - name: OIDC_JWK_SET_URI
+                    value: "https://sso-sit.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"

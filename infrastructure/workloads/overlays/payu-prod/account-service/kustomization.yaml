@@ -9,7 +9,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/account-service
-    newTag: "1.18.45"
+    newTag: "1.18.50"
 
 patches:
   - target:
@@ -29,12 +29,12 @@ patches:
                   - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
                     value: payu-cache.payu.svc.cluster.local
                   - name: OIDC_ISSUER
-                    value: https://sso.payu.fajjjar.my.id/realms/payu
+                    value: https://sso-prod.apps.fajjjar.my.id/realms/payu
                   - name: OIDC_JWK_SET_URI
-                    value: https://sso.payu.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
+                    value: https://sso-prod.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
                   - name: QUARKUS_OIDC_AUTH_SERVER_URL
-                    value: https://sso.payu.fajjjar.my.id/realms/payu
+                    value: https://sso-prod.apps.fajjjar.my.id/realms/payu
                   - name: QUARKUS_OIDC_TOKEN_ISSUER
-                    value: https://sso.payu.fajjjar.my.id/realms/payu
+                    value: https://sso-prod.apps.fajjjar.my.id/realms/payu
                   - name: PAYU_KEYCLOAK_SERVER_URL
-                    value: https://sso.payu.fajjjar.my.id
+                    value: https://sso-prod.apps.fajjjar.my.id
