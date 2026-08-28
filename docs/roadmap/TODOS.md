@@ -137,7 +137,14 @@ Drift audit sweep 2026-08-24 (70 ADR vs repo): 3 klaim bukti dikoreksi — beres
 
 ### 2. 🔴 ADR yang Sudah Ada tapi Belum / Sebagian Diimplementasikan
 
-No open gap — seluruh ADR-GAP (003..009, 015, 019, 028W, 029, 030E, 032W, 047, 048, 054C, 056) **CLOSED 1.18.9–1.18.40** → `CHANGELOG.md`.
+| Key | ADR | Status | Gap | Bukti |
+|:---|:---|:---|:---|:---|
+| ADR-GAP-0014 | [ADR-0014 API Management Platform](adr/0014-api-management-platform.md) | **Proposed** (2026-03-02) — trigger ≥5 partners | Status masih `Proposed` padahal **3scale `APIManager Available True` `system-app 3/3` `apicast-production` `backend-listener/worker/cron` `system-memcache/searchd` `zync` live** `infrastructure/platform/api-management/3scale` + `GATEWAY_ARCH.md` `3scale` verified `payu-dev 6 pods` — perlu update status `Proposed→Accepted` + `PROPOSED` note sync | `grep -r "status.*Proposed" docs/adr/0014` + `oc get apimanager -n payu-api-management` `Available True` `oc get pods -n payu-api-management` `system-app 3/3` |
+| ADR-GAP-0016 | [ADR-0016 ARCH-006 Spring Boot 4.1.0](adr/0016-arch-006-phase-a-strategy.md) | **Deferred** (2026-06-14) — shared starters blocker | Status `Deferred` karena 4 shared starters `Spring Boot 3.x APIs` gagal, tapi **live `backend/pom.xml` `spring-boot-starter-parent:4.1.0` `java.version 25` `AccountServiceApplication v4.1.0` `Started` `BUILD SUCCESS` `31/31` `1.18.55`** — migrasi sudah live, perlu update status `Deferred→Accepted` + `Implementation Notes` sync | `grep -r "spring-boot-starter-parent:4.1.0" backend/pom.xml` + `grep "java.version.*25" backend/pom.xml` + `oc logs account-service` `Spring Boot v4.1.0` |
+| ADR-GAP-0069 | [ADR-0069 OpenShift 4.22](adr/0069-openshift-4-22-platform-standard.md) | **Accepted** (2026-08-24) — doc sweep `4.20→4.22` | Status `Accepted` tapi **normative docs masih `4.20+`** `grep -R "4\.20\+" docs/ AGENTS.md README.md` `~20` hits (`ADR-0032/0034/0024/0031` `AGENTS.md:7` `README.md` `ARCHITECTURE.md:78` `INFRASTRUCTURE_DEPLOYMENT.md:30` vs live `OCP 4.22.7` `K8s 1.35.6`), perlu sweep `~40` files per `Implementation Notes` | `grep -R "4\.20\+" docs/ | wc -l` `~20` + `grep -R "4\.22\+" docs/ | wc -l` `~5` |
+| ADR-GAP-0071 | [ADR-0071 Test Quality Gates](adr/0071-test-quality-gates-mutation-accessibility-exploratory-canary-standard.md) | **Accepted** (2026-08-26) — PIT `≥70%` core 5 | Status `Accepted` tapi **parent `backend/pom.xml` `mutationThreshold 60` untuk semua**, 5 core `transaction/wallet/partner/account/auth` **tidak override `70`** (`grep -R mutationThreshold backend/partner-service/pom.xml` 0), `axe-core` `test:a11y` exists tapi `a11y:audit` baseline burn-down belum, `Tekton` `-Pmutation-testing` nightly `CronJob` belum checked-in | `grep -R "mutationThreshold" backend --include=pom.xml` `only parent 60` + `grep -R "@axe-core/playwright" frontend/web-app/package.json` + `ls frontend/web-app/scripts/a11y-audit.ts` |
+
+No open gap — seluruh ADR-GAP (003..009, 015, 019, 028W, 029, 030E, 032W, 047, 048, 054C, 056) **CLOSED 1.18.9–1.18.40** → `CHANGELOG.md` (di atas adalah gap baru hasil audit 2026-08-28).
 
 ### 3. 📝 Backlog ADR Baru yang Perlu Dibuat
 
