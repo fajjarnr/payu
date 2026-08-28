@@ -13,7 +13,7 @@ import { useAuthStore } from '@/stores/authStore';
 
 export default function MerchantDashboard() {
  const t = useTranslations('merchant');
- const { user } = useAuthStore();
+ const { user: _user } = useAuthStore();
  const [partner, setPartner] = useState<Partner | null>(null);
  const [loading, setLoading] = useState(true);
 

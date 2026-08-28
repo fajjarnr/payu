@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
+
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import {

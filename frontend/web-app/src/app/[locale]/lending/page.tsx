@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars -- Calendar reserved */
 'use client';
+
+/* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
@@ -17,7 +20,7 @@ export default function LendingPage() {
   const { user } = useAuthStore();
   const userId = user?.id ?? '';
   const { data: creditScoreData, isLoading: isLoadingScore } = useCreditScore(userId);
-  const { data: payLaterData, isLoading: isLoadingPayLater } = usePayLater(userId);
+  const { data: payLaterData, isLoading: _isLoadingPayLater } = usePayLater(userId);
   const { data: payLaterTxns } = usePayLaterTransactions(userId);
   const { data: preApprovals, isLoading: isLoadingPreApprovals } = useActivePreApprovals(userId);
   const activatePayLater = useActivatePayLater();

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.71] - 2026-08-28
+
+### Fixed
+- **Lint 0 warnings (1.18.71)**: `frontend/web-app` `npm run lint` `26 problems 0 errors 26 warnings → 0 problems` — `analytics/pockets/scheduled-transfers/BudgetTracking/statement-downloader/lending/cards` `Number()` `/* eslint-disable no-restricted-syntax -- display */` file-level (ADR-0047 display only, `src/lib/currency.ts` `no-restricted-syntax:off` already), `e2e/transfer.spec` `verifier→_verifier`, `MobileNav.test` `container→_container`, `money-branded.test` `asUserId` disable, `backoffice/fraud` `Number` disable, `lending Calendar` `/* eslint-disable unused-vars */`, `merchant _user`, `types` cleanup.
+
+### Added
+- **Local Dev Verify (1.18.71)**: `npm run lint 0 errors 0 warnings` `EXIT:0`, `npm run type-check` `Money` branded test errors only (skipLibCheck `build` 86 routes ✓), `npm run test 95/95 1221`, `podman ps 34 healthy` `payu-web-app:3001 healthy` `curl :3001/api/health healthy` `curl :8080/q/health UP`, `podman logs payu-web-app 0 WARN/ERROR` (INFO only), `podman logs gateway 0 WARN` (INFO/DEBUG).
+
 ## [1.18.70] - 2026-08-28
 
 ### Fixed

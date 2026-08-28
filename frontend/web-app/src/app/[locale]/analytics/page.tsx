@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
+
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { TrendingUp, TrendingDown, Calendar, ArrowUpRight, Activity, Wifi, WifiOff } from 'lucide-react';

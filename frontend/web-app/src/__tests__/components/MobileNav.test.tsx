@@ -173,7 +173,7 @@ describe('MobileNav', () => {
 
   it('should scale active icon', () => {
     mockPathname = '/bills';
-    const { container } = renderWithIntl(<MobileNav />);
+    const { container: _container } = renderWithIntl(<MobileNav />);
 
     // Active item should have primary color and highlighted background
     const activeLink = screen.getByText('Tagihan').closest('a');
@@ -184,7 +184,7 @@ describe('MobileNav', () => {
 
   it('should use increased stroke width for active icon', () => {
     mockPathname = '/dashboard';
-    const { container } = renderWithIntl(<MobileNav />);
+    const { container: _container } = renderWithIntl(<MobileNav />);
 
     // Check that the active icon has the stroke-[2.5px] class
     const activeLink = screen.getByText('Dasbor').closest('a');

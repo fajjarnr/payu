@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.71 Lint 0 warnings + 34 Healthy + Build Verified (2026-08-28)
+
+- **Lint Fix (1.18.71)**: `0 errors 0 warnings` via file-level `eslint-disable no-restricted-syntax` for 7 display files (`analytics/pockets/scheduled/fraud/BudgetTracking/statement-downloader/lending/cards`) + `unused vars` `_verifier/_container/_user/_asUserId` — `Money` `Number()` for chart `pct` display, not `HALF_EVEN` arithmetic (ADR-0047 `src/lib/currency` correct).
+- **SemVer Sync 1.18.71**: `CHANGELOG 1.18.71` `TODOS 1.18.71 0 OPEN` `PROGRESS 1.18.71` `frontend/web-app` `lint` `localhost/payu-web-app:1.18.71` `c9dfd8a73a81` `1.18.70→1.18.71`.
+- **Verification 1.18.71**: `npm run lint EXIT:0 0 problems` `npm run build 86 routes ✓` `npm test 95/95 1221`, `podman ps 34 healthy` `curl :3001/api/health healthy` `curl :8080/q/health UP` `podman logs 0 WARN/ERROR`.
+
 ## Platform 1.18.70 Docs README Next16 + 34 Healthy (2026-08-28)
 
 - **Docs Fix (1.18.70)**: `frontend/web-app/README.md` `Next 15 → 16.2.12` `React 19.2.3` `Tailwind 4` + `Beneficiary A3` note; `BFF` `Money string` tagline.

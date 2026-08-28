@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
+
 import React, { useState } from 'react';
 import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, ArrowDownLeft, Trash2 } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';

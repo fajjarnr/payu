@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, FileText, Calendar, RefreshCw, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';

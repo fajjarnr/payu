@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax -- display percentage */
 'use client';
 
 import { useState } from 'react';

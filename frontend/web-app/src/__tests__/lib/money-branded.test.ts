@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- retained for branded type test
 import { asMoney, isMoney, asAccountId, asUserId, asTransactionId } from '@/types';
 import { asMoney as asMoneyCur, isMoney as isMoneyCur, addCurrency, compareCurrency, divideCurrency, parseCurrencyExact, formatExactDecimal } from '@/lib/currency';
 
