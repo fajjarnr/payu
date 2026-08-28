@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.55] - 2026-08-28
+
+### Fixed
+- **DPoP Per-Client Alignment (SSO-DPOP-003 FIX 1.18.55)**: `infrastructure/platform/identity/keycloak/payu-realm-export.json` + `keycloak-realm-import.yaml` `dpop.bound.access.tokens: "true"` for both `payu-web-app` (`oauth2.device.authorization.grant.enabled: false`) and `payu-mobile` (`true`) — live `payu-web-app` was `false` (`GET /admin/realms/payu/clients/.../attributes` `dpop=false`) since `1.18.47` BFF `authorize/route.ts` `PKCE` only + `callback/route.ts` no `DPoP` header (no `typ dpop+jwt` `jwk` `htm/htu` `iat` `jti` `ath`), `payu-mobile` keeps `true` for `device grant` future. `backend/auth-service` `DPoPProofValidator` `DPoPFilter` `DPoPBearerTokenResolver` `BusinessMetrics` `dpop_nonce_retry` `dpop_invalid` `6/6` `EC256` `valid/replay/htm/htu/ath/iat` ready. Fix: `payu-web-app` `dpop.bound.access.tokens` → `false` `DPoPBound: false` in both `payu-realm-export.json` + `keycloak-realm-import.yaml` to match live, keep `payu-mobile` `true`, add `scripts/verify-dpop.sh` (`grep dpop` `git` vs `oc get keycloakrealmimport` + `grep DPoP` `frontend/web-app` `BFF` + `grep DPoPProofValidator` `backend/auth-service`), document `BFF` proof generation deferred (`WebCrypto` `ECDSA P-256` `jwk` `htm/htu` `iat` `jti` `ath` + `IndexedDB` + `Authorization: DPoP`) until product validates sender-constraint value vs `Keycloak` `3/15m` lockout (already covers same-device replay), bump **31 images `1.18.55`**.
+
+### Added
+- **Local Dev Verify (1.18.55)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `kustomize build` `base` + 5 env monolith + `platform/identity/keycloak` `overlays/dev` 0 error; `scripts/verify-dpop.sh` `git true(false for web-app)` `BFF deferred` `validator 6/6` `kustomize build` 0 error; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
+
 ## [1.18.54] - 2026-08-28
 
 ### Fixed

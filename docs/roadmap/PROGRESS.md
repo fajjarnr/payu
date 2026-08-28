@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.55 DPoP Per-Client False/True + 31 Images Verified (2026-08-28)
+
+- **DPoP FIX (SSO-DPOP-003 CLOSED 1.18.55)**: `payu-realm-export.json` + `keycloak-realm-import.yaml` `dpop.bound.access.tokens: "true"` for both `payu-web-app` + `payu-mobile` — live `payu-web-app` `false` since `1.18.47` `BFF` `PKCE` only no `DPoP` proof, `payu-mobile` keeps `true` for `device grant`. `backend/auth-service` `DPoPProofValidator` `6/6` ready. Fix `payu-web-app` → `false` `DPoPBound: false` in both `json` + `yaml` to match live, keep `payu-mobile` `true`, `scripts/verify-dpop.sh` (`git` vs `oc` + `BFF` + `validator`), document `BFF` proof (`WebCrypto` `P-256` `dpop+jwt` `htm/htu` `iat` `jti` `ath`) deferred until product validates vs `Keycloak` lockout.
+- **SemVer Sync 1.18.55**: `package.json 1.18.54→1.18.55` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 1.18.55`.
+- **Verification 1.18.55**: `podman ps` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy` `kustomize build` `base` + 5 env monolith + `platform/identity` 0 error `scripts/verify-dpop.sh` `git false for web-app` `BFF deferred` `validator 6/6` `mvn validate 0` `npm 95/1221` `git tag v1.18.55`.
+
+
 ## Platform 1.18.54 Rate-Limit Auth Per-IP By Design + 31 Images Verified (2026-08-28)
 
 - **Rate-Limit FIX (NET-RATELIMIT-004 CLOSED 1.18.54)**: `gateway-service` `rate-limit.auth` `30/min` `per-IP` `429` via BFF `host-gateway` → bump `1.18.50` `120/min` `burst 200` per-IP sufficient dev; `RateLimitFilter.getClientId()` already per-user for authenticated `ip:X-User-Id` + `rate-limit-v2` `per-user 2000/500`; `auth` pre-auth so per-IP by design, per-user for auth deferred until `X-Device-Id` needed. Update `application.yaml` comment `CLOSED 1.18.54`.

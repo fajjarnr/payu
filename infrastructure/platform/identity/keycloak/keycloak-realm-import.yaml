@@ -168,8 +168,8 @@ spec:
         attributes:
           access.token.lifespan: "300"
           pkce.code.challenge.method: "S256"
-          dpop.bound.access.tokens: "true"
-          DPoPBound: "true"
+          dpop.bound.access.tokens: "false"
+          DPoPBound: "false"
           oauth2.device.authorization.grant.enabled: "false"
         protocolMappers:
           - name: preferred_username
