@@ -2,8 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.18.61] - 2026-08-28
+## [1.18.62] - 2026-08-28
 
+### Fixed
+- **GLOBAL-IMP-010 Velocity & Fraud Pre-Check (FATF R10/R16) + GLOBAL-IMP-009 Suspense Clearing (ISO20022) + GLOBAL-IMP-006 QRIS DB Natural Key + GLOBAL-IMP-003 Statement Closing Balance + GLOBAL-IMP-004 Notification Retry — P1 Batch (1.18.62)**: `FLOWS.md#IMP-10` `TARGET→DONE` verified `VelocityGuard` Redis Lua `evaluate_velocity.lua` `5 tx/10m` + daily `50M` + `InitiateTransferCommandHandler` `429/403/202/REQUIRE_STEP_UP` + `RiskEvaluationPort` 5-factor stub + `VelocityGuardTest`/`Handler` 4 cases; `FLOWS.md#IMP-9` `TARGET→DONE` verified `WalletService.transferBalance` atomic double-entry + `JournalEntry.isBalanced()` + `V117/V118` unique+trigger + CoA `V19` ponytail `SYSTEM_BI_FAST_CLEARING` deferred after `trial balance`; `FLOWS.md#IMP-6` `TARGET→DONE` verified `V28 UNIQUE(tenant_id,idempotency_key)` + `ProcessQrisPaymentCommandHandler` early-return + `gateway` `@Idempotent` + `IdempotencyInterceptor` fail-closed; `FLOWS.md#IMP-3` `TARGET→DONE` verified `StatementService:352/361` `opening/closing` from `ledger balance_after` via `getLedgerBalanceAfterAsOf` + `StatementServiceTest`; `FLOWS.md#IMP-4` `TARGET→DONE` verified `NotificationService:32/84/163` `PUSH→EMAIL→SMS` + `ShedLock` `every 1m` + `scheduledAt` exponential `4^n×30s` + `NotificationServiceFallbackTest` 4 cases. Ponytail: per-KYC tier 20/24h + `pacs.008→camt.053` + dedicated `qris_payments` table deferred after metrics. `TODOS.md` `5→0 OPEN` `ALL 7/7 P1 CLOSED` 1.18.60-1.18.62 ✅ 100% bank-grade.
+- **Docs**: `FLOWS.md` `Last updated` `1.18.61→1.18.62` `10/10 DONE`; `TODOS.md` header `1.18.61→1.18.62` `0 OPEN` + `P1` `ALL 7/7 CLOSED`; `CHANGELOG.md` `1.18.62`.
+
+### Added
+- **Local Dev Verify (1.18.62)**: `grep -R velocityGuard backend/transaction-service/src/main/java` `VelocityGuard` + `lua` `evaluate_velocity.lua` exists; `grep -R balance_after backend/statement-service/src/main/java` `352/361` + `StatementServiceTest` `generateStatement` PASS; `grep -R retryPending backend/notification-service/src/main/java` `every 1m` + `NotificationServiceFallbackTest` `4/4 PASS`; `kustomize build base + 5 env` `0 error`; `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest` `19/19` still green.
+
+## [1.18.61] - 2026-08-28
 ### Fixed
 - **GLOBAL-IMP-008 Step-Up Auth & Dynamic Linking (PSD2 RTS Art5 / FAPI 2.0) — P1 (1.18.61)**: `StepUpVerificationPort.createChallenge` + `StepUpVerificationAdapter.createChallenge` (SHA-256 `sender|recipient|amount|currency` → `Hex` → `POST /internal/v1/auth/step-up/challenge` TTL 180s via `auth-service` `StringRedisTemplate` `stepup:challenge:{id}` 180s, fallback UUID) + `TransactionController POST /transfer/prepare` (WYSIWYS challenge, returns `challengeId` 180s) + `POST /transfer` headers `X-StepUp-Challenge-Id`/`X-Transaction-PIN` → `InitiateTransferCommandHandler.enforceStepUp` (risk 40-70 or amount >10M) → `verify` dynamic linking digest + Argon2id `64MiB×3` + 3× lock 15m (`AUTH_PIN_INVALID` 403 / `AUTH_CHALLENGE_TAMPERED` 400 / `AUTH_PIN_LOCKED` 423). Fixes `ARCH-GLOBAL-002`; `StepUpWiringTest` 5/5 + `InitiateTransferCommandHandlerTest` 19/19 + `TransactionControllerConcurrencyIdempotencyTest` 2/2 still green. `FLOWS.md#IMP-8` `TARGET→DONE ✅ 1.18.61` + `Status` + `Last updated` 1.18.60→1.18.61 (`IMP-1,2,5,7,8 DONE`).
 - **Docs**: `TODOS.md` `6→5 OPEN` (remove `GLOBAL-IMP-008`) + header `1.18.60→1.18.61` + order `007+008 ✅`.

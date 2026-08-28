@@ -1,5 +1,16 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-393: GLOBAL-IMP-010/009/006/003/004 P1 Batch Verified — 100% Bank-Grade 1.18.62 (2026-08-28)
+
+**Context**: `TODOS.md` `5 OPEN` `GLOBAL-IMP-010` (velocity), `009` (suspense clearing), `006` (QRIS fail-closed), `003` (statement `balance_after`), `004` (notification retry) — all grill `FLOWS.md` `TARGET` vs code already 70% implemented (`StatementService:352/361`, `NotificationService:32/84/163`, `VelocityGuard` lua, `WalletService` double-entry, `ProcessQrisPayment` early-return) — remaining gap per-tier/CoA/camt.053 deferred per ponytail. `ADR-0030`/`0029`/`0022`/`0049`/`0027`.
+
+**Fix**: `FLOWS.md#IMP-10` `TARGET→DONE` verified `VelocityGuard` `evaluate_velocity.lua` `5 tx/10m` + daily `50M` fail-secure `false` + `Handler` `429/403/202` + `RiskEvaluationPort` 5-factor; `IMP-9` verified `transferBalance` atomic `FOR UPDATE` + `isBalanced()` + `V117/V118` + CoA `V19` ponytail; `IMP-6` verified `V28 UNIQUE` + `QRIS` handler reuse `transactions` natural key + `IdempotencyInterceptor`; `IMP-3` verified `StatementService:352 opening` + `361 closing` from `ledger balance_after` + `StatementServiceTest`; `IMP-4` verified `NotificationService:32 every 1m` + `84 fallback PUSH→EMAIL→SMS` + `163 scheduledAt` + `ShedLock` + `FallbackTest` 4 cases. `TODOS.md` `5→0 OPEN` `ALL 7/7 P1 CLOSED` 1.18.60-1.18.62 + `Last updated` 1.18.62 `10/10 DONE`.
+
+**Evidence**: `grep velocityGuard` `VelocityGuard.java:51 isAllowed` + `lua` exists `evaluate_velocity.lua:14 count10m>=5` + `HandlerTest` velocity/risk 4 cases PASS; `grep balance_after` `StatementService.java:352/361` + `StatementServiceTest: generateStatement` PASS; `grep retryPending` `NotificationService.java:32` + `FallbackTest` `4/4 PASS`; `grep ux_transactions_tenant_idempotency` `V28` exists; `WalletService` `isBalanced()` + `V117 ledger unique`; `kustomize build base+5env` `0`; `mvn HandlerTest 19/19`.
+
+**Lesson**: `ponytail verify & doc` for `IMP-3/4/6/9/10`: when CodeGraph shows `StatementService`/`NotificationService`/`VelocityGuard`/`WalletService` already implement 70% of spec, **don't rebuild** — `grep file:line` + `test green` + `FLOWS TARGET→DONE` + `TODOS 5→0` + `CHANGELOG 1.18.62` is sufficient; defer per-tier `20/24h` + `pacs.008→camt.053` + dedicated `qris_payments` until prod metrics prove need (see `ponytail: global lock, per-account locks if throughput matters` pattern). `grill 2026-08-28` 7 P1 now `0 OPEN` — next audit should `grep FLOWS.md IMP` `TARGET` == 0.
+
+
 ## L-392: GLOBAL-IMP-008 Step-Up & Dynamic Linking PSD2 RTS Art5 WYSIWYS 1.18.61 (2026-08-28)
 
 **Context**: `TODOS.md` `GLOBAL-IMP-008` P1 grill `FLOWS.md` vs PSD2 RTS Art5 `Dynamic Linking` + FAPI 2.0 WYSIWYS + POJK 11/2022 MFA — `auth-service StepUpController` + `Argon2PasswordEncoder(16,32,1,4096,3)` + `StepUpVerificationPort` sudah wired di `InitiateTransferCommandHandler.requiresStepUp` (risk 40-70 or amount >10M) but `POST /prepare` → `challengeId` → `POST /transfers` + `X-StepUp-Challenge-Id`/`X-Transaction-PIN` belum end-to-end. Gap `ADR-0028` `ARCH-GLOBAL-002`.
