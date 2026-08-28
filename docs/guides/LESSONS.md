@@ -1,5 +1,16 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-392: GLOBAL-IMP-008 Step-Up & Dynamic Linking PSD2 RTS Art5 WYSIWYS 1.18.61 (2026-08-28)
+
+**Context**: `TODOS.md` `GLOBAL-IMP-008` P1 grill `FLOWS.md` vs PSD2 RTS Art5 `Dynamic Linking` + FAPI 2.0 WYSIWYS + POJK 11/2022 MFA — `auth-service StepUpController` + `Argon2PasswordEncoder(16,32,1,4096,3)` + `StepUpVerificationPort` sudah wired di `InitiateTransferCommandHandler.requiresStepUp` (risk 40-70 or amount >10M) but `POST /prepare` → `challengeId` → `POST /transfers` + `X-StepUp-Challenge-Id`/`X-Transaction-PIN` belum end-to-end. Gap `ADR-0028` `ARCH-GLOBAL-002`.
+
+**Fix**: `StepUpVerificationPort.createChallenge` + `StepUpVerificationAdapter.createChallenge` (SHA-256 `sender|recipient|amount|currency` → `Hex` → `POST /internal/v1/auth/step-up/challenge` `TTL 180s` `stepup:challenge:{id}` via `StringRedisTemplate`, fallback UUID ponytail) + `TransactionController POST /transfer/prepare` (returns `challengeId` 180s, WYSIWYS) + `POST /transfer` merge `X-StepUp-Challenge-Id`/`X-Transaction-PIN` headers into `InitiateTransferCommand` → `enforceStepUp` → `verify` digest + Argon2id `64MiB×3` + 3× lock 15m (`AUTH_PIN_INVALID` 403 / `AUTH_CHALLENGE_TAMPERED` 400 / `AUTH_PIN_LOCKED` 423). Fixes `ARCH-GLOBAL-002`. `FLOWS.md#IMP-8` `TARGET→DONE`.
+
+**Evidence**: `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest,StepUpWiringTest,TransactionControllerConcurrencyIdempotencyTest` `26/26` (`StepUpWiring 5` + `Handler 19` + `Concurrency 2`); `mvn clean package -DskipTests` `BUILD SUCCESS` `416 classes`; `TransactionController` injects `StepUpVerificationPort` mock in concurrency test.
+
+**Lesson**: `PSD2` dynamic linking = **prepare/verify split**: `createChallenge` stores `userId|payload_digest` 180s via `DEL` single-use; `verify` recomputes digest from execution payload and checks `userId|digest` equality before Argon2. `fallback UUID` ponytail preserves local dev without `payu-redis`; production must have Redis (`payu-redis` `payu-cache`). `X-StepUp-Challenge-Id` + `X-Transaction-PIN` headers beats body-only for log masking (`@Sensitive` PIN never logged).
+
+
 ## L-391: GLOBAL-IMP-007 Payload Fingerprint — Stripe/Adyen SHA-256 Canonical JSON + DB Durability 1.18.60 (2026-08-28)
 
 **Context**: `TODOS.md` `GLOBAL-IMP-007` P1 grill `FLOWS.md` vs Stripe `/stripe/stripe-node` `StripeIdempotencyError` + Adyen `idempotency-key ≤64 UUID + HMAC SHA256` — `InitiateTransferCommandHandler.findByIdempotencyKey` hanya string match, belum `request_hash`; cache `IdempotencyInterceptor/Service` sudah `SHA-256(canonical Body)` + `409 IDEMPOTENCY_KEY_REUSE` but `Redis 24h TTL` + `fail-open` → replay pasca-TTL = double-charge. Gap `ADR-0022` `Option 4` DB natural key + `ADR-0060` `UNIQUE(tenant_id,idempotency_key)`.

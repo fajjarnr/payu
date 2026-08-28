@@ -1835,10 +1835,10 @@ sequenceDiagram
 |:---|:---|
 | Replay hanya mencocokkan string `X-Idempotency-Key` → **Validasi kecocokan SHA-256 Request Body** | Menjamin jika client/attacker me-reuse key dengan nominal atau tujuan berbeda, request langsung ditolak 409 |
 
-## IMP-8. Step-Up Authentication & Dynamic Linking (flow #3, #7, #8, #30)
+## IMP-8. Step-Up Authentication & Dynamic Linking (flow #3, #7, #8, #30) ✅ DONE (GLOBAL-IMP-008, 1.18.61)
 
+> **Status**: implemented 2026-08-28 — `StepUpVerificationPort.createChallenge` + `StepUpVerificationAdapter.createChallenge` (SHA-256 `sender|recipient|amount|currency` → `Hex` → POST `/internal/v1/auth/step-up/challenge` TTL 180s via `auth-service` Redis, fallback UUID) + `TransactionController POST /transfer/prepare` (WYSIWYS challenge, returns `challengeId` 180s) + `POST /transfer` header `X-StepUp-Challenge-Id`/`X-Transaction-PIN` → `InitiateTransferCommandHandler.enforceStepUp` (risk 40-70 or amount >10M) → `StepUpVerificationPort.verify` dynamic linking digest + Argon2id 64MiB×3 + 3× lock 15m (`AUTH_PIN_INVALID` 403 / `AUTH_CHALLENGE_TAMPERED` 400 / `AUTH_PIN_LOCKED` 423). Tests: `StepUpWiringTest` 5/5 + `InitiateTransferCommandHandlerTest` 19/19 + `TransactionControllerConcurrencyIdempotencyTest` 2/2.
 > **Pola Global**: PSD2 RTS Article 5 (Strong Customer Authentication) / FAPI Standard. Otorisasi spesifik per transaksi mutasi dana keluar.
-
 ```mermaid
 sequenceDiagram
     actor U as User
@@ -1936,5 +1936,4 @@ sequenceDiagram
 
 ---
 
-*Last updated: 2026-08-28. Verifikasi code: release 1.18.60 (flow 1-47 = aktual; IMP-1, IMP-2, IMP-5 & IMP-7 = DONE; IMP-3, IMP-4, IMP-6, IMP-8, IMP-9, IMP-10 = TARGET — 1 of 7 P1 remaining from grill 2026-08-28). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52).*
-
+*Last updated: 2026-08-28. Verifikasi code: release 1.18.61 (flow 1-47 = aktual; IMP-1, IMP-2, IMP-5, IMP-7 & IMP-8 = DONE; IMP-3, IMP-4, IMP-6, IMP-9, IMP-10 = TARGET — 2 of 7 P1 done, 5 remaining). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52).*

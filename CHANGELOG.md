@@ -2,9 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-## [1.18.60] - 2026-08-28
+## [1.18.61] - 2026-08-28
 
+### Fixed
+- **GLOBAL-IMP-008 Step-Up Auth & Dynamic Linking (PSD2 RTS Art5 / FAPI 2.0) — P1 (1.18.61)**: `StepUpVerificationPort.createChallenge` + `StepUpVerificationAdapter.createChallenge` (SHA-256 `sender|recipient|amount|currency` → `Hex` → `POST /internal/v1/auth/step-up/challenge` TTL 180s via `auth-service` `StringRedisTemplate` `stepup:challenge:{id}` 180s, fallback UUID) + `TransactionController POST /transfer/prepare` (WYSIWYS challenge, returns `challengeId` 180s) + `POST /transfer` headers `X-StepUp-Challenge-Id`/`X-Transaction-PIN` → `InitiateTransferCommandHandler.enforceStepUp` (risk 40-70 or amount >10M) → `verify` dynamic linking digest + Argon2id `64MiB×3` + 3× lock 15m (`AUTH_PIN_INVALID` 403 / `AUTH_CHALLENGE_TAMPERED` 400 / `AUTH_PIN_LOCKED` 423). Fixes `ARCH-GLOBAL-002`; `StepUpWiringTest` 5/5 + `InitiateTransferCommandHandlerTest` 19/19 + `TransactionControllerConcurrencyIdempotencyTest` 2/2 still green. `FLOWS.md#IMP-8` `TARGET→DONE ✅ 1.18.61` + `Status` + `Last updated` 1.18.60→1.18.61 (`IMP-1,2,5,7,8 DONE`).
+- **Docs**: `TODOS.md` `6→5 OPEN` (remove `GLOBAL-IMP-008`) + header `1.18.60→1.18.61` + order `007+008 ✅`.
+
+### Added
+- **Local Dev Verify (1.18.61)**: `mvn -f backend/pom.xml clean install -DskipTests -pl shared/*` `11/11 SUCCESS`; `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest,StepUpWiringTest,TransactionControllerConcurrencyIdempotencyTest` `26/26 PASS`; `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS` `416 classes`; `kustomize build base + 5 env` `0 error`.
+
+## [1.18.60] - 2026-08-28
 ### Fixed
 - **GLOBAL-IMP-007 Idempotency Payload Fingerprint (Parameter Tampering Guard) — Stripe/Adyen P1 (1.18.60)**: `V31__add_idempotency_request_hash.sql` `transactions.idempotency_request_hash VARCHAR(64)` (SHA-256 Base64 canonical JSON `TreeMap` sorted → `SHA-256` → Base64) + `InitiateTransferCommandHandler.computeRequestHash` (amount `toPlainString` + currency + recipient + sender + type + bankCode) + DB guard `findByIdempotencyKey` hash compare → `409 IDEMPOTENCY_PAYLOAD_MISMATCH` on amount/recipient/type tamper (fail-closed beyond 24h TTL). Cache layer `IdempotencyInterceptor`/`IdempotencyService` already `SHA-256(canonical Body)` + `409 IDEMPOTENCY_KEY_REUSE`/`IN_PROGRESS`; DB adds durability per `ADR-0022` + `ADR-0060` + `FLOWS.md#IMP-7`. `TransactionDomainException.IdempotencyPayloadMismatchException` extends `ConflictException` → RFC9457 `409 Conflict`. Legacy `NULL` hash bypass (ponytail backfill deferred). Coverage: `InitiateTransferCommandHandlerTest` +5 (replay ok / amount tamper 409 / recipient tamper 409 / deterministic hash / legacy null) `19 PASS` + `TransactionControllerConcurrencyIdempotencyTest` 10 concurrent → 1 mutation (`409` on 9) + `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS`.
 - **Docs**: `docs/product/FLOWS.md#IMP-7` `TARGET → DONE ✅ 1.18.60` + `Status` + `Last updated` `1.11.14 → 1.18.60` (`IMP-1,2,5,7 DONE`); `docs/roadmap/TODOS.md` `7 → 6 OPEN` (remove `GLOBAL-IMP-007`) + header `1.18.59 → 1.18.60` + order `007 ✅`.

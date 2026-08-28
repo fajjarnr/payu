@@ -9,6 +9,7 @@ import id.payu.commons.idempotency.IdempotencyService;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
+import id.payu.transaction.domain.port.out.StepUpVerificationPort;
 import id.payu.transaction.interfaces.dto.InitiateTransferResponse;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.DisplayName;
@@ -104,7 +105,8 @@ class TransactionControllerConcurrencyIdempotencyTest {
     private static MockMvc buildMockMvc(TransactionUseCase useCase, IdempotencyInterceptor interceptor) {
         return MockMvcBuilders
                 .standaloneSetup(new TransactionController(useCase, mock(
-                        id.payu.transaction.application.service.AccountTransactionSummaryService.class)))
+                        id.payu.transaction.application.service.AccountTransactionSummaryService.class),
+                        mock(StepUpVerificationPort.class)))
                 .addFilters(bodyCachingFilter())
                 .addInterceptors(interceptor)
                 .build();

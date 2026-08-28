@@ -27,4 +27,11 @@ public interface StepUpVerificationPort {
     void verify(String userId, String challengeId, String pin,
                 UUID senderAccountId, String recipientAccountNumber,
                 BigDecimal amount, String currency);
+
+    /**
+     * Create dynamic linking challenge (prepare phase). Returns challengeId.
+     * Stores payload_digest = SHA-256(sender|recipient|amount|currency) in auth-service Redis 180s.
+     */
+    String createChallenge(String userId, UUID senderAccountId, String recipientAccountNumber,
+                           BigDecimal amount, String currency);
 }

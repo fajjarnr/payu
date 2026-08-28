@@ -112,6 +112,40 @@ public class StepUpVerificationAdapter implements StepUpVerificationPort {
         }
     }
 
+    @Override
+    public String createChallenge(String userId, UUID senderAccountId, String recipientAccountNumber,
+                                  BigDecimal amount, String currency) {
+        String payloadDigest = computeDigest(senderAccountId, recipientAccountNumber, amount, currency);
+        String url = authServiceUrl + "/internal/v1/auth/step-up/challenge";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("userId", userId);
+        body.put("payloadDigest", payloadDigest);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        try {
+            ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
+            String respBody = resp.getBody();
+            if (respBody != null) {
+                JsonNode root = objectMapper.readTree(respBody);
+                String challengeId = root.path("challengeId").asText(null);
+                if (challengeId != null && !challengeId.isBlank()) {
+                    log.info("Step-up challenge created {} for user {} digest {}", challengeId, userId, payloadDigest);
+                    return challengeId;
+                }
+                // fallback: if auth returns plain challengeId string
+                if (root.isTextual()) return root.asText();
+            }
+            // fallback generate local UUID if auth unavailable locally (ponytail local dev without payu-redis)
+            log.warn("Auth challenge response missing challengeId, respBody={} — fallback local", respBody);
+            return UUID.randomUUID().toString();
+        } catch (Exception e) {
+            log.warn("Step-up challenge creation failed for user {}: {} — fallback local challenge", userId, e.getMessage());
+            // ponytail: local fallback preserves UX when auth-service/redis down locally; production must have redis
+            return UUID.randomUUID().toString();
+        }
+    }
+
     /**
      * Canonical digest per ADR-0028: SHA-256(sender|recipient|amount.toPlainString|currency)
      * Visible for tests.

@@ -15,6 +15,7 @@ import id.payu.transaction.application.cqrs.command.InitiateTransferCommand;
 import id.payu.transaction.application.cqrs.command.InitiateTransferCommandResult;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.in.TransactionUseCase;
+import id.payu.transaction.domain.port.out.StepUpVerificationPort;
 import id.payu.transaction.interfaces.dto.InitiateTransferRequest;
 import id.payu.transaction.interfaces.dto.InitiateTransferResponse;
 import id.payu.transaction.interfaces.dto.InterbankTransferCallbackRequest;
@@ -63,11 +64,14 @@ public class TransactionController extends BaseController {
 
     private final TransactionUseCase transactionUseCase;
     private final id.payu.transaction.application.service.AccountTransactionSummaryService accountTransactionSummaryService;
+    private final StepUpVerificationPort stepUpVerificationPort;
 
     public TransactionController(TransactionUseCase transactionUseCase,
-                                 id.payu.transaction.application.service.AccountTransactionSummaryService accountTransactionSummaryService) {
+                                 id.payu.transaction.application.service.AccountTransactionSummaryService accountTransactionSummaryService,
+                                 StepUpVerificationPort stepUpVerificationPort) {
         this.transactionUseCase = transactionUseCase;
         this.accountTransactionSummaryService = accountTransactionSummaryService;
+        this.stepUpVerificationPort = stepUpVerificationPort;
     }
 
     /**
@@ -195,12 +199,22 @@ public class TransactionController extends BaseController {
     @Idempotent(required = true)
     @PreAuthorize("hasAuthority('write:transaction')")
     public ResponseEntity<ApiResponse<InitiateTransferResponse>> initiateTransfer(
-            @Valid @RequestBody InitiateTransferRequest request
+            @Valid @RequestBody InitiateTransferRequest request,
+            @RequestHeader(value = "X-StepUp-Challenge-Id", required = false) String challengeIdHeader,
+            @RequestHeader(value = "X-Transaction-PIN", required = false) String pinHeader
     ) {
         try {
             String userId = extractUserId();
-            InitiateTransferCommandResult result = transactionUseCase.initiateTransfer(
-                    InitiateTransferCommand.from(request, userId));
+            InitiateTransferCommand base = InitiateTransferCommand.from(request, userId);
+            // ADR-0028: support both body and header for step-up proof (WYSIWYS)
+            String effectiveChallengeId = base.stepUpChallengeId() != null && !base.stepUpChallengeId().isBlank()
+                    ? base.stepUpChallengeId() : challengeIdHeader;
+            String effectivePin = base.transactionPin() != null && !base.transactionPin().isBlank()
+                    ? base.transactionPin() : pinHeader;
+            InitiateTransferCommand command = new InitiateTransferCommand(
+                    base.senderAccountId(), base.recipientAccountNumber(), base.amount(), base.description(),
+                    base.type(), effectivePin, base.deviceId(), base.idempotencyKey(), base.userId(), base.bankCode(), effectiveChallengeId);
+            InitiateTransferCommandResult result = transactionUseCase.initiateTransfer(command);
             InitiateTransferResponse response = result.toResponse();
             return created(response, "/api/v1/transactions/" + result.transactionId());
         } catch (BusinessException e) {
@@ -211,8 +225,29 @@ public class TransactionController extends BaseController {
         // BUG-BE-144: Removed generic Exception catch — GlobalExceptionHandler handles unexpected errors uniformly
     }
 
+    /**
+     * ADR-0028 Step-Up prepare — dynamic linking challenge per PSD2 RTS Art5.
+     * Returns challengeId (TTL 180s) for WYSIWYS display + PIN entry.
+     * Client must forward challengeId + PIN via headers X-StepUp-Challenge-Id + X-Transaction-PIN on POST /transfer.
+     */
+    @PostMapping("/transfer/prepare")
+    @Operation(summary = "Prepare step-up challenge", description = "Creates dynamic linking challenge (SHA-256 sender|recipient|amount|currency) TTL 180s per ADR-0028. Returns challengeId for PIN entry; verify via X-StepUp-Challenge-Id + X-Transaction-PIN on transfer execute.")
+    @PreAuthorize("hasAuthority('write:transaction')")
+    public ResponseEntity<ApiResponse<PrepareChallengeResponse>> prepareTransfer(
+            @Valid @RequestBody InitiateTransferRequest request) {
+        String userId = extractUserId();
+        String currency = request.getCurrency() != null ? request.getCurrency() : "IDR";
+        String challengeId = stepUpVerificationPort.createChallenge(
+                userId, request.getSenderAccountId(), request.getRecipientAccountNumber(),
+                request.getAmount(), currency);
+        PrepareChallengeResponse body = new PrepareChallengeResponse(challengeId, 180L,
+                request.getRecipientAccountNumber(), request.getAmount().toPlainString(), currency);
+        return ResponseEntity.ok(ApiResponse.success(body));
+    }
+
+    public record PrepareChallengeResponse(String challengeId, long ttlSeconds, String recipientAccountNumber, String amount, String currency) {}
+
     @PostMapping("/interbank/callback")
-    @Idempotent(required = true)
     @Operation(summary = "Settle interbank transfer", description = "Applies a signed BI-FAST, SKN, or RTGS status callback")
     public ResponseEntity<ApiResponse<TransactionResponse>> settleInterbankTransfer(
             @Valid @RequestBody InterbankTransferCallbackRequest request) {
