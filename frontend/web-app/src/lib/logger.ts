@@ -40,11 +40,12 @@ export function withCorrelation(correlationId: string) {
 /*  Helper: extract or generate correlation-id from a request         */
 /* ------------------------------------------------------------------ */
 export function getCorrelationId(request: Request): string {
-  return (
-    request.headers.get("x-correlation-id") ??
-    request.headers.get("x-request-id") ??
-    crypto.randomUUID()
-  );
+  const fromHeader = request.headers.get("x-correlation-id") ?? request.headers.get("x-request-id");
+  if (fromHeader) return fromHeader;
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  } catch {}
+  return `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 10)}`;
 }
 
 /* ------------------------------------------------------------------ */

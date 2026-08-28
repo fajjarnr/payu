@@ -62,7 +62,7 @@ rules:
                         type: string
   # Idempotency Rules
   idempotency-header-required:
-    description: "POST/PUT/PATCH operations must support Idempotency-Key header"
+    description: "POST/PUT/PATCH operations must support X-Idempotency-Key header (PayU standard, Stripe/Adyen X- prefix, Context7 verified)"
     given: "$.paths.*[post,put,patch].parameters"
     then:
       function: schema
@@ -72,20 +72,20 @@ rules:
             type: object
             properties:
               name:
-                const: "Idempotency-Key"
+                const: "X-Idempotency-Key"
               in:
                 const: "header"
               required:
                 const: true
   idempotency-header-description:
-    description: "Idempotency-Key header must have proper description"
-    given: "$.paths.*[post,put,patch].parameters[?(@.name=='Idempotency-Key')]"
+    description: "X-Idempotency-Key header must have proper description (UUID v4, 64 chars, Stripe/Adyen max 64 per Context7)"
+    given: "$.paths.*[post,put,patch].parameters[?(@.name=='X-Idempotency-Key')]"
     then:
       function: truthy
       field: description
   idempotency-header-format:
-    description: "Idempotency-Key should be UUID format"
-    given: "$.paths.*[post,put,patch].parameters[?(@.name=='Idempotency-Key')]"
+    description: "X-Idempotency-Key should be UUID format"
+    given: "$.paths.*[post,put,patch].parameters[?(@.name=='X-Idempotency-Key')]"
     then:
       function: schema
       functionOptions:

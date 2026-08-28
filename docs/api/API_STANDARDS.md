@@ -134,6 +134,7 @@ Operasi mutating (POST/PUT/PATCH) wajib mendukung header `X-Idempotency-Key` (UU
 ## ✅ API Validation (Spectral)
 
 PayU menggunakan **Spectral** sebagai OpenAPI linter untuk memastikan spek API mematuhi standar di atas secara otomatis.
+Generated spec: gateway `http://localhost:8080/q/openapi` (Quarkus SmallRye) + JVM `http://localhost:8001/v3/api-docs` (Springdoc) — agregasi via `api-portal-service` allowlist; `docs/openapi/` adalah generated, jangan commit manual.
 
 ### Installation
 
@@ -141,27 +142,28 @@ PayU menggunakan **Spectral** sebagai OpenAPI linter untuk memastikan spek API m
 # Install via npm
 npm install -g @stoplight/spectral-cli
 
-# Install via script
-./scripts/validate-api.sh --install
+# Install via script (actual path)
+./scripts/validation/validate-api.sh --install
 ```
 
 ### Quick Start
 
 ```bash
-# Validasi file tunggal
-./scripts/validate-api.sh docs/openapi/account-api.yaml
+# Validasi file tunggal (Context7 + Stripe/Adyen X- prefix verified)
+./scripts/validation/validate-api.sh docs/openapi/account-api.yaml
 
 # Validasi semua spek di project
-./scripts/validate-api.sh
+./scripts/validation/validate-api.sh
 ```
 
 ### Aturan yang Diverifikasi (Spectral Ruleset)
 
 1. **Response Envelope**: Semua response sukses harus menggunakan field `data` dan `meta`.
-2. **Idempotency**: Semua POST/PUT/PATCH harus mendefinisikan header `Idempotency-Key`.
+2. **Idempotency**: Semua POST/PUT/PATCH harus mendefinisikan header `X-Idempotency-Key` (PayU `X-` prefix, Stripe `Idempotency-Key` / Adyen `idempotency-key` max 64 UUID per Context7, PayU konsisten `X-Idempotency-Key` di gateway/Java/Python/CORS/mobile).
 3. **Naming**: Path harus kebab-case (e.g., `/user-accounts`) dan memiliki prefix versi (`/v1/`).
 4. **Documentation**: Tiap operasi wajib memiliki `summary`, `description`, dan `operationId` (camelCase).
 5. **Pagination**: Endpoint list wajib mendukung parameter `page` dan `size`.
+
 
 ---
 
@@ -174,10 +176,10 @@ Sebelum merilis API baru, pastikan:
 - [ ] Response mengikuti format standar PayU (`data` & `meta`).
 - [ ] Support `X-Idempotency-Key` (untuk write operations).
 - [ ] Error codes mengikuti prefix domain yang sesuai.
-- [ ] **Lulus validasi Spectral** (`./scripts/validate-api.sh`).
+- [ ] **Lulus validasi Spectral** (`./scripts/validation/validate-api.sh`).
 - [ ] OpenAPI spec (JSON/YAML) sudah diupdate.
 - [ ] Unit tests mencakup happy path & error scenarios.
-
 ---
 
-_Last Updated: February 24, 2026_
+_Last Updated: February 24, 2026 — patched 2026-08-28 `scripts/validation/validate-api.sh` `X-Idempotency-Key` `q/openapi+v3/api-docs` via Context7 Stripe/Adyen X- prefix max64_
+

@@ -36,8 +36,9 @@ export const useUIStore = create<UIState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
 
   addToast: (message, type, duration = 5000) => {
-    // BUG-FE-003: Use crypto.randomUUID() instead of incrementing counter
-    const id = crypto.randomUUID();
+    const id = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 10)}`;
     const toast = { id, message, type, duration };
     
     set((state) => ({ toasts: [...state.toasts, toast] }));

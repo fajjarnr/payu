@@ -148,10 +148,11 @@ export class FxService {
   }
 
   async createConversion(request: FxConversionRequest): Promise<FxConversionResponse> {
+    const idem = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
     const response = await api.post<FxConversionResponse>(
       `${this.baseUrl}/conversions`,
       request,
-      { headers: { 'X-Idempotency-Key': crypto.randomUUID() } }
+      { headers: { 'X-Idempotency-Key': idem } }
     );
     return response.data;
   }
@@ -167,12 +168,12 @@ export class FxService {
     const response = await api.get<FxConversionResponse[]>(`${this.baseUrl}/conversions`);
     return response.data;
   }
-
   async reverseConversion(conversionId: string): Promise<FxConversionResponse> {
+    const idem = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
     const response = await api.post<FxConversionResponse>(
       `${this.baseUrl}/conversions/${conversionId}/reverse`,
       {},
-      { headers: { 'X-Idempotency-Key': crypto.randomUUID() } }
+      { headers: { 'X-Idempotency-Key': idem } }
     );
     return response.data;
   }

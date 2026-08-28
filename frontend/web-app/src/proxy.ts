@@ -3,6 +3,13 @@ import createMiddleware from 'next-intl/middleware';
 import { locales, defaultLocale } from './i18n/config';
 import { edgeLogger } from './lib/edge-logger';
 
+function safeRandomUUID(): string {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  } catch {}
+  return `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 10)}-${Math.random().toString(36).substring(2, 10)}`;
+}
+
 const intlMiddleware = createMiddleware({
   locales,
   defaultLocale,
@@ -101,7 +108,7 @@ export async function proxy(request: NextRequest) {
   // WEB-001: Next.js injects the nonce into inline scripts only when it can
   // read `x-nonce` from the request headers during render, so propagate the
   // nonce + CSP on the request (not just the response) before next-intl runs.
-  const nonce = crypto.randomUUID();
+  const nonce = safeRandomUUID();
   const isDev = process.env.NODE_ENV === 'development';
   const scriptSrc = isDev
     ? `'self' 'unsafe-eval' 'unsafe-inline' 'nonce-${nonce}'`
@@ -242,7 +249,7 @@ export async function proxy(request: NextRequest) {
     finalResponse.headers.set('Cache-Control', 'private, no-store');
   }
   // ponytail: X-Request-ID on client-side routes mirrors BFF API proxy header
-  finalResponse.headers.set('X-Request-ID', crypto.randomUUID());
+  finalResponse.headers.set('X-Request-ID', safeRandomUUID());
 
   return finalResponse;
 }

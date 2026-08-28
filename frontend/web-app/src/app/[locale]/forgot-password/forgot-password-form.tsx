@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
       // ponytail: OIDC PKCE + Keycloak execute-actions-email per ADR-0039, rate-limit IP + audit payu.auth.password-reset-requested.v1 handled by backend
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Idempotency-Key': crypto.randomUUID() },
+        headers: { 'Content-Type': 'application/json', 'X-Idempotency-Key': typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 10)}` },
         body: JSON.stringify({ email }),
       });
       if (res.ok) toast.success('Instruksi reset telah dikirim');

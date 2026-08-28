@@ -2,8 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.18.64] - 2026-08-28
+## [1.18.65] - 2026-08-28
 
+### Fixed
+- **Onboarding Insecure Context crypto.randomUUID Fallback (1.18.65)**: `frontend/web-app/src/app/[locale]/onboarding/page.tsx:45 stableExternalId` + `347 hidden externalId` `crypto.randomUUID is not a function` on `http://13.251.103.184:3001/onboarding` (insecure `http` public IP, `crypto.randomUUID` requires SecureContext `localhost`/`https` per WebCrypto spec) — guard `typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).substring(2,10)` + `Date.now()`; `src/proxy.ts:104 nonce` + `252 X-Request-ID` `safeRandomUUID()` `Date.now+Math.random` fallback; `src/stores/uiStore.ts:39 addToast`, `src/app/[locale]/forgot-password/forgot-password-form.tsx:26 X-Idempotency-Key`, `src/services/FxService.ts:151/172 create/reverse`, `src/lib/logger.ts:42 getCorrelationId`, `src/lib/utils.ts:12 generateUUID` `getRandomValues` try/catch fallback `Math.random`. `npm test 95/1221` still green, `podman 36/36 healthy` `curl public /onboarding 200` `web-app 1.18.65`.
+- **Docs**: `TODOS.md` still `0 OPEN` (no new backlog); `CHANGELOG.md` `1.18.65`; `LESSONS.md` `L-397` (insecure context fallback).
+
+### Added
+- **Local Dev Verify (1.18.65)**: `grep -R crypto.randomUUID frontend/web-app/src` now `6` guarded `typeof randomUUID === function`; `cd frontend/web-app && npm test` `95/1221`; `PAYU_VERSION=1.18.65 podman compose --profile apps build web-app 24740a441cdb` `podman ps 36/36 healthy` `curl http://13.251.103.184:3001/onboarding 200` `x-nonce` `/_next` `private` `curl :3001/api/health healthy`.
+
+
+## [1.18.64] - 2026-08-28
 ### Fixed
 - **GLOBAL-RECON 3-Way Auto-Resolve + GLOBAL-BFF SameSite Strict Audit (P3 Extended) — 1.18.64**: `SnapBiReconciliationService` auto-resolve `PAYMENT`/`REFUND`/`WALLET_MOVEMENT` within 5m `Duration.between(detectedAt, now) <5` + `resolve()` + `caseRepository.save` for crash-after-commit ledger catch-up (`flow #40` `Auto-resolve belum` → `auto-resolve <5m`), `camt.053` vs `NOSTRO` deferred ponytail; `frontend/web-app/src/app/api/auth/authorize/route.ts` `cookieOptions secure: NODE_ENV===production` + `sameSite:lax` 10m + `frontend/web-app/e2e` `payu_session`/`accessToken` `sameSite: Strict` (was `Lax`) + `src/__tests__/api/auth-oidc-route.test.ts` `SameSite=lax`/`strict` + `Max-Age=600` + `HttpOnly` checks; `SnapBiReconciliationServiceTest` `9/9` new `autoResolvesPaymentCaseWithin5m` + `Callback` `10/10` uniform already, frontend `6/6` `auth-oidc-route` PASS. `TODOS.md` `2→0 P3` `ALL 3/3 P3 CLOSED` 1.18.63-1.18.64 + header `1.18.63→1.18.64` `0 OPEN`.
 - **Docs**: `TODOS.md` `GLOBAL-RECON` + `GLOBAL-BFF` removed `2→0` + header `1.18.63→1.18.64` `0 OPEN` + `P3` `No open P3 — 3/3 CLOSED`; `CHANGELOG.md` `1.18.64`; `LESSONS.md` `L-395` (combined RECON+BFF).

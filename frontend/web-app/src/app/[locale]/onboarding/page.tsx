@@ -42,9 +42,12 @@ export default function OnboardingPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Stable per-mount external ID — computed once via useState lazy initializer
   // (acceptable to the React 19 linter, unlike Date.now() in useRef or useMemo).
-  const [stableExternalId] = useState(() =>
-    `KTP-${Date.now()}-${typeof crypto !== 'undefined' ? crypto.randomUUID().substring(0, 8) : 'rnd'}`
-  );
+  const [stableExternalId] = useState(() => {
+    const rnd = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID().substring(0, 8)
+      : Math.random().toString(36).substring(2, 10);
+    return `KTP-${Date.now()}-${rnd}`;
+  });
 
   const fileToBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -344,7 +347,7 @@ export default function OnboardingPage() {
                                 </div>
                             </div>
                             
-                            <input type="hidden" value={`KTP-${stableExternalId}-${typeof crypto !== 'undefined' ? crypto.randomUUID().substring(0, 8) : 'rnd'}`} {...register('externalId')} />
+                            <input type="hidden" value={`KTP-${stableExternalId}-${typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().substring(0, 8) : Math.random().toString(36).substring(2, 10)}`} {...register('externalId')} />
 
                              <div className="pt-6 flex gap-4">
                                 <Button type="button" variant="outline" onClick={() => setStep(1)} className="h-14 px-8">
