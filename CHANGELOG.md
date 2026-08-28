@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.51] - 2026-08-28
+
+### Fixed
+- **Container Base 1.24-3 + Lending-Rules Cleanup (IMAGE-1.24-3 FIX 1.18.51)**: `27 Containerfile` `registry.redhat.io/ubi9/openjdk-25-runtime:1.24` (22 services) + `1.24-2` (5 simulators) → `1.24-3` (latest UBI9 Java 25 patch, `microdnf` `glib2 2.68.4-19.el9_8.9` + `python3 3.9.25-7.el9_8.3`), `backend/lending-rules` fork deleted `1.18.36` but `infrastructure/local/podman/podman-compose.yml` still defined service `lending-rules` (`context: ../../../backend/lending-rules` `Dockerfile not found`) + `loan-origination-process` `depends_on: lending-rules` + `LENDING_RULES_URL: http://lending-rules:8080` → `podman-compose --profile apps build` fail `OSError: Dockerfile not found in .../lending-rules/Containerfile`. Fix: update all `Containerfile` to `1.24-3` (templates `.agents/.../Containerfile` + `.claude/...` too), remove `lending-rules` service block (19 lines) + `LENDING_RULES_URL` + `depends_on` `lending-rules` (3 lines), bump **31 images `1.18.51`** `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160×`, verify `mvn validate 0` `kustomize build` `base` + 5 env monolith + per-service 0 error `podman-compose --profile apps build account-service` `FROM 1.24-3` `Successfully tagged localhost/payu-account-service:1.18.51` `Up 4m Healthy` `Java 25.0.4` + `podman ps` 7 infra + 1 app Healthy. Ponytail: delete weightless `lending-rules` service, update base via `sed` not per-file manual.
+
+### Added
+- **Local Dev Verify (1.18.51)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy` `Java 25.0.4` `ubi9/openjdk-25-runtime:1.24-3`; `kustomize build` `base` + 5 env monolith + per-service 0 error; `podman-compose --profile apps build account-service` `1.24-3` `Successfully tagged 1.18.51`; `mvn validate 0` `kustomize build` 5/5 `podman ps` `npm test 95/1221` `scripts/verify-sso-issuer.sh` PASS.
+
 ## [1.18.50] - 2026-08-28
 
 ### Fixed

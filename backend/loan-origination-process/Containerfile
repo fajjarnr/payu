@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
+FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24-3
 
 ARG APP_VERSION=1.0.0-SNAPSHOT
 LABEL maintainer="backend-team@payu.fajjjar.my.id"

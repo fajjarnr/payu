@@ -20,7 +20,7 @@ spec:
     - name: image
       value: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
     - name: image-tag
-      value: "1.18.50"
+      value: "1.18.51"
     - name: target-env
       value: "dev"
   workspaces:

@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.50` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.50` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Last Release** | `1.18.51` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.51` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
 | **Backlog Aktif** | *No OPEN item* — seluruh B1–B4 + harden sweep **CLOSED 1.18.9–1.18.48** → [`CHANGELOG.md`](../../CHANGELOG.md). |
-| **Last Updated** | 2026-08-28 — SSO issuer 5 env **1.18.50** CLOSED `verify-sso-issuer.sh` PASS + RLS rollout **1.18.49**; sisa OPEN: DPoP, rate-limit keying, PERF-004 DEFERRED, Results/ArgoCD tolerance. |
+| **Last Updated** | 2026-08-28 — UBI9 1.24-3 + lending-rules cleanup **1.18.51** `podman 1.18.51 Java 25.0.4` + SSO issuer 5 env **1.18.50** + RLS **1.18.49**; sisa OPEN: DPoP, rate-limit keying, PERF-004 DEFERRED, Results/ArgoCD tolerance. |
 
 ---
 
