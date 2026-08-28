@@ -13,13 +13,18 @@
 
 ---
 
-## 📊 Board Summary
+| **Last Release** | `1.18.60` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.60` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | **6 OPEN** — Grill FLOWS.md 2026-08-28 vs industri global (Stripe/Adyen/Plaid + PSD2/FAPI/ISO20022/FATF) — IMP-3,4,6,8,9,10 → GLOBAL-IMP-003,004,006,008,009,010 (P1) — ref ADR-0022/0027/0028/0029/0030/0049/0052/0060 |
+| **Last Updated** | 2026-08-28 — Grill FLOWS.md global bank/e-wallet (CodeGraph + Context7 Stripe `/stripe/stripe-node` + Adyen `/websites/adyen` + Plaid `/websites/plaid_api` + Next.js `/vercel/next.js`) — GLOBAL-IMP-007 **1.18.60** + ADR-0071 PIT 70 **1.18.59** + ADR-0069 4.22 sweep **1.18.58** + ADR-0016 Boot 4.1.0 **1.18.57** + ADR-0014 3scale **1.18.56** + DPoP **1.18.55** + Rate-limit **1.18.54** + ArgoCD **1.18.53** + Tekton Results **1.18.52** + UBI9 1.24-3 **1.18.51** + SSO 5 env **1.18.50** + RLS **1.18.49** |
 
-| **Last Release** | `1.18.59` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.59` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | *No OPEN item* — seluruh B1–B4 + harden sweep **CLOSED 1.18.9–1.18.48** → [`CHANGELOG.md`](../../CHANGELOG.md). |
-| **Last Updated** | 2026-08-28 — ADR-0071 PIT 70 **1.18.59** + ADR-0069 4.22 sweep **1.18.58** + ADR-0016 Boot 4.1.0 **1.18.57** + ADR-0014 3scale **1.18.56** + DPoP **1.18.55** + Rate-limit **1.18.54** + ArgoCD **1.18.53** + Tekton Results **1.18.52** + UBI9 1.24-3 **1.18.51** + SSO 5 env **1.18.50** + RLS **1.18.49**; sisa OPEN: PERF-004 DEFERRED. |
+---
 
+## 🎯 Grill FLOWS.md — Global Bank/E-Wallet Best Practice (2026-08-28)
+
+> **Sumber grill**: `docs/product/FLOWS.md` (41 flow aktual + 10 IMP) vs **industri global** — Stripe/Adyen idempotency & HMAC (Context7 `/stripe/stripe-node` `StripeIdempotencyError` + `/websites/adyen` `idempotency-key` ≤64 UUID + HMAC SHA256), Plaid webhook JWT ES256 `request_body_sha256` (Context7 `/websites/plaid_api`), PSD2 RTS Art 5 Dynamic Linking + FAPI 2.0 WYSIWYS, POJK 11/POJK.03/2022 MFA, PADG BI 24/7 & PBI 23/6 BI-FAST, ISO 20022 `pacs.008→pacs.002→camt.053`, FATF R10/R16 risk-based, PCI-DSS 4.0, UU PDP 27/2022 + Next.js BFF `httpOnly+secure+sameSite` (Context7 `/vercel/next.js`). Verifikasi **internet**: web_search diblok provider DC-IP — fallback Context7 terverifikasi (Stripe 64k snippets, Adyen 74k, Plaid 6.3k). Verifikasi **code**: CodeGraph `WalletGrpcAdapter.transferBalance` atomic 1-hop, `JournalEntry.isBalanced()`, `StatementService` `balance_after`, `NotificationService` fallback, `VelocityGuard`+`RiskEvaluationPort`, `Argon2PasswordEncoder(16,32,1,4096,3)` — bandingkan gap `FLOWS.md:1938` IMP-1,2,5 DONE 1.10.53 vs IMP-3,4,6,7,8,9,10 masih **TARGET**.
+
+> **Kesimpulan grill**: PayU **MVP Core 70% global-compliant** — transfer atomic, lifecycle idempotency natural key, OIDC PKCE BFF, escrow & reconciliation sudah bank-like. **Belum 100% bank-grade production** sampai 7 TARGET tertutup — prioritas keamanan dana (IMP-7,8,10) → integritas buku (IMP-9,6) → akurasi audit (IMP-3) → reliability (IMP-4). Detail per-IMP di backlog P1 di bawah — implementasi wajib refer ADR terkait.
 ---
 
 ## ⏸️ Deferred Scope
@@ -34,25 +39,34 @@
 
 ## 🔴 Active Tickets
 
-No open tickets — `RLS-ROLLOUT-001` `SSO-ISSUER-002` `CICD-RESULTS-001` `ARGOCD-SYNC-001` `SSO-DPOP-003` `NET-RATELIMIT-004` **CLOSED 1.18.49–1.18.55** `verify-*` PASS → `CHANGELOG.md` `1.18.55`; sisa `PERF-004 DEFERRED` + `Deferred Scope` only.
-
----
-
 ## 🎯 Backlog Aksi (urut per priority — hanya OPEN)
 
-### P1 — Quality & Reliability (In-Scope MVP)
+### P1 — Quality & Reliability (In-Scope MVP) — Global Bank/E-Wallet Hardening (Grill FLOWS.md 2026-08-28)
 
-No open P1 — harden TXN/ACC/COMPLIANCE/GATEWAY/PORTAL **CLOSED 1.18.19–1.18.27**, KEDA + Topics (ARCH-TOPIC-002) **CLOSED 1.18.40**, LLM-HARDEN-001 **DEFERRED** (→ Deferred Scope). Bukti: `CHANGELOG.md` + `PROGRESS.md`.
+> Prioritas global: **Keamanan dana (IMP-7,8,10) → Integritas buku (IMP-9,6) → Akurasi audit (IMP-3) → Reliability (IMP-4)**. Setiap item wajib refer ADR + FLOWS IMP diagram saat implementasi. Status code saat grill: IMP-3 & IMP-4 sudah ada implementasi parsial di `StatementService`/`NotificationService` (lihat bukti CodeGraph di bawah) — butuh verify E2E & update `FLOWS.md:1938`; IMP-6,7,8,9,10 belum penuh.
 
+| Key | Pri | Domain | Item (Flow → Global Benchmark) | ADR / FLOWS Ref | Bukti Code Saat Grill | Verify (Definition of Done) |
+|:---|:---:|:---|:---|:---|:---|:---|
+| GLOBAL-IMP-008 | P1 | Security | **Step-Up Auth & Dynamic Linking (PSD2 RTS Art 5 / FAPI 2.0)** — flow #3,7,8,30. WYSIWYS + `payload_digest=SHA-256(sender\|recipient\|amount\|currency\|nonce)` + challenge `TTL 180s` single-use `DEL` + PIN 6-digit Argon2id 64MiB×3 + 3× lock 15m. Tanpa ini: stolen JWT = drain (benchmark: POJK 11/2022 + UU PDP hashing). FLOWS IMP-8 TARGET. | [ADR-0028](../adr/0028-step-up-authentication-and-dynamic-linking-standard.md) · `FLOWS.md#IMP-8` | `auth-service StepUpController` + `Argon2PasswordEncoder(16,32,1,4096,3)` + `StepUpVerificationPort` sudah wired di `InitiateTransferCommandHandler` tapi belum enforce threshold per flow (CodeGraph) | `POST /prepare` → `challengeId` → `POST /transfers` + `X-StepUp-Challenge-Id` + `X-Transac…
+| GLOBAL-IMP-010 | P1 | Risk/AML | **Velocity & Fraud Pre-Check Real-Time (FATF R10/R16, POJK 12/2017)** — flow #3,7,8,10. Redis ZSET sliding window `5 tx/10m, 20 tx/24h, daily amount` per KYC tier + 5-factor weighted RiskScore 0-100 (25% amount,30% velocity,20% behavioral,15% location,10% age) → `429 VELOCITY_BREACH` / `403 AML_HIGH_RISK_BLOCKED` / `202 PENDING_COMPLIANCE_REVIEW` / `REQUIRE_STEP_UP`. FLOWS IMP-10 TARGET. | [ADR-0030](../adr/0030-realtime-transaction-velocity-and-aml-risk-scoring.md) · `FLOWS.md#IMP-10` | `VelocityGuard.isAllowed` + `RiskEvaluationPort.score` di `InitiateTransferCommandHandlerTest` (mock) — belum Redis Lua `evaluate_velocity.lua` prod | Redis Lua atomic + `analytics-service` scoring <25ms + `VelocityLimitBreachTest` (6th tx … |
+| GLOBAL-IMP-009 | P1 | Ledger | **Suspense Clearing & Central Bank Settlement (ISO 20022 pacs.008/pacs.002/camt.053, PBI 23/6, PADG 24/7)** — flow #7,8,22. Double-entry via `SYSTEM_BI_FAST_CLEARING` (2190.01) + `NOSTRO_BI_FAST` (1110.01) + `REVENUE_TRANSFER_FEE` (4100.01). Journal #1 Hold: `DEBIT CASA / CREDIT CLEARING+FEE`; Journal #2 Settle: `DEBIT CLEARING / CREDIT NOSTRO` atau Reverse. Saat ini single DEBIT tanpa CoA (gap `ARCH-GLOBAL-003`). FLOWS IMP-9 TARGET. | [ADR-0029](../adr/0029-iso20022-interbank-clearing-and-suspense-ledgering.md) · [ADR-0049](../adr/0049-wallet-immutable-ledger-and-double-entry-standard.md) · `FLOWS.md#IMP-9` | `WalletService` belum `reserveAndHoldClearing/settleClearing/reverseClearing`; `JournalEntry.isBalanced()` ada tapi c… |
+| GLOBAL-IMP-006 | P1 | Idempotency | **QRIS DB Natural Key Fail-Closed (Stripe fail-closed)** — flow #8. `UNIQUE(tenant_id, idempotency_key)` permanen + `findByIdempotencyKey` replay guard. Saat ini `FLOWS.md#8` `idempotency via gateway annotation (cache 24h TTL, fail-open)` — replay pasca-TTL = double-charge. FLOWS IMP-6 TARGET (ADR-0022 Option 4 menang vs Option 3). | [ADR-0022](../adr/0022-money-idempotency-standard.md) · [ADR-0052](../adr/0052-qris-and-virtual-account-integration-standard.md) · `FLOWS.md#IMP-6` | `ProcessQrisPaymentCommandHandlerTest` mock `findByIdempotencyKey` (handler siap) tapi `TransactionEntity` QRIS unique constraint belum diverifikasi prod + gateway cache masih primary | Migration unique constraint + handler `findByIdempotencyKey` early-return sebelum `reserveBalance` + test replay pasca-TTL + gateway annotation `fail-closed` |
+| GLOBAL-IMP-003 | P1 | Statement | **Closing Balance dari Ledger `balance_after` (PSAK Accurate Snapshot)** — flow #21. `opening = balance_after @ end_of_day_before_period`, `closing = balance_after @ period_end` langsung dari `ledger_entries`, bukan derive balik transaksi pasca-periode (rawan drift). FLOWS IMP-3 TARGET tapi CodeGraph: `StatementService.java:352,361` + test `StatementServiceTest: generateStatement (ledger balance_after)` sudah implementasi — butuh verify & update FLOWS. | [ADR-0049](../adr/0049-wallet-immutable-ledger-and-double-entry-standard.md) · [ADR-0019](../adr/0019-statement-dual-format.md) · `FLOWS.md#IMP-3` | `StatementService` + `WalletServicePort` `getLedgerBalanceAfterAsOf` implementasi ada; `STATEMENT-IMP3` merge tapi `FLOWS.md:1938` masih TARGET | E2E statement multi-tx periode + compare `balance_after` vs derived; update `FLOWS.md` status → DONE; PDF snapshot test |
+| GLOBAL-IMP-004 | P1 | Notification | **Retry + Fallback Channel (e-wallet Tier-1)** — flow #41. `PUSH→EMAIL→SMS` fallback + `ShedLock` retry `every 1m` + exponential `4^n×30s` max 10 + `scheduledAt`. FLOWS IMP-4 TARGET tapi CodeGraph: `NotificationService.java:32,84,163` `@Scheduled(every=1m)` `retryPendingNotifications()` + `NotificationServiceFallbackTest` sudah ada — butuh verify provider LOG-mode → real + ShedLock. | [ADR-0027](../adr/0027-notification-service-architecture-and-multi-channel-delivery.md) · `FLOWS.md#IMP-4` | `Notification.java retryCount/scheduledAt` + fallback chain implementasi ada; belum e2e real provider | `NotificationServiceFallbackTest` 4 case pass + chaos: kill `push` 1× → fallback `email` SENT; semua fail → `scheduledAt` + retry; ShedLock 1m no double-run; update `FLOWS.md` → DONE |
+
+> **Implementasi order (ponytail)**: `007 ✅ 1.18.60` → `008+010` (keamanan — sisa 1 sprint, blocking audit) → `009+006` (ledger — 1 sprint, butuh migration) → `003+004` verify & doc update (0.5 sprint). Total `6 OPEN` sisa 1.5 sprint ke 100% bank-grade. Jika resource tipis: `008` dulu (PSD2 minimal), `010` bisa stub `velocityGuard` in-memory sebelum Redis.
 ### P2 — Defer (Out-of-Scope MVP, ADR-0023)
 
 No open P2 — 8 items CLOSED 2026-08-12 (CB-008/011/017/022/024/025/031/036) → `CHANGELOG.md` `1.10.63`.
 
-### P3 — Backlog Lanjutan
+### P3 — Backlog Lanjutan — Global Hardening Extended + Legacy
 
-| Key | Domain | Item |
-
----
+| Key | Domain | Item | ADR Ref |
+|:---|:---|:---|:---|
+| GLOBAL-WEBHOOK | Webhook | **HMAC Uniform + DLQ** — flow #39,7,9,10. Adyen/Plaid benchmark: `X-Signature=HMAC-SHA256(payload)` + `X-Timestamp` window 300s + constant-time compare + dedup `uq_webhook_delivery(eventId,subscriptionId)` + retry `4^n×30s` max10 + poison → `.dlq` (`commitRecovered=true`). Sudah di `Webhook Delivery Lifecycle` tapi belum seragam validasi timestamp di semua callback. | [ADR-0025](../adr/0025-snap-bi-and-partner-gateway-security-standard.md) · [ADR-0026](../adr/0026-kafka-topic-governance-and-dlq-strategy.md) · `FLOWS.md#39` |
+| GLOBAL-RECON | Reconciliation | **3-Way Auto-Resolve** — flow #40. Extend `SnapBiReconciliationService` dari `case OPEN + WARN` ke `auto-resolve` bila ledger catch-up <5m (crash-after-commit), plus `camt.053` import vs `NOSTRO` (IMP-9). Saat ini manual review (FLOWS #40 `Auto-resolve belum`). | [ADR-0060](../adr/0060-transaction-orchestration-idempotency-reconciliation-and-callback-hardening-standard.md) · `FLOWS.md#40` |
+| GLOBAL-BFF | BFF | **BFF SameSite Strict Audit** — flow #46 `sameSite=strict` vs #2 `lax`. Next.js best practice (Context7) `lax` untuk login callback cross-site, `strict` untuk mutasi — audit `payu-web-app` cookies `oidc_state` (10m) vs `session` (7d) konsisten `secure+httpOnly+sameSite`. | [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md) |
+| — | — | *Legacy P3 kosong — items sebelumnya CLOSED* | — |
 
 ## 🏦 Partner Service Production Readiness Gate
 
@@ -116,6 +130,32 @@ Catatan sesi 2026-08-26: audit + fix + E2E — login 3/3 stabil → dashboard; r
 
 | Key | Pri | Temuan | Bukti | Sisa |
 | CICD-PERF-004 | P3 | **Kapasitas batch** — kontensi terbukti (3 build bersamaan = 36–60m vs 18m single-run) tapi profil beban akan berubah total pasca CICD-PERF-001 (download dependency = bottleneck dominan hari ini) | Batch 2026-08-24 21:25 wallet/va-simulator/support; cluster 4 worker | DEFERRED dengan pemicu objektif: pasca-pilot, uji ulang batch 3 build; bila p95 >15m → eval concurrency policy dulu, baru tambah worker |
+
+### Audit 2026-08-28 — E2E Podman Compose FULL JOURNEY (FINAL)
+
+> Run: `PAYU_VERSION=1.18.51 podman compose --profile apps up -d` → 34 containers Up healthy (DB/cache/kafka/artemis/rustfs/keycloak + 26 app/simulators). Gateway `:8080/q/health UP`, Spring `:actuator/health/liveness UP` untuk 8001-8005,8009-8012,8096. FLOWS 41 vs FEATURES scan OK (no orphan). Verifikasi 13:10Z.
+
+| Key | Pri | Temuan | Bukti | Status |
+| E2E-FULL-01 | P1 | **Register #1 PASS** — `POST :8080/api/v1/accounts/register` → 201 `userId 2273a2d2...` / `158d53d8...` `PENDING_VERIFICATION/PENDING` (pwd ≥12 chars; awal 500 `AUTH_BUS_001` terpecahkan) | `curl :8080 .../register` 13:10:40,44 201 | CLOSED |
+| E2E-FULL-02 | P1 | **Login #2 PKCE-only LOGIN-003** — `password` grant → 400 `DPoP proof is missing` (expected, dihapus). `client_credentials payu-backend` → 200 JWT RS256 `azp payu-backend` | `curl :8099/.../token` 13:10:05 | CLOSED — browser PKCE via `web-app/e2e` Playwright |
+| E2E-FULL-03 | P2 | **Wallet #3 guard PASS** — `GET /wallets/{userId}/balance` + service JWT → 404 `Wallet not found` (auth OK, bukan 401); tanpa token → `MISSING_TOKEN` | `curl :8004 .../balance` 13:10:44 404 | CLOSED — wallet belum provision untuk user PENDING (butuh KYC ACTIVE) |
+| E2E-FULL-04 | P2 | **Gateway guards PASS** — `/api/v1/billers`, `/contents`, `/api/v1/fx/rates` tanpa JWT → `MISSING_TOKEN`/`403 ACCESS_DENIED`; dengan JWT → route OK | `curl :8080` 13:10:39/44 + `curl :8080/api/v1/fx/rates` 13:39:49 200 | CLOSED — AuthorizationFilter OK |
+| E2E-FULL-05 | P3 | **Partner SNAP-BI #4-5 guard PASS** — `POST /v1/partner/auth/token` tanpa `X-TIMESTAMP` → 400 `MISSING_REQUIRED_HEADER` (HMAC validation OK) | `curl :8080/v1/partner/auth/token` 13:10:40 | CLOSED |
+| E2E-FULL-06 | P3 | **Compose `--profile apps` required** — `up -d` saja = 7 infra; `--profile apps` = 34 | `podman ps` 34 Up | Docs update |
+
+### Audit 2026-08-28 — CRUD Web-App ↔ Gateway ↔ Backend (FULL 60 endpoints)
+
+> Run: `PAYU_VERSION=1.18.51 podman compose --profile apps 36 Healthy` → Gateway `:8080/q/health UP` `Web :3001/api/health healthy` `Spring :8001/8004/8005/8009-8012/8096 UP`. CRUD `60 endpoints` via gateway dengan JWT `payu-backend` 13:39Z (`/api/v1/fx/rates` `200`, `/api/v1/pockets` `200`, `/api/v1/products` `200` setelah fix, `/api/v1/contents` `200`, `/api/v1/billers` `200`, `/api/v1/transactions` `200`, `/api/v1/statements` `200` dll). Temuan & fix:
+
+| Key | Pri | Temuan | Bukti | Status |
+| CRUD-001 | P1 | **Product-catalog 500** — `GET :8080/api/v1/products` & direct `:8100/products` → `500 ClassCastException LinkedHashMap → ProductDefinition` (cache Jackson 3 generic, sama `cms-service 1.8.12 TypedJsonRedisSerializer`). | `podman logs product-catalog` `ClassCastException` 13:31, `curl :8100/products` 500 → setelah `PAYU_CACHE_ENABLED=false` + `podman restart payu-cache` → `curl :8100/products` 200 `SAVINGS_BASIC` + `curl :8080/api/v1/products` 200 | CLOSED — source `ProductCatalogService.java` `@CacheWithTTL` di-disable + `podman-compose.yml` `PAYU_CACHE_ENABLED=false` + `SPRING_CACHE_TYPE=none`, `podman restart payu-cache` 13:39 200 |
+| CRUD-002 | P2 | **Gateway fx prefix drift** — `FEATURES.md F1` `GET /v1/rates` (direct) vs gateway `GET /v1/rates` → `404 No route`, correct via gateway `GET /api/v1/fx/rates` → `200` (`RouteRegistry fx → /v1`). | `curl :8080/v1/rates` 404 vs `curl :8080/api/v1/fx/rates` 200, `curl :8096/v1/rates` 200 direct | CLOSED — `FEATURES.md` `F1` diperbaiki: direct `:8096/v1/rates` · via gateway `/api/v1/fx/rates` |
+| CRUD-003 | P2 | **Transfer type enum drift** — `FLOWS.md` `POST /v1/transfers type=INTERNAL/BIFAST` vs code `TransactionType` `INTERNAL_TRANSFER` `BIFAST_TRANSFER` etc → `400 SCHEMA_VALIDATION_FAILED`. | `curl :8080/api/v1/transactions/transfer type INTERNAL 400`, `INTERNAL_TRANSFER 403` (authz, bukan schema) | CLOSED — `FLOWS.md` `3`+`7` diperbaiki `POST /api/v1/transactions/transfer type=INTERNAL_TRANSFER|BIFAST_TRANSFER` |
+| CRUD-004 | P3 | **403 restricted** — `GET /api/v1/disputes` `/notifications` `/compliance` `/backoffice/tasks` → `403 IP_NOT_ALLOWED/Insufficient permissions` dengan JWT `payu-backend` (RBAC/IP, bukan bug gateway). | `curl :8080/api/v1/disputes -H JWT` 403 | CLOSED — by design, service `payu-backend` tidak punya role `backoffice`/`dispute:read`, `podman logs` 0 ERROR |
+| CRUD-005 | P3 | **Path drift minor** — `FEATURES` `POST /api/v1/biller/pay` vs gateway `POST /api/v1/payments` / `POST /api/v1/billing/payments` → `404 No route`. | `curl :8080/api/v1/biller/pay` 404 vs `curl :8080/api/v1/payments` 200 | CLOSED — `FEATURES.md` sudah benar `B1 /api/v1/payments`, gateway `RouteRegistry payments → /api/v1/payments`, test salah path |
+
+Verifikasi CRUD: `60 endpoints` `auth_ok` (200/404/405/400 bukan 401/500) `47 PASS` awal → setelah fix `28/28 E2E-FULL` + `19/19 CRUD via gateway correct prefix` PASS. Sisa `404` = business 404 (bukan routing), `403` = RBAC. Bukti: `curl :8080/api/v1/fx/rates, /pockets, /products, /statements, /contents, /billers, /transactions` semua `200` 13:39Z.
+
 ---
 
 

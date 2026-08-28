@@ -1750,6 +1750,8 @@ services:
 
       OTEL_ENDPOINT: http://jaeger:4317
       OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-true}
+      PAYU_CACHE_ENABLED: "false"
+      SPRING_CACHE_TYPE: "none"
     depends_on:
       payu-database-rw:
         condition: service_healthy

@@ -96,8 +96,8 @@ sequenceDiagram
     participant DB as "PostgreSQL (transaction)"
     participant OB as "Outbox → Kafka"
 
-    U->>G: POST /v1/transfers (amount, recipient, bankCode, X-Idempotency-Key)
-    G->>TX: forward
+    U->>G: POST /api/v1/transactions/transfer (amount, recipient, bankCode, type=INTERNAL_TRANSFER|BIFAST_TRANSFER|SKN_TRANSFER|RTGS_TRANSFER, X-Idempotency-Key)
+    G->>TX: forward → POST /api/v1/transactions/transfer
     TX->>TX: verify sender ownership (JWT)
     TX->>DB: findByIdempotencyKey (natural key)
     alt replay
@@ -260,8 +260,8 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant OB as "Outbox → Kafka"
 
-    U->>G: POST /v1/transfers (type=BIFAST, bankCode, recipient, amount, X-Idempotency-Key)
-    G->>TX: forward
+    U->>G: POST /api/v1/transactions/transfer (type=BIFAST_TRANSFER|SKN_TRANSFER|RTGS_TRANSFER, bankCode, recipient, amount, X-Idempotency-Key)
+    G->>TX: forward → POST /api/v1/transactions/transfer
     TX->>TX: ownership + idempotency check (natural key)
     TX->>DB: INSERT PENDING + outbox initiated
     TX->>WL: reserveBalance
@@ -305,8 +305,8 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant OB as Outbox
 
-    U->>G: POST /qris/pay (qrisCode, amount, X-Idempotency-Key)
-    G->>TX: forward
+    U->>G: POST /api/v1/qris/pay (qrisCode, amount, X-Idempotency-Key)
+    G->>TX: forward → POST /api/v1/transactions/qris/pay
     TX->>TX: ownership (JWT) + rate limit (100/min)
     TX->>DB: INSERT PENDING + outbox initiated
     TX->>WL: reserveBalance (SEBELUM call QRIS)
@@ -1801,8 +1801,9 @@ sequenceDiagram
 |:---|:---|:---:|:---|
 | Idempotency cache-only (TTL 24h, fail-open) → **DB natural key + replay check di handler** (pola transfer, CB-017) | Replay pasca-TTL/down tidak double-charge; fail-closed (ADR-0022) |
 
-## IMP-7. Idempotency Payload Fingerprint Validation (flow #3, #4, #7, #8)
+## IMP-7. Idempotency Payload Fingerprint Validation (flow #3, #4, #7, #8) ✅ DONE (GLOBAL-IMP-007, 1.18.60)
 
+> **Status**: implemented 2026-08-28 — `V31__add_idempotency_request_hash.sql` `transactions.idempotency_request_hash VARCHAR(64)` (SHA-256 Base64 canonical JSON) + `InitiateTransferCommandHandler.computeRequestHash` (TreeMap sorted → SHA-256 → Base64) + DB guard `findByIdempotencyKey` hash compare → `409 IDEMPOTENCY_PAYLOAD_MISMATCH` on amount/recipient/type/bankCode tamper. Cache layer `IdempotencyInterceptor/Service` already does `SHA-256(canonical Body)` + `409 IDEMPOTENCY_KEY_REUSE`; DB adds durability beyond 24h TTL / fail-closed. Coverage: `InitiateTransferCommandHandlerTest` 5 new cases (replay ok, amount tamper, recipient tamper, deterministic hash, legacy null) + `TransactionControllerConcurrencyIdempotencyTest` 10 concurrent → 1 mutation.
 > **Pola Global**: Stripe / Adyen Idempotency Standard. Mencegah parameter tampering pada replay idempotency key yang sama dengan payload berbeda.
 
 ```mermaid
@@ -1935,5 +1936,5 @@ sequenceDiagram
 
 ---
 
-*Last updated: 2026-08-17. Verifikasi code: release 1.11.14 (flow 1-47 = aktual; IMP-1, IMP-2 & IMP-5 = DONE; IMP-3, IMP-4, IMP-6, IMP-7, IMP-8, IMP-9, IMP-10 = TARGET standard global bank/e-wallet). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52).*
+*Last updated: 2026-08-28. Verifikasi code: release 1.18.60 (flow 1-47 = aktual; IMP-1, IMP-2, IMP-5 & IMP-7 = DONE; IMP-3, IMP-4, IMP-6, IMP-8, IMP-9, IMP-10 = TARGET — 1 of 7 P1 remaining from grill 2026-08-28). Catatan: login sudah OIDC auth-code + PKCE (LOGIN-003, 1.10.52).*
 

@@ -9,6 +9,7 @@ import id.payu.transaction.application.service.VelocityGuard;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.*;
 import id.payu.transaction.exception.TransactionDomainException.AmlHighRiskBlockedException;
+import id.payu.transaction.exception.TransactionDomainException.IdempotencyPayloadMismatchException;
 import id.payu.transaction.exception.TransactionDomainException.RiskEvaluationUnavailableException;
 import id.payu.transaction.exception.TransactionDomainException.StepUpRequiredException;
 import id.payu.transaction.exception.TransactionDomainException.StepUpVerificationFailedException;
@@ -24,9 +25,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Locale;
+import java.util.TreeMap;
 import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.transaction.domain.model.TransactionStatus;
 import id.payu.transaction.domain.model.TransactionType;
 
@@ -37,6 +44,9 @@ import id.payu.transaction.domain.model.TransactionType;
 @Component
 public class InitiateTransferCommandHandler implements CommandHandler<InitiateTransferCommand, InitiateTransferCommandResult> {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InitiateTransferCommandHandler.class);
+    // GLOBAL-IMP-007: canonical payload hash — sorted JSON → SHA-256 → Base64
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
 
 
 
@@ -89,13 +99,22 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
         // Verify the user owns the sender account
         authorizationService.verifySenderAccountOwnership(command.senderAccountId(), command.userId());
-
-        // Check for idempotency
+        // GLOBAL-IMP-007: Idempotency payload fingerprint (Stripe/Adyen)
+        // Cache layer (IdempotencyInterceptor) already does SHA-256 canonical JSON + 409,
+        // DB layer ensures durability beyond 24h TTL / cache fail-closed.
         if (command.idempotencyKey() != null) {
-            InitiateTransferCommandResult existingResult = findByIdempotencyKey(command.idempotencyKey());
-            if (existingResult != null) {
+            String currentHash = computeRequestHash(command);
+            java.util.Optional<TransactionEntity> existingOpt = transactionPersistencePort.findByIdempotencyKey(command.idempotencyKey());
+            if (existingOpt.isPresent()) {
+                TransactionEntity existing = existingOpt.get();
+                String storedHash = existing.getIdempotencyRequestHash();
+                if (storedHash != null && !storedHash.equals(currentHash)) {
+                    log.warn("Idempotency payload mismatch for key {}: storedHash={} currentHash={} amount={} recipient={}",
+                            command.idempotencyKey(), storedHash, currentHash, command.amount().getAmount(), command.recipientAccountNumber());
+                    throw new IdempotencyPayloadMismatchException(command.idempotencyKey());
+                }
                 log.info("Returning existing transaction for idempotency key: {}", command.idempotencyKey());
-                return existingResult;
+                return buildResult(existing);
             }
         }
 
@@ -239,7 +258,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
     private TransactionEntity createTransaction(InitiateTransferCommand command) {
         String referenceNumber = generateReferenceNumber();
-
+        String requestHash = command.idempotencyKey() != null ? computeRequestHash(command) : null;
         return TransactionEntity.builder()
                 .referenceNumber(referenceNumber)
                 .senderAccountId(command.senderAccountId())
@@ -250,10 +269,36 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .idempotencyKey(command.idempotencyKey())
+                .idempotencyRequestHash(requestHash)
                 .metadata("{\"recipientAccountNumber\":\""
                         + command.recipientAccountNumber().replace("\\", "\\\\").replace("\"", "\\\"")
                         + "\"}")
                 .build();
+    }
+
+    // GLOBAL-IMP-007: SHA-256(canonical JSON) payload fingerprint — Stripe/Adyen benchmark
+    // Canonical = sorted keys TreeMap → JSON → SHA-256 → Base64 (same as IdempotencyService.computeFingerprint)
+    // Includes business-critical fields: amount/currency/recipient/sender/type/bankCode
+    // Changing amount or recipient with same X-Idempotency-Key → 409 IDEMPOTENCY_PAYLOAD_MISMATCH
+    String computeRequestHash(InitiateTransferCommand command) {
+        try {
+            TreeMap<String, Object> payload = new TreeMap<>();
+            payload.put("amount", command.amount().getAmount().toPlainString());
+            String currency = command.amount().getCurrency() != null ? command.amount().getCurrency().getCurrencyCode() : "IDR";
+            payload.put("currency", currency);
+            payload.put("recipientAccountNumber", command.recipientAccountNumber());
+            payload.put("senderAccountId", command.senderAccountId().toString());
+            payload.put("type", command.type().name());
+            if (command.bankCode() != null) payload.put("bankCode", command.bankCode());
+            String json = OBJECT_MAPPER.writeValueAsString(payload);
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(json.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 unavailable", e);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize payload for hash", e);
+        }
     }
 
     private InitiateTransferCommandResult findByIdempotencyKey(String idempotencyKey) {

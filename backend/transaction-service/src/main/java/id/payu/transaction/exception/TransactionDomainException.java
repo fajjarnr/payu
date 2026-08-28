@@ -257,6 +257,14 @@ public abstract class TransactionDomainException extends BusinessException {
         }
     }
 
+    // === Idempotency Errors (6600-6699) === GLOBAL-IMP-007 Stripe/Adyen payload fingerprint
+    public static class IdempotencyPayloadMismatchException extends ConflictException {
+        public IdempotencyPayloadMismatchException(String idempotencyKey) {
+            super("IDEMPOTENCY_PAYLOAD_MISMATCH",
+                  "Idempotency-Key '" + idempotencyKey + "' reused with different payload (amount/recipient/type mismatch)");
+        }
+    }
+
 
     // === System Errors (6900-6999) ===
 

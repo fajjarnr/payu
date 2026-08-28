@@ -135,6 +135,7 @@ ios/build/
 .kube/
 
 # --- Agentic Tools ---
+.omp/
 .opencode/
 .claude/
 .kimchi/

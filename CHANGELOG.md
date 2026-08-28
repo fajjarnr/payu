@@ -3,7 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.60] - 2026-08-28
+
+### Fixed
+- **GLOBAL-IMP-007 Idempotency Payload Fingerprint (Parameter Tampering Guard) — Stripe/Adyen P1 (1.18.60)**: `V31__add_idempotency_request_hash.sql` `transactions.idempotency_request_hash VARCHAR(64)` (SHA-256 Base64 canonical JSON `TreeMap` sorted → `SHA-256` → Base64) + `InitiateTransferCommandHandler.computeRequestHash` (amount `toPlainString` + currency + recipient + sender + type + bankCode) + DB guard `findByIdempotencyKey` hash compare → `409 IDEMPOTENCY_PAYLOAD_MISMATCH` on amount/recipient/type tamper (fail-closed beyond 24h TTL). Cache layer `IdempotencyInterceptor`/`IdempotencyService` already `SHA-256(canonical Body)` + `409 IDEMPOTENCY_KEY_REUSE`/`IN_PROGRESS`; DB adds durability per `ADR-0022` + `ADR-0060` + `FLOWS.md#IMP-7`. `TransactionDomainException.IdempotencyPayloadMismatchException` extends `ConflictException` → RFC9457 `409 Conflict`. Legacy `NULL` hash bypass (ponytail backfill deferred). Coverage: `InitiateTransferCommandHandlerTest` +5 (replay ok / amount tamper 409 / recipient tamper 409 / deterministic hash / legacy null) `19 PASS` + `TransactionControllerConcurrencyIdempotencyTest` 10 concurrent → 1 mutation (`409` on 9) + `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS`.
+- **Docs**: `docs/product/FLOWS.md#IMP-7` `TARGET → DONE ✅ 1.18.60` + `Status` + `Last updated` `1.11.14 → 1.18.60` (`IMP-1,2,5,7 DONE`); `docs/roadmap/TODOS.md` `7 → 6 OPEN` (remove `GLOBAL-IMP-007`) + header `1.18.59 → 1.18.60` + order `007 ✅`.
+
+### Added
+- **Local Dev Verify (1.18.60)**: `mvn -f backend/pom.xml clean install -DskipTests -pl shared/*` `11/11 SUCCESS`; `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest` `19/19 PASS` (`5 new GLOBAL-IMP-007`); `TransactionControllerConcurrencyIdempotencyTest` `2/2 PASS`; `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS`; `kustomize build base + 5 env` `0 error`; `podman compose` DB infra `Healthy` (full apps profile deferred — backend-only change).
+
 ## [1.18.59] - 2026-08-28
 
 ### Fixed

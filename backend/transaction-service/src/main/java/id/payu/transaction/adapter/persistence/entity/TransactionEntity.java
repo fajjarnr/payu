@@ -69,6 +69,7 @@ public class TransactionEntity implements Persistable<UUID> {
         private Instant updatedAt;
         private Instant completedAt;
         private String idempotencyKey;
+        private String idempotencyRequestHash;
         private String reservationId;
         private Instant expiresAt;
         private String memo;
@@ -138,6 +139,10 @@ public class TransactionEntity implements Persistable<UUID> {
             this.idempotencyKey = idempotencyKey;
             return this;
         }
+        public TransactionBuilder idempotencyRequestHash(String idempotencyRequestHash) {
+            this.idempotencyRequestHash = idempotencyRequestHash;
+            return this;
+        }
         public TransactionBuilder reservationId(String reservationId) {
             this.reservationId = reservationId;
             return this;
@@ -156,7 +161,9 @@ public class TransactionEntity implements Persistable<UUID> {
         }
 
         public TransactionEntity build() {
-            return new TransactionEntity(id, referenceNumber, senderAccountId, recipientAccountId, type, amount, amountValue, currencyCode, description, status, failureReason, metadata, createdAt, updatedAt, completedAt, idempotencyKey, reservationId, expiresAt, memo, tags);
+            TransactionEntity entity = new TransactionEntity(id, referenceNumber, senderAccountId, recipientAccountId, type, amount, amountValue, currencyCode, description, status, failureReason, metadata, createdAt, updatedAt, completedAt, idempotencyKey, reservationId, expiresAt, memo, tags);
+            entity.setIdempotencyRequestHash(idempotencyRequestHash);
+            return entity;
         }
     }
 
@@ -307,6 +314,14 @@ public class TransactionEntity implements Persistable<UUID> {
         this.idempotencyKey = idempotencyKey;
     }
 
+    public String getIdempotencyRequestHash() {
+        return idempotencyRequestHash;
+    }
+
+    public void setIdempotencyRequestHash(String idempotencyRequestHash) {
+        this.idempotencyRequestHash = idempotencyRequestHash;
+    }
+
     public String getReservationId() {
         return reservationId;
     }
@@ -451,6 +466,9 @@ public class TransactionEntity implements Persistable<UUID> {
 
     @Column(name = "idempotency_key")
     private String idempotencyKey;
+
+    @Column(name = "idempotency_request_hash", length = 64)
+    private String idempotencyRequestHash;
 
     @Column(name = "reservation_id", length = 64)
     private String reservationId;

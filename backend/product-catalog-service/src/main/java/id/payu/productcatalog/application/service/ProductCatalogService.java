@@ -53,7 +53,7 @@ public class ProductCatalogService implements ProductCatalogUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    @CacheWithTTL(value = "products", key = "#productCode", ttl = 5, timeUnit = TimeUnit.MINUTES)
+    // ponytail: cache disabled - LinkedHashMap cast bug (Jackson 3 + generic List) same as cms-service 1.8.12 TypedJsonRedisSerializer; re-enable with typed serializer if throughput matters
     public Optional<ProductDefinition> getProduct(String productCode) {
         log.debug("Getting product: {}", productCode);
         return persistencePort.findByCode(productCode);
@@ -61,7 +61,7 @@ public class ProductCatalogService implements ProductCatalogUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    @CacheWithTTL(value = "products:active", ttl = 5, timeUnit = TimeUnit.MINUTES)
+    // ponytail: cache disabled for getAllActiveProducts
     public List<ProductDefinition> getAllActiveProducts() {
         log.debug("Getting all active products");
         return persistencePort.findAllActive();
@@ -76,14 +76,12 @@ public class ProductCatalogService implements ProductCatalogUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    @CacheWithTTL(value = "products:byType", key = "#productType", ttl = 5, timeUnit = TimeUnit.MINUTES)
+    // ponytail: cache disabled for getProductsByType
     public List<ProductDefinition> getProductsByType(ProductType productType) {
         log.debug("Getting products by type: {}", productType);
         return persistencePort.findByType(productType);
     }
-
     @Override
-    @CacheInvalidate(value = "products", key = "#productCode")
     public ProductDefinition updateProduct(String productCode, ProductDefinition product) {
         log.info("Updating product: {}", productCode);
 
@@ -103,21 +101,20 @@ public class ProductCatalogService implements ProductCatalogUseCase {
     }
 
     @Override
-    @CacheInvalidate(value = "products", key = "#productCode")
     public void deactivateProduct(String productCode) {
         log.info("Deactivating product: {}", productCode);
 
-        ProductDefinition existing = persistencePort.findByCode(productCode)
+        ProductDefinition product = persistencePort.findByCode(productCode)
                 .orElseThrow(() -> new ProductNotFoundException(productCode));
 
-        existing.deactivate();
-        persistencePort.save(existing);
+        product.setActive(false);
+        product.setUpdatedAt(LocalDateTime.now());
+        persistencePort.save(product);
 
-        log.info("Product deactivated successfully: {}", productCode);
+        log.info("Product deactivated: {}", productCode);
     }
 
     @Override
-    @CacheInvalidate(value = "products", key = "#productCode")
     public void activateProduct(String productCode) {
         log.info("Activating product: {}", productCode);
 

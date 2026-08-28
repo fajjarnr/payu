@@ -106,10 +106,9 @@
 
 | # | Fitur | Endpoint utama |
 |:---:|:---|:---|
-| F1 | Kurs | `GET /v1/rates`, `/rates/{fromCurrency}/{toCurrency}` |
-| F2 | Konversi | `POST /v1/conversions`, `GET /conversions/estimate`, `/conversions/{conversionId}` |
+| F1 | Kurs | `GET /v1/rates` (direct `:8096`) · Via gateway `GET /api/v1/fx/rates` → `GET /v1/rates`, `/rates/{fromCurrency}/{toCurrency}` → `/v1/rates/{fromCurrency}/{toCurrency}` |
+| F2 | Konversi | `POST /v1/conversions` (direct) · Via gateway `POST /api/v1/fx/conversions` → `POST /v1/conversions`, `GET /conversions/estimate` |
 | F3 | Reverse konversi | `POST /v1/conversions/{conversionId}/reverse` |
-
 ## statement-service (8015)
 
 | # | Fitur | Endpoint utama |
@@ -335,4 +334,4 @@
 
 ---
 
-*Last updated: 2026-08-11. Verifikasi automated diff path-by-path vs semua `*Controller.java`/`*Resource.java`/Python routers (148 file) — bersih setelah penambahan 6 fitur: K6 upload KTP, G9 gateway analytics, G3 assignments, P7 rotate-all, SU2 training-status, LO1 approve. Sisa diff = noise (health/ready/openapi/redoc/test paths).*
+*Last updated: 2026-08-28. Verifikasi automated diff path-by-path vs semua `*Controller.java`/`*Resource.java`/Python routers (148 file) — bersih setelah penambahan 6 fitur: K6 upload KTP, G9 gateway analytics, G3 assignments, P7 rotate-all, SU2 training-status, LO1 approve. Fix 2026-08-28: `fx-service F1` gateway `/api/v1/fx/*` vs direct `/v1/*`, `FLOWS.md` transfer `INTERNAL_TRANSFER` enum & `QRIS` gateway `/api/v1/qris/pay`, product-catalog cache 500 fixed via `PAYU_CACHE_ENABLED=false`.*

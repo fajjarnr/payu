@@ -486,6 +486,89 @@ class InitiateTransferCommandHandlerTest {
         verify(walletServicePort, never()).reserveBalance(any(UUID.class), anyString(), any(java.math.BigDecimal.class));
     }
 
+    // === GLOBAL-IMP-007: payload fingerprint tamper guard ===
+    @Test
+    void reusesExistingTransactionWhenIdempotencyKeyAndPayloadMatch() {
+        UUID sender = UUID.randomUUID();
+        String key = "idem-replay-ok-001";
+        InitiateTransferCommand command = new InitiateTransferCommand(sender, "1234567890", Money.idr("50000"), "test", id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER, null, null, key, "user-001", null);
+        String hash = handler.computeRequestHash(command);
+        TransactionEntity existing = TransactionEntity.builder()
+                .id(UUID.randomUUID()).referenceNumber("TXN-REPLAY-001").senderAccountId(sender)
+                .amount(Money.idr("50000")).type(TransactionType.INTERNAL_TRANSFER).status(TransactionStatus.COMPLETED)
+                .idempotencyKey(key).idempotencyRequestHash(hash).build();
+        when(transactionPersistencePort.findByIdempotencyKey(key)).thenReturn(java.util.Optional.of(existing));
+
+        InitiateTransferCommandResult result = handler.handle(command);
+
+        assertThat(result.referenceNumber()).isEqualTo("TXN-REPLAY-001");
+        verify(transactionPersistencePort, never()).save(any(TransactionEntity.class));
+        verify(walletServicePort, never()).transferBalance(anyString(), anyString(), any(java.math.BigDecimal.class), anyString());
+    }
+
+    @Test
+    void rejectsIdempotencyReuseWithDifferentAmount() {
+        UUID sender = UUID.randomUUID();
+        String key = "idem-tamper-amount-001";
+        InitiateTransferCommand original = new InitiateTransferCommand(sender, "1234567890", Money.idr("50000"), "test", id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER, null, null, key, "user-001", null);
+        String originalHash = handler.computeRequestHash(original);
+        TransactionEntity existing = TransactionEntity.builder()
+                .id(UUID.randomUUID()).referenceNumber("TXN-TAMPER-001").senderAccountId(sender)
+                .amount(Money.idr("50000")).type(TransactionType.INTERNAL_TRANSFER).status(TransactionStatus.COMPLETED)
+                .idempotencyKey(key).idempotencyRequestHash(originalHash).build();
+        when(transactionPersistencePort.findByIdempotencyKey(key)).thenReturn(java.util.Optional.of(existing));
+        InitiateTransferCommand tampered = new InitiateTransferCommand(sender, "1234567890", Money.idr("99999"), "test", id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER, null, null, key, "user-001", null);
+
+        assertThatThrownBy(() -> handler.handle(tampered))
+                .isInstanceOf(TransactionDomainException.IdempotencyPayloadMismatchException.class)
+                .satisfies(ex -> assertThat(((id.payu.api.common.exception.BusinessException) ex).getCode()).isEqualTo("IDEMPOTENCY_PAYLOAD_MISMATCH"));
+        verify(transactionPersistencePort, never()).save(any(TransactionEntity.class));
+    }
+
+    @Test
+    void rejectsIdempotencyReuseWithDifferentRecipient() {
+        UUID sender = UUID.randomUUID();
+        String key = "idem-tamper-recipient-001";
+        InitiateTransferCommand original = new InitiateTransferCommand(sender, "1111111111", Money.idr("50000"), "test", id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER, null, null, key, "user-001", "014");
+        String originalHash = handler.computeRequestHash(original);
+        TransactionEntity existing = TransactionEntity.builder()
+                .id(UUID.randomUUID()).referenceNumber("TXN-TAMPER-002").senderAccountId(sender)
+                .amount(Money.idr("50000")).type(TransactionType.BIFAST_TRANSFER).status(TransactionStatus.PENDING)
+                .idempotencyKey(key).idempotencyRequestHash(originalHash).build();
+        when(transactionPersistencePort.findByIdempotencyKey(key)).thenReturn(java.util.Optional.of(existing));
+        InitiateTransferCommand tampered = new InitiateTransferCommand(sender, "9999999999", Money.idr("50000"), "test", id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER, null, null, key, "user-001", "014");
+
+        assertThatThrownBy(() -> handler.handle(tampered))
+                .isInstanceOf(TransactionDomainException.IdempotencyPayloadMismatchException.class);
+    }
+
+    @Test
+    void computeRequestHashIsDeterministicAndSensitiveToPayload() {
+        UUID sender = UUID.randomUUID();
+        InitiateTransferCommand a = new InitiateTransferCommand(sender, "1234567890", Money.idr("100000"), "test", id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER, null, null, "k1", "user-001", "014");
+        InitiateTransferCommand b = new InitiateTransferCommand(sender, "1234567890", Money.idr("100000"), "test", id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER, null, null, "k1", "user-001", "014");
+        InitiateTransferCommand c = new InitiateTransferCommand(sender, "1234567890", Money.idr("100001"), "test", id.payu.transaction.interfaces.dto.TransactionType.BIFAST_TRANSFER, null, null, "k1", "user-001", "014");
+        assertThat(handler.computeRequestHash(a)).isEqualTo(handler.computeRequestHash(b));
+        assertThat(handler.computeRequestHash(a)).isNotEqualTo(handler.computeRequestHash(c));
+    }
+
+    @Test
+    void legacyNullHashAllowsReplayWithoutMismatchCheck() {
+        UUID sender = UUID.randomUUID();
+        String key = "idem-legacy-null-001";
+        // legacy row with null hash (pre GLOBAL-IMP-007)
+        TransactionEntity legacy = TransactionEntity.builder()
+                .id(UUID.randomUUID()).referenceNumber("TXN-LEGACY-001").senderAccountId(sender)
+                .amount(Money.idr("50000")).type(TransactionType.INTERNAL_TRANSFER).status(TransactionStatus.COMPLETED)
+                .idempotencyKey(key).idempotencyRequestHash(null).build();
+        when(transactionPersistencePort.findByIdempotencyKey(key)).thenReturn(java.util.Optional.of(legacy));
+        InitiateTransferCommand command = new InitiateTransferCommand(sender, "9999999999", Money.idr("99999"), "test", id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER, null, null, key, "user-001", null);
+        // with null stored hash, should not throw mismatch — returns legacy (ponytail backfill deferred)
+        InitiateTransferCommandResult result = handler.handle(command);
+        assertThat(result.referenceNumber()).isEqualTo("TXN-LEGACY-001");
+    }
+
+
     private InitiateTransferCommand bifastCommand(String idempotencyKey) {
         return new InitiateTransferCommand(
                 UUID.randomUUID(),
