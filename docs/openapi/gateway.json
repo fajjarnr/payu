@@ -1,0 +1,1267 @@
+---
+openapi: 3.1.0
+paths:
+  /api/v1/admin/rate-plans:
+    get:
+      summary: List rate plans
+      description: "Returns all rate plans, optionally filtered by active status"
+      tags:
+      - Rate Plans
+      parameters:
+      - description: Filter by active status only
+        name: active
+        in: query
+        schema:
+          type: boolean
+          default: true
+      responses:
+        "200":
+          description: Rate plans retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatePlan"
+      security:
+      - bearerAuth: []
+    post:
+      summary: Create rate plan
+      description: Creates a new rate plan with default and endpoint-specific limits
+      tags:
+      - Rate Plans
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRatePlanRequest"
+        required: true
+      responses:
+        "201":
+          description: Rate plan created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatePlan"
+        "400":
+          description: Invalid request
+      security:
+      - bearerAuth: []
+  /api/v1/admin/rate-plans/assignments:
+    post:
+      summary: Assign rate plan to partner
+      description: Assigns a rate plan to a specific partner
+      tags:
+      - Rate Plans
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignRatePlanRequest"
+        required: true
+      responses:
+        "201":
+          description: Rate plan assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerRatePlan"
+        "400":
+          description: Invalid request
+      security:
+      - bearerAuth: []
+  /api/v1/admin/rate-plans/partners/{partnerId}/limits:
+    get:
+      summary: Get partner rate limits
+      description: Returns the effective rate limits for a partner on a specific endpoint
+      tags:
+      - Rate Plans
+      parameters:
+      - description: Partner ID
+        required: true
+        name: partnerId
+        in: path
+        schema:
+          type: string
+      - description: Endpoint path
+        name: endpoint
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Rate limits retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+      security:
+      - bearerAuth: []
+  /api/v1/admin/rate-plans/partners/{partnerId}/rate-plan:
+    get:
+      summary: Get partner rate plan
+      description: Returns the rate plan assigned to a specific partner
+      tags:
+      - Rate Plans
+      parameters:
+      - description: Partner ID
+        required: true
+        name: partnerId
+        in: path
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Rate plan found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerRatePlan"
+        "404":
+          description: No rate plan assigned for partner
+      security:
+      - bearerAuth: []
+  /api/v1/admin/rate-plans/partners/{partnerId}/status:
+    get:
+      summary: Check partner rate limit status
+      description: Checks the current rate limit status for a partner on a specific
+        endpoint
+      tags:
+      - Rate Plans
+      parameters:
+      - description: Partner ID
+        required: true
+        name: partnerId
+        in: path
+        schema:
+          type: string
+      - description: Endpoint path
+        name: endpoint
+        in: query
+        schema:
+          type: string
+          default: /api/v1/accounts
+      responses:
+        "200":
+          description: Rate limit status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+      security:
+      - bearerAuth: []
+  /api/v1/admin/rate-plans/{id}:
+    put:
+      summary: Update rate plan
+      description: Updates an existing rate plan
+      tags:
+      - Rate Plans
+      parameters:
+      - description: Rate plan ID
+        required: true
+        name: id
+        in: path
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRatePlanRequest"
+        required: true
+      responses:
+        "200":
+          description: Rate plan updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatePlan"
+        "404":
+          description: Rate plan not found
+        "400":
+          description: Invalid request
+      security:
+      - bearerAuth: []
+    get:
+      summary: Get rate plan by ID
+      description: Returns a specific rate plan by its ID
+      tags:
+      - Rate Plans
+      parameters:
+      - description: Rate plan ID
+        required: true
+        name: id
+        in: path
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Rate plan found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatePlan"
+        "404":
+          description: Rate plan not found
+      security:
+      - bearerAuth: []
+    delete:
+      summary: Delete rate plan
+      description: Deletes a rate plan by its ID
+      tags:
+      - Rate Plans
+      parameters:
+      - description: Rate plan ID
+        required: true
+        name: id
+        in: path
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Rate plan deleted successfully
+        "404":
+          description: Rate plan not found
+      security:
+      - bearerAuth: []
+  /api/v1/checkout/page/{token}:
+    get:
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/html: {}
+      summary: Checkout Page
+      tags:
+      - Checkout Resource
+  /api/v1/checkout/tokens:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCheckoutRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Create Checkout Token
+      tags:
+      - Checkout Resource
+  /api/v1/checkout/tokens/{token}:
+    get:
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+      summary: Get Checkout Session
+      tags:
+      - Checkout Resource
+  /api/v1/checkout/tokens/{token}/pay:
+    post:
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Complete Checkout
+      tags:
+      - Checkout Resource
+  /api/v1/deeplinks:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeeplinkRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      summary: Generate Deeplink
+      tags:
+      - Deeplink Resource
+  /api/v1/payments/methods:
+    get:
+      summary: Get available payment methods
+      description: "Returns available payment methods with eligibility, fees, and\
+        \ settlement times based on payment context"
+      tags:
+      - Payment Methods
+      parameters:
+      - description: Payment amount
+        example: 100000.0
+        name: amount
+        in: query
+        schema:
+          type: number
+      - description: Currency code (ISO 4217)
+        example: IDR
+        name: currency
+        in: query
+        schema:
+          type: string
+          default: IDR
+      - description: KYC status of user
+        name: kycStatus
+        in: query
+        schema:
+          type: string
+      - description: Partner ID for partner-specific methods
+        name: partnerId
+        in: query
+        schema:
+          type: string
+      - description: User ID
+        name: userId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Payment methods retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethodInfo"
+        "400":
+          description: Invalid request parameters
+        "401":
+          description: Authentication required
+  /api/v1/simulator/bifast/inquiry:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Bifast Inquiry
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/simulator/bifast/status/{ref}:
+    get:
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Bifast Status
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/simulator/bifast/transfer:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Bifast Transfer
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/simulator/dukcapil/match-photo:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Dukcapil Match Photo
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/simulator/dukcapil/nik/{nik}:
+    get:
+      parameters:
+      - name: nik
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Dukcapil Get Nik
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/simulator/dukcapil/verify:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Dukcapil Verify
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/simulator/qris/generate:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Qris Generate
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/simulator/qris/pay:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Qris Pay
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/simulator/qris/status/{qrId}:
+    get:
+      parameters:
+      - name: qrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Qris Status
+      tags:
+      - Simulator Gateway Resource
+  /api/v1/{path}:
+    put:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Put
+      tags:
+      - Api Gateway Resource
+    post:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Post
+      tags:
+      - Api Gateway Resource
+    patch:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Patch
+      tags:
+      - Api Gateway Resource
+    get:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Get
+      tags:
+      - Api Gateway Resource
+    delete:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Delete
+      tags:
+      - Api Gateway Resource
+  /gateway/analytics/config:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Config
+      tags:
+      - Analytics Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /gateway/analytics/health:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+      summary: Health
+      tags:
+      - Analytics Resource
+  /gateway/analytics/metrics:
+    get:
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: method
+        in: query
+        schema:
+          type: string
+          default: GET
+      - name: path
+        in: query
+        schema:
+          type: string
+      - name: to
+        in: query
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Metrics
+      tags:
+      - Analytics Resource
+      security:
+      - SecurityScheme:
+        - admin
+        - analytics-reader
+  /gateway/analytics/partners/{partnerId}/metrics:
+    get:
+      parameters:
+      - name: partnerId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: to
+        in: query
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Partner Metrics
+      tags:
+      - Analytics Resource
+      security:
+      - SecurityScheme:
+        - admin
+        - analytics-reader
+  /gateway/analytics/top-endpoints:
+    get:
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      - name: to
+        in: query
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Top Endpoints
+      tags:
+      - Analytics Resource
+      security:
+      - SecurityScheme:
+        - admin
+        - analytics-reader
+  /health:
+    get:
+      summary: Health check
+      description: Returns the health status of the gateway service including circuit
+        breaker states
+      tags:
+      - Health
+      responses:
+        "200":
+          description: Service is healthy or degraded
+          content:
+            application/json:
+              schema:
+                type: object
+        "503":
+          description: Service is unavailable
+  /health/circuits:
+    get:
+      summary: Circuit breaker states
+      description: Returns circuit breaker states for all downstream services
+      tags:
+      - Health
+      responses:
+        "200":
+          description: Circuit breaker states retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+  /health/circuits/{serviceName}:
+    get:
+      summary: Service circuit breaker state
+      description: Returns circuit breaker state for a specific downstream service
+      tags:
+      - Health
+      parameters:
+      - name: serviceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Circuit breaker state retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: Service not found
+  /health/circuits/{serviceName}/reset:
+    post:
+      summary: Reset circuit breaker
+      description: Resets the circuit breaker for a specific downstream service (admin
+        only)
+      tags:
+      - Health
+      parameters:
+      - name: serviceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Circuit breaker reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: Service not found
+        "403":
+          description: Forbidden - admin access required
+  /q/openapi/services:
+    get:
+      summary: List all service OpenAPI endpoints
+      description: Returns a map of all registered backend services and their OpenAPI
+        spec URLs
+      tags:
+      - OpenAPI Aggregation
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+  /status:
+    get:
+      summary: Service status
+      description: "Returns detailed status information including uptime, memory,\
+        \ and system info"
+      tags:
+      - Health
+      responses:
+        "200":
+          description: Status information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+  /v1.0/{path}:
+    put:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Put
+      tags:
+      - Partner V 10 Contract Resource
+    post:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Post
+      tags:
+      - Partner V 10 Contract Resource
+    patch:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Patch
+      tags:
+      - Partner V 10 Contract Resource
+    get:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Get
+      tags:
+      - Partner V 10 Contract Resource
+    delete:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Delete
+      tags:
+      - Partner V 10 Contract Resource
+  /v1/partner/{path}:
+    put:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Put
+      tags:
+      - Partner Contract Resource
+    post:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Post
+      tags:
+      - Partner Contract Resource
+    patch:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Patch
+      tags:
+      - Partner Contract Resource
+    get:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Get
+      tags:
+      - Partner Contract Resource
+    delete:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: .*
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+      summary: Delete
+      tags:
+      - Partner Contract Resource
+  /version:
+    get:
+      summary: API version
+      description: Returns the API version and build information
+      tags:
+      - Health
+      responses:
+        "200":
+          description: Version information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  schemas:
+    AssignRatePlanRequest:
+      type: object
+      properties:
+        partnerId:
+          type: string
+        ratePlanId:
+          type: string
+    CreateCheckoutRequest:
+      type: object
+      properties:
+        partnerId:
+          type: string
+        orderId:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        itemName:
+          type: string
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        callbackUrl:
+          type: string
+        redirectUrl:
+          type: string
+    CreateRatePlanRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        requestsPerMinute:
+          type: integer
+          format: int32
+        requestsPerHour:
+          type: integer
+          format: int32
+        requestsPerDay:
+          type: integer
+          format: int32
+        endpointOverrides:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: integer
+              format: int32
+    DeeplinkRequest:
+      type: object
+      properties:
+        action:
+          type: string
+        token:
+          type: string
+        amount:
+          type: string
+        orderId:
+          type: string
+        partnerId:
+          type: string
+        expiryMinutes:
+          type: integer
+          format: int32
+    Instant:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T16:15:50Z
+    PartnerRatePlan:
+      type: object
+      properties:
+        id:
+          type: string
+        partnerId:
+          type: string
+        ratePlanId:
+          type: string
+        assignedAt:
+          $ref: "#/components/schemas/Instant"
+        effectiveFrom:
+          $ref: "#/components/schemas/Instant"
+        effectiveUntil:
+          $ref: "#/components/schemas/Instant"
+        active:
+          type: boolean
+        effectiveNow:
+          type: boolean
+    PaymentMethodInfo:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        eligible:
+          type: boolean
+        fee:
+          type: number
+        feeCurrency:
+          type: string
+        estimatedSettlementTime:
+          type: string
+        description:
+          type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+    RateLimit:
+      type: object
+      properties:
+        requestsPerMinute:
+          type: integer
+          format: int32
+        requestsPerHour:
+          type: integer
+          format: int32
+        requestsPerDay:
+          type: integer
+          format: int32
+    RatePlan:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        defaultLimit:
+          $ref: "#/components/schemas/RateLimit"
+        endpointOverrides:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/RateLimit"
+        active:
+          type: boolean
+        createdAt:
+          $ref: "#/components/schemas/Instant"
+        updatedAt:
+          $ref: "#/components/schemas/Instant"
+    UpdateRatePlanRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        requestsPerMinute:
+          type: integer
+          format: int32
+        requestsPerHour:
+          type: integer
+          format: int32
+        requestsPerDay:
+          type: integer
+          format: int32
+  securitySchemes:
+    SecurityScheme:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentication
+tags:
+- name: Health
+  description: Health check and status endpoints
+- name: OpenAPI Aggregation
+  description: Unified API documentation across all PayU services
+- name: Payment Methods
+  description: Payment method selection and eligibility
+- name: Rate Plans
+  description: Partner rate plan management (admin only)
+info:
+  title: PayU API Gateway
+  version: 1.0.0
+  description: API Gateway for PayU Digital Banking Platform
+  contact:
+    name: PayU Engineering Team
+    email: engineering@payu.fajjjar.my.id

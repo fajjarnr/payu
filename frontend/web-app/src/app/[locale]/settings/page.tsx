@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight, FileText, Loader2, CheckCircle } from 'lucide-react';
+import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight, FileText, Loader2, CheckCircle, Building2 } from 'lucide-react';
 import clsx from 'clsx';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import StatementDownloader from '@/components/settings/statement-downloader';
@@ -10,13 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useAuth, useLogout, useUpdateUser } from '@/hooks';
+import { useAuthStore } from '@/stores';
+import BeneficiaryManager from '@/components/account/BeneficiaryManager';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslations } from 'next-intl';
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
-  const [activeTab, setActiveTab] = useState<'profile' | 'statements'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'statements' | 'beneficiaries'>('profile');
   const { user } = useAuth();
+  const accountId = useAuthStore((s) => s.accountId) || user?.id || '';
   const updateUser = useUpdateUser();
   const logoutMutation = useLogout();
 
@@ -42,6 +45,7 @@ export default function SettingsPage() {
 
   const menuItems = [
     { label: t('menu.generalProfile'), icon: User, active: activeTab === 'profile', onClick: () => setActiveTab('profile') },
+    { label: 'Beneficiaries', icon: Building2, active: activeTab === 'beneficiaries', onClick: () => setActiveTab('beneficiaries') },
     { label: t('menu.eStatement'), icon: FileText, active: activeTab === 'statements', onClick: () => setActiveTab('statements') },
     { label: t('menu.billingPlan'), icon: CreditCard, active: false },
     { label: t('menu.privacySecurity'), icon: Shield, active: false },
@@ -262,6 +266,8 @@ export default function SettingsPage() {
                       </Button>
                     </div>
                   </div>
+                ) : activeTab === 'beneficiaries' ? (
+                  <BeneficiaryManager accountId={accountId} />
                 ) : (
                   <div className="space-y-8">
                     <StaggerItem>

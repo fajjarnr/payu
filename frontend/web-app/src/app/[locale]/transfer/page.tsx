@@ -8,6 +8,7 @@ import { compareCurrency, parseCurrencyExact } from '@/lib/currency';
 import { useState, useCallback, useMemo } from 'react';
 import { useInitiateTransfer } from '@/hooks';
 import { useAuthStore } from '@/stores';
+import { useBeneficiaries } from '@/hooks/useBeneficiaries';
 import { useUIStore } from '@/stores';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
@@ -84,12 +85,20 @@ export default function TransferPage() {
   const addToast = useUIStore((state) => state.addToast);
   const transferMutation = useInitiateTransfer();
 
-  const recentContacts: Array<{ name: string; initial: string; color: string; accountId: string }> = [
-    { name: 'Anya', initial: 'A', color: 'bg-pink-100 text-pink-600', accountId: 'acc-any123' },
-    { name: 'Budi', initial: 'B', color: 'bg-blue-100 text-blue-600', accountId: 'acc-bud456' },
-    { name: 'Citra', initial: 'C', color: 'bg-amber-100 text-amber-600', accountId: 'acc-cit789' },
-    { name: 'Dodi', initial: 'D', color: 'bg-emerald-100 text-emerald-600', accountId: 'acc-dod012' },
-  ];
+  const { data: beneficiaries } = useBeneficiaries(accountId || undefined);
+  const recentContacts: Array<{ name: string; initial: string; color: string; accountId: string }> = beneficiaries && beneficiaries.length > 0
+    ? beneficiaries.map((b) => ({
+        name: b.nickname || b.accountName || b.accountNumber.slice(-4),
+        initial: (b.nickname || b.accountName || 'B').charAt(0).toUpperCase(),
+        color: 'bg-emerald-100 text-emerald-600',
+        accountId: b.accountNumber,
+      }))
+    : [
+        { name: 'Anya', initial: 'A', color: 'bg-pink-100 text-pink-600', accountId: 'acc-any123' },
+        { name: 'Budi', initial: 'B', color: 'bg-blue-100 text-blue-600', accountId: 'acc-bud456' },
+        { name: 'Citra', initial: 'C', color: 'bg-amber-100 text-amber-600', accountId: 'acc-cit789' },
+        { name: 'Dodi', initial: 'D', color: 'bg-emerald-100 text-emerald-600', accountId: 'acc-dod012' },
+      ];
 
   const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<TransferRequest>({
     resolver: zodResolver(transferSchema),

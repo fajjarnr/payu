@@ -16,16 +16,25 @@ vi.mock('@/components/ui/Motion', () => ({
 }));
 
 vi.mock('@/stores/authStore', () => ({
-  useAuthStore: () => ({
-    user: { id: 'user_1', username: 'budi' },
-    isAuthenticated: true,
-  }),
+  useAuthStore: (selector?: (s: Record<string, unknown>) => unknown) => {
+    const state = {
+      accountId: 'acc_123',
+      user: { id: 'user_1', username: 'budi' },
+      isAuthenticated: true,
+    };
+    return selector ? selector(state) : state;
+  },
 }));
 
 vi.mock('@/stores/uiStore', () => ({
-  useUIStore: () => ({
-    showToast: vi.fn(),
-  }),
+  useUIStore: (selector?: (s: Record<string, unknown>) => unknown) => {
+    const state = { addToast: vi.fn() };
+    return selector ? selector(state) : state;
+  },
+}));
+
+vi.mock('@/hooks/useBeneficiaries', () => ({
+  useBeneficiaries: () => ({ data: [], isLoading: false }),
 }));
 
 vi.mock('@/hooks/useTransactions', () => ({

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.67] - 2026-08-28
+
+### Fixed
+- **BFF OpenAPI + Beneficiary A3 (1.18.67)**: `docs/openapi/gateway.json` 29KB `openapi:3.1.0` generated via `curl http://localhost:8080/q/openapi` + `docs/openapi/README.md` (generation via `api-portal-service` allowlist, `BFF /api/v1/portal` already `ALLOWED_PATH_PREFIXES`); `.spectral.yaml` `graphql-compatibility-note function: undefined → truthy` (Spectral 6.14.2 Node 24 `Function is not defined` — requires Node 18/20, documented `nvm use 20`); BFF idempotency whitelist `route.ts:292` `x-idempotency-key, x-device-id, x-signature, x-timestamp` already 100% for `POST/PUT/PATCH`; `FEATURES A3` `AccountService` `GET /accounts/{accountId}/beneficiaries` + `POST`/`PUT`/`DELETE` with `X-Idempotency-Key getFinancialMutationHeaders()` (`@Idempotent` backend `MAX 50` `BEN_001/002`); `BeneficiaryManager` `Card` `Input Label` `useBeneficiaries` `react-query` `30s stale` + `settings/page` new tab `beneficiaries` (`Building2`) + `transfer/page` `recentContacts` → `beneficiaries.map` fallback hardcode `Anya/Budi`; `Money` `string` `inputMode numeric` for `accountNumber` `10-20 digits` `bankCode 1-10`.
+- **Tests**: `TransferPage.test.tsx` mock `useBeneficiaries` `[]` + `useAuthStore selector` `Record<string,unknown>` + `any→unknown` (rule `ts-no-any`).
+
+### Added
+- **Local Dev Verify (1.18.67)**: `curl -s http://localhost:8080/q/openapi -o docs/openapi/gateway.json` `29771 30K` `openapi:3.1.0`; `spectral lint` `Function is not defined` Node 24 → `nvm use 20` workaround; `cd frontend/web-app && npm test` `95/95 1221` `npm run build` `86 routes ✓` `podman build` `c9dfd8a73a81 1.18.67 672 MB` `podman tag 1.18.66→1.18.67`; `podman ps 34 healthy` `payu-web-app:3001 healthy` `curl :3001/api/health healthy` `podman_payu-network`; `BFF` `ALLOWED_PATH 44` `X-Idempotency-Key` 100% financial writes.
+
 ## [1.18.66] - 2026-08-28
 
 ### Fixed

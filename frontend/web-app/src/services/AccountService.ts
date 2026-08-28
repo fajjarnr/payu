@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { getFinancialMutationHeaders } from '@/lib/utils';
 
 export interface RegisterUserRequest {
   externalId: string;
@@ -87,7 +88,50 @@ export class AccountService {
     return response.data;
   }
 
+  // === Beneficiary CRUD (FEATURES A3) ===
+  async getBeneficiaries(accountId: string): Promise<Beneficiary[]> {
+    const response = await api.get<Beneficiary[]>(`/accounts/${accountId}/beneficiaries`);
+    return response.data;
+  }
+
+  async createBeneficiary(accountId: string, request: BeneficiaryRequest): Promise<Beneficiary> {
+    const response = await api.post<Beneficiary>(`/accounts/${accountId}/beneficiaries`, request, {
+      headers: getFinancialMutationHeaders(),
+    });
+    return response.data;
+  }
+
+  async updateBeneficiary(accountId: string, beneficiaryId: string, request: BeneficiaryRequest): Promise<Beneficiary> {
+    const response = await api.put<Beneficiary>(`/accounts/${accountId}/beneficiaries/${beneficiaryId}`, request, {
+      headers: getFinancialMutationHeaders(),
+    });
+    return response.data;
+  }
+
+  async deleteBeneficiary(accountId: string, beneficiaryId: string): Promise<void> {
+    await api.delete(`/accounts/${accountId}/beneficiaries/${beneficiaryId}`, {
+      headers: getFinancialMutationHeaders(),
+    });
+  }
+
   // BUG-FE-025: Deprecated methods removed — use useAuthStore hook instead
+}
+
+export interface Beneficiary {
+  id: string;
+  bankCode: string;
+  accountNumber: string;
+  accountName: string;
+  nickname?: string;
+  status: string;
+  verifiedAt?: string;
+  createdAt?: string;
+}
+
+export interface BeneficiaryRequest {
+  bankCode: string;
+  accountNumber: string;
+  nickname?: string;
 }
 
 export default AccountService.getInstance();

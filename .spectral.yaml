@@ -815,7 +815,7 @@ rules:
     description: "Consider GraphQL for complex nested queries"
     given: "$.paths[?(@property.match(/nested|complex|batch/i))]"
     then:
-      function: undefined
+      function: truthy
 overrides:
   - files:
       - "**/health*.yaml"
