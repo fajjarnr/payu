@@ -144,7 +144,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3, 4].map((i) => (

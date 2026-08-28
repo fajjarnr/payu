@@ -278,13 +278,13 @@ export default function TransferPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-                    <div className="bg-muted p-8 rounded-xl border border-border">
+                    <div className="bg-muted p-5 sm:p-6 lg:p-8 rounded-xl border border-border">
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Kantong Sumber</p>
                       <p className="font-bold text-foreground text-lg">Kantong Utama Cair</p>
                       <p className="text-xs font-bold text-primary tracking-widest uppercase mt-2">Saldo: Rp 86.353.000</p>
                     </div>
                     {description && (
-                      <div className="bg-muted p-8 rounded-xl border border-border">
+                      <div className="bg-muted p-5 sm:p-6 lg:p-8 rounded-xl border border-border">
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Pesan Konfirmasi</p>
                         <p className="font-bold text-foreground text-lg">&quot;{description}&quot;</p>
                       </div>
@@ -315,19 +315,19 @@ export default function TransferPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 sm:space-y-8 lg:space-y-10">
           <StaggerContainer>
             <StaggerItem>
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-foreground">Transfer Instan</h2>
+              <div className="mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Transfer Instan</h2>
                 <p className="text-sm text-muted-foreground font-medium mt-1">Kirim dana secara aman dalam hitungan detik.</p>
               </div>
             </StaggerItem>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-8">
-              <StaggerItem className="md:col-span-12 lg:col-span-8 space-y-8">
-                <div className="bg-card rounded-2xl p-8 border border-border shadow-card">
-                  <h3 className="text-sm font-bold text-foreground mb-6 tracking-widest uppercase">Pilih Metode Transfer</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
+              <StaggerItem className="lg:col-span-8 space-y-6 sm:space-y-8">
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card">
+                  <h3 className="text-xs sm:text-sm font-bold text-foreground mb-4 sm:mb-6 tracking-widest uppercase">Pilih Metode Transfer</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {TRANSFER_TYPES.map((t) => {
                       const Icon = t.icon;
@@ -364,8 +364,8 @@ export default function TransferPage() {
                   </div>
                 </div>
 
-                <div className="bg-card rounded-2xl p-8 border border-border shadow-card">
-                  <h3 className="text-sm font-bold text-foreground mb-6 tracking-widest uppercase">Jadwal Transfer</h3>
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card">
+                  <h3 className="text-xs sm:text-sm font-bold text-foreground mb-4 sm:mb-6 tracking-widest uppercase">Jadwal Transfer</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {SCHEDULE_TYPES.map((s) => {
                       const isSelected = scheduleType === s.type;
@@ -529,31 +529,31 @@ export default function TransferPage() {
                   {errors.toAccountId && <p className="text-destructive text-xs mt-4 ml-6 font-bold tracking-widest uppercase">{errors.toAccountId.message}</p>}
                 </div>
 
-                <div className="bg-card rounded-2xl p-8 border border-border shadow-card relative overflow-hidden">
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -z-0" />
 
-                  <div className="flex justify-between items-center mb-10 relative z-10">
+                  <div className="flex justify-between items-center mb-6 sm:mb-10 relative z-10 gap-2">
                     <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Nominal Transfer</span>
-                    <div className="flex items-center gap-3 bg-success-light px-4 py-1.5 rounded-full border border-primary/10 shadow-sm">
+                    <div className="flex items-center gap-2 sm:gap-3 bg-success-light px-3 sm:px-4 py-1.5 rounded-full border border-primary/10 shadow-sm shrink-0">
                       <div className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse" />
-                      <span className="text-xs font-bold text-primary tracking-widest uppercase">Secured IDR</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-primary tracking-widest uppercase">Secured IDR</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 mb-10 relative z-10">
+                  <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-10 relative z-10">
                       <input
                         type="text"
                         value={formattedAmount}
                         onChange={handleAmountChange}
                         data-testid="amount-input"
                         placeholder="0"
-                        className="w-full bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/10 text-5xl sm:text-5xl lg:text-7xl font-bold outline-none text-foreground"
+                        className="w-full bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/10 text-3xl sm:text-4xl lg:text-5xl xl:text-7xl font-bold outline-none text-foreground truncate"
                       />
                   </div>
 
-                  {errors.amount && <p className="text-destructive text-xs mb-8 font-bold tracking-widest uppercase">{errors.amount.message}</p>}
+                  {errors.amount && <p className="text-destructive text-xs mb-6 sm:mb-8 font-bold tracking-widest uppercase">{errors.amount.message}</p>}
 
-                  <div className="bg-muted/50 p-8 rounded-xl border border-border relative z-10">
+                  <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-xl border border-border relative z-10">
                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3">Memo Transaksi</p>
                     <input
                       {...register('description')}
@@ -577,9 +577,9 @@ export default function TransferPage() {
                 </ButtonMotion>
               </StaggerItem>
 
-              <StaggerItem className="md:col-span-12 lg:col-span-4 space-y-8">
-                <div className="bg-card rounded-2xl p-8 border border-border shadow-card h-full flex flex-col">
-                  <div className="flex justify-between items-center mb-10">
+              <StaggerItem className="lg:col-span-4 space-y-6 sm:space-y-8">
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card h-full flex flex-col">
+                  <div className="flex justify-between items-center mb-6 sm:mb-10">
                     <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">Penerima Favorit</h3>
                     <div className="h-1 w-8 bg-primary rounded-full" />
                   </div>
@@ -612,7 +612,7 @@ export default function TransferPage() {
                   </div>
 
                   <div className="mt-auto pt-10">
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 text-white relative overflow-hidden shadow-2xl group">
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl group">
                       <div className="relative z-10">
                         <h4 className="font-bold text-xl mb-2">Bantuan?</h4>
                         <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mb-8 leading-relaxed">Proteksi & panduan transaksi aman.</p>

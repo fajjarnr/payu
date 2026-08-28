@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.66] - 2026-08-28
+
+### Fixed
+- **Web-App Responsive Mobile-Friendly (1.18.66)**: `frontend/web-app` premium quiet + mobile-first 375/768/1024/1440 — `DashboardLayout` header `h-16 sm:h-20 lg:h-24 xl:h-28` `px-4 sm:px-6 lg:px-8 xl:px-12` `gap-2 sm:gap-4 lg:gap-6` `w-11/12/14` `Avatar h-10→14` `Bell h-5→6` `pb-28 lg:pb-10 overflow-x-hidden` + sidebar `w-[320px]` keep; `MobileNav` `px-2 sm:px-4` `pb-[max(0.5rem,env(safe-area-inset-bottom))]` `rounded-t-2xl sm:rounded-t-3xl` `h-14 sm:h-16` `justify-around sm:justify-between` labels `text-[10px] sm:text-xs` `opacity-70` visible (was hidden `opacity-0 h-0`), `bg-card/95` `shadow-[0_-8px_30px]`; `BalanceCard` grid `lg:grid-cols-12 xl:grid-cols-3 gap-4 sm:gap-6` `text-2xl sm:text-3xl lg:text-4xl xl:text-5xl break-words` hero `min-h-[220→300] p-5 sm:p-7 lg:p-10` `tracking 0.15→0.3em truncate` summary `grid-cols-2 xl:grid-cols-1`; `Transfer` `space-y-6 sm:space-y-8 lg:space-y-10` `p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl` amount `text-3xl sm:text-4xl lg:text-5xl xl:text-7xl truncate` `grid lg:12`; `landing/page` header `px-4 sm:px-6` `md:hidden` (was `sm:hidden`) `gap-10 sm:gap-14` hero `text-[28px] sm:text-4xl lg:text-5xl xl:text-6xl`; `dashboard/page` `overflow-x-hidden space-y-4 sm:space-y-6 lg:space-y-8` CTA `p-5 sm:p-6 lg:p-8 text-2xl→5xl`; `globals.css` `html,body overflow-x-hidden` `* {touch-action:manipulation}` `Tailwind v4 @theme inline`; `button` `cursor-pointer disabled:cursor-not-allowed` `focus-visible:ring-1`; `input` `min-h-[44px] h-14`; `select` `h-11 sm:h-12 min-h-[44px] cursor-pointer` `focus-visible`; `Motion` `useReducedMotion` gating all variants (`PageTransition` `initial false` `duration 0`, `FadeIn` `delay 0`, `ScaleIn` `0.4→0`, `StaggerContainer/Item` `stagger 0`, `ButtonMotion` `whileHover undefined`); `TransferActivity` `CardContent overflow-x-auto`; batch `rounded-2xl p-8 → rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8` across 27 files (pockets/qris/cards/backoffice/*).
+- **Tests**: `MobileNav.test.tsx` `bg-card/95` `pb-[max]` `h-14` `opacity-70` + `BalanceCard.test.tsx` `lg:grid-cols-12 text-2xl` — brittle class asserts → responsive; `95/95 files 1221/1222 pass 1 skipped`.
+
+### Added
+- **Local Dev Verify (1.18.66)**: `cd frontend/web-app && npm test` `95/95 1221` `npm run build` `86 routes ✓ Compiled 5.4s` `podman build -f Containerfile -t localhost/payu-web-app:1.18.66` `c9dfd8a73a81 672 MB` `podman-compose --profile apps build web-app` `Successfully tagged 1.18.65` `cache` `podman ps 34 healthy` `payu-web-app:3001→8080 healthy 30m` `curl :3001/api/health {"status":"healthy","version":"1.5.16"}` `podman_payu-network` `podman images 1.18.65 672 MB`; `viewport` `device-width viewportFit cover themeColor` `layout.tsx:40`.
+
 ## [1.18.65] - 2026-08-28
 
 ### Fixed

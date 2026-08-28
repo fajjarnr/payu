@@ -53,7 +53,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen w-full flex bg-background font-inter">
       {/* Left Panel - Branding (Hidden on mobile) */}
-      <aside className="hidden lg:flex flex-col justify-between w-1/2 bg-zinc-900 border-r border-border/10 p-8 relative overflow-hidden text-white" aria-label="Branding">
+      <aside className="hidden lg:flex flex-col justify-between w-1/2 bg-zinc-900 border-r border-border/10 p-5 sm:p-6 lg:p-8 relative overflow-hidden text-white" aria-label="Branding">
         {/* Background Effects */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-bank-green/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
@@ -102,7 +102,7 @@ function LoginForm() {
       </aside>
 
       {/* Right Panel - Sign in */}
-      <main className="flex-1 flex items-center justify-center p-8 bg-background relative" aria-labelledby="login-title">
+      <main className="flex-1 flex items-center justify-center p-5 sm:p-6 lg:p-8 bg-background relative" aria-labelledby="login-title">
         <div className="w-full max-w-[420px] space-y-8">
             <div className="text-center lg:text-left space-y-2">
                 <h2 id="login-title" className="text-3xl font-bold tracking-tight">{t('welcomeBack')}</h2>

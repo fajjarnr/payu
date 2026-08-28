@@ -35,7 +35,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background font-inter text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1080px] items-center justify-between px-6">
+        <div className="mx-auto flex h-16 max-w-[1080px] items-center justify-between px-4 sm:px-6">
           <Link href={'/'} className="flex items-center gap-1.5 cursor-pointer" aria-label="PayU Home">
             <span className="font-heading text-xl font-bold tracking-tight">PayU</span>
             <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
@@ -67,7 +67,7 @@ export default function LandingPage() {
               {t('getStarted')}
             </Link>
             <button
-              className="flex size-10 items-center justify-center rounded-full border border-border bg-card cursor-pointer sm:hidden"
+              className="flex size-10 items-center justify-center rounded-full border border-border bg-card cursor-pointer md:hidden shrink-0"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
@@ -78,8 +78,8 @@ export default function LandingPage() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="border-t border-border bg-background sm:hidden">
-            <nav className="mx-auto flex max-w-[1080px] flex-col gap-1 px-6 py-4" aria-label="Mobile">
+          <div className="border-t border-border bg-background md:hidden">
+            <nav className="mx-auto flex max-w-[1080px] flex-col gap-1 px-4 sm:px-6 py-4" aria-label="Mobile">
               <a href="#features" onClick={(e) => handleNavClick(e, 'features')} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
                 {t('nav.features')}
               </a>
@@ -106,12 +106,12 @@ export default function LandingPage() {
           <div className="pointer-events-none absolute -top-40 right-[-12%] size-[520px] rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
           <div className="pointer-events-none absolute bottom-[-30%] left-[-10%] size-[400px] rounded-full bg-primary/5 blur-3xl" aria-hidden="true" />
 
-          <div className="relative mx-auto grid max-w-[1080px] grid-cols-1 items-center gap-14 px-6 pb-20 pt-16 sm:pt-24 lg:grid-cols-2">
-            <div>
-              <span className="inline-block animate-fade-in rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary motion-reduce:animate-none">
+          <div className="relative mx-auto grid max-w-[1080px] grid-cols-1 items-center gap-10 sm:gap-14 px-4 sm:px-6 pb-16 sm:pb-20 pt-10 sm:pt-16 lg:pt-24 lg:grid-cols-2">
+            <div className="min-w-0">
+              <span className="inline-block animate-fade-in rounded-full bg-primary/10 px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-semibold text-primary motion-reduce:animate-none">
                 {t('badge')}
               </span>
-              <h1 className="animate-fade-in mt-6 font-heading text-4xl font-extrabold leading-[1.06] tracking-tight sm:text-6xl motion-reduce:animate-none" style={{ animationDelay: '80ms' }}>
+              <h1 className="animate-fade-in mt-4 sm:mt-6 font-heading text-[28px] leading-[1.1] sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight motion-reduce:animate-none" style={{ animationDelay: '80ms' }}>
                 {rawHeroTitle.split(/<br\s*\/?>/i).map((line, index) => (
                   <Fragment key={`${index}-${line}`}>
                     {index > 0 && <br />}

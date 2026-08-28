@@ -32,7 +32,7 @@ export default function BackofficeDashboard() {
           <StaggerItem>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
               {stats.map((stat, i) => (
-                <div key={i} className="bg-card p-8 rounded-2xl border border-border shadow-sm group hover:shadow-card transition-all">
+                <div key={i} className="bg-card p-5 sm:p-6 lg:p-8 rounded-2xl border border-border shadow-sm group hover:shadow-card transition-all">
                   <div className="flex justify-between items-start mb-6">
                     <div className={`h-12 w-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
                       <stat.icon className="h-6 w-6" />
@@ -54,7 +54,7 @@ export default function BackofficeDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {quickLinks.map((link, i) => (
                 <Link key={i} href={link.href} className="group">
-                  <div className="bg-card p-8 rounded-2xl border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all h-full flex flex-col">
+                  <div className="bg-card p-5 sm:p-6 lg:p-8 rounded-2xl border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all h-full flex flex-col">
                     <div className="flex justify-between items-start mb-8">
                       <div className={`h-14 w-14 rounded-xl ${link.color} text-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
                         <link.icon className="h-7 w-7" />

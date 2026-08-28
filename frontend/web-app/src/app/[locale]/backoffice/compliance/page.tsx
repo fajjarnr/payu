@@ -120,7 +120,7 @@ export default function CompliancePage() {
 
         {/* Toolbar */}
         <StaggerItem>
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-8 rounded-2xl shadow-sm">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-5 sm:p-6 lg:p-8 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-96">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

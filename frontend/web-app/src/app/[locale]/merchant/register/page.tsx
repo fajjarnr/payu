@@ -93,7 +93,7 @@ export default function MerchantRegisterPage() {
     </div>
 
     <form onSubmit={handleSubmit} className="space-y-8">
-     <div className="bg-card rounded-[3rem] p-8 border border-border shadow-sm relative overflow-hidden">
+     <div className="bg-card rounded-[3rem] p-5 sm:p-6 lg:p-8 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
 
       <div className="relative z-10 space-y-8">
@@ -161,7 +161,7 @@ export default function MerchantRegisterPage() {
       </div>
      </div>
 
-     <div className="bg-card rounded-[3rem] p-8 border border-border shadow-sm relative overflow-hidden">
+     <div className="bg-card rounded-[3rem] p-5 sm:p-6 lg:p-8 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
       <h3 className="text-xl font-bold text-foreground  mb-10 relative z-10">Tipe Merchant</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
@@ -196,7 +196,7 @@ export default function MerchantRegisterPage() {
       {errors.type && <p className="text-red-500 text-xs mt-4 font-bold tracking-widest">{errors.type}</p>}
      </div>
 
-     <div className="bg-card rounded-[3rem] p-8 border border-border shadow-sm relative overflow-hidden">
+     <div className="bg-card rounded-[3rem] p-5 sm:p-6 lg:p-8 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
       <div className="relative z-10 space-y-8">
        <div>
@@ -220,7 +220,7 @@ export default function MerchantRegisterPage() {
       </div>
      </div>
 
-     <div className="bg-foreground text-background rounded-[3rem] p-8 relative overflow-hidden shadow-2xl">
+     <div className="bg-foreground text-background rounded-[3rem] p-5 sm:p-6 lg:p-8 relative overflow-hidden shadow-2xl">
       <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
        <div className="space-y-4 max-w-xl text-center md:text-left">

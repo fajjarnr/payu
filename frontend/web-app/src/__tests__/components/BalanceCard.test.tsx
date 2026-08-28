@@ -65,9 +65,9 @@ describe('BalanceCard', () => {
    const { container } = renderWithIntl(<BalanceCard balance={1000000} />);
 
    const mainGrid = container.querySelector('.grid');
-   expect(mainGrid).toHaveClass('grid-cols-1', 'md:grid-cols-12');
+   expect(mainGrid).toHaveClass('grid-cols-1', 'lg:grid-cols-12');
 
-   const balanceSection = container.querySelector('.text-3xl');
+   const balanceSection = container.querySelector('.text-2xl');
    expect(balanceSection).toBeInTheDocument();
  });
 

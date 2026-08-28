@@ -139,7 +139,7 @@ export default function QRISPage() {
           {/* Right Sidebar Column (4 units) */}
           <div className="md:col-span-12 lg:col-span-4 space-y-8 xl:space-y-12">
             {/* Security Status Card */}
-            <div className="bg-card rounded-2xl p-8 xl:p-8 border border-border shadow-sm">
+            <div className="bg-card rounded-2xl p-5 sm:p-6 lg:p-8 xl:p-8 border border-border shadow-sm">
               <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] mb-8 uppercase opacity-60">Protokol Keamanan</h3>
               <div className="space-y-8">
                 <div className="flex gap-4">
@@ -164,7 +164,7 @@ export default function QRISPage() {
             </div>
 
             {/* My QR Card */}
-            <div className="bg-gray-900 rounded-2xl p-8 xl:p-8 text-white relative overflow-hidden shadow-2xl group border border-white/5">
+            <div className="bg-gray-900 rounded-2xl p-5 sm:p-6 lg:p-8 xl:p-8 text-white relative overflow-hidden shadow-2xl group border border-white/5">
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-8">
                     <div>
@@ -174,7 +174,7 @@ export default function QRISPage() {
                     <QrCode className="h-7 w-7 text-emerald-500/40" />
                 </div>
                 
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 mb-8 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 mb-8 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
                    <QrCode className={`h-32 w-32 transition-all ${showMyQr ? 'text-emerald-400 scale-105' : 'text-white/20'}`} />
                    {!showMyQr && (
                      <div className="absolute inset-0 flex items-center justify-center">
@@ -194,7 +194,7 @@ export default function QRISPage() {
             </div>
 
             {/* Daily Limit Card */}
-            <div className="bg-muted/30 rounded-2xl p-8 xl:p-8 border border-border flex flex-col justify-between min-h-[180px] xl:min-h-[200px]">
+            <div className="bg-muted/30 rounded-2xl p-5 sm:p-6 lg:p-8 xl:p-8 border border-border flex flex-col justify-between min-h-[180px] xl:min-h-[200px]">
                <div className="space-y-1">
                   <p className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase opacity-60">Limit Harian QRIS</p>
                   <p className="text-2xl xl:text-3xl font-bold text-foreground tabular-nums">Rp 10.000.000</p>

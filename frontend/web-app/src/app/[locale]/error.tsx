@@ -29,7 +29,7 @@ export default function Error({ error, reset }: ErrorProps) {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-6 sm:px-10 lg:px-12 bg-background">
-      <div className="max-w-md w-full bg-card/80 backdrop-blur-xl rounded-2xl p-8 border border-border shadow-sm text-center relative overflow-hidden">
+      <div className="max-w-md w-full bg-card/80 backdrop-blur-xl rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm text-center relative overflow-hidden">
         {/* Subtle ambient glow */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-destructive/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-bank-green/5 rounded-full blur-3xl" />

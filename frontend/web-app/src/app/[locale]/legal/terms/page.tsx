@@ -26,7 +26,7 @@ export default function TermsPage() {
             </StaggerItem>
 
             <StaggerItem>
-              <div className="bg-card rounded-2xl p-8 sm:p-8 border border-border shadow-card space-y-8">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-8">
                 <div className="prose prose-sm max-w-none">
                   <section className="space-y-4">
                     <h3 className="text-xl font-bold text-foreground flex items-center gap-3">

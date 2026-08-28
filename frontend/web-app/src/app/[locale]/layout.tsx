@@ -37,6 +37,17 @@ export const metadata = {
   description: 'Platform digital banking standalone yang aman, cepat, dan transparan.',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
+};
+
 export default async function RootLayout({
   children,
   params

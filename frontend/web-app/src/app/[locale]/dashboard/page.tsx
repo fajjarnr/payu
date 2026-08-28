@@ -73,8 +73,8 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
    {/* Promo Popup */}
    <PromoPopup delay={3000} />
 
-   <main id="main-content">
-    <div className="space-y-6 md:space-y-8 lg:space-y-8">
+   <main id="main-content" className="overflow-x-hidden">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
      {/* Banner Carousel - LCP Element 1 */}
      <BannerCarousel autoPlayInterval={6000} />
 
@@ -89,49 +89,49 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
        )}
      </div>
 
-     <StaggerContainer className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-8">
+     <StaggerContainer className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
       {/* High Priority Actions & Health - 4/8 Split (Aligned with Balance) */}
-      <StaggerItem className="md:col-span-12 lg:col-span-4">
+      <StaggerItem className="lg:col-span-4">
         <FinancialHealthScore isLoading={metricsLoading} className="h-full" />
       </StaggerItem>
 
-      <StaggerItem className="md:col-span-12 lg:col-span-8">
+      <StaggerItem className="lg:col-span-8">
        <QuickActions maxActions={8} className="h-full" />
       </StaggerItem>
 
       {/* Activity & Insights - 4/8 Split (Consistent Sidebar) */}
-      <StaggerItem className="md:col-span-12 lg:col-span-4">
+      <StaggerItem className="lg:col-span-4">
         <SpendingInsights isLoading={spendingLoading} className="h-full" />
       </StaggerItem>
 
-      <StaggerItem className="md:col-span-12 lg:col-span-8">
+      <StaggerItem className="lg:col-span-8">
        <TransferActivity className="h-full" />
       </StaggerItem>
 
       {/* Charts & Investment - 4/8 Split (Consistent Sidebar) */}
-      <StaggerItem className="md:col-span-12 lg:col-span-4">
+      <StaggerItem className="lg:col-span-4">
         <InvestmentPerformance isLoading={investmentLoading} className="h-full" />
       </StaggerItem>
 
-      <StaggerItem className="md:col-span-12 lg:col-span-8">
+      <StaggerItem className="lg:col-span-8">
         <StatsCharts isLoading={spendingLoading} className="h-full" />
       </StaggerItem>
 
       {/* Budget & Offers - 4/8 Split */}
-      <StaggerItem className="md:col-span-12 lg:col-span-4">
+      <StaggerItem className="lg:col-span-4">
         <BudgetTracking isLoading={spendingLoading} className="h-full" />
       </StaggerItem>
 
-      <StaggerItem className="md:col-span-12 lg:col-span-8">
+      <StaggerItem className="lg:col-span-8">
        <SegmentedOffers maxOffers={3} />
       </StaggerItem>
 
       {/* Investment CTA - Full Width */}
-      <StaggerItem className="md:col-span-12 lg:col-span-12">
-       <div className="card-gradient rounded-2xl p-8 sm:p-8 lg:p-8 text-primary-foreground relative overflow-hidden group shadow-card border border-white/10">
+      <StaggerItem className="lg:col-span-12">
+       <div className="card-gradient rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 text-primary-foreground relative overflow-hidden group shadow-card border border-white/10">
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
          <div className="space-y-6 text-center lg:text-left">
-          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight leading-none">{t('futureTitle')}</h3>
+          <h3 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold uppercase tracking-tight leading-none">{t('futureTitle')}</h3>
           <p className="text-base sm:text-xl font-medium opacity-90 max-w-2xl leading-relaxed">
            {t('futureDesc')}
           </p>

@@ -111,7 +111,7 @@ export default function CMSPage() {
 
         {/* Toolbar */}
         <StaggerItem>
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-8 rounded-2xl shadow-sm">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-5 sm:p-6 lg:p-8 rounded-2xl shadow-sm">
             <div className="flex flex-wrap items-center gap-3">
               {['ALL', 'BANNER', 'PROMO', 'ALERT', 'POPUP'].map((tab) => (
                 <button

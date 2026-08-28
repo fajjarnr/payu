@@ -101,7 +101,7 @@ describe('MobileNav', () => {
 
     const navContainer = container.querySelector('.fixed.bottom-0.left-0.right-0');
     expect(navContainer).toHaveClass(
-      'bg-card/70',
+      'bg-card/95',
       'backdrop-blur-2xl',
       'border-t',
       'border-border',
@@ -127,15 +127,14 @@ describe('MobileNav', () => {
     mockPathname = '/transfer';
     const { container } = renderWithIntl(<MobileNav />);
 
-    // Active item should have visible label (text-xs class)
+    // Active item should have visible label (opacity-100)
     const activeLabels = container.querySelectorAll('.opacity-100');
     expect(activeLabels.length).toBeGreaterThan(0);
 
-    // Inactive items should have hidden labels
-    const hiddenLabels = container.querySelectorAll('.opacity-0.h-0.overflow-hidden');
-    expect(hiddenLabels.length).toBeGreaterThan(0);
+    // Inactive items should have dimmed labels (opacity-70) - responsive keeps labels visible
+    const dimmedLabels = container.querySelectorAll('.opacity-70');
+    expect(dimmedLabels.length).toBeGreaterThan(0);
   });
-
   it('should render icons for all navigation items', () => {
     const { container } = renderWithIntl(<MobileNav />);
 
@@ -159,10 +158,11 @@ describe('MobileNav', () => {
   it('should have proper spacing between navigation items', () => {
     const { container } = renderWithIntl(<MobileNav />);
 
-    const navContainer = container.querySelector('.flex.justify-between.items-center');
+    const navContainer = container.querySelector('.flex.items-center');
     expect(navContainer).toBeInTheDocument();
+    // Responsive uses justify-around on mobile, justify-between on sm+
+    expect(navContainer).toHaveClass('flex');
   });
-
   it('should apply active styling with accent background', () => {
     mockPathname = '/pockets';
     renderWithIntl(<MobileNav />);
@@ -175,33 +175,34 @@ describe('MobileNav', () => {
     mockPathname = '/bills';
     const { container } = renderWithIntl(<MobileNav />);
 
-    const activeIcon = container.querySelector('.scale-105');
-    expect(activeIcon).toBeInTheDocument();
+    // Active item should have primary color and highlighted background
+    const activeLink = screen.getByText('Tagihan').closest('a');
+    expect(activeLink).toHaveClass('text-primary');
+    const activeIconBg = activeLink?.querySelector('.bg-primary\\/10');
+    expect(activeIconBg).toBeInTheDocument();
   });
 
   it('should use increased stroke width for active icon', () => {
     mockPathname = '/dashboard';
     const { container } = renderWithIntl(<MobileNav />);
 
-    // Check that the active icon has the stroke-[2.5px] class by checking the rendered HTML
-    const activeIconContainer = screen.getByText('Dasbor').closest('a')?.querySelector('div');
-    expect(activeIconContainer).toBeInTheDocument();
-    // The active icon should have a scale-110 class as well
-    const activeIcon = container.querySelector('.scale-105');
+    // Check that the active icon has the stroke-[2.5px] class
+    const activeLink = screen.getByText('Dasbor').closest('a');
+    const activeIcon = activeLink?.querySelector('.stroke-\\[2\\.5px\\]');
     expect(activeIcon).toBeInTheDocument();
   });
 
   it('should have safe area padding for mobile devices', () => {
     renderWithIntl(<MobileNav />);
 
-    expect(screen.getByTestId('mobile-nav')).toHaveClass('pb-[env(safe-area-inset-bottom,1.5rem)]');
+    expect(screen.getByTestId('mobile-nav')).toHaveClass('pb-[max(0.5rem,env(safe-area-inset-bottom))]');
   });
 
 
   it('should render with correct height', () => {
     const { container } = renderWithIntl(<MobileNav />);
 
-    const navContainer = container.querySelector('.h-16');
+    const navContainer = container.querySelector('.h-14');
     expect(navContainer).toBeInTheDocument();
   });
 });

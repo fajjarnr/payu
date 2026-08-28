@@ -99,7 +99,7 @@ export default function AnalyticsPage() {
               { label: 'Tabungan Bulanan', amount: analyticsData.monthlySavings, change: analyticsData.savingsChange, isPos: true, icon: Activity },
               { label: 'ROI Investasi', amount: analyticsData.investmentRoi, change: analyticsData.roiChange, isPos: true, icon: ArrowUpRight },
             ].map((stat, i) => (
-              <div key={i} className="bg-card p-8 rounded-xl border border-border shadow-sm group hover:shadow-xl hover:shadow-bank-green/5 transition-all duration-500">
+              <div key={i} className="bg-card p-5 sm:p-6 lg:p-8 rounded-xl border border-border shadow-sm group hover:shadow-xl hover:shadow-bank-green/5 transition-all duration-500">
                 <div className="flex justify-between items-start mb-6">
                   <div className="h-12 w-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center border border-border group-hover:border-bank-green/20 transition-all">
                     <stat.icon className={clsx("h-6 w-6", stat.isPos ? "text-bank-green" : "text-red-500")} />
@@ -226,7 +226,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="bg-foreground text-background rounded-xl p-8 relative overflow-hidden group shadow-2xl">
+          <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 lg:p-8 relative overflow-hidden group shadow-2xl">
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="space-y-4 max-w-xl text-center md:text-left">

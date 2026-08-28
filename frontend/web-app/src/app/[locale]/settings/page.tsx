@@ -89,7 +89,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
               {/* Sidebar Profiles */}
               <StaggerItem className="md:col-span-6 lg:col-span-4 space-y-6">
-                <div className="bg-card rounded-xl p-8 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
+                <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
                   <div className="relative w-24 h-24 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-bold text-4xl shadow-xl shadow-primary/20 mb-8 transition-transform group-hover:scale-110">

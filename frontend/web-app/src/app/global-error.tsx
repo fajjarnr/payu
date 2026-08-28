@@ -15,7 +15,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
   return (
     <html lang="id">
       <body className="antialiased bg-background text-foreground min-h-screen flex items-center justify-center px-6 sm:px-10 lg:px-12 font-sans">
-        <div className="max-w-md w-full bg-card/80 backdrop-blur-xl rounded-2xl p-8 border border-border shadow-2xl text-center relative overflow-hidden">
+        <div className="max-w-md w-full bg-card/80 backdrop-blur-xl rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-2xl text-center relative overflow-hidden">
           {/* Ambient glow effects */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-destructive/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-40 h-40 bg-bank-green/5 rounded-full blur-3xl" />

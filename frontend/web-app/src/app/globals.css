@@ -108,7 +108,11 @@
 }
 
 @layer base {
+  * {
+    touch-action: manipulation;
+  }
   html {
+    overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -117,6 +121,7 @@
   }
 
   body {
+    overflow-x: hidden;
     background: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: var(--font-sans);

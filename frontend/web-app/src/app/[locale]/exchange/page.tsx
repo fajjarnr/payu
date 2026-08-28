@@ -162,7 +162,7 @@ export default function ExchangePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Main Exchange Form */}
               <StaggerItem className="lg:col-span-8 space-y-8">
-                <div className="bg-card rounded-2xl p-8 border border-border shadow-card relative overflow-hidden">
+                <div className="bg-card rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                   {/* Ambient glow effect */}
                   <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/3 rounded-full blur-3xl pointer-events-none" />
@@ -392,7 +392,7 @@ export default function ExchangePage() {
               {/* Sidebar - Recent Conversions & Info */}
               <StaggerItem className="lg:col-span-4 space-y-8">
                 {/* Rate Updates Card */}
-                <div className="bg-card rounded-2xl p-8 border border-border shadow-card">
+                <div className="bg-card rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">
                       Market Status
@@ -425,7 +425,7 @@ export default function ExchangePage() {
                 </div>
 
                 {/* Recent Conversions */}
-                <div className="bg-card rounded-2xl p-8 border border-border shadow-card">
+                <div className="bg-card rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">
                       Recent Exchanges
@@ -486,7 +486,7 @@ export default function ExchangePage() {
                 </div>
 
                 {/* Help Card */}
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 text-white relative overflow-hidden shadow-2xl">
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
                   <div className="absolute bottom-[-20px] right-[-20px] opacity-10">
                     <TrendingUp className="h-32 w-32" />
                   </div>

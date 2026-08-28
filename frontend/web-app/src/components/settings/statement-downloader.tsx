@@ -128,7 +128,7 @@ export default function StatementDownloader() {
     <StaggerContainer className="space-y-8">
       {/* Statement Generator Section */}
       <StaggerItem>
-      <div className="bg-card rounded-xl p-8 border border-border shadow-card space-y-8 relative overflow-hidden">
+      <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
         {/* Section Header */}
@@ -288,7 +288,7 @@ export default function StatementDownloader() {
 
       {/* Statement History Section */}
       <StaggerItem>
-      <div className="bg-card rounded-xl p-8 border border-border shadow-card space-y-6 relative overflow-hidden">
+      <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-6 relative overflow-hidden">
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
 
         {/* Section Header */}

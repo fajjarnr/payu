@@ -26,7 +26,7 @@ export default function PrivacyPage() {
             </StaggerItem>
 
             <StaggerItem>
-              <div className="bg-gradient-to-br from-primary/5 to-bank-emerald/5 rounded-2xl p-8 sm:p-8 border border-border shadow-card space-y-8 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-primary/5 to-bank-emerald/5 rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
                 
                 <div className="prose prose-sm max-w-none relative z-10">

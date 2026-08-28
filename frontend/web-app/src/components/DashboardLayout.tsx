@@ -112,7 +112,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
     <div className="h-screen bg-background flex overflow-hidden font-inter text-foreground">
       {/* Desktop Sidebar - Increased spacing and font weight */}
       <aside
-        className="hidden lg:flex flex-col w-[320px] 2xl:w-[380px] border-r border-border bg-background p-8 2xl:p-8 h-screen overflow-y-auto shrink-0 sticky top-0"
+        className="hidden lg:flex flex-col w-[320px] 2xl:w-[380px] border-r border-border bg-background p-5 sm:p-6 lg:p-8 2xl:p-8 h-screen overflow-y-auto shrink-0 sticky top-0"
         aria-label="Sidebar Navigasi Desktop"
       >
         <div className="flex items-center gap-5 mb-16 px-2 group cursor-pointer">
@@ -150,19 +150,19 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-28 border-b border-border bg-background/80 backdrop-blur-3xl sticky top-0 z-30 shrink-0">
-          <div className="w-full px-6 sm:px-10 lg:px-12 h-full flex items-center justify-between">
-            <div className="flex items-center gap-8">
+        <header className="h-16 sm:h-20 lg:h-24 xl:h-28 border-b border-border bg-background/80 backdrop-blur-3xl sticky top-0 z-30 shrink-0">
+          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 h-full flex items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-6 lg:gap-8 min-w-0 flex-1">
               <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
                 <SheetTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     data-testid="mobile-menu-trigger"
-                    className="lg:hidden w-14 h-14 -ml-2 text-foreground/60 hover:text-foreground hover:bg-foreground/5 rounded-2xl"
+                    className="lg:hidden w-11 h-11 sm:w-12 sm:h-12 -ml-2 text-foreground/60 hover:text-foreground hover:bg-foreground/5 rounded-xl sm:rounded-2xl shrink-0 cursor-pointer"
                     aria-label="Buka menu navigasi"
                   >
-                    <Menu className="h-8 w-8" aria-hidden="true" />
+                    <Menu className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 p-0 border-r border-border bg-background shadow-3xl">
@@ -206,7 +206,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
               </div>
             </div>
 
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
                <ThemeToggle />
                <LanguageSwitcher />
 
@@ -224,12 +224,12 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                  variant="ghost"
                  size="icon"
                  data-testid="notification-button"
-                 className="w-14 h-14 bg-card text-foreground/60 hover:text-primary hover:bg-primary/5 rounded-2xl relative shadow-sm border border-primary/10 hover:border-primary/30 transition-all"
+                 className="w-11 h-11 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-card text-foreground/60 hover:text-primary hover:bg-primary/5 rounded-xl sm:rounded-2xl relative shadow-sm border border-primary/10 hover:border-primary/30 transition-all cursor-pointer shrink-0"
                  aria-label="Notifikasi"
                  onClick={() => router.push(`/${locale}/notifications`)}
                >
-                 <div className="absolute top-5 right-5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-card shadow-sm" aria-label="Notifikasi baru" />
-                 <Bell className="h-6 w-6" aria-hidden="true" />
+                 <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 lg:top-5 lg:right-5 h-2 w-2 sm:h-2.5 sm:w-2.5 bg-primary rounded-full border-2 border-card shadow-sm" aria-label="Notifikasi baru" />
+                 <Bell className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
                </Button>
 
                 <DropdownMenu>
@@ -240,7 +240,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                       className="p-0 h-auto rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary shadow-lg border border-primary/10"
                       aria-label="Menu profil pengguna"
                     >
-                      <Avatar className="h-14 w-14 border-2 border-card shadow-md">
+                      <Avatar className="h-10 w-10 sm:h-11 sm:w-11 lg:h-14 lg:w-14 border-2 border-card shadow-md">
                         <AvatarFallback className="bg-primary/5">
                           <User className="h-7 w-7 text-primary" aria-hidden="true" />
                         </AvatarFallback>
@@ -269,8 +269,8 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto scrollbar-hide bg-background">
-          <div className="w-full px-6 sm:px-10 lg:px-12 py-8 lg:py-10 pb-32 transition-all duration-500">
+        <main className="flex-1 overflow-y-auto scrollbar-hide bg-background overflow-x-hidden">
+          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 lg:py-10 pb-28 lg:pb-10 transition-all duration-300">
             {children}
           </div>
         </main>

@@ -38,10 +38,10 @@ export default function BalanceCard({
   const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
 
   return (
-    <div data-testid="balance-card" className="grid grid-cols-1 md:grid-cols-12 xl:grid-cols-3 gap-6">
+    <div data-testid="balance-card" className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-3 gap-4 sm:gap-6">
       {/* Col 1: Primary Balance & Net Worth */}
-      <div className="md:col-span-12 lg:col-span-4 xl:col-span-1 flex flex-col gap-6">
-        <Card data-testid="primary-balance-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group min-h-[220px]">
+      <div className="lg:col-span-12 xl:col-span-1 flex flex-col gap-4 sm:gap-6">
+        <Card data-testid="primary-balance-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
             <div>
               <CardTitle className="text-xs sm:text-sm font-bold text-emerald-500 tracking-[0.2em] uppercase">
@@ -59,7 +59,7 @@ export default function BalanceCard({
 
           <CardContent>
             <div className="space-y-4">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tabular-nums leading-none tracking-tighter">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground tabular-nums leading-none tracking-tight break-words">
                 {formatCurrency(balance, { symbol: currency, locale: bcp47Locale })}
               </h2>
               <div className="flex items-center gap-3">
@@ -79,8 +79,8 @@ export default function BalanceCard({
           </CardContent>
         </Card>
 
-        <Card data-testid="net-worth-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow min-h-[220px]">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
+        <Card data-testid="net-worth-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6 sm:pb-8">
             <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
               Kekayaan Bersih
             </CardTitle>
@@ -91,7 +91,7 @@ export default function BalanceCard({
 
           <CardContent>
             <div className="space-y-4">
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight">
+              <h3 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight break-words">
                 {formatCurrency(netWorth ?? 0, { symbol: currency, locale: bcp47Locale })}
               </h3>
               <div className="flex items-center gap-2">
@@ -113,8 +113,8 @@ export default function BalanceCard({
       </div>
 
       {/* Col 2: Visual Card Representation (Hero) */}
-      <div className="md:col-span-12 lg:col-span-8 xl:col-span-1">
-        <div className="relative aspect-[1.6/1] md:aspect-auto md:h-full min-h-[300px] xl:min-h-0 rounded-2xl overflow-hidden shadow-glass group border border-white/10">
+      <div className="lg:col-span-12 xl:col-span-1">
+        <div className="relative aspect-[1.6/1] lg:aspect-auto lg:h-full min-h-[220px] sm:min-h-[260px] lg:min-h-[300px] xl:min-h-0 rounded-2xl overflow-hidden shadow-glass group border border-white/10">
           {/* Gradient background */}
           <div className="absolute inset-0 card-gradient" />
 
@@ -125,29 +125,29 @@ export default function BalanceCard({
           <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/20 blur-xl transition-transform group-hover:scale-110 pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
 
-          <div className="relative z-10 p-7 sm:p-10 h-full flex flex-col justify-between text-white">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 font-bold text-2xl shadow-lg">
+          <div className="relative z-10 p-5 sm:p-7 lg:p-10 h-full flex flex-col justify-between text-white">
+            <div className="flex justify-between items-start gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/20 font-bold text-xl sm:text-2xl shadow-lg shrink-0">
                   U
                 </div>
-                <span className="text-3xl font-bold uppercase tracking-tighter">PayU</span>
+                <span className="text-xl sm:text-2xl lg:text-3xl font-bold uppercase tracking-tighter truncate">PayU</span>
               </div>
-              <div className="text-xs font-bold tracking-widest opacity-80 bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">07/28</div>
+              <div className="text-[10px] sm:text-xs font-bold tracking-widest opacity-80 bg-white/10 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-white/10 shrink-0">07/28</div>
             </div>
 
-            <div className="space-y-6">
-              <div className="text-xl sm:text-3xl lg:text-5xl font-bold tracking-[0.3em] font-mono whitespace-nowrap overflow-hidden drop-shadow-2xl">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="text-base sm:text-xl lg:text-2xl xl:text-3xl font-bold tracking-[0.15em] sm:tracking-[0.2em] lg:tracking-[0.3em] font-mono truncate drop-shadow-2xl">
                 4829 •••• •••• 1928
               </div>
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-xs text-white/60 font-bold uppercase tracking-[0.2em] mb-2">Pemegang Kartu</p>
-                  <p className="text-sm sm:text-base lg:text-lg font-bold uppercase tracking-widest">PENGGUNA PAYU</p>
+              <div className="flex justify-between items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs text-white/60 font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1 sm:mb-2">Pemegang Kartu</p>
+                  <p className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold uppercase tracking-widest truncate">PENGGUNA PAYU</p>
                 </div>
-                <div className="flex -space-x-3">
-                  <div className="w-12 h-12 rounded-full bg-orange-500/80 backdrop-blur-sm border border-white/20 shadow-lg" />
-                  <div className="w-12 h-12 rounded-full bg-yellow-400/60 backdrop-blur-sm border border-white/20 shadow-lg" />
+                <div className="flex -space-x-2 sm:-space-x-3 shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-500/80 backdrop-blur-sm border border-white/20 shadow-lg" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-yellow-400/60 backdrop-blur-sm border border-white/20 shadow-lg" />
                 </div>
               </div>
             </div>
@@ -155,8 +155,7 @@ export default function BalanceCard({
         </div>
       </div>
 
-      {/* Col 3: Summary Stats (Pemasukan/Pengeluaran) */}
-      <div className="md:col-span-12 lg:col-span-12 xl:col-span-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-6">
+      <div className="lg:col-span-12 xl:col-span-1 grid grid-cols-2 xl:grid-cols-1 gap-4 sm:gap-6">
         <SummaryItem
           data-testid="income-card"
           label="Pemasukan"
@@ -193,31 +192,31 @@ interface SummaryItemProps {
 function SummaryItem({ label, amount, change, isPositive, currency, bcp47Locale, 'data-testid': testId }: SummaryItemProps) {
   return (
     <Card data-testid={testId} className="flex flex-col justify-between h-full relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-10">
-        <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6 sm:pb-10 gap-2">
+        <CardTitle className="text-[10px] sm:text-xs lg:text-sm font-bold text-muted-foreground tracking-[0.15em] sm:tracking-[0.2em] uppercase leading-tight">
           {label}
         </CardTitle>
         <div className={cn(
-          "w-12 h-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-white/5",
+          "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-white/5 shrink-0",
           isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
         )}>
-          {isPositive ? <ArrowUpRight className="h-6 w-6" /> : <ArrowDownRight className="h-6 w-6" />}
+          {isPositive ? <ArrowUpRight className="h-5 w-5 sm:h-6 sm:w-6" /> : <ArrowDownRight className="h-5 w-5 sm:h-6 sm:w-6" />}
         </div>
       </CardHeader>
 
       <CardContent>
-        <div className="space-y-4">
-          <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">
+        <div className="space-y-3 sm:space-y-4">
+          <h4 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground tabular-nums tracking-tight break-words leading-none">
             {formatCurrency(amount, { symbol: currency, locale: bcp47Locale })}
           </h4>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className={cn(
               "text-xs font-bold px-2 py-0.5 rounded-lg",
               isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
             )}>
               {isPositive ? '+' : ''}{change}%
             </span>
-            <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Bulan ini</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">Bulan ini</span>
           </div>
         </div>
       </CardContent>

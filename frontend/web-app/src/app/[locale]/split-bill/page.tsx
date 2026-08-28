@@ -185,7 +185,7 @@ export default function SplitBillPage() {
             {/* Create Modal */}
             {showCreateModal && (
               <StaggerItem>
-                <div className="bg-card border border-border rounded-2xl p-8 shadow-card space-y-6">
+                <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 lg:p-8 shadow-card space-y-6">
                   <h3 className="text-xl font-bold text-foreground">Buat Split Bill Baru</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>

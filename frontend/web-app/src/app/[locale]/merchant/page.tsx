@@ -75,7 +75,7 @@ export default function MerchantDashboard() {
       </StaggerItem>
 
       <StaggerItem>
-       <div className="bg-card rounded-xl p-8 border border-border shadow-sm mb-6">
+       <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm mb-6">
         <div className="flex items-center gap-3 mb-6">
          <ShieldCheck className="h-5 w-5 text-primary" />
          <h3 className="text-lg font-bold">{t('profile')}</h3>
@@ -104,7 +104,7 @@ export default function MerchantDashboard() {
       </StaggerItem>
 
       <StaggerItem>
-       <div className="bg-card rounded-xl p-8 border border-border shadow-sm">
+       <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm">
         <div className="flex items-center gap-3 mb-6">
          <Key className="h-5 w-5 text-primary" />
          <h3 className="text-lg font-bold">{t('apiCredentials')}</h3>

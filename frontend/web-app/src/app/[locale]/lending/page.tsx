@@ -212,7 +212,7 @@ export default function LendingPage() {
                   <h3 className="text-xl font-bold text-foreground">Produk Pinjaman</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {loanProducts.map((product, i) => (
-                      <StaggerItem key={i} data-testid={`loan-product-${i}`} className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
+                      <StaggerItem key={i} data-testid={`loan-product-${i}`} className="bg-card p-5 sm:p-6 lg:p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
                         <div className="flex justify-between items-start mb-8">
                           <div className={clsx("h-16 w-16 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110", product.bg, product.color)}>
                             <product.icon className="h-8 w-8" />

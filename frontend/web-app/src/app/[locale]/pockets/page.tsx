@@ -298,7 +298,7 @@ export default function PocketsPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
                             <StaggerItem className="md:col-span-12 lg:col-span-8">
-                                <div className="bg-card rounded-2xl p-8 sm:p-8 border border-border shadow-card flex flex-col justify-between min-h-[400px] relative overflow-hidden group shadow-2xl">
+                                <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col justify-between min-h-[400px] relative overflow-hidden group shadow-2xl">
                                     <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -z-0" />
 
                                     <div className="relative z-10 flex flex-col h-full">
@@ -336,7 +336,7 @@ export default function PocketsPage() {
                             </StaggerItem>
 
                             <StaggerItem className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-8">
-                                <div className="bg-card p-8 rounded-2xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group min-h-[180px]">
+                                <div className="bg-card p-5 sm:p-6 lg:p-8 rounded-2xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group min-h-[180px]">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl" />
                                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1 opacity-60">Protokol Cadangan</p>
                                     <p className="text-2xl font-bold text-foreground tabular-nums">{formatCurrency(balance?.reservedBalance ?? '0', { locale: bcp47Locale })}</p>
@@ -350,7 +350,7 @@ export default function PocketsPage() {
                                         })()}
                                     </div>
                                 </div>
-                                <div className="bg-gray-900 p-8 rounded-2xl text-white relative overflow-hidden shadow-2xl group flex flex-col justify-between min-h-[180px] border border-white/5">
+                                <div className="bg-gray-900 p-5 sm:p-6 lg:p-8 rounded-2xl text-white relative overflow-hidden shadow-2xl group flex flex-col justify-between min-h-[180px] border border-white/5">
                                     <div className="relative z-10 flex items-center gap-4 mb-6">
                                         <div className="h-12 w-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/10 backdrop-blur-md">
                                             <ShieldCheck className="h-6 w-6 text-emerald-500" />
@@ -485,7 +485,7 @@ export default function PocketsPage() {
                                         const percentage = Math.round((Number(goal.current) / Number(goal.target)) * 100);
                                         const Icon = goal.icon;
                                         return (
-                                            <div key={goal.id} className="bg-card rounded-xl p-8 border border-border shadow-sm group hover:shadow-card hover:-translate-y-1 transition-all duration-300">
+                                            <div key={goal.id} className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm group hover:shadow-card hover:-translate-y-1 transition-all duration-300">
                                                 <div className="flex items-center gap-5 mb-8">
                                                     <div className={clsx(
                                                         "h-14 w-14 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110",

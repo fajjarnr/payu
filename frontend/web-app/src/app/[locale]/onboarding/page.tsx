@@ -106,7 +106,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen w-full flex bg-background font-inter">
       {/* Left Panel - Branding */}
-      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-zinc-900 border-r border-border/10 p-8 relative overflow-hidden text-white" aria-label="Branding">
+      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-zinc-900 border-r border-border/10 p-5 sm:p-6 lg:p-8 relative overflow-hidden text-white" aria-label="Branding">
         {/* Background Effects */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
@@ -157,7 +157,7 @@ export default function OnboardingPage() {
       </aside>
 
       {/* Right Panel - Form Flow */}
-      <main className="flex-1 flex flex-col items-center justify-center p-8 bg-background relative" aria-labelledby="onboarding-title">
+      <main className="flex-1 flex flex-col items-center justify-center p-5 sm:p-6 lg:p-8 bg-background relative" aria-labelledby="onboarding-title">
         <div className="w-full max-w-[520px]">
             {/* Mobile back link */}
             <Link href="/login" className="lg:hidden flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 w-fit">
