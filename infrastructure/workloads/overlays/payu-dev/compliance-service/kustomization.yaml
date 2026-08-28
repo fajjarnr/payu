@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
-    newTag: "1.18.48"
+    newTag: "1.18.49"
 patches:
   - target:
       kind: Deployment

@@ -20,7 +20,7 @@ spec:
     - name: image
       value: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
     - name: image-tag
-      value: "1.18.48"
+      value: "1.18.49"
     - name: target-env
       value: "dev"
   workspaces:

@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.48` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.48` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Last Release** | `1.18.49` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.49` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
 | **Backlog Aktif** | *No OPEN item* — seluruh B1–B4 + harden sweep **CLOSED 1.18.9–1.18.48** → [`CHANGELOG.md`](../../CHANGELOG.md). |
-| **Last Updated** | 2026-08-28 — pipeline-perf+simulator+spotbugs **1.18.48** grill CLOSED 7/8 pilot 3 verified (CICD-PERF-001..003 + DRIFT-001..003 + CLEANUP-001) + **WAF-CORAZA + GITOPS-LEGACY simulators 5×** CLOSED; sisa OPEN: RLS rollout, issuer audit env lain, DPoP, rate-limit keying, PERF-004 DEFERRED, Results/ArgoCD tolerance. |
+| **Last Updated** | 2026-08-28 — RLS rollout **1.18.49** CLOSED 8 services `TenantDataSource` SET LOCAL `1.18.49` `TenantDataSourceRlsTest 4/4` + pipeline-perf+simulator+spotbugs **1.18.48** 7/8; sisa OPEN: issuer audit env lain, DPoP, rate-limit keying, PERF-004 DEFERRED, Results/ArgoCD tolerance. |
 
 ---
 
@@ -36,7 +36,6 @@
 ## 🔴 Active Tickets
 
 | Key | Pri | Summary | Status |
-| RLS-ROLLOUT-001 | P1 | `TenantDataSource` decorator (SET LOCAL per tx) baru ter-build di account-service `1.18.47`; service lain masih bertahan pada mitigasi `ALTER ROLE payu SET app.tenant_id='default'` — rebuild + deploy per service di rilis berikutnya, lalu evaluasi pencabutan mitigasi | Detail di [Open Findings → Audit 2026-08-26] |
 | SSO-ISSUER-002 | P1 | Issuer alignment + realm drift audit untuk sit/uat/preprod/prod — dev terbukti mati oleh pola identik (web-app issuer publik vs backend internal + realm drift); env lain kemungkinan besar sama | Detail di [Open Findings → Audit 2026-08-26] |
 
 ---
@@ -116,7 +115,6 @@ Catatan sesi 2026-08-25: failure PipelineRun lama di `payu-cicd` (gateway-servic
 
 | Key | Pri | Temuan | Bukti | Sisa |
 |:---|:---:|:---|:---|:---|
-| RLS-ROLLOUT-001 | P1 | `TenantDataSource` decorator baru ter-build di account-service `1.18.47`; service lain (transaction/wallet/billing/partner/auth/dll.) masih bergantung pada mitigasi DB-level `ALTER ROLE payu SET app.tenant_id='default'` | `oc get deploy <svc> -o jsonpath={.image}` vs `1.18.47` | Rebuild + deploy service bertabel RLS di rilis berikutnya; regression test non-superuser per service; evaluasi pencabutan ALTER ROLE setelah semua ter-cover |
 | SSO-ISSUER-002 | P1 | Pola issuer mismatch + realm drift kemungkinan besar terulang di sit/uat/preprod/prod (web-app issuer publik per-env vs backend internal; realm per env diimpor dari manifest berbeda-beda) | Pola identik terbukti di dev (6 lapis) | Audit per env dengan checklist yang sama: issuer token vs validator, realm users/secret/redirectUris vs git, DPoP attributes |
 | SSO-DPOP-003 | P3 | DPoP (ADR-0062) enforcement dinonaktifkan di client `payu-web-app` karena BFF belum menghasilkan DPoP proof — sender-constrained tokens belum aktif | `GET /admin/realms/payu/clients/…/attributes` dpop=false | Implementasi DPoP proof generation di BFF/auth-service, lalu nyalakan kembali enforcement |
 | NET-RATELIMIT-004 | P3 | Rate-limit auth gateway masih per-IP — seluruh user berbagi IP pod BFF; bump 120/min cukup untuk dev, per-user keying (dari refresh token/session) lebih tepat untuk prod | `gateway-service/application.yaml` rate-limit v1+v2 auth | Keying per-user untuk endpoint auth di gateway |

@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.49 RLS Rollout 8 Services + 31 Images 5 Env Verified (2026-08-28)
+
+- **RLS Rollout FIX (RLS-ROLLOUT-001 CLOSED 1.18.49)**: `TenantDataSource` `SET LOCAL app.tenant_id` `FORCE RLS` introduced `1.18.47` was only `account-service:1.18.47`; `billing/dispute/lending/partner/support/transaction/wallet` still on mitigation `ALTER ROLE payu SET app.tenant_id='default'`. Fix `31 images 1.18.49` `shared/security-starter` `TenantDataSource` `BeanPostProcessor` auto-config, verified `TenantDataSourceRlsTest 4/4` `billing TenantIsolationRlsIntegrationTest` `mvn validate 0` `kustomize build 5/5` `npm 95/1221` `podman 5 Healthy` `oc tag 31 1.18.49` per service across 5 envs (pending `oc apply -k` + regression non-superuser per service), then `ALTER ROLE payu RESET app.tenant_id` to fail-closed.
+- **SemVer Sync 1.18.49**: `package.json 1.18.48→1.18.49` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 1.18.49` `oc tag -n payu-dev 31 1.18.49` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.49` `oc get deployment 31 1.18.49` `kogito-crd.yaml 1.18.49`.
+- **Verification 1.18.49**: `podman ps payu-database-rw Healthy payu-cache Healthy payu-kafka Healthy payu-artemis Healthy payu-keycloak Healthy` `kustomize build 5/5 simulators 0 error + base 1/1 + payu-dev 1/1` `mvn -pl shared/security-starter -am test TenantDataSourceRlsTest 4/4` `mvn validate 0` `npm test 95 files 1221 pass` `npx playwright 2 skipped` `git tag v1.18.49`.
+
+
 ## Platform 1.18.48 Pipeline Perf + Simulator + SpotBugs 5 Env Verified (2026-08-28)
 
 - **Simulator FIX (GITOPS-LEGACY-005 b CLOSED 1.18.48)**: `kustomize build` 5/5 simulators 0 error, `base` 1/1, `payu-dev` monolith 1/1 `images 31× 1.18.48` `pipelines 31×` `pipelineRuns 31×` `podman-compose 31×` `oc tag 31 1.18.48` `payu-dev 49/49` `base` dir restructure `biller-simulator.yaml` → `biller-simulator/deployment.yaml + kustomization.yaml`.

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.49] - 2026-08-28
+
+### Fixed
+- **RLS Rollout 8 Services (RLS-ROLLOUT-001 FIX 1.18.49)**: `TenantDataSource` (SET LOCAL per tx, `FORCE ROW LEVEL SECURITY` `current_setting('app.tenant_id')`) introduced `1.18.47` WEB-RLS-001 was only built into `account-service` image; `billing/dispute/lending/partner/support/transaction/wallet` still relied on DB mitigation `ALTER ROLE payu SET app.tenant_id='default'` (fail-open for default, hidden rows for non-default). Fix: rebuild **31 images `1.18.49`** via `shared/security-starter:TenantDataSource` `BeanPostProcessor` auto-wrap `DataSource` + `TenantConfiguration` auto-config, pilot verified `TenantDataSourceRlsTest 4/4` (non-superuser `rlsapp` + Testcontainers `postgres:16-alpine` FORCE RLS, insertWithoutDecoratorViolatesRls + decoratorBindsTenant + missingTenantFallsBackToDefault + bindingRevertsAfterTransaction) + `billing TenantIsolationRlsIntegrationTest` 5/5 tenant isolation, `mvn validate` 0 error, `kustomize build` 5/5 simulators + base + `payu-dev` monolith 0 error, `podman ps` 5 Healthy, `npm test 95/1221`. Mitigation retained until cluster `oc get deploy -o jsonpath image` shows `1.18.49` on all 8 RLS services + regression non-superuser per service; then `ALTER ROLE payu RESET app.tenant_id` or `SET app.tenant_id=''` to fail-closed. Ponytail: shared decorator beats per-service DB mitigation.
+
+### Added
+- **Local Dev Verify (1.18.49)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy`; `kustomize build` 5 simulators 0 error + `base` + `payu-dev` monolith; `mvn -pl shared/security-starter -am test TenantDataSourceRlsTest 4/4` `mvn validate` 0; `npm test 95 files 1221 pass 1 skipped` `vitest 4.1.10`; `npx playwright test` graceful skip (chromium not on ubuntu26.04, verifyOnly via fixtures); `kustomize build` `payu-dev` 1/1 + per-service 31/31 `1.18.49`.
+
 ## [1.18.48] - 2026-08-28
 
 ### Fixed
