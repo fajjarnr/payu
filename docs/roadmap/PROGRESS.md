@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.70 Docs README Next16 + 34 Healthy (2026-08-28)
+
+- **Docs Fix (1.18.70)**: `frontend/web-app/README.md` `Next 15 → 16.2.12` `React 19.2.3` `Tailwind 4` + `Beneficiary A3` note; `BFF` `Money string` tagline.
+- **SemVer Sync 1.18.70**: `CHANGELOG 1.18.70` `TODOS 1.18.70 0 OPEN` `PROGRESS 1.18.70` `frontend/web-app/README` `localhost/payu-web-app:1.18.70` `c9dfd8a73a81` `1.18.69→1.18.70`.
+- **Verification 1.18.70**: `cat README` `Next 16.2.12`, `podman tag 1.18.69→1.18.70`, `podman ps 34 healthy`.
+
 ## Platform 1.18.69 Lint Polish 0 errors + 34 Healthy + Build Verified (2026-08-28)
 
 - **Lint Fix (1.18.69)**: `onboarding Math.random` purity → `stableExternalId` only, `as any→as unknown as`, `qris _crc16X25`, `merchant _user`, `e2e _verifier`, `WalletService` already 100% idempotency — `npm run lint 38→26 1 error→0` `Money Number()` warnings only (ADR-0047 display).

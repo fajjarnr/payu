@@ -1,6 +1,6 @@
 # PayU Digital Banking Web Application
 
-> **Modern Next.js 15 banking frontend with Premium Emerald design system**
+> **Modern Next.js 16.2.12 + React 19.2.3 + Tailwind 4 Premium Emerald — BFF HttpOnly + Money string (1.18.69)**
 
 ---
 
@@ -33,6 +33,8 @@ npm start
 ```
 
 ---
+
+### Beneficiary (FEATURES A3) — `AccountService` `GET /accounts/{id}/beneficiaries` + `BeneficiaryManager` in `settings` + `transfer` fallback
 
 ## 📁 Project Structure
 

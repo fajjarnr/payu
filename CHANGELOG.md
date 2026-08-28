@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.70] - 2026-08-28
+
+### Fixed
+- **Docs README Next16 (1.18.70)**: `frontend/web-app/README.md` `Next.js 15 → 16.2.12 + React 19.2.3 + Tailwind 4` header + `Beneficiary (FEATURES A3)` `AccountService` `BeneficiaryManager` in `settings` + `transfer` fallback note — `BFF HttpOnly + Money string (1.18.69)` tagline; `TODOS` `1.18.69→1.18.70`.
+
+### Added
+- **Local Dev Verify (1.18.70)**: `cat frontend/web-app/README.md` `Next 16.2.12`, `podman tag 1.18.69→1.18.70 c9dfd8a73a81`.
+
 ## [1.18.69] - 2026-08-28
 
 ### Fixed
