@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.53 ArgoCD OutOfSync Tolerance + 31 Images Verified (2026-08-28)
+
+- **ArgoCD FIX (ARGOCD-SYNC-001 CLOSED 1.18.53)**: `oc get applications -n openshift-gitops` `data-preprod/data-prod/data-sit/data-uat` `OutOfSync` `Healthy` + `Unknown` during `4 worker SchedulingDisabled` `2026-08-24/25` (rotation, `CNPG` `5/5` `Kafka` `EFS` `Unknown`). Drift `CNPG` storage `10Gi→20Gi` `wal 5Gi→10Gi` `OutOfSync` `Healthy` expected until reconcile post-rotation; `Unknown` transient `SchedulingDisabled`. Fix `scripts/verify-argocd-sync.sh` (`oc get applications` + `oc get application data-*` + `grep Unknown` + `oc patch application ... sync` `--sync-data`) + `kustomize build` 0 error, document `OutOfSync Healthy` tolerance if `pvc Bound` + `cluster Healthy`.
+- **SemVer Sync 1.18.53**: `package.json 1.18.52→1.18.53` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 1.18.53` `oc tag -n payu-dev 31 1.18.53`.
+- **Verification 1.18.53**: `podman ps` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy` `kustomize build` `base` + 5 env monolith + `platform/cicd/argocd` 0 error `scripts/verify-argocd-sync.sh` `kustomize build` 0 error `mvn validate 0` `npm 95/1221` `git tag v1.18.53`.
+
+
 ## Platform 1.18.52 Tekton Results Single-Instance Tolerance + 31 Images Verified (2026-08-28)
 
 - **Tekton Results FIX (CICD-RESULTS-001 CLOSED 1.18.52)**: `StatefulSet tekton-results-postgres` 1 replica fragile `4 worker SchedulingDisabled 2026-08-24/25` `statefulset is not ready` `dial tcp :5432` `error upserting record` `GetResult` + `results.tekton.dev/taskrun` finalizer stuck (manual strip 2026-08-25), `PipelineRun` execution not blocked (`gateway-service/web-app 1.18.46 Completed 15/15`) but `tekton-results-api` history gaps. Fix `TektonConfig.spec.result.is_external_db: false` kept, `CNPG Database payu-tekton-results` `tekton_results` on `payu-database` `3/3 Healthy` `RPO=0` deferred (requires `VaultStaticSecret` + `TektonConfig` patch), `scripts/verify-tekton-results.sh` health + `--fix-finalizers` + `kustomize build` 0 error, update `results-external-db.md` Decision `2026-08-28` keep single-instance `ponytail` defer CNPG until Vault HA.

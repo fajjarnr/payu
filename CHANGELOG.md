@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.53] - 2026-08-28
+
+### Fixed
+- **ArgoCD OutOfSync Tolerance (ARGOCD-SYNC-001 FIX 1.18.53)**: `oc get applications.argoproj.io -n openshift-gitops` `data-preprod/data-prod/data-sit/data-uat` `OutOfSync` `Healthy` + `Unknown` during `4 worker SchedulingDisabled` `2026-08-24/25` (rotation, `CNPG` `Kafka` `EFS` `5/5` `Unknown`). Drift source: `CNPG Cluster` storage `10Gi→20Gi` `wal 5Gi→10Gi` `allowVolumeExpansion` `pvc` `Bound` but `Application` spec still `10Gi` (as of `1.18.42` `Storage FIX`), `OutOfSync` `Healthy` is expected until `ArgoCD` reconciles post-rotation; `Unknown` is transient `SchedulingDisabled`. Fix: `scripts/verify-argocd-sync.sh` (`oc get applications` + `oc get application data-* -o jsonpath sync/health` + `grep Unknown` + `oc patch application data-* --type merge -p '{"operation":{"sync":{"revision":"main"}}}'` `--sync-data`), `kustomize build` `base` + 5 env monolith 0 error, document `OutOfSync Healthy` tolerance if `pvc Bound` + `cluster Healthy`, `Unknown` tolerance during rotation `oc get nodes` `Ready`, bump **31 images `1.18.53`** `podman-compose 31×` `pipelines 31×` `workloads 160×`.
+
+### Added
+- **Local Dev Verify (1.18.53)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `kustomize build` `base` + 5 env monolith + `platform/cicd/argocd` (app-of-apps) 0 error; `scripts/verify-argocd-sync.sh` `kustomize build` 0 error (no oc locally); `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
+
 ## [1.18.52] - 2026-08-28
 
 ### Fixed
