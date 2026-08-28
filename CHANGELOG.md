@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.52] - 2026-08-28
+
+### Fixed
+- **Tekton Results Single-Instance Tolerance (CICD-RESULTS-001 FIX 1.18.52)**: `StatefulSet tekton-results-postgres` 1 replica fragile during node rotation `4 worker SchedulingDisabled 2026-08-24/25` → `statefulset is not ready` `dial tcp :5432 connection refused` `error upserting record` `GetResult` + `results.tekton.dev/taskrun` finalizer stuck (manual strip 2026-08-25), `PipelineRun`/`TaskRun` execution not blocked (`gateway-service/web-app 1.18.46 Completed 15/15`) but `tekton-results-api` history may gap. Fix: `TektonConfig.spec.result.is_external_db: false` kept (single-instance), `CNPG Database payu-tekton-results` `tekton_results` on `Cluster payu-database` `3/3 Healthy` `RPO=0` `barman-cloud 1/1` deferred (requires `VaultStaticSecret` `tekton-results-db` + `TektonConfig` patch, operator reverts direct `TektonResult` edits), add `scripts/verify-tekton-results.sh` health + `--fix-finalizers` (`oc patch taskrun ... finalizers:null` as done 2026-08-25) + `kustomize build` 0 error, update `infrastructure/platform/cicd/tekton/results-external-db.md` Decision `2026-08-28` keep single-instance `ponytail` defer CNPG until Vault HA + restore test, re-evaluate if `connection refused` >1% `PipelineRun` or rotation >1x/quarter >12h downtime. Verify `oc get statefulset -n openshift-pipelines tekton-results-postgres` `1/1 Ready` `oc get tektonconfig` `false`.
+
+### Added
+- **Local Dev Verify (1.18.52)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `kustomize build` `base` + 5 env monolith + `platform/cicd/tekton` 0 error; `scripts/verify-tekton-results.sh` `kustomize build` 0 error (no oc locally); `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip; `kustomize build` `payu-dev` 1/1.
+
 ## [1.18.51] - 2026-08-28
 
 ### Fixed

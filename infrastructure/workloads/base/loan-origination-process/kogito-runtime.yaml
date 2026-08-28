@@ -7,12 +7,12 @@ metadata:
     app.kubernetes.io/name: loan-origination-process
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: process-orchestration
-    app.kubernetes.io/version: 1.18.51
+    app.kubernetes.io/version: 1.18.52
     team: backend
 spec:
   runtime: springboot
   replicas: 1
-  image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.18.51
+  image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.18.52
   insecureImageRegistry: true
 
   env:

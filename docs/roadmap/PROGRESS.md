@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.52 Tekton Results Single-Instance Tolerance + 31 Images Verified (2026-08-28)
+
+- **Tekton Results FIX (CICD-RESULTS-001 CLOSED 1.18.52)**: `StatefulSet tekton-results-postgres` 1 replica fragile `4 worker SchedulingDisabled 2026-08-24/25` `statefulset is not ready` `dial tcp :5432` `error upserting record` `GetResult` + `results.tekton.dev/taskrun` finalizer stuck (manual strip 2026-08-25), `PipelineRun` execution not blocked (`gateway-service/web-app 1.18.46 Completed 15/15`) but `tekton-results-api` history gaps. Fix `TektonConfig.spec.result.is_external_db: false` kept, `CNPG Database payu-tekton-results` `tekton_results` on `payu-database` `3/3 Healthy` `RPO=0` deferred (requires `VaultStaticSecret` + `TektonConfig` patch), `scripts/verify-tekton-results.sh` health + `--fix-finalizers` + `kustomize build` 0 error, update `results-external-db.md` Decision `2026-08-28` keep single-instance `ponytail` defer CNPG until Vault HA.
+- **SemVer Sync 1.18.52**: `package.json 1.18.51→1.18.52` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 1.18.52` `oc tag -n payu-dev 31 1.18.52` `oc get is 31 1.18.52`.
+- **Verification 1.18.52**: `podman ps` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy` `kustomize build` `base` + 5 env monolith + `platform/cicd/tekton` 0 error `scripts/verify-tekton-results.sh` `kustomize build` 0 error `mvn validate 0` `npm 95/1221` `git tag v1.18.52`.
+
+
 ## Platform 1.18.51 UBI9 Java 25 1.24-3 + Lending-Rules Removal + 31 Images Verified (2026-08-28)
 
 - **Container Base FIX (IMAGE-1.24-3 CLOSED 1.18.51)**: `27 Containerfile` `ubi9/openjdk-25-runtime:1.24` (22) + `1.24-2` (5 simulators) → `1.24-3` (latest UBI9 `glib2 2.68.4-19` `python3 3.9.25-7`), `backend/lending-rules` deleted `1.18.36` but `podman-compose.yml` still `lending-rules` service (`Dockerfile not found`) + `loan-origination-process` `depends_on` + `LENDING_RULES_URL`. Fix `sed` `1.24-3` all `Containerfile` + remove `lending-rules` service (19 lines) + `LENDING_RULES_URL` + `depends_on` (3 lines), bump **31 images `1.18.51`** `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160×`.

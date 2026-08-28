@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.51` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.51` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Last Release** | `1.18.52` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.52` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
 | **Backlog Aktif** | *No OPEN item* — seluruh B1–B4 + harden sweep **CLOSED 1.18.9–1.18.48** → [`CHANGELOG.md`](../../CHANGELOG.md). |
-| **Last Updated** | 2026-08-28 — UBI9 1.24-3 + lending-rules cleanup **1.18.51** `podman 1.18.51 Java 25.0.4` + SSO issuer 5 env **1.18.50** + RLS **1.18.49**; sisa OPEN: DPoP, rate-limit keying, PERF-004 DEFERRED, Results/ArgoCD tolerance. |
+| **Last Updated** | 2026-08-28 — Tekton Results tolerance **1.18.52** `verify-tekton-results.sh` + UBI9 1.24-3 **1.18.51** + SSO 5 env **1.18.50** + RLS **1.18.49**; sisa OPEN: DPoP, rate-limit keying, PERF-004 DEFERRED, ArgoCD tolerance. |
 
 ---
 
@@ -101,7 +101,6 @@ No open findings — 20/20 CLOSED 1.13.70 → `CHANGELOG.md` `1.13.70` (swarm 5 
 ### Audit 2026-08-25 — CI/CD & Platform Health (hanya OPEN)
 
 | Key | Pri | Temuan | Bukti | Sisa |
-| CICD-RESULTS-001 | P2 | **Tekton Results Postgres single-instance rapuh saat node rotation** — `tekton-results-postgres-0` recreate lama ketika 4 worker SchedulingDisabled (rotasi nodeset 2026-08-24/25) → `error upserting record ... dial tcp :5432 connection refused` pada record PipelineRun/TaskRun, plus finalizer `results.tekton.dev/taskrun` macet (TaskRun lama dibersihkan manual via strip finalizer 2026-08-25). Build tetap sehat (`gateway-service/web-app 1.18.46 Completed 15/15`), tapi riwayat Tekton Results bisa bolong tiap rotasi node. | events `tekton-results-postgres statefulset is not ready` · `GetResult ... connection refused` | Evaluasi HA/CNPG untuk results PG atau dokumentasikan tolerance; monitor setelah rotasi selesai |
 | ARGOCD-SYNC-001 | P3 | **4 Application ArgoCD OutOfSync** — `data-preprod/data-prod/data-sit/data-uat` OutOfSync tapi Healthy; banyak app lain sync status `Unknown` selama rotasi node. | `oc get applications.argoproj.io -n openshift-gitops` | Refresh/reconcile setelah rotasi selesai; telusuri sumber drift data-* |
 
 Catatan sesi 2026-08-25: failure PipelineRun lama di `payu-cicd` (gateway-service-build-w8n7r/d78wt, web-app-build-56jr4/qpn4t, transaction-service-build-rpn86/76564) sudah disulih run hijau (`gateway-service-build-hq6pw`, `web-app-build-c7z4h` — tag 1.18.46, 15/15 tasks) dan dihapus dari cluster; akar masalahnya diperbaiki di `672b247c9` + `1b6133d4e`. Tidak perlu entri terpisah.

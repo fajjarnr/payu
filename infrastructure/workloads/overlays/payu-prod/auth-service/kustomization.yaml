@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
     newName: image-registry.openshift-image-registry.svc:5000/payu/auth-service
-    newTag: "1.18.51"
+    newTag: "1.18.52"
 patches:
   - patch: |-
       apiVersion: apps/v1
