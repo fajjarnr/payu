@@ -37,7 +37,7 @@ export default function SecurityPage() {
         }
         let credential = '';
         try {
-          if (typeof navigator !== 'undefined' && navigator.credentials && (window as any).PublicKeyCredential) {
+          if (typeof navigator !== 'undefined' && navigator.credentials && (window as unknown as { PublicKeyCredential?: unknown }).PublicKeyCredential) {
             const createOptions = {
               publicKey: {
                 challenge: Uint8Array.from(atob(ch.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)),
@@ -48,9 +48,9 @@ export default function SecurityPage() {
                 attestation: 'none' as const,
               },
             };
-            const cred = await navigator.credentials.create(createOptions as any) as any;
+            const cred = await navigator.credentials.create(createOptions as unknown as CredentialCreationOptions) as unknown as PublicKeyCredential;
             if (cred) {
-              const raw = cred.response?.attestationObject || cred.rawId || '';
+              const raw = (cred.response as unknown as { attestationObject?: ArrayBuffer })?.attestationObject || cred.rawId || '';
               credential = typeof raw === 'string' ? raw : btoa(String.fromCharCode(...new Uint8Array(raw)));
             }
           }

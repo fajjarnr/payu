@@ -72,14 +72,14 @@ export default function OnboardingPage() {
       if (ktpFile) {
         try {
           const base64 = await fileToBase64(ktpFile);
-          const userId = (res.data as any)?.data?.id || (res.data as any)?.id || payload.username;
+          const userId = (res.data as unknown as { data?: { id?: string }; id?: string })?.data?.id || (res.data as unknown as { id?: string })?.id || payload.username;
           const start = await KYCService.startVerification({
             userId: String(userId),
             fullName: payload.fullName,
             nik: payload.nik,
             dateOfBirth: '1990-01-01',
             address: 'Indonesia',
-            phone: (payload as any).phoneNumber,
+            phone: (payload as unknown as { phoneNumber?: string }).phoneNumber,
           });
           await KYCService.uploadKtp({ verificationId: start.verificationId, ktpImage: base64, nik: payload.nik });
         } catch (kycErr) {
@@ -347,7 +347,7 @@ export default function OnboardingPage() {
                                 </div>
                             </div>
                             
-                            <input type="hidden" value={`KTP-${stableExternalId}-${typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().substring(0, 8) : Math.random().toString(36).substring(2, 10)}`} {...register('externalId')} />
+                            <input type="hidden" value={stableExternalId} {...register('externalId')} />
 
                              <div className="pt-6 flex gap-4">
                                 <Button type="button" variant="outline" onClick={() => setStep(1)} className="h-14 px-8">

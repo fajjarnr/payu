@@ -41,8 +41,8 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
       await createMut.mutateAsync({ bankCode: bankCode.trim(), accountNumber: accountNumber.trim(), nickname: nickname.trim() || undefined });
       toast.success('Beneficiary added');
       setBankCode(''); setAccountNumber(''); setNickname('');
-    } catch (err: any) {
-      const msg = err?.response?.data?.error?.message || err?.message || 'Failed to add beneficiary';
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } }; message?: string })?.response?.data?.error?.message || (err as { message?: string })?.message || 'Failed to add beneficiary';
       toast.error(msg);
     }
   };
@@ -51,8 +51,8 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
     try {
       await deleteMut.mutateAsync(id);
       toast.success('Beneficiary removed');
-    } catch (err: any) {
-      toast.error(err?.response?.data?.error?.message || 'Failed to delete');
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message || 'Failed to delete');
     }
   };
 

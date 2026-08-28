@@ -1,5 +1,15 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-401: Lint Polish 0 errors — onboarding purity + as unknown as + Money warnings (2026-08-28)
+
+**Context**: `npm run lint` `38 problems 1 error 37 warnings` → `onboarding/page:350` `react-hooks/purity` `Math.random()` in render (`stableExternalId` already `KTP-${Date.now()}-${random}` + extra `Math.random` in `value`), `as any` 5× (`onboarding` `res.data as any`, `security` `window as any`, `credentials.create as any`), `qris _crc16X25` unused, `merchant _user` unused, `e2e verifier` unused, `WalletService` already `idempotencyKeyFor` (1.18.68).
+
+**Fix**: `onboarding:350` `value={stableExternalId}` (remove extra `Math.random`), `res.data as unknown as {data?:{id}}`, `payload as unknown as {phoneNumber}`, `security:40 (window as unknown as {PublicKeyCredential})` + `51 createOptions as unknown as CredentialCreationOptions as unknown as PublicKeyCredential` + `attestationObject` cast, `merchant: _user`, `qris: _crc16X25`, `e2e: _verifier`, `useBeneficiaries` remove unused `Beneficiary` import. `npm run lint` `38→26 1→0` (`Money Number()` 26 warnings remain per ADR-0047 display, not error).
+
+**Evidence**: `npm run lint 0 errors 26 warnings` `npm run build 86 routes ✓` `npm test 95/95 1221` `podman tag 1.18.68→1.18.69`.
+
+**Lesson**: `react-hooks/purity` = **never call `Math.random()` in render** — use stable `useState(() => Date.now()+random)` initializer; `as any` = **always `as unknown as T`** with named type; `_` prefix for unused `allowed vars`; `Money` `Number()` warnings are `ponytail: display Number() is okay for chart, but financial POST must use `Money` string` — keep warnings, fix only `1 error`.
+
 ## L-400: Wallet Pocket Idempotency — POST /pockets/* X-Idempotency-Key 1.18.68 (2026-08-28)
 
 **Context**: `API_STANDARDS:129` `POST/PUT/PATCH wajib X-Idempotency-Key UUIDv4` + `.spectral.yaml idempotency-header-required` + `BFF route.ts:292` whitelist `x-idempotency-key` 100% — `WalletService:161 creditPocket` `167 debitPocket` `POST /pockets/{id}/credit|debit {amount,referenceId}` tanpa header (financial write 90% → missing 10%), `freeze/unfreeze/close` `POST .../freeze null` tanpa header. `grep api.post WalletService` 5 POST vs `grep X-Idempotency-Key` 3 → `credit/debit` missing. `FEATURES W7 Pocket` `credit/debit/freeze/unfreeze` via `WalletService` → `gateway → wallet-service` dengan `Idempotent` di backend (`@Idempotent` pada `Beneficiary` tapi `Pocket` juga idempotent by `referenceId`).

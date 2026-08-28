@@ -6,7 +6,7 @@ import { QrCode, Camera, History, Image as ImageIcon, ShieldCheck, Info } from '
 import { toast } from 'sonner';
 
 // ponytail: minimal EMVCo CRC16 X25 (tag 63) — full TLV 26/30/54/59 + query GET /accounts/{id}/qris when backend live per ADR-0025
-function crc16X25(data: string): string {
+function _crc16X25(data: string): string {
   let crc = 0xffff;
   for (let i = 0; i < data.length; i++) {
     crc ^= data.charCodeAt(i) << 8;

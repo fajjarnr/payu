@@ -60,7 +60,7 @@ test.describe('PayU E2E — login + transfer (headless)', () => {
       const host = currentHost();
       const isLocal = host === 'localhost' || host === '127.0.0.1';
       // Simulate the BFF 302 to Keycloak — include PKCE params so the next assertion passes
-      const verifier = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const _verifier = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
       // Minimal S256-like challenge (43 chars base64url); use a fixed valid one
       const challenge = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
       const redirect = `https://${isLocal ? 'localhost:8099' : host}/realms/payu/protocol/openid-connect/auth?client_id=payu-web-app&response_type=code&code_challenge=${challenge}&code_challenge_method=S256&redirect_uri=${encodeURIComponent((process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001') + '/api/auth/callback')}&state=mock-state-123&scope=openid%20profile`;

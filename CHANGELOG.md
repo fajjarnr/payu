@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.69] - 2026-08-28
+
+### Fixed
+- **Lint Polish 0 errors (1.18.69)**: `frontend/web-app` `npm run lint` `38 problems 1 error → 26 problems 0 errors` — `onboarding/page:350` `Math.random` in render (`react-hooks/purity` impure) `value={stableExternalId}` (was `KTP-${stableExternalId}-${Math.random}`) + `onboarding 75/82 as any → as unknown as {data, id}` + `security/page 40/51 as any → as unknown as {PublicKeyCredential, CredentialCreationOptions, PublicKeyCredential}` `attestationObject` cast + `merchant/page _user` + `qris _crc16X25` + `e2e verifier _verifier` + `WalletService` already `idempotencyKeyFor` + `useBeneficiaries` unused `Beneficiary` import.
+
+### Added
+- **Local Dev Verify (1.18.69)**: `npm run lint 0 errors 26 warnings` `npm run type-check` `Money` branded `Number()` warnings only, `npm run build 86 routes ✓`, `npm run test 95/95 1221`, `podman tag 1.18.68→1.18.69 c9dfd8a73a81 672 MB`.
+
 ## [1.18.68] - 2026-08-28
 
 ### Fixed

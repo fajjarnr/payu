@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.69 Lint Polish 0 errors + 34 Healthy + Build Verified (2026-08-28)
+
+- **Lint Fix (1.18.69)**: `onboarding Math.random` purity → `stableExternalId` only, `as any→as unknown as`, `qris _crc16X25`, `merchant _user`, `e2e _verifier`, `WalletService` already 100% idempotency — `npm run lint 38→26 1 error→0` `Money Number()` warnings only (ADR-0047 display).
+- **SemVer Sync 1.18.69**: `CHANGELOG 1.18.69` `TODOS 1.18.69 0 OPEN` `PROGRESS 1.18.69` `frontend/web-app` `lint` `localhost/payu-web-app:1.18.69` `c9dfd8a73a81` `1.18.68→1.18.69`.
+- **Verification 1.18.69**: `npm run lint 0 errors 26 warnings` `npm run type-check` `Money` warnings, `npm run build 86 routes ✓`, `npm test 95/95 1221`, `podman tag 1.18.68→1.18.69`, `podman ps 34 healthy`.
+
 ## Platform 1.18.68 Wallet Pocket Idempotency + 34 Healthy + Build Verified (2026-08-28)
 
 - **Wallet Fix (1.18.68)**: `WalletService` `creditPocket/debitPocket` `X-Idempotency-Key` deterministic `idempotencyKeyFor` + `freeze/unfreeze/close` `getFinancialMutationHeaders()` — now 100% `POST /pockets/*` idempotent per `API_STANDARDS` `Stripe/Adyen Context7 max64`, BFF `44 prefixes` forward.

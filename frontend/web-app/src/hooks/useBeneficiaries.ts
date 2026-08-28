@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import AccountService, { Beneficiary, BeneficiaryRequest } from '@/services/AccountService';
+import AccountService, { type BeneficiaryRequest } from '@/services/AccountService';
 
 export function useBeneficiaries(accountId?: string) {
   return useQuery({
