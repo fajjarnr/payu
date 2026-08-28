@@ -20,7 +20,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0011](0011-frontend-architecture.md)           | Frontend Architecture                    | Accepted | 2026-01-30 |
 | [0012](0012-container-standardization.md)       | Container Standardization                | Accepted | 2026-01-30 |
 | [0013](0013-testing-strategy.md)                | Testing Strategy                         | Accepted | 2026-01-30 |
-| [0014](0014-api-management-platform.md)         | API Management Platform Selection        | Proposed | 2026-03-02 |
+| [0014](0014-api-management-platform.md)         | API Management Platform Selection (3scale Live) | Accepted | 2026-08-28 |
 | [0015](0015-process-automation-rhpam.md)        | Process Automation (RHPAM/Kogito/Drools) | Accepted | 2026-03-11 |
 | [0016](0016-arch-006-phase-a-strategy.md)       | ARCH-006 Phase A: Spring Boot 4.1.0 Platform Migration | Deferred | 2026-06-14 |
 | [0017](0017-infinispan-hotrod-migration.md)     | Native Hot Rod Migration with REST Interoperability    | Accepted | 2026-07-17 |

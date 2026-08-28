@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.56 ADR-0014 3scale Accepted Live + 31 Images Verified (2026-08-28)
+
+- **ADR FIX (ADR-GAP-0014 CLOSED 1.18.56)**: `docs/adr/0014` `Proposed` `2026-03-02` `Deferred` trigger `>=5 partners` — `5 partners` `TokoBapak/Nobar/Dolan/Sinau/Maca` live `3scale` `APIManager Available True` `6 pods` `payu-dev` `GATEWAY_ARCH.md` verified. Fix `Status: Proposed→Accepted` `Date: 2026-08-28` `Decision: Accepted — Red Hat 3scale (Option A) — Live 2026-08-28` `Rationale/Implementation Notes` `Live` `docs/adr/README.md` `Accepted 2026-08-28`.
+- **SemVer Sync 1.18.56**: `package.json 1.18.55→1.18.56` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 1.18.56`.
+- **Verification 1.18.56**: `kustomize build` `base` + 5 env monolith + `platform/api-management/3scale` 0 error `podman ps` `7 Healthy` `mvn validate 0` `npm 95/1221` `git tag v1.18.56`.
+
+
 ## Platform 1.18.55 DPoP Per-Client False/True + 31 Images Verified (2026-08-28)
 
 - **DPoP FIX (SSO-DPOP-003 CLOSED 1.18.55)**: `payu-realm-export.json` + `keycloak-realm-import.yaml` `dpop.bound.access.tokens: "true"` for both `payu-web-app` + `payu-mobile` — live `payu-web-app` `false` since `1.18.47` `BFF` `PKCE` only no `DPoP` proof, `payu-mobile` keeps `true` for `device grant`. `backend/auth-service` `DPoPProofValidator` `6/6` ready. Fix `payu-web-app` → `false` `DPoPBound: false` in both `json` + `yaml` to match live, keep `payu-mobile` `true`, `scripts/verify-dpop.sh` (`git` vs `oc` + `BFF` + `validator`), document `BFF` proof (`WebCrypto` `P-256` `dpop+jwt` `htm/htu` `iat` `jti` `ath`) deferred until product validates vs `Keycloak` lockout.

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.56] - 2026-08-28
+
+### Fixed
+- **ADR-0014 Accepted 3scale Live (ADR-GAP-0014 FIX 1.18.56)**: `docs/adr/0014-api-management-platform.md` `Status: Proposed` `2026-03-02` `Deferred` trigger `>=5 partners` — `payu-dev` now `5 partners` `TokoBapak/Nobar/Dolan/Sinau/Maca` live `infrastructure/platform/api-management/3scale` `APIManager Available True Preflights True` `system-app 3/3` `system-sidekiq` `apicast-production` `apicast-staging` `backend-listener/worker/cron` `system-memcache/searchd` `zync` `6 pods` `GATEWAY_ARCH.md` `3scale` verified `payu-dev` `6 pods` `E2E` `200` `401`. Fix: `Status: Proposed→Accepted` `Date: 2026-08-28` `Supersedes: Proposed 2026-03-02 — 5 partners live + 3scale APIManager Available True` `Decision: Deferred→Accepted — Red Hat 3scale (Option A) — Live 2026-08-28` `Rationale` `Live 2026-08-28` 5 partners trigger met `GATEWAY_ARCH.md` `Implementation Notes` `Live` `oc apply -k` `6 pods` `Verification` `oc get apimanager` `Available True` `docs/adr/README.md` `Accepted 2026-08-28`, bump **31 images `1.18.56`**.
+
+### Added
+- **Local Dev Verify (1.18.56)**: `kustomize build` `base` + 5 env monolith + `platform/api-management/3scale` 0 error; `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
+
 ## [1.18.55] - 2026-08-28
 
 ### Fixed
