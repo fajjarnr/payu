@@ -3,13 +3,13 @@
 > **Status**: Documented — Known upstream limitation
 > **Date**: 2026-05-02
 > **Affected**: Litmus 3.28.0 (go-runner helper binary)
-> **Cluster**: OpenShift 4.20.6, CRI-O 1.33.10, Kernel 5.14.0-503
+> **Cluster**: OpenShift 4.22.6, CRI-O 1.33.10, Kernel 5.14.0-503
 
 ---
 
 ## Executive Summary
 
-LitmusChaos **helper-based experiments deadlock indefinitely** on OpenShift 4.20 + CRI-O. Only `pod-delete` (non-helper) works reliably. This is a **platform-specific bug** in the Litmus `go-runner:3.28.0` helper binary, not a configuration issue.
+LitmusChaos **helper-based experiments deadlock indefinitely** on OpenShift 4.22 + CRI-O. Only `pod-delete` (non-helper) works reliably. This is a **platform-specific bug** in the Litmus `go-runner:3.28.0` helper binary, not a configuration issue.
 
 ---
 
@@ -78,7 +78,7 @@ Then nothing. The pod runs forever (until ChaosEngine timeout).
 
 ### Conclusion
 
-The `./helpers` binary (compiled from Litmus go-runner) enters a **futex deadlock during initialization** specifically on OpenShift 4.20 + CRI-O. This is likely triggered by:
+The `./helpers` binary (compiled from Litmus go-runner) enters a **futex deadlock during initialization** specifically on OpenShift 4.22 + CRI-O. This is likely triggered by:
 
 - A CRI-O-specific container runtime check
 - A seccomp/SELinux interaction unique to OpenShift

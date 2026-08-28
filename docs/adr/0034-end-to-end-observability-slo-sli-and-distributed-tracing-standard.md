@@ -8,7 +8,7 @@
 
 ## Context
 
-Sebagai platform perbankan digital modern dan payment gateway terintegrasi (SNAP-BI, VA, QRIS, Transfer, Escrow, dan Lending), PayU memproses volume transaksi finansial tinggi yang tersebar di lingkungan microservices heterogen (Java 25 Spring Boot 4.1, Quarkus 3.x, Python 3.12 FastAPI, dan Next.js 16 BFF) di atas platform Red Hat OpenShift 4.20+. 
+Sebagai platform perbankan digital modern dan payment gateway terintegrasi (SNAP-BI, VA, QRIS, Transfer, Escrow, dan Lending), PayU memproses volume transaksi finansial tinggi yang tersebar di lingkungan microservices heterogen (Java 25 Spring Boot 4.1, Quarkus 3.x, Python 3.12 FastAPI, dan Next.js 16 BFF) di atas platform Red Hat OpenShift 4.22+. 
 
 Dalam ekosistem perbankan digital dan payment gateway multi-tenant (TokoBapak, Nobar, Dolan, Sinau, Maca), ketiadaan observabilitas menyeluruh (*end-to-end observability*) dan standarisasi keandalan (*reliability governance*) menimbulkan risiko operasional dan kepatuhan yang masif:
 
@@ -239,7 +239,7 @@ Implementasi ditegakkan via `MdcMaskingPatternLayout` di `backend/shared/logging
 - **Transparansi Kinerja SLA Mitra**: Partner (TokoBapak/Nobar) mendapatkan kepastian data performa dan laporan real-time tanpa sengketa audit.
 - **Zero False Alarm (Precision High)**: On-call SRE hanya dibangunkan saat insiden nyata mengancam ketersediaan sistem pembayaran.
 - **Root Cause Analysis Cepat**: Engineer dapat melacak alur transaksi dari APIcast $\to$ Quarkus $\to$ Kafka $\to$ Spring Boot $\to$ PostgreSQL dalam satu visualisasi trace di Red Hat Tempo.
-- **Efisiensi Finansial (Zero Licensing Cost)**: Menggunakan stack OSS (OTel, TempoStack, Prometheus, Vector, Grafana) yang berjalan native di atas OpenShift 4.20+.
+- **Efisiensi Finansial (Zero Licensing Cost)**: Menggunakan stack OSS (OTel, TempoStack, Prometheus, Vector, Grafana) yang berjalan native di atas OpenShift 4.22+.
 
 ### Negative & Mitigations
 - **Storage Overhead untuk Tracing**:

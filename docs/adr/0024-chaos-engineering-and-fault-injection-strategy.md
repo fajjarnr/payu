@@ -8,7 +8,7 @@
 
 Platform Core Banking & Payment Gateway PayU melayani transaksi finansial kritikal dan integrasi eksternal (standar SNAP-BI). Sistem wajib memiliki ketahanan tinggi terhadap kegagalan komponen (pod restart mendadak, degradasi latensi downstream partner, hingga kegagalan kontrol infrastruktur).
 
-Namun, pengujian resiliensi pada platform Red Hat OpenShift 4.20 menghadapi sejumlah batasan operasional dan teknis:
+Namun, pengujian resiliensi pada platform Red Hat OpenShift 4.22 menghadapi sejumlah batasan operasional dan teknis:
 1. **RHCOS (Red Hat Enterprise Linux CoreOS) & CRI-O Runtime**: Host OS bersifat *immutable* dengan kernel RHEL 9 (5.14.0-xxx) dan SELinux *enforcing*. Helper pod LitmusChaos 3.28.0 (`go-runner`) mengalami *futex deadlock* saat inisialisasi thread lokal ketika mencoba berinteraksi dengan socket CRI-O. Hanya eksperimen berbasis K8s API (`pod-delete`) yang berjalan andal.
 2. **Container Hardening (UBI9 Non-Root)**: Seluruh container PayU menggunakan UBI9 non-root (UID 1001), drop ALL capabilities, dan read-only root filesystem. Container sengaja tidak memuat utilitas manipulasi jaringan/kernel OS seperti `tc` (iproute2) atau `stress-ng`. Injeksi network chaos yang membutuhkan hak `CAP_NET_ADMIN` atau privileged SCC dilarang.
 3. **Evolusi Perkakas Simulasi**: Alat lama seperti Toxiproxy sudah tidak aktif dikembangkan (maintenance mode), sehingga diperlukan alternatif modern (2025/2026) yang native terhadap Kubernetes/OpenShift.
@@ -84,7 +84,7 @@ flowchart TD
 ## Consequences
 
 ### Positive
-- **Stabilitas CI/CD**: Menghilangkan kegagalan pipeline akibat *deadlock* helper pod Litmus di OpenShift 4.20 / CRI-O.
+- **Stabilitas CI/CD**: Menghilangkan kegagalan pipeline akibat *deadlock* helper pod Litmus di OpenShift 4.22 / CRI-O.
 - **Keamanan Terjaga**: Tidak memerlukan penambahan privilege Linux (`NET_ADMIN`) atau privileged SCC pada node RHCOS.
 - **Compliance Ready**: Menghasilkan data uji dan bukti ketahanan operasional yang terdokumentasi rapi untuk audit PCI-DSS v4.0 (Req 11.3) dan OJK/BI.
 - **Determinisme Pengujian**: Mocking via Microcks/WireMock 3.x dan Istio VirtualService memberikan kontrol latensi/kegagalan yang presisi dan reproducible.

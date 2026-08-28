@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.58 ADR-0069 Doc Sweep 4.20→4.22 + 31 Images Verified (2026-08-28)
+
+- **ADR FIX (ADR-GAP-0069 CLOSED 1.18.58)**: `docs/adr/0069` `Accepted` `2026-08-24` `Doc sweep ~40 files` `4.20+` → `4.22+` `K8s 1.33→1.35` — normative `grep -R 4.20+ docs/architecture` `~20` hits vs live `OCP 4.22.7` `K8s 1.35.6` `INFRASTRUCTURE_DEPLOYMENT.md:30` `OCP 4.22.7` vs `TODOS.md:20` `4.20.29`. Fix `sed` `4.20+→4.22+` `OCP 4.20→4.22` `Kubernetes 1.33→1.35` for `ARCHITECTURE.md` `DEVSECOPS` `CICD-MONITORING` `DISASTER_RECOVERY` `ZERO-DOWNTIME` `LITMUS` `INFRASTRUCTURE_DEPLOYMENT` `README` `AGENTS` `catalog-info` `SECURITY` `PRD` `provisioning` `platform Helm` + `ADR 0031/0032/0034/0024/0064`, verify `grep 4.20+` `0` `grep 4.22+` `~20` `kustomize build` `0`.
+- **SemVer Sync 1.18.58**: `package.json 1.18.57→1.18.58` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 1.18.58`.
+- **Verification 1.18.58**: `grep -R 4.20+ docs/architecture` `0` `grep -R 4.22+` `~20` `kustomize build` `base` + 5 env monolith 0 error `podman ps` `7 Healthy` `mvn validate 0` `npm 95/1221` `git tag v1.18.58`.
+
+
 ## Platform 1.18.57 ADR-0016 Boot 4.1.0 Accepted Live + 31 Images Verified (2026-08-28)
 
 - **ADR FIX (ADR-GAP-0016 CLOSED 1.18.57)**: `docs/adr/0016` `Deferred` `2026-06-14` `4 shared starters` `Spring Boot 3.x APIs` blocker — live `backend/pom.xml` `spring-boot-starter-parent:4.1.0` `java.version 25` `31/31` `v4.1.0` `BUILD SUCCESS` `1.18.55` `podman 7 Healthy`. Fix `Status: Deferred→Accepted` `Date: 2026-08-28` `Decision Log` `ACCEPTED` `TL;DR` `Accepted` `Decision` `Accepted — Platform-wide rollout complete` `Next Steps Done` `Implementation Plan Executed` `docs/adr/README.md` `Accepted 2026-08-28`.

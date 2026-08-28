@@ -8,7 +8,7 @@
 
 ## Context
 
-Sebagai platform perbankan digital dan payment gateway terintegrasi (SNAP-BI, VA, QRIS, Transfer, dan Escrow), PayU beroperasi pada lingkungan hybrid-cloud di atas Red Hat OpenShift 4.20+. Lalu lintas API publik masuk dari beragam entitas eksternal: mitra perbankan (TokoBapak, Nobar, Dolan, Sinau, Maca), aplikasi mobile perbankan (Expo/React Native), serta web banking (Next.js).
+Sebagai platform perbankan digital dan payment gateway terintegrasi (SNAP-BI, VA, QRIS, Transfer, dan Escrow), PayU beroperasi pada lingkungan hybrid-cloud di atas Red Hat OpenShift 4.22+. Lalu lintas API publik masuk dari beragam entitas eksternal: mitra perbankan (TokoBapak, Nobar, Dolan, Sinau, Maca), aplikasi mobile perbankan (Expo/React Native), serta web banking (Next.js).
 
 Dalam lanskap ancaman sektor perbankan, platform menghadapi tantangan keamanan perimeter yang kompleks:
 1. **Ancaman Volumetrik & Layer 7**: Serangan DDoS Layer 7, credential stuffing bot, scanner otomatis (mass scanning tool), serta web application exploitation (OWASP Top 10: SQLi, NoSQLi, XSS, Remote Code Execution, Command Injection, Server-Side Request Forgery).
@@ -166,7 +166,7 @@ spec:
 
 ### 4. Wazuh SIEM Architecture & OpenShift Constraints (`INFRA-011`)
 
-Wazuh SIEM di-deploy di namespace `wazuh` dengan konfigurasi yang telah diverifikasi kompatibel dengan OpenShift 4.20+:
+Wazuh SIEM di-deploy di namespace `wazuh` dengan konfigurasi yang telah diverifikasi kompatibel dengan OpenShift 4.22+:
 
 1. **Security Context Constraints (SCC) Mapping**:
    - `wazuh-manager` ServiceAccount $\rightarrow$ `wazuh-manager-scc` (Custom SCC dengan `SYS_CHROOT` capability agar `wazuh-analysisd` dapat melakukan chroot ke `/var/ossec`, fsGroup MustRunAs `101`).

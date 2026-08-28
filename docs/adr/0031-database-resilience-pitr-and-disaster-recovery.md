@@ -30,7 +30,7 @@ Kegagalan sistem data layer (akibat *node failure*, *disk corruption*, *human op
 - **Zero Data Loss (RPO = 0)**: Transaksi debit/kredit yang telah di-*commit* tidak boleh hilang meski satu Availability Zone musnah.
 - **Fast Automatic Failover (RTO < 5m)**: Deteksi *primary node failure* dan promosi *standby* tanpa intervensi manual (< 15–30 detik).
 - **Sub-Second Continuous PITR**: Kemampuan *point-in-time recovery* hingga level detik via *continuous WAL streaming* ke *offsite object storage* (S3).
-- **Kubernetes-Native Architecture**: Integrasi penuh dengan **CloudNativePG (CNPG 1.30+)** di Red Hat OpenShift 4.20+ dan standardisasi target AWS RDS Multi-AZ / Aurora PostgreSQL di cloud.
+- **Kubernetes-Native Architecture**: Integrasi penuh dengan **CloudNativePG (CNPG 1.30+)** di Red Hat OpenShift 4.22+ dan standardisasi target AWS RDS Multi-AZ / Aurora PostgreSQL di cloud.
 - **Verifiable DR Rehearsals**: Prosedur *restore drill* otomatis yang dapat diuji berkala tanpa mengganggu *live workload*.
 
 ---
@@ -39,7 +39,7 @@ Kegagalan sistem data layer (akibat *node failure*, *disk corruption*, *human op
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                             OpenShift 4.20+ Multi-AZ Topology                               │
+│                             OpenShift 4.22+ Multi-AZ Topology                               │
 │                                                                                             │
 │  ┌───────────────────────┐   ┌───────────────────────┐   ┌───────────────────────┐          │
 │  │     AZ-a (Zone 1)     │   │     AZ-b (Zone 2)     │   │     AZ-c (Zone 3)     │          │

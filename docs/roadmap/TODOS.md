@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.57` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.57` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Last Release** | `1.18.58` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.58` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
 | **Backlog Aktif** | *No OPEN item* — seluruh B1–B4 + harden sweep **CLOSED 1.18.9–1.18.48** → [`CHANGELOG.md`](../../CHANGELOG.md). |
-| **Last Updated** | 2026-08-28 — ADR-0016 Boot 4.1.0 Accepted **1.18.57** + ADR-0014 3scale **1.18.56** + DPoP **1.18.55** + Rate-limit **1.18.54** + ArgoCD **1.18.53** + Tekton Results **1.18.52** + UBI9 1.24-3 **1.18.51** + SSO 5 env **1.18.50** + RLS **1.18.49**; sisa OPEN: ADR-GAP-0069/0071 + PERF-004 DEFERRED. |
+| **Last Updated** | 2026-08-28 — ADR-0069 4.22 sweep **1.18.58** + ADR-0016 Boot 4.1.0 **1.18.57** + ADR-0014 3scale **1.18.56** + DPoP **1.18.55** + Rate-limit **1.18.54** + ArgoCD **1.18.53** + Tekton Results **1.18.52** + UBI9 1.24-3 **1.18.51** + SSO 5 env **1.18.50** + RLS **1.18.49**; sisa OPEN: ADR-GAP-0071 + PERF-004 DEFERRED. |
 
 ---
 
@@ -139,7 +139,6 @@ Drift audit sweep 2026-08-24 (70 ADR vs repo): 3 klaim bukti dikoreksi — beres
 
 | Key | ADR | Status | Gap | Bukti |
 |:---|:---|:---|:---|:---|
-| ADR-GAP-0069 | [ADR-0069 OpenShift 4.22](adr/0069-openshift-4-22-platform-standard.md) | **Accepted** (2026-08-24) — doc sweep `4.20→4.22` | Status `Accepted` tapi **normative docs masih `4.20+`** `grep -R "4\.20\+" docs/ AGENTS.md README.md` `~20` hits (`ADR-0032/0034/0024/0031` `AGENTS.md:7` `README.md` `ARCHITECTURE.md:78` `INFRASTRUCTURE_DEPLOYMENT.md:30` vs live `OCP 4.22.7` `K8s 1.35.6`), perlu sweep `~40` files per `Implementation Notes` | `grep -R "4\.20\+" docs/ | wc -l` `~20` + `grep -R "4\.22\+" docs/ | wc -l` `~5` |
 | ADR-GAP-0071 | [ADR-0071 Test Quality Gates](adr/0071-test-quality-gates-mutation-accessibility-exploratory-canary-standard.md) | **Accepted** (2026-08-26) — PIT `≥70%` core 5 | Status `Accepted` tapi **parent `backend/pom.xml` `mutationThreshold 60` untuk semua**, 5 core `transaction/wallet/partner/account/auth` **tidak override `70`** (`grep -R mutationThreshold backend/partner-service/pom.xml` 0), `axe-core` `test:a11y` exists tapi `a11y:audit` baseline burn-down belum, `Tekton` `-Pmutation-testing` nightly `CronJob` belum checked-in | `grep -R "mutationThreshold" backend --include=pom.xml` `only parent 60` + `grep -R "@axe-core/playwright" frontend/web-app/package.json` + `ls frontend/web-app/scripts/a11y-audit.ts` |
 
 No open gap — seluruh ADR-GAP (003..009, 015, 019, 028W, 029, 030E, 032W, 047, 048, 054C, 056) **CLOSED 1.18.9–1.18.40** → `CHANGELOG.md` (di atas adalah gap baru hasil audit 2026-08-28).

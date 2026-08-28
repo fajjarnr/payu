@@ -56,7 +56,7 @@ Industry: Red Hat 3scale hybrid-cloud (gateway policy execution async from manag
 ## Consequences
 
 **Positive**: backend throughput protected, per-user fairness, hybrid resilience.
-**Negative**: need `APIManager` on cluster (`cluster-nkk8q` lab vs `OCP 4.20.29` main), Lua policy authoring.
+**Negative**: need `APIManager` on cluster (`cluster-nkk8q` lab vs `OCP 4.22.29` main), Lua policy authoring.
 
 ## Implementation Notes
 

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.58] - 2026-08-28
+
+### Fixed
+- **ADR-0069 Doc Sweep 4.20→4.22 (ADR-GAP-0069 FIX 1.18.58)**: `docs/adr/0069-openshift-4-22-platform-standard.md` `Accepted` `2026-08-24` `Implementation Notes` `Doc sweep ~40 files` `4.20+` → `4.22+` `Kubernetes v1.33→v1.35` — normative docs still `4.20+` `grep -R 4.20+ docs/ AGENTS.md README.md` `~20` hits (`ADR-0032/0034/0024/0031` `AGENTS.md:7` `README.md` `ARCHITECTURE.md:78` `INFRASTRUCTURE_DEPLOYMENT.md:30` vs live `OCP 4.22.7` `K8s 1.35.6`), `TODOS.md:20` `OCP 4.20.29` pilot vs `INFRASTRUCTURE_DEPLOYMENT.md:30` `4.22.7`. Fix: `sed` `4.20+→4.22+` `OCP 4.20→4.22` `OpenShift 4.20→4.22` `Kubernetes 1.33→1.35` `v1.33→v1.35` for `docs/architecture/ARCHITECTURE.md` `DEVSECOPS_ARCHITECTURE.md` `CICD-MONITORING-GUIDE.md` `DISASTER_RECOVERY.md` `ZERO-DOWNTIME-DEPLOYMENT.md` `LITMUS_CHAOS_OPENSHIFT_COMPATIBILITY.md` `INFRASTRUCTURE_DEPLOYMENT.md` `README.md` `AGENTS.md` `catalog-info.yaml` `SECURITY.md` `PRD.md` `compliance` `provisioning/DEPLOYMENT.md` `platform Helm` `mesh/README` + `ADR 0031/0032/0034/0024/0064` `4.20+` → `4.22+`, verify `grep -R 4.20+ docs/architecture` `0` `grep -R 4.22+` `~20` `kustomize build` `base` + 5 env `0` `podman ps` `7 Healthy`, bump **31 images `1.18.58`**.
+
+### Added
+- **Local Dev Verify (1.18.58)**: `kustomize build` `base` + 5 env monolith + `platform/api-management/3scale` 0 error; `grep -R 4.20+ docs/architecture` `0` `grep -R 4.22+` `~20` `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
+
 ## [1.18.57] - 2026-08-28
 
 ### Fixed
