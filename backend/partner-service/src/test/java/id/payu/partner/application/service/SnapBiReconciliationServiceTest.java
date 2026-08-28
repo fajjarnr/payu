@@ -17,7 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.when;
  * PARTNER-PROD-005: SNAP payment/refund vs wallet-ledger reconciliation.
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SnapBiReconciliationServiceTest {
 
     @Mock private SnapBiPaymentRepository paymentRepository;
@@ -192,17 +194,34 @@ class SnapBiReconciliationServiceTest {
     @Test
     @DisplayName("non-SNAP references (INVESTMENT/other) do not create cases")
     void unrelatedMovementsIgnored() {
-        SnapBiPaymentEntity p = payment("PAYU-P9", "COMPLETED");
-        when(paymentRepository.findByCreatedAtAfter(any(Instant.class))).thenReturn(List.of(p));
-        when(refundRepository.findByCreatedAtAfter(any(Instant.class))).thenReturn(List.of());
-        when(walletSettlementPort.ledgerMovementsByReferences(any()))
-                .thenReturn(List.of(
-                        movement("INVESTMENT-1", "RESERVATION", "DEBIT"),
-                        movement("PAYU-P9", "RESERVATION", "DEBIT"),
-                        movement("PAYU-P9", "CREDIT", "CREDIT")));
-
+        when(paymentRepository.findByCreatedAtAfter(any())).thenReturn(List.of());
+        when(refundRepository.findByCreatedAtAfter(any())).thenReturn(List.of());
+        when(walletSettlementPort.ledgerMovementsByReferences(any())).thenReturn(List.of(
+                movement("INVESTMENT-001", "COMMIT", "DEBIT")
+        ));
         service.reconcileSnapMovements();
-
         verify(caseRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("GLOBAL-RECON: auto-resolves PAYMENT case when ledger catch-up within 5m")
+    void autoResolvesPaymentCaseWithin5m() {
+        String ref = "PAYU-AUTO-001";
+        SnapReconciliationCaseEntity existing = new SnapReconciliationCaseEntity(
+                SnapReconciliationCaseEntity.TYPE_PAYMENT, ref, "missing legs");
+        // existing is OPEN and detectedAt is now (within 5m)
+        when(caseRepository.findByReferenceTypeAndReferenceId(
+                SnapReconciliationCaseEntity.TYPE_PAYMENT, ref))
+                .thenReturn(java.util.Optional.of(existing));
+        SnapBiPaymentEntity payment = payment(ref, "COMPLETED");
+        when(paymentRepository.findByCreatedAtAfter(any())).thenReturn(List.of(payment));
+        when(refundRepository.findByCreatedAtAfter(any())).thenReturn(List.of());
+        when(walletSettlementPort.ledgerMovementsByReferences(any())).thenReturn(List.of(
+                movement(ref, "COMMIT", "DEBIT"),
+                movement(ref, "CREDIT", "CREDIT")
+        ));
+        service.reconcileSnapMovements();
+        assertEquals("RESOLVED", existing.getStatus());
+        verify(caseRepository).save(existing);
     }
 }

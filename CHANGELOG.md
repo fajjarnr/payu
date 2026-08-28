@@ -2,8 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.18.63] - 2026-08-28
+## [1.18.64] - 2026-08-28
 
+### Fixed
+- **GLOBAL-RECON 3-Way Auto-Resolve + GLOBAL-BFF SameSite Strict Audit (P3 Extended) — 1.18.64**: `SnapBiReconciliationService` auto-resolve `PAYMENT`/`REFUND`/`WALLET_MOVEMENT` within 5m `Duration.between(detectedAt, now) <5` + `resolve()` + `caseRepository.save` for crash-after-commit ledger catch-up (`flow #40` `Auto-resolve belum` → `auto-resolve <5m`), `camt.053` vs `NOSTRO` deferred ponytail; `frontend/web-app/src/app/api/auth/authorize/route.ts` `cookieOptions secure: NODE_ENV===production` + `sameSite:lax` 10m + `frontend/web-app/e2e` `payu_session`/`accessToken` `sameSite: Strict` (was `Lax`) + `src/__tests__/api/auth-oidc-route.test.ts` `SameSite=lax`/`strict` + `Max-Age=600` + `HttpOnly` checks; `SnapBiReconciliationServiceTest` `9/9` new `autoResolvesPaymentCaseWithin5m` + `Callback` `10/10` uniform already, frontend `6/6` `auth-oidc-route` PASS. `TODOS.md` `2→0 P3` `ALL 3/3 P3 CLOSED` 1.18.63-1.18.64 + header `1.18.63→1.18.64` `0 OPEN`.
+- **Docs**: `TODOS.md` `GLOBAL-RECON` + `GLOBAL-BFF` removed `2→0` + header `1.18.63→1.18.64` `0 OPEN` + `P3` `No open P3 — 3/3 CLOSED`; `CHANGELOG.md` `1.18.64`; `LESSONS.md` `L-395` (combined RECON+BFF).
+
+### Added
+- **Local Dev Verify (1.18.64)**: `mvn -f backend/partner-service/pom.xml test -Dtest=SnapBiReconciliationServiceTest` `9/9 PASS` `Auto-resolved PAYMENT within 5m`; `mvn -f backend/transaction-service/pom.xml test -Dtest=CallbackSignatureFilterTest` `10/10 PASS`; `cd frontend/web-app && npx vitest run src/__tests__/api/auth-oidc-route.test.ts` `6/6 PASS` `SameSite=lax/strict`; `mvn clean package -DskipTests` `partner-service` + `transaction-service` `BUILD SUCCESS`; `kustomize build base+5 env` `0 error`.
+
+## [1.18.63] - 2026-08-28
 ### Fixed
 - **GLOBAL-WEBHOOK HMAC Uniform + DLQ (P3 Extended) — 1.18.63**: `CallbackSignatureFilter.shouldNotFilter` uniform `path.contains("/callback")` → HMAC-SHA256 `X-Signature` + `X-Timestamp` window `300s` + `MessageDigest.isEqual` constant-time + `secret` + `toleranceSeconds` for **all** callback paths `flow #39,7,9,10` (was only 3 exact `protectedPaths`). `WebhookDispatcherService` already `uq_webhook_delivery(eventId,subscriptionId)` dedup `V16` + retry `4^n×30s` max10 + `payu.<domain>.<event>.v1.dlq` `commitRecovered=true` + `SSRF` `WebhookUrlValidatorService` HTTPS-only. Test: `CallbackSignatureFilterTest` `10/10` (new `shouldUniformlyProtectAnyCallbackPath` `/api/v1/qris/callback` 401 without signature, `shouldNotFilter` false, non-callback bypass).
 - **Docs**: `TODOS.md` `GLOBAL-WEBHOOK` removed `3→2 P3` + header `1.18.62→1.18.63` + `P3` `GLOBAL-RECON` + `GLOBAL-BFF` remain; `CHANGELOG.md` `1.18.63`; `LESSONS.md` `L-394`.

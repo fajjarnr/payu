@@ -120,6 +120,17 @@ public class SnapBiReconciliationService {
                 created += createCase(SnapReconciliationCaseEntity.TYPE_PAYMENT,
                         payment.getPayuReferenceNo(),
                         "COMPLETED payment missing ledger legs (debit=" + debitLeg + ", credit=" + creditLeg + ")");
+            } else {
+                // GLOBAL-RECON: auto-resolve crash-after-commit within 5m window
+                caseRepository.findByReferenceTypeAndReferenceId(SnapReconciliationCaseEntity.TYPE_PAYMENT, payment.getPayuReferenceNo())
+                        .filter(c -> SnapReconciliationCaseEntity.STATUS_OPEN.equals(c.getStatus()))
+                        .ifPresent(c -> {
+                            if (Duration.between(c.getDetectedAt(), Instant.now()).toMinutes() < 5) {
+                                c.resolve();
+                                caseRepository.save(c);
+                                log.info("Auto-resolved PAYMENT {} within 5m ledger catch-up", payment.getPayuReferenceNo());
+                            }
+                        });
             }
         }
 
@@ -132,6 +143,17 @@ public class SnapBiReconciliationService {
                 created += createCase(SnapReconciliationCaseEntity.TYPE_REFUND,
                         refund.getPayuRefundNo(),
                         "COMPLETED refund without REFUND_REVERSAL ledger movement");
+            } else {
+                // GLOBAL-RECON: auto-resolve refund reversal catch-up within 5m
+                caseRepository.findByReferenceTypeAndReferenceId(SnapReconciliationCaseEntity.TYPE_REFUND, refund.getPayuRefundNo())
+                        .filter(c -> SnapReconciliationCaseEntity.STATUS_OPEN.equals(c.getStatus()))
+                        .ifPresent(c -> {
+                            if (Duration.between(c.getDetectedAt(), Instant.now()).toMinutes() < 5) {
+                                c.resolve();
+                                caseRepository.save(c);
+                                log.info("Auto-resolved REFUND {} within 5m ledger catch-up", refund.getPayuRefundNo());
+                            }
+                        });
             }
         }
 
@@ -148,6 +170,19 @@ public class SnapBiReconciliationService {
                                 + entry.getValue().size() + " movement(s))");
             }
         }
+        // GLOBAL-RECON: auto-resolve wallet movement orphans when partner record appears within 5m (reverse crash)
+        for (String ref : completedRefs) {
+            caseRepository.findByReferenceTypeAndReferenceId(SnapReconciliationCaseEntity.TYPE_WALLET_MOVEMENT, ref)
+                    .filter(c -> SnapReconciliationCaseEntity.STATUS_OPEN.equals(c.getStatus()))
+                    .ifPresent(c -> {
+                        if (Duration.between(c.getDetectedAt(), Instant.now()).toMinutes() < 5) {
+                            c.resolve();
+                            caseRepository.save(c);
+                            log.info("Auto-resolved WALLET_MOVEMENT {} within 5m partner catch-up", ref);
+                        }
+                    });
+        }
+
 
         if (created == 0) {
             log.info("Snap reconciliation clean: {} payment(s), {} refund(s), {} reference(s) checked, 0 unmatched",

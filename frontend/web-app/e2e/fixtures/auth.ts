@@ -21,7 +21,7 @@ export async function setupAuthCookies(context: BrowserContext) {
       path: '/',
       httpOnly: true,
       secure: false,
-      sameSite: 'Lax',
+      sameSite: 'Strict',
     },
     {
       name: 'payu_session',
@@ -30,7 +30,7 @@ export async function setupAuthCookies(context: BrowserContext) {
       path: '/',
       httpOnly: true,
       secure: false,
-      sameSite: 'Lax',
+      sameSite: 'Strict',
     },
   ]);
 }

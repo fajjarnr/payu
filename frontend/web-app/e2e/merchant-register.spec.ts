@@ -91,7 +91,7 @@ test('merchant register back to dashboard link', async ({ page, context }) => {
       path: '/',
       httpOnly: true,
       secure: false,
-      sameSite: 'Lax',
+      sameSite: 'Strict',
     },
     {
       name: 'payu_session',
@@ -100,7 +100,7 @@ test('merchant register back to dashboard link', async ({ page, context }) => {
       path: '/',
       httpOnly: true,
       secure: false,
-      sameSite: 'Lax',
+      sameSite: 'Strict',
     },
   ]);
 

@@ -13,11 +13,10 @@
 
 ---
 
-| **Last Release** | `1.18.63` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.63` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | **2 OPEN (P3)** — Grill P1 **7/7 CLOSED** 1.18.60-1.18.62 ✅ + **GLOBAL-WEBHOOK CLOSED 1.18.63** (P3) — sisa `GLOBAL-RECON` + `GLOBAL-BFF` (P3 extended) |
-| **Last Updated** | 2026-08-28 — GLOBAL-WEBHOOK **1.18.63** + Grill P1 complete 7/7 CLOSED 1.18.60-1.18.62 + ADR-0071 PIT 70 **1.18.59** + ADR-0069 4.22 sweep **1.18.58** |
-
+| **Last Release** | `1.18.64` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.64` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | **0 OPEN** — Grill P1 **7/7 CLOSED** 1.18.60-1.18.62 ✅ + **P3 Extended 3/3 CLOSED 1.18.63-1.18.64** (GLOBAL-WEBHOOK 1.18.63 + GLOBAL-RECON + GLOBAL-BFF 1.18.64) ✅ 100% global hardening |
+| **Last Updated** | 2026-08-28 — GLOBAL-RECON + GLOBAL-BFF **1.18.64** + GLOBAL-WEBHOOK **1.18.63** + Grill P1 1.18.60-1.18.62 + ADR-0071 **1.18.59** + ADR-0069 **1.18.58** |
 ## 🎯 Grill FLOWS.md — Global Bank/E-Wallet Best Practice (2026-08-28)
 
 > **Sumber grill**: `docs/product/FLOWS.md` (41 flow aktual + 10 IMP) vs **industri global** — Stripe/Adyen idempotency & HMAC (Context7 `/stripe/stripe-node` `StripeIdempotencyError` + `/websites/adyen` `idempotency-key` ≤64 UUID + HMAC SHA256), Plaid webhook JWT ES256 `request_body_sha256` (Context7 `/websites/plaid_api`), PSD2 RTS Art 5 Dynamic Linking + FAPI 2.0 WYSIWYS, POJK 11/POJK.03/2022 MFA, PADG BI 24/7 & PBI 23/6 BI-FAST, ISO 20022 `pacs.008→pacs.002→camt.053`, FATF R10/R16 risk-based, PCI-DSS 4.0, UU PDP 27/2022 + Next.js BFF `httpOnly+secure+sameSite` (Context7 `/vercel/next.js`). Verifikasi **internet**: web_search diblok provider DC-IP — fallback Context7 terverifikasi (Stripe 64k snippets, Adyen 74k, Plaid 6.3k). Verifikasi **code**: CodeGraph `WalletGrpcAdapter.transferBalance` atomic 1-hop, `JournalEntry.isBalanced()`, `StatementService` `balance_after`, `NotificationService` fallback, `VelocityGuard`+`RiskEvaluationPort`, `Argon2PasswordEncoder(16,32,1,4096,3)` — bandingkan gap `FLOWS.md:1938` IMP-1,2,5 DONE 1.10.53 vs IMP-3,4,6,7,8,9,10 masih **TARGET**.
@@ -49,11 +48,11 @@ No open P1 — 7/7 CLOSED 1.18.60 (007) + 1.18.61 (008) + 1.18.62 (003,004,006,0
 No open P2 — 8 items CLOSED 2026-08-12 (CB-008/011/017/022/024/025/031/036) → `CHANGELOG.md` `1.10.63`.
 
 ### P3 — Backlog Lanjutan — Global Hardening Extended + Legacy
+No open P3 — 3/3 CLOSED 1.18.63 (GLOBAL-WEBHOOK) + 1.18.64 (GLOBAL-RECON + GLOBAL-BFF) → `CHANGELOG.md` `1.18.64` — extended hardening 100%.
+
 
 | Key | Domain | Item | ADR Ref |
 |:---|:---|:---|:---|
-| GLOBAL-RECON | Reconciliation | **3-Way Auto-Resolve** — flow #40. Extend `SnapBiReconciliationService` dari `case OPEN + WARN` ke `auto-resolve` bila ledger catch-up <5m (crash-after-commit), plus `camt.053` import vs `NOSTRO` (IMP-9). Saat ini manual review (FLOWS #40 `Auto-resolve belum`). | [ADR-0060](../adr/0060-transaction-orchestration-idempotency-reconciliation-and-callback-hardening-standard.md) · `FLOWS.md#40` |
-| GLOBAL-BFF | BFF | **BFF SameSite Strict Audit** — flow #46 `sameSite=strict` vs #2 `lax`. Next.js best practice (Context7) `lax` untuk login callback cross-site, `strict` untuk mutasi — audit `payu-web-app` cookies `oidc_state` (10m) vs `session` (7d) konsisten `secure+httpOnly+sameSite`. | [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md) |
 | — | — | *Legacy P3 kosong — items sebelumnya CLOSED* | — |
 
 ## 🏦 Partner Service Production Readiness Gate

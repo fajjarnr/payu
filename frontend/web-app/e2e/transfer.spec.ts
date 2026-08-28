@@ -28,14 +28,14 @@ async function ensureAuthCookies(page: Page) {
   try {
     if (isLocal) {
       await page.context().addCookies([
-        { name: 'accessToken', value: 'mock-access-token-for-e2e-tests', domain: 'localhost', path: '/', httpOnly: true, secure: false, sameSite: 'Lax' as const },
-        { name: 'payu_session', value: 'mock-session-for-e2e-tests', domain: 'localhost', path: '/', httpOnly: true, secure: false, sameSite: 'Lax' as const },
+        { name: 'accessToken', value: 'mock-access-token-for-e2e-tests', domain: 'localhost', path: '/', httpOnly: true, secure: false, sameSite: 'Strict' as const },
+        { name: 'payu_session', value: 'mock-session-for-e2e-tests', domain: 'localhost', path: '/', httpOnly: true, secure: false, sameSite: 'Strict' as const },
       ]);
     } else {
       // For remote hosts, use url-based cookie (Playwright requires either domain or url)
       await page.context().addCookies([
-        { name: 'accessToken', value: 'mock-access-token-for-e2e-tests', url: `${urlBase}/`, httpOnly: true, secure: true, sameSite: 'Lax' as const },
-        { name: 'payu_session', value: 'mock-session-for-e2e-tests', url: `${urlBase}/`, httpOnly: true, secure: true, sameSite: 'Lax' as const },
+        { name: 'accessToken', value: 'mock-access-token-for-e2e-tests', url: `${urlBase}/`, httpOnly: true, secure: true, sameSite: 'Strict' as const },
+        { name: 'payu_session', value: 'mock-session-for-e2e-tests', url: `${urlBase}/`, httpOnly: true, secure: true, sameSite: 'Strict' as const },
       ]);
     }
   } catch { /* best-effort */ }

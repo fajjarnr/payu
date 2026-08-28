@@ -55,6 +55,9 @@ describe("GET /api/auth/authorize (OIDC PKCE start)", () => {
     expect(cookies).toContain("oidc_state=");
     expect(cookies).toContain("pkce_verifier=");
     expect(cookies).toContain("HttpOnly");
+    expect(cookies).toContain("SameSite=lax");
+    expect(cookies).toContain("Max-Age=600");
+    expect(cookies).toContain("Path=/");
   });
 
   it("fails closed with 503 when the OIDC issuer is not configured", async () => {
@@ -118,6 +121,7 @@ describe("GET /api/auth/callback (OIDC PKCE completion)", () => {
     expect(cookies).toContain("accessToken=at-123");
     expect(cookies).toContain("refreshToken=rt-456");
     expect(cookies).toContain("HttpOnly");
+    expect(cookies).toContain("SameSite=strict");
   });
 
   it("rejects a mismatched CSRF state without calling the gateway", async () => {

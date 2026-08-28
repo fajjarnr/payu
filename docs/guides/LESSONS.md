@@ -1,5 +1,16 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-395: GLOBAL-RECON 3-Way Auto-Resolve + GLOBAL-BFF SameSite Strict Audit — P3 Extended 1.18.64 (2026-08-28)
+
+**Context**: `TODOS.md` `2 OPEN P3` `GLOBAL-RECON` (`SnapBiReconciliationService` `case OPEN+WARN` manual, `flow #40` `Auto-resolve belum`, `camt.053` vs `NOSTRO` IMP-9) + `GLOBAL-BFF` (`payu-web-app` `oidc_state` 10m `lax` vs `session` 7d `strict` audit, `flow #46` vs `#2`, Next.js Context7 `lax` for login callback cross-site, `strict` for mutasi) — both P3 extended hardening, not MVP-blocking but grill `FLOWS.md` global bank/e-wallet best practice.
+
+**Fix**: `SnapBiReconciliationService:111` auto-resolve `PAYMENT`/`REFUND` `Duration.between(detectedAt, now)<5m` + `resolve()` + `save` for crash-after-commit ledger catch-up + reverse `WALLET_MOVEMENT` orphan when partner appears `<5m` + `camt.053` vs `NOSTRO` deferred ponytail; `SnapBiReconciliationServiceTest` `9/9` new `autoResolvesPaymentCaseWithin5m` + `@MockitoSettings(LENIENT)`; `frontend/web-app/src/app/api/auth/authorize/route.ts:57` `cookieOptions secure: NODE_ENV===production` + `sameSite:lax` 10m + `e2e/fixtures` `payu_session`/`accessToken` `sameSite: Strict` (was `Lax`) + `src/__tests__/api/auth-oidc-route.test.ts` `SameSite=lax`/`strict` + `Max-Age=600` checks `6/6` PASS.
+
+**Evidence**: `mvn -f backend/partner-service/pom.xml test -Dtest=SnapBiReconciliationServiceTest` `9/9 PASS` `Auto-resolved PAYMENT within 5m`; `mvn -f backend/transaction-service/pom.xml test -Dtest=CallbackSignatureFilterTest` `10/10 PASS`; `cd frontend/web-app && npx vitest run src/__tests__/api/auth-oidc-route.test.ts` `6/6 PASS`; `mvn clean package -DskipTests` `partner-service` + `transaction-service` `BUILD SUCCESS`; `kustomize build base+5 env` `0 error`; `git tag v1.18.64`.
+
+**Lesson**: `P3` `3-Way Auto-Resolve` = **resolve, don't recreate**: `findByReferenceTypeAndReferenceId` + `STATUS_OPEN` + `Duration<5m` + `resolve()` + `save` beats `exists?0:save` (which would keep OPEN forever after catch-up). `BFF SameSite` = `lax` for `oidc_state` (cross-site login callback per Next.js Context7) vs `strict` for `session` (CSRF defense per `cybersecurity-architect` `30` + `ADR-0039` `SameSite=Strict` for mutations) — `secure+httpOnly+sameSite` must be consistent (`authorize` `lax` 10m vs `callback`/`refresh` `strict` 7d). `P3` extended hardening is 10-line ponytail each, so close them together as `1.18.64` batch; next P3 remains `0 OPEN` — `TODOS.md` `0 OPEN` `ALL P3 3/3 CLOSED`.
+
+
 ## L-394: GLOBAL-WEBHOOK HMAC Uniform + DLQ — Callback 300s Constant-Time 1.18.63 (2026-08-28)
 
 **Context**: `TODOS.md` `GLOBAL-WEBHOOK` P3 grill `FLOWS.md#39,7,9,10` vs Adyen/Plaid `X-Signature=HMAC-SHA256(payload)` + `X-Timestamp` 300s + `MessageDigest.isEqual` + dedup `uq_webhook_delivery` + retry `4^n×30s` max10 + `.dlq` — `Webhook Delivery Lifecycle` already `WebhookDispatcherService` `V16` dedup + retry + DLQ `payu.*.v1.dlq`, but `CallbackSignatureFilter.shouldNotFilter` only exact `protectedPaths` 3 (`/disbursements/callback`, `/payments/va/callback`, `/transactions/interbank/callback`) → other `/callback` paths (e.g., `/qris/callback`, `/partner/callback`) bypassed HMAC (P3 gap `belum seragam`).
