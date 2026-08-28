@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup-orphan-pvcs
+  namespace: payu-cicd
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: pipeline
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: registry.redhat.io/openshift4/ose-cli@sha256:placeholder
+              command: ["/bin/sh","-c"]
+              args:
+                - |
+                  echo "[*] Cleaning PVCs older than 24h with no PipelineRun"
+                  oc get pvc -n payu-cicd -o json | jq -r '.items[] | select(.metadata.creationTimestamp < (now - 86400 | todate)) | .metadata.name' | xargs -r oc delete pvc -n payu-cicd
+                  echo "done"
+              resources:
+                requests: {cpu: 50m, memory: 64Mi}
+                limits: {cpu: 200m, memory: 128Mi}

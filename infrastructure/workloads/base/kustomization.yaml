@@ -31,11 +31,11 @@ resources:
 - ./hpa.yaml
 - ./pdb.yaml
 - ./resource-budget.yaml
-- ./bi-fast-simulator.yaml
-- ./biller-simulator.yaml
-- ./dukcapil-simulator.yaml
-- ./qris-simulator.yaml
-- ./va-simulator.yaml
+- ./bi-fast-simulator
+- ./biller-simulator
+- ./dukcapil-simulator
+- ./qris-simulator
+- ./va-simulator
 - ./service-endpoints.yaml
 - ./dev-env-secrets.yaml
 

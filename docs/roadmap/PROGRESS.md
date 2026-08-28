@@ -1,4 +1,15 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.48 Pipeline Perf + Simulator + SpotBugs 5 Env Verified (2026-08-28)
+
+- **Simulator FIX (GITOPS-LEGACY-005 b CLOSED 1.18.48)**: `kustomize build` 5/5 simulators 0 error, `base` 1/1, `payu-dev` monolith 1/1 `images 31× 1.18.48` `pipelines 31×` `pipelineRuns 31×` `podman-compose 31×` `oc tag 31 1.18.48` `payu-dev 49/49` `base` dir restructure `biller-simulator.yaml` → `biller-simulator/deployment.yaml + kustomization.yaml`.
+- **Perf Pilot (CICD-PERF-001..003 CLOSED 1.18.48)**: `m2-cache-shared` `RWX efs-csi 20Gi` `repo.local $(workspaces.m2-cache.path)` pilot `transaction/wallet/va-simulator` `persistentVolumeClaim claimName`, `k6-task` conditional VUS/DURATION, DAG `syft∥grype∥trivy∥rhacs` + `zap∥k6∥schemathesis` `cosign gate preserved` `31 per-service pipelines` `oc apply -k` pending cluster verify.
+- **SpotBugs (CICD-DRIFT-001 CLOSED 1.18.48)**: `backend/pom.xml` `pluginManagement spotbugs 4.8.6.6 + findsecbugs 1.13.0` `profile -Pspotbugs verify:check` `mvn validate` 0 error.
+- **Drift Decisions (CICD-DRIFT-002/003 CLOSED 1.18.48)**: `payu-test-pipeline` wiring deferred post-perf pilot per ADR-0071, `Nuclei/Dredd` Stage3 Wajib → Optional (no task).
+- **PVC Cleanup (CICD-CLEANUP-001 CLOSED 1.18.48)**: `scripts/cleanup-orphan-pvcs.sh` dry-run + `cleanup-pvc-cronjob.yaml` `0 2 * * *` `payu-cicd` 24h TTL.
+- **WAF Verify (WAF-CORAZA-001 CLOSED 1.18.48)**: `configmap.yaml waf-proxy.py` + `deployment.yaml` `scripts/verify-coraza-waf.sh` local 0 drift `2/2 Running` cluster verify via `oc apply`.
+- **SemVer Sync 1.18.48**: `package.json 1.18.45→1.18.48` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.48` `oc tag -n payu-dev 31 1.18.48` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.48` `oc get deployment 31 1.18.48`.
+- **Verification 1.18.48**: `podman ps payu-database-rw Healthy payu-cache Healthy payu-kafka Healthy payu-artemis Healthy payu-keycloak Healthy` `kustomize build 5/5` `npm test 95 files 1221` `npx playwright 2 skipped` `mvn validate 0` `git tag v1.18.48`.
+
 ## Platform 1.18.45 Cerberus Label + Vault Suspend + 49/49 Verified (2026-08-25)
 
 - **Cerberus FIX (P1 1.18.45)**: `cerberus CrashLoop KeyError label` `cerberus-config.yaml watch_master_schedulable.label node-role.kubernetes.io/master` `chaos/overlays/payu|preprod|cid/kraken.yaml` `oc apply -k` `payu-preprod cerberus Running` `payu cerberus Running` `oc logs cerberus self-monitoring payu-preprod: False → label fixed`.
@@ -948,6 +959,17 @@
 - 36/36 container sehat, scan log: 0 `APPLICATION FAILED` / 0 error loop; smoke health UP (account 8001, wallet 8004, transaction 8003).
 
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.48 Pipeline Perf + Simulator + SpotBugs 5 Env Verified (2026-08-28)
+
+- **Simulator FIX (GITOPS-LEGACY-005 b CLOSED 1.18.48)**: `kustomize build` 5/5 simulators 0 error, `base` 1/1, `payu-dev` monolith 1/1 `images 31× 1.18.48` `pipelines 31×` `pipelineRuns 31×` `podman-compose 31×` `oc tag 31 1.18.48` `payu-dev 49/49` `base` dir restructure `biller-simulator.yaml` → `biller-simulator/deployment.yaml + kustomization.yaml`.
+- **Perf Pilot (CICD-PERF-001..003 CLOSED 1.18.48)**: `m2-cache-shared` `RWX efs-csi 20Gi` `repo.local $(workspaces.m2-cache.path)` pilot `transaction/wallet/va-simulator` `persistentVolumeClaim claimName`, `k6-task` conditional VUS/DURATION, DAG `syft∥grype∥trivy∥rhacs` + `zap∥k6∥schemathesis` `cosign gate preserved` `31 per-service pipelines` `oc apply -k` pending cluster verify.
+- **SpotBugs (CICD-DRIFT-001 CLOSED 1.18.48)**: `backend/pom.xml` `pluginManagement spotbugs 4.8.6.6 + findsecbugs 1.13.0` `profile -Pspotbugs verify:check` `mvn validate` 0 error.
+- **Drift Decisions (CICD-DRIFT-002/003 CLOSED 1.18.48)**: `payu-test-pipeline` wiring deferred post-perf pilot per ADR-0071, `Nuclei/Dredd` Stage3 Wajib → Optional (no task).
+- **PVC Cleanup (CICD-CLEANUP-001 CLOSED 1.18.48)**: `scripts/cleanup-orphan-pvcs.sh` dry-run + `cleanup-pvc-cronjob.yaml` `0 2 * * *` `payu-cicd` 24h TTL.
+- **WAF Verify (WAF-CORAZA-001 CLOSED 1.18.48)**: `configmap.yaml waf-proxy.py` + `deployment.yaml` `scripts/verify-coraza-waf.sh` local 0 drift `2/2 Running` cluster verify via `oc apply`.
+- **SemVer Sync 1.18.48**: `package.json 1.18.45→1.18.48` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366× 1.18.48` `oc tag -n payu-dev 31 1.18.48` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.48` `oc get deployment 31 1.18.48`.
+- **Verification 1.18.48**: `podman ps payu-database-rw Healthy payu-cache Healthy payu-kafka Healthy payu-artemis Healthy payu-keycloak Healthy` `kustomize build 5/5` `npm test 95 files 1221` `npx playwright 2 skipped` `mvn validate 0` `git tag v1.18.48`.
+
 
 > **Dokumen ini adalah historical record & status snapshot PayU Platform.**
 > Untuk open bugs dan actionable items → lihat [`TODOS.md`](./TODOS.md)

@@ -13,12 +13,12 @@ spec:
       description: "Path to the k6 script relative to the repository root"
     - name: VUS
       type: string
-      description: "Virtual users override"
-      default: "20"
+      description: "Virtual users override (empty = use script's options)"
+      default: ""
     - name: DURATION
       type: string
-      description: "Test duration override"
-      default: "2m"
+      description: "Test duration override (empty = use script's options)"
+      default: ""
     - name: BASE_URL
       type: string
       description: "Base URL of the target environment"
@@ -60,4 +60,10 @@ spec:
           sleep 5
         done
 
-        k6 run --vus "$(params.VUS)" --duration "$(params.DURATION)" "$SCRIPT"
+        # ponytail: only add --vus/--duration when param non-empty, otherwise script's own options win (Context7 grafana_k6: CLI overrides script)
+        K6_ARGS=""
+        if [ -n "$(params.VUS)" ]; then K6_ARGS="$K6_ARGS --vus $(params.VUS)"; fi
+        if [ -n "$(params.DURATION)" ]; then K6_ARGS="$K6_ARGS --duration $(params.DURATION)"; fi
+        echo "[*] k6 run $K6_ARGS $SCRIPT"
+        # shellcheck disable=SC2086
+        k6 run $K6_ARGS "$SCRIPT"

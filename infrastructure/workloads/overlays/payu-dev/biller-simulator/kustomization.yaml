@@ -2,15 +2,16 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: payu-dev
 resources:
-  - ../../../base/biller-simulator.yaml
+  - ../../../base/biller-simulator
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
-    newTag: "1.18.45"
-  # WEB-CSP-001 issuer alignment: tokens carry the PUBLIC SSO issuer
-  # (https://sso-dev...); validators must expect it. JWK/auth-server URLs stay
-  # internal (in-cluster).
-  - patch: |-
+    newTag: "1.18.48"
+patches:
+  - target:
+      kind: Deployment
+      name: biller-simulator
+    patch: |-
       apiVersion: apps/v1
       kind: Deployment
       metadata:

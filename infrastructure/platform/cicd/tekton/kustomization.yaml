@@ -51,9 +51,11 @@ resources:
 
   # ConfigMaps
   - k6-scripts-configmap.yaml
-
   # NetworkPolicies
   - networkpolicy-allow-egress.yaml
+
+  # Shared PVC for maven repo cache and grype/trivy DB (CICD-PERF-001)
+  - m2-cache-shared-pvc.yaml
 
   # RBAC (ArgoCD Application read for sync-wait gate)
   - argocd-sync-rbac.yaml

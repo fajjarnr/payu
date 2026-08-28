@@ -61,7 +61,7 @@ spec:
         - "$(params.GOALS[*])"
         # ponytail: shared m2-cache PVC + podTemplate fsGroup grants group-write,
         # so deps persist across runs instead of fresh download per PipelineRun
-        - -Dmaven.repo.local=$(workspaces.source.path)/.m2
+        - -Dmaven.repo.local=$(workspaces.m2-cache.path)
         - -Duser.home=/tekton/home
         - -Dmaven.resolver.transport=wagon
         - -Dmaven.wagon.http.retryHandler.count=5

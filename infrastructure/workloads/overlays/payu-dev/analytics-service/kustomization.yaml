@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
-    newTag: "1.18.45"
+    newTag: "1.18.48"
 patches:
   - target:
       kind: Deployment

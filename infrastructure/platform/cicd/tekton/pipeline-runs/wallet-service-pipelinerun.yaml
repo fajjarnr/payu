@@ -20,7 +20,7 @@ spec:
     - name: image
       value: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     - name: image-tag
-      value: "1.18.47"
+      value: "1.18.48"
     - name: target-env
       value: "dev"
   workspaces:
@@ -36,13 +36,8 @@ spec:
       secret:
         secretName: dockerconfig
     - name: m2-cache
-      volumeClaimTemplate:
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 1Gi
+      persistentVolumeClaim:
+        claimName: m2-cache-shared
     - name: signing-secrets
       secret:
         secretName: signing-secrets

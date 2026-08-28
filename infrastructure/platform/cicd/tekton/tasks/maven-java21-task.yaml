@@ -55,18 +55,15 @@ spec:
           value: /tekton/home
         - name: MAVEN_MIRROR_URL
           value: $(params.MAVEN_MIRROR_URL)
-      command:
-        - /usr/bin/mvn
       args:
         - "$(params.GOALS[*])"
-        - -Dmaven.repo.local=$(workspaces.source.path)/.m2
+        - -Dmaven.repo.local=$(workspaces.m2-cache.path)
         - -Duser.home=/tekton/home
         - -Dmaven.resolver.transport=wagon
         - -Dmaven.wagon.http.retryHandler.count=3
         - -Dmaven.wagon.http.retryHandler.requestSentEnabled=true
         - -Daether.connector.http.retryHandler.count=3
-        # ponytail: maven-settings secret carries settings.xml (mirror central ->
-        # repo1.maven.org) so a Central 429 throttle on one hostname cannot stop builds
+        # ponytail: shared m2-cache PVC via claimName; repo.local now points to workspace mount not source
         - -s
         - $(workspaces.maven-settings.path)/settings.xml
       resources:

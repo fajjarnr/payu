@@ -5,8 +5,8 @@ metadata:
   namespace: payu-cicd
 spec:
   accessModes:
-    - ReadWriteOnce
-  storageClassName: gp3-csi
+    - ReadWriteMany
+  storageClassName: efs-csi
   resources:
     requests:
       storage: 20Gi
