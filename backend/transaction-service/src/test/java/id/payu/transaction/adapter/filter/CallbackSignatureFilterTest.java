@@ -174,16 +174,38 @@ class CallbackSignatureFilterTest {
     @Test
     @DisplayName("should reject callback for VA callback path with invalid signature")
     void shouldRejectVaCallback() throws Exception {
+        long timestamp = Instant.now().getEpochSecond();
+        String body = """
+                {"referenceNumber":"VA-REF-001","status":"COMPLETED"}""";
+        String invalidSignature = "deadbeef".repeat(8);
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/payments/va/callback");
-        request.setContent("{\"vaNumber\":\"123\",\"amount\":1000}".getBytes(StandardCharsets.UTF_8));
-        request.addHeader("X-Timestamp", String.valueOf(Instant.now().getEpochSecond()));
-        request.addHeader("X-Signature", "wrongsignature");
+        request.addHeader("X-Signature", invalidSignature);
+        request.addHeader("X-Timestamp", String.valueOf(timestamp));
+        request.setContent(body.getBytes(StandardCharsets.UTF_8));
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();
-
         filter.doFilter(request, response, chain);
-
         assertThat(response.getStatus()).isEqualTo(401);
+    }
+
+    @Test
+    @DisplayName("should uniformly protect any path containing /callback (GLOBAL-WEBHOOK)")
+    void shouldUniformlyProtectAnyCallbackPath() throws Exception {
+        String path = "/api/v1/qris/callback";
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", path);
+        request.setContent("{}".getBytes(StandardCharsets.UTF_8));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+        // No signature -> should be rejected 401, not bypassed
+        filter.doFilter(request, response, chain);
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getContentAsString()).contains("MISSING_SIGNATURE");
+        // shouldNotFilter must be false for any /callback path (uniform)
+        MockHttpServletRequest req2 = new MockHttpServletRequest("POST", path);
+        assertThat(filter.shouldNotFilter(req2)).isFalse();
+        // Non-callback path should still be bypassed
+        MockHttpServletRequest nonCallback = new MockHttpServletRequest("GET", "/api/v1/transactions");
+        assertThat(filter.shouldNotFilter(nonCallback)).isTrue();
     }
 
     private String computeHmac(long timestamp, String body, String secret) throws Exception {

@@ -2,8 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.18.62] - 2026-08-28
+## [1.18.63] - 2026-08-28
 
+### Fixed
+- **GLOBAL-WEBHOOK HMAC Uniform + DLQ (P3 Extended) — 1.18.63**: `CallbackSignatureFilter.shouldNotFilter` uniform `path.contains("/callback")` → HMAC-SHA256 `X-Signature` + `X-Timestamp` window `300s` + `MessageDigest.isEqual` constant-time + `secret` + `toleranceSeconds` for **all** callback paths `flow #39,7,9,10` (was only 3 exact `protectedPaths`). `WebhookDispatcherService` already `uq_webhook_delivery(eventId,subscriptionId)` dedup `V16` + retry `4^n×30s` max10 + `payu.<domain>.<event>.v1.dlq` `commitRecovered=true` + `SSRF` `WebhookUrlValidatorService` HTTPS-only. Test: `CallbackSignatureFilterTest` `10/10` (new `shouldUniformlyProtectAnyCallbackPath` `/api/v1/qris/callback` 401 without signature, `shouldNotFilter` false, non-callback bypass).
+- **Docs**: `TODOS.md` `GLOBAL-WEBHOOK` removed `3→2 P3` + header `1.18.62→1.18.63` + `P3` `GLOBAL-RECON` + `GLOBAL-BFF` remain; `CHANGELOG.md` `1.18.63`; `LESSONS.md` `L-394`.
+
+### Added
+- **Local Dev Verify (1.18.63)**: `mvn -f backend/transaction-service/pom.xml test -Dtest=CallbackSignatureFilterTest` `10/10 PASS` (new uniform test); `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS` `416 classes`; `kustomize build base + 5 env` `0 error`; `grep -R "contains.*callback" backend/transaction-service/src/main/java/id/payu/transaction/adapter/filter/CallbackSignatureFilter.java` `uniform`.
+
+## [1.18.62] - 2026-08-28
 ### Fixed
 - **GLOBAL-IMP-010 Velocity & Fraud Pre-Check (FATF R10/R16) + GLOBAL-IMP-009 Suspense Clearing (ISO20022) + GLOBAL-IMP-006 QRIS DB Natural Key + GLOBAL-IMP-003 Statement Closing Balance + GLOBAL-IMP-004 Notification Retry — P1 Batch (1.18.62)**: `FLOWS.md#IMP-10` `TARGET→DONE` verified `VelocityGuard` Redis Lua `evaluate_velocity.lua` `5 tx/10m` + daily `50M` + `InitiateTransferCommandHandler` `429/403/202/REQUIRE_STEP_UP` + `RiskEvaluationPort` 5-factor stub + `VelocityGuardTest`/`Handler` 4 cases; `FLOWS.md#IMP-9` `TARGET→DONE` verified `WalletService.transferBalance` atomic double-entry + `JournalEntry.isBalanced()` + `V117/V118` unique+trigger + CoA `V19` ponytail `SYSTEM_BI_FAST_CLEARING` deferred after `trial balance`; `FLOWS.md#IMP-6` `TARGET→DONE` verified `V28 UNIQUE(tenant_id,idempotency_key)` + `ProcessQrisPaymentCommandHandler` early-return + `gateway` `@Idempotent` + `IdempotencyInterceptor` fail-closed; `FLOWS.md#IMP-3` `TARGET→DONE` verified `StatementService:352/361` `opening/closing` from `ledger balance_after` via `getLedgerBalanceAfterAsOf` + `StatementServiceTest`; `FLOWS.md#IMP-4` `TARGET→DONE` verified `NotificationService:32/84/163` `PUSH→EMAIL→SMS` + `ShedLock` `every 1m` + `scheduledAt` exponential `4^n×30s` + `NotificationServiceFallbackTest` 4 cases. Ponytail: per-KYC tier 20/24h + `pacs.008→camt.053` + dedicated `qris_payments` table deferred after metrics. `TODOS.md` `5→0 OPEN` `ALL 7/7 P1 CLOSED` 1.18.60-1.18.62 ✅ 100% bank-grade.
 - **Docs**: `FLOWS.md` `Last updated` `1.18.61→1.18.62` `10/10 DONE`; `TODOS.md` header `1.18.61→1.18.62` `0 OPEN` + `P1` `ALL 7/7 CLOSED`; `CHANGELOG.md` `1.18.62`.

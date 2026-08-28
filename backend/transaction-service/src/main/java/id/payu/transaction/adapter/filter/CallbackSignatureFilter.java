@@ -89,6 +89,11 @@ public class CallbackSignatureFilter extends OncePerRequestFilter {
             return true;
         }
         String path = request.getRequestURI();
+        // GLOBAL-WEBHOOK: uniform HMAC + X-Timestamp 300s for all callback paths (flow #39,7,9,10)
+        // ponytail: any path containing "/callback" is protected, plus explicit protectedPaths list
+        if (path != null && path.contains("/callback")) {
+            return false;
+        }
         return protectedPaths.stream().noneMatch(path::equals);
     }
 

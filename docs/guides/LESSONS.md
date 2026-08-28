@@ -1,5 +1,16 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-394: GLOBAL-WEBHOOK HMAC Uniform + DLQ — Callback 300s Constant-Time 1.18.63 (2026-08-28)
+
+**Context**: `TODOS.md` `GLOBAL-WEBHOOK` P3 grill `FLOWS.md#39,7,9,10` vs Adyen/Plaid `X-Signature=HMAC-SHA256(payload)` + `X-Timestamp` 300s + `MessageDigest.isEqual` + dedup `uq_webhook_delivery` + retry `4^n×30s` max10 + `.dlq` — `Webhook Delivery Lifecycle` already `WebhookDispatcherService` `V16` dedup + retry + DLQ `payu.*.v1.dlq`, but `CallbackSignatureFilter.shouldNotFilter` only exact `protectedPaths` 3 (`/disbursements/callback`, `/payments/va/callback`, `/transactions/interbank/callback`) → other `/callback` paths (e.g., `/qris/callback`, `/partner/callback`) bypassed HMAC (P3 gap `belum seragam`).
+
+**Fix**: `CallbackSignatureFilter:86` uniform `path.contains("/callback") → false` (filter) + `protectedPaths` exact fallback; preserves `toleranceSeconds 300` `X-Signature`/`X-Timestamp` `MISSING_*` + `HMAC-SHA256` `timestamp+"\n"+body` `HexFormat` + `MessageDigest.isEqual` constant-time + `secret` `payu.callback.signature.secret`. Test: `CallbackSignatureFilterTest` `10/10` new `shouldUniformlyProtectAnyCallbackPath` `/api/v1/qris/callback` without signature → `401 MISSING_SIGNATURE`, `shouldNotFilter` false, non-callback bypass true.
+
+**Evidence**: `mvn -f backend/transaction-service/pom.xml test -Dtest=CallbackSignatureFilterTest` `10/10 PASS` `WARN missing X-Signature for /api/v1/qris/callback`; `grep -R "contains.*callback" CallbackSignatureFilter.java` `uniform`; `mvn clean package -DskipTests` `BUILD SUCCESS` `416 classes`; `WebhookDispatcherService` `uq_webhook_delivery` `V16` + `findRetryableDeliveries` `4^n×30s` + `payu.*.v1.dlq` already; `git tag v1.18.63`.
+
+**Lesson**: `HMAC Uniform` = **one filter, all callbacks**: `path.contains("/callback")` beats `exact List` (covers `#39,7,9,10` plus future `qris/partner/billing` callbacks) — add new callback endpoint = automatically protected, no need to update `payu.callback.signature.paths` list. `constant-time` `MessageDigest.isEqual` is non-negotiable (prevents timing attack per `cybersecurity-architect` skill). `P3` `GLOBAL-WEBHOOK` is `OUT-OF-SCOPE MVP` but fixing uniform filter is 5-line ponytail, so do it now; defer full outbound `WebhookUrlValidatorService` SSRF audit to `P3` `GLOBAL-WEBHOOK` follow-up only if needed.
+
+
 ## L-393: GLOBAL-IMP-010/009/006/003/004 P1 Batch Verified — 100% Bank-Grade 1.18.62 (2026-08-28)
 
 **Context**: `TODOS.md` `5 OPEN` `GLOBAL-IMP-010` (velocity), `009` (suspense clearing), `006` (QRIS fail-closed), `003` (statement `balance_after`), `004` (notification retry) — all grill `FLOWS.md` `TARGET` vs code already 70% implemented (`StatementService:352/361`, `NotificationService:32/84/163`, `VelocityGuard` lua, `WalletService` double-entry, `ProcessQrisPayment` early-return) — remaining gap per-tier/CoA/camt.053 deferred per ponytail. `ADR-0030`/`0029`/`0022`/`0049`/`0027`.

@@ -13,11 +13,10 @@
 
 ---
 
-| **Last Release** | `1.18.62` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.62` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | **0 OPEN** — Grill FLOWS.md 2026-08-28 vs industri global (Stripe/Adyen/Plaid + PSD2/FAPI/ISO20022/FATF) — IMP-3,4,6,7,8,9,10 → GLOBAL-IMP-003..010 (P1) **ALL 7/7 CLOSED 1.18.60-1.18.62** ✅ 100% bank-grade — ref ADR-0022/0027/0028/0029/0030/0049/0052/0060 |
-| **Last Updated** | 2026-08-28 — Grill complete 7/7 P1 CLOSED — GLOBAL-IMP-003,004,006,009,010 **1.18.62** + GLOBAL-IMP-008 **1.18.61** + GLOBAL-IMP-007 **1.18.60** + ADR-0071 PIT 70 **1.18.59** + ADR-0069 4.22 sweep **1.18.58** + ADR-0016 Boot 4.1.0 **1.18.57** + ADR-0014 3scale **1.18.56** |
----
+| **Last Release** | `1.18.63` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.63` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | **2 OPEN (P3)** — Grill P1 **7/7 CLOSED** 1.18.60-1.18.62 ✅ + **GLOBAL-WEBHOOK CLOSED 1.18.63** (P3) — sisa `GLOBAL-RECON` + `GLOBAL-BFF` (P3 extended) |
+| **Last Updated** | 2026-08-28 — GLOBAL-WEBHOOK **1.18.63** + Grill P1 complete 7/7 CLOSED 1.18.60-1.18.62 + ADR-0071 PIT 70 **1.18.59** + ADR-0069 4.22 sweep **1.18.58** |
 
 ## 🎯 Grill FLOWS.md — Global Bank/E-Wallet Best Practice (2026-08-28)
 
@@ -53,7 +52,6 @@ No open P2 — 8 items CLOSED 2026-08-12 (CB-008/011/017/022/024/025/031/036) �
 
 | Key | Domain | Item | ADR Ref |
 |:---|:---|:---|:---|
-| GLOBAL-WEBHOOK | Webhook | **HMAC Uniform + DLQ** — flow #39,7,9,10. Adyen/Plaid benchmark: `X-Signature=HMAC-SHA256(payload)` + `X-Timestamp` window 300s + constant-time compare + dedup `uq_webhook_delivery(eventId,subscriptionId)` + retry `4^n×30s` max10 + poison → `.dlq` (`commitRecovered=true`). Sudah di `Webhook Delivery Lifecycle` tapi belum seragam validasi timestamp di semua callback. | [ADR-0025](../adr/0025-snap-bi-and-partner-gateway-security-standard.md) · [ADR-0026](../adr/0026-kafka-topic-governance-and-dlq-strategy.md) · `FLOWS.md#39` |
 | GLOBAL-RECON | Reconciliation | **3-Way Auto-Resolve** — flow #40. Extend `SnapBiReconciliationService` dari `case OPEN + WARN` ke `auto-resolve` bila ledger catch-up <5m (crash-after-commit), plus `camt.053` import vs `NOSTRO` (IMP-9). Saat ini manual review (FLOWS #40 `Auto-resolve belum`). | [ADR-0060](../adr/0060-transaction-orchestration-idempotency-reconciliation-and-callback-hardening-standard.md) · `FLOWS.md#40` |
 | GLOBAL-BFF | BFF | **BFF SameSite Strict Audit** — flow #46 `sameSite=strict` vs #2 `lax`. Next.js best practice (Context7) `lax` untuk login callback cross-site, `strict` untuk mutasi — audit `payu-web-app` cookies `oidc_state` (10m) vs `session` (7d) konsisten `secure+httpOnly+sameSite`. | [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md) |
 | — | — | *Legacy P3 kosong — items sebelumnya CLOSED* | — |
