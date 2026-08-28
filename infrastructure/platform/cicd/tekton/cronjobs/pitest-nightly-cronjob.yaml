@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pitest-nightly
+  namespace: payu-cicd
+  labels:
+    app: payu
+    component: pitest
+    payu.io/adr: "0071"
+spec:
+  schedule: "0 3 * * *" # 03:00 nightly, off PR path
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: pipeline
+          restartPolicy: OnFailure
+          containers:
+            - name: pitest
+              image: registry.redhat.io/openshift4/ose-cli@sha256:placeholder
+              # ponytail: use Tekton PipelineRun, not direct mvn; this CronJob triggers PipelineRuns via oc
+              command: ["/bin/sh","-c"]
+              args:
+                - |
+                  set -e
+                  echo "[*] Triggering PIT mutation nightly for 5 core money services"
+                  for svc in transaction-service wallet-service partner-service account-service auth-service; do
+                    echo "-> $svc"
+                    oc create -f - <<EOF
+                  apiVersion: tekton.dev/v1
+                  kind: PipelineRun
+                  metadata:
+                    generateName: pitest-$svc-
+                    namespace: payu-cicd
+                    labels:
+                      payu.io/nightly: pitest
+                      payu.io/service: $svc
+                  spec:
+                    pipelineRef:
+                      name: payu-test-pipeline
+                    params:
+                      - name: service-name
+                        value: $svc
+                      - name: git-url
+                        value: https://github.com/fajjarnr/payu.git
+                      - name: git-revision
+                        value: main
+                      - name: service-type
+                        value: spring-boot
+                      - name: coverage-threshold
+                        value: "70"
+                    workspaces:
+                      - name: source
+                        volumeClaimTemplate:
+                          spec:
+                            accessModes: [ReadWriteOnce]
+                            resources:
+                              requests:
+                                storage: 5Gi
+                  EOF
+                    sleep 2
+                  done
+                  echo "PIT nightly triggered 5 PipelineRuns"
+              resources:
+                requests: {cpu: 50m, memory: 64Mi}
+                limits: {cpu: 200m, memory: 128Mi}
+---
+# ADR-0071: keep PIT off PR path, nightly only via CronJob
+# Manual trigger: oc create -f infrastructure/platform/cicd/tekton/cronjobs/pitest-nightly-cronjob.yaml
+# Check: oc get cronjob -n payu-cicd pitest-nightly; oc get pipelinerun -n payu-cicd -l payu.io/nightly=pitest

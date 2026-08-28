@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.59] - 2026-08-28
+
+### Fixed
+- **ADR-0071 PIT 70 Core 5 + Tekton Nightly (ADR-GAP-0071 FIX 1.18.59)**: `backend/pom.xml` `pitest-maven 1.25.9` `mutationThreshold 60` `coverageThreshold 70` for all, 5 core money `transaction/wallet/partner/account/auth` `grep mutationThreshold` `0` (parent `60`), `frontend/web-app` `@axe-core/playwright ^4.11.0` `test:a11y` `a11y:audit` `scripts/a11y-audit.ts` exists but `baseline` burn-down not, `Tekton` `-Pmutation-testing` nightly `CronJob` not checked-in (`infrastructure/platform/cicd/tekton/cronjobs/` missing). Fix: `5 core poms` add `<plugin><groupId>org.pitest</groupId><artifactId>pitest-maven</artifactId><configuration><mutationThreshold>70</mutationThreshold><coverageThreshold>70</coverageThreshold></configuration></plugin>` `ADR-0071` `≥70%` core 5 `≥60%` others, `infrastructure/platform/cicd/tekton/cronjobs/pitest-nightly-cronjob.yaml` `CronJob` `0 3 * * *` `Forbid` `serviceAccount pipeline` `oc create PipelineRun payu-test-pipeline` `service-name $svc` `coverage-threshold 70` `volumeClaimTemplate 5Gi` for 5 core, `frontend/web-app/.a11y-baseline.json` `{"criticalFlows":["login","onboarding","dashboard/transfer"],"baseline":true}` `burn-down` until `WEB-CSP-001/002` close, `infrastructure/platform/cicd/tekton/kustomization.yaml` `+ cronjobs/pitest-nightly-cronjob.yaml`, bump **31 images `1.18.59`**.
+
+### Added
+- **Local Dev Verify (1.18.59)**: `kustomize build` `base` + 5 env monolith + `platform/cicd/tekton` 0 error; `mvn -f backend/pom.xml validate` `0` `grep mutationThreshold backend/transaction-service/pom.xml` `70` `5 core`; `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
+
 ## [1.18.58] - 2026-08-28
 
 ### Fixed

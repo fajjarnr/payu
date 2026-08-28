@@ -474,6 +474,15 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- ADR-0071 PIT 70% core money services (transaction/wallet/partner/account/auth) -->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <mutationThreshold>70</mutationThreshold>
+                    <coverageThreshold>70</coverageThreshold>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

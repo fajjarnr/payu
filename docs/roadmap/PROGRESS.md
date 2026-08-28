@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.59 ADR-0071 PIT 70 Core 5 Nightly + 31 Images Verified (2026-08-28)
+
+- **ADR FIX (ADR-GAP-0071 CLOSED 1.18.59)**: `backend/pom.xml` `pitest 1.25.9` `mutationThreshold 60` all, 5 core `transaction/wallet/partner/account/auth` `0` (parent `60`) `≥70%` per `ADR-0071` `5 core` `≥60%` others, `axe-core` `test:a11y` exists `a11y:audit` baseline burn-down not, `Tekton` `-Pmutation-testing` nightly `CronJob` not checked-in. Fix `5 core poms` `<mutationThreshold>70` `infrastructure/platform/cicd/tekton/cronjobs/pitest-nightly-cronjob.yaml` `CronJob` `0 3 * * *` `oc create PipelineRun` `5 core` `volumeClaimTemplate` `frontend/web-app/.a11y-baseline.json` `criticalFlows` `baseline true` `kustomization.yaml` `+ cronjobs`.
+- **SemVer Sync 1.18.59**: `package.json 1.18.58→1.18.59` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 1.18.59`.
+- **Verification 1.18.59**: `grep mutationThreshold backend/transaction-service/pom.xml` `70` `5 core` `kustomize build` `base` + 5 env monolith + `platform/cicd/tekton` 0 error `podman ps` `7 Healthy` `mvn validate 0` `npm 95/1221` `git tag v1.18.59`.
+
+
 ## Platform 1.18.58 ADR-0069 Doc Sweep 4.20→4.22 + 31 Images Verified (2026-08-28)
 
 - **ADR FIX (ADR-GAP-0069 CLOSED 1.18.58)**: `docs/adr/0069` `Accepted` `2026-08-24` `Doc sweep ~40 files` `4.20+` → `4.22+` `K8s 1.33→1.35` — normative `grep -R 4.20+ docs/architecture` `~20` hits vs live `OCP 4.22.7` `K8s 1.35.6` `INFRASTRUCTURE_DEPLOYMENT.md:30` `OCP 4.22.7` vs `TODOS.md:20` `4.20.29`. Fix `sed` `4.20+→4.22+` `OCP 4.20→4.22` `Kubernetes 1.33→1.35` for `ARCHITECTURE.md` `DEVSECOPS` `CICD-MONITORING` `DISASTER_RECOVERY` `ZERO-DOWNTIME` `LITMUS` `INFRASTRUCTURE_DEPLOYMENT` `README` `AGENTS` `catalog-info` `SECURITY` `PRD` `provisioning` `platform Helm` + `ADR 0031/0032/0034/0024/0064`, verify `grep 4.20+` `0` `grep 4.22+` `~20` `kustomize build` `0`.

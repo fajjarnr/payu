@@ -1,0 +1,8 @@
+{
+  "generated": "2026-08-28",
+  "adr": "0071",
+  "criticalFlows": ["login", "onboarding", "dashboard/transfer"],
+  "status": "baseline burn-down active — WEB-CSP-001/002 open P1 blocks release-gate, pre-existing violations tracked here, new pages must pass component-level vitest a11y test:a11y at PR time",
+  "violations": [],
+  "baseline": true
+}

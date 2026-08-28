@@ -57,6 +57,9 @@ resources:
   # Shared PVC for maven repo cache and grype/trivy DB (CICD-PERF-001)
   - m2-cache-shared-pvc.yaml
 
+  # ADR-0071 PIT nightly (core money 5 ≥70% via Tekton, off PR path)
+  - cronjobs/pitest-nightly-cronjob.yaml
+
   # RBAC (ArgoCD Application read for sync-wait gate)
   - argocd-sync-rbac.yaml
 
