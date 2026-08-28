@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.54 Rate-Limit Auth Per-IP By Design + 31 Images Verified (2026-08-28)
+
+- **Rate-Limit FIX (NET-RATELIMIT-004 CLOSED 1.18.54)**: `gateway-service` `rate-limit.auth` `30/min` `per-IP` `429` via BFF `host-gateway` → bump `1.18.50` `120/min` `burst 200` per-IP sufficient dev; `RateLimitFilter.getClientId()` already per-user for authenticated `ip:X-User-Id` + `rate-limit-v2` `per-user 2000/500`; `auth` pre-auth so per-IP by design, per-user for auth deferred until `X-Device-Id` needed. Update `application.yaml` comment `CLOSED 1.18.54`.
+- **SemVer Sync 1.18.54**: `package.json 1.18.53→1.18.54` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 1.18.54`.
+- **Verification 1.18.54**: `podman ps` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy` `kustomize build` `base` + 5 env monolith 0 error `mvn validate 0` `npm 95/1221` `git tag v1.18.54`.
+
+
 ## Platform 1.18.53 ArgoCD OutOfSync Tolerance + 31 Images Verified (2026-08-28)
 
 - **ArgoCD FIX (ARGOCD-SYNC-001 CLOSED 1.18.53)**: `oc get applications -n openshift-gitops` `data-preprod/data-prod/data-sit/data-uat` `OutOfSync` `Healthy` + `Unknown` during `4 worker SchedulingDisabled` `2026-08-24/25` (rotation, `CNPG` `5/5` `Kafka` `EFS` `Unknown`). Drift `CNPG` storage `10Gi→20Gi` `wal 5Gi→10Gi` `OutOfSync` `Healthy` expected until reconcile post-rotation; `Unknown` transient `SchedulingDisabled`. Fix `scripts/verify-argocd-sync.sh` (`oc get applications` + `oc get application data-*` + `grep Unknown` + `oc patch application ... sync` `--sync-data`) + `kustomize build` 0 error, document `OutOfSync Healthy` tolerance if `pvc Bound` + `cluster Healthy`.

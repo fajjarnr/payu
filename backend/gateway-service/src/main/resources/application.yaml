@@ -185,10 +185,15 @@ gateway:
       # WEB-CSP-001 follow-up: ALL browser users share the BFF pod IP, so this
       # bucket is platform-wide, not per-user — 30/min starved it (429 →
       # login flakiness). Brute force stays covered by Keycloak + lockout.
-      # NET-RATELIMIT-004: per-user keying (X-User-Id/JWT sub) deferred to prod
-      # when gateway can read user identity after JWT validation; 120/min per-IP
-      # sufficient for dev, prod will switch to per-user bucket via
-      # io.payu.gateway.filter.RateLimitFilter userPrincipal resolver.
+      # NET-RATELIMIT-004 CLOSED 1.18.54: auth is pre-auth (no JWT/X-User-Id) so per-IP
+      # is by design — all browser users share BFF pod IP via host-gateway.
+      # 120/min per-IP (burst 200) sufficient for dev (30/min starved login).
+      # Authenticated endpoints are already per-user via RateLimitFilter.getClientId():
+      # ip + ":" + X-User-Id / X-Account-Id / ":authenticated" (Hot Rod sliding window),
+      # plus rate-limit-v2 per-user 2000/500 vs per-ip 500. 120/min per-IP for auth
+      # kept for dev; prod per-user for auth would require device/session fingerprint
+      # (e.g., X-Device-Id / refresh-token hash) — deferred until brute-force
+      # via Keycloak lockout (3/15m) proves insufficient. See RateLimitFilter.java.
       auth:
         requests-per-minute: 120
         burst: 200

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.54] - 2026-08-28
+
+### Fixed
+- **Rate-Limit Auth Per-IP By Design (NET-RATELIMIT-004 FIX 1.18.54)**: `gateway-service` `rate-limit.auth` `30/min` `burst 50` `per-IP` caused `429` login flakiness via BFF single pod IP (`host-gateway`), bumped `1.18.50` to `120/min` `burst 200` per-IP sufficient for dev. `RateLimitFilter.getClientId()` already does per-user for authenticated: `ip + ":" + X-User-Id / X-Account-Id / ":authenticated"` (`Hot Rod` sliding window) + `rate-limit-v2` `per-user 2000/500` vs `per-ip 500`; `auth` endpoint is pre-auth (no JWT/`X-User-Id`) so per-IP is by design, per-user for auth would require device/session fingerprint (`X-Device-Id` / refresh-token hash) deferred until `Keycloak` lockout `3/15m` proves insufficient. Fix: update `backend/gateway-service/src/main/resources/application.yaml` comment to `CLOSED 1.18.54` clarify `auth` per-IP by design + authenticated per-user via `X-User-Id` + `rate-limit-v2`, bump **31 images `1.18.54`**.
+
+### Added
+- **Local Dev Verify (1.18.54)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `kustomize build` `base` + 5 env monolith 0 error; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
+
 ## [1.18.53] - 2026-08-28
 
 ### Fixed

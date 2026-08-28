@@ -6,4 +6,4 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/qris-simulator
-    newTag: "1.18.53"
+    newTag: "1.18.54"

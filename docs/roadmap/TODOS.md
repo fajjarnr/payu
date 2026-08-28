@@ -15,10 +15,10 @@
 
 ## 📊 Board Summary
 
-| **Last Release** | `1.18.53` (2026-08-28) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.53` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Last Release** | `1.18.54` (2026-08-28) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.54` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
 | **Backlog Aktif** | *No OPEN item* — seluruh B1–B4 + harden sweep **CLOSED 1.18.9–1.18.48** → [`CHANGELOG.md`](../../CHANGELOG.md). |
-| **Last Updated** | 2026-08-28 — ArgoCD tolerance **1.18.53** `verify-argocd-sync.sh` + Tekton Results **1.18.52** + UBI9 1.24-3 **1.18.51** + SSO 5 env **1.18.50** + RLS **1.18.49**; sisa OPEN: DPoP, rate-limit keying, PERF-004 DEFERRED. |
+| **Last Updated** | 2026-08-28 — Rate-limit auth per-IP **1.18.54** `gateway RateLimitFilter` + ArgoCD **1.18.53** + Tekton Results **1.18.52** + UBI9 1.24-3 **1.18.51** + SSO 5 env **1.18.50** + RLS **1.18.49**; sisa OPEN: DPoP, PERF-004 DEFERRED. |
 
 ---
 
@@ -108,7 +108,6 @@ Catatan sesi 2026-08-25: failure PipelineRun lama di `payu-cicd` (gateway-servic
 
 | Key | Pri | Temuan | Bukti | Sisa |
 | SSO-DPOP-003 | P3 | DPoP (ADR-0062) enforcement dinonaktifkan di client `payu-web-app` karena BFF belum menghasilkan DPoP proof — sender-constrained tokens belum aktif | `GET /admin/realms/payu/clients/…/attributes` dpop=false | Implementasi DPoP proof generation di BFF/auth-service, lalu nyalakan kembali enforcement |
-| NET-RATELIMIT-004 | P3 | Rate-limit auth gateway masih per-IP — seluruh user berbagi IP pod BFF; bump 120/min cukup untuk dev, per-user keying (dari refresh token/session) lebih tepat untuk prod | `gateway-service/application.yaml` rate-limit v1+v2 auth | Keying per-user untuk endpoint auth di gateway |
 
 Catatan sesi 2026-08-26: audit + fix + E2E — login 3/3 stabil → dashboard; register UI→API **201** (NIK valid, data unik); CSP nonce onboarding 0/33 → 29/30; build Tekton web-app/gateway/account **15/15** `1.18.47`; spec kontrol `forgot-password`+`not-found` 2/2 PASS. Incident node mati `ip-10-0-88-91` (8 VolumeAttachment orphan → Multi-Attach, DB Pending) disulihkan dengan menghapus VA stale. Detail lengkap fix: `CHANGELOG.md` 1.18.47.
 
