@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.18.57] - 2026-08-28
+
+### Fixed
+- **ADR-0016 Accepted Boot 4.1.0 Live (ADR-GAP-0016 FIX 1.18.57)**: `docs/adr/0016-arch-006-phase-a-strategy.md` `Status: Deferred` `2026-06-14` `4 shared starters` `Spring Boot 3.x APIs` blocker (`jms` `rest-client` `events` `saga` `package org.springframework.boot.actuate.health does not exist` `RestClientErrorHandler` `jsr310` `saga` `BindableType`) — `2026-06-14` `DEFERRED` until shared starter migration `~2-3 days`. Live `2026-08-28` `backend/pom.xml` `spring-boot-starter-parent:4.1.0` `java.version 25` `AccountServiceApplication v4.1.0` `Started` `BUILD SUCCESS` `31/31` `1.18.55` `podman 7 Healthy` `Java 25.0.4` `ubi9/openjdk-25-runtime:1.24-3` — 14 shared starters `backend/shared/*` now compile on `4.1.0 + Spring 7 + Hibernate 7 + Jackson 3` (`mvn validate 0`). Fix: `Status: Deferred→Accepted` `Date: 2026-08-28` `Supersedes: Deferred 2026-06-14 — shared starters migrated` `Decision Log` `2026-08-28 ACCEPTED` `TL;DR` `Accepted` live `31` `Decision` `Accepted — Platform-wide rollout complete` `Next Steps Done` `Implementation Plan Executed` `docs/adr/README.md` `Accepted 2026-08-28`, bump **31 images `1.18.57`**.
+
+### Added
+- **Local Dev Verify (1.18.57)**: `kustomize build` `base` + 5 env monolith 0 error; `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
+
 ## [1.18.56] - 2026-08-28
 
 ### Fixed

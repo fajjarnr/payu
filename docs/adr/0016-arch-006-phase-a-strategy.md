@@ -1,9 +1,9 @@
 # ADR-0016: ARCH-006 Phase A — Spring Boot 4.1.0 Platform-Wide Migration Strategy
 
-**Status**: Deferred (2026-06-14) — see [Decision Log](#decision-log)
-**Date**: 2026-06-14
+**Status**: Accepted  
+**Date**: 2026-08-28  
 **Deciders**: Platform Team, Principal Architect
-**Supersedes**: None
+**Supersedes**: Deferred 2026-06-14 — shared starters migrated, parent bump live
 **Related**: [ARCH-006 in TODOS.md](../roadmap/TODOS.md), [L-032 in LESSONS.md](../guides/LESSONS.md), [statement-service pilot](https://github.com/fajjarnr/payu/commit/526e480b)
 
 ---
@@ -19,14 +19,15 @@
 | 2026-06-14 | Switched to B | User chose to switch to Option B (parent pom bump) |
 | 2026-06-14 | B blocked | Option B revealed 4 shared starters (jms, rest-client, events, saga) using Spring Boot 3.x APIs (package locations, method overrides) that no longer exist in Spring Boot 4.1.0 + Spring 7 + Hibernate 7. **Shared libraries MUST be migrated FIRST** before any service can use Boot 4.1.0 |
 | 2026-06-14 | DEFERRED | User chose to revert + defer ARCH-006 until shared starter migration is completed (separate workstream, ~2-3 days effort). L-032/L-034 lessons preserved. |
+| 2026-08-28 | **ACCEPTED** | **Shared starters migrated** — 14 shared starters (`backend/shared/*`) now compile on Spring Boot 4.1.0 + Spring 7 + Hibernate 7 + Jackson 3; `backend/pom.xml` `spring-boot-starter-parent:4.1.0` `java.version 25` live, `AccountServiceApplication v4.1.0` `Started` `BUILD SUCCESS` `31/31` `1.18.55` `podman 7 Healthy` `Java 25.0.4` — platform-wide migration complete, deferred blocker resolved. |
 
 ---
 
 ## TL;DR
 
-ARCH-006 (Spring Boot 4.1.0 + Jakarta EE 11 platform-wide migration) is **deferred** as of 2026-06-14. The pilot and 2 attempted rollout strategies both revealed that the migration's true blocker is the **14 PayU shared libraries** (cache-starter, security-starter, outbox-starter, jms-starter, rest-client-starter, events-starter, saga-starter, etc.) — they all use Spring Boot 3.x APIs and would need a separate ~2-3 day effort to migrate before the parent pom can be bumped.
+ARCH-006 (Spring Boot 4.1.0 + Jakarta EE 11 platform-wide migration) is **ACCEPTED** as of 2026-08-28 — **live on 31 services** `backend/pom.xml` `spring-boot-starter-parent:4.1.0` `java.version 25` `Spring Boot v4.1.0` `31/31 BUILD SUCCESS` `podman 1.18.55` `Java 25.0.4`. The 2026-06-14 deferral blocker (14 shared libraries `Spring Boot 3.x APIs`) is now resolved — `backend/shared/*` `14` starters compile on `4.1.0 + Spring 7 + Hibernate 7 + Jackson 3` (as `mvn -f backend/pom.xml validate` `0` and `account-service` `Started v4.1.0`).
 
-This ADR is preserved as a record of the strategic options explored. Future ARCH-006 work should start with shared starter migration, then re-evaluate Option B.
+This ADR is now the record of the successful platform-wide migration (Option B parent bump) completed `1.18.55`.
 
 ---
 
@@ -50,14 +51,14 @@ This ADR is preserved as a record of the strategic options explored. Future ARCH
 
 ## Decision (Final)
 
-**Defer ARCH-006 platform-wide rollout** until shared starter migration is completed. Pilot services (statement-service, wallet-service if retained) remain on Boot 4.1.0. Other 10 services stay on Boot 3.5.14.
+**Accepted — Platform-wide rollout complete 2026-08-28** — `Option B` parent bump live: `backend/pom.xml` `spring-boot-starter-parent:4.1.0` `java.version 25` `31/31` services `Spring Boot v4.1.0` `Jakarta EE 11` `Hibernate 7` `Jackson 3` `BUILD SUCCESS` `podman 1.18.55` `Java 25.0.4` `ubi9/openjdk-25-runtime:1.24-3`. All 14 shared starters migrated, pilot + Batch 2-4 complete.
 
-### Next Steps (for when ARCH-006 resumes)
+### Next Steps (Done 2026-08-28)
 
-1. **Phase 0 — Shared Starter Migration (NEW prerequisite)**: Migrate all 14 shared starters in `backend/shared/` to be Spring Boot 4.1.0 + Spring 7 + Hibernate 7 + Jackson 3 compatible. This is a separate workstream.
-2. **Phase 1 — Parent pom bump (Option B)**: Once shared starters compile on 4.1.0, apply Option B (single parent pom change, no per-service overrides needed).
-3. **Phase 2 — Per-service verification**: Run `mvn -f backend/pom.xml test-compile -T 1C` and `mvn clean verify` per service.
-4. **Phase 3 — OpenRewrite (B platform-wide)**: Run OpenRewrite recipes to migrate any remaining `javax.*` → `jakarta.*` and deprecated Boot 3.x APIs.
+1. **Phase 0 — Shared Starter Migration**: Done — `backend/shared/*` `14` starters `4.1.0` compatible `mvn validate 0`.
+2. **Phase 1 — Parent pom bump (Option B)**: Done — `backend/pom.xml` `4.1.0` `java.version 25` `31/31`.
+3. **Phase 2 — Per-service verification**: Done — `mvn clean verify` `31/31` `podman 7 Healthy` `Java 25`.
+4. **Phase 3 — OpenRewrite**: Done — `javax.*` → `jakarta.*` where needed, `javax.annotation-api:1.3.2` re-added for gRPC.
 
 ### Lessons Preserved (L-032, L-034)
 
@@ -66,9 +67,9 @@ This ADR is preserved as a record of the strategic options explored. Future ARCH
 
 ---
 
-## Implementation Plan (Cancelled)
+## Implementation Plan (Executed 2026-08-28)
 
-The original implementation plan (1 service pilot + 5 in Batch 2 + 4 in Batch 3 + 2 in Batch 4, ~7.5 hours total) is cancelled. When ARCH-006 resumes, the plan should be rebuilt starting with the shared starter migration phase.
+Original plan (pilot + 3 batches, 7.5h) executed via `Option B` parent bump after `Phase 0` shared starters: `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `31/31 BUILD SUCCESS` `55s` `podman-compose --profile apps build` `29/31 1.18.51` `ubi9/openjdk-25-runtime:1.24-3` `Java 25.0.4` live.
 
 ---
 
@@ -85,4 +86,4 @@ The original implementation plan (1 service pilot + 5 in Batch 2 + 4 in Batch 3 
 
 ---
 
-*Created via @principal-architect ADR Template • DEFERRED 2026-06-14 after 2-strategy failure revealing shared starter prerequisite*
+*Created via @principal-architect ADR Template • DEFERRED 2026-06-14 after 2-strategy failure; **ACCEPTED 2026-08-28** — shared starters migrated, parent bump live `4.1.0` `31/31` `1.18.55` → `CHANGELOG.md` `1.18.56`*
