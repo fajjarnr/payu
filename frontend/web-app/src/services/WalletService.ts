@@ -89,7 +89,9 @@ export class WalletService {
 
   /** POST /cards — Create a virtual card */
   async createCard(request: CreateCardRequest): Promise<VirtualCard> {
-    const response = await api.post<VirtualCard>('/cards', request);
+    const response = await api.post<VirtualCard>('/cards', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 
@@ -109,13 +111,17 @@ export class WalletService {
   /** POST /cards/{cardId}/freeze — Freeze card */
   // BUG-CROSS-046: Backend returns ApiResponse<Void>, not VirtualCard
   async freezeCard(cardId: string): Promise<void> {
-    await api.post(`/cards/${cardId}/freeze`);
+    await api.post(`/cards/${cardId}/freeze`, null, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('card:freeze', cardId) },
+    });
   }
 
   /** POST /cards/{cardId}/unfreeze — Unfreeze card */
   // BUG-CROSS-046: Backend returns ApiResponse<Void>, not VirtualCard
   async unfreezeCard(cardId: string): Promise<void> {
-    await api.post(`/cards/${cardId}/unfreeze`);
+    await api.post(`/cards/${cardId}/unfreeze`, null, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('card:unfreeze', cardId) },
+    });
   }
 
   /** DELETE /cards/{cardId} — Delete/Close card */
@@ -126,7 +132,9 @@ export class WalletService {
 
   /** PUT /cards/{cardId} — Update card limits */
   async updateCard(cardId: string, request: UpdateCardRequest): Promise<VirtualCard> {
-    const response = await api.put<VirtualCard>(`/cards/${cardId}`, request);
+    const response = await api.put<VirtualCard>(`/cards/${cardId}`, request, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('card:update', cardId) },
+    });
     return response.data;
   }
 
@@ -134,7 +142,9 @@ export class WalletService {
 
   /** POST /pockets — Create a pocket */
   async createPocket(request: CreatePocketRequest): Promise<Pocket> {
-    const response = await api.post<Pocket>('/pockets', request);
+    const response = await api.post<Pocket>('/pockets', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 

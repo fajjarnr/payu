@@ -371,7 +371,7 @@ async function proxyRequest(
   } catch (error) {
     if (error instanceof RequestBodyTooLargeError) {
       return NextResponse.json(
-        { error: 'Payload Too Large', message: 'Request body exceeds 1 MiB limit' },
+        { error: 'Payload Too Large', message: 'Request body exceeds 10 MiB limit' },
         { status: 413, headers: getSecurityHeaders(correlationId) },
       );
     }

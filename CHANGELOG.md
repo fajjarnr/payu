@@ -2,14 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.74] - 2026-08-29
+
+### Fixed
+- **Audit API Consistency 1.18.74 (api-architect)**: `gateway application.yaml:169` `allowed-headers` `X-Idempotency-Key,X-Device-Id,X-Signature,X-Timestamp,X-Client-Version` + `exposed-headers X-Idempotency-Key` (was `Content-Type,Authorization,X-Request-Id,X-Correlation-Id,X-Client-Id` only — preflight 403 for financial mutations via gateway). `backend/analytics-service, kyc-service main.py` `allow_headers X-Idempotency-Key + Idempotency-Key (compat) + X-Device-Id,X-Signature,X-Timestamp` + `expose_headers X-Idempotency-Key` (was `Idempotency-Key` tanpa `X-` — mismatch `X-Idempotency-Key` `API_STANDARDS:129` `Stripe/Adyen Context7 max64`, BFF `x-idempotency-key` forward gagal di Python). `kyc/api/v1/kyc.py` `analytics/api/v1/analytics.py` `Header alias X-Idempotency-Key` + `Idempotency-Key fallback` `or idempotency_key_legacy` (was `Idempotency-Key` only — `X-Idempotency-Key` di-drop). `kyc/models/schemas.py:11` `Decimal float(obj)` → `format(obj,'f')` preserve `DECIMAL(19,4) HALF_EVEN` string (was float precision loss). `frontend/web-app` `WalletService createCard/freezeCard/unfreezeCard/updateCard/createPocket` `X-Idempotency-Key` (`getFinancialMutationHeaders`/`idempotencyKeyFor`) + `KYCService start/ktp/selfie` `X-Idempotency-Key` deterministic + `InvestmentService createAccount` `X-Idempotency-Key` + `LendingService createRepaymentSchedule/activatePayLater/calculateCreditScore/checkPreApproval` + `TransactionService cancelTransaction` + `BFF route.ts:374` `1 MiB → 10 MiB` message — header konsisten `X-Idempotency-Key` across gateway/Java/Python/CORS/mobile/BFF.
+
+### Added
+- **Local Dev Verify (1.18.74)**: `npm run lint 0` `npm run build 86 routes ✓` `npm test 95/95 1221` `mvn -f backend/pom.xml clean package -DskipTests BUILD SUCCESS` 23 modules `python3 -m py_compile kyc/analytics main+api+schemas OK` `podman ps` prior `37 healthy` (gateway CORS fix requires restart to apply).
+
 ## [1.18.73] - 2026-08-29
 
 ### Fixed
-- **Audit Backend No-Warn (1.18.73)**: `backend/wallet-service` `Pocket.java:40,51` `Wallet.java:59-101` raw `add/subtract` → `setScale(4,HALF_EVEN)` konsisten `Money` `DECIMAL(19,4)` + `PocketPersistenceAdapter` preserve `@Version` polish + `backend/transaction-service` `SplitBillService.java:360` `divide(...,2,DOWN)` → `divide(...,4,HALF_EVEN)` + `TransactionEntity.java:434` `@Column precision=19,scale=4` + PII mask `WalletRestAdapter/WalletGrpcAdapter/InitiateTransferCommandHandler` `amount/recipient` dari `log.info/warn` + `backend/shared/events-starter/pom.xml:118` `source/target 21→25` vs `java.version 25` + `backend/gateway-service` `ApiGatewayResource.java:40` `@Blocking` hapus (Vert.x `WebClient` non-blocking) + `backend/wallet-service application.yml:143` `springdoc.api-docs.enabled=false` + `logging.level hibernate.deprecation/flyway/NetworkClient/ResourceReaper=ERROR` + `application-test.yml:70` suppress test WARN.
-
-### Added
-- **Local Dev Verify (1.18.73)**: `mvn -f backend/pom.xml clean package -DskipTests BUILD SUCCESS` 23 modules, `mvn -f backend/wallet-service/pom.xml test ClearingLedgerDoubleEntryInvariantTest 4/4 PASS` `WARN 0` (was 4x `DefaultSqlScriptExecutor/Hibernate/SpringDoc`), `mvn -f backend/transaction-service/pom.xml test SplitBillServiceTest 4/4 InitiateTransfer 23/23 PASS`, `podman ps 37 healthy` `curl :3001/api/health healthy`.
-
+- **Audit Backend No-Warn (1.18.73)**: `backend/wallet-service` `Pocket.java:40,51` `Wallet.java:59-101` raw `add/subtract` → `setScale(4,HALF_EVEN)` konsisten `Money` `DECIMAL(19,4)` + `PocketPersistenceAdapter` preserve `@Version` polish + `backend/transaction-service` `SplitBillService.java:360` `divide(...,2,DOWN)` → `divide(...,4,HALF_EVEN)` + `TransactionEntity.java:434` `@Column precision=19,scale=4` + PII mask `WalletRestAdapter/WalletGrpcAdapter/InitiateTransferCommandHandler` `amount/recipient` dari `log.info/warn` + `backend/shared/events-starter/pom.xml:118` `source/target 21→25` vs `java.version 25` + `backend/gateway-service` `ApiGatewayResource.java:40` `@Blocking` hapus (Vert.x `WebClient` non-blocking) + `backend/wallet-service application.y…
 ## [1.18.72] - 2026-08-28
 
 ### Fixed

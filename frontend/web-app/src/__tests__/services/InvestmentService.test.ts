@@ -61,7 +61,7 @@ describe('InvestmentService', () => {
 
       const result = await InvestmentService.createAccount();
 
-      expect(api.post).toHaveBeenCalledWith('/investments/accounts');
+      expect(api.post).toHaveBeenCalledWith('/investments/accounts', null, expect.objectContaining({ headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }));
       expect(result.id).toBe('inv_acc_001');
       expect(result.status).toBe('ACTIVE');
     });

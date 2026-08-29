@@ -1,10 +1,15 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.74 Audit API Consistency + 37 Healthy + Backend Verified (2026-08-29)
+
+- **Audit Fix (1.18.74)**: `gateway CORS` `X-Idempotency-Key,X-Device-Id,X-Signature,X-Timestamp,X-Client-Version` + `analytics/kyc CORS` `X-Idempotency-Key+compat` + `Header alias X-Idempotency-Key` with fallback + `kyc Decimal float→string` + `Wallet/KYC/Investment/Lending/Transaction` `X-Idempotency-Key` deterministic/random via `getFinancialMutationHeaders`/`idempotencyKeyFor` + `BFF 10 MiB` — header konsisten `X-Idempotency-Key` across gateway/Java/Python/CORS/BFF per `API_STANDARDS:129` `Stripe/Adyen`.
+- **SemVer Sync 1.18.74**: `CHANGELOG 1.18.74` `TODOS 1.18.74 0 OPEN` `PROGRESS 1.18.74` `backend/gateway+analytics+kyc` `frontend/web-app` `audit api-architect` `localhost/payu-*:1.18.74` `1.18.73→1.18.74`.
+- **Verification 1.18.74**: `npm run lint 0` `npm run build 86 routes ✓` `npm test 95/95 1221` `mvn -f backend/pom.xml clean package -DskipTests BUILD SUCCESS` 23 modules `python3 -m py_compile 5/5 OK`.
+
 ## Platform 1.18.73 Audit No-Warn + 37 Healthy + Backend Verified (2026-08-29)
 
 - **Audit Fix (1.18.73)**: `Pocket/Wallet` `HALF_EVEN` `4` + `SplitBill` `HALF_EVEN` + `TransactionEntity` `19,4` + PII mask `WalletRest/Grpc` + `events-starter 21→25` + `gateway @Blocking` removed (Quarkus reactive) + `springdoc` `false` + `logging ERROR` for `hibernate/Flyway/NetworkClient` — `WARN 0` (was `4x DefaultSqlScriptExecutor/Hibernate/SpringDoc + amount PII`).
 - **SemVer Sync 1.18.73**: `CHANGELOG 1.18.73` `TODOS 1.18.73 0 OPEN` `PROGRESS 1.18.73` `backend/*` `audit` `localhost/payu-*:1.18.73` `1.18.72→1.18.73`.
 - **Verification 1.18.73**: `mvn -f backend/pom.xml clean package -DskipTests BUILD SUCCESS` 23 modules, `mvn wallet ClearingLedger 4/4 PASS` `WARN 0`, `mvn transaction SplitBill 4/4 Initiate 23/23 PASS`, `podman ps 37 healthy` `curl :3001/api/health healthy`.
-
 ## Platform 1.18.72 Wallet Pocket Version Fix + 37 Healthy + CRUD Verified (2026-08-28)
 
 - **Pocket Fix (1.18.72)**: `PocketPersistenceAdapter.toEntity` `new PocketEntity()` with `id` + `@Version null` -> `DataIntegrityViolation Detached entity version null` on `POST /pockets/{id}/credit|debit` 500. Fix: `findById(id).orElseGet(PocketEntity::new)` preserves `version` for optimistic locking. `creditPocket` 10.0000 balance 10.0000, idempotent duplicate 5.0000 balance 15->15 same requestId, debit 3.0000 ->12.0000 `DECIMAL(19,4)` `version 3`.

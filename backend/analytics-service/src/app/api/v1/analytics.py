@@ -190,7 +190,8 @@ async def get_recommendations(
 async def get_robo_advisory(
     request: Request,
     request_data: GetRoboAdvisoryRequest,
-    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
+    idempotency_key_legacy: Optional[str] = Header(None, alias="Idempotency-Key"),
     auth: dict = Depends(require_auth)
 ):
     """
@@ -201,6 +202,7 @@ async def get_robo_advisory(
     user_id = request_data.user_id
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only access your own robo-advisory")
+    idempotency_key = idempotency_key or idempotency_key_legacy
     log = logger.bind(
         user_id=request_data.user_id,
         request_id=getattr(request.state, "request_id", None),
@@ -256,7 +258,8 @@ async def get_robo_advisory(
 async def calculate_fraud_score(
     request: Request,
     request_data: GetFraudScoreRequest,
-    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
+    idempotency_key_legacy: Optional[str] = Header(None, alias="Idempotency-Key"),
     auth: dict = Depends(require_auth)
 ):
     """
@@ -268,6 +271,7 @@ async def calculate_fraud_score(
     user_id = request_data.user_id
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only calculate fraud score for your own transactions")
+    idempotency_key = idempotency_key or idempotency_key_legacy
     log = logger.bind(
         transaction_id=request_data.transaction_id,
         user_id=request_data.user_id,

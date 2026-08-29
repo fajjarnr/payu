@@ -182,7 +182,7 @@ describe('LendingService', () => {
 
         const result = await service.createRepaymentSchedule('loan_123');
 
-        expect(api.post).toHaveBeenCalledWith('/lending/loans/loan_123/repayment-schedule');
+        expect(api.post).toHaveBeenCalledWith('/lending/loans/loan_123/repayment-schedule', null, expect.objectContaining({ headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }));
         expect(result).toHaveLength(2);
         expect(result[0].installmentNumber).toBe(1);
       });
@@ -297,9 +297,7 @@ describe('LendingService', () => {
 
         const result = await service.activatePayLater('user_123', mockRequest);
 
-        expect(api.post).toHaveBeenCalledWith('/lending/paylater/activate', mockRequest, {
-          params: { userId: 'user_123' },
-        });
+        expect(api.post).toHaveBeenCalledWith('/lending/paylater/activate', mockRequest, expect.objectContaining({ params: { userId: 'user_123' }, headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }));
         expect(result.status).toBe('ACTIVE');
         expect(result.availableLimit).toBe('5000000');
       });
@@ -508,9 +506,7 @@ describe('LendingService', () => {
 
         const result = await service.calculateCreditScore('user_123');
 
-        expect(api.post).toHaveBeenCalledWith('/lending/credit-score/calculate', null, {
-          params: { userId: 'user_123' },
-        });
+        expect(api.post).toHaveBeenCalledWith('/lending/credit-score/calculate', null, expect.objectContaining({ params: { userId: 'user_123' }, headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }));
         expect(result.score).toBe(750);
         expect(result.grade).toBe('A');
       });

@@ -109,7 +109,9 @@ class InvestmentService {
   // BUG-CROSS-049: Backend createAccount takes no body — empty POST
   /** POST /investments/accounts — Create investment account */
   async createAccount(): Promise<InvestmentAccount> {
-    const response = await api.post('/investments/accounts');
+    const response = await api.post('/investments/accounts', null, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 

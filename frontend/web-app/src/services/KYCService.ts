@@ -1,3 +1,4 @@
+import { idempotencyKeyFor } from '@/lib/utils';
 import api from '@/lib/api';
 
 // --- Interfaces matching backend kyc_router (FastAPI) ---
@@ -84,7 +85,9 @@ class KYCService {
 
   /** POST /kyc/verify/start — Start KYC verification process */
   async startVerification(request: StartKycRequest): Promise<KycVerificationResult> {
-    const response = await api.post('/kyc/verify/start', request);
+    const response = await api.post('/kyc/verify/start', request, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('kyc:start', request.userId) },
+    });
     return response.data;
   }
 
@@ -103,14 +106,18 @@ class KYCService {
   /** POST /kyc/verify/ktp — Upload and verify KTP document */
   async uploadKtp(request: UploadKtpRequest): Promise<KycVerificationResult> {
     this.validateImageSize(request.ktpImage, 'KTP image');
-    const response = await api.post('/kyc/verify/ktp', request);
+    const response = await api.post('/kyc/verify/ktp', request, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('kyc:ktp', request.verificationId) },
+    });
     return response.data;
   }
 
   /** POST /kyc/verify/selfie — Upload and verify selfie */
   async uploadSelfie(request: UploadSelfieRequest): Promise<KycVerificationResult> {
     this.validateImageSize(request.selfieImage, 'Selfie image');
-    const response = await api.post('/kyc/verify/selfie', request);
+    const response = await api.post('/kyc/verify/selfie', request, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('kyc:selfie', request.verificationId) },
+    });
     return response.data;
   }
 

@@ -82,7 +82,9 @@ export class TransactionService {
 
   /** POST /transactions/{transactionId}/cancel — Cancel pending transaction */
   async cancelTransaction(transactionId: string): Promise<{ status: string; transactionId: string }> {
-    const response = await api.post<{ status: string; transactionId: string }>(`/transactions/${transactionId}/cancel`);
+    const response = await api.post<{ status: string; transactionId: string }>(`/transactions/${transactionId}/cancel`, null, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('transaction:cancel', transactionId) },
+    });
     return response.data;
   }
 

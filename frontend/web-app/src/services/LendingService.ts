@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import { getFinancialMutationHeaders } from '@/lib/utils';
+import { getFinancialMutationHeaders, idempotencyKeyFor } from '@/lib/utils';
 import type { Money } from '@/types';
 
 export type LoanStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISBURSED' | 'REPAID' | 'DEFAULTED';
@@ -114,7 +114,9 @@ export class LendingService {
   }
 
   async createRepaymentSchedule(loanId: string): Promise<RepaymentSchedule[]> {
-    const response = await api.post<RepaymentSchedule[]>(`/lending/loans/${loanId}/repayment-schedule`);
+    const response = await api.post<RepaymentSchedule[]>(`/lending/loans/${loanId}/repayment-schedule`, null, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('lending:schedule', loanId) },
+    });
     return response.data;
   }
 
@@ -139,7 +141,8 @@ export class LendingService {
   // Query params are logged in access logs and browser history (security risk)
   async activatePayLater(userId: string, request: PayLaterLimitRequest): Promise<PayLater> {
     const response = await api.post<PayLater>(`/lending/paylater/activate`, request, {
-      params: { userId }
+      params: { userId },
+      headers: getFinancialMutationHeaders(),
     });
     return response.data;
   }
@@ -178,7 +181,8 @@ export class LendingService {
 
   async calculateCreditScore(userId: string): Promise<CreditScore> {
     const response = await api.post<CreditScore>('/lending/credit-score/calculate', null, {
-      params: { userId }
+      params: { userId },
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('lending:credit-score', userId) },
     });
     return response.data;
   }
@@ -192,7 +196,9 @@ export class LendingService {
 
   /** POST /lending/pre-approval/check — Check pre-approval eligibility */
   async checkPreApproval(request: PreApprovalCheckRequest): Promise<PreApproval> {
-    const response = await api.post<PreApproval>('/lending/pre-approval/check', request);
+    const response = await api.post<PreApproval>('/lending/pre-approval/check', request, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   }
 

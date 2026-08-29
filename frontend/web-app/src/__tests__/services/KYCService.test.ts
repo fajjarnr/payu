@@ -48,7 +48,7 @@ describe('KYCService', () => {
 
       const result = await KYCService.startVerification(request);
 
-      expect(api.post).toHaveBeenCalledWith('/kyc/verify/start', request);
+      expect(api.post).toHaveBeenCalledWith('/kyc/verify/start', request, expect.objectContaining({ headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }));
       expect(result.verificationId).toBe('ver_001');
       expect(result.status).toBe('PENDING');
     });
@@ -66,7 +66,7 @@ describe('KYCService', () => {
 
       const result = await KYCService.startVerification(request);
 
-      expect(api.post).toHaveBeenCalledWith('/kyc/verify/start', request);
+      expect(api.post).toHaveBeenCalledWith('/kyc/verify/start', request, expect.objectContaining({ headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }));
       expect(result.userId).toBe('user_123');
     });
   });
@@ -84,7 +84,7 @@ describe('KYCService', () => {
 
       const result = await KYCService.uploadKtp(request);
 
-      expect(api.post).toHaveBeenCalledWith('/kyc/verify/ktp', request);
+      expect(api.post).toHaveBeenCalledWith('/kyc/verify/ktp', request, expect.objectContaining({ headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }));
       expect(result.ktpVerified).toBe(true);
       expect(result.ocrData?.nik).toBe('3201********0001');
     });
@@ -107,7 +107,7 @@ describe('KYCService', () => {
 
       const result = await KYCService.uploadSelfie(request);
 
-      expect(api.post).toHaveBeenCalledWith('/kyc/verify/selfie', request);
+      expect(api.post).toHaveBeenCalledWith('/kyc/verify/selfie', request, expect.objectContaining({ headers: expect.objectContaining({ 'X-Idempotency-Key': expect.any(String) }) }));
       expect(result.selfieVerified).toBe(true);
       expect(result.livenessScore).toBe(0.95);
       expect(result.faceMatchScore).toBe(0.92);

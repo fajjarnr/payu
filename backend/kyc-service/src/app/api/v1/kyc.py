@@ -62,7 +62,8 @@ async def require_auth(
 async def start_kyc_verification(
     request: Request,
     request_data: StartKycVerificationRequest,
-    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
+    idempotency_key_legacy: Optional[str] = Header(None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db_session),
     auth: dict = Depends(require_auth),
 ):
@@ -74,6 +75,8 @@ async def start_kyc_verification(
     # Validate ownership
     if request_data.user_id != auth.get("sub"):
          raise HTTPException(status_code=403, detail="Forbidden: You can only start KYC for yourself")
+    # X-Idempotency-Key canonical; Idempotency-Key fallback for compat
+    idempotency_key = idempotency_key or idempotency_key_legacy
     log = logger.bind(
         user_id=request_data.user_id,
         request_id=getattr(request.state, "request_id", None),
@@ -138,7 +141,8 @@ async def start_kyc_verification(
 async def upload_ktp(
     request: Request,
     request_data: UploadKtpRequest,
-    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
+    idempotency_key_legacy: Optional[str] = Header(None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db_session),
     auth: dict = Depends(require_auth),
 ):
@@ -147,6 +151,7 @@ async def upload_ktp(
     Supports idempotency for safe retries.
     Rate limit: 5 requests per minute per IP.
     """
+    idempotency_key = idempotency_key or idempotency_key_legacy
     log = logger.bind(
         verification_id=request_data.verification_id,
         request_id=getattr(request.state, "request_id", None),
@@ -219,7 +224,8 @@ async def upload_ktp(
 async def upload_selfie(
     request: Request,
     request_data: UploadSelfieRequest,
-    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
+    idempotency_key_legacy: Optional[str] = Header(None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db_session),
     auth: dict = Depends(require_auth),
 ):
@@ -228,6 +234,7 @@ async def upload_selfie(
     Supports idempotency for safe retries.
     Rate limit: 5 requests per minute per IP.
     """
+    idempotency_key = idempotency_key or idempotency_key_legacy
     log = logger.bind(
         verification_id=request_data.verification_id,
         request_id=getattr(request.state, "request_id", None),

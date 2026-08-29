@@ -9,7 +9,8 @@ class DateTimeEncoder(json.JSONEncoder):
         if isinstance(obj, (datetime, date)):
             return obj.isoformat()
         if isinstance(obj, Decimal):
-            return float(obj)
+            # Money: DECIMAL(19,4) HALF_EVEN — preserve string to avoid float precision loss
+            return format(obj, 'f')
         return super().default(obj)
 from enum import Enum
 
