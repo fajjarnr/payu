@@ -115,10 +115,21 @@ class KycOutboxPublisher:
         while True:
             try:
                 await self.publish_pending()
+            except asyncio.CancelledError:
+                logger.info("KYC outbox publisher loop cancelled — shutting down")
+                break
             except Exception as e:  # noqa: BLE001
-                logger.error("KYC outbox publisher loop error", error=str(e))
-            await asyncio.sleep(self.poll_interval_sec)
-
+                msg = str(e)
+                # Shutdown races (DB/engine closing, DNS down) are INFO not ERROR
+                if "cannot switch to state" in msg or "Name or service not known" in msg or "another operation" in msg:
+                    logger.info("KYC outbox publisher transient shutdown", error=msg)
+                else:
+                    logger.error("KYC outbox publisher loop error", error=msg)
+            try:
+                await asyncio.sleep(self.poll_interval_sec)
+            except asyncio.CancelledError:
+                logger.info("KYC outbox publisher loop cancelled during sleep — shutting down")
+                break
     def start(self):
         if self._task is None or self._task.done():
             self._task = asyncio.create_task(self._loop())

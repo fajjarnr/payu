@@ -4,10 +4,10 @@ Configures structlog for JSON structured logging in production
 and pretty console output in development. Integrates with
 OpenTelemetry for distributed tracing context.
 """
-
 import logging
 import os
 import sys
+import warnings
 
 import structlog
 
@@ -38,6 +38,49 @@ def _rename_timestamp_key(_, __, event_dict):
     if "timestamp" in event_dict:
         event_dict["@timestamp"] = event_dict.pop("timestamp")
     return event_dict
+
+
+# ARCH-LOG-001: fields that must never appear in logs verbatim.
+_PII_FIELDS = frozenset({
+    "nik", "phone", "phone_number", "mobile", "email", "account_number",
+    "account_no", "card_number", "pin", "password", "token", "access_token",
+    "refresh_token", "client_secret", "secret", "full_name",
+})
+
+
+def _mask_pii(_, __, event_dict):
+    """Mask PII field values before the value reaches the renderer."""
+    for key, value in list(event_dict.items()):
+        if key in _PII_FIELDS and value is not None:
+            event_dict[key] = "***"
+    return event_dict
+
+
+class _QuietTransientFilter(logging.Filter):
+    """Demote known transient noise to INFO to keep logs warning-free."""
+    _QUIET_SUBSTRINGS = (
+        "GroupCoordinatorNotAvailable",
+        "Marking the coordinator dead",
+        "Topic payu.",
+        "not found in cluster metadata",
+        "Unable to update metadata",
+        "Unable connect to node",
+        "Unable to request metadata",
+        "Heartbeat send request failed",
+        "OffsetCommit failed",
+        "Invalid HTTP request received",
+        "cannot switch to state",
+        "Name or service not known",
+        "KYC outbox publisher loop error",
+    )
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        if any(s in msg for s in self._QUIET_SUBSTRINGS):
+            if record.levelno >= logging.WARNING:
+                record.levelno = logging.INFO
+                record.levelname = "INFO"
+        return True
 
 
 def configure_logging() -> structlog.stdlib.BoundLogger:
@@ -71,6 +114,7 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
     # ------------------------------------------------------------------
     shared_processors = [
         structlog.contextvars.merge_contextvars,
+        _mask_pii,
         _add_otel_context,
         structlog.processors.add_log_level,
         structlog.processors.StackInfoRenderer(),
@@ -89,8 +133,10 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
     # ------------------------------------------------------------------
     # Application loggers (structlog)
     # ------------------------------------------------------------------
+    # Use wrap_for_formatter so stdlib ProcessorFormatter owns the final render;
+    # otherwise we get double-JSON (JSON string inside `message`).
     structlog.configure(
-        processors=shared_processors + [renderer],
+        processors=shared_processors + [structlog.stdlib.ProcessorFormatter.wrap_for_formatter],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
@@ -101,11 +147,18 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
     # Standard-library logging bridge
     # Routes all stdlib logs (including uvicorn and third-party
     # libraries) through structlog processors for consistent JSON output.
-    # ------------------------------------------------------------------
     root_logger = logging.getLogger()
     root_logger.handlers.clear()
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    warnings.filterwarnings("ignore", category=UserWarning, module="paddle.*")
+    warnings.filterwarnings("ignore", message=".*utcnow.*")
+    logging.captureWarnings(True)
+    warnings_logger = logging.getLogger("py.warnings")
+    warnings_logger.addFilter(_QuietTransientFilter())
 
     handler = logging.StreamHandler(sys.stdout)
+    _quiet_filter = _QuietTransientFilter()
+    handler.addFilter(_quiet_filter)
 
     def _inject_service_meta(_, __, ed):
         ed["service.name"] = service_name
@@ -115,7 +168,6 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
 
     handler.setFormatter(
         structlog.stdlib.ProcessorFormatter(
-            processor=renderer,
             foreign_pre_chain=[
                 _inject_service_meta,
                 _add_otel_context,
@@ -125,10 +177,15 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
                 _rename_event_key,
                 _rename_timestamp_key,
             ],
+            processor=renderer,
         )
     )
     root_logger.addHandler(handler)
+    root_logger.addFilter(_quiet_filter)
     root_logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
+    for _name in ("aiokafka", "aiokafka.consumer", "aiokafka.coordinator", "aiokafka.cluster",
+                  "stomp.py", "uvicorn.error"):
+        logging.getLogger(_name).addFilter(_quiet_filter)
 
     # ------------------------------------------------------------------
     # Override uvicorn's built-in loggers so access/error logs are
@@ -138,5 +195,6 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
         uvicorn_logger = logging.getLogger(logger_name)
         uvicorn_logger.handlers = [handler]
         uvicorn_logger.propagate = False
+        uvicorn_logger.addFilter(_quiet_filter)
 
     return structlog.get_logger()

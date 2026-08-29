@@ -27,7 +27,7 @@ class ArtemisListener(stomp.ConnectionListener):
             user_id = data.get("user_id") or data.get("userId")
             verification_type = data.get("verification_type") or data.get("verificationType") or "FULL_KYC"
             if not user_id:
-                logger.warn("Message missing user_id - ignoring")
+                logger.warning("Message missing user_id - ignoring")
                 return
 
             logger.info("Triggering KYC verification via command", user_id=user_id, verification_type=verification_type)

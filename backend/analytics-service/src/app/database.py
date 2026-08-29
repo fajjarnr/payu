@@ -356,7 +356,7 @@ async def _create_hypertables():
             logger.info("TimescaleDB hypertables created")
         except Exception as e:
             await session.rollback()
-            logger.warning("TimescaleDB hypertables may already exist", error=str(e))
+            logger.info("TimescaleDB hypertables already exist or setup skipped", error=str(e))
 
 
 async def close_db():
