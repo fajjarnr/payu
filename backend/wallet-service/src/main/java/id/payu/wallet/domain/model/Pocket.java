@@ -37,7 +37,7 @@ public class Pocket {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be positive");
         }
-        this.balance = this.balance.add(amount);
+        this.balance = this.balance.add(amount).setScale(4, java.math.RoundingMode.HALF_EVEN);
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -48,7 +48,7 @@ public class Pocket {
         if (balance.compareTo(amount) < 0) {
             throw new IllegalStateException("Insufficient balance in pocket");
         }
-        this.balance = this.balance.subtract(amount);
+        this.balance = this.balance.subtract(amount).setScale(4, java.math.RoundingMode.HALF_EVEN);
         this.updatedAt = LocalDateTime.now();
     }
 

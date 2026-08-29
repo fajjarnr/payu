@@ -56,7 +56,7 @@ public class Wallet {
         if (!hasSufficientBalance(amount)) {
             throw new IllegalStateException("Insufficient available balance");
         }
-        this.reservedBalance = this.reservedBalance.add(amount);
+        this.reservedBalance = this.reservedBalance.add(amount).setScale(4, java.math.RoundingMode.HALF_EVEN);
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -67,8 +67,8 @@ public class Wallet {
         if (reservedBalance.compareTo(amount) < 0) {
             throw new IllegalStateException("Reserved amount not found");
         }
-        this.balance = this.balance.subtract(amount);
-        this.reservedBalance = this.reservedBalance.subtract(amount);
+        this.balance = this.balance.subtract(amount).setScale(4, java.math.RoundingMode.HALF_EVEN);
+        this.reservedBalance = this.reservedBalance.subtract(amount).setScale(4, java.math.RoundingMode.HALF_EVEN);
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -79,7 +79,7 @@ public class Wallet {
         if (reservedBalance.compareTo(amount) < 0) {
             throw new IllegalStateException("Reserved amount not found");
         }
-        this.reservedBalance = this.reservedBalance.subtract(amount);
+        this.reservedBalance = this.reservedBalance.subtract(amount).setScale(4, java.math.RoundingMode.HALF_EVEN);
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -87,7 +87,7 @@ public class Wallet {
      * Credit amount to wallet (e.g., incoming transfer).
      */
     public void credit(BigDecimal amount) {
-        this.balance = this.balance.add(amount);
+        this.balance = this.balance.add(amount).setScale(4, java.math.RoundingMode.HALF_EVEN);
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -98,7 +98,7 @@ public class Wallet {
         if (!hasSufficientBalance(amount)) {
             throw new IllegalStateException("Insufficient available balance");
         }
-        this.balance = this.balance.subtract(amount);
+        this.balance = this.balance.subtract(amount).setScale(4, java.math.RoundingMode.HALF_EVEN);
         this.updatedAt = LocalDateTime.now();
     }
 

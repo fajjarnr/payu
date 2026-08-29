@@ -1,7 +1,6 @@
 package id.payu.gateway.adapter.web;
 
 import id.payu.gateway.application.service.GatewayDispatchService;
-import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -37,7 +36,6 @@ import jakarta.ws.rs.core.UriInfo;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
-@Blocking
 public class ApiGatewayResource {
 
     @Inject

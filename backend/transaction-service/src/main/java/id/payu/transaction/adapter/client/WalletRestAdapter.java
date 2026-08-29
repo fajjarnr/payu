@@ -53,8 +53,7 @@ public class WalletRestAdapter implements WalletServicePort {
     @Retry(name = "walletService")
     public ReserveBalanceResponse reserveBalance(UUID accountId, String transactionId, BigDecimal amount) {
         String url = walletServiceUrl + "/api/v1/wallets/" + accountId.toString() + "/reserve";
-        log.info("Reserving balance: accountId={}, transactionId={}, amount={}", accountId, transactionId, amount);
-
+        log.info("Reserving balance: accountId={}, transactionId={}", accountId, transactionId);
         ReserveBalanceRequest request = ReserveBalanceRequest.builder()
                 .amount(amount)
                 .referenceId(transactionId)
@@ -151,8 +150,7 @@ public class WalletRestAdapter implements WalletServicePort {
     @Retry(name = "walletService")
     public void creditBalance(String accountId, String transactionId, BigDecimal amount) {
         String url = walletServiceUrl + "/api/v1/wallets/" + accountId + "/credit";
-        log.info("Crediting balance: accountId={}, transactionId={}, amount={}", accountId, transactionId, amount);
-
+        log.info("Crediting balance: accountId={}, transactionId={}", accountId, transactionId);
         Map<String, Object> request = Map.of(
                 "amount", amount,
                 "referenceId", transactionId,

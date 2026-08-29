@@ -1,4 +1,16 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.73 Audit No-Warn + 37 Healthy + Backend Verified (2026-08-29)
+
+- **Audit Fix (1.18.73)**: `Pocket/Wallet` `HALF_EVEN` `4` + `SplitBill` `HALF_EVEN` + `TransactionEntity` `19,4` + PII mask `WalletRest/Grpc` + `events-starter 21→25` + `gateway @Blocking` removed (Quarkus reactive) + `springdoc` `false` + `logging ERROR` for `hibernate/Flyway/NetworkClient` — `WARN 0` (was `4x DefaultSqlScriptExecutor/Hibernate/SpringDoc + amount PII`).
+- **SemVer Sync 1.18.73**: `CHANGELOG 1.18.73` `TODOS 1.18.73 0 OPEN` `PROGRESS 1.18.73` `backend/*` `audit` `localhost/payu-*:1.18.73` `1.18.72→1.18.73`.
+- **Verification 1.18.73**: `mvn -f backend/pom.xml clean package -DskipTests BUILD SUCCESS` 23 modules, `mvn wallet ClearingLedger 4/4 PASS` `WARN 0`, `mvn transaction SplitBill 4/4 Initiate 23/23 PASS`, `podman ps 37 healthy` `curl :3001/api/health healthy`.
+
+## Platform 1.18.72 Wallet Pocket Version Fix + 37 Healthy + CRUD Verified (2026-08-28)
+
+- **Pocket Fix (1.18.72)**: `PocketPersistenceAdapter.toEntity` `new PocketEntity()` with `id` + `@Version null` -> `DataIntegrityViolation Detached entity version null` on `POST /pockets/{id}/credit|debit` 500. Fix: `findById(id).orElseGet(PocketEntity::new)` preserves `version` for optimistic locking. `creditPocket` 10.0000 balance 10.0000, idempotent duplicate 5.0000 balance 15->15 same requestId, debit 3.0000 ->12.0000 `DECIMAL(19,4)` `version 3`.
+- **SemVer Sync 1.18.72**: `CHANGELOG 1.18.72` `TODOS 1.18.72 0 OPEN` `PROGRESS 1.18.72` `backend/wallet-service` `PocketPersistenceAdapter` `localhost/payu-wallet-service:1.18.72` `2fa88a12fa42` `1.18.71->1.18.72` (wallet only, 30x deferred).
+- **Verification 1.18.72**: `mvn -f backend/wallet-service/pom.xml test WalletServiceIdempotencyTest,ClearingLedgerDoubleEntryInvariantTest 7/7` `mvn -f backend/transaction-service/pom.xml test InitiateTransferCommandHandlerTest,VelocityGuardTest,CallbackSignatureFilterTest 38/38` `mvn partner SnapBiReconciliationServiceTest 9/9` `npm run lint 0` `npm run build 86 routes ok` `npm test 95/95 1221`, `podman ps 37 healthy` `curl :3001/api/health healthy` `curl :8080/q/health UP` `curl :8080/api/v1/pockets 200` `curl :8080/api/v1/products 200` `curl :8080/api/v1/fx/rates 200`, `podman logs payu-wallet-service 0 ERROR` (was 4x version error), `podman inspect wallet version 3`.
+
 ## Platform 1.18.71 Lint 0 warnings + 34 Healthy + Build Verified (2026-08-28)
 
 - **Lint Fix (1.18.71)**: `0 errors 0 warnings` via file-level `eslint-disable no-restricted-syntax` for 7 display files (`analytics/pockets/scheduled/fraud/BudgetTracking/statement-downloader/lending/cards`) + `unused vars` `_verifier/_container/_user/_asUserId` — `Money` `Number()` for chart `pct` display, not `HALF_EVEN` arithmetic (ADR-0047 `src/lib/currency` correct).

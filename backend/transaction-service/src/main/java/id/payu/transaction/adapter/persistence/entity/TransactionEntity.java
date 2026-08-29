@@ -428,10 +428,10 @@ public class TransactionEntity implements Persistable<UUID> {
 
     /**
      * @deprecated Use {@link #getAmount()} instead. This field is kept for JPA compatibility.
-     * Mapped to 'amount' column in database.
+     * Mapped to 'amount' column in database — DECIMAL(19,4) per AGENTS.md Rule #1.
      */
     @Deprecated
-    @Column(name = "amount")
+    @Column(name = "amount", precision = 19, scale = 4)
     private BigDecimal amountValue;
 
     /**

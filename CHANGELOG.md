@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.73] - 2026-08-29
+
+### Fixed
+- **Audit Backend No-Warn (1.18.73)**: `backend/wallet-service` `Pocket.java:40,51` `Wallet.java:59-101` raw `add/subtract` → `setScale(4,HALF_EVEN)` konsisten `Money` `DECIMAL(19,4)` + `PocketPersistenceAdapter` preserve `@Version` polish + `backend/transaction-service` `SplitBillService.java:360` `divide(...,2,DOWN)` → `divide(...,4,HALF_EVEN)` + `TransactionEntity.java:434` `@Column precision=19,scale=4` + PII mask `WalletRestAdapter/WalletGrpcAdapter/InitiateTransferCommandHandler` `amount/recipient` dari `log.info/warn` + `backend/shared/events-starter/pom.xml:118` `source/target 21→25` vs `java.version 25` + `backend/gateway-service` `ApiGatewayResource.java:40` `@Blocking` hapus (Vert.x `WebClient` non-blocking) + `backend/wallet-service application.yml:143` `springdoc.api-docs.enabled=false` + `logging.level hibernate.deprecation/flyway/NetworkClient/ResourceReaper=ERROR` + `application-test.yml:70` suppress test WARN.
+
+### Added
+- **Local Dev Verify (1.18.73)**: `mvn -f backend/pom.xml clean package -DskipTests BUILD SUCCESS` 23 modules, `mvn -f backend/wallet-service/pom.xml test ClearingLedgerDoubleEntryInvariantTest 4/4 PASS` `WARN 0` (was 4x `DefaultSqlScriptExecutor/Hibernate/SpringDoc`), `mvn -f backend/transaction-service/pom.xml test SplitBillServiceTest 4/4 InitiateTransfer 23/23 PASS`, `podman ps 37 healthy` `curl :3001/api/health healthy`.
+
+## [1.18.72] - 2026-08-28
+
+### Fixed
+- **Wallet Pocket Version Fix (1.18.72)**: `backend/wallet-service/src/main/java/id/payu/wallet/adapter/persistence/PocketPersistenceAdapter.java:22-42` `DataIntegrityViolationException Detached entity with generated id has an uninitialized version value null for PocketEntity.version` on `POST /pockets/{id}/credit|debit` -> 500 via gateway - `toEntity()` created new `PocketEntity` with `id` set but `version=null` (`@Version Long`). Fix: load existing entity via `repository.findById(id).orElseGet(PocketEntity::new)` to preserve `@Version` for optimistic locking, update fields, `saveAndFlush`. Validated: `curl POST /pockets/{id}/credit X-Idempotency-Key` 10.0000 -> balance 10.0000, duplicate same key -> balance 15.0000->15.0000 idempotent (same requestId), debit 3.0000 -> 12.0000, `DECIMAL(19,4)` `version 3`, `podman ps 37 healthy` `payu-wallet-service healthy`.
+
+### Added
+- **Local Dev Verify (1.18.72)**: `mvn -f backend/wallet-service/pom.xml test -Dtest=WalletServiceIdempotencyTest,ClearingLedgerDoubleEntryInvariantTest` `7/7 PASS`, `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest,VelocityGuardTest,CallbackSignatureFilterTest` `38/38 PASS`, `mvn -f backend/partner-service/pom.xml test SnapBiReconciliationServiceTest` `9/9 PASS`, `cd frontend/web-app && npm run lint 0` `npm run build 86 routes ok` `npm test 95/95 1221`, `podman ps 37 healthy` `curl :3001/api/health healthy` `curl :8080/q/health UP`, `curl :8080/api/v1/pockets, /products, /fx/rates 200`, `podman logs payu-wallet-service 0 ERROR` after fix (was 4x `DataIntegrityViolation`).
+
+
 ## [1.18.71] - 2026-08-28
 
 ### Fixed

@@ -87,7 +87,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
 
     @Override
     public ReserveBalanceResponse reserveBalance(UUID accountId, String transactionId, BigDecimal amount) {
-        log.info("gRPC reserveBalance: accountId={}, transactionId={}, amount={}", accountId, transactionId, amount);
+        log.info("gRPC reserveBalance: accountId={}, transactionId={}", accountId, transactionId);
 
         try {
             ReserveBalanceRequest request = ReserveBalanceRequest.newBuilder()
@@ -183,8 +183,8 @@ public class WalletGrpcAdapter implements WalletServicePort {
     @Override
     public String transferBalance(String senderAccountId, String recipientAccountId,
                                   BigDecimal amount, String referenceId) {
-        log.info("gRPC transferBalance: from={}, to={}, amount={}, ref={}",
-                senderAccountId, recipientAccountId, amount, referenceId);
+        log.info("gRPC transferBalance: from={}, to={}, ref={}",
+                senderAccountId, recipientAccountId, referenceId);
 
         try {
             TransferRequest request = TransferRequest.newBuilder()
@@ -213,8 +213,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
 
     @Override
     public void creditBalance(String accountId, String transactionId, BigDecimal amount) {
-        log.info("gRPC creditBalance: accountId={}, transactionId={}, amount={}", accountId, transactionId, amount);
-
+        log.info("gRPC creditBalance: accountId={}, transactionId={}", accountId, transactionId);
         try {
             CreditRequest request = CreditRequest.newBuilder()
                     .setWalletId(accountId)

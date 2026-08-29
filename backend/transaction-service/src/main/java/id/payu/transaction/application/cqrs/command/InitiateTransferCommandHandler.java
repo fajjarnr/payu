@@ -109,8 +109,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                 TransactionEntity existing = existingOpt.get();
                 String storedHash = existing.getIdempotencyRequestHash();
                 if (storedHash != null && !storedHash.equals(currentHash)) {
-                    log.warn("Idempotency payload mismatch for key {}: storedHash={} currentHash={} amount={} recipient={}",
-                            command.idempotencyKey(), storedHash, currentHash, command.amount().getAmount(), command.recipientAccountNumber());
+                    log.warn("Idempotency payload mismatch for key {}: storedHash={} currentHash={}",
+                            command.idempotencyKey(), storedHash, currentHash);
                     throw new IdempotencyPayloadMismatchException(command.idempotencyKey());
                 }
                 log.info("Returning existing transaction for idempotency key: {}", command.idempotencyKey());

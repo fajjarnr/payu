@@ -355,10 +355,10 @@ public class SplitBillService implements SplitBillUseCase {
             }
         }
 
-        // BUG-BE-124: Fix EQUAL split rounding error
+        // BUG-BE-124: Fix EQUAL split rounding error — use SCALE 4 HALF_EVEN (AGENTS.md Rule #1)
         // Calculate base amount per person, then assign remainder to last participant
         BigDecimal amountPerPerson = request.getTotalAmount()
-                .divide(BigDecimal.valueOf(participantCount), 2, RoundingMode.DOWN);
+                .divide(BigDecimal.valueOf(participantCount), 4, RoundingMode.HALF_EVEN);
 
         // Calculate remainder: totalAmount - (amountPerPerson * (count - 1))
         // Last participant gets the remainder to ensure total adds up exactly

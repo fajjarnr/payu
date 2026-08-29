@@ -67,3 +67,8 @@ logging:
     root: WARN
     id.payu.wallet: DEBUG
     org.springframework.security: WARN
+    org.hibernate.orm.deprecation: ERROR
+    org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor: ERROR
+    org.apache.kafka.clients.NetworkClient: ERROR
+    org.testcontainers.utility.ResourceReaper: ERROR
+    org.springframework.kafka.listener: ERROR

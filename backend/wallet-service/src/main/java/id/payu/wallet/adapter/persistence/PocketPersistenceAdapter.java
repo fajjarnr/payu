@@ -21,9 +21,19 @@ public class PocketPersistenceAdapter implements PocketPersistencePort {
 
     @Override
     public Pocket save(Pocket pocket) {
-        PocketEntity entity = toEntity(pocket);
-        PocketEntity savedEntity = repository.saveAndFlush(entity);
-        return toDomain(savedEntity);
+        PocketEntity entity = pocket.getId() != null
+                ? repository.findById(pocket.getId()).orElseGet(PocketEntity::new)
+                : new PocketEntity();
+        entity.setId(pocket.getId());
+        entity.setAccountId(pocket.getAccountId());
+        entity.setName(pocket.getName());
+        entity.setDescription(pocket.getDescription());
+        entity.setCurrency(pocket.getCurrency());
+        entity.setBalance(pocket.getBalance());
+        entity.setStatus(pocket.getStatus());
+        entity.setCreatedAt(pocket.getCreatedAt());
+        entity.setUpdatedAt(pocket.getUpdatedAt());
+        return toDomain(repository.saveAndFlush(entity));
     }
 
     @Override
@@ -45,20 +55,6 @@ public class PocketPersistenceAdapter implements PocketPersistencePort {
     @Override
     public List<Pocket> findAllActive() {
         return repository.findAllActive().stream().map(this::toDomain).toList();
-    }
-
-    private PocketEntity toEntity(Pocket pocket) {
-        PocketEntity entity = new PocketEntity();
-        entity.setId(pocket.getId());
-        entity.setAccountId(pocket.getAccountId());
-        entity.setName(pocket.getName());
-        entity.setDescription(pocket.getDescription());
-        entity.setCurrency(pocket.getCurrency());
-        entity.setBalance(pocket.getBalance());
-        entity.setStatus(pocket.getStatus());
-        entity.setCreatedAt(pocket.getCreatedAt());
-        entity.setUpdatedAt(pocket.getUpdatedAt());
-        return entity;
     }
 
     private Pocket toDomain(PocketEntity entity) {
