@@ -22,7 +22,6 @@ resources:
   - integration-service-pipeline.yaml
   - investment-service-pipeline.yaml
   - kyc-service-pipeline.yaml
-  - lending-rules-pipeline.yaml
   - lending-service-pipeline.yaml
   - loan-origination-process-pipeline.yaml
   - notification-service-pipeline.yaml

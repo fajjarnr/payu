@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,9 +37,6 @@ export default function BannerCarousel({
   const { data: banners, isLoading, error } = useBanners({ segment, location, device });
   // BUG-FE-101: Use Next.js router for DEEP_LINK navigation
   const router = useRouter();
-  const plugin = React.useRef(
-    Autoplay({ delay: autoPlayInterval, stopOnInteraction: true })
-  );
   // BUG-FE-011 FIX: Debounce navigation to prevent history flooding
   const isNavigating = useRef(false);
   const [api, setApi] = useState<CarouselApi>();
@@ -53,6 +49,16 @@ export default function BannerCarousel({
     api.on('select', updateCurrent);
     return () => { api.off('select', updateCurrent); };
   }, [api]);
+
+  // ponytail: native autoplay via scrollTo — replaces embla-autoplay 8.6, 0 deps
+  useEffect(() => {
+    if (!api || !banners || banners.length <= 1) return
+    const id = setInterval(() => {
+      const next = (api.selectedScrollSnap() + 1) % banners.length
+      api.scrollTo(next)
+    }, autoPlayInterval)
+    return () => clearInterval(id)
+  }, [api, autoPlayInterval, banners])
 
   const handleBannerClick = (banner: Content) => {
     if (onBannerClick) {
@@ -86,14 +92,7 @@ export default function BannerCarousel({
     <div className={clsx('relative w-full group/carousel', className)}>
       <Carousel
         setApi={setApi}
-        plugins={[plugin.current]}
         className="w-full"
-        onMouseEnter={plugin.current.stop}
-        onMouseLeave={plugin.current.reset}
-        opts={{
-          align: "start",
-          loop: true,
-        }}
       >
         <CarouselContent className="-ml-0">
           {banners.map((banner, index) => (

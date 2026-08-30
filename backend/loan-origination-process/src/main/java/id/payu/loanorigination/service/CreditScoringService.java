@@ -21,20 +21,20 @@ public class CreditScoringService {
     private final String lendingRulesUrl;
 
     public CreditScoringService(PayuRestClient restClient,
-                                @Value("${payu.lending-rules.url:http://lending-rules:8080}") String lendingRulesUrl) {
+                                @Value("${payu.lending-rules.url:http://lending-service:8080}") String lendingRulesUrl) {
         this.restClient = restClient;
         this.lendingRulesUrl = lendingRulesUrl;
     }
 
     public BigDecimal evaluate(BigDecimal amount, int tenureMonths) {
-        log.info("Calling lending-rules: amount={}, tenureMonths={}", amount, tenureMonths);
+        log.info("Calling lending-service: amount={}, tenureMonths={}", amount, tenureMonths);
         var fact = new CreditScoringFact();
         fact.setTotalAmount(amount);
         fact.setTenureMonths(tenureMonths);
         try {
             @SuppressWarnings("unchecked")
             ResponseEntity<Map<String, BigDecimal>> resp = restClient.post(
-                    "lending-rules",
+                    "lending-service",
                     lendingRulesUrl + "/api/v1/rules/credit-score",
                     fact,
                     (Class<Map<String, BigDecimal>>) (Class<?>) Map.class);

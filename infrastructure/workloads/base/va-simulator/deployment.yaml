@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/managed-by: platform-team
     app.kubernetes.io/part-of: payu
     team: backend
-    app.kubernetes.io/version: 1.8.80
+    app.kubernetes.io/version: 1.18.74
 spec:
   replicas: 1
   selector:
@@ -22,7 +22,7 @@ spec:
         app.kubernetes.io/name: va-simulator
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/managed-by: platform-team
-        app.kubernetes.io/version: 1.8.80
+        app.kubernetes.io/version: 1.18.74
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/path: /metrics
@@ -35,7 +35,7 @@ spec:
         emptyDir: {}
       containers:
       - name: va-simulator
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator:1.8.81
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator:1.18.74
         imagePullPolicy: Always
         ports:
         - containerPort: 8085

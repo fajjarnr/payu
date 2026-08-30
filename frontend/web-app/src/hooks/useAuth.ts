@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { MutationPresets } from '@/lib/mutation-config';
 import AuthService from '@/services/AuthService';
 import { useAuthStore, useWalletStore, useNotificationStore, useTransactionStore, useUIStore } from '@/stores';
-import ABTestingService from '@/services/ABTestingService';
 import { createLocaleHref } from '@/lib/navigation';
 import { useLocale } from 'next-intl';
 
@@ -31,9 +30,6 @@ export const useLogout = () => {
       setNotifications([]);
       resetFilters();
       clearToasts();
-
-      // BUG-FE-071: Clear A/B testing cache (localStorage + memoryCache)
-      ABTestingService.clearAllCache();
 
       // BUG-FE-100: Clear promo popup localStorage dismissals
       if (typeof window !== 'undefined') {

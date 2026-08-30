@@ -243,58 +243,6 @@ export interface PortfolioUpdate {
   timestamp: string;
 }
 
-// A/B Testing Types (re-exported from ABTestingService)
-export enum ExperimentStatus {
-  DRAFT = 'DRAFT',
-  RUNNING = 'RUNNING',
-  PAUSED = 'PAUSED',
-  COMPLETED = 'COMPLETED',
-}
-
-export enum AllocationStrategy {
-  MODULO = 'MODULO',
-  MURMURHASH3 = 'MURMURHASH3',
-}
-
-export interface ExperimentVariant {
-  id: string;
-  experimentId: string;
-  key: string;
-  name: string;
-  description: string;
-  isControl: boolean;
-  allocationWeight: number;
-  config: Record<string, unknown>;
-  createdAt: string;
-}
-
-export interface Experiment {
-  id: string;
-  key: string;
-  name: string;
-  description: string;
-  status: ExperimentStatus;
-  allocationStrategy: AllocationStrategy;
-  trafficPercentage: number;
-  targetAudience: Record<string, unknown>;
-  variants: ExperimentVariant[];
-  startDate: string;
-  endDate?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface VariantAssignment {
-  id: string;
-  experimentId: string;
-  experimentKey: string;
-  variantId: string;
-  variantKey: string;
-  userId: string;
-  deviceId?: string;
-  assignedAt: string;
-  variant: ExperimentVariant;
-}
 
 // Customer Segmentation Types (re-exported from SegmentationService)
 export type SegmentTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND' | 'VIP';

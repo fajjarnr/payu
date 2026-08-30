@@ -27,7 +27,7 @@ class CreditScoringServiceTest {
 
     @Test
     void returnsBigDecimalScore() {
-        when(restClient.post(eq("lending-rules"), any(), any(), any(Class.class))).thenReturn(
+        when(restClient.post(eq("lending-service"), any(), any(), any(Class.class))).thenReturn(
                 ResponseEntity.ok(Map.of("score", new BigDecimal("700"))));
 
         assertThat(service("http://rules:8080").evaluate(new BigDecimal("100000"), 12))
@@ -36,7 +36,7 @@ class CreditScoringServiceTest {
 
     @Test
     void returnsNumberScore() {
-        when(restClient.post(eq("lending-rules"), any(), any(), any(Class.class))).thenReturn(
+        when(restClient.post(eq("lending-service"), any(), any(), any(Class.class))).thenReturn(
                 ResponseEntity.ok(Map.of("score", 700)));
 
         assertThat(service("http://rules:8080").evaluate(new BigDecimal("100000"), 12))
@@ -45,7 +45,7 @@ class CreditScoringServiceTest {
 
     @Test
     void returnsStringScore() {
-        when(restClient.post(eq("lending-rules"), any(), any(), any(Class.class))).thenReturn(
+        when(restClient.post(eq("lending-service"), any(), any(), any(Class.class))).thenReturn(
                 ResponseEntity.ok(Map.of("score", "600")));
 
         assertThat(service("http://rules:8080").evaluate(new BigDecimal("100000"), 12))
@@ -54,7 +54,7 @@ class CreditScoringServiceTest {
 
     @Test
     void defaultsToZeroWhenNoScoreInBody() {
-        when(restClient.post(eq("lending-rules"), any(), any(), any(Class.class))).thenReturn(
+        when(restClient.post(eq("lending-service"), any(), any(), any(Class.class))).thenReturn(
                 ResponseEntity.ok(Map.of()));
 
         assertThat(service("http://rules:8080").evaluate(new BigDecimal("100000"), 12))
@@ -63,7 +63,7 @@ class CreditScoringServiceTest {
 
     @Test
     void defaultsToZeroWhenCallFails() {
-        when(restClient.post(eq("lending-rules"), any(), any(), any(Class.class))).thenThrow(
+        when(restClient.post(eq("lending-service"), any(), any(), any(Class.class))).thenThrow(
                 new RuntimeException("rules down"));
 
         assertThat(service("http://rules:8080").evaluate(new BigDecimal("100000"), 12))

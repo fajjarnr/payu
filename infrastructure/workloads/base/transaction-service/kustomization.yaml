@@ -8,6 +8,6 @@ labels:
 - pairs:
     app.kubernetes.io/name: transaction-service
     app.kubernetes.io/part-of: payu
-    app.kubernetes.io/version: 1.9.4
+    app.kubernetes.io/version: 1.18.74
   includeSelectors: false
   includeTemplates: true

@@ -20,7 +20,7 @@ spec:
     - name: image
       value: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
     - name: image-tag
-      value: "1.18.59"
+      value: "1.18.74"
     - name: target-env
       value: "dev"
   workspaces:

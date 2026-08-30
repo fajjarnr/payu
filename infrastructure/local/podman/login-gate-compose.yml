@@ -63,7 +63,7 @@ services:
     networks: [gate]
 
   auth-service:
-    image: localhost/payu-auth-service:gate
+    image: localhost/payu-auth-service:1.18.74
     build:
       context: ../../../backend/auth-service
       dockerfile: Containerfile
@@ -111,7 +111,7 @@ services:
     networks: [gate]
 
   gateway-service:
-    image: localhost/payu-gateway-service:gate
+    image: localhost/payu-gateway-service:1.18.74
     build:
       context: ../../../backend/gateway-service
       dockerfile: Containerfile
@@ -158,7 +158,7 @@ services:
     networks: [gate]
 
   web-app:
-    image: localhost/payu-web-app:gate
+    image: localhost/payu-web-app:1.18.74
     build:
       context: ../../../frontend/web-app
       dockerfile: Containerfile

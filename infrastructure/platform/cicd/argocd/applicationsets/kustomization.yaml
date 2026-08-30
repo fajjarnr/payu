@@ -20,7 +20,6 @@ resources:
   - payu-integration-service-applicationset.yaml
   - payu-investment-service-applicationset.yaml
   - payu-kyc-service-applicationset.yaml
-  - payu-lending-rules-applicationset.yaml
   - payu-lending-service-applicationset.yaml
   - payu-loan-origination-process-applicationset.yaml
   - payu-notification-service-applicationset.yaml

@@ -34,7 +34,7 @@ spec:
         emptyDir: {}
       containers:
       - name: bi-fast-simulator
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.8.84
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator:1.18.74
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

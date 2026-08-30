@@ -7,12 +7,12 @@ metadata:
     app.kubernetes.io/name: loan-origination-process
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: process-orchestration
-    app.kubernetes.io/version: 1.18.59
+    app.kubernetes.io/version: 1.18.74
     team: backend
 spec:
   runtime: springboot
   replicas: 1
-  image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.18.59
+  image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.18.74
   insecureImageRegistry: true
 
   env:
@@ -25,8 +25,6 @@ spec:
         configMapKeyRef:
           key: KAFKA_URL
           name: service-endpoints
-    - name: LENDING_RULES_URL
-      value: http://lending-rules:8080
     - name: DATABASE_URL
       value: jdbc:postgresql://payu-database-rw:5432/payu_loan_origination
     - name: DATABASE_USER

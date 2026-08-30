@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/component: process-orchestration
     app.kubernetes.io/managed-by: platform-team
-    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/version: 1.18.74
     team: backend
 spec:
   replicas: 1
@@ -21,7 +21,7 @@ spec:
         app.kubernetes.io/part-of: payu
         app.kubernetes.io/component: process-orchestration
         app.kubernetes.io/managed-by: platform-team
-        app.kubernetes.io/version: 1.0.0
+        app.kubernetes.io/version: 1.18.74
         team: backend
     spec:
       securityContext:
@@ -33,7 +33,7 @@ spec:
         emptyDir: {}
       containers:
       - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.0.6
+        image: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process:1.18.74
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -101,8 +101,6 @@ spec:
             configMapKeyRef:
               key: KAFKA_URL
               name: service-endpoints
-        - name: LENDING_RULES_URL
-          value: http://lending-rules:8080
         - name: OIDC_ISSUER
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI

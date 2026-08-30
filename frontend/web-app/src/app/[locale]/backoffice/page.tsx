@@ -1,5 +1,5 @@
 import { Link } from '@/lib/navigation';
-import { Users, AlertTriangle, Headphones, FileText, FlaskConical, ClipboardCheck, ArrowUpRight, ShieldCheck, Zap } from 'lucide-react';
+import { Users, AlertTriangle, Headphones, FileText, ClipboardCheck, ArrowUpRight, ShieldCheck, Zap } from 'lucide-react';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
 export default function BackofficeDashboard() {
@@ -14,7 +14,6 @@ export default function BackofficeDashboard() {
     { name: 'Fraud Monitoring', description: 'Investigate suspicious activities', href: '/backoffice/fraud', icon: AlertTriangle, color: 'bg-rose-500' },
     { name: 'Customer Ops', description: 'Manage support cases and inquiries', href: '/backoffice/customers', icon: Headphones, color: 'bg-blue-500' },
     { name: 'CMS Content', description: 'Manage banners and dynamic content', href: '/backoffice/cms', icon: FileText, color: 'bg-emerald-500' },
-    { name: 'A/B Testing', description: 'Monitor active experiments', href: '/backoffice/ab-testing', icon: FlaskConical, color: 'bg-amber-500' },
     { name: 'Audit Logs', description: 'Review system changes and audits', href: '/backoffice/compliance', icon: ClipboardCheck, color: 'bg-slate-500' },
   ];
 
