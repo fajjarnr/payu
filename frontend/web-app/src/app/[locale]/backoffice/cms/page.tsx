@@ -38,16 +38,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-import { type Content } from '@/services/CMSService';
+import { useActiveContent } from '@/hooks/useCMS';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// BUG-FE-098: Removed MOCK_CONTENT — should be fetched from CMS service API
-const MOCK_CONTENT: Content[] = [];
+
 
 export default function CMSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<string>('ALL');
 
-  const filteredContent = MOCK_CONTENT.filter(content => {
+  const { data: cmsData, isLoading, error } = useActiveContent('BANNER');
+  const filteredContent = (cmsData ?? []).filter(content => {
     const matchesSearch = content.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           content.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === 'ALL' || content.contentType === activeTab;
@@ -162,7 +163,14 @@ export default function CMSPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredContent.map((item) => (
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={5} className="p-6 text-center"><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+                ) : error ? (
+                  <TableRow><TableCell colSpan={5} className="p-6 text-center text-destructive">Failed to load content</TableCell></TableRow>
+                ) : filteredContent.length === 0 ? (
+                  <TableRow><TableCell colSpan={5} className="p-6 text-center text-muted-foreground">No content found</TableCell></TableRow>
+                ) : (
+                  filteredContent.map((item) => (
                   <TableRow key={item.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <div className="flex items-start gap-4">
@@ -236,7 +244,8 @@ export default function CMSPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+                )}
               </TableBody>
             </Table>
             

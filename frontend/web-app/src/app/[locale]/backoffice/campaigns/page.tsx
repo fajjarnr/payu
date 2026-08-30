@@ -36,12 +36,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { useActivePromotions } from '@/hooks/useRewards';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// BUG-FE-097: Removed MOCK_CAMPAIGNS — should be fetched from Promotion service API
-const MOCK_CAMPAIGNS: Array<{ id: string; name: string; type: string; status: string; budget: string; spent: string; redemptions: number; startDate: string; endDate: string }> = [];
+
 
 export default function CampaignsPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const { data: campaigns, isLoading, error } = useActivePromotions();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -133,7 +135,14 @@ export default function CampaignsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {MOCK_CAMPAIGNS.map((cmp) => (
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={7} className="p-6 text-center"><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+                ) : error ? (
+                  <TableRow><TableCell colSpan={7} className="p-6 text-center text-destructive">Failed to load campaigns</TableCell></TableRow>
+                ) : !campaigns || campaigns.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="p-6 text-center text-muted-foreground">No campaigns found</TableCell></TableRow>
+                ) : (
+                  campaigns.filter((cmp: any) => cmp.name.toLowerCase().includes(searchTerm.toLowerCase())).map((cmp: any) => (
                   <TableRow key={cmp.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <div className="space-y-1">
@@ -196,7 +205,8 @@ export default function CampaignsPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+                )}
               </TableBody>
             </Table>
             

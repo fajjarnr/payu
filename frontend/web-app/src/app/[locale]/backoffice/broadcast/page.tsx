@@ -27,12 +27,15 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { useAuthStore } from '@/stores/authStore';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// BUG-FE-099: Removed MOCK_BROADCASTS — should be fetched from Notification service API
-const MOCK_BROADCASTS: Array<{ id: string; title: string; channels: string[]; audience: string; status: string; sentCount: string; openRate: string; timestamp: string }> = [];
 
 export default function BroadcastPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const { accountId } = useAuthStore();
+  const { data: notifications, isLoading, error } = useNotifications(accountId ?? '', 20);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -125,7 +128,14 @@ export default function BroadcastPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {MOCK_BROADCASTS.map((bc) => (
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={6} className="p-6 text-center"><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+                ) : error ? (
+                  <TableRow><TableCell colSpan={6} className="p-6 text-center text-destructive">Failed to load broadcasts</TableCell></TableRow>
+                ) : !notifications || notifications.length === 0 ? (
+                  <TableRow><TableCell colSpan={6} className="p-6 text-center text-muted-foreground">No broadcasts found</TableCell></TableRow>
+                ) : (
+                  notifications.filter((bc: any) => bc.title?.toLowerCase().includes(searchTerm.toLowerCase())).map((bc: any) => (
                   <TableRow key={bc.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <div className="space-y-1">
@@ -138,7 +148,7 @@ export default function BroadcastPage() {
                     </TableCell>
                     <TableCell className="px-6">
                       <div className="flex items-center gap-1.5">
-                        {bc.channels.map(ch => (
+                        {bc.channels.map((ch: string) => (
                           <div key={ch} className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center border border-border" title={ch}>
                             {getChannelIcon(ch)}
                           </div>
@@ -159,7 +169,7 @@ export default function BroadcastPage() {
                       <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(bc.timestamp).toLocaleDateString()}</p>
                     </TableCell>
                   </TableRow>
-                ))}
+                )))}
               </TableBody>
             </Table>
             

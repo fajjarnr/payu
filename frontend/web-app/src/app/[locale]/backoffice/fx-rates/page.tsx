@@ -10,7 +10,6 @@ import {
   Edit, 
   History,
   Lock,
-  Unlock,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -27,12 +26,13 @@ import {
 } from '@/components/ui/table';
 import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
-// BUG-FE-095: Removed MOCK_FX_RATES — should be fetched from FX service API
-const MOCK_FX_RATES: Array<{ id: string; pair: string; rate: number; spread: number; auto: boolean; lastUpdate: string; trend: string }> = [];
+
+import { useAllFxRates } from '@/hooks/useFx';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FxRatesAdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
-
+  const { data: fxRates, isLoading, error } = useAllFxRates();
   return (
     <div className="space-y-12">
       <StaggerContainer>
@@ -102,53 +102,51 @@ export default function FxRatesAdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {MOCK_FX_RATES.map((fx) => (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="p-6 text-center">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <RefreshCw className="h-4 w-4 animate-spin" /> Loading rates...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="p-6 text-center text-destructive">Failed to load rates</TableCell>
+                  </TableRow>
+                ) : !fxRates || fxRates.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="p-6 text-center text-muted-foreground">No rates found</TableCell>
+                  </TableRow>
+                ) : (
+                  fxRates.filter((fx) => `${fx.fromCurrency}/${fx.toCurrency}`.toLowerCase().includes(searchTerm.toLowerCase())).map((fx) => (
                   <TableRow key={fx.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                           <ArrowRightLeft className="h-5 w-5 text-emerald-600" />
                         </div>
-                        <span className="font-bold text-foreground text-sm tracking-widest">{fx.pair}</span>
+                        <span className="font-bold text-foreground text-sm tracking-widest">{fx.fromCurrency}/{fx.toCurrency}</span>
                       </div>
                     </TableCell>
                     <TableCell className="px-6 font-mono text-sm font-bold text-foreground">
-                      {fx.rate.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {Number(fx.rate).toLocaleString('en-US', { minimumFractionDigits: 4 })}
                     </TableCell>
                     <TableCell className="px-6">
-                      {fx.trend === 'UP' ? (
-                        <div className="flex items-center gap-1 text-emerald-500">
-                          <TrendingUp className="h-3 w-3" />
-                          <span className="text-xs font-bold uppercase tracking-widest">Growing</span>
-                        </div>
-                      ) : fx.trend === 'DOWN' ? (
-                        <div className="flex items-center gap-1 text-rose-500">
-                          <TrendingUp className="h-3 w-3 rotate-90" />
-                          <span className="text-xs font-bold uppercase tracking-widest">Falling</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Stable</span>
-                      )}
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">—</span>
                     </TableCell>
                     <TableCell className="px-6 text-xs font-bold text-foreground">
-                      {fx.spread}%
+                      —
                     </TableCell>
                     <TableCell className="px-6">
-                      {fx.auto ? (
-                        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 uppercase tracking-widest text-xs gap-1.5 flex items-center justify-center w-fit">
-                          <RefreshCw className="h-3 w-3" />
-                          Auto
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-3 py-1 uppercase tracking-widest text-xs gap-1.5 flex items-center justify-center w-fit">
-                          <Lock className="h-3 w-3" />
-                          Manual
-                        </Badge>
-                      )}
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 uppercase tracking-widest text-xs gap-1.5 flex items-center justify-center w-fit">
+                        <RefreshCw className="h-3 w-3" />
+                        Auto
+                      </Badge>
                     </TableCell>
                     <TableCell className="px-6">
-                      <p className="text-xs font-medium text-foreground">{new Date(fx.lastUpdate).toLocaleTimeString()}</p>
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(fx.lastUpdate).toLocaleDateString()}</p>
+                      <p className="text-xs font-medium text-foreground">{new Date(fx.validFrom).toLocaleTimeString()}</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(fx.validFrom).toLocaleDateString()}</p>
                     </TableCell>
                     <TableCell className="text-right p-6">
                       <div className="flex items-center justify-end gap-2">
@@ -156,12 +154,13 @@ export default function FxRatesAdminPage() {
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted/50">
-                          {fx.auto ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                          <Lock className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+                )}
               </TableBody>
             </Table>
             

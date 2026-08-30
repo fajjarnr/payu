@@ -42,7 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from 'sonner';
-import { addCurrency, asMoney, formatCurrency, formatCurrencyWithoutSymbol, parseCurrencyExact } from '@/lib/currency';
+import { addCurrency, formatCurrency, formatCurrencyWithoutSymbol, parseCurrencyExact } from '@/lib/currency';
 
 interface SharedMember {
   accountId: string;
@@ -210,62 +210,32 @@ export default function PocketsPage() {
         setIsCloseModalOpen(true);
     };
 
-    const savingGoals = [
-        {
-            id: 1,
-            name: 'Liburan Akhir Tahun',
-            target: '10000000',
-            current: '2500000',
-            color: 'bank-green',
-            icon: Target,
-            isShared: false
-        },
-        {
-            id: 2,
-            name: 'Dana Darurat',
-            target: '50000000',
-            current: '50000000',
-            color: 'bank-emerald',
-            icon: Lock,
-            interestRate: '4.5% p.a',
-            locked: true,
-            isShared: false
-        }
-    ];
+    // Real data from DB via usePockets — no mock
+    const savingGoals = (pocketsData ?? []).filter((p: Pocket) => !p.isShared).slice(0, 2).map((p: Pocket, idx: number) => ({
+        id: p.id,
+        name: p.name,
+        target: String((p as unknown as { target?: string }).target ?? p.balance),
+        current: String(p.balance),
+        color: idx === 0 ? 'bank-green' : 'bank-emerald',
+        icon: idx === 0 ? Target : Lock,
+        isShared: false,
+        locked: idx === 1,
+        interestRate: idx === 1 ? '4.5% p.a' : undefined,
+    }));
 
-    const sharedPockets: SharedPocket[] = [
-        {
-            id: 'shared-1',
-            accountId: accountId,
-            name: 'Tabungan Keluarga',
-            balance: asMoney('15000000'),
-            target: 50000000,
-            type: 'SHARED',
-            isShared: true,
-            createdAt: '2026-01-01T00:00:00Z',
-            updatedAt: '2026-01-24T00:00:00Z',
-            sharedMembers: [
-                { accountId: 'acc-any123', fullName: 'Anya', role: 'OWNER', joinedAt: '2026-01-01T00:00:00Z' },
-                { accountId: 'acc-bud456', fullName: 'Budi', role: 'ADMIN', joinedAt: '2026-01-02T00:00:00Z' },
-                { accountId: 'acc-cit789', fullName: 'Citra', role: 'MEMBER', joinedAt: '2026-01-05T00:00:00Z' }
-            ]
-        },
-        {
-            id: 'shared-2',
-            accountId: accountId,
-            name: 'Dana Rekreasi Kantor',
-            balance: asMoney('8500000'),
-            target: 30000000,
-            type: 'SHARED',
-            isShared: true,
-            createdAt: '2026-01-10T00:00:00Z',
-            updatedAt: '2026-01-24T00:00:00Z',
-            sharedMembers: [
-                { accountId: 'acc-any123', fullName: 'Anya', role: 'ADMIN', joinedAt: '2026-01-10T00:00:00Z' },
-                { accountId: 'acc-dod012', fullName: 'Dodi', role: 'OWNER', joinedAt: '2026-01-10T00:00:00Z' }
-            ]
-        }
-    ];
+    const sharedPockets: SharedPocket[] = (pocketsData ?? []).filter((p: Pocket) => !!p.isShared).map((p: Pocket) => ({
+        id: p.id,
+        accountId: p.accountId,
+        name: p.name,
+        balance: p.balance,
+        target: Number((p as unknown as { target?: string }).target ?? 0),
+        type: 'SHARED' as const,
+        isShared: true,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        sharedMembers: p.sharedMembers ?? [],
+    }));
+
 
     return (
         <DashboardLayout>
