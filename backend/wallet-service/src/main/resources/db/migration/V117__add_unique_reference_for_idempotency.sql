@@ -1,14 +1,14 @@
 -- QE-LEDGER-002 / QE-TEST-001: idempotency race without unique constraint
 -- Concurrent findByTransactionId/referenceId before SELECT FOR UPDATE → duplicate double-execute.
 -- Add partial unique indexes to make second insert fail fast (duplicate key) instead of relying on app-level check.
--- ponytail: global unique on reference_id where not null; per-wallet uniqueness enforced via wallet_id+reference_id if needed later
+-- ponytail: global unique on (reference_type, reference_id, entry_type) where not null; allows double-entry DEBIT+CREDIT per reference, prevents duplicate same-type replay
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_wallet_transactions_reference_id
     ON wallet_transactions(reference_id)
     WHERE reference_id IS NOT NULL AND reference_id <> '';
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_ledger_entries_reference_id
-    ON ledger_entries(reference_type, reference_id)
+    ON ledger_entries(reference_type, reference_id, entry_type)
     WHERE reference_id IS NOT NULL AND reference_id <> '' AND reference_id <> 'INTERNAL';
 
 -- idempotency_keys PG table for outbox/idempotency fallback (migrator proposed V120)

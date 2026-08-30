@@ -123,18 +123,40 @@ public class PaymentWebhookHandler implements WebhookHandler {
     public void processWebhook(String webhookId, String payload) {
         try {
             JsonNode root = objectMapper.readTree(payload);
-            String eventType = root.get("event").asText();
-            JsonNode data = root.get("data");
-
+            JsonNode eventNode = root.get("event");
+            JsonNode dataNode = root.get("data");
+            // Defensive: snap payload may be flat or missing event/data, fallback to webhookId parsing
+            String eventType = eventNode != null && !eventNode.isNull() ? eventNode.asText() : null;
+            if (eventType == null) {
+                // Infer from webhookId suffix e.g. PAYU-xxx:payment.completed
+                int idx = webhookId.lastIndexOf(':');
+                eventType = idx > 0 ? webhookId.substring(idx + 1) : EVENT_COMPLETED;
+            }
+            JsonNode data = dataNode != null && !dataNode.isNull() ? dataNode : root;
+            // data may be flat snap payload: payuReferenceNo, partnerReferenceNo, amount, etc.
+            String txn = null;
+            if (data.has("transactionId")) txn = data.get("transactionId").asText();
+            else if (data.has("payuReferenceNo")) txn = data.get("payuReferenceNo").asText();
+            else if (data.has("payu_reference_no")) txn = data.get("payu_reference_no").asText();
+            else if (root.has("payuReferenceNo")) txn = root.get("payuReferenceNo").asText();
+            else txn = webhookId;
+            String amtStr = "0";
+            if (data.has("amount")) {
+                JsonNode amt = data.get("amount");
+                amtStr = amt.isTextual() ? amt.asText() : amt.isNumber() ? amt.asText() : amt.has("value") ? amt.get("value").asText() : "0";
+            } else if (root.has("amount")) {
+                JsonNode amt = root.get("amount");
+                amtStr = amt.isTextual() ? amt.asText() : amt.isNumber() ? amt.asText() : "0";
+            }
             PaymentEvent event = PaymentEvent.builder()
                     .webhookId(webhookId)
                     .eventType(eventType)
-                    .transactionId(data.get("transactionId").asText())
-                    .referenceId(data.has("referenceId") ? data.get("referenceId").asText() : null)
-                    .amount(new BigDecimal(data.get("amount").asText()))
-                    .currency(data.has("currency") ? data.get("currency").asText() : "IDR")
-                    .sourceAccount(data.has("sourceAccount") ? data.get("sourceAccount").asText() : null)
-                    .destinationAccount(data.has("destinationAccount") ? data.get("destinationAccount").asText() : null)
+                    .transactionId(txn)
+                    .referenceId(data.has("referenceId") ? data.get("referenceId").asText() : data.has("partnerReferenceNo") ? data.get("partnerReferenceNo").asText() : null)
+                    .amount(new BigDecimal(amtStr))
+                    .currency(data.has("currency") ? data.get("currency").asText() : root.has("currency") ? root.get("currency").asText() : "IDR")
+                    .sourceAccount(data.has("sourceAccount") ? data.get("sourceAccount").asText() : data.has("sourceAccountNo") ? data.get("sourceAccountNo").asText() : null)
+                    .destinationAccount(data.has("destinationAccount") ? data.get("destinationAccount").asText() : data.has("beneficiaryAccountNo") ? data.get("beneficiaryAccountNo").asText() : null)
                     .settlementTime(data.has("settlementTime")
                             ? Instant.parse(data.get("settlementTime").asText())
                             : Instant.now())
