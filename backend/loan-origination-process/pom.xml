@@ -50,6 +50,10 @@
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
         <dependency>
+            <groupId>id.payu.shared</groupId>
+            <artifactId>api-commons</artifactId>
+        </dependency>
+        <dependency>
             <groupId>id.payu</groupId>
             <artifactId>security-starter</artifactId>
             <version>${project.version}</version>

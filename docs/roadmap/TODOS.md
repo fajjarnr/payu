@@ -12,11 +12,10 @@
 > 🔐 Pen test schedule → [`../security/PENTEST_SCHEDULE.md`](../security/PENTEST_SCHEDULE.md)
 
 ---
-
-| **Last Release** | `1.18.74` (2026-08-29) |
-| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.74` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | **0 OPEN** — Grill P1 **7/7 CLOSED** 1.18.60-1.18.62 ✅ + **P3 Extended 3/3 CLOSED 1.18.63-1.18.64** ✅ + **Hotfix 1.18.65 Insecure crypto.randomUUID Fallback** ✅ + **UI Responsive 1.18.66 Web-App Mobile-Friendly** ✅ + **BFF/OpenAPI 1.18.67 Beneficiary A3** ✅ + **Wallet Idempotency 1.18.68 Pocket** ✅ + **Lint Polish 1.18.69 0 errors** ✅ + **Docs README 1.18.70 Next16** ✅ + **Lint 0 warnings 1.18.71** ✅ + **Wallet Pocket Version 1.18.72** ✅ + **Audit No-Warn 1.18.73** ✅ + **Audit API Consistency 1.18.74** ✅ + **Diet DRY/Bundle/Image 1.18.75 d6a37a2b2** ✅ + **Per-Service 8/8 CLOSED 1.18.76** ✅ |
-| **Last Updated** | 2026-08-30 — **1.18.76 Per-Service 8/8 CLOSED (PER-SVC-001..008)** |
+| **Last Release** | `1.18.77` (2026-08-30) |
+| **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.77` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso.uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
+| **Backlog Aktif** | **0 OPEN** — PAYU-TB-001..005 **5/5 CLOSED 1.18.77** ✅ TokoBapak SNAP-BI E2E → `CHANGELOG.md` + Grill P1 **7/7 CLOSED** 1.18.60-1.18.62 ✅ + P3 Extended 3/3 CLOSED → `CHANGELOG.md` |
+| **Last Updated** | 2026-08-30 — **PAYU-TB-001..005 CLOSED 1.18.77 (TokoBapak bisa bayar via PayU)** |
 ## 🎯 Grill FLOWS.md — Global Bank/E-Wallet Best Practice (2026-08-28)
 
 > **Sumber grill**: `docs/product/FLOWS.md` (41 flow aktual + 10 IMP) vs **industri global** — Stripe/Adyen idempotency & HMAC (Context7 `/stripe/stripe-node` `StripeIdempotencyError` + `/websites/adyen` `idempotency-key` ≤64 UUID + HMAC SHA256), Plaid webhook JWT ES256 `request_body_sha256` (Context7 `/websites/plaid_api`), PSD2 RTS Art 5 Dynamic Linking + FAPI 2.0 WYSIWYS, POJK 11/POJK.03/2022 MFA, PADG BI 24/7 & PBI 23/6 BI-FAST, ISO 20022 `pacs.008→pacs.002→camt.053`, FATF R10/R16 risk-based, PCI-DSS 4.0, UU PDP 27/2022 + Next.js BFF `httpOnly+secure+sameSite` (Context7 `/vercel/next.js`). Verifikasi **internet**: web_search diblok provider DC-IP — fallback Context7 terverifikasi (Stripe 64k snippets, Adyen 74k, Plaid 6.3k). Verifikasi **code**: CodeGraph `WalletGrpcAdapter.transferBalance` atomic 1-hop, `JournalEntry.isBalanced()`, `StatementService` `balance_after`, `NotificationService` fallback, `VelocityGuard`+`RiskEvaluationPort`, `Argon2PasswordEncoder(16,32,1,4096,3)` — bandingkan gap `FLOWS.md:1938` IMP-1,2,5 DONE 1.10.53 vs IMP-3,4,6,7,8,9,10 masih **TARGET**.
@@ -47,7 +46,6 @@ No open P1 — 7/7 CLOSED 1.18.60 (007) + 1.18.61 (008) + 1.18.62 (003,004,006,0
 
 No open P2 — 8 items CLOSED 2026-08-12 (CB-008/011/017/022/024/025/031/036) → `CHANGELOG.md` `1.10.63`.
 
-### P3 — Backlog Lanjutan — Global Hardening Extended + Legacy
 No open P3 — 3/3 CLOSED 1.18.63 (GLOBAL-WEBHOOK) + 1.18.64 (GLOBAL-RECON + GLOBAL-BFF) → `CHANGELOG.md` `1.18.64` — extended hardening 100%.
 
 
@@ -55,6 +53,9 @@ No open P3 — 3/3 CLOSED 1.18.63 (GLOBAL-WEBHOOK) + 1.18.64 (GLOBAL-RECON + GLO
 |:---|:---|:---|:---|
 | — | — | *Legacy P3 kosong — items sebelumnya CLOSED* | — |
 
+## 🔗 TokoBapak PayU Integration — Audit 2026-08-30 (Sisa OPEN)
+
+No open — **5/5 CLOSED 1.18.77** (PAYU-TB-001..005 TokoBapak SNAP-BI E2E `partner-service` `tokobapak-mvp` `ACC_TOKOBAPAK_ESCROW`/`ACC_SELLER_*` seed `V23`/`V122` + `Keycloak tokobapak-mvp` + `SnapBiTokoBapakContractTest` 5/5 `4002501/4002502/2002500` idempoten `uq_snap_payment_partner_ref` + `payu_client.go` HMAC-SHA512 `SignForB2B`/`SignWithToken` `source/beneficiaryAccountNo` + `PAYU_BASE_URL http://payu-partner-service:8080` `payu-network` + `TOKOBAPAK_SNAPBI.md` HMAC `±300s` `4012504/4012506`) → `CHANGELOG.md` `1.18.77` — **TokoBapak BELUM → BISA bayar via PayU**.
 ## 🏦 Partner Service Production Readiness Gate
 
 Status `partner-service` hanya Production Ready setelah seluruh gate memiliki bukti live. `PARTNER-001..006` CLOSED (2026-08-08).

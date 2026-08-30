@@ -260,7 +260,20 @@ spec:
           dpop.bound.access.tokens: "true"
           DPoPBound: "true"
           oauth2.device.authorization.grant.enabled: "true"
-    # --- Browser Security Headers ---
+      - clientId: tokobapak-mvp
+        name: TokoBapak MVP
+        description: "PAYU-TB-001: TokoBapak SNAP-BI partner B2B (X-CLIENT-KEY/X-SIGNATURE)"
+        enabled: true
+        clientAuthenticatorType: client-secret
+        secret: tokobapak-mvp-dev-secret-32chars-long!
+        redirectUris: []
+        webOrigins: []
+        publicClient: false
+        standardFlowEnabled: false
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: true
+        serviceAccountsEnabled: true
+        protocol: openid-connect
     browserSecurityHeaders:
       contentSecurityPolicyReportOnly: ""
       xContentTypeOptions: nosniff
