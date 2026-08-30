@@ -172,9 +172,9 @@ export default function LandingPage() {
                   <div className="flex items-center justify-between pt-1">
                     <div>
                       <p className="text-[10px] text-muted-foreground">PayU</p>
-                      <p className="text-sm font-semibold tracking-tight">Budiono</p>
+                      <p className="text-sm font-semibold tracking-tight">Demo Preview</p>
                     </div>
-                    <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">B</div>
+                    <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">P</div>
                   </div>
 
                   <div className="rounded-2xl bg-primary p-4 text-primary-foreground shadow-lg shadow-primary/30">
