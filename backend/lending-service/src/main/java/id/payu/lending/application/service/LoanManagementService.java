@@ -92,7 +92,7 @@ public class LoanManagementService implements LoanManagementUseCase {
     @Transactional(noRollbackFor = RepaymentProcessingException.class)
     public RepaymentSchedule processRepayment(UUID repaymentScheduleId, BigDecimal amount, String idempotencyKey) {
         validateRepaymentInput(repaymentScheduleId, amount, idempotencyKey);
-        log.info("Processing repayment for schedule: {} with amount: {}", repaymentScheduleId, amount);
+        log.info("Processing repayment for schedule: {}", repaymentScheduleId);
 
         RepaymentPayment payment = repaymentPaymentPersistencePort.findByIdempotencyKey(idempotencyKey)
                 .orElse(null);

@@ -1,5 +1,6 @@
 package id.payu.loanorigination.adapter.web;
 
+import id.payu.commons.idempotency.Idempotent;
 import id.payu.loanorigination.domain.LoanOriginationProcess;
 import id.payu.loanorigination.domain.LoanOriginationRequest;
 import id.payu.loanorigination.service.LoanOriginationProcessService;
@@ -29,8 +30,8 @@ public class LoanOriginationController {
     public LoanOriginationController(LoanOriginationProcessService processService) {
         this.processService = processService;
     }
-
     @PostMapping
+    @Idempotent(required = true)
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> startProcess(
             @RequestBody LoanOriginationRequest request,
@@ -49,8 +50,8 @@ public class LoanOriginationController {
                 .map(process -> ResponseEntity.ok(toResponse(process)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
     @PostMapping("/{id}/approve")
+    @Idempotent(required = true)
     @PreAuthorize("hasAnyRole('LOAN_OFFICER', 'ADMIN', 'BACKOFFICE')")
     public ResponseEntity<Map<String, Object>> approveTask(
             @PathVariable UUID id,

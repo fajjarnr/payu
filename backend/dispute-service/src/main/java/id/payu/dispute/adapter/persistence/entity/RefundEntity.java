@@ -39,6 +39,9 @@ public class RefundEntity {
     @Column(name = "transaction_id", nullable = false)
     private UUID transactionId;
 
+    @Column(name = "idempotency_key", unique = true)
+    private String idempotencyKey;
+
     @Column(name = "amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal amount; // AUDIT-042
 

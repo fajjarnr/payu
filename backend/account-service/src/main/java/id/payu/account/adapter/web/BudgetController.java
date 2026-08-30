@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import id.payu.commons.idempotency.Idempotent;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -46,8 +47,8 @@ public class BudgetController {
 
     /**
      * Create a new budget.
-     */
     @PostMapping
+    @Idempotent(required = true)
     @PreAuthorize("hasRole('USER') and @accountSecurityService.isAccountOwner(#accountId, authentication)")
     @Operation(summary = "Create budget", description = "Creates a new spending budget for a specific category")
     @ApiResponses({
@@ -116,8 +117,8 @@ public class BudgetController {
 
     /**
      * Update a budget.
-     */
     @PutMapping("/{budgetId}")
+    @Idempotent(required = true)
     @PreAuthorize("hasRole('USER') and @accountSecurityService.isAccountOwner(#accountId, authentication)")
     @Operation(summary = "Update budget", description = "Updates an existing budget")
     @ApiResponses({

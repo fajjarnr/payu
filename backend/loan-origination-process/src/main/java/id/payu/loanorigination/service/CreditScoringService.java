@@ -27,7 +27,7 @@ public class CreditScoringService {
     }
 
     public BigDecimal evaluate(BigDecimal amount, int tenureMonths) {
-        log.info("Calling lending-service: amount={}, tenureMonths={}", amount, tenureMonths);
+        log.info("Calling lending-service: tenureMonths={}", tenureMonths);
         var fact = new CreditScoringFact();
         fact.setTotalAmount(amount);
         fact.setTenureMonths(tenureMonths);

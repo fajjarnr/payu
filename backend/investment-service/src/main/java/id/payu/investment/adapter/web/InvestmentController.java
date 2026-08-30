@@ -62,6 +62,7 @@ public class InvestmentController extends BaseController {
     }
 
     @PostMapping("/accounts")
+    @Idempotent(required = true, headerName = "X-Idempotency-Key")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create investment account", description = "Creates a new investment account for a user")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Account created successfully",

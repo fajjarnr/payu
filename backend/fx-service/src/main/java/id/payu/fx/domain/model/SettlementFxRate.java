@@ -83,7 +83,7 @@ public class SettlementFxRate {
         if (!isValid()) {
             throw new IllegalStateException("FX rate lock has expired");
         }
-        return amount.multiply(rate).setScale(2, java.math.RoundingMode.HALF_EVEN);
+        return amount.multiply(rate).setScale(4, java.math.RoundingMode.HALF_EVEN);
     }
 
     /**

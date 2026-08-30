@@ -30,6 +30,7 @@ public class Refund {
 
     private UUID id;
     private UUID transactionId;
+    private String idempotencyKey;
     private BigDecimal amount;
     private String currency;
     private String reason;

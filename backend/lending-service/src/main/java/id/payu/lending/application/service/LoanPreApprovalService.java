@@ -136,7 +136,7 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
         BigDecimal monthlyRate = annualRate.divide(new BigDecimal("12"), 6, RoundingMode.HALF_EVEN);
 
         if (monthlyRate.compareTo(BigDecimal.ZERO) == 0) {
-            return principal.divide(new BigDecimal(months), 2, RoundingMode.HALF_EVEN);
+            return principal.divide(new BigDecimal(months), 4, RoundingMode.HALF_EVEN);
         }
 
         BigDecimal numerator = monthlyRate.multiply(principal);
@@ -144,7 +144,7 @@ public class LoanPreApprovalService implements LoanPreApprovalUseCase {
                 BigDecimal.ONE.add(monthlyRate).pow(-months, java.math.MathContext.DECIMAL128)
         );
 
-        return numerator.divide(denominator, 2, RoundingMode.HALF_EVEN);
+        return numerator.divide(denominator, 4, RoundingMode.HALF_EVEN);
     }
 
     private LoanPreApprovalResponse mapToResponse(LoanPreApproval preApproval) {

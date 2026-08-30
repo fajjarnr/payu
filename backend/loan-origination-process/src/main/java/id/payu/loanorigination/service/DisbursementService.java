@@ -37,7 +37,7 @@ public class DisbursementService {
             log.info("Disbursement already published for reference {}, skipping duplicate", reference);
             return reference;
         }
-        log.info("Disbursement: userId={}, amount={}, type={}, tenure={}, ref={}", userId, amount, loanType, tenureMonths, reference);
+        log.info("Disbursement: userId={}, type={}, tenure={}, ref={}", userId, loanType, tenureMonths, reference);
         var event = new DisbursementEvent(userId, amount, loanType, tenureMonths, reference);
         outboxService.createEventFromObject(
                 AGGREGATE_TYPE, reference, EVENT_TYPE, event, null,

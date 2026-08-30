@@ -79,6 +79,7 @@ public class RefundPersistenceAdapter implements RefundPersistencePort {
         return RefundEntity.builder()
                 .id(refund.getId())
                 .transactionId(refund.getTransactionId())
+                .idempotencyKey(refund.getIdempotencyKey())
                 .amount(refund.getAmount())
                 .currency(refund.getCurrency())
                 .reason(refund.getReason())
@@ -94,6 +95,7 @@ public class RefundPersistenceAdapter implements RefundPersistencePort {
 
     private RefundEntity updateEntity(RefundEntity entity, Refund refund) {
         entity.setTransactionId(refund.getTransactionId());
+        entity.setIdempotencyKey(refund.getIdempotencyKey());
         entity.setAmount(refund.getAmount());
         entity.setCurrency(refund.getCurrency());
         entity.setReason(refund.getReason());
@@ -111,6 +113,7 @@ public class RefundPersistenceAdapter implements RefundPersistencePort {
         return Refund.builder()
                 .id(entity.getId())
                 .transactionId(entity.getTransactionId())
+                .idempotencyKey(entity.getIdempotencyKey())
                 .amount(entity.getAmount())
                 .currency(entity.getCurrency())
                 .reason(entity.getReason())

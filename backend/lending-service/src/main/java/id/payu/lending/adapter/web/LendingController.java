@@ -204,7 +204,7 @@ public class LendingController extends BaseController {
             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody RepaymentRequest request) {
         BigDecimal amount = request.amount();
-        log.info("Processing repayment for schedule: {} with amount: {}", scheduleId, amount);
+        log.info("Processing repayment for schedule: {}", scheduleId);
         return ok(loanManagementService.processRepayment(scheduleId, amount, idempotencyKey));
     }
 
@@ -301,7 +301,7 @@ public class LendingController extends BaseController {
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
             @Valid @RequestBody PayLaterPaymentRequest request,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
-        log.info("Recording PayLater payment for user: {} with amount: {}", userId, request.amount());
+        log.info("Recording PayLater payment for user: {}", userId);
         PayLaterTransaction transaction = payLaterTransactionService.recordPayment(userId, request.amount(), idempotencyKey);
 
         URI location = ServletUriComponentsBuilder
@@ -456,7 +456,7 @@ public class LendingController extends BaseController {
             java.security.Principal principal) {
         // BUG-BE-192 FIX: Extract authenticated userId from JWT instead of trusting client-submitted value
         UUID authenticatedUserId = UUID.fromString(principal.getName());
-        log.info("Tenor options requested: userId={}, amount={}", authenticatedUserId, request.amount());
+        log.info("Tenor options requested: userId={}", authenticatedUserId);
         List<TenorOptionResponse> options = installmentService
                 .getTenorOptions(authenticatedUserId, request.amount())
                 .stream()
@@ -485,7 +485,7 @@ public class LendingController extends BaseController {
             java.security.Principal principal) {
         // BUG-SECURITY-020 FIX: Extract authenticated userId from JWT
         UUID authenticatedUserId = UUID.fromString(principal.getName());
-        log.info("Installment checkout: userId={}, partner={}, amount={}, tenor={}x",
+        log.info("Installment checkout: userId={}, partner={}, tenor={}x",
                 authenticatedUserId, request.partnerId(), request.amount(), request.tenor());
         id.payu.lending.domain.model.InstallmentCheckout result = installmentService.checkout(
                 authenticatedUserId, request.partnerId(), request.externalOrderId(),

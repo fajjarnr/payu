@@ -38,6 +38,7 @@ public class SupportController extends BaseController {
     private final AgentTrainingService agentTrainingService;
     private final SupportTicketService ticketService;
     private final FaqService faqService;
+    private final id.payu.support.adapter.messaging.SupportOutboxEventAdapter outboxAdapter;
 
     @GetMapping
     @Operation(summary = "Support service status", description = "Returns support service health and available endpoints")
@@ -329,15 +330,13 @@ public class SupportController extends BaseController {
         ));
     }
 
-    // --- ADR-0051 Support Ticket & FAQ (BE-SUPP-001) ponytail: minimal ITIL lifecycle, RLS tenant_id stub, outbox log ---
     @PostMapping("/tickets")
     @Operation(summary = "Create support ticket", description = "ITIL: OPEN→IN_PROGRESS→WAITING_CUSTOMER→RESOLVED→CLOSED, SLA 24h, idempotency X-Idempotency-Key")
     public ResponseEntity<ApiResponse<SupportTicketResponse>> createTicket(@RequestBody Map<String,String> body,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idem) {
         String userId = currentUserId();
         SupportTicketResponse saved = ticketService.create(userId, body);
-        // ponytail: outbox payu.support.ticket-created.v1 → log; add outbox-starter when Kafka needed + DLQ .dlq
-        org.slf4j.LoggerFactory.getLogger(SupportController.class).info("ticket-created {} user {}", saved.id(), userId);
+        outboxAdapter.publishTicketCreated(saved.id(), userId, body.getOrDefault("subject", ""));
         URI loc = URI.create("/api/v1/support/tickets/" + saved.id());
         return created(saved, loc.toString());
     }

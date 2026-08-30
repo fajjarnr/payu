@@ -70,7 +70,7 @@ public class LendingDmnService {
             status = PreApprovalStatus.CONDITIONALLY_APPROVED;
             BigDecimal factor = creditScore.compareTo(new BigDecimal("640")) >= 0
                     ? new BigDecimal("0.85") : new BigDecimal("0.70");
-            maxAmount = requestedAmount.multiply(factor).setScale(2, RoundingMode.HALF_EVEN);
+            maxAmount = requestedAmount.multiply(factor).setScale(4, RoundingMode.HALF_EVEN);
             maxTenure = Math.min(requestedTenure, 24);
             reason = "Conditional approval: Higher interest rate and lower loan amount may apply";
         } else {

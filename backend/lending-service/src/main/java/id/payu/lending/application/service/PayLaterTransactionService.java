@@ -119,7 +119,7 @@ public class PayLaterTransactionService implements PayLaterTransactionUseCase {
     @Transactional
     public PayLaterTransaction recordPayment(UUID userId, BigDecimal amount, String externalId) {
         validateAmount(amount);
-        log.info("Recording PayLater payment for user: {} with amount: {}", userId, amount);
+        log.info("Recording PayLater payment for user: {}", userId);
 
         if (externalId != null && !externalId.isBlank()) {
             java.util.Optional<PayLaterTransaction> existing = transactionPersistencePort.findByExternalId(externalId);

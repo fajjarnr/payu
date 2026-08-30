@@ -66,7 +66,7 @@ public class InstallmentService implements InstallmentUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<InstallmentOption> getTenorOptions(UUID userId, BigDecimal amount) {
-        log.info("Getting tenor options: userId={}, amount={}", userId, amount);
+        log.info("Getting tenor options: userId={}", userId);
 
         // Validate PayLater eligibility
         PayLater payLater = getActivePayLater(userId);
@@ -98,8 +98,8 @@ public class InstallmentService implements InstallmentUseCase {
     @Transactional
     public InstallmentCheckout checkout(UUID userId, String partnerId, String externalOrderId,
                                          BigDecimal amount, int tenor) {
-        log.info("Installment checkout: userId={}, partner={}, amount={}, tenor={}x",
-                userId, partnerId, amount, tenor);
+        log.info("Installment checkout: userId={}, partner={}, tenor={}x",
+                userId, partnerId, tenor);
 
         // 1. Validate PayLater account is active with sufficient credit
         PayLater payLater = getActivePayLater(userId);

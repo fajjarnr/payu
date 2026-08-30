@@ -132,7 +132,7 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
                 savedLoan.getDisbursementDate()
         ));
 
-        log.info("Loan approved for user: {} with amount: {}", command.userId(), command.principalAmount());
+        log.info("Loan approved for user: {}", command.userId());
         return CompletableFuture.completedFuture(savedLoan);
     }
 
