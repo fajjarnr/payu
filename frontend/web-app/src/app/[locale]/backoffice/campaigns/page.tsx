@@ -142,7 +142,7 @@ export default function CampaignsPage() {
                 ) : !campaigns || campaigns.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="p-6 text-center text-muted-foreground">No campaigns found</TableCell></TableRow>
                 ) : (
-                  campaigns.filter((cmp: any) => cmp.name.toLowerCase().includes(searchTerm.toLowerCase())).map((cmp: any) => (
+                  campaigns.filter((cmp: { name: string; id: string }) => cmp.name.toLowerCase().includes(searchTerm.toLowerCase())).map((cmp) => (
                   <TableRow key={cmp.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <div className="space-y-1">
@@ -164,16 +164,16 @@ export default function CampaignsPage() {
                       {getStatusBadge(cmp.status)}
                     </TableCell>
                     <TableCell className="px-6 text-xs font-bold text-foreground">
-                      {cmp.redemptions.toLocaleString()}
+                      {cmp.currentClaims.toLocaleString()}
                     </TableCell>
                     <TableCell className="px-6">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest">
-                          <span className="text-emerald-500">{cmp.spent}</span>
-                          <span className="text-muted-foreground opacity-40">/ {cmp.budget}</span>
+                          <span className="text-emerald-500">{cmp.value}</span>
+                          <span className="text-muted-foreground opacity-40">/ {cmp.maxClaims ?? '∞'}</span>
                         </div>
                         <div className="w-32 bg-muted h-1 rounded-full overflow-hidden">
-                          <div className="bg-emerald-500 h-full" style={{ width: '40%' }} />
+                          <div className="bg-emerald-500 h-full" style={{ width: `${cmp.maxClaims ? Math.min(100, (cmp.currentClaims / cmp.maxClaims) * 100) : 0}%` }} />
                         </div>
                       </div>
                     </TableCell>

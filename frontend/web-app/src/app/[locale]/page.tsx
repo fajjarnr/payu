@@ -203,7 +203,7 @@ export default function LandingPage() {
                     {[
                       { name: 'QRIS Merchant', amount: '-Rp45.000', positive: false },
                       { name: 'Top Up Pocket', amount: '+Rp500.000', positive: true },
-                      { name: 'Transfer Budi', amount: '-Rp120.000', positive: false },
+                      { name: 'Transfer', amount: '-Rp120.000', positive: false },
                     ].map((tx) => (
                       <div key={tx.name} className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">

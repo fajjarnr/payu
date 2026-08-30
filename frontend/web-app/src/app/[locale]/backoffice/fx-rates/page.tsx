@@ -28,7 +28,6 @@ import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 
 
 import { useAllFxRates } from '@/hooks/useFx';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FxRatesAdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -130,7 +129,7 @@ export default function FxRatesAdminPage() {
                       </div>
                     </TableCell>
                     <TableCell className="px-6 font-mono text-sm font-bold text-foreground">
-                      {Number(fx.rate).toLocaleString('en-US', { minimumFractionDigits: 4 })}
+                      {fx.rate}
                     </TableCell>
                     <TableCell className="px-6">
                       <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">—</span>

@@ -135,38 +135,36 @@ export default function BroadcastPage() {
                 ) : !notifications || notifications.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="p-6 text-center text-muted-foreground">No broadcasts found</TableCell></TableRow>
                 ) : (
-                  notifications.filter((bc: any) => bc.title?.toLowerCase().includes(searchTerm.toLowerCase())).map((bc: any) => (
+                  notifications.filter((bc: { title?: string; id: string }) => (bc.title ?? '').toLowerCase().includes(searchTerm.toLowerCase())).map((bc) => (
                   <TableRow key={bc.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell className="p-6">
                       <div className="space-y-1">
                         <p className="font-bold text-foreground text-sm uppercase tracking-tight">{bc.title}</p>
                         <div className="flex items-center gap-2">
                           <Users className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{bc.audience}</span>
+                          <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{bc.recipient}</span>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="px-6">
                       <div className="flex items-center gap-1.5">
-                        {bc.channels.map((ch: string) => (
-                          <div key={ch} className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center border border-border" title={ch}>
-                            {getChannelIcon(ch)}
-                          </div>
-                        ))}
+                        <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center border border-border" title={bc.channel}>
+                          {getChannelIcon(bc.channel)}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="px-6">
                       {getStatusBadge(bc.status)}
                     </TableCell>
                     <TableCell className="px-6 text-xs font-bold text-foreground">
-                      {bc.sentCount}
+                      —
                     </TableCell>
                     <TableCell className="px-6 text-xs font-bold text-emerald-500">
-                      {bc.openRate}
+                      —
                     </TableCell>
                     <TableCell className="text-right p-6">
-                      <p className="text-xs font-medium text-foreground">{new Date(bc.timestamp).toLocaleTimeString()}</p>
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(bc.timestamp).toLocaleDateString()}</p>
+                      <p className="text-xs font-medium text-foreground">{new Date(bc.createdAt).toLocaleTimeString()}</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(bc.createdAt).toLocaleDateString()}</p>
                     </TableCell>
                   </TableRow>
                 )))}
