@@ -17,22 +17,16 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
-  - patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
+  - target:
+      kind: ConfigMap
+      name: frontend-config
+    patch: |-
+      apiVersion: v1
+      kind: ConfigMap
       metadata:
-        name: web-app
-      spec:
-        template:
-          spec:
-            containers:
-              - name: app
-                env:
-                  - name: OIDC_ISSUER
-                    value: "https://sso-uat.apps.fajjjar.my.id/realms/payu"
-                  - name: OIDC_JWK_SET_URI
-                    value: "https://sso-uat.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
-                  - name: KEYCLOAK_URL
-                    value: "https://sso-uat.apps.fajjjar.my.id"
-                  - name: NEXT_PUBLIC_BASE_URL
-                    value: "https://uat.payu.fajjjar.my.id"
+        name: frontend-config
+      data:
+        OIDC_ISSUER: "https://sso-uat.apps.fajjjar.my.id/realms/payu"
+        OIDC_JWK_SET_URI: "https://sso-uat.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
+        KEYCLOAK_URL: "https://sso-uat.apps.fajjjar.my.id"
+        NEXT_PUBLIC_BASE_URL: "https://uat.payu.fajjjar.my.id"

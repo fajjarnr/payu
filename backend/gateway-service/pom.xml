@@ -68,9 +68,11 @@
             <artifactId>quarkus-reactive-routes</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-virtual-threads</artifactId>
+        </dependency>
 
-
-        <!-- Vert.x Web Client -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-vertx</artifactId>

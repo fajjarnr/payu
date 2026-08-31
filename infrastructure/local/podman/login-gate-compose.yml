@@ -45,8 +45,8 @@ services:
       KC_DB_PASSWORD: payu_secret
       KC_HEALTH_ENABLED: "true"
       # Pinned hostname so every token carries one stable issuer (see podman-compose.yml)
-      KC_HOSTNAME: http://keycloak:8099
-      KC_HOSTNAME_STRICT: "true"
+      KC_HOSTNAME: ${KC_HOSTNAME:-http://keycloak:8099}
+      KC_HOSTNAME_STRICT: "${KC_HOSTNAME_STRICT:-true}"
     ports:
       - 8099:8080
     volumes:
@@ -68,7 +68,7 @@ services:
       context: ../../../backend/auth-service
       dockerfile: Containerfile
     environment:
-      PAYU_KEYCLOAK_SERVER_URL: http://keycloak:8099
+      PAYU_KEYCLOAK_SERVER_URL: ${PAYU_KEYCLOAK_SERVER_URL:-http://keycloak:8099}
       PAYU_KEYCLOAK_REALM: payu
       PAYU_KEYCLOAK_CLIENT_ID: payu-backend
       PAYU_KEYCLOAK_CLIENT_SECRET: payu-backend-d3v-0nly-a7c2f1e8b4d9063e5c8a2b7f1d4e9a3c
@@ -85,8 +85,8 @@ services:
       DB_PASSWORD: payu_secret
       SERVER_PORT: "8080"
       PORT: "8080"
-      OIDC_ISSUER: http://keycloak:8099/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8099/realms/payu/protocol/openid-connect/certs
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8099/realms/payu}
+      OIDC_JWK_SET_URI: ${OIDC_JWK_SET_URI:-http://keycloak:8099/realms/payu/protocol/openid-connect/certs}
       PAYU_CACHE_PROVIDER: hotrod
       PAYU_CACHE_HOTROD_SERVER_LIST: infinispan:11222
       PAYU_CACHE_HOTROD_CACHE_NAME: payu
@@ -119,11 +119,11 @@ services:
       JWT_SECRET: dev_jwt_secret_must_be_long_enough_for_dev_only_usage
       GATEWAY_AUTHORIZATION_JWT_SECRET: dev_jwt_secret_must_be_long_enough_for_dev_only_usage
       WEBHOOK_PARTNER_1_SECRET: dummy_secret_for_dev_only
-      OIDC_ISSUER: http://keycloak:8099/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8099/realms/payu/protocol/openid-connect/certs
-      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8099/realms/payu
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8099/realms/payu}
+      OIDC_JWK_SET_URI: ${OIDC_JWK_SET_URI:-http://keycloak:8099/realms/payu/protocol/openid-connect/certs}
+      QUARKUS_OIDC_AUTH_SERVER_URL: ${QUARKUS_OIDC_AUTH_SERVER_URL:-http://keycloak:8099/realms/payu}
       OIDC_CLIENT_SECRET: payu-web-local-client-secret
-      KEYCLOAK_URL: http://keycloak:8099
+      KEYCLOAK_URL: ${KEYCLOAK_URL:-http://keycloak:8099}
       ROUTES_AUTH_URL: http://auth-service:8080
       AUTH_SERVICE_URL: http://auth-service:8080
       ROUTES_ACCOUNT_URL: http://auth-service:8080
@@ -164,11 +164,11 @@ services:
       dockerfile: Containerfile
     environment:
       NEXT_PUBLIC_API_URL: /api/v1
-      NEXT_PUBLIC_BASE_URL: http://localhost:3001
-      GATEWAY_URL: http://gateway-service:8080
-      KEYCLOAK_URL: http://keycloak:8099
-      OIDC_ISSUER: http://keycloak:8099/realms/payu
-      OIDC_JWK_SET_URI: http://keycloak:8099/realms/payu/protocol/openid-connect/certs
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3001}
+      GATEWAY_URL: ${GATEWAY_URL:-http://gateway-service:8080}
+      KEYCLOAK_URL: ${KEYCLOAK_URL:-http://keycloak:8099}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8099/realms/payu}
+      OIDC_JWK_SET_URI: ${OIDC_JWK_SET_URI:-http://keycloak:8099/realms/payu/protocol/openid-connect/certs}
       NODE_ENV: production
       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: gate-next-server-actions-encryption-key-000
     ports:

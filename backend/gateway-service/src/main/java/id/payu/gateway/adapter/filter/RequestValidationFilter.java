@@ -8,6 +8,7 @@ import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 import id.payu.gateway.config.GatewayConfig;
 import io.quarkus.logging.Log;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
  */
 @Provider
 @ApplicationScoped
+@RunOnVirtualThread
 public class RequestValidationFilter implements ContainerRequestFilter {
 
     private static final Set<String> VALIDATABLE_METHODS = Set.of("POST", "PUT", "PATCH");
@@ -102,11 +104,14 @@ public class RequestValidationFilter implements ContainerRequestFilter {
         }
 
         String path = requestContext.getUriInfo().getPath();
+        // Skip auth OIDC endpoints — code exchange payload not JSON-schema validated
+        if (path.startsWith("/api/v1/auth") || path.startsWith("/api/auth") || path.startsWith("/v1/auth")) {
+            return;
+        }
         if (path.startsWith("/q/") || path.equals("/health") || path.equals("/status")
                 || path.equals("/version")) {
             return;
         }
-
         String method = requestContext.getMethod();
         if (!VALIDATABLE_METHODS.contains(method)) {
             return;

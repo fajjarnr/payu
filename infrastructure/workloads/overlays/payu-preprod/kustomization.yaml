@@ -855,23 +855,20 @@ patches:
         name: OTEL_ENDPOINT
         value: "http://localhost:4317"
 
-# OIDC Issuer patch - web-app (Next.js)
+# OIDC Issuer patch - web-app (Next.js) — env-driven via frontend-config ConfigMap (no hardcoded Deployment env)
 - target:
-    kind: Deployment
-    name: web-app
+    kind: ConfigMap
+    name: frontend-config
   patch: |-
-    - op: replace
-      path: /spec/template/spec/containers/0/env/0/value
-      value: "https://sso-preprod.apps.fajjjar.my.id/realms/payu"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/1/value
-      value: "https://sso-preprod.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
-    # WEB-004: sitemap/robots must advertise the dev domain, not prod.
-    - op: add
-      path: /spec/template/spec/containers/0/env/-
-      value:
-        name: NEXT_PUBLIC_BASE_URL
-        value: "https://preprod.payu.fajjjar.my.id"
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: frontend-config
+    data:
+      OIDC_ISSUER: "https://sso-preprod.apps.fajjjar.my.id/realms/payu"
+      OIDC_JWK_SET_URI: "https://sso-preprod.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
+      KEYCLOAK_URL: "https://sso-preprod.apps.fajjjar.my.id"
+      NEXT_PUBLIC_BASE_URL: "https://preprod.payu.fajjjar.my.id"
 
 # Dev-only: use the pre-provisioned runtime key in payu-dev.
 - target:

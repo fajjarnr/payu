@@ -5,6 +5,7 @@ resources:
 - deployment.yaml
 - service.yaml
 - route.yaml
+- frontend-config.yaml
 labels:
 - pairs:
     app.kubernetes.io/name: web-app

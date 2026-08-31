@@ -17,24 +17,16 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
-  # WEB-CSP-001: browser-facing OIDC must use the public SSO route + dev domain.
-  # Strategic merge on env (mergeKey name) — replaces existing, adds missing.
-  - patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
+  - target:
+      kind: ConfigMap
+      name: frontend-config
+    patch: |-
+      apiVersion: v1
+      kind: ConfigMap
       metadata:
-        name: web-app
-      spec:
-        template:
-          spec:
-            containers:
-              - name: app
-                env:
-                  - name: OIDC_ISSUER
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
-                  - name: OIDC_JWK_SET_URI
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
-                  - name: KEYCLOAK_URL
-                    value: "https://sso-dev.apps.fajjjar.my.id"
-                  - name: NEXT_PUBLIC_BASE_URL
-                    value: "https://payu-dev.apps.fajjjar.my.id"
+        name: frontend-config
+      data:
+        OIDC_ISSUER: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+        OIDC_JWK_SET_URI: "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
+        KEYCLOAK_URL: "https://sso-dev.apps.fajjjar.my.id"
+        NEXT_PUBLIC_BASE_URL: "https://payu-dev.apps.fajjjar.my.id"

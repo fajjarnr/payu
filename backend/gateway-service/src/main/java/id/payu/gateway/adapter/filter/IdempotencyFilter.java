@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import id.payu.gateway.config.GatewayConfig;
 import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -36,11 +37,11 @@ import java.util.Set;
  *
  * Supports both standard "Idempotency-Key" header and legacy "X-Idempotency-Key" header
  * for backward compatibility.
- *
  * For financial operations (transfers, payments, wallet debit/credit), idempotency key is REQUIRED.
  */
 @Provider
 @ApplicationScoped
+@RunOnVirtualThread
 public class IdempotencyFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     private static final Set<String> IDEMPOTENT_METHODS = Set.of("POST", "PUT", "PATCH", "DELETE");

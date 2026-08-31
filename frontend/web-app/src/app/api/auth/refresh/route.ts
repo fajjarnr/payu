@@ -28,8 +28,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
  */
 export async function POST() {
   const startTime = Date.now();
-  // BUG-AUTH-027: Secure cookie flags
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isSecure = (process.env.NEXT_PUBLIC_BASE_URL ?? "").startsWith("https://");
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get('refreshToken')?.value;
@@ -40,7 +39,7 @@ export async function POST() {
         { success: false, message: 'No refresh token' },
         { status: 401 },
       );
-      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
+      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
       return response;
     }
 
@@ -57,8 +56,8 @@ export async function POST() {
     if (!res.ok) {
       logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected by gateway');
       const response = NextResponse.json(data, { status: res.status });
-      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
-      response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
+      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
+      response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
       return response;
     }
 
@@ -98,8 +97,8 @@ export async function POST() {
     if (newAccessToken) {
       response.cookies.set('accessToken', newAccessToken, {
         httpOnly: true,
-        secure: isProduction, // BUG-AUTH-027: HTTPS-only in production
-        sameSite: 'strict', // BUG-AUTH-027: strict to prevent CSRF
+        secure: isSecure,
+        sameSite: 'strict',
         maxAge: ACCESS_TOKEN_MAX_AGE,
         path: '/',
       });
@@ -108,8 +107,8 @@ export async function POST() {
     if (newRefreshToken) {
       response.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
-        secure: isProduction, // BUG-AUTH-027: HTTPS-only in production
-        sameSite: 'strict', // BUG-AUTH-027: strict to prevent CSRF
+        secure: isSecure,
+        sameSite: 'strict',
         maxAge: 604_800,
         path: '/',
       });
@@ -126,8 +125,8 @@ export async function POST() {
       { success: false, message: 'Token refresh failed' },
       { status: 503 },
     );
-    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
-    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isProduction, sameSite: 'strict' });
+    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
     return response;
   }
 }

@@ -111,7 +111,7 @@ test.describe('Login Flow - OIDC PKCE journey (LOGIN-003)', () => {
 
     if (await page.getByRole('button', { name: 'Sign In' }).isVisible().catch(() => false)) {
       await page.getByRole('textbox', { name: 'Username or email' }).fill('customer1');
-      await page.getByRole('textbox', { name: 'Password' }).fill('Dev-customer1-change-me');
+      await page.getByRole('textbox', { name: 'Password' }).fill('P@ssw0rd12345');
       await page.getByRole('button', { name: 'Sign In' }).click();
     }
 

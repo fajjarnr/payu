@@ -58,16 +58,16 @@ test.describe('Onboarding Flow - Complete Journey', () => {
     // Now step 2 content should be visible
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
 
-    // Mock the registration API to return success (no backend running)
-    await page.route('**/api/v1/accounts/register', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'mock-id', username: 'testuser123' }) })
-    );
+    // Real backend - use unique data to avoid duplicate errors
+    const unique = Date.now().toString().slice(-6);
+    const uniqueNik = `320101010101${unique.slice(0,4).padStart(4, '0')}`;
+    const uniqueUser = `testuser${unique}`;
+    const uniqueEmail = `test${unique}@example.com`;
 
-    // Fill form and submit
-    await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
+    await page.getByPlaceholder('16 digit angka...').fill(uniqueNik);
     await page.getByPlaceholder('Sesuai KTP').fill('Test User');
-    await page.getByPlaceholder('nama@email.com').fill('test@example.com');
-    await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+    await page.getByPlaceholder('nama@email.com').fill(uniqueEmail);
+    await page.getByPlaceholder('unik & mudah diingat').fill(uniqueUser);
     await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
@@ -281,11 +281,7 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
     await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
-    // Mock API to delay so loading spinner is visible
-    await page.route('**/api/v1/accounts/register', async route => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'mock' }) });
-    });
+    // Real backend - no mock, loading state may be brief but should still show
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
@@ -349,10 +345,11 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
     await page.goto('/onboarding');
     await page.waitForLoadState('domcontentloaded');
 
-    // Mock the registration API to return success (no backend running)
-    await page.route('**/api/v1/accounts/register', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'mock-id', username: 'testuser123' }) })
-    );
+    // Real backend - use unique data
+    const uniqueStep3 = Date.now().toString().slice(-6);
+    const uniqueNik3 = `320101010101${uniqueStep3.slice(0,4).padStart(4, '0')}`;
+    const uniqueUser3 = `testuser${uniqueStep3}`;
+    const uniqueEmail3 = `test${uniqueStep3}@example.com`;
 
     const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
     await page.locator('input[type="file"]').setInputFiles({
@@ -362,11 +359,11 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
     });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Fill form with valid data
-    await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
+    // Fill form with valid data - unique
+    await page.getByPlaceholder('16 digit angka...').fill(uniqueNik3);
     await page.getByPlaceholder('Sesuai KTP').fill('Test User');
-    await page.getByPlaceholder('nama@email.com').fill('test@example.com');
-    await page.getByPlaceholder('unik & mudah diingat').fill('testuser123');
+    await page.getByPlaceholder('nama@email.com').fill(uniqueEmail3);
+    await page.getByPlaceholder('unik & mudah diingat').fill(uniqueUser3);
     await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
@@ -617,10 +614,7 @@ test.describe('Onboarding Flow - Visual Regression', () => {
   test('should match screenshots on desktop - Step 3', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
 
-    // Mock registration API for Step 3
-    await page.route('**/api/v1/accounts/register', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'mock-id' }) })
-    );
+    // Real backend - no mock
 
     const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
     await page.locator('input[type="file"]').setInputFiles({

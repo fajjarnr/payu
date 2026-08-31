@@ -94,8 +94,8 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
     }
 
     private Response handleGenericException(Throwable ex) {
-        log.error("Unexpected error at {}: {} - {}",
-                getRequestPath(), ex.getClass().getSimpleName(), getSafeErrorMessage(ex));
+        log.error("Unexpected error at {}: {} - {}", getRequestPath(), ex.getClass().getSimpleName(),
+                getSafeErrorMessage(ex), ex);
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(ApiResponse.error("INTERNAL_ERROR", "An unexpected error occurred. Please try again later."))
                 .build();

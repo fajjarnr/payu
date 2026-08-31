@@ -212,12 +212,8 @@ test.describe('KYC Flow - Form Validation', () => {
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
     // Mock the API to delay so loading spinner is visible
-    await page.route('**/api/v1/accounts/register', async route => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ id: 'mock' }) });
-    });
-
-    await page.click('button:has-text("Konfirmasi Pendaftaran")');
+    // Real backend
+await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
     // Check for loading icon
     const loadingIcon = page.locator('.animate-spin');

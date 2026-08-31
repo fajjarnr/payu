@@ -3,6 +3,7 @@ package id.payu.gateway.adapter.filter;
 import id.payu.gateway.config.GatewayConfig;
 import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -39,6 +40,7 @@ import java.util.Map;
  */
 @Provider
 @ApplicationScoped
+@RunOnVirtualThread
 public class RateLimitFilter implements ContainerRequestFilter {
 
     private static final String RATE_LIMIT_PREFIX = "ratelimit:sw:";
@@ -100,6 +102,12 @@ public class RateLimitFilter implements ContainerRequestFilter {
         }
 
         String path = requestContext.getUriInfo().getPath();
+
+        // Skip public auth endpoints — OIDC code exchange is per-auth-code, not per-IP sliding window.
+        // Keeping it in the sliding window blocked the event loop without virtual threads (see 1.18.78).
+        if (path.startsWith("/api/v1/auth") || path.startsWith("/api/auth") || path.startsWith("/v1/auth")) {
+            return;
+        }
 
         // Skip health and metrics endpoints
         if (path.startsWith("/q/") || path.equals("/health") || path.equals("/status")

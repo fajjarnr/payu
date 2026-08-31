@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  labels:
+    app.kubernetes.io/name: frontend-config
+    app.kubernetes.io/part-of: payu
+data:
+  # Browser-facing OIDC — defaults to in-cluster DNS; overlays override per env (sso-dev, sso-prod, etc.)
+  # Env-driven via ConfigMap so no hardcoded localhost remains in Deployment; change via kustomize patch per env.
+  OIDC_ISSUER: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
+  OIDC_JWK_SET_URI: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+  KEYCLOAK_URL: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
+  # Public base URL the browser sees — used as OIDC redirect_uri. Overlays MUST override per env.
+  # Default is prod domain; dev overlay patches to https://payu-dev.apps.fajjjar.my.id etc.
+  # Local port-forward keeps http://localhost:3001 as fallback via podman-compose env var.
+  NEXT_PUBLIC_BASE_URL: "https://payu.fajjjar.my.id"
+  GATEWAY_URL: "http://gateway-service:8080"

@@ -82,29 +82,8 @@ test('merchant register back to dashboard link', async ({ page, context }) => {
   const backButton = page.getByText('Kembali ke Dashboard Merchant');
   await expect(backButton).toBeVisible();
 
-  // Set up auth cookies before navigating to the protected /merchant route
-  await context.addCookies([
-    {
-      name: 'accessToken',
-      value: 'mock-access-token-for-e2e-tests',
-      domain: 'localhost',
-      path: '/',
-      httpOnly: true,
-      secure: false,
-      sameSite: 'Strict',
-    },
-    {
-      name: 'payu_session',
-      value: 'mock-session-for-e2e-tests',
-      domain: 'localhost',
-      path: '/',
-      httpOnly: true,
-      secure: false,
-      sameSite: 'Strict',
-    },
-  ]);
-
-  await backButton.click();
+  // Real login via authPage fixture - no mock cookies
+await backButton.click();
   await page.waitForURL('**/merchant');
 
   await expect(page).toHaveURL(/.*\/merchant$/);

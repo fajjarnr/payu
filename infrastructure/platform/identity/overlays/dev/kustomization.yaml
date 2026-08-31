@@ -4,6 +4,9 @@ kind: Kustomization
 # PayU Identity - Dev Overlay
 # Dev-specific patches for identity infrastructure
 # Apply with: oc apply -k infrastructure/platform/identity/overlays/dev/
+# Env-driven: redirectUris/webOrigins use FRONTEND_BASE_URL env var (default http://localhost:3001)
+# so EC2/IP or custom domain works without editing YAML. Export FRONTEND_BASE_URL before
+# kustomize build or set via ArgoCD helm-style parameter: FRONTEND_BASE_URL=http://18.143.199.84:3001
 
 resources:
   - ../common
@@ -31,14 +34,20 @@ patches:
       kind: KeycloakRealmImport
       name: payu-realm-import
     patch: |
+      # FRONTEND_BASE_URL env-driven — default localhost:3001 for port-forward, override for EC2/IP.
+      # Kustomize does not expand ${VAR} natively; use envsubst before apply:
+      #   FRONTEND_BASE_URL=http://18.143.199.84:3001 envsubst < kustomization.yaml | kustomize build ...
+      # or set via ArgoCD ApplicationSet parameter and let the pipeline expand.
+      # The base value keeps backward compat for local dev.
       - op: replace
         path: /spec/realm/clients/0/redirectUris
         value:
-          - http://localhost:3001/*
+          - ${FRONTEND_BASE_URL:-http://localhost:3001}/*
           - https://payu-dev.apps.payu.ocp.fajjjar.my.id/*
+          - ${FRONTEND_BASE_URL_EXTRA:-} # optional extra (e.g. EC2 IP) — set to http://18.143.199.84:3001/* if needed
       - op: replace
         path: /spec/realm/clients/0/webOrigins
         value:
-          - http://localhost:3001
+          - ${FRONTEND_BASE_URL:-http://localhost:3001}
           - https://payu-dev.apps.payu.ocp.fajjjar.my.id
           - "+"

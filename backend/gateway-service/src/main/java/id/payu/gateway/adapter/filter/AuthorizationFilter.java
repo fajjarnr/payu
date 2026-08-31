@@ -16,6 +16,7 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import id.payu.gateway.adapter.cache.HotRodCacheClient;
 import io.quarkus.logging.Log;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import id.payu.gateway.config.GatewayConfig;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -43,6 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Provider
 @ApplicationScoped
+@RunOnVirtualThread
 public class AuthorizationFilter implements ContainerRequestFilter {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";

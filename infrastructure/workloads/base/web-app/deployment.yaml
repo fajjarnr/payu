@@ -98,15 +98,34 @@ spec:
             memory: 1Gi
         env:
         - name: OIDC_ISSUER
-          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
+          valueFrom:
+            configMapKeyRef:
+              name: frontend-config
+              key: OIDC_ISSUER
         - name: OIDC_JWK_SET_URI
-          value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+          valueFrom:
+            configMapKeyRef:
+              name: frontend-config
+              key: OIDC_JWK_SET_URI
+        - name: KEYCLOAK_URL
+          valueFrom:
+            configMapKeyRef:
+              name: frontend-config
+              key: KEYCLOAK_URL
+        - name: NEXT_PUBLIC_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: frontend-config
+              key: NEXT_PUBLIC_BASE_URL
         - name: NODE_ENV
           value: "production"
         - name: APP_VERSION
           value: "1.18.74"
         - name: GATEWAY_URL
-          value: "http://gateway-service:8080"
+          valueFrom:
+            configMapKeyRef:
+              name: frontend-config
+              key: GATEWAY_URL
         - name: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:

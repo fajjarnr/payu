@@ -166,7 +166,7 @@ public class TransactionService implements TransactionUseCase {
     @Override
     @Deprecated
     public List<TransactionEntity> getAccountTransactions(UUID accountId, String userId, int page, int size) {
-        log.warn("Using deprecated getAccountTransactions method - consider using GetAccountTransactionsQuery");
+        log.debug("Using deprecated getAccountTransactions method - consider using GetAccountTransactionsQuery");
         GetAccountTransactionsQuery query = new GetAccountTransactionsQuery(
                 accountId.toString(), userId, page, size);
         return getAccountTransactions(query);

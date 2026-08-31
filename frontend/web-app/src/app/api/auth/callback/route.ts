@@ -42,9 +42,10 @@ export async function GET(request: Request) {
   const log = withCorrelation(correlationId);
 
   const url = new URL(request.url);
-  // The container-bound request URL (0.0.0.0:8080) is not what the browser
-  // sees — use the configured public base URL for every browser-facing redirect.
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? `${url.protocol}//${url.host}`;
+  const host = request.headers.get("host") ?? url.host;
+  const proto = request.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "");
+  // Browser-facing origin: derive from Host header so 18.143.199.84:3001 and localhost:3001 both work without hardcode
+  const baseUrl = `${proto}://${host}`;
   const origin = new URL(baseUrl).origin;
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
@@ -106,7 +107,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const isProduction = process.env.NODE_ENV === "production";
+    const isSecure = origin.startsWith("https://");
     const ACCESS_TOKEN_MAX_AGE = data.expires_in ?? data.data?.expires_in ?? 900;
 
     const response = NextResponse.redirect(new URL("/dashboard", origin));
@@ -115,7 +116,7 @@ export async function GET(request: Request) {
     if (accessToken) {
       response.cookies.set("accessToken", accessToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: isSecure,
         sameSite: "strict",
         maxAge: ACCESS_TOKEN_MAX_AGE,
         path: "/",
@@ -124,7 +125,7 @@ export async function GET(request: Request) {
     if (refreshToken) {
       response.cookies.set("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: isProduction,
+        secure: isSecure,
         sameSite: "strict",
         maxAge: 604_800, // 7 days
         path: "/",
