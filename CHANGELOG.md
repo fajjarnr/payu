@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.79] - 2026-09-03
+
+### Fixed
+- **Relay E2E full money journey dev (RELAY-001..013, L-411..415)**: live proof `201 COMPLETED` + double-entry `sender -10.000 / recipient +10.000` fee 0 via Chrome+relay clicks (login OIDC → transfer → review → confirm).
+- **Login orphan account (RELAY-001)**: BFF fallback `account-${sub}` vs seeded wallets. Fix: `account_id` protocol mapper + `accountId` attrs (customer1/2/admin) live + `keycloak-realm-import.yaml`; `unmanagedAttributePolicy=ENABLED` (PUT 204 tapi hilang tanpanya).
+- **Transfer confirm mati diam-diam (RELAY-013/TRF-SUBMIT-001)**: `fromAccountId` cuma di-set via kontak favorit → zod gagal tanpa feedback. Fix: `useEffect` default dari session. Regression `money-journey.spec.ts` (REG-VAL-001, LOGIN-J-001, TRF-J-001/002/003; `X-E2E-Test` bypass + skip infra/velocity, `retries: 0`).
+- **Transfer amount string vs schema (RELAY-012/TRF-AMOUNT-001)**: frontend kirim Money string, gateway minta JSON number → semua transfer web 400. Fix: konversi di `TransactionService.initiateTransfer`; ekspektasi test jadi angka 9/9.
+- **429 retry storm (RELAY-003/RATELOOP-001)**: axios retry-429 x3 + RQ retry = amplifikasi 8x + toast permanen. Fix: 429 tak pernah di-retry (`api.ts` + `providers.tsx` predicate 4xx); `api-rate-limit.test.ts` ditulis ulang lawan interceptor asli 4/4.
+- **Dev tanpa Redis (RELAY-006)**: VelocityGuard fail-secure tiap transfer (`422 AML_VELOCITY…` padahal `Unable to connect to Redis`). Fix: `redis-standalone.yaml` dev-only (ACL developer, `payu-cache-resp:11222`) + `SPRING_DATA_REDIS_*` via overlay, `oc apply -k`.
+- **Status DDL drift (RELAY-007)**: `PENDING_COMPLIANCE_REVIEW` (25ch) vs `status VARCHAR(20)` + `valid_status` CHECK lama → 22001/23514, API 500. Fix: V32 widen `VARCHAR(40)` + recreate 3 matview dependen, V33 CHECK enum penuh. transaction-service image `1.8.109-113`.
+- **Fraud scoring tanpa kredensial (RELAY-008)**: adapter panggil analytics tanpa JWT → 401 → semua transfer HOLD. Fix: teruskan bearer SecurityContext (null-safe); test header `RiskEvaluationAdapterTest` 5/5.
+- **Analytics tanpa KEYCLOAK_URL (RELAY-009)**: `jwt_auth` 401 semua call. Fix: overlay `KEYCLOAK_URL` in-cluster per L-408.
+- **gRPC deadline beku (RELAY-011/GRPC-012)**: `withDeadlineAfter` di shared stub → semua call 30 dtk pasca-boot `DEADLINE_EXCEEDED` offset negatif (`-321s`). Fix: stub polos + deadline per call (`WalletGrpcAdapter` 5 titik + `AccountServiceAdapter`); sisa billing/fx/investment/lending OPEN.
+- **BFF E2E header (E2E-RLS-001)**: `x-e2e-test` masuk allowlist forward (gateway hanya honor saat test-mode dev/test).
+- **Money brand test migration**: 9 file `src/__tests__` ke `asMoney` (159 titik) — `tsc --noEmit` 0 error, vitest 140/140 + target 9/9.
+
+### Deployed
+- web-app `1.18.79 → 1.18.82` (podman build + push internal registry + `oc set image`, lalu overlay `newTag` + `oc apply -k` — git = cluster); transaction-service `1.8.109 → 1.8.113`; overlays `payu-dev/web-app`, `payu-dev/transaction-service`, `payu-dev/analytics-service`, `platform/data/overlays/dev`.
+
 ## [1.18.78] - 2026-09-03
 
 ### Fixed

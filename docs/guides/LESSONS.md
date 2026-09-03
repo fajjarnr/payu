@@ -1,5 +1,16 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-415: withDeadlineAfter di shared stub = semua gRPC mati 30 dtk pasca-boot (2026-09-03)
+
+**Context**: `GrpcChannelSupport.withDeadline()` dipanggil sekali di `@PostConstruct`. Deadline gRPC absolut beku saat pembuatan stub — tiap call setelah 30 dtk gagal `DEADLINE_EXCEEDED` dengan offset negatif membesar (`-321s` = umur pod). Semua service pemakai helper (billing/fx/investment/lending/transaction) kena. Gejala menipu: TCP connect OK, tak ada log server.
+
+**Fix**: stub polos saat init, `withDeadlineAfter` per call (`stubWithDeadline()`). Scope sesi ini: `WalletGrpcAdapter` (5 call) + `AccountServiceAdapter` transaction-service; sisa service di RELAY-011. Pelajaran: deadline relatif milik call, bukan milik stub — helper yang menggabungkan keduanya adalah jebakan API.
+
+## L-414: Fail-secure tanpa dependensi = outage senyap — Redis dev tak ada, semua transfer 422 (2026-09-03)
+
+**Context**: `VelocityGuard` fail-secure saat Redis unreachable. Benar untuk prod, tapi dev tak punya Redis sama sekali (`payu-cache-resp` tak ada; live Deployment bahkan kehilangan env REDIS) → tiap transfer `422 AML_VELOCITY_LIMIT_EXCEEDED`. Rantai yang sama: fraud URL `localhost:8082`, analytics tanpa `KEYCLOAK_URL` (401), status CHECK `VARCHAR(20)` vs enum 25ch (500), CHECK constraint lama (23514).
+
+**Fix**: `redis-standalone.yaml` dev-only (ACL developer, emptyDir) + env via overlay + `SERVICES_ANALYTICS_URL` in-cluster + `KEYCLOAK_URL` analytics + V32/V33 (widen + CHECK + recreate 3 matview) + teruskan bearer ke fraud/score. Bukti akhir: `201 COMPLETED`, debit/kredit Rp 10.000 pas. Pelajaran: error keamanan yang generik (`LIMIT_EXCEEDED`) harus log sebab presisi (unreachable vs breach) — tanpa log `Unable to connect to Redis`, ini tak terpecahkan.
 ## L-413: Client retry 429 = request storm — server bilang pelan, client malah ngegas (2026-09-03)
 
 **Context**: Satu poll analytics kena 429 gateway → interceptor axios retry x3 + React Query retry → 8x lipat per mount; tiap tab-focus refetch lagi. Hasil: toast `Terlalu banyak permintaan` permanen + bucket tak pernah pulih + transfer POST ikut ke-429. Bukti DevTools: `/api/v1/analytics/user/.../metrics` 24x, transfer POST 0x.
