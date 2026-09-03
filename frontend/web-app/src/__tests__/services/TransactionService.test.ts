@@ -7,6 +7,7 @@ import {
   type ProcessQrisPaymentRequest,
 } from '@/services/TransactionService';
 import api from '@/lib/api';
+import { asMoney } from '@/lib/currency';
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -32,7 +33,7 @@ describe('TransactionService', () => {
       const mockRequest: InitiateTransferRequest = {
         senderAccountId: 'acc_123',
         recipientAccountNumber: 'acc_456',
-        amount: '100000',
+        amount: asMoney('100000'),
         description: 'Test transfer',
         type: 'INTERNAL_TRANSFER',
         transactionPin: '123456',
@@ -43,7 +44,7 @@ describe('TransactionService', () => {
         transactionId: 'tx_123',
         referenceNumber: 'REF-2024-001',
         status: 'PENDING',
-        fee: '0',
+        fee: asMoney('0'),
         estimatedCompletionTime: '2024-01-01T12:00:00Z',
       };
 
@@ -51,7 +52,8 @@ describe('TransactionService', () => {
 
       const result = await TransactionService.getInstance().initiateTransfer(mockRequest);
 
-      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', mockRequest, {
+      // TRF-AMOUNT-001: transport sends amount as JSON number (gateway schema).
+      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', { ...mockRequest, amount: 100000 }, {
         headers: { 'X-Idempotency-Key': expect.any(String) },
       });
       expect(result).toEqual(mockResponse);
@@ -61,7 +63,7 @@ describe('TransactionService', () => {
       const mockRequest: InitiateTransferRequest = {
         senderAccountId: 'acc_123',
         recipientAccountNumber: 'acc_456',
-        amount: '50000',
+        amount: asMoney('50000'),
         description: 'Minimal transfer',
       };
 
@@ -69,15 +71,14 @@ describe('TransactionService', () => {
         transactionId: 'tx_456',
         referenceNumber: 'REF-2024-002',
         status: 'PENDING',
-        fee: '0',
+        fee: asMoney('0'),
         estimatedCompletionTime: '2024-01-01T12:30:00Z',
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
 
       const result = await TransactionService.getInstance().initiateTransfer(mockRequest);
-
-      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', mockRequest, {
+      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', { ...mockRequest, amount: 50000 }, {
         headers: { 'X-Idempotency-Key': expect.any(String) },
       });
       expect(result).toEqual(mockResponse);
@@ -92,7 +93,7 @@ describe('TransactionService', () => {
         senderAccountId: 'acc_123',
         recipientAccountId: 'acc_456',
         type: 'INTERNAL_TRANSFER',
-        amount: '100000',
+        amount: asMoney('100000'),
         currency: 'IDR',
         description: 'Test transfer',
         status: 'COMPLETED',
@@ -116,7 +117,7 @@ describe('TransactionService', () => {
         senderAccountId: 'acc_123',
         recipientAccountId: 'acc_789',
         type: 'BIFAST_TRANSFER',
-          amount: '50000',
+          amount: asMoney('50000'),
         currency: 'IDR',
         description: 'Test BIFAST',
         status: 'FAILED',
@@ -142,7 +143,7 @@ describe('TransactionService', () => {
           senderAccountId: 'acc_123',
           recipientAccountId: 'acc_456',
           type: 'INTERNAL_TRANSFER',
-          amount: '100000',
+          amount: asMoney('100000'),
           currency: 'IDR',
           description: 'Transfer 1',
           status: 'COMPLETED',
@@ -180,7 +181,7 @@ describe('TransactionService', () => {
     it('should process QRIS payment successfully', async () => {
       const mockRequest: ProcessQrisPaymentRequest = {
         qrCode: '00020101021226570016ID.CO.QRIS.WWW01189360052002855280214ID10200000000303UMI51440014ID.CO.QRIS.WWW0215ID10200000000303UMI5204581253033605802ID5910Merchant6010Jakarta6105101106304ABCD',
-          amount: '50000',
+          amount: asMoney('50000'),
         accountId: 'acc_123',
       };
 
@@ -196,7 +197,7 @@ describe('TransactionService', () => {
     it('should process QRIS payment with different amount', async () => {
       const mockRequest: ProcessQrisPaymentRequest = {
         qrCode: 'qris_code_string',
-          amount: '150000',
+          amount: asMoney('150000'),
         accountId: 'acc_456',
       };
 
