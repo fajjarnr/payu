@@ -9,6 +9,7 @@ import InvestmentService, {
   type GoldHolding,
 } from '@/services/InvestmentService';
 import api from '@/lib/api';
+import { asMoney } from '@/lib/currency';
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -21,7 +22,7 @@ const mockAccount: InvestmentAccount = {
   id: 'inv_acc_001',
   userId: 'user_123',
   accountType: 'PREMIUM',
-  balance: '50000000',
+  balance: asMoney('50000000'),
   currency: 'IDR',
   status: 'ACTIVE',
   createdAt: '2026-02-18T10:00:00Z',
@@ -32,7 +33,7 @@ const mockOrder: InvestmentOrder = {
   userId: 'user_123',
   type: 'GOLD',
   action: 'BUY',
-  amount: '5000000',
+  amount: asMoney('5000000'),
   units: 5,
   status: 'COMPLETED',
   createdAt: '2026-02-18T10:00:00Z',
@@ -41,11 +42,11 @@ const mockOrder: InvestmentOrder = {
 const mockGoldHolding: GoldHolding = {
   userId: 'user_123',
   totalWeightGrams: 10.5,
-  currentValuePerGram: '1050000',
-  totalValue: '11025000',
+  currentValuePerGram: asMoney('1050000'),
+  totalValue: asMoney('11025000'),
   holdings: [
-    { purchaseDate: '2026-01-15', weightGrams: 5.0, purchasePrice: '1000000' },
-    { purchaseDate: '2026-02-01', weightGrams: 5.5, purchasePrice: '1020000' },
+    { purchaseDate: '2026-01-15', weightGrams: 5.0, purchasePrice: asMoney('1000000') },
+    { purchaseDate: '2026-02-01', weightGrams: 5.5, purchasePrice: asMoney('1020000') },
   ],
 };
 
@@ -84,7 +85,7 @@ describe('InvestmentService', () => {
     it('should buy a fixed deposit', async () => {
       const request: BuyDepositRequest = {
         accountId: 'acc_123',
-        amount: '10000000',
+        amount: asMoney('10000000'),
         tenure: 12,
       };
 
@@ -106,7 +107,7 @@ describe('InvestmentService', () => {
       const request: BuyMutualFundRequest = {
         accountId: 'acc_123',
         fundCode: 'fund_001',
-        amount: '1000000',
+        amount: asMoney('1000000'),
       };
 
       const fundOrder = { ...mockOrder, type: 'MUTUAL_FUND' as const };
@@ -125,7 +126,7 @@ describe('InvestmentService', () => {
   describe('buyGold', () => {
     it('should buy gold', async () => {
       const request: BuyGoldRequest = {
-        amount: '5000000',
+        amount: asMoney('5000000'),
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockOrder });
@@ -144,7 +145,7 @@ describe('InvestmentService', () => {
       const request: SellInvestmentRequest = {
         accountId: 'acc_123',
         transactionId: 'inv_001',
-        amount: '3000000',
+        amount: asMoney('3000000'),
       };
 
       const sellOrder = { ...mockOrder, action: 'SELL' as const };

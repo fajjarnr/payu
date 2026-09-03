@@ -7,6 +7,7 @@ import {
   type WalletTransaction,
 } from '@/services/WalletService';
 import api from '@/lib/api';
+import { asMoney } from '@/lib/currency';
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -30,9 +31,9 @@ describe('WalletService', () => {
     it('should fetch balance for given account', async () => {
       const mockBalance: BalanceResponse = {
         accountId: 'acc_123',
-        balance: '9007199254740993.1234',
-        availableBalance: '900000.0000',
-        reservedBalance: '100000.0000',
+        balance: asMoney('9007199254740993.1234'),
+        availableBalance: asMoney('900000.0000'),
+        reservedBalance: asMoney('100000.0000'),
         currency: 'IDR',
       };
 
@@ -48,7 +49,7 @@ describe('WalletService', () => {
   describe('reserveBalance', () => {
     it('should reserve balance successfully', async () => {
       const mockRequest: ReserveBalanceRequest = {
-          amount: '50000',
+          amount: asMoney('50000'),
         referenceId: 'ref_123',
       };
 
@@ -117,8 +118,8 @@ describe('WalletService', () => {
           walletId: 'wallet_123',
           referenceId: 'ref_1',
           type: 'CREDIT' as const,
-          amount: '100000.0000',
-          balanceAfter: '9007199254740993.1234',
+          amount: asMoney('100000.0000'),
+          balanceAfter: asMoney('9007199254740993.1234'),
           description: 'Test transaction',
           createdAt: '2024-01-01T00:00:00Z',
         },

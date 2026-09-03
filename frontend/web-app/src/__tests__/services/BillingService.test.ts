@@ -6,6 +6,7 @@ import BillingService, {
   type TopUpRequest,
 } from '@/services/BillingService';
 import api from '@/lib/api';
+import { asMoney } from '@/lib/currency';
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -25,7 +26,7 @@ describe('BillingService', () => {
         accountId: 'acc_123',
         billerCode: 'PLN',
         customerId: 'customer_456',
-        amount: '150000',
+        amount: asMoney('150000'),
       };
 
       const mockPayment: BillPayment = {
@@ -34,9 +35,9 @@ describe('BillingService', () => {
         billerCode: 'PLN',
         billerName: 'PLN Electricity',
         customerId: 'customer_456',
-        amount: '150000',
-        adminFee: '2500',
-        totalAmount: '152500',
+        amount: asMoney('150000'),
+        adminFee: asMoney('2500'),
+        totalAmount: asMoney('152500'),
         status: 'COMPLETED',
         referenceNumber: 'REF123',
         createdAt: '2026-02-18T10:00:00Z',
@@ -61,7 +62,7 @@ describe('BillingService', () => {
         accountId: 'acc_123',
         provider: 'TELKOMSEL',
         walletNumber: '08123456789',
-        amount: '50000',
+        amount: asMoney('50000'),
       };
 
       const mockPayment: BillPayment = {
@@ -70,9 +71,9 @@ describe('BillingService', () => {
         billerCode: 'TELKOMSEL',
         billerName: 'Telkomsel Prepaid',
         customerId: '08123456789',
-        amount: '50000',
-        adminFee: '0',
-        totalAmount: '50000',
+        amount: asMoney('50000'),
+        adminFee: asMoney('0'),
+        totalAmount: asMoney('50000'),
         status: 'COMPLETED',
         referenceNumber: 'TOP001',
         createdAt: '2026-02-18T10:00:00Z',
@@ -127,9 +128,9 @@ describe('BillingService', () => {
         billerCode: 'PDAM',
         billerName: 'PDAM Water',
         customerId: 'cust_001',
-        amount: '85000',
-        adminFee: '2500',
-        totalAmount: '87500',
+        amount: asMoney('85000'),
+        adminFee: asMoney('2500'),
+        totalAmount: asMoney('87500'),
         status: 'COMPLETED',
         referenceNumber: 'REF456',
         createdAt: '2026-02-18T10:00:00Z',

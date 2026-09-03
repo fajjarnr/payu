@@ -15,6 +15,7 @@ import {
   type RewardType,
 } from '@/services/PromotionService';
 import api from '@/lib/api';
+import { asMoney } from '@/lib/currency';
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -357,7 +358,7 @@ describe('PromotionService', () => {
           {
             id: 'cashback_1',
             accountId: 'acc_123',
-            amount: '10000',
+            amount: asMoney('10000'),
             type: 'PERCENTAGE',
             referenceId: 'txn_123',
             merchantName: 'Tokopedia',
@@ -368,7 +369,7 @@ describe('PromotionService', () => {
           {
             id: 'cashback_2',
             accountId: 'acc_123',
-            amount: '5000',
+            amount: asMoney('5000'),
             type: 'FIXED',
             referenceId: 'txn_456',
             status: 'PENDING',
@@ -395,7 +396,7 @@ describe('PromotionService', () => {
             {
               id: `cashback_${status}`,
               accountId: 'acc_123',
-              amount: '1000',
+              amount: asMoney('1000'),
               type: 'FIXED',
               referenceId: 'txn_ref',
               status: status as Cashback['status'],
@@ -416,10 +417,10 @@ describe('PromotionService', () => {
       it('should fetch cashback summary for account', async () => {
         const mockSummary = {
           accountId: 'acc_123',
-          totalCashback: '150000',
-          pendingCashback: '25000',
-          creditedCashback: '100000',
-          expiredCashback: '25000',
+          totalCashback: asMoney('150000'),
+          pendingCashback: asMoney('25000'),
+          creditedCashback: asMoney('100000'),
+          expiredCashback: asMoney('25000'),
         };
 
         vi.mocked(api.get).mockResolvedValue({ data: mockSummary });
@@ -438,8 +439,8 @@ describe('PromotionService', () => {
       it('should create new referral', async () => {
         const mockRequest: CreateReferralRequest = {
           referrerAccountId: 'acc_123',
-          referrerReward: '50000',
-          refereeReward: '25000',
+          referrerReward: asMoney('50000'),
+          refereeReward: asMoney('25000'),
           rewardType: 'CASHBACK',
           expiryDate: '2024-01-31T00:00:00Z',
         };
@@ -448,8 +449,8 @@ describe('PromotionService', () => {
           id: 'ref_123',
           referrerAccountId: 'acc_123',
           referralCode: 'REF123ABC',
-          referrerReward: '50000',
-          refereeReward: '25000',
+          referrerReward: asMoney('50000'),
+          refereeReward: asMoney('25000'),
           rewardType: 'CASHBACK',
           status: 'PENDING',
           expiryDate: '2024-01-31T00:00:00Z',
@@ -478,8 +479,8 @@ describe('PromotionService', () => {
           referrerAccountId: 'acc_123',
           refereeAccountId: 'acc_456',
           referralCode: 'REF123ABC',
-          referrerReward: '50000',
-          refereeReward: '25000',
+          referrerReward: asMoney('50000'),
+          refereeReward: asMoney('25000'),
           rewardType: 'CASHBACK',
           status: 'COMPLETED',
           completedAt: '2024-01-15T10:00:00Z',
@@ -503,8 +504,8 @@ describe('PromotionService', () => {
           id: 'ref_456',
           referrerAccountId: 'acc_789',
           referralCode: 'MYREFCODE',
-          referrerReward: '75000',
-          refereeReward: '25000',
+          referrerReward: asMoney('75000'),
+          refereeReward: asMoney('25000'),
           rewardType: 'CASHBACK',
           status: 'PENDING',
           expiryDate: '2024-02-01T00:00:00Z',
@@ -528,8 +529,8 @@ describe('PromotionService', () => {
             referrerAccountId: 'acc_123',
             refereeAccountId: 'acc_456',
             referralCode: 'REF1',
-            referrerReward: '50000',
-            refereeReward: '25000',
+            referrerReward: asMoney('50000'),
+            refereeReward: asMoney('25000'),
             rewardType: 'CASHBACK',
             status: 'COMPLETED',
             completedAt: '2024-01-10T10:00:00Z',
@@ -540,8 +541,8 @@ describe('PromotionService', () => {
             id: 'ref_2',
             referrerAccountId: 'acc_123',
             referralCode: 'REF2',
-            referrerReward: '50000',
-            refereeReward: '25000',
+            referrerReward: asMoney('50000'),
+            refereeReward: asMoney('25000'),
             rewardType: 'CASHBACK',
             status: 'PENDING',
             expiryDate: '2024-02-01T00:00:00Z',
@@ -567,7 +568,7 @@ describe('PromotionService', () => {
           totalReferrals: 10,
           completedReferrals: 7,
           pendingReferrals: 3,
-          totalEarnings: '350000',
+          totalEarnings: asMoney('350000'),
         };
 
         vi.mocked(api.get).mockResolvedValue({ data: mockSummary });

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { StatementService, type Statement, type StatementGenerationRequest, type StatementsListResponse } from '@/services/StatementService';
 import api, { isAxiosError } from '@/lib/api';
+import { asMoney } from '@/lib/currency';
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -15,10 +16,10 @@ const mockStatement: Statement = {
   customerId: 'cust_123',
   accountNumber: '1234567890',
   statementPeriod: '2026-01',
-  openingBalance: '10000000.0000',
-  closingBalance: '15000000.0000',
-  totalCredits: '8000000.0000',
-  totalDebits: '3000000.0000',
+  openingBalance: asMoney('10000000.0000'),
+  closingBalance: asMoney('15000000.0000'),
+  totalCredits: asMoney('8000000.0000'),
+  totalDebits: asMoney('3000000.0000'),
   transactionCount: 25,
   status: 'COMPLETED',
   generatedAt: '2026-02-01T10:00:00Z',

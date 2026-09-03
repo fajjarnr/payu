@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FxService, SUPPORTED_CURRENCIES, type FxRateResponse, type FxConversionResponse, type ConvertCurrencyRequest, type FxConversionRequest } from '@/services/FxService';
 import api from '@/lib/api';
+import { asMoney } from '@/lib/currency';
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -13,8 +14,8 @@ const mockRate: FxRateResponse = {
   id: 'rate_001',
   fromCurrency: 'USD',
   toCurrency: 'IDR',
-  rate: '15750',
-  inverseRate: '0.0000635',
+  rate: asMoney('15750'),
+  inverseRate: asMoney('0.0001'),
   validFrom: '2026-02-18T00:00:00Z',
   validUntil: '2026-02-18T23:59:59Z',
 };
@@ -24,11 +25,11 @@ const mockConversion: FxConversionResponse = {
   accountId: 'acc_123',
   fromCurrency: 'USD',
   toCurrency: 'IDR',
-  fromAmount: '100',
-  toAmount: '1575000',
-  exchangeRate: '15750',
-  fee: '5000',
-  effectiveAmount: '1570000',
+  fromAmount: asMoney('100'),
+  toAmount: asMoney('1575000'),
+  exchangeRate: asMoney('15750'),
+  fee: asMoney('5000'),
+  effectiveAmount: asMoney('1570000'),
   conversionDate: '2026-02-18T10:00:00Z',
   status: 'COMPLETED',
 };
@@ -76,7 +77,7 @@ describe('FxService', () => {
       const request: ConvertCurrencyRequest = {
         fromCurrency: 'USD',
         toCurrency: 'IDR',
-        amount: '100',
+        amount: asMoney('100'),
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockConversion });
@@ -93,7 +94,7 @@ describe('FxService', () => {
       const request: FxConversionRequest = {
         fromCurrency: 'USD',
         toCurrency: 'IDR',
-        amount: '100',
+        amount: asMoney('100'),
       };
 
       vi.mocked(api.post).mockResolvedValue({ data: mockConversion });

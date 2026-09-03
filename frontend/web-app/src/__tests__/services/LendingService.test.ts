@@ -12,6 +12,7 @@ import {
   type PayLaterStatus,
 } from '@/services/LendingService';
 import api from '@/lib/api';
+import { asMoney } from '@/lib/currency';
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -43,7 +44,7 @@ describe('LendingService', () => {
         const mockRequest: LoanApplicationRequest = {
           externalId: 'user_123',
           loanType: 'PERSONAL',
-          principalAmount: "10000000",
+          principalAmount: asMoney("10000000"),
           tenureMonths: 12,
           purpose: 'Home renovation',
         };
@@ -51,13 +52,13 @@ describe('LendingService', () => {
         const mockLoan: Loan = {
           id: 'loan_123',
           userId: 'user_123',
-          amount: "10000000",
-          interestRate: "12.5",
+          amount: asMoney("10000000"),
+          interestRate: asMoney("12.5"),
           tenureMonths: 12,
           purpose: 'Home renovation',
           status: 'PENDING',
-          monthlyPayment: "888888.89",
-          totalPayment: "10666666.67",
+          monthlyPayment: asMoney("888888.89"),
+          totalPayment: asMoney("10666666.67"),
           createdAt: '2024-01-01T10:00:00Z',
         };
 
@@ -76,7 +77,7 @@ describe('LendingService', () => {
         const mockRequest: LoanApplicationRequest = {
           externalId: 'user_456',
           loanType: 'PERSONAL',
-          principalAmount: "5000000",
+          principalAmount: asMoney("5000000"),
           tenureMonths: 6,
           purpose: 'Emergency fund',
         };
@@ -84,13 +85,13 @@ describe('LendingService', () => {
         const mockLoan: Loan = {
           id: 'loan_456',
           userId: 'user_456',
-          amount: "5000000",
-          interestRate: "15.0",
+          amount: asMoney("5000000"),
+          interestRate: asMoney("15.0"),
           tenureMonths: 6,
           purpose: 'Emergency fund',
           status: 'PENDING',
-          monthlyPayment: "901775.32",
-          totalPayment: "5410651.92",
+          monthlyPayment: asMoney("901775.32"),
+          totalPayment: asMoney("5410651.92"),
           createdAt: '2024-01-01T11:00:00Z',
         };
 
@@ -107,13 +108,13 @@ describe('LendingService', () => {
         const mockLoan: Loan = {
           id: 'loan_789',
           userId: 'user_789',
-          amount: "20000000",
-          interestRate: "10.0",
+          amount: asMoney("20000000"),
+          interestRate: asMoney("10.0"),
           tenureMonths: 24,
           purpose: 'Business expansion',
           status: 'APPROVED',
-          monthlyPayment: "917496.36",
-          totalPayment: "22019912.64",
+          monthlyPayment: asMoney("917496.36"),
+          totalPayment: asMoney("22019912.64"),
           createdAt: '2024-01-01T10:00:00Z',
           approvedAt: '2024-01-02T10:00:00Z',
         };
@@ -134,13 +135,13 @@ describe('LendingService', () => {
           const mockLoan: Loan = {
             id: `loan_${status}`,
             userId: `user_${status}`,
-            amount: "1000000",
-            interestRate: "12.0",
+            amount: asMoney("1000000"),
+            interestRate: asMoney("12.0"),
             tenureMonths: 12,
             purpose: 'Test',
             status: status,
-            monthlyPayment: "88888.89",
-            totalPayment: "1066666.67",
+            monthlyPayment: asMoney("88888.89"),
+            totalPayment: asMoney("1066666.67"),
             createdAt: '2024-01-01T10:00:00Z',
           };
 
@@ -161,9 +162,9 @@ describe('LendingService', () => {
             loanId: 'loan_123',
             installmentNumber: 1,
             dueDate: '2024-02-01T00:00:00Z',
-            amount: "888888.89",
-            principalAmount: "783888.89",
-            interestAmount: "105000.00",
+            amount: asMoney("888888.89"),
+            principalAmount: asMoney("783888.89"),
+            interestAmount: asMoney("105000.00"),
             status: 'PENDING',
           },
           {
@@ -171,9 +172,9 @@ describe('LendingService', () => {
             loanId: 'loan_123',
             installmentNumber: 2,
             dueDate: '2024-03-01T00:00:00Z',
-            amount: "888888.89",
-            principalAmount: "791688.89",
-            interestAmount: "97200.00",
+            amount: asMoney("888888.89"),
+            principalAmount: asMoney("791688.89"),
+            interestAmount: asMoney("97200.00"),
             status: 'PENDING',
           },
         ];
@@ -196,9 +197,9 @@ describe('LendingService', () => {
             loanId: 'loan_123',
             installmentNumber: 1,
             dueDate: '2024-02-01T00:00:00Z',
-            amount: "888888.89",
-            principalAmount: "783888.89",
-            interestAmount: "105000.00",
+            amount: asMoney("888888.89"),
+            principalAmount: asMoney("783888.89"),
+            interestAmount: asMoney("105000.00"),
             status: 'PAID',
             paidAt: '2024-02-01T10:00:00Z',
           },
@@ -207,9 +208,9 @@ describe('LendingService', () => {
             loanId: 'loan_123',
             installmentNumber: 2,
             dueDate: '2024-03-01T00:00:00Z',
-            amount: "888888.89",
-            principalAmount: "791688.89",
-            interestAmount: "97200.00",
+            amount: asMoney("888888.89"),
+            principalAmount: asMoney("791688.89"),
+            interestAmount: asMoney("97200.00"),
             status: 'PENDING',
           },
         ];
@@ -231,9 +232,9 @@ describe('LendingService', () => {
             loanId: 'loan_456',
             installmentNumber: 1,
             dueDate: '2024-01-01T00:00:00Z',
-            amount: "500000",
-            principalAmount: "450000",
-            interestAmount: "50000",
+            amount: asMoney("500000"),
+            principalAmount: asMoney("450000"),
+            interestAmount: asMoney("50000"),
             status: 'OVERDUE',
           },
         ];
@@ -253,19 +254,19 @@ describe('LendingService', () => {
           loanId: 'loan_123',
           installmentNumber: 1,
           dueDate: '2024-02-01T00:00:00Z',
-          amount: "888888.89",
-          principalAmount: "783888.89",
-          interestAmount: "105000.00",
+          amount: asMoney("888888.89"),
+          principalAmount: asMoney("783888.89"),
+          interestAmount: asMoney("105000.00"),
           status: 'PAID',
           paidAt: '2024-02-01T10:30:00Z',
         };
 
         vi.mocked(api.post).mockResolvedValue({ data: mockSchedule });
 
-        const result = await service.processRepayment('schedule_1', '888888.89');
+        const result = await service.processRepayment('schedule_1', asMoney('888888.89'));
 
         expect(api.post).toHaveBeenCalledWith('/lending/repayment-schedules/schedule_1/pay', {
-          amount: "888888.89",
+          amount: asMoney("888888.89"),
         }, {
           headers: { 'X-Idempotency-Key': expect.any(String) },
         });
@@ -278,7 +279,7 @@ describe('LendingService', () => {
     describe('activatePayLater', () => {
       it('should activate PayLater account', async () => {
         const mockRequest: PayLaterLimitRequest = {
-          monthlyIncome: "15000000",
+          monthlyIncome: asMoney("15000000"),
           employmentType: 'FULL_TIME',
           employmentDurationMonths: 24,
         };
@@ -286,9 +287,9 @@ describe('LendingService', () => {
         const mockPayLater: PayLater = {
           id: 'paylater_123',
           userId: 'user_123',
-          creditLimit: "5000000",
-          usedLimit: "0",
-          availableLimit: "5000000",
+          creditLimit: asMoney("5000000"),
+          usedLimit: asMoney("0"),
+          availableLimit: asMoney("5000000"),
           status: 'ACTIVE',
           createdAt: '2024-01-01T10:00:00Z',
         };
@@ -307,7 +308,7 @@ describe('LendingService', () => {
 
         for (const empType of employmentTypes) {
           const mockRequest: PayLaterLimitRequest = {
-            monthlyIncome: "10000000",
+            monthlyIncome: asMoney("10000000"),
             employmentType: empType,
             employmentDurationMonths: 12,
           };
@@ -315,9 +316,9 @@ describe('LendingService', () => {
           const mockPayLater: PayLater = {
             id: `paylater_${empType}`,
             userId: `user_${empType}`,
-            creditLimit: "3000000",
-            usedLimit: "0",
-            availableLimit: "3000000",
+            creditLimit: asMoney("3000000"),
+            usedLimit: asMoney("0"),
+            availableLimit: asMoney("3000000"),
             status: 'ACTIVE',
             createdAt: '2024-01-01T10:00:00Z',
           };
@@ -336,12 +337,12 @@ describe('LendingService', () => {
         const mockPayLater: PayLater = {
           id: 'paylater_456',
           userId: 'user_456',
-          creditLimit: "10000000",
-          usedLimit: "2500000",
-          availableLimit: "7500000",
+          creditLimit: asMoney("10000000"),
+          usedLimit: asMoney("2500000"),
+          availableLimit: asMoney("7500000"),
           status: 'ACTIVE',
           dueDate: '2024-02-15T00:00:00Z',
-          minimumPayment: "500000",
+          minimumPayment: asMoney("500000"),
           createdAt: '2024-01-01T10:00:00Z',
         };
 
@@ -361,9 +362,9 @@ describe('LendingService', () => {
           const mockPayLater: PayLater = {
             id: `paylater_${status}`,
             userId: `user_${status}`,
-            creditLimit: "5000000",
-            usedLimit: "1000000",
-            availableLimit: "4000000",
+            creditLimit: asMoney("5000000"),
+            usedLimit: asMoney("1000000"),
+            availableLimit: asMoney("4000000"),
             status: status,
             createdAt: '2024-01-01T10:00:00Z',
           };
@@ -384,19 +385,19 @@ describe('LendingService', () => {
           userId: 'user_123',
           type: 'PURCHASE',
           merchantName: 'Tokopedia',
-          amount: "500000",
-          balanceAfter: "500000",
+          amount: asMoney("500000"),
+          balanceAfter: asMoney("500000"),
           description: 'Online shopping',
           createdAt: '2024-01-01T10:00:00Z',
         };
 
         vi.mocked(api.post).mockResolvedValue({ data: mockTransaction });
 
-        const result = await service.recordPurchase('user_123', 'Tokopedia', '500000', 'Online shopping');
+        const result = await service.recordPurchase('user_123', 'Tokopedia', asMoney('500000'), 'Online shopping');
 
         expect(api.post).toHaveBeenCalledWith('/lending/paylater/user_123/purchase', {
           merchantName: 'Tokopedia',
-          amount: "500000",
+          amount: asMoney("500000"),
           description: 'Online shopping',
         }, {
           headers: { 'X-Idempotency-Key': expect.any(String) },
@@ -411,14 +412,14 @@ describe('LendingService', () => {
           userId: 'user_456',
           type: 'PURCHASE',
           merchantName: 'Shopee',
-          amount: "1000000",
-          balanceAfter: "1500000",
+          amount: asMoney("1000000"),
+          balanceAfter: asMoney("1500000"),
           createdAt: '2024-01-01T11:00:00Z',
         };
 
         vi.mocked(api.post).mockResolvedValue({ data: mockTransaction });
 
-        const result = await service.recordPurchase('user_456', 'Shopee', '1000000');
+        const result = await service.recordPurchase('user_456', 'Shopee', asMoney('1000000'));
 
         expect(result.merchantName).toBe('Shopee');
       });
@@ -430,16 +431,16 @@ describe('LendingService', () => {
           id: 'txn_789',
           userId: 'user_789',
           type: 'PAYMENT',
-          amount: "500000",
-          balanceAfter: "0",
+          amount: asMoney("500000"),
+          balanceAfter: asMoney("0"),
           createdAt: '2024-01-01T12:00:00Z',
         };
 
         vi.mocked(api.post).mockResolvedValue({ data: mockTransaction });
 
-        const result = await service.recordPayment('user_789', '500000');
+        const result = await service.recordPayment('user_789', asMoney('500000'));
 
-        expect(api.post).toHaveBeenCalledWith('/lending/paylater/user_789/payment', { amount: "500000" }, {
+        expect(api.post).toHaveBeenCalledWith('/lending/paylater/user_789/payment', { amount: asMoney("500000") }, {
           headers: { 'X-Idempotency-Key': expect.any(String) },
         });
         expect(result.type).toBe('PAYMENT');
@@ -455,16 +456,16 @@ describe('LendingService', () => {
             userId: 'user_123',
             type: 'PURCHASE',
             merchantName: 'Merchant 1',
-            amount: "100000",
-            balanceAfter: "100000",
+            amount: asMoney("100000"),
+            balanceAfter: asMoney("100000"),
             createdAt: '2024-01-01T10:00:00Z',
           },
           {
             id: 'txn_2',
             userId: 'user_123',
             type: 'PAYMENT',
-            amount: "50000",
-            balanceAfter: "50000",
+            amount: asMoney("50000"),
+            balanceAfter: asMoney("50000"),
             createdAt: '2024-01-02T10:00:00Z',
           },
           {
@@ -472,8 +473,8 @@ describe('LendingService', () => {
             userId: 'user_123',
             type: 'PURCHASE',
             merchantName: 'Merchant 2',
-            amount: "200000",
-            balanceAfter: "250000",
+            amount: asMoney("200000"),
+            balanceAfter: asMoney("250000"),
             createdAt: '2024-01-03T10:00:00Z',
           },
         ];
@@ -562,7 +563,7 @@ describe('LendingService', () => {
       const mockRequest: LoanApplicationRequest = {
         externalId: 'user_calc',
         loanType: 'PERSONAL',
-        principalAmount: "12000000",
+        principalAmount: asMoney("12000000"),
         tenureMonths: 12,
         purpose: 'Test calculation',
       };
@@ -570,13 +571,13 @@ describe('LendingService', () => {
       const mockLoan: Loan = {
         id: 'loan_calc',
         userId: 'user_calc',
-        amount: "12000000",
-        interestRate: "12.0",
+        amount: asMoney("12000000"),
+        interestRate: asMoney("12.0"),
         tenureMonths: 12,
         purpose: 'Test calculation',
         status: 'PENDING',
-        monthlyPayment: "1066666.67",
-        totalPayment: "12800000.04",
+        monthlyPayment: asMoney("1066666.67"),
+        totalPayment: asMoney("12800000.04"),
         createdAt: '2024-01-01T10:00:00Z',
       };
 
@@ -592,9 +593,9 @@ describe('LendingService', () => {
       const mockPayLater: PayLater = {
         id: 'paylater_transform',
         userId: 'user_transform',
-        creditLimit: "10000000",
-        usedLimit: "3000000",
-        availableLimit: "7000000",
+        creditLimit: asMoney("10000000"),
+        usedLimit: asMoney("3000000"),
+        availableLimit: asMoney("7000000"),
         status: 'ACTIVE',
         createdAt: '2024-01-01T10:00:00Z',
       };
@@ -612,7 +613,7 @@ describe('LendingService', () => {
       const mockRequest: LoanApplicationRequest = {
         externalId: 'user_error',
         loanType: 'PERSONAL',
-        principalAmount: "1000000",
+        principalAmount: asMoney("1000000"),
         tenureMonths: 12,
         purpose: 'Test error',
       };
@@ -624,7 +625,7 @@ describe('LendingService', () => {
 
     it('should handle PayLater activation errors', async () => {
       const mockRequest: PayLaterLimitRequest = {
-        monthlyIncome: "5000000",
+        monthlyIncome: asMoney("5000000"),
         employmentType: 'PART_TIME',
         employmentDurationMonths: 6,
       };
