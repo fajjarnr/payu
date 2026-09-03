@@ -30,14 +30,19 @@ async function skipOnInfra(status: number, body: () => Promise<string>): Promise
   }
 }
 
-async function readMainBalance(authPage: Page): Promise<number> {
-  await authPage.goto('/dashboard');
-  const card = authPage.locator('[data-testid="primary-balance-card"]');
-  await expect(card).toBeVisible({ timeout: 15000 });
-  const text = await card.locator('h2').innerText();
-  return extractCurrencyAmount(text);
-}
+// Seeded sender for the dev journey (mirrors wallet-test-data.sql + Keycloak
+// accountId claim). The dashboard card caches 30s via React Query, so the
+// delta proof reads the API directly — always network, never stale cache.
+const SENDER = '750e8400-e29b-41d4-a716-446655440001';
 
+async function readMainBalance(authPage: Page): Promise<number> {
+  const raw: string = await authPage.evaluate(async (id: string) => {
+    const res = await fetch(`/api/v1/wallets/${id}/balance`, { credentials: 'include' });
+    return res.text();
+  }, SENDER);
+  const body = JSON.parse(raw) as { data?: { balance?: string }; balance?: string };
+  return extractCurrencyAmount(String(body.data?.balance ?? body.balance ?? '0'));
+}
 test.describe.configure({ retries: 0 }); // transfers burn the 5tx/10min AML budget — no retry amplification
 
 test.describe('PayU E2E — full money journey (real)', () => {
