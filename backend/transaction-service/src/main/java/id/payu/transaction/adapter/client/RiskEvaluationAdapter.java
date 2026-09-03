@@ -7,7 +7,13 @@ import id.payu.transaction.exception.TransactionDomainException.RiskEvaluationUn
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -54,7 +60,14 @@ public class RiskEvaluationAdapter implements RiskEvaluationPort {
             request.put("currency", currency != null ? currency : "IDR");
             request.put("transaction_type", "TRANSFER");
 
-            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String bearer = currentBearerToken();
+            if (bearer != null) {
+                headers.setBearerAuth(bearer);
+            }
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
             return extractRiskScore(response.getBody());
         } catch (RiskEvaluationUnavailableException e) {
             throw e;
@@ -81,6 +94,31 @@ public class RiskEvaluationAdapter implements RiskEvaluationPort {
         } catch (Exception e) {
             throw new RiskEvaluationUnavailableException(e);
         }
+    }
+
+    /**
+     * RELAY-008: current request JWT for downstream user-scoped calls.
+     * Null outside a web request (tests, schedulers) — callers fail closed.
+     */
+    static String currentBearerToken() {
+        Authentication authentication;
+        try {
+            authentication = SecurityContextHolder.getContext().getAuthentication();
+        } catch (Exception e) {
+            return null;
+        }
+        if (authentication == null) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof Jwt jwt) {
+            return jwt.getTokenValue();
+        }
+        Object credentials = authentication.getCredentials();
+        if (credentials instanceof String token && !token.isBlank()) {
+            return token;
+        }
+        return null;
     }
 
     /**

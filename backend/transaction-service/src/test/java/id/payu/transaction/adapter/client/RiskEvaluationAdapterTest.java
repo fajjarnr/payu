@@ -83,6 +83,27 @@ class RiskEvaluationAdapterTest {
         assertThat(adapter.score("user-1", new BigDecimal("50000"), null)).isEqualTo(15);
     }
 
+    @Test
+    void forwardsCallerJwtToFraudScoring() {
+        org.springframework.security.oauth2.jwt.Jwt jwt = new org.springframework.security.oauth2.jwt.Jwt(
+                "tok-123", java.time.Instant.now(), java.time.Instant.now().plusSeconds(300),
+                java.util.Map.of("alg", "RS256"), java.util.Map.of("sub", "user-1"));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt));
+        try {
+            server.expect(requestTo("http://analytics-service:8082/api/v1/analytics/fraud/score"))
+                    .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.header("Authorization", "Bearer tok-123"))
+                    .andRespond(withSuccess(
+                            "{\"data\": {\"fraud_score\": {\"risk_score\": 10.0}}}",
+                            MediaType.APPLICATION_JSON));
+
+            assertThat(adapter.score("user-1", new BigDecimal("50000"), "IDR")).isEqualTo(10);
+            server.verify();
+        } finally {
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        }
+    }
+
     private static void setUrl(RiskEvaluationAdapter target, String url) throws Exception {
         Field field = RiskEvaluationAdapter.class.getDeclaredField("analyticsServiceUrl");
         field.setAccessible(true);
