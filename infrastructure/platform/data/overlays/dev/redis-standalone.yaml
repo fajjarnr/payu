@@ -1,0 +1,91 @@
+# Redis dev cache — standalone Deployment + Service.
+#
+# payu-dev workloads (transaction-service VelocityGuard Lua, gateway rate
+# limiter) expect a RESP endpoint at payu-cache-resp:11222 with user
+# `developer` (secret payu-cache-credentials). The Infinispan standalone
+# only speaks Hot Rod, so without this manifest every transfer 422s with
+# AML_VELOCITY_LIMIT_EXCEEDED ("Unable to connect to Redis", fail-secure).
+#
+# Service exposes 11222 (to match workload env) targeting Redis 6379.
+# Promoted environments must use a managed Redis/Valkey with persistence;
+# this dev instance is emptyDir-backed and loses velocity counters on restart
+# (safe: fail-secure just throttles until keys rebuild).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payu-cache-resp
+  labels:
+    app.kubernetes.io/name: payu-cache-resp
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/managed-by: platform-team
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payu-cache-resp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payu-cache-resp
+        app.kubernetes.io/component: cache
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: redis
+          image: docker.io/library/redis:7.4-alpine
+          ports:
+            - name: redis
+              containerPort: 6379
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-cache-credentials
+                  key: password
+          command:
+            - sh
+            - -c
+            - printf 'user developer on >%s ~* &* +@all\n' "$REDIS_PASSWORD" > /data/users.acl && exec redis-server --port 6379 --save '' --appendonly no --aclfile /data/users.acl
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payu-cache-resp
+  labels:
+    app.kubernetes.io/name: payu-cache-resp
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+spec:
+  selector:
+    app.kubernetes.io/name: payu-cache-resp
+  ports:
+    - name: resp
+      port: 11222
+      targetPort: redis

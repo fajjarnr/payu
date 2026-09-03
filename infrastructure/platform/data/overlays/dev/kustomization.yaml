@@ -14,6 +14,9 @@ resources:
   # Data Grid 8.6.5 operator webhook (vinfinispan.kb.io) panics on it in the
   # sandbox cluster and never provisions the cache.
   - infinispan-standalone.yaml
+  # Dev-only: standalone Redis for RESP clients (transaction VelocityGuard Lua,
+  # gateway rate limiter) at payu-cache-resp:11222. Promoted envs use managed Redis.
+  - redis-standalone.yaml
   # Promoted overlays (sit/uat/preprod/prod) use ../../base which includes the
   # operator-managed Infinispan CR with mTLS.
 

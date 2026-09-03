@@ -4,9 +4,11 @@ namespace: payu-dev
 resources:
   - ../../../base/transaction-service
 images:
+  # NOTE: transaction-service images are service-versioned (1.8.x), not platform
+  # (1.18.x). Live was 1.8.108; this overlay now tracks the service line.
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-    newTag: "1.18.74"
+    newTag: "1.8.109"
 patches:
   - target:
       kind: Deployment
@@ -24,6 +26,20 @@ patches:
                 env:
                   - name: SPRINGDOC_API_DOCS_ENABLED
                     value: "true"
+                  # RELAY-006: dev Redis (payu-cache-resp:11222, user developer).
+                  # Base defines these but the live Deployment predates them.
+                  - name: SPRING_DATA_REDIS_HOST
+                    value: payu-cache-resp
+                  - name: SPRING_DATA_REDIS_PORT
+                    value: "11222"
+                  - name: SPRING_DATA_REDIS_USERNAME
+                    value: developer
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-cache-credentials
+                  - name: SERVICES_ANALYTICS_URL
+                    value: "http://analytics-service:8080"
   # WEB-CSP-001 issuer alignment: tokens carry the PUBLIC SSO issuer
   # (https://sso-dev...); validators must expect it. JWK/auth-server URLs stay
   # internal (in-cluster).
