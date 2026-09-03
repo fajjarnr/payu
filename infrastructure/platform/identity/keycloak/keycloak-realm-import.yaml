@@ -74,6 +74,8 @@ spec:
             - "3201234567890001"
           externalId:
             - "EXT-CUST-001"
+          accountId:
+            - "750e8400-e29b-41d4-a716-446655440001"
         credentials:
           - type: password
             value: "P@ssw0rd123"
@@ -96,6 +98,8 @@ spec:
             - "3201234567890002"
           externalId:
             - "EXT-CUST-002"
+          accountId:
+            - "750e8400-e29b-41d4-a716-446655440004"
         credentials:
           - type: password
             value: "P@ssw0rd123"
@@ -114,6 +118,8 @@ spec:
             - "+628111111111"
           externalId:
             - "EXT-ADMIN-001"
+          accountId:
+            - "750e8400-e29b-41d4-a716-446655440005"
         credentials:
           - type: password
             value: "P@ssw0rd123"
@@ -204,6 +210,17 @@ spec:
               id.token.claim: "true"
               access.token.claim: "true"
               claim.name: nik
+              jsonType.label: String
+          - name: account_id
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-attribute-mapper
+            consentRequired: false
+            config:
+              userinfo.token.claim: "true"
+              user.attribute: accountId
+              id.token.claim: "true"
+              access.token.claim: "true"
+              claim.name: account_id
               jsonType.label: String
       - clientId: payu-backend
         name: PayU Backend Services

@@ -158,6 +158,18 @@ Verifikasi CRUD: `60 endpoints` `auth_ok` (200/404/405/400 bukan 401/500) `47 PA
 | PER-SVC-007 | P3 | **PII amount log** — `lending/LOP` `log.info` mask `***` | `grep log.info.*amount 0` | CLOSED 1.18.76 |
 | PER-SVC-008 | P3 | **HEALTHCHECK** — `lending/investment Containerfile` `HEALTHCHECK` add | `Containerfile HEALTHCHECK /actuator/health/liveness` | CLOSED 1.18.76 |
 
+### Audit 2026-09-03 — Relay E2E Full Money Journey (dev cluster, Chrome via omp browser relay)
+
+> Run: relay `http://127.0.0.1:9224` + Chrome XFCE, `https://payu-dev.apps.fajjjar.my.id`. Login OIDC customer1 → dashboard → transfer clicks. Spec baru `frontend/web-app/e2e/money-journey.spec.ts` (REG-VAL-001, LOGIN-J-001, TRF-J-001/002/003).
+
+| Key | Pri | Temuan | Bukti | Status |
+|---|---|---|---|---|
+| RELAY-001 | P1 | **Login orphan account** — BFF fallback `account-${sub}` tanpa `account_id` claim → saldo Rp 0 + `403 ACCESS_DENIED` wallet. | `callback/route.ts:98`, `GET /wallets/account-07f1…/balance 403` | CLOSED — mapper `account_id` + atribut `accountId` customer1=`750e8400-…-0001` di live Keycloak + `keycloak-realm-import.yaml` |
+| RELAY-002 | P1 | **Dev DB tanpa seed wallet** — `payu_wallet.wallets` kosong (RLS sembunyikan tanpa `app.tenant_id`; seed `wallet-test-data.sql` belum di-run di dev). | `psql payu_wallet SELECT 0 rows` tanpa tenant GUC | OPEN — wallet `750e8400-…-0001` Rp 10jt + `acc-bud456` Rp 5jt di-seed manual; butuh seed job/Flow terdokumentasi untuk dev |
+| RELAY-003 | P2 | **Confirm transfer 429 persisten** — review OK (`Rp 10.000`, fee Gratis) tapi POST `/transactions/transfer` tak pernah fire (network log cuma GET history); toast `Terlalu banyak permintaan`. | DevTools resource entries `NO_TX_CALLS`, `transactions` 0 rows | OPEN — cooldown + 1x klik; bila masih 429 → naikkan bucket gateway per-user financial atau flag `GATEWAY_RATE_LIMIT_TEST_MODE` di dev |
+| RELAY-004 | P2 | **Full-reload buang sesi** — `tab.goto` ke `/transfer`/`/dashboard` mental ke `/login`, navigasi SPA aman. Store zustand in-memory hilang saat reload. | relay `NOFORM:/login?callbackUrl=%2Ftransfer` berulang | OPEN — selidiki middleware refresh vs persist store; Playwright spec pakai `authPage` fixture (1 sesi) |
+| RELAY-005 | P3 | **Live realm drift** — cuma `customer1` (tanpa customer2/admin), atribut phone/nik hilang (user-profile declarative drop unmanaged attrs). | `GET /admin/realms/payu/users` 1 user | OPEN (parsial CLOSED: `unmanagedAttributePolicy=ENABLED` + mapper; sinkronisasi penuh users+attrs ke YAML menyusul) |
+
 
 ---
 

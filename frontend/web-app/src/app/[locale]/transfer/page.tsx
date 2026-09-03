@@ -5,7 +5,7 @@ import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { transferSchema, TransferRequest, TransferType, TransferScheduleType } from '@/types';
 import { compareCurrency, parseCurrencyExact } from '@/lib/currency';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useInitiateTransfer } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { useBeneficiaries } from '@/hooks/useBeneficiaries';
@@ -101,6 +101,12 @@ export default function TransferPage() {
       scheduleType: 'NOW'
     }
   });
+
+  // TRF-SUBMIT-001: sender must default from the session account so typing a
+  // recipient manually (no favorite contact) still passes schema validation.
+  useEffect(() => {
+    if (accountId) setValue('fromAccountId', accountId);
+  }, [accountId, setValue]);
 
   // Use useWatch for individual fields to prevent React Compiler warnings
   // useWatch returns stable values that work with React Compiler memoization
