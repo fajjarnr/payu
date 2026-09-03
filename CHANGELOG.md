@@ -4,8 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [1.18.79] - 2026-09-03
 
+### Verified
+- **money-journey.spec.ts 5/5 (12.2s) vs dev**: REG-VAL-001, LOGIN-J-001, TRF-J-001 (delta eksak via API), TRF-J-002 (memo di riwayat), TRF-J-003 (double-click 1 POST).
+
 ### Fixed
-- **Relay E2E full money journey dev (RELAY-001..013, L-411..415)**: live proof `201 COMPLETED` + double-entry `sender -10.000 / recipient +10.000` fee 0 via Chrome+relay clicks (login OIDC → transfer → review → confirm).
+- **Relay E2E full money journey dev (RELAY-001..014, L-411..415)**: live proof `201 COMPLETED` + double-entry `sender -10.000 / recipient +10.000` fee 0 via Chrome+relay clicks (login OIDC → transfer → review → confirm).
 - **Login orphan account (RELAY-001)**: BFF fallback `account-${sub}` vs seeded wallets. Fix: `account_id` protocol mapper + `accountId` attrs (customer1/2/admin) live + `keycloak-realm-import.yaml`; `unmanagedAttributePolicy=ENABLED` (PUT 204 tapi hilang tanpanya).
 - **Transfer confirm mati diam-diam (RELAY-013/TRF-SUBMIT-001)**: `fromAccountId` cuma di-set via kontak favorit → zod gagal tanpa feedback. Fix: `useEffect` default dari session. Regression `money-journey.spec.ts` (REG-VAL-001, LOGIN-J-001, TRF-J-001/002/003; `X-E2E-Test` bypass + skip infra/velocity, `retries: 0`).
 - **Transfer amount string vs schema (RELAY-012/TRF-AMOUNT-001)**: frontend kirim Money string, gateway minta JSON number → semua transfer web 400. Fix: konversi di `TransactionService.initiateTransfer`; ekspektasi test jadi angka 9/9.
@@ -17,9 +20,10 @@ All notable changes to this project will be documented in this file.
 - **gRPC deadline beku (RELAY-011/GRPC-012)**: `withDeadlineAfter` di shared stub → semua call 30 dtk pasca-boot `DEADLINE_EXCEEDED` offset negatif (`-321s`). Fix: stub polos + deadline per call (`WalletGrpcAdapter` 5 titik + `AccountServiceAdapter`); sisa billing/fx/investment/lending OPEN.
 - **BFF E2E header (E2E-RLS-001)**: `x-e2e-test` masuk allowlist forward (gateway hanya honor saat test-mode dev/test).
 - **Money brand test migration**: 9 file `src/__tests__` ke `asMoney` (159 titik) — `tsc --noEmit` 0 error, vitest 140/140 + target 9/9.
+- **Riwayat crash status baru (RELAY-014)**: `statusConfig` tanpa `PENDING_COMPLIANCE_REVIEW`/`PENDING_STEP_UP`/`VALIDATING` → `/transactions` blank. Badge baru.
 
 ### Deployed
-- web-app `1.18.79 → 1.18.82` (podman build + push internal registry + `oc set image`, lalu overlay `newTag` + `oc apply -k` — git = cluster); transaction-service `1.8.109 → 1.8.113`; overlays `payu-dev/web-app`, `payu-dev/transaction-service`, `payu-dev/analytics-service`, `platform/data/overlays/dev`.
+- web-app `1.18.79 → 1.18.83` (podman build + push internal registry, overlay `newTag` + `oc apply -k` — git = cluster); transaction-service `1.8.109 → 1.8.113`; overlays `payu-dev/web-app`, `payu-dev/transaction-service`, `payu-dev/analytics-service`, `platform/data/overlays/dev`.
 
 ## [1.18.78] - 2026-09-03
 

@@ -161,6 +161,8 @@ Verifikasi CRUD: `60 endpoints` `auth_ok` (200/404/405/400 bukan 401/500) `47 PA
 ### Audit 2026-09-03 — Relay E2E Full Money Journey (dev cluster, Chrome via omp browser relay)
 
 > Run: relay `http://127.0.0.1:9224` + Chrome XFCE, `https://payu-dev.apps.fajjjar.my.id`. Login OIDC customer1 → dashboard → transfer clicks. Spec baru `frontend/web-app/e2e/money-journey.spec.ts` (REG-VAL-001, LOGIN-J-001, TRF-J-001/002/003).
+>
+> Context7 gate: no Context7 MCP in this environment — fallback per skill §4: Playwright `1.62.1` (CLI verified), Next `16.2.12`, React `19.2.3`, axios `^1.18.1`, TanStack Query `^5.90.19`, RHF `^7.71.1`, zod `^4.3.5`, vitest `4.1.10`. APIs used (test.use/extraHTTPHeaders, getByTestId, waitForResponse, axios adapter seam, Query retry predicate) verified against installed packages + existing repo specs; re-resolve when deps upgrade.
 
 | Key | Pri | Temuan | Bukti | Status |
 |---|---|---|---|---|
@@ -177,6 +179,7 @@ Verifikasi CRUD: `60 endpoints` `auth_ok` (200/404/405/400 bukan 401/500) `47 PA
 | RELAY-011 | P1 | **gRPC deadline beku di shared stub** — `withDeadlineAfter` saat init → semua call 30 dtk pasca-boot `DEADLINE_EXCEEDED` offset negatif membesar (semua service pemakai helper). | `-321s` di log, 0 call sampai wallet | CLOSED (transaction: Wallet+Account adapter per-call) — OPEN sisa: billing/fx/investment/lending pakai pola sama |
 | RELAY-012 | P1 | **Transfer amount string vs schema** — frontend kirim Money string, gateway minta JSON number → semua transfer web 400. | `400 SCHEMA_VALIDATION_FAILED` | CLOSED — konversi di `TransactionService.initiateTransfer`, test ekspektasi angka 9/9 |
 | RELAY-013 | P1 | **fromAccountId cuma via kontak favorit** — ketik manual → zod gagal diam-diam, confirm mati. | network 0 POST, tombol enabled | CLOSED — `useEffect` default dari session, `TRF-J-001` isi manual |
+| RELAY-014 | P1 | **Riwayat crash untuk status baru** — `statusConfig` tanpa `PENDING_COMPLIANCE_REVIEW`/`PENDING_STEP_UP`/`VALIDATING` → `/transactions` blank `reading 'icon'`. | screenshot error boundary | CLOSED — badge baru di `transactions/page.tsx`, `money-journey` 5/5 (12.2s) |
 
 
 ---
