@@ -1,8 +1,8 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { ReactNode, useState } from 'react';
-
 const createQueryClient = () => new QueryClient({
  defaultOptions: {
   queries: {
@@ -11,7 +11,15 @@ const createQueryClient = () => new QueryClient({
    // BUG-FE-026: Enable auto-refresh on reconnect/focus so balance stays fresh
    refetchOnWindowFocus: true,
    refetchOnReconnect: true,
-   retry: 1,
+   retry: (failureCount, error) => {
+    // RATELOOP-001: never retry 4xx (429/validation/auth) — the server already
+    // decided. Retry only transient 5xx/network failures, max once.
+    if (isAxiosError(error)) {
+      const status = error.response?.status;
+      if (status !== undefined && status < 500) return false;
+    }
+    return failureCount < 1;
+   },
    retryDelay: (attemptIndex) => {
     return Math.min(1000 * 2 ** attemptIndex, 30000);
    },

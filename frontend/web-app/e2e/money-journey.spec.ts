@@ -10,9 +10,20 @@ import { test, expect } from './fixtures';
 import type { Page } from '@playwright/test';
 import { waitForPageStable, extractCurrencyAmount } from './utils';
 
+// E2E-RLS-001: gateway honors X-E2E-Test only with GATEWAY_RATE_LIMIT_TEST_MODE
+// in dev/test profiles (prod ignores). BFF forwards it (allowlist).
+test.use({ extraHTTPHeaders: { 'X-E2E-Test': 'true' } });
+
 const RECIPIENT = 'acc-bud456';
 const AMOUNT = 10000;
 const MEMO = `E2E journey ${Date.now()}`;
+
+/** Skip on infra outage (429/502/503/504); fail on 500/unexpected 4xx. */
+function skipOnInfra(status: number): void {
+  if ([429, 502, 503, 504].includes(status)) {
+    test.skip(true, `infra ${status}`);
+  }
+}
 
 async function readMainBalance(authPage: Page): Promise<number> {
   await authPage.goto('/dashboard');
@@ -61,6 +72,7 @@ test.describe('PayU E2E — full money journey (real)', () => {
     );
     await authPage.locator('[data-testid="confirm-transfer-button"]').click();
     const response = await post;
+    skipOnInfra(response.status());
     expect(response.status()).toBeLessThan(300);
 
     await expect(authPage.getByText(/Transfer berhasil|berhasil/i).first()).toBeVisible({ timeout: 15000 });

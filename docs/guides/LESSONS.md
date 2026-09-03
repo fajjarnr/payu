@@ -1,5 +1,22 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-413: Client retry 429 = request storm — server bilang pelan, client malah ngegas (2026-09-03)
+
+**Context**: Satu poll analytics kena 429 gateway → interceptor axios retry x3 + React Query retry → 8x lipat per mount; tiap tab-focus refetch lagi. Hasil: toast `Terlalu banyak permintaan` permanen + bucket tak pernah pulih + transfer POST ikut ke-429. Bukti DevTools: `/api/v1/analytics/user/.../metrics` 24x, transfer POST 0x.
+
+**Fix**: `lib/api.ts` — 429 tidak pernah di-retry (toast sekali + reject); `providers.tsx` — `retry` predicate tolak semua 4xx, cuma 5xx/network max 1x. Test lama yang menguji rumus backoff mati ditulis ulang jadi 4 test lawan interceptor asli (adapter stub, assert 1 request). Pelajaran: 429 bukan error transient — retry otomatis atas 429 adalah bug, bukan resilience.
+
+## L-412: Transfer confirm mati diam-diam saat ketik manual — fromAccountId cuma di-set via kontak favorit (2026-09-03)
+
+**Context**: `handleContactSelect` satu-satunya yang `setValue('fromAccountId')`. Ketik `acc-bud456` manual → zod `fromAccountId min(1)` gagal → `handleSubmit` telan error (tak ada field render error-nya) → tombol confirm tak pernah POST. Bukti: network log 0 POST, DB `transactions` 0 rows, tombol enabled tanpa error.
+
+**Fix**: `useEffect` default `fromAccountId` dari session `accountId` saat mount (TRF-SUBMIT-001). Regression: `money-journey.spec.ts` TRF-J-001 isi manual + assert delta saldo eksak. Pelajaran: tiap required schema field harus punya sumber default atau pesan error yang kelihatan — tombol mati tanpa feedback selalu bug.
+
+## L-411: BFF `account-${sub}` yatim — login sukses, dompet tak ketemu (2026-09-03)
+
+**Context**: `callback/route.ts:98` fallback `account-${claims.sub}` saat claim `account_id` absen. Hasil: saldo Rp 0 + `403 ACCESS_DENIED` wallet padahal seed wallet customer1 (`750e8400-…-0001`, Rp 10jt) ada. Akar kedua: `payu_wallet.wallets` dev kosong (seed tak pernah di-run) + RLS sembunyikan baris tanpa GUC `app.tenant_id` (SELECT 0 rows menyesatkan).
+
+**Fix**: mapper `account_id` (user attribute `accountId`) di client `payu-web-app` + atribut customer1 → claim mengalir ke BFF tanpa ubah code (live via Admin REST + `keycloak-realm-import.yaml` untuk customer1/2/admin). Syarat Realm: `unmanagedAttributePolicy=ENABLED` kalau tidak PUT atribut 204 tapi hilang. Seed wallet dev manual via `SET app.tenant_id='SYSTEM'`. Pelajaran: verifikasi klaim di token (decode) sebelum tuduh service; `0 rows` sebagai role app selalu cek GUC dulu.
 
 ## L-410: Topik deklaratif + namespace apply — consumer berisik, CR nyasar (2026-09-03)
 

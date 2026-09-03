@@ -289,7 +289,9 @@ async function proxyRequest(
     // BUG-FE-029/085: Forward only explicitly allowed security/custom headers
     // BUG-FE-085: Removed catch-all `lowerKey.startsWith('x-')` to prevent
     // leaking internal headers (e.g. x-forwarded-for, x-real-ip) to the gateway.
-    const allowedHeaders = ['x-idempotency-key', 'x-device-id', 'x-client-version', 'x-signature', 'x-timestamp'];
+    // E2E-RLS-001: x-e2e-test is safe to forward — the gateway only honors it
+    // when GATEWAY_RATE_LIMIT_TEST_MODE=true in dev/test profiles (prod ignores).
+    const allowedHeaders = ['x-idempotency-key', 'x-device-id', 'x-client-version', 'x-signature', 'x-timestamp', 'x-e2e-test'];
     request.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase();
       if (allowedHeaders.includes(lowerKey)) {

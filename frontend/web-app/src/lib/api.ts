@@ -1,4 +1,4 @@
-import axios, { isAxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 
 /**
@@ -18,36 +18,8 @@ const api = axios.create({
   withCredentials: true, // include httpOnly cookies in every request
 });
 
-// IMP-004: Rate Limit Handling — Track retry state per request
-interface RateLimitState {
-  retryCount: number;
-  maxRetries: number;
-  baseDelay: number;
-}
-
-const rateLimitStates = new WeakMap<InternalAxiosRequestConfig, RateLimitState>();
-
-// Get or initialize rate limit state for a request
-const getRateLimitState = (config: InternalAxiosRequestConfig): RateLimitState => {
-  if (!rateLimitStates.has(config)) {
-    rateLimitStates.set(config, {
-      retryCount: 0,
-      maxRetries: 3,
-      baseDelay: 1000, // 1 second base delay
-    });
-  }
-  return rateLimitStates.get(config)!;
-};
-
 // Export isAxiosError for type checking
 export { isAxiosError };
-
-// ── Request interceptor: Initialize rate limit tracking ─────────────
-api.interceptors.request.use((config) => {
-  // Initialize rate limit state for new requests
-  getRateLimitState(config);
-  return config;
-});
 
 // ── Response unwrapper: auto-extract ApiResponse.data wrapper ───────
 // BUG-CROSS-003: Backend wraps responses in ApiResponse<T> = { success, data, message }.
@@ -147,42 +119,16 @@ api.interceptors.response.use(
       }
     }
 
-    // IMP-004 / WEB-IDM-001: Handle 429 Rate Limit with exponential backoff for idempotent requests only
+    // RATELOOP-001: Never auto-retry 429. The server is explicitly asking us
+    // to slow down; client-side retries (axios x3 + React Query) amplified one
+    // throttled poll into a request storm with toast spam. Surface once, let
+    // the query layer decide (4xx is not retried, see providers.tsx).
     if (error.response?.status === 429) {
-      const method = (originalRequest.method || 'GET').toUpperCase();
-      const isIdempotentMethod = ['GET', 'HEAD', 'OPTIONS'].includes(method);
-      const hasIdempotencyKey = Boolean(
-        originalRequest.headers?.['X-Idempotency-Key'] || 
-        originalRequest.headers?.['x-idempotency-key']
-      );
-
-      const state = getRateLimitState(originalRequest);
-      const retryAfter = error.response.headers['retry-after'];
-
-      // Parse Retry-After header (seconds)
-      let delayMs: number;
-      if (retryAfter) {
-        const retrySeconds = parseInt(retryAfter, 10);
-        delayMs = isNaN(retrySeconds) ? state.baseDelay : retrySeconds * 1000;
-      } else {
-        // Exponential backoff: 1s, 2s, 4s
-        delayMs = state.baseDelay * Math.pow(2, state.retryCount);
-      }
-
-      // Show toast notification
-      const retrySeconds = Math.ceil(delayMs / 1000);
+      const retryAfter = error.response.headers?.['retry-after'];
+      const retrySeconds = retryAfter ? Math.max(1, Math.ceil(parseInt(retryAfter, 10) || 1)) : 1;
       toast.error(`Terlalu banyak permintaan, coba lagi dalam ${retrySeconds} detik`, {
-        duration: Math.min(delayMs, 5000),
+        duration: 5000,
       });
-
-      // Check if we should retry (only if idempotent or has idempotency key)
-      if ((isIdempotentMethod || hasIdempotencyKey) && state.retryCount < state.maxRetries) {
-        state.retryCount++;
-
-        // Wait for the delay then retry
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        return api(originalRequest);
-      }
     }
 
     return Promise.reject(error);
