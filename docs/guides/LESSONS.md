@@ -1,6 +1,12 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
 
+## L-410: Topik deklaratif + namespace apply — consumer berisik, CR nyasar (2026-09-03)
+
+**Context**: `FinancialEventConsumer` subscribe 5 topik yang dipublish di code tapi tidak ada CR-nya (auto-create OFF) → ~1 `UNKNOWN_TOPIC_OR_PARTITION` warn/detik. Saat memperbaiki, `oc apply -f` tanpa `-n` membuat 14 CR di namespace `default` (current-context), bukan `payu-dev`.
+
+**Fix**: daftarkan 5 topik + DLQ di `01-kafka-topics-code.yaml` (3/3, DLQ retensi 30 hari sesuai konvensi), apply dengan `-n payu-dev` eksplisit, hapus CR nyasar. Pelajaran: untuk file multi-resource tanpa namespace, selalu `-n` eksplisit; warning `UNKNOWN_TOPIC` = topik belum dideklarasikan, bukan Kafka mati.
+
 ## L-409: FORCE RLS vs pre-auth lookup — semua partner 401 di prod, hijau di test (2026-09-03)
 
 **Context**: `partners` `FORCE RLS tenant_isolation_partners` (`tenant_id = current_setting`). Endpoint pre-auth SNAP-BI (`/v1.0/access-token/b2b`) tidak membawa header tenant → `TenantDataSource` bind `'default'` → `findByClientId` kosong untuk SEMUA partner → `4012502`, dan merambat ke payment/status/refund (`4012507`). Kontrak test hijau karena H2 tidak punya RLS (buta yang sama seperti L-375). Bukti DB: sebagai role `payu`, `count(*)=0` tanpa GUC, `=1` dengan `app.tenant_id='tokobapak'`.
