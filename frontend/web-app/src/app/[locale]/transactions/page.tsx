@@ -52,10 +52,15 @@ import { addCurrency, formatCurrency } from '@/lib/currency';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
+  VALIDATING: { label: 'Divalidasi', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
   PROCESSING: { label: 'Diproses', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: RotateCcw },
   COMPLETED: { label: 'Selesai', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: CheckCircle2 },
   FAILED: { label: 'Gagal', color: 'bg-red-500/10 text-red-600 border-red-500/20', icon: XCircle },
   CANCELLED: { label: 'Dibatalkan', color: 'bg-gray-500/10 text-gray-600 border-gray-500/20', icon: X },
+  // RELAY-014: enum gained these (ADR-0028/0030) — missing entries crashed the
+  // whole page (reading 'icon' of undefined) on any held/step-up row.
+  PENDING_COMPLIANCE_REVIEW: { label: 'Tinjauan AML', color: 'bg-orange-500/10 text-orange-600 border-orange-500/20', icon: AlertCircle },
+  PENDING_STEP_UP: { label: 'Butuh Verifikasi', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20', icon: AlertCircle },
 };
 
 const typeConfig: Record<string, { label: string; icon: typeof ArrowLeftRight }> = {
