@@ -82,16 +82,34 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await skipOnInfra(response.status(), () => response.text().catch(() => ''));
     expect(response.status()).toBeLessThan(300);
 
-    await expect(authPage.getByText(/Transfer berhasil|berhasil/i).first()).toBeVisible({ timeout: 15000 });
-
+    // onSuccess closes the review (setShowReview(false)) — deterministic proof
+    // the mutation succeeded; toast text is transient by design.
+    await expect(authPage.locator('[data-testid="review-transfer-button"]')).toBeVisible({ timeout: 15000 });
     const after = await readMainBalance(authPage);
     expect(before - after).toBe(AMOUNT);
   });
 
   test('history shows the journey transfer (TRF-J-002)', async ({ authPage }) => {
+    const memo = `E2E history ${Date.now()}`;
+    await authPage.goto('/transfer');
+    await waitForPageStable(authPage);
+    await authPage.locator('[data-testid="recipient-account-input"]').fill(RECIPIENT);
+    await authPage.locator('[data-testid="amount-input"]').fill('5000');
+    await authPage.locator('[data-testid="description-input"]').fill(memo).catch(() => {});
+    await authPage.locator('[data-testid="review-transfer-button"]').click();
+    await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible({ timeout: 10000 });
+    const post = authPage.waitForResponse(
+      (resp) => resp.url().includes('/api/v1/transactions/transfer') && resp.request().method() === 'POST',
+      { timeout: 20000 },
+    );
+    await authPage.locator('[data-testid="confirm-transfer-button"]').click();
+    const response = await post;
+    await skipOnInfra(response.status(), () => response.text().catch(() => ''));
+    expect(response.status()).toBeLessThan(300);
+
     await authPage.goto('/transactions');
     await waitForPageStable(authPage);
-    await expect(authPage.getByText(MEMO).first()).toBeVisible({ timeout: 15000 });
+    await expect(authPage.getByText(memo).first()).toBeVisible({ timeout: 15000 });
   });
 
   test('double confirm fires a single transfer POST (TRF-J-003)', async ({ authPage }) => {
