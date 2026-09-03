@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.78] - 2026-09-03
+
+### Fixed
+- **SNAP-BI pre-auth vs FORCE RLS (PAYU-TB-006)**: `partners` `tenant_isolation_partners` hides every row when no tenant is bound; pre-auth SNAP-BI requests carry no tenant header, so `findByClientId` returned empty for ALL partners (`4012502` token, `4012507` payment/status/refund) in production while H2 contract tests stayed green (H2 has no RLS — same blind spot as L-375). Fix: `PartnerService.findByClientIdForAuth` SYSTEM-scoped lookup (sanctioned bypass, secret/token still verified after) + scope request tenant to the authenticated partner so downstream RLS reads (webhook subscriptions) resolve. `PartnerServiceAuthLookupTest` 3/3, `SnapBiTokoBapakContractTest` 5/5. Live proof: token 200 without tenant header, payment `2002500` + settlement.
+- **payu-dev Keycloak client secret drift**: ExternalSecrets `Password` generator minted random 48-char `payu-keycloak-client-secrets` never synced into Keycloak (realm holds `payu-backend-secret-dev-2026!`), breaking every `client_credentials` grant (`WalletSettlementAdapter.platformToken` → settlement 500). Fix: live secret synced to Keycloak-registered value. ESO CRDs are not installed in this cluster, so the generator objects are inert — do not trust them as source of truth.
+- **Public JWKS unreachable from pods (503)**: payu-dev overlay forced `*_JWK_SET_URI=https://sso-dev...` on all Spring services; the public route 503s in- and out-of-cluster, so JWT validation failed (`wallet-service` settlement 401, `AuthenticationServiceException: 503 on GET JWKS`). Fix: JWKS stays in-cluster (`payu-keycloak-service.payu-sso`), public issuer kept for `iss` validation (L-378 pattern). Applied to full-overlay patches + `wallet-service` per-service overlay.
+- **Cross-namespace partner ingress**: payu-dev `default-deny-all` + intra-namespace-only policy dropped TokoBapak `payment-service → partner-service:8080` (TCP timeout). Fix: `partner-service-allow-tokobapak` NetworkPolicy (tokobapak-dev → 8080 only).
+
 ## [1.18.77] - 2026-08-30
 
 ### Fixed

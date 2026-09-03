@@ -1,6 +1,24 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
 
+## L-409: FORCE RLS vs pre-auth lookup — semua partner 401 di prod, hijau di test (2026-09-03)
+
+**Context**: `partners` `FORCE RLS tenant_isolation_partners` (`tenant_id = current_setting`). Endpoint pre-auth SNAP-BI (`/v1.0/access-token/b2b`) tidak membawa header tenant → `TenantDataSource` bind `'default'` → `findByClientId` kosong untuk SEMUA partner → `4012502`, dan merambat ke payment/status/refund (`4012507`). Kontrak test hijau karena H2 tidak punya RLS (buta yang sama seperti L-375). Bukti DB: sebagai role `payu`, `count(*)=0` tanpa GUC, `=1` dengan `app.tenant_id='tokobapak'`.
+
+**Fix**: `PartnerService.findByClientIdForAuth` — lookup sebagai `SYSTEM` (bypass yang disahkan policy, sama seperti seed migration), kembalikan tenant semula di `finally`; controller scope request ke `partner.getTenantId()` setelah auth agar bacaan RLS hilir (webhook subscriptions) resolve. ClientId saja tidak memberi apa-apa — secret/token tetap diverifikasi setelahnya. Test disiplin ThreadLocal: `PartnerServiceAuthLookupTest` 3/3.
+
+## L-408: ESO Password generator vs Keycloak — secret drift mematikan client_credentials (2026-09-03)
+
+**Context**: `payu-dev/payu-keycloak-client-secrets` berisi random 48-char dari generator yang tidak pernah disinkron ke Keycloak (realm: `payu-backend-secret-dev-2026!`). Semua grant `client_credentials` (`WalletSettlementAdapter.platformToken` → settlement) 500 `unauthorized_client`. Lebih dalam: CRD ExternalSecrets TIDAK terinstal di cluster ini, jadi objek `Password`/`ExternalSecret` inert — tampak terkelola, sebenarnya statis basi.
+
+**Fix**: samakan live secret dengan nilai terdaftar di Keycloak (sumber kebenaran = realm, sama seperti di git `identity-dev-secrets.yaml`); restart pod konsumen (env secret immutable di pod jalan). Pelajaran: sebelum percaya Secret "terkelola", cek `oc get crd | grep external-secrets` + bandingkan nilai aktual vs IdP via Admin REST, bukan via manifest.
+
+## L-407: JWKS publik 503 dari pod — validasi JWT mati cluster-wide (2026-09-03)
+
+**Context**: Overlay payu-dev memaksa `*_JWK_SET_URI=https://sso-dev...` ke semua Spring service; route publik 503 baik dari dalam maupun luar cluster → `AuthenticationServiceException: 503 on GET JWKS` (`wallet-service` settlement 401). Issuer publik tetap benar (token `iss` = URL publik, L-378) — yang salah hanya lokasi unduh kunci.
+
+**Fix**: `*_JWK_SET_URI` → internal (`payu-keycloak-service.payu-sso`), `*_ISSUER*` tetap publik. Aturan: issuer = apa yang tertanam di token (decode, jangan asumsi); JWKS = endpoint yang bisa dijangkau pod (curl dari `tmp-curl`, bukan dari laptop).
+
 ## L-406: TokoBapak SNAP-BI E2E — HMAC-SHA512 vs Mock + RLS H2 + PAYU_BASE_URL (2026-08-30)
 
 **Context**: `TokoBapak` `payment-service` `payu_client.go:43` mock `return "payu-ref-"` tanpa HTTP, `Sign(payload+timestamp) hex(SHA256)` mismatch `SnapBiSignatureService.java:136 HmacSHA512 Base64` `hex(SHA256(body))`, payload `PaymentRequest.java:9` missing `sourceAccountNo/beneficiaryAccountNo` → `4002501` di PayU, `order-service` scaffold `handler.go:8` `/health` only, `checkout/index.tsx:32` `order-${Date.now()}` + `amount 110000` hardcode, `callback` tanpa `X-SIGNATURE` (`handler.go:84`), `outbox_poller.go:19` never `Start()` di `main.go`. PayU `partner-service` live `POST /v1.0/transfer-va/payment` `WalletSettlementAdapter:48 settle()` atomic `X-Idempotency-Key: snap-transfer-{ref}` `DEBIT/CREDIT` `balance_after` tapi tidak pernah dipanggil. Verifikasi `podman exec tokobapak-payment-service wget http://payu-partner-service:8080` → `Connection refused` karena `PAYU_BASE_URL=http://payu-gateway:8080` misroute + missing `payu-network` bridge (`podman_payu-network` vs `local_payu-network`). Test `SnapBiTokoBapakContractTest` fail `SET LOCAL app.tenant_id` `Syntax error` di H2 `TestSecurityConfig` tidak mock `TenantDataSource` + `loan-origination-process` missing `id.payu.shared:api-commons` `Idempotent`.
