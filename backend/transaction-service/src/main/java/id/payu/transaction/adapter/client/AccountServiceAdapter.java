@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Adapter for calling account-service over gRPC (GRPC-001 server is live).
@@ -37,9 +38,9 @@ public class AccountServiceAdapter implements AccountServicePort {
     @PostConstruct
     void init() {
         channel = GrpcChannelSupport.channel(accountServiceAddress);
-        stub = GrpcChannelSupport.withDeadline(
-                AccountServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        // GRPC-012: deadline per call (see WalletGrpcAdapter) — a shared stub
+        // freezes its deadline at creation and dies 30s after boot.
+        stub = AccountServiceGrpc.newBlockingStub(channel);
     }
 
     @PreDestroy
@@ -62,7 +63,8 @@ public class AccountServiceAdapter implements AccountServicePort {
 
         try {
             List<UUID> accountIds = new ArrayList<>();
-            stub.getAccountsByUser(GetAccountsByUserRequest.newBuilder()
+            stub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS)
+                    .getAccountsByUser(GetAccountsByUserRequest.newBuilder()
                     .setUserId(userId)
                     .build())
                     .forEachRemaining(account -> accountIds.add(UUID.fromString(account.getAccountId())));

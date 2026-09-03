@@ -66,11 +66,16 @@ public class WalletGrpcAdapter implements WalletServicePort {
         String host = parts[0];
         int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 9090;
 
+        // GRPC-012: NEVER bake withDeadlineAfter into a shared stub — the
+        // deadline freezes at creation, so every call 30s after boot fails
+        // with a growing negative offset. Apply per call via stubWithDeadline().
         channel = channelFactory.channel(walletServiceAddress);
-        walletStub = channelFactory.blockingStub(
-                WalletServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        walletStub = WalletServiceGrpc.newBlockingStub(channel);
         log.info("Initialized gRPC wallet-service stub at {}:{}", host, port);
+    }
+
+    private WalletServiceGrpc.WalletServiceBlockingStub stubWithDeadline() {
+        return walletStub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS);
     }
 
     @PreDestroy
@@ -101,7 +106,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setDescription("TransactionEntity reserve")
                     .build();
 
-            ReservationResponse response = walletStub.reserveBalance(request);
+            ReservationResponse response = stubWithDeadline().reserveBalance(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC balance reserved: reservationId={}", response.getReservationId());
@@ -138,7 +143,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setReservationId(reservationId)
                     .build();
 
-            TransactionResponse response = walletStub.commitReservation(request);
+            TransactionResponse response = stubWithDeadline().commitReservation(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC reservation committed: reservationId={}, txId={}", reservationId, response.getTransactionId());
@@ -166,7 +171,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setReservationId(reservationId)
                     .build();
 
-            TransactionResponse response = walletStub.releaseReservation(request);
+            TransactionResponse response = stubWithDeadline().releaseReservation(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC reservation released: reservationId={}", reservationId);
@@ -198,7 +203,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setDescription("Atomic internal transfer")
                     .build();
 
-            TransactionResponse response = walletStub.transfer(request);
+            TransactionResponse response = stubWithDeadline().transfer(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC atomic transfer completed: txId={}", response.getTransactionId());
@@ -226,7 +231,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setDescription("Internal transfer credit")
                     .build();
 
-            TransactionResponse response = walletStub.credit(request);
+            TransactionResponse response = stubWithDeadline().credit(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC balance credited: accountId={}, txId={}", accountId, response.getTransactionId());
