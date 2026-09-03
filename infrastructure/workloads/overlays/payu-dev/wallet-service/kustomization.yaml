@@ -19,7 +19,8 @@ patches:
           value: "true"
   # WEB-CSP-001 issuer alignment: tokens carry the PUBLIC SSO issuer
   # (https://sso-dev...); validators must expect it. JWK/auth-server URLs stay
-  # internal (in-cluster).
+  # internal (in-cluster) — the public certs endpoint is not reachable from
+  # pods (PAYU-TB-006: 503 on JWKS fetch broke all JWT validation).
   - patch: |-
       apiVersion: apps/v1
       kind: Deployment
@@ -33,3 +34,9 @@ patches:
                 env:
                   - name: OIDC_ISSUER
                     value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                  - name: OIDC_JWK_SET_URI
+                    value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+                  - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                  - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+                    value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
