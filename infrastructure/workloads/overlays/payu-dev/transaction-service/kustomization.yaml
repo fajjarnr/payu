@@ -8,7 +8,7 @@ images:
   # (1.18.x). Live was 1.8.108; this overlay now tracks the service line.
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-    newTag: "1.8.109"
+    newTag: "1.8.110"
 patches:
   - target:
       kind: Deployment
