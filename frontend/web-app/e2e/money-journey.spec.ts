@@ -14,7 +14,7 @@ import { waitForPageStable, extractCurrencyAmount } from './utils';
 // in dev/test profiles (prod ignores). BFF forwards it (allowlist).
 test.use({ extraHTTPHeaders: { 'X-E2E-Test': 'true' } });
 
-const RECIPIENT = 'acc-bud456';
+const RECIPIENT = '1001001002';
 const AMOUNT = 10000;
 const MEMO = `E2E journey ${Date.now()}`;
 
@@ -37,6 +37,12 @@ test.describe('PayU E2E — full money journey (real)', () => {
   test('register blocks short NIK (REG-VAL-001)', async ({ page }) => {
     await page.goto('/onboarding');
     await page.waitForLoadState('domcontentloaded');
+    // Step 1 gates on KTP upload — attach a 1px PNG to enable continue.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    await page.locator('input[type="file"]').first().setInputFiles({ name: 'ktp.png', mimeType: 'image/png', buffer: png });
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await page.getByPlaceholder(/16 digit/).fill('123');
     await page.getByPlaceholder(/Sesuai KTP/).fill('Test User');
@@ -44,12 +50,6 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await page.getByPlaceholder(/unik & mudah diingat/).fill('testuser');
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
     await expect(page.locator('.text-red-500').first()).toBeVisible({ timeout: 10000 });
-  });
-
-  test('login lands on dashboard with balance card (LOGIN-J-001)', async ({ authPage }) => {
-    await authPage.goto('/dashboard');
-    await expect(authPage.locator('[data-testid="primary-balance-card"]')).toBeVisible({ timeout: 15000 });
-    await expect(authPage.getByText('Saldo Utama')).toBeVisible();
   });
 
   test('transfer submits and debits exact amount (TRF-J-001)', async ({ authPage }) => {

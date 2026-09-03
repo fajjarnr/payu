@@ -50,7 +50,10 @@ export class TransactionService {
   }
 
   async initiateTransfer(request: InitiateTransferRequest): Promise<InitiateTransferResponse> {
-    const response = await api.post<InitiateTransferResponse>('/transactions/transfer', request, {
+    // TRF-AMOUNT-001: gateway schema demands JSON number for amount, but the
+    // domain keeps Money (decimal string). Convert at the transport boundary —
+    // IDR transfers are whole units, exactly representable as JSON numbers.
+    const response = await api.post<InitiateTransferResponse>('/transactions/transfer', { ...request, amount: Number(request.amount) }, {
       headers: getFinancialMutationHeaders(),
     });
     return response.data;
