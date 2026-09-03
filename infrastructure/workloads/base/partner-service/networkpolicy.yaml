@@ -1,0 +1,24 @@
+# PAYU-TB: allow TokoBapak dev namespace to reach partner-service SNAP-BI (8080).
+# payu-dev default-deny-all + allow-intra-namespace (part-of=payu only) otherwise
+# drops cross-namespace partner traffic (TokoBapak payment-service → /v1.0/*).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: partner-service-allow-tokobapak
+  labels:
+    app.kubernetes.io/name: partner-service
+    app.kubernetes.io/part-of: payu
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: partner-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tokobapak-dev
+      ports:
+        - protocol: TCP
+          port: 8080
