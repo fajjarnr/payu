@@ -1855,3 +1855,173 @@ spec:
   config:
     retention.ms: 2592000000
     cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.validated.v1 (PAYU-TB-006: producer TransactionEventPublisherAdapter + consumer FinancialEventConsumer; missing CR caused consumer UNKNOWN_TOPIC warnings)
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.validated.v1
+  labels:
+    app.kubernetes.io/name: payu.transaction.validated.v1
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.validated.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.validated.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.validated.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.failed.v1 (PAYU-TB-006: same)
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.failed.v1
+  labels:
+    app.kubernetes.io/name: payu.transaction.failed.v1
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.transaction.failed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.transaction.failed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.transaction.failed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.investment.created.v1 (PAYU-TB-006: producer KafkaInvestmentEventPublisherAdapter)
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.investment.created.v1
+  labels:
+    app.kubernetes.io/name: payu.investment.created.v1
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.investment.created.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.investment.created.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.investment.created.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.investment.completed.v1 (PAYU-TB-006: same)
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.investment.completed.v1
+  labels:
+    app.kubernetes.io/name: payu.investment.completed.v1
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.investment.completed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.investment.completed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.investment.completed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.investment.failed.v1 (PAYU-TB-006: same)
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.investment.failed.v1
+  labels:
+    app.kubernetes.io/name: payu.investment.failed.v1
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+---
+# KafkaTopic - payu.investment.failed.v1.dlq
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaTopic
+metadata:
+  name: payu.investment.failed.v1.dlq
+  labels:
+    app.kubernetes.io/name: payu.investment.failed.v1.dlq
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+    strimzi.io/cluster: payu-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
