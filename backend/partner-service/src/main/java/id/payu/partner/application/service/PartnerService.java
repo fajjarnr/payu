@@ -9,6 +9,7 @@ import id.payu.api.common.exception.BusinessException;
 import id.payu.api.common.exception.ConflictException;
 import id.payu.api.common.exception.ResourceNotFoundException;
 import id.payu.outbox.service.OutboxService;
+import id.payu.security.multitenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,31 @@ public class PartnerService {
 
     public Optional<PartnerEntity> findByClientId(String clientId) {
         return partnerRepository.findByClientId(clientId);
+    }
+
+    /**
+     * PAYU-TB-006: pre-auth partner lookup. The partners table is FORCE RLS
+     * ({@code tenant_isolation_partners}); pre-auth SNAP-BI requests carry no
+     * tenant header, so the per-transaction binding would fall back to
+     * {@code 'default'} and hide every row (4012502 for all partners).
+     * Run the lookup as {@code SYSTEM} — the sanctioned RLS bypass, same as
+     * the seed migrations. Presenting a clientId alone grants nothing; the
+     * stored secret / access token is verified by the caller afterwards.
+     * Previous tenant (if any) is restored before returning.
+     */
+    @Transactional(readOnly = true)
+    public Optional<PartnerEntity> findByClientIdForAuth(String clientId) {
+        String previous = TenantContext.isSet() ? TenantContext.getTenantId() : null;
+        TenantContext.setTenantId("SYSTEM");
+        try {
+            return partnerRepository.findByClientId(clientId);
+        } finally {
+            if (previous != null) {
+                TenantContext.setTenantId(previous);
+            } else {
+                TenantContext.clear();
+            }
+        }
     }
 
     private boolean isBypassType(String type) {

@@ -9,6 +9,7 @@ import id.payu.partner.application.service.PartnerService;
 import id.payu.partner.application.service.SnapBiPaymentService;
 import id.payu.partner.application.service.SnapBiSignatureService;
 import id.payu.partner.application.service.SnapBiTokenService;
+import id.payu.security.multitenancy.TenantContext;
 import id.payu.partner.adapter.web.OpenApiConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -121,7 +122,9 @@ public class SnapBiController {
         }
 
         // BUG-BE-138: Use service layer instead of repository
-        PartnerEntity partner = partnerService.findByClientId(clientKey).orElse(null);
+        // PAYU-TB-006: SYSTEM-scoped lookup — pre-auth requests carry no tenant,
+        // FORCE RLS would hide every partner row (4012502 for all partners).
+        PartnerEntity partner = partnerService.findByClientIdForAuth(clientKey).orElse(null);
         if (partner == null) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012502", "Invalid Client Key");
         }
@@ -129,6 +132,8 @@ public class SnapBiController {
         if (!partner.isActive()) {
              return errorResponse(HttpStatus.UNAUTHORIZED, "4012503", "PartnerEntity is inactive");
         }
+        // Scope downstream RLS-bound reads (webhook subscriptions, etc.) to this partner.
+        TenantContext.setTenantId(partner.getTenantId());
 
         try {
             // BUG-BE-139 FIX: Use raw request body for signature validation
@@ -206,11 +211,12 @@ public class SnapBiController {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012506", "Invalid or Expired Token");
         }
 
-        // BUG-BE-138: Use service layer
-        PartnerEntity partner = partnerService.findByClientId(clientId).orElse(null);
+        // PAYU-TB-006: SYSTEM-scoped lookup (see getAccessToken) + tenant scoping.
+        PartnerEntity partner = partnerService.findByClientIdForAuth(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "PartnerEntity not found or inactive");
         }
+        TenantContext.setTenantId(partner.getTenantId());
 
         try {
             // BUG-BE-139 FIX: Use raw body for signature validation
@@ -269,11 +275,12 @@ public class SnapBiController {
              return errorResponse(HttpStatus.UNAUTHORIZED, "4012506", "Invalid or Expired Token");
         }
 
-        // BUG-BE-138: Use service layer
-        PartnerEntity partner = partnerService.findByClientId(clientId).orElse(null);
+        // PAYU-TB-006: SYSTEM-scoped lookup (see getAccessToken) + tenant scoping.
+        PartnerEntity partner = partnerService.findByClientIdForAuth(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "PartnerEntity not found or inactive");
         }
+        TenantContext.setTenantId(partner.getTenantId());
 
         try {
             String requestBody = "";
@@ -325,11 +332,12 @@ public class SnapBiController {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012506", "Invalid or Expired Token");
         }
 
-        // BUG-BE-138: Use service layer
-        PartnerEntity partner = partnerService.findByClientId(clientId).orElse(null);
+        // PAYU-TB-006: SYSTEM-scoped lookup (see getAccessToken) + tenant scoping.
+        PartnerEntity partner = partnerService.findByClientIdForAuth(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "PartnerEntity not found or inactive");
         }
+        TenantContext.setTenantId(partner.getTenantId());
 
         try {
             // BUG-BE-139 FIX: Use raw body for signature validation
@@ -391,10 +399,12 @@ public class SnapBiController {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012506", "Invalid or Expired Token");
         }
 
-        PartnerEntity partner = partnerService.findByClientId(clientId).orElse(null);
+        PartnerEntity partner = partnerService.findByClientIdForAuth(clientId).orElse(null);
         if (partner == null || !partner.isActive()) {
             return errorResponse(HttpStatus.UNAUTHORIZED, "4012507", "PartnerEntity not found or inactive");
         }
+        // PAYU-TB-006: scope downstream RLS-bound reads to this partner.
+        TenantContext.setTenantId(partner.getTenantId());
 
         try {
             boolean signatureValid = signatureService.validateSignature(
