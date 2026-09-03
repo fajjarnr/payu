@@ -64,6 +64,12 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await expect(page.locator('.text-red-500').first()).toBeVisible({ timeout: 10000 });
   });
 
+  test('login lands on dashboard with balance card (LOGIN-J-001)', async ({ authPage }) => {
+    await authPage.goto('/dashboard');
+    await expect(authPage.locator('[data-testid="primary-balance-card"]')).toBeVisible({ timeout: 15000 });
+    await expect(authPage.getByText('Saldo Utama')).toBeVisible();
+  });
+
   test('transfer submits and debits exact amount (TRF-J-001)', async ({ authPage }) => {
     const before = await readMainBalance(authPage);
 
