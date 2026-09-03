@@ -18,10 +18,15 @@ const RECIPIENT = '1001001002';
 const AMOUNT = 10000;
 const MEMO = `E2E journey ${Date.now()}`;
 
-/** Skip on infra outage (429/502/503/504); fail on 500/unexpected 4xx. */
-function skipOnInfra(status: number): void {
+/** Skip on infra outage (429/502/503/504). 422 counts only when the body proves
+ * AML velocity throttling (environmental budget shared with manual probing);
+ * any other 422/500 is a product failure. */
+async function skipOnInfra(status: number, body: () => Promise<string>): Promise<void> {
   if ([429, 502, 503, 504].includes(status)) {
     test.skip(true, `infra ${status}`);
+  }
+  if (status === 422 && (await body()).includes('AML_VELOCITY_LIMIT_EXCEEDED')) {
+    test.skip(true, 'infra AML velocity budget exhausted');
   }
 }
 
@@ -32,6 +37,8 @@ async function readMainBalance(authPage: Page): Promise<number> {
   const text = await card.locator('h2').innerText();
   return extractCurrencyAmount(text);
 }
+
+test.describe.configure({ retries: 0 }); // transfers burn the 5tx/10min AML budget — no retry amplification
 
 test.describe('PayU E2E — full money journey (real)', () => {
   test('register blocks short NIK (REG-VAL-001)', async ({ page }) => {
@@ -72,7 +79,7 @@ test.describe('PayU E2E — full money journey (real)', () => {
     );
     await authPage.locator('[data-testid="confirm-transfer-button"]').click();
     const response = await post;
-    skipOnInfra(response.status());
+    await skipOnInfra(response.status(), () => response.text().catch(() => ''));
     expect(response.status()).toBeLessThan(300);
 
     await expect(authPage.getByText(/Transfer berhasil|berhasil/i).first()).toBeVisible({ timeout: 15000 });
