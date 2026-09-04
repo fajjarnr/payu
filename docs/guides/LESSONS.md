@@ -1,5 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-421: Counter hardcode berbohong saat API menolak — angka harus dari data (2026-09-04)
+
+**Context**: backoffice tampilkan "TERTUNDA: 24" / "KRITIS: 12" sementara tabel "TIDAK ADA DITEMUKAN" — angka hardcode, kontradiktif. Akar: API 403 `IP_NOT_ALLOWED` (customer1 tanpa grant backoffice; konsisten CRUD-004) sehingga list kosong, tapi badge tak baca data. Command center lebih parah: semua stat "—" hardcode.
+
+**Fix**: badge hitung dari hasil query (`PENDING`/`CRITICAL`, `…` saat loading); baris error "AKSES DITOLAK — HUBUNGI ADMINISTRATOR" saat `isError` (bedakan dari kosong); command center jadi antrian live (KYC Tertunda / Fraud Terbuka / Tiket Terbuka). Regression `BackofficeKycPage` (2 pending → "Tertunda: 2"). Deploy `:1.18.91`, proof relay ("TERTUNDA: 0" + baris akses ditolak).
+
+**Pelajaran**: angka di UI yang tak terikat ke query adalah dusta yang menunggu ketahuan — tiap badge counter wajib derive dari data yang sama dengan tabelnya, dan path 403 butuh state sendiri (bukan empty state).
+
 ## L-420: SameSite=Strict membunuh sesi di navigasi top-level — cookie sesi harus Lax (2026-09-04)
 
 **Context**: goto langsung (`tab.goto`, ketik URL, deep-link) selalu mental ke `/login` detik setelah login sukses, sementara landing via callback SSO render normal. Cookie sesi (`accessToken`/`refreshToken`) diset `SameSite=Strict` — navigasi top-level (termasuk callback SSO yang cross-site-initiated) membuat browser menahan cookie Strict di request pertama. Middleware tak terima cookie apa pun → redirect login. Pola ini menjelaskan seluruh keluhan "selalu logout".

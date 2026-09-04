@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.91] - 2026-09-04
+
+### Fixed
+- **Counter backoffice jujur (L-421)**: badge "TERTUNDA: 24"/"KRITIS: 12" hardcode padahal API 403 + tabel kosong → hitung dari query (`…` saat loading), baris "AKSES DITOLAK" saat error, command center jadi antrian live (KYC/Fraud/Tiket). Regression hijau. Proof relay.
+
 ## [1.18.90] - 2026-09-04
 
 ### Fixed

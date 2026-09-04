@@ -15,11 +15,12 @@ export default function KycReviewsPage() {
  const [status, setStatus] = useState<string>('');
  const [page, setPage] = useState(0);
 
-  const { data: rawReviews, isLoading } = useQuery({
+  const { data: rawReviews, isLoading, isError } = useQuery({
    queryKey: ['kyc-reviews', status, page],
    queryFn: () => BackofficeService.getKycReviews(status || undefined, page),
   });
   const reviews = Array.isArray(rawReviews) ? rawReviews : [];
+  const pendingCount = reviews.filter((r) => r.status === BackofficeKycStatus.PENDING).length;
 
  return (
   <div className="space-y-6">
@@ -30,7 +31,7 @@ export default function KycReviewsPage() {
       </div>
       <div className="flex items-center gap-3">
         <div className="bg-amber-500/10 px-4 py-2 rounded-lg border border-amber-500/20">
-          <span className="text-xs font-bold text-amber-500 tracking-widest uppercase">Tertunda: 24</span>
+          <span className="text-xs font-bold text-amber-500 tracking-widest uppercase">Tertunda: {isLoading ? '…' : pendingCount}</span>
         </div>
       </div>
     </div>
@@ -69,6 +70,10 @@ export default function KycReviewsPage() {
           {isLoading ? (
             <TableRow>
               <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Memuat data...</TableCell>
+            </TableRow>
+          ) : isError ? (
+            <TableRow>
+              <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Akses ditolak — hubungi administrator</TableCell>
             </TableRow>
           ) : reviews.length === 0 ? (
             <TableRow>

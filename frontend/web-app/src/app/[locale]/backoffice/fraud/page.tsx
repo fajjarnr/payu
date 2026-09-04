@@ -17,11 +17,12 @@ export default function FraudCasesPage() {
  const [riskLevel, setRiskLevel] = useState<string>('');
  const [page, setPage] = useState(0);
 
-  const { data: rawCases, isLoading } = useQuery({
+  const { data: rawCases, isLoading, isError } = useQuery({
    queryKey: ['fraud-cases', status, riskLevel, page],
    queryFn: () => BackofficeService.getFraudCases(status || undefined, riskLevel || undefined, page),
   });
   const cases = Array.isArray(rawCases) ? rawCases : [];
+  const criticalCount = cases.filter((c) => c.riskLevel === FraudRiskLevel.CRITICAL).length;
 
  return (
   <div className="space-y-6">
@@ -32,7 +33,7 @@ export default function FraudCasesPage() {
       </div>
       <div className="flex items-center gap-3">
         <div className="bg-rose-500/10 px-4 py-2 rounded-lg border border-rose-500/20">
-          <span className="text-xs font-bold text-rose-500 tracking-widest uppercase">Kritis: 12</span>
+          <span className="text-xs font-bold text-rose-500 tracking-widest uppercase">Kritis: {isLoading ? '…' : criticalCount}</span>
         </div>
       </div>
     </div>
@@ -82,6 +83,10 @@ export default function FraudCasesPage() {
           {isLoading ? (
             <TableRow>
               <TableCell colSpan={6} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Memuat data...</TableCell>
+            </TableRow>
+          ) : isError ? (
+            <TableRow>
+              <TableCell colSpan={6} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Akses ditolak — hubungi administrator</TableCell>
             </TableRow>
           ) : cases.length === 0 ? (
             <TableRow>

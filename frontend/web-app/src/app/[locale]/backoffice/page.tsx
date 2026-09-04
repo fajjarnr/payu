@@ -1,12 +1,29 @@
+'use client';
+
 import { Link } from '@/lib/navigation';
-import { Users, AlertTriangle, Headphones, FileText, ClipboardCheck, ArrowUpRight, ShieldCheck, Zap } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Users, AlertTriangle, Headphones, FileText, ClipboardCheck, ArrowUpRight } from 'lucide-react';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { BackofficeService, BackofficeKycStatus, FraudCaseStatus, CustomerCaseStatus } from '@/services';
 
 export default function BackofficeDashboard() {
+  const { data: kyc } = useQuery({
+    queryKey: ['kyc-reviews', 'PENDING', 0],
+    queryFn: () => BackofficeService.getKycReviews(BackofficeKycStatus.PENDING, 0),
+  });
+  const { data: fraud } = useQuery({
+    queryKey: ['fraud-cases', 'OPEN', 0],
+    queryFn: () => BackofficeService.getFraudCases(FraudCaseStatus.OPEN, undefined, 0),
+  });
+  const { data: tickets } = useQuery({
+    queryKey: ['customer-cases', 'OPEN', 0],
+    queryFn: () => BackofficeService.getCustomerCases(CustomerCaseStatus.OPEN, undefined, 0),
+  });
+  const count = (list: unknown) => (Array.isArray(list) ? list.length : 0);
   const stats = [
-    { label: 'Total Customers', value: '\u2014', change: '\u2014', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Active Sessions', value: '\u2014', change: '\u2014', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { label: 'Security Alerts', value: '\u2014', change: '\u2014', icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'KYC Tertunda', value: String(count(kyc)), change: 'ANTRIAN', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Fraud Terbuka', value: String(count(fraud)), change: 'ANTRIAN', icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+    { label: 'Tiket Terbuka', value: String(count(tickets)), change: 'ANTRIAN', icon: Headphones, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   ];
 
   const quickLinks = [
