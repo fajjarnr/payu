@@ -192,6 +192,7 @@ Verifikasi CRUD: `60 endpoints` `auth_ok` (200/404/405/400 bukan 401/500) `47 PA
 | FE-AUDIT-003 | P2 | **Rehidrasi middleware self-fetch gagal dari pod** — `proxy.ts:147` fetch public URL dari dalam cluster → `fetch failed` (bukti log) → reload-pas-expiry selalu redirect login sebelum `SessionBootstrap` jalan. | `Session rehydration error — fetch failed` | CLOSED 1.18.86 — refresh via `127.0.0.1:$PORT`, bukti log "Session rehydrated successfully" |
 | FE-AUDIT-004 | P3 | **Input `type=number` + helper float tanpa caller hidup** — pockets/split-bill amount `type=number` (e/exponent), `validation.ts parseIndonesianAmount/validateAmount` float, `currency.ts` compact/`parseCurrency`/`roundCurrency` legacy. Display-only/laten. | audit MoneyBoundaryAudit M3–M5 | OPEN — samakan ke pola transfer bila menyentuh file itu |
 | FE-AUDIT-005 | P1 | **Cookie sesi Strict mati di navigasi top-level** — tiap goto langsung mental login detik pasca-login. | proof relay `/pockets` bounce | CLOSED 1.18.87 — cookie sesi → `Lax` (L-420); goto render data langsung |
+| FE-AUDIT-006 | P2 | **Analytics backend nol padahal transaksi ada** — cashflow/trends 200 dengan income/expenses 0 + kategori kosong untuk user ber-16 transaksi; frontend sudah hidrasi REST benar (test hijau, live tampilkan apa kata backend). Dugaan agregasi by user_id vs transaksi by account_id. | proof relay + API probe 11:06 UTC | OPEN — selidiki agregasi analytics-service |
 
 
 ---

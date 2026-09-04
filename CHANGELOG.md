@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.90] - 2026-09-04
+
+### Fixed
+- **Analytics hidrasi REST (bukan cuma WS mati)**: halaman analytics cuma baca websocket `/ws/analytics` yang tak pernah connect (tak ada proxy WS) → nol permanen. Sekarang seed dari `useCashFlow`/`useSpendingTrends`, WS override bila ada. Test hidrasi hijau. Catatan: backend kembalikan 0 untuk user bertransaksi (FE-AUDIT-006, agregasi backend).
+
 ## [1.18.89] - 2026-09-04
 
 ### Fixed

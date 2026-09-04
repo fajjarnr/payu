@@ -6,7 +6,7 @@ import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { TrendingUp, TrendingDown, Calendar, ArrowUpRight, Activity, Wifi, WifiOff } from 'lucide-react';
 import clsx from 'clsx';
-import { useAnalyticsWebSocket } from '@/hooks';
+import { useAnalyticsWebSocket, useCashFlow, useSpendingTrends } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { PageTransition } from '@/components/ui/Motion';
 import { 
@@ -29,10 +29,40 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
+  const userId = useAuthStore((state) => state.user?.id);
   const { analytics, isConnected } = useAnalyticsWebSocket(accountId || undefined);
+  const { data: cashFlow } = useCashFlow(userId);
+  const { data: trends } = useSpendingTrends(userId);
+
+  // REST baseline: the WS feed is enhancement-only (it may never connect —
+  // no WS proxy exists in this environment), so seed the page from REST.
+  // Live WS data takes precedence when present.
+  const CATEGORY_COLORS = [
+    'bg-emerald-500', 'bg-blue-500', 'bg-amber-500',
+    'bg-violet-500', 'bg-rose-500', 'bg-slate-500',
+  ];
+  const restData =
+    cashFlow || trends
+      ? {
+          totalIncome: cashFlow?.income ?? 0,
+          totalExpenses: cashFlow?.expenses ?? trends?.totalSpending ?? 0,
+          monthlySavings: cashFlow?.netCashFlow ?? 0,
+          investmentRoi: 0,
+          incomeChange: 0,
+          expenseChange: trends?.monthOverMonthChange ?? 0,
+          savingsChange: 0,
+          roiChange: 0,
+          spendingBreakdown: (trends?.categories ?? cashFlow?.expensesByCategory ?? []).map((c, i) => ({
+            label: c.category,
+            amount: c.amount,
+            percentage: c.percentage,
+            color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+          })),
+        }
+      : null;
 
   // BUG-FE-062: Replace hardcoded fallback data with zeros/empty state
-  const analyticsData = analytics || {
+  const analyticsData = analytics ?? restData ?? {
     totalIncome: 0,
     totalExpenses: 0,
     monthlySavings: 0,
@@ -43,7 +73,6 @@ export default function AnalyticsPage() {
     roiChange: 0,
     spendingBreakdown: [] as { label: string; amount: number; percentage: number; color: string }[]
   };
-
   // ponytail: Money string HALF_EVEN 4 preferred, number legacy — chart coerces via Number()
   const trajectoryData: { day: string; masuk: number | string; keluar: number | string }[] = (analytics?.trajectoryData ?? []) as { day: string; masuk: number | string; keluar: number | string }[]
 

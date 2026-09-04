@@ -21,9 +21,8 @@ vi.mock('@/stores/authStore', () => ({
     isAuthenticated: true,
   }),
 }));
-
-vi.mock('@/hooks/useAnalytics', () => ({
-  useAnalyticsWebSocket: () => ({
+const { wsMock, cashFlowMock, trendsMock } = vi.hoisted(() => ({
+  wsMock: vi.fn((): { isConnected: boolean; data: unknown } => ({
     isConnected: true,
     data: {
       totalIncome: 25000000,
@@ -33,9 +32,16 @@ vi.mock('@/hooks/useAnalytics', () => ({
       spendingByCategory: [],
       monthlyTrend: [],
     },
-  }),
+  })),
+  cashFlowMock: vi.fn((): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false })),
+  trendsMock: vi.fn((): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false })),
 }));
 
+vi.mock('@/hooks/useAnalytics', () => ({
+  useAnalyticsWebSocket: () => wsMock(),
+  useCashFlow: () => cashFlowMock(),
+  useSpendingTrends: () => trendsMock(),
+}));
 // Mock recharts to avoid canvas rendering issues
 vi.mock('recharts', () => ({
   BarChart: ({ children }: { children: React.ReactNode }) => <div data-testid="bar-chart">{children}</div>,
@@ -97,5 +103,24 @@ describe('AnalyticsPage', () => {
   it('should show live connection status', () => {
     render(<AnalyticsPage />);
     expect(screen.getByText('Live Update')).toBeInTheDocument();
+  });
+
+  it('hydrates from REST when the websocket has no data', () => {
+    wsMock.mockReturnValueOnce({ isConnected: false, data: null });
+    cashFlowMock.mockReturnValueOnce({
+      data: { income: '5000000', expenses: '3000000', netCashFlow: '2000000' },
+      isLoading: false,
+    });
+    trendsMock.mockReturnValueOnce({
+      data: {
+        totalSpending: '3000000',
+        monthOverMonthChange: -5,
+        categories: [{ category: 'Makanan', amount: '1500000', percentage: 50 }],
+      },
+      isLoading: false,
+    });
+    render(<AnalyticsPage />);
+    expect(screen.getByText('Rp 5.000.000')).toBeInTheDocument();
+    expect(screen.getByText('Makanan')).toBeInTheDocument();
   });
 });
