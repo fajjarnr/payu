@@ -130,7 +130,7 @@ export default function EmergencyAlert({
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Alert 
+              <Alert
                 variant={alertType}
                 className={clsx(
                   "relative pr-12 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 bg-background/50 backdrop-blur-md border-b-2",
@@ -138,6 +138,8 @@ export default function EmergencyAlert({
                   alertType === 'default' && "border-primary/20"
                 )}
                 onClick={() => handleAlertClick(alert)}
+                tabIndex={alert.actionUrl ? 0 : undefined}
+                onKeyDown={alert.actionUrl ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAlertClick(alert); } } : undefined}
               >
                 <Icon className="h-4 w-4" />
                 <AlertTitle className="font-bold uppercase tracking-tight text-xs mb-1">
@@ -156,7 +158,7 @@ export default function EmergencyAlert({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-2 right-2 h-8 w-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+                  className="absolute top-2 right-2 h-11 w-11 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
                   onClick={(e) => handleDismiss(alert.id, e)}
                   aria-label="Dismiss alert"
                 >

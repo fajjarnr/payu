@@ -84,13 +84,13 @@ export default function KycReviewsPage() {
                     </div>
                     <div>
                       <div className="text-sm font-bold text-foreground">{review.fullName}</div>
-                      <div className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">{review.userId}</div>
+                      <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{review.userId}</div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="text-sm font-bold text-foreground">{review.documentType}</div>
-                  <div className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">{review.documentNumber}</div>
+                  <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{review.documentNumber}</div>
                 </TableCell>
                 <TableCell className="text-muted-foreground font-bold text-xs">
                   {new Date(review.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}

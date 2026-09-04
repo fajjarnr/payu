@@ -171,16 +171,16 @@ export default function LandingPage() {
                   <div className="mx-auto h-1.5 w-16 rounded-full bg-border" />
                   <div className="flex items-center justify-between pt-1">
                     <div>
-                      <p className="text-[10px] text-muted-foreground">PayU</p>
+                      <p className="text-xs text-muted-foreground">PayU</p>
                       <p className="text-sm font-semibold tracking-tight">Demo Preview</p>
                     </div>
                     <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">P</div>
                   </div>
 
                   <div className="rounded-2xl bg-primary p-4 text-primary-foreground shadow-lg shadow-primary/30">
-                    <p className="text-[10px] opacity-70">Total Saldo</p>
+                    <p className="text-xs opacity-70">Total Saldo</p>
                     <p className="mt-0.5 font-heading text-xl font-bold tracking-tight tabular-nums">Rp24.562.800</p>
-                    <p className="mt-3 text-[10px] font-medium opacity-70">•••• 4682</p>
+                    <p className="mt-3 text-xs font-medium opacity-70">•••• 4682</p>
                   </div>
 
                   <div className="grid grid-cols-4 gap-2">
@@ -194,7 +194,7 @@ export default function LandingPage() {
                         <div className="flex size-11 w-full items-center justify-center rounded-xl bg-primary/10 text-primary">
                           <Icon size={18} />
                         </div>
-                        <span className="text-[9px] font-medium text-muted-foreground">{label}</span>
+                        <span className="text-xs font-medium text-muted-foreground">{label}</span>
                       </div>
                     ))}
                   </div>
@@ -223,7 +223,7 @@ export default function LandingPage() {
                 <CheckCircle2 size={18} className="text-primary" />
                 <div>
                   <p className="text-[11px] font-semibold">Payment Successful</p>
-                  <p className="text-[10px] text-muted-foreground">QRIS • Rp45.000</p>
+                  <p className="text-xs text-muted-foreground">QRIS • Rp45.000</p>
                 </div>
               </div>
               </div>

@@ -161,12 +161,12 @@ describe('PromoPopup', () => {
     expect(mockSessionStorage.setItem).toHaveBeenCalled();
   });
 
-  it('should permanently dismiss when "Don\'t Show Again" is clicked', () => {
+  it('should permanently dismiss when dismiss-forever is clicked', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
     advanceTimers(100);
 
-    const dontShowButton = screen.getByText("Don't Show Again");
+    const dontShowButton = screen.getByText('Jangan Tampilkan Lagi');
     fireEvent.click(dontShowButton);
 
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
@@ -180,7 +180,7 @@ describe('PromoPopup', () => {
 
     advanceTimers(100);
 
-    const claimButton = screen.getByText('Claim Now');
+    const claimButton = screen.getByText('Klaim Sekarang');
     fireEvent.click(claimButton);
 
     expect(mockPush).toHaveBeenCalledWith('/offers/special');
@@ -246,7 +246,7 @@ describe('PromoPopup', () => {
 
     advanceTimers(100);
 
-    expect(screen.getByText('SPECIAL OFFER')).toBeInTheDocument();
+    expect(screen.getByText('Penawaran Spesial')).toBeInTheDocument();
   });
 
   it('should have proper ARIA attributes', () => {

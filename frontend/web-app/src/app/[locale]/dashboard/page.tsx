@@ -74,7 +74,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
    <PromoPopup delay={3000} />
 
    <main id="main-content" className="overflow-x-hidden">
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="space-y-6 lg:space-y-8">
      {/* Banner Carousel - LCP Element 1 */}
      <BannerCarousel autoPlayInterval={6000} />
 
@@ -89,7 +89,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
        )}
      </div>
 
-     <StaggerContainer className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
+    <StaggerContainer className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
       {/* High Priority Actions & Health - 4/8 Split (Aligned with Balance) */}
       <StaggerItem className="lg:col-span-4">
         <FinancialHealthScore isLoading={metricsLoading} className="h-full" />

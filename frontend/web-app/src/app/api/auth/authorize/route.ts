@@ -22,26 +22,13 @@ export async function GET(request: Request) {
   const proto = request.headers.get("x-forwarded-proto") ?? reqUrl.protocol.replace(":", "");
   // Browser-facing baseUrl: use request Host so 18.143.199.84:3001 and localhost:3001 both work without hardcode
   const baseUrl = `${proto}://${host}`;
-  const keycloakUrlRaw =
+  // KEYCLOAK_URL / OIDC_ISSUER is already browser-reachable (sso-dev in
+  // cluster, localhost:8099 or EC2 IP locally). Never derive it from the
+  // web-app Host header — web and SSO are different hosts in cluster.
+  const keycloakUrl =
     process.env.KEYCLOAK_URL ??
     (oidcIssuer.includes("/realms/") ? oidcIssuer.split("/realms/")[0] : "") ??
     "";
-  // Browser-facing Keycloak URL: same hostname as request, Keycloak's public port 8099 (http) or 443 (https via reverse proxy)
-  let keycloakUrl = keycloakUrlRaw;
-  if (keycloakUrlRaw) {
-    try {
-      const kcUrl = new URL(keycloakUrlRaw);
-      const reqHostname = host.split(":")[0];
-      // Preserve Keycloak's path but swap host to request's hostname for browser reachability
-      // e.g., http://localhost:8099 → http://<request-hostname>:8099
-      // For https (payu.fajjjar.my.id) the public Keycloak is same host without port (reverse proxy)
-      if (proto === "https") {
-        keycloakUrl = `${proto}://${host.split(":")[0]}`;
-      } else {
-        keycloakUrl = `${kcUrl.protocol}//${reqHostname}:8099`;
-      }
-    } catch {}
-  }
   const realm =
     process.env.KEYCLOAK_REALM ??
     (oidcIssuer.includes("/realms/") ? oidcIssuer.split("/realms/")[1] : "") ??

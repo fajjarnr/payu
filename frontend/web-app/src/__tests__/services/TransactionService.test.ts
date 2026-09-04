@@ -52,8 +52,8 @@ describe('TransactionService', () => {
 
       const result = await TransactionService.getInstance().initiateTransfer(mockRequest);
 
-      // TRF-AMOUNT-001: transport sends amount as JSON number (gateway schema).
-      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', { ...mockRequest, amount: 100000 }, {
+      // Money travels as a canonical decimal string end-to-end (backend BigDecimal coerces it exactly).
+      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', { ...mockRequest }, {
         headers: { 'X-Idempotency-Key': expect.any(String) },
       });
       expect(result).toEqual(mockResponse);
@@ -78,7 +78,7 @@ describe('TransactionService', () => {
       vi.mocked(api.post).mockResolvedValue({ data: mockResponse });
 
       const result = await TransactionService.getInstance().initiateTransfer(mockRequest);
-      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', { ...mockRequest, amount: 50000 }, {
+      expect(api.post).toHaveBeenCalledWith('/transactions/transfer', { ...mockRequest }, {
         headers: { 'X-Idempotency-Key': expect.any(String) },
       });
       expect(result).toEqual(mockResponse);

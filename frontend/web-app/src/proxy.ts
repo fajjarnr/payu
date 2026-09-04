@@ -67,6 +67,7 @@ async function validateAccessToken(token: string): Promise<ValidationResult> {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
+      signal: AbortSignal.timeout(5_000),
     });
     // A definitive 401/403 means the token is rejected. Any other response
     // (200, or even 5xx from the gateway) is not a conclusive rejection.
@@ -149,6 +150,7 @@ export async function proxy(request: NextRequest) {
         headers: {
           'Cookie': request.headers.get('cookie') || '',
         },
+        signal: AbortSignal.timeout(10_000),
       });
 
       if (refreshRes.ok) {

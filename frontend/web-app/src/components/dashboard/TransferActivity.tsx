@@ -64,8 +64,12 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
 
   const canCancel = (status: string) => status === 'PENDING' || status === 'PROCESSING';
 
-  const formatAmount = (amount: string) => {
-    return formatCurrency(amount.replace(/^-/, ''), { locale: bcp47Locale });
+  // Wire data can carry DECIMAL as a JSON number; formatCurrency already
+  // normalizes number input. Keep the string path byte-identical (direction
+  // sign is rendered by the caller from transaction type).
+  const formatAmount = (amount: string | number) => {
+    const unsigned = typeof amount === 'string' ? amount.replace(/^-/, '') : amount;
+    return formatCurrency(unsigned, { locale: bcp47Locale });
   };
 
   const formatDate = (dateString: string) => {
@@ -83,11 +87,11 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
   return (
     <div data-testid="transfer-activity-section" className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
       {/* Quick Transfer Section - Now on the Left */}
-      <Card data-testid="quick-transfer-card" className="lg:col-span-4 relative overflow-hidden group min-h-[400px]">
+      <Card data-testid="quick-transfer-card" className="lg:col-span-4 relative overflow-hidden group min-h-[320px]">
         {/* Decorative background */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl transition-transform group-hover:scale-125 pointer-events-none" />
 
-        <CardHeader className="flex flex-row items-center justify-between pb-10">
+        <CardHeader className="flex flex-row items-center justify-between pb-6">
           <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             Kirim Cepat
           </CardTitle>
@@ -96,10 +100,10 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-12 py-6 relative z-10 flex flex-col justify-between h-full">
+        <CardContent className="space-y-8 relative z-10 flex flex-col justify-between h-full">
           <div>
-            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.25em] mb-8 text-center uppercase opacity-60">Kategori Favorit</p>
-            <div className="grid grid-cols-4 gap-4 sm:gap-6 px-1">
+            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.25em] mb-6 text-center uppercase opacity-60">Kategori Favorit</p>
+            <div className="grid grid-cols-4 gap-6 px-1">
               {[
                 { icon: Landmark, label: 'Bank' },
                 { icon: Smartphone, label: 'E-Wallet' },
@@ -117,7 +121,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
           </div>
 
           <div>
-            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.25em] mb-8 text-center uppercase opacity-60">Kontak Terbaru</p>
+            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.25em] mb-6 text-center uppercase opacity-60">Kontak Terbaru</p>
             <div className="flex justify-between items-center px-2">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-accent border-2 border-background shadow-md flex items-center justify-center overflow-hidden cursor-pointer hover:scale-110 active:scale-95 transition-all hover:ring-2 ring-primary/30 group/avatar">
@@ -135,7 +139,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
 
       {/* Recent Transfer Activity List - Now on the Right */}
       <Card data-testid="recent-activity-card" className="lg:col-span-8 overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between pb-10">
+        <CardHeader className="flex flex-row items-center justify-between pb-6">
           <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             Aktivitas Terakhir
           </CardTitle>
@@ -167,7 +171,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                   <TableBody>
                     {displayTransactions.map((item: Transaction) => (
                       <TableRow key={item.id} data-testid={`transfer-row-${item.id}`} className="group border-b border-border/30 hover:bg-muted/30 transition-colors">
-                        <TableCell className="py-6 sm:py-8 whitespace-nowrap">
+                        <TableCell className="py-6 whitespace-nowrap">
                           <div className="text-xs sm:text-xs text-muted-foreground font-bold tabular-nums uppercase tracking-tighter opacity-70">
                             {formatDate(item.createdAt)}
                           </div>
@@ -175,7 +179,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                             {item.referenceNumber}
                           </div>
                         </TableCell>
-                        <TableCell className="py-6 sm:py-8">
+                        <TableCell className="py-6">
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:scale-110 transition-transform shadow-sm">
                               <User className="h-6 w-6 text-primary" />
@@ -186,12 +190,12 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="py-6 sm:py-8 text-center">
+                        <TableCell className="py-6 text-center">
                           <Badge variant="outline" className={cn("font-bold text-xs", statusConfig[item.status]?.color || statusConfig.PENDING.color)}>
                             {statusConfig[item.status]?.label || item.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-6 sm:py-8 text-right">
+                        <TableCell className="py-6 text-right">
                           <p className={cn(
                             "text-sm sm:text-base font-bold tabular-nums tracking-tight",
                             isCreditType(item.type) ? "text-emerald-600" : "text-foreground"
@@ -202,7 +206,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                         <TableCell className="py-6 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
+                              <Button variant="ghost" size="icon" aria-label="Opsi transaksi" className="h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -259,7 +263,8 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            aria-label="Batalkan transaksi"
+                            className="h-11 w-11 text-red-500 hover:text-red-600 hover:bg-red-50"
                             onClick={() => handleCancel(item.id)}
                           >
                             <X className="h-4 w-4" />
@@ -283,7 +288,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                 </div>
               )}
 
-              <div className="mt-10 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-6">
+              <div className="mt-6 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-6">
                 <Button variant="ghost" size="sm" data-testid="repeat-last-transfer-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:text-primary/80 tracking-widest transition-colors uppercase h-auto p-0 hover:bg-transparent">
                   <RotateCcw className="h-4 w-4" /> Ulangi Transfer Terakhir
                 </Button>

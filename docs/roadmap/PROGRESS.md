@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Platform 1.18.84 Frontend Best-Practice Audit (frontend-architect, kode saja — 2026-09-04)
+
+- **Audit Fix (1.18.84)**: `TransactionService` Money string utuh (revisi RELAY-012, L-417) + `PartnerService` idempotency + `api/auth/refresh` preserve-cookie anti-paksa-logout (L-416) + timeout edge + adopsi user + `useSellInvestment` keys + `AuthService` dedup + FX log redact + a11y/i18n batch (`beneficiaries`/`promo`, paritas 572/572, 44px, reduced-motion global, floor 12px) + whitespace hemat + saldo 1 baris + crash `e.replace` (proof relay `-Rp 5.000`).
+- **SemVer Sync 1.18.84**: `CHANGELOG 1.18.84` `TODOS FE-AUDIT-001..004 OPEN` (RELAY-012 REVISED) `LESSONS L-416+L-417` `frontend/web-app` kode saja — live `:1.18.83` mendahului, deploy menyusul.
+- **Verification 1.18.84**: `tsc --noEmit` 0 `vitest 95 files 1203 (1202 pass 1 skip)` `check-i18n-coverage` OK `eslint` file terdampak 0 Context7 next/react/tailwindcss/framer-motion.
+
 ## Platform 1.18.77 TokoBapak SNAP-BI E2E (PAYU-TB-001..005) + 37 Healthy + Backend Verified (2026-08-30)
 
 - **TokoBapak Fix (1.18.77)**: `partner-service V23 tokobapak-mvp ACTIVE SANDBOX` + `wallet V122 ACC_TOKOBAPAK_ESCROW 100M + ACC_SELLER_* 0` `tenant SYSTEM bypass` + `Keycloak tokobapak-mvp serviceAccounts` + `SnapBiTokoBapakContractTest 5/5` `2002500/4002501/4002502` `uq_snap_payment_partner_ref` `payu.partner.payment-completed.v1` + `payu_client.go HMAC-SHA512 SignForB2B/SignWithToken hashBody` `source/beneficiaryAccountNo` `POST /v1.0/access-token/b2b → /v1.0/transfer-va/payment` `X-CLIENT-KEY/Bearer/X-SIGNATURE/X-EXTERNAL-ID` + `podman-compose PAYU_BASE_URL payu-partner-service:8080 payu-network podman_payu-network` + `TOKOBAPAK_SNAPBI.md` `±300s` `4012504/4012506` + `TenantDataSource H2 skip` + `loan-origination api-commons` — **TokoBapak BELUM → BISA bayar via PayU**.

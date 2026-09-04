@@ -91,7 +91,7 @@ export default function CustomerCasesPage() {
                   <TableCell className="font-bold text-muted-foreground tabular-nums">#{c.caseNumber}</TableCell>
                   <TableCell>
                     <div className="text-sm font-bold text-foreground">{c.subject}</div>
-                    <div className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">{c.userId}</div>
+                    <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{c.userId}</div>
                   </TableCell>
                   <TableCell>
                     <Badge

@@ -115,7 +115,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
         className="hidden lg:flex flex-col w-[320px] 2xl:w-[380px] border-r border-border bg-background p-5 sm:p-6 lg:p-8 2xl:p-8 h-screen overflow-y-auto shrink-0 sticky top-0"
         aria-label="Sidebar Navigasi Desktop"
       >
-        <div className="flex items-center gap-5 mb-16 px-2 group cursor-pointer">
+        <div className="flex items-center gap-5 mb-10 px-2 group cursor-pointer">
           <Link href="/" className="flex items-center gap-5">
             <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-primary/20 rotate-3 transition-transform group-hover:rotate-0">
               U
@@ -124,7 +124,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
           </Link>
         </div>
 
-        <div className="space-y-6 2xl:space-y-8 mb-14">
+        <div className="space-y-6 2xl:space-y-8 mb-10">
           <p className="text-xs sm:text-sm font-bold text-primary/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('main')}</p>
           {mainMenu.map((item) => (
             <SidebarItem
@@ -150,7 +150,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-16 sm:h-20 lg:h-24 xl:h-28 border-b border-border bg-background/80 backdrop-blur-3xl sticky top-0 z-30 shrink-0">
+        <header className="h-16 sm:h-20 lg:h-20 xl:h-24 border-b border-border bg-background/80 backdrop-blur-3xl sticky top-0 z-30 shrink-0">
           <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 h-full flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-3 sm:gap-6 lg:gap-8 min-w-0 flex-1">
               <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
@@ -228,7 +228,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
                  aria-label="Notifikasi"
                  onClick={() => router.push(`/${locale}/notifications`)}
                >
-                 <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 lg:top-5 lg:right-5 h-2 w-2 sm:h-2.5 sm:w-2.5 bg-primary rounded-full border-2 border-card shadow-sm" aria-label="Notifikasi baru" />
+                 <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 lg:top-5 lg:right-5 h-2 w-2 sm:h-2.5 sm:w-2.5 bg-primary rounded-full border-2 border-card shadow-sm" aria-hidden="true" />
                  <Bell className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
                </Button>
 
@@ -270,7 +270,7 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
         </header>
 
         <main className="flex-1 overflow-y-auto scrollbar-hide bg-background overflow-x-hidden">
-          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-8 lg:py-10 pb-28 lg:pb-10 transition-all duration-300">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-8 pb-28 lg:pb-12 transition-all duration-300">
             {children}
           </div>
         </main>

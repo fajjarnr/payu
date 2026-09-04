@@ -116,7 +116,7 @@ export default function BannerCarousel({
                 </div>
 
                 {/* Content */}
-                <div className="relative z-10 h-full flex flex-col justify-center p-6 sm:p-10 md:p-16">
+                <div className="relative z-10 h-full flex flex-col justify-center p-5 sm:p-8 lg:p-10">
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -148,7 +148,7 @@ export default function BannerCarousel({
         )}
       </Carousel>
       {banners.length > 1 && (
-        <div className="mt-3 flex justify-center gap-2" aria-label="Banner pagination">
+        <div className="mt-3 flex justify-center gap-2" role="group" aria-label="Banner pagination">
           {banners.map((banner, index) => (
             <button
               key={banner.id}
@@ -156,11 +156,16 @@ export default function BannerCarousel({
               aria-label={`Go to banner ${index + 1}`}
               aria-current={index === current ? 'true' : undefined}
               onClick={() => api?.scrollTo(index)}
-              className={clsx(
-                'h-2 rounded-full transition-all',
-                index === current ? 'w-8 bg-bank-green' : 'w-2 bg-muted-foreground/30'
-              )}
-            />
+              className="flex h-11 w-11 items-center justify-center cursor-pointer"
+            >
+              <span
+                aria-hidden="true"
+                className={clsx(
+                  'h-2 rounded-full transition-all',
+                  index === current ? 'w-8 bg-bank-green' : 'w-2 bg-muted-foreground/30'
+                )}
+              />
+            </button>
           ))}
         </div>
       )}

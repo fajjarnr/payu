@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronDown } from 'lucide-react';
 import { 
   Bar, 
@@ -65,12 +66,13 @@ export default function StatsCharts({
   totalValue,
   isLoading = false,
 }: StatsChartsProps) {
+  const t = useTranslations('investments');
   const invData = investmentChartData ?? [];
   const spdData = spendingChartData ?? [];
   const legend = investmentLegend ?? [
-    { color: 'bg-emerald-500', label: 'Saham', percentage: '--' },
-    { color: 'bg-emerald-400', label: 'Obligasi', percentage: '--' },
-    { color: 'bg-emerald-300', label: 'Emas Digital', percentage: '--' },
+    { color: 'bg-emerald-500', label: t('legendStocks'), percentage: '--' },
+    { color: 'bg-emerald-400', label: t('legendBonds'), percentage: '--' },
+    { color: 'bg-emerald-300', label: t('legendGold'), percentage: '--' },
   ];
   const displayTotal = totalValue ?? '--';
 
@@ -78,10 +80,10 @@ export default function StatsCharts({
     return (
       <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
         <Card className="lg:col-span-5 flex items-center justify-center min-h-[300px]">
-          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
+          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">{t('loading')}</p>
         </Card>
         <Card className="lg:col-span-7 flex items-center justify-center min-h-[300px]">
-          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
+          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">{t('loading')}</p>
         </Card>
       </div>
     );
@@ -91,14 +93,14 @@ export default function StatsCharts({
       <Card className="lg:col-span-5 relative overflow-hidden group">
         <CardHeader className="flex flex-row items-center justify-between pb-6">
           <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
-            Performa Investasi
+            {t('perfTitle')}
           </CardTitle>
           <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-5 py-2.5 rounded-xl cursor-pointer hover:bg-muted transition-colors uppercase tracking-widest shadow-sm">
-            Januari 2026 <ChevronDown className="h-4 w-4" />
+            {t('january2026')} <ChevronDown className="h-4 w-4" />
           </div>
         </CardHeader>
 
-        <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-10">
+        <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-6 lg:gap-8">
           <div className="space-y-6 w-full sm:w-auto">
             {legend.map((item) => (
               <ChartLegend key={item.label} color={item.color} label={item.label} percentage={item.percentage} />
@@ -165,7 +167,7 @@ export default function StatsCharts({
           </div>
 
           <div className="text-right w-full sm:w-auto shrink-0 space-y-2">
-            <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">Total Nilai</p>
+            <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">{t('totalValue')}</p>
             <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">{displayTotal}</h4>
           </div>
         </CardContent>
@@ -173,12 +175,10 @@ export default function StatsCharts({
 
       {/* Spending Overview (Official Shadcn Bar Chart) */}
       <Card className="lg:col-span-7 group overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between pb-8">
-          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
-            Ikhtisar Pengeluaran
-          </CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-6">
+          <CardTitle className="text-xl font-bold text-foreground">{t('spendingOverview')}</CardTitle>
           <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-5 py-2.5 rounded-xl cursor-pointer hover:bg-muted transition-colors uppercase tracking-widest shadow-sm">
-            Tahun 2026 <ChevronDown className="h-4 w-4" />
+            {t('year2026')} <ChevronDown className="h-4 w-4" />
           </div>
         </CardHeader>
 

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.84] - 2026-09-04
+
+### Fixed
+- **Frontend best-practice audit batch (frontend-architect, 4 slice paralel + Context7)**: `TransactionService.initiateTransfer` kirim Money string utuh (hapus `Number()` — backend `BigDecimal` coerce exact; revisi RELAY-012) + regression `TransferActivityNumericAmount`; `PartnerService.createSnapBiPayment/refundSnapBiPayment` bawa `X-Idempotency-Key` (refund deterministik); `api/auth/refresh` tak lagi wipe cookie saat transient (503/5xx preserve, wipe hanya 401/403/400 — tutup paksa-logout); timeout `AbortSignal` 10s refresh/callback + 5s validasi/10s rehidrasi edge; silent refresh/bootstrap adopsi `user` BFF (tutup split-brain) + `useRefreshToken` onError 401→logout; `useSellInvestment` invalidate key benar (holdings tak lagi stale); hapus slot session mati `AuthService`; log FX diredaksi ke message.
+- **A11y/i18n web-app**: tombol ikon transaksi bernama + 44px; `BalanceCard/InvestmentPerformance/StatsCharts/BeneficiaryManager/PromoPopup/ThemeToggle` → next-intl (namespace baru `beneficiaries`/`promo`, +22 keys, paritas 572/572); menu bahasa semantik + Esc; dots banner hit-area 44px + role group; dismiss alert 44px + keyboard; `MotionConfig reducedMotion="user"` + guard CSS global; teks <12px → floor `text-xs`; cursor-pointer, dot notifikasi, ikon ⚠️.
+- **Dashboard crash `e.replace` (live proof relay)**: `TransferActivity.formatAmount` terima `string | number` (API DECIMAL sebagai JSON number) — `/dashboard` render transaksi asli `-Rp 5.000`, error boundary hilang.
+- **Whitespace hemat + saldo satu baris**: root halaman `space-y-12→6/8`, hero `min-h-400→280/320`, banner `p-16→10`, empty `py-20→8`, header/sidebar dipadatkan; saldo hero cap `lg:text-4xl` (tak lagi wrap 2 baris di kolom ⅓).
+
+### Added
+- **Local Verify (1.18.84, kode saja — belum deploy; live `:1.18.83` mendahuluinya)**: `tsc --noEmit` 0; vitest **95 files 1203 (1202 pass 1 skip)**; `check-i18n-coverage` paritas; eslint file terdampak 0; Context7 `/vercel/next.js` (v16.2.9≈16.2.12) + `/react/react` (v19.2.7≈19.2.3) + `/tailwindlabs/tailwindcss.com` + framer-motion terverifikasi di paket terpasang 12.29.0.
+
 ## [1.18.79] - 2026-09-03
 
 ### Verified

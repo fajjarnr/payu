@@ -216,7 +216,7 @@ export default function TransferPage() {
     return (
       <DashboardLayout>
         <PageTransition>
-          <div className="space-y-12">
+          <div className="space-y-6 lg:space-y-8">
             <StaggerContainer>
               <StaggerItem>
                 <div className="flex items-center gap-6">
@@ -234,10 +234,10 @@ export default function TransferPage() {
               </StaggerItem>
 
               <StaggerItem>
-                <div className="bg-card rounded-xl p-8 sm:p-8 shadow-card border border-border relative overflow-hidden group">
+                <div className="bg-card rounded-xl p-5 sm:p-6 shadow-card border border-border relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
 
-                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 pb-12 border-b border-border">
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-border">
                     <div className="flex items-center gap-6">
                       <div className={clsx("w-20 h-20 rounded-2xl flex items-center justify-center font-bold text-3xl shadow-lg transition-transform group-hover:rotate-3", selectedContactData?.color)}>
                         {selectedContactData?.initial}
@@ -255,7 +255,7 @@ export default function TransferPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 relative z-10">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 relative z-10">
                     <div className="bg-muted p-6 rounded-xl border border-border">
                       <div className="flex items-center gap-2 mb-2">
                         <TransferTypeIcon className="h-4 w-4 text-primary" />
@@ -285,7 +285,7 @@ export default function TransferPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                     <div className="bg-muted p-5 sm:p-6 lg:p-8 rounded-xl border border-border">
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">Kantong Sumber</p>
                       <p className="font-bold text-foreground text-lg">Kantong Utama Cair</p>
@@ -323,7 +323,7 @@ export default function TransferPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-6 sm:space-y-8 lg:space-y-10">
+        <div className="space-y-6 lg:space-y-8">
           <StaggerContainer>
             <StaggerItem>
               <div className="mb-6 sm:mb-8">
@@ -544,7 +544,7 @@ export default function TransferPage() {
                     <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Nominal Transfer</span>
                     <div className="flex items-center gap-2 sm:gap-3 bg-success-light px-3 sm:px-4 py-1.5 rounded-full border border-primary/10 shadow-sm shrink-0">
                       <div className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse" />
-                      <span className="text-[10px] sm:text-xs font-bold text-primary tracking-widest uppercase">Secured IDR</span>
+                      <span className="text-xs font-bold text-primary tracking-widest uppercase">Secured IDR</span>
                     </div>
                   </div>
 

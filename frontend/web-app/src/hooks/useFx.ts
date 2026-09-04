@@ -45,7 +45,7 @@ export const useFxConversion = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error) => {
-      console.error('FX conversion failed:', error);
+      console.error('FX conversion failed:', error instanceof Error ? error.message : 'unknown');
     }
   });
 };
@@ -82,7 +82,7 @@ export const useFxReverse = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error) => {
-      console.error('FX reversal failed:', error);
+      console.error('FX reversal failed:', error instanceof Error ? error.message : 'unknown');
     }
   });
 };

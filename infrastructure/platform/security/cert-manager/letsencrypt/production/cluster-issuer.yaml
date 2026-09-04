@@ -10,10 +10,9 @@ spec:
     server: 'https://acme-v02.api.letsencrypt.org/directory'
     solvers:
       # -----------------------------------------------------------------------
-      # Zone 1 (ACTIVE): apps.fajjjar.my.id → Z03498391WUK9UKLLX2B0 (2026-08-21 manual PHZ)
+      # Zone 1 (ACTIVE): apps.fajjjar.my.id → Z0964617377Y5SMFEKJFR
       # Covers: *.apps.fajjjar.my.id, apps.fajjjar.my.id
-      # Public zone apps.fajjjar.my.id NS ns-806/ns-1199/ns-218/ns-1668 → Cloudflare NS updated
-      # Credentials: cert-manager-aws-creds (student, ap-southeast-1, via kube-system/aws-creds)
+      # Credentials: cert-manager-aws-creds (student, via kube-system/aws-creds)
       # -----------------------------------------------------------------------
       - dns01:
           route53:
@@ -23,35 +22,20 @@ spec:
             secretAccessKeySecretRef:
               name: cert-manager-aws-creds
               key: aws_secret_access_key
-            hostedZoneID: 'Z03498391WUK9UKLLX2B0'
+            hostedZoneID: 'Z0964617377Y5SMFEKJFR'
             region: ap-southeast-1
         selector:
           dnsZones:
             - 'apps.fajjjar.my.id'
 
-      # -----------------------------------------------------------------------
-      # Zone 2 (ACTIVE): 9xtfg.sandbox5612.opentlc.com → Z02340702RYD34OD8N5J0
-      # Covers: *.apps.cluster-9xtfg.9xtfg.sandbox5612.opentlc.com (default OCP ingress)
-      # -----------------------------------------------------------------------
-      - dns01:
-          route53:
-            accessKeyIDSecretRef:
-              name: cert-manager-aws-creds
-              key: aws_access_key_id
-            secretAccessKeySecretRef:
-              name: cert-manager-aws-creds
-              key: aws_secret_access_key
-            hostedZoneID: 'Z02340702RYD34OD8N5J0'
-            region: us-east-1
-        selector:
-          dnsZones:
-            - '9xtfg.sandbox5612.opentlc.com'
 
       # -----------------------------------------------------------------------
-      # Zone 3 (ACTIVE): payu.ocp.fajjjar.my.id → Z0355604365BIY6CKWOGU
+      # Zone 2 (ACTIVE): payu.ocp branch — served by ocp.fajjjar.my.id → Z00771482ZN71F761ZGVE
+      # (Z016807015N5JY498AUZI payu.ocp zone is NOT delegated from parent; TXT there is invisible.
+      #  Parent Z0077 holds the live A records, so DNS-01 must present here.)
       # Covers: *.apps.payu.ocp.fajjjar.my.id, apps.payu.ocp.fajjjar.my.id, payu.ocp.fajjjar.my.id, ocp.fajjjar.my.id
       # Ingress default: apps.payu.ocp.fajjjar.my.id (oc get ingress.config cluster .spec.domain)
-      # Credentials: cert-manager-aws-creds (student, ap-southeast-1, via kube-system/aws-creds)
+      # Credentials: cert-manager-aws-creds (student, via kube-system/aws-creds)
       # -----------------------------------------------------------------------
       - dns01:
           route53:
@@ -61,7 +45,7 @@ spec:
             secretAccessKeySecretRef:
               name: cert-manager-aws-creds
               key: aws_secret_access_key
-            hostedZoneID: 'Z0355604365BIY6CKWOGU'
+            hostedZoneID: 'Z00771482ZN71F761ZGVE'
             region: ap-southeast-1
         selector:
           dnsZones:

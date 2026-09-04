@@ -21,7 +21,8 @@
     "success": "Berhasil",
     "failed": "Gagal",
     "pending": "Menunggu",
-    "user": "Pengguna"
+    "user": "Pengguna",
+    "toggleTheme": "Ganti tema"
   },
   "nav": {
     "dashboard": "Dasbor",
@@ -85,7 +86,37 @@
     "quickActionsSubtitle": "Akses cepat ke fitur favorit Anda",
     "quickActionsDragHint": "Seret untuk mengatur ulang",
     "viewAllAnalytics": "Lihat Semua Analitik",
-    "manageBudgets": "Kelola Anggaran"
+    "manageBudgets": "Kelola Anggaran",
+    "primaryBalance": "Saldo Utama",
+    "netWorth": "Kekayaan Bersih",
+    "cardHolder": "Pemegang Kartu",
+    "growthFactor": "Faktor Pertumbuhan",
+    "totalGrowth": "Peningkatan Total",
+    "thisMonth": "Bulan ini"
+  },
+  "beneficiaries": {
+    "title": "Penerima",
+    "description": "Kelola penerima transfer",
+    "empty": "Belum ada penerima — tambah di bawah.",
+    "addTitle": "Tambah Penerima",
+    "bankCode": "Kode Bank",
+    "accountNumber": "Nomor Rekening",
+    "nicknameOptional": "Nama panggilan (opsional)",
+    "use": "Gunakan",
+    "delete": "Hapus {name}",
+    "add": "Tambah Penerima",
+    "added": "Penerima ditambahkan",
+    "removed": "Penerima dihapus",
+    "addFailed": "Gagal menambah penerima",
+    "deleteFailed": "Gagal menghapus",
+    "errBankCode": "Kode bank 1-10 karakter",
+    "errAccount": "10-20 digit",
+    "errNickname": "Maks 100 karakter"
+  },
+  "promo": {
+    "specialOffer": "Penawaran Spesial",
+    "claimNow": "Klaim Sekarang",
+    "dismissForever": "Jangan Tampilkan Lagi"
   },
   "accounts": {
     "accountNumber": "Nomor Akun",
@@ -202,6 +233,24 @@
     "return": "Imbal Hasil",
     "invest": "Investasi",
     "withdraw": "Tarik",
+    "perfTitle": "Performa Investasi",
+    "loading": "Memuat...",
+    "perfYield": "ROI Tahunan (Yield)",
+    "annualRoi": "Annual ROI",
+    "target": "Target",
+    "profit": "Profit",
+    "up": "Naik",
+    "down": "Turun",
+    "thisMonth": "bulan ini",
+    "basedOnTotal": "Berdasarkan total investasi {amount}",
+    "noData": "Belum ada data investasi",
+    "january2026": "Januari 2026",
+    "totalValue": "Total Nilai",
+    "spendingOverview": "Ikhtisar Pengeluaran",
+    "year2026": "Tahun 2026",
+    "legendStocks": "Saham",
+    "legendBonds": "Obligasi",
+    "legendGold": "Emas Digital",
     "history": "Riwayat",
     "risk": {
       "low": "Risiko Rendah",
@@ -373,14 +422,14 @@
         "title": "Verifikasi Identitas Digital.",
         "desc": "Bergabung dengan 2 Juta+ pengguna yang telah mempercayakan masa depan finansial mereka pada ekosistem PayU.",
         "features": {
-            "ekyc": {
-                "title": "e-KYC Instant Liveness",
-                "desc": "Verifikasi wajah biometrik otomatis tanpa antri video call agent."
-            },
-            "data": {
-                "title": "Kedaulatan Data",
-                "desc": "Data pribadi Anda dienkripsi penuh dan tidak pernah dibagikan ke pihak ketiga."
-            }
+          "ekyc": {
+            "title": "e-KYC Instant Liveness",
+            "desc": "Verifikasi wajah biometrik otomatis tanpa antri video call agent."
+          },
+          "data": {
+            "title": "Kedaulatan Data",
+            "desc": "Data pribadi Anda dienkripsi penuh dan tidak pernah dibagikan ke pihak ketiga."
+          }
         },
         "system": "Sistem Operasional"
       }
@@ -537,19 +586,17 @@
       "openAccount": "Buka Rekening"
     },
     "features": {
-      "title": "Kinerja Tanpa Batas.",
-      "subtitle": "Dibangun di atas infrastruktur microservices modern.",
-      "instantTransfer": {
-        "title": "Transfer Instan",
-        "desc": "Kirim uang ke bank mana pun dalam hitungan detik tanpa biaya tersembunyi."
+      "qris": {
+        "title": "Bayar dengan QRIS",
+        "desc": "Scan, konfirmasi, selesai. Bayar dan terima pembayaran di jutaan merchant."
       },
-      "secure": {
-        "title": "Keamanan Tinggi",
-        "desc": "Data dan aset Anda dilindungi dengan enkripsi tingkat lanjut dan autentikasi biometrik."
+      "pockets": {
+        "title": "Pocket & Sub-akun",
+        "desc": "Pisahkan dana untuk tabungan, usaha, dan kebutuhan harian dalam satu akun."
       },
-      "smartInvesting": {
-        "title": "Investasi Cerdas",
-        "desc": "Tumbuhkan kekayaan Anda dengan produk investasi yang dikurasi khusus untuk Anda."
+      "bills": {
+        "title": "Tagihan Otomatis",
+        "desc": "Listrik, air, pulsa, dan cicilan terbayar tepat waktu dengan penjadwalan otomatis."
       }
     },
     "about": {
@@ -616,12 +663,7 @@
       "marketing": "Standar Baru Perbankan."
     },
     "footer": {
-      "legal": "2026 PayU. Hak Cipta Dilindungi Undang-Undang.",
-      "rights": "© 2026 PayU Financial Infrastructure.",
-      "features": "Fitur",
-      "career": "Karir",
-      "blog": "Blog",
-      "privacy": "Privasi"
+      "tagline": "Solusi finansial modern untuk individu dan bisnis."
     },
     "ticker": {
       "label": "Dipercaya oleh Pemimpin:"
@@ -662,20 +704,6 @@
       "terms": "Syarat & Ketentuan",
       "privacy": "Privacy Policy"
     },
-    "features": {
-      "qris": {
-        "title": "Bayar dengan QRIS",
-        "desc": "Scan, konfirmasi, selesai. Bayar dan terima pembayaran di jutaan merchant."
-      },
-      "pockets": {
-        "title": "Pocket & Sub-akun",
-        "desc": "Pisahkan dana untuk tabungan, usaha, dan kebutuhan harian dalam satu akun."
-      },
-      "bills": {
-        "title": "Tagihan Otomatis",
-        "desc": "Listrik, air, pulsa, dan cicilan terbayar tepat waktu dengan penjadwalan otomatis."
-      }
-    },
     "how": {
       "title": "Mulai dalam 3 langkah",
       "step1": {
@@ -695,9 +723,6 @@
       "item1": "Enkripsi end-to-end",
       "item2": "Verifikasi biometrik",
       "item3": "Berlisensi & diaudit"
-    },
-    "footer": {
-      "tagline": "Solusi finansial modern untuk individu dan bisnis."
     }
   }
 }

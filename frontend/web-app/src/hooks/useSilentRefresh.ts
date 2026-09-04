@@ -37,7 +37,7 @@ const EAGER_REFRESH_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutes
 export function useSilentRefresh() {
   const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const { setAuthenticated, setTokenExpiry, logout } = useAuthStore();
+  const { setAuth, setAuthenticated, setTokenExpiry, logout } = useAuthStore();
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // BUG-AUTH-001: Shared lock to prevent concurrent refresh calls
@@ -74,10 +74,14 @@ export function useSilentRefresh() {
         return false;
       }
 
-      const data: { success: boolean; expiresIn?: number } = await res.json();
+      const data: { success: boolean; expiresIn?: number; user?: { id: string; accountId?: string } & Record<string, unknown> } = await res.json();
       const expiresIn = data.expiresIn ?? 900; // seconds
-      setAuthenticated(true);
       setTokenExpiry(Date.now() + expiresIn * 1000);
+      if (data.user) {
+        setAuth(data.user as Parameters<typeof setAuth>[0], data.user.accountId || data.user.id);
+      } else {
+        setAuthenticated(true);
+      }
       return true;
     } catch (err) {
       console.error('[useSilentRefresh] Token refresh network error:', err);
@@ -85,7 +89,7 @@ export function useSilentRefresh() {
     } finally {
       isRefreshingRef.current = false;
     }
-  }, [logout, setAuthenticated, setTokenExpiry]);
+  }, [logout, setAuth, setAuthenticated, setTokenExpiry]);
 
   // BUG-AUTH-004: Retry counter for exponential backoff on failure
   const retryAttemptsRef = useRef(0);

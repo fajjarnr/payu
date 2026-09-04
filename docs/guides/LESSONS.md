@@ -1,5 +1,21 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-417: Jackson BigDecimal coerce JSON string exact — frontend Money string end-to-end (2026-09-04)
+
+**Context**: `TransactionService.initiateTransfer` konversi `Number(request.amount)` dengan klaim "gateway minta JSON number" (RELAY-012/TRF-AMOUNT-001, test ekspektasi angka). Padahal DTO `InitiateTransferRequest.amount` adalah `BigDecimal` — Jackson coerce JSON string → BigDecimal secara exact, sementara float64 tak bisa wakili fraksi 4dp (`"1500000.50"` → double) dan pecah di atas 2^53. Bug yang sama men-crash dashboard: API kembalikan DECIMAL sebagai JSON number, `TransferActivity.formatAmount` panggil `amount.replace` → `e.replace is not a function` → error boundary seluruh `/dashboard` (bukti relay).
+
+**Fix**: kirim `request` apa adanya (string kanonis); `formatAmount(amount: string | number)` teruskan ke `formatCurrency` yang sudah normalisasi number (path string byte-identical, tanda arah tetap dari tipe transaksi). Test kontrak dibalik ke string + regression `TransferActivityNumericAmount` (amount number render `Rp 1.500.000` tanpa crash). Revisi RELAY-012: konversi Number() dihapus, bukan dipertahankan.
+
+**Pelajaran**: klaim "schema minta number" harus dibuktikan di DTO (`BigDecimal` = string OK), bukan di komentar kode. `DECIMAL(19,4)` tak pernah melewati float64 di transport — batas aman cuma string.
+
+## L-416: BFF refresh yang wipe cookie saat transient = logout paksa massal (2026-09-04)
+
+**Context**: user "selalu logout" acak. `POST /api/auth/refresh` (`refresh/route.ts`) menghapus kedua cookie (`maxAge: 0`) di SEMUA path gagal — termasuk `catch` (gateway timeout) dan 5xx. Padahal tiap full load (`SessionBootstrap`) + tiap ~3 mnt (`useSilentRefresh`, access TTL Keycloak pendek) selalu hit endpoint ini. Satu blip gateway → sesi valid 2 menit ke depan ikut musnah → navigasi berikut 302 `/login`. Bukti log: `Session rehydration error — fetch failed` (self-fetch middleware ke public URL tak terjangkau dari pod) + refresh sukses tiap 3 mnt.
+
+**Fix**: cookie cuma dihapus pada 401/403/400 definitif; 5xx/exception → 503/502 tanpa `Set-Cookie` (token lama tetap valid, client retry backoff BUG-AUTH-004 sudah ada). Selaras FE-PROXY-AUTH-001 + BUG-AUTH-016 (hanya 401 yang logout). Regression `auth-refresh-route.test.ts` 3 test (503/502 preserve, 401 wipe). Sisa terbuka: rehidrasi middleware self-fetch public URL gagal dari pod (FE-AUDIT-004), race refresh ganda client+server (FE-AUDIT-001).
+
+**Pelajaran**: transient ≠ session end — fail-closed yang benar untuk refresh adalah "jangan sentuh cookie", bukan "bersihkan lalu redirect". Setiap `Set-Cookie: maxAge=0` harus dijaga kondisi definitif (401/403), dan tiap klaim "mencegah infinite loop" yang diwujudkan via wipe harus diuji skenario blip-nya.
+
 ## L-415: withDeadlineAfter di shared stub = semua gRPC mati 30 dtk pasca-boot (2026-09-03)
 
 **Context**: `GrpcChannelSupport.withDeadline()` dipanggil sekali di `@PostConstruct`. Deadline gRPC absolut beku saat pembuatan stub — tiap call setelah 30 dtk gagal `DEADLINE_EXCEEDED` dengan offset negatif membesar (`-321s` = umur pod). Semua service pemakai helper (billing/fx/investment/lending/transaction) kena. Gejala menipu: TCP connect OK, tak ada log server.

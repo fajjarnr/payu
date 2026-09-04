@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import clsx from 'clsx';
 import { useRouter } from '@/lib/navigation';
@@ -60,6 +60,7 @@ export default function PromoPopup({
   const router = useRouter();
   // BUG-FE-008 FIX: Use dynamic locale instead of hardcoded 'id-ID'
   const locale = useLocale();
+  const t = useTranslations('promo');
   const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
   const { data: popups, isLoading } = usePopups({ segment, location, device });
   const [isOpen, setIsOpen] = useState(false);
@@ -239,7 +240,7 @@ export default function PromoPopup({
         >
           <div className="mb-8">
             <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-xs font-bold tracking-[0.2em] rounded-full mb-4 uppercase border border-white/20 backdrop-blur-md">
-              SPECIAL OFFER
+              {t('specialOffer')}
             </span>
             <h3 className="text-2xl sm:text-4xl font-bold text-foreground mb-4 leading-tight uppercase">
               {currentPopup.title}
@@ -257,14 +258,14 @@ export default function PromoPopup({
               onClick={handleAction}
               className="flex-1 h-14 bg-bank-green hover:bg-bank-emerald text-white font-bold uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-bank-green/20"
             >
-              Claim Now
+              {t('claimNow')}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleClose(true)}
               className="flex-1 h-14 font-bold uppercase tracking-widest text-xs rounded-2xl border-border hover:bg-muted transition-all"
             >
-              Don&apos;t Show Again
+              {t('dismissForever')}
             </Button>
           </div>
 

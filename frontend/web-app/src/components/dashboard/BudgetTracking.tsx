@@ -114,7 +114,7 @@ export default function BudgetTracking({
       {/* Decorative background */}
       <div className="absolute top-1/2 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8 shrink-0">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6 shrink-0">
         <div>
           <CardTitle id="budget-tracking-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('budgetTracking')}

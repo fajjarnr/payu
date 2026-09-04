@@ -75,7 +75,7 @@ export default function AnalyticsPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
           <div className="flex justify-between items-end">
             <div>
               <h2 className="text-3xl font-bold text-foreground">Intelijen Keuangan</h2>
@@ -119,11 +119,11 @@ export default function AnalyticsPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
             <div className="md:col-span-6 lg:col-span-8">
               <Card className="rounded-xl border border-border shadow-sm h-full relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
-                <CardHeader className="flex flex-row items-center justify-between pb-8 relative z-10 p-8">
+                <CardHeader className="flex flex-row items-center justify-between pb-6 relative z-10 p-6 sm:p-6 lg:p-8">
                   <div>
                     <CardTitle className="text-xl font-bold text-foreground">Trajektori Pengeluaran</CardTitle>
                     <CardDescription className="text-xs text-gray-400 font-bold tracking-widest mt-1 lowercase">Analisis arus kas harian periode ini</CardDescription>
@@ -230,14 +230,14 @@ export default function AnalyticsPage() {
 
           <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 lg:p-8 relative overflow-hidden group shadow-2xl">
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="space-y-4 max-w-xl text-center md:text-left">
                 <h3 className="text-3xl font-bold text-white">Siap untuk menabung otomatis?</h3>
                 <p className="text-sm font-medium text-gray-400 leading-relaxed tracking-wide">
                   Sistem AI kami mendeteksi Anda dapat menabung tambahan <span className="text-bank-green font-bold">Rp 2.500.000</span> setiap bulan dengan mengoptimalkan tagihan utilitas dan langganan berulang Anda.
                 </p>
               </div>
-              <button className="whitespace-nowrap bg-bank-green text-white px-10 py-6 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20">
+              <button className="whitespace-nowrap bg-bank-green text-white px-8 py-4 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20">
                 Terapkan Optimasi
               </button>
             </div>

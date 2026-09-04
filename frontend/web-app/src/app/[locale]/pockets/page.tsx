@@ -3,7 +3,7 @@
 /* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
 
 import React, { useState } from 'react';
-import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, ArrowDownLeft, Trash2 } from "lucide-react";
+import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, ArrowDownLeft, Trash2, TriangleAlert } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import { BalanceResponse, WalletTransaction, Pocket } from '@/types';
@@ -240,10 +240,10 @@ export default function PocketsPage() {
     return (
         <DashboardLayout>
             <PageTransition>
-                <div className="space-y-12">
+                <div className="space-y-6 lg:space-y-8">
                     <StaggerContainer>
                         <StaggerItem>
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                                 <div>
                                     <h2 className="text-3xl font-bold text-foreground">Manajemen Kantong</h2>
                                     <p className="text-sm text-muted-foreground font-medium mt-1">Kelola dan alokasikan dana Anda dengan presisi tinggi.</p>
@@ -268,13 +268,13 @@ export default function PocketsPage() {
                             </div>
                         </StaggerItem>
 
-                        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
                             <StaggerItem className="md:col-span-12 lg:col-span-8">
-                                <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col justify-between min-h-[400px] relative overflow-hidden group shadow-2xl">
+                                <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col justify-between min-h-[280px] lg:min-h-[320px] relative overflow-hidden group shadow-2xl">
                                     <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -z-0" />
 
                                     <div className="relative z-10 flex flex-col h-full">
-                                        <div className="flex justify-between items-start mb-10">
+                                        <div className="flex justify-between items-start mb-6">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <div className="h-2 w-2 bg-emerald-500 rounded-full shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
@@ -307,7 +307,7 @@ export default function PocketsPage() {
                                 </div>
                             </StaggerItem>
 
-                            <StaggerItem className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-8">
+                            <StaggerItem className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-6">
                                 <div className="bg-card p-5 sm:p-6 lg:p-8 rounded-2xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group min-h-[180px]">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl" />
                                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1 opacity-60">Protokol Cadangan</p>
@@ -342,8 +342,8 @@ export default function PocketsPage() {
                         </div>
 
                         {/* Pockets List with CRUD */}
-                        <div className="mt-12">
-                            <div className="flex justify-between items-center mb-8">
+                        <div className="mt-8">
+                            <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold text-foreground">Kantong Saya</h3>
                                 <Badge variant="outline" className="font-mono">
                                     Total: {formatCurrency(totalBalance?.totalBalance ?? '0', { locale: bcp47Locale })}
@@ -434,7 +434,7 @@ export default function PocketsPage() {
                                     })}
                                 </div>
                             ) : (
-                                <div className="text-center py-12 bg-muted/30 rounded-2xl border border-border">
+                                <div className="text-center py-8 bg-muted/30 rounded-2xl border border-border">
                                     <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                                     <h4 className="text-lg font-bold text-foreground mb-2">Belum Ada Kantong</h4>
                                     <p className="text-sm text-muted-foreground mb-4">Buat kantong pertama Anda untuk mulai mengalokasikan dana</p>
@@ -445,8 +445,8 @@ export default function PocketsPage() {
                             )}
                         </div>
 
-                        <div className="md:col-span-12 lg:col-span-12 gap-8 mt-12 grid grid-cols-1 lg:grid-cols-12">
-                            <div className="lg:col-span-7 space-y-8">
+                        <div className="md:col-span-12 lg:col-span-12 gap-6 mt-8 grid grid-cols-1 lg:grid-cols-12">
+                            <div className="lg:col-span-7 space-y-6">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold text-foreground">Tujuan Khusus</h3>
                                     <button className="text-xs font-bold text-primary hover:underline">Kelola Portofolio</button>
@@ -458,7 +458,7 @@ export default function PocketsPage() {
                                         const Icon = goal.icon;
                                         return (
                                             <div key={goal.id} className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm group hover:shadow-card hover:-translate-y-1 transition-all duration-300">
-                                                <div className="flex items-center gap-5 mb-8">
+                                                <div className="flex items-center gap-5 mb-6">
                                                     <div className={clsx(
                                                         "h-14 w-14 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110",
                                                         goal.color === 'bank-green' ? "bg-primary/10 text-primary border border-primary/10" : "bg-bank-emerald/10 text-bank-emerald border border-bank-emerald/10"
@@ -507,16 +507,16 @@ export default function PocketsPage() {
                                     </div>
                                 </div>
 
-                                <div className="bg-card rounded-xl border border-border shadow-sm min-h-[400px] flex flex-col">
+                                <div className="bg-card rounded-xl border border-border shadow-sm min-h-[280px] lg:min-h-[320px] flex flex-col">
                                     {transactionsLoading ? (
-                                        <div className="p-8 space-y-6">
+                                        <div className="p-6 space-y-4">
                                             {[1, 2, 3, 4, 5].map(i => <SkeletonTransaction key={i} />)}
                                         </div>
                                     ) : (
                                         <div className="flex-1">
                                             <div className="divide-y divide-border">
                                                 {transactions?.map((tx) => (
-                                                    <div key={tx.id} className="p-6 flex items-center justify-between group hover:bg-muted/30 transition-all">
+                                                    <div key={tx.id} className="p-4 flex items-center justify-between group hover:bg-muted/30 transition-all">
                                                         <div className="flex gap-4">
                                                             <div className={clsx(
                                                                 "h-12 w-12 rounded-xl flex items-center justify-center border transition-all group-hover:scale-105",
@@ -546,7 +546,7 @@ export default function PocketsPage() {
                                             </div>
 
                                             {(!transactions || transactions.length === 0) && (
-                                                <div className="h-full flex flex-col items-center justify-center text-center py-20 px-10">
+                                                <div className="h-full flex flex-col items-center justify-center text-center py-8 px-6">
                                                     <History className="h-12 w-12 text-muted/20 mb-4" />
                                                     <p className="text-sm font-bold text-muted-foreground">Tidak Ada Aktivitas</p>
                                                     <p className="text-xs text-muted-foreground/60 mt-1 uppercase tracking-widest">Aktivitas keuangan Anda akan muncul di sini</p>
@@ -561,8 +561,8 @@ export default function PocketsPage() {
                             </div>
                         </div>
 
-                        <div className="mt-12">
-                            <div className="flex justify-between items-center mb-8">
+                        <div className="mt-8">
+                            <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
                                     <Users className="h-5 w-5 text-primary" />
                                     Kantong Bersama
@@ -652,10 +652,10 @@ export default function PocketsPage() {
                             </div>
                         </div>
 
-                        <StaggerItem className="mt-12">
-                            <div className="bg-foreground text-background rounded-xl p-8 sm:p-8 relative overflow-hidden group shadow-card">
+                        <StaggerItem className="mt-8">
+                            <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 relative overflow-hidden group shadow-card">
                                 <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
-                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                                     <div className="space-y-4 max-w-xl text-center md:text-left">
                                         <div className="flex items-center justify-center md:justify-start gap-4">
                                             <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
@@ -668,7 +668,7 @@ export default function PocketsPage() {
                                         </p>
                                     </div>
                                     <ButtonMotion>
-                                        <button className="whitespace-nowrap px-10 py-5 bg-bank-green text-white rounded-xl font-bold text-xs tracking-widest shadow-2xl shadow-bank-green/40 hover:bg-bank-emerald transition-all">
+                                        <button className="whitespace-nowrap px-8 py-4 bg-bank-green text-white rounded-xl font-bold text-xs tracking-widest shadow-2xl shadow-bank-green/40 hover:bg-bank-emerald transition-all">
                                             Jelajahi Marketplace
                                         </button>
                                     </ButtonMotion>
@@ -836,7 +836,7 @@ export default function PocketsPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="p-4 bg-red-50 rounded-xl border border-red-100">
-                        <p className="text-sm text-red-600 font-medium">⚠️ Tindakan ini tidak dapat dibatalkan</p>
+                        <p className="text-sm text-red-600 font-medium flex items-center gap-2"><TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" /> Tindakan ini tidak dapat dibatalkan</p>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsCloseModalOpen(false)}>

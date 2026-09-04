@@ -39,4 +39,44 @@ describe("POST /api/auth/refresh", () => {
     expect(responses.every(response => response.status === 200)).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(6);
   });
+
+  it("preserves cookies when the gateway is unreachable (transient)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("fetch failed")));
+
+    const response = await POST();
+
+    expect(response.status).toBe(503);
+    expect(response.cookies.get("accessToken")).toBeUndefined();
+    expect(response.cookies.get("refreshToken")).toBeUndefined();
+  });
+
+  it("preserves cookies on gateway 5xx without wiping the session", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(
+      new Response(JSON.stringify({ success: false }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      }),
+    )));
+
+    const response = await POST();
+
+    expect(response.status).toBe(502);
+    expect(response.cookies.get("accessToken")).toBeUndefined();
+    expect(response.cookies.get("refreshToken")).toBeUndefined();
+  });
+
+  it("clears cookies only on definitive 401 rejection", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(
+      new Response(JSON.stringify({ success: false }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }),
+    )));
+
+    const response = await POST();
+
+    expect(response.status).toBe(401);
+    expect(response.cookies.get("accessToken")?.value).toBe("");
+    expect(response.cookies.get("refreshToken")?.value).toBe("");
+  });
 });

@@ -60,9 +60,9 @@ export default function SpendingInsights({
       {/* Decorative background */}
       <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 shrink-0 z-10">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6 shrink-0 z-10">
         <div>
-          <CardTitle id="spending-insights-title" className="text-sm font-bold text-foreground tracking-widest uppercase">
+          <CardTitle id="spending-insights-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('spendingInsights')}
           </CardTitle>
           <CardDescription>
@@ -161,7 +161,7 @@ export default function SpendingInsights({
                 role="listitem"
                 className="bg-muted/30 rounded-xl border-none overflow-hidden"
               >
-                <AccordionTrigger className="hover:no-underline px-4 py-8 group/trigger">
+                <AccordionTrigger className="hover:no-underline px-4 py-4 group/trigger">
                   <div className="flex items-center gap-3 w-full text-left">
                     {/* Icon */}
                     <div

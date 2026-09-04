@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { getFinancialMutationHeaders, idempotencyKeyFor } from '@/lib/utils';
 
 export interface Partner {
   id: number;
@@ -155,7 +156,9 @@ export const PartnerService = {
 
   /** POST /partner/payments — Create SNAP-BI payment */
   async createSnapBiPayment(data: { amount: number; currency: string; referenceId: string; description?: string }) {
-    const response = await api.post<SnapBiPayment>('/partner/payments', data);
+    const response = await api.post<SnapBiPayment>('/partner/payments', data, {
+      headers: getFinancialMutationHeaders(),
+    });
     return response.data;
   },
 
@@ -167,7 +170,9 @@ export const PartnerService = {
 
   /** POST /partner/payments/{id}/refund — Refund SNAP-BI payment */
   async refundSnapBiPayment(id: string) {
-    const response = await api.post<SnapBiPayment>(`/partner/payments/${id}/refund`);
+    const response = await api.post<SnapBiPayment>(`/partner/payments/${id}/refund`, null, {
+      headers: { 'X-Idempotency-Key': idempotencyKeyFor('partner:refund', id) },
+    });
     return response.data;
   },
 };

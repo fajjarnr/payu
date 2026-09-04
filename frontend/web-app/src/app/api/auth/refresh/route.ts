@@ -49,16 +49,24 @@ export async function POST() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
+      signal: AbortSignal.timeout(10_000),
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected by gateway');
-      const response = NextResponse.json(data, { status: res.status });
-      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
-      response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
-      return response;
+      // Definitive rejection (bad/expired refresh token) ends the session.
+      // Anything else (gateway 5xx, timeouts surfaced as !ok) is transient:
+      // keep the existing cookies so the client can retry with backoff.
+      if (res.status === 401 || res.status === 403 || res.status === 400) {
+        logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected by gateway');
+        const response = NextResponse.json(data, { status: res.status });
+        response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
+        response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
+        return response;
+      }
+      logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh transient failure — preserving session cookies');
+      return NextResponse.json(data, { status: res.status });
     }
 
     const newAccessToken =
@@ -118,15 +126,13 @@ export async function POST() {
 
     return response;
   } catch (error) {
-    logger.error({ action: 'refresh', err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Token refresh proxy error');
-    // BUG-AUTH-014: Clear stale cookies on all error paths to prevent
-    // infinite refresh loops when the gateway is unreachable.
-    const response = NextResponse.json(
+    // Transient (network/timeout): NEVER clear cookies here. The existing
+    // tokens are still valid until expiry and the client retries with
+    // backoff — wiping them turns a blip into a forced logout.
+    logger.error({ action: 'refresh', err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Token refresh proxy error — session preserved');
+    return NextResponse.json(
       { success: false, message: 'Token refresh failed' },
       { status: 503 },
     );
-    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
-    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
-    return response;
   }
 }

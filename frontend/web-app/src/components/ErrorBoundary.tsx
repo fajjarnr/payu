@@ -78,7 +78,7 @@ export class ErrorBoundary extends Component<Props, State> {
        <div className="space-y-3">
         <button
          onClick={this.handleRefresh}
-         className="w-full bg-foreground text-background py-5 rounded-[1.25rem] font-bold text-xs tracking-[0.2em] hover:bg-bank-green hover:text-white transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2"
+         className="w-full bg-foreground text-background py-5 rounded-[1.25rem] font-bold text-xs tracking-[0.2em] hover:bg-bank-green hover:text-white transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 cursor-pointer"
         >
          <RefreshCw className="h-4 w-4" />
          Muat Ulang Halaman
@@ -87,7 +87,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="flex gap-3">
          <button
           onClick={this.handleGoBack}
-          className="flex-1 bg-gray-50 dark:bg-gray-900 py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+          className="flex-1 bg-gray-50 dark:bg-gray-900 py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
          >
           <ArrowLeft className="h-4 w-4" />
           Kembali
@@ -95,7 +95,7 @@ export class ErrorBoundary extends Component<Props, State> {
          
          <button
           onClick={this.handleGoHome}
-          className="flex-1 bg-gray-50 dark:bg-gray-900 py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+          className="flex-1 bg-gray-50 dark:bg-gray-900 py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
          >
           <Home className="h-4 w-4" />
           Beranda

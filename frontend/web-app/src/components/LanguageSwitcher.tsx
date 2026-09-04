@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter, usePathname } from '@/lib/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Languages, ChevronDown } from 'lucide-react';
+import { Languages, ChevronDown, Check } from 'lucide-react';
 import clsx from 'clsx';
 
 const locales = [
@@ -54,7 +54,7 @@ export default function LanguageSwitcher() {
   const currentLocale = locales.find(l => l.code === locale) || locales[0];
 
   return (
-    <div className="relative">
+    <div className="relative" onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         data-testid="language-switcher-button"
@@ -65,9 +65,11 @@ export default function LanguageSwitcher() {
           'focus:outline-none focus:ring-4 focus:ring-emerald-500/10'
         )}
         aria-label={t('changeLanguage')}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
       >
         <Languages className="h-4 w-4" />
-        <span className="hidden sm:inline">{currentLocale.flag}</span>
+        <span className="hidden sm:inline" aria-hidden="true">{currentLocale.flag}</span>
         <span className="hidden sm:inline uppercase">{currentLocale.code}</span>
         <ChevronDown className={clsx(
           'h-3 w-3 transition-transform',
@@ -81,7 +83,7 @@ export default function LanguageSwitcher() {
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className={clsx(
+          <div role="menu" aria-label={t('changeLanguage')} className={clsx(
             'absolute right-0 top-full mt-2 z-50',
             'bg-card rounded-xl shadow-lg border border-border',
             'py-2 min-w-[160px]',
@@ -89,9 +91,10 @@ export default function LanguageSwitcher() {
           )}>
             {locales.map((loc) => (
               <button
+                role="menuitemradio"
+                aria-checked={locale === loc.code}
                 key={loc.code}
                 onClick={() => switchLocale(loc.code)}
-                data-testid={`locale-${loc.code}`}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-2.5',
                   'text-xs font-semibold transition-colors',
@@ -99,10 +102,10 @@ export default function LanguageSwitcher() {
                   locale === loc.code ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
                 )}
               >
-                <span className="text-lg">{loc.flag}</span>
+                <span className="text-lg" aria-hidden="true">{loc.flag}</span>
                 <span>{loc.label}</span>
                 {locale === loc.code && (
-                  <span className="ml-auto text-primary">✓</span>
+                  <Check className="ml-auto h-4 w-4 text-primary" aria-hidden="true" />
                 )}
               </button>
             ))}

@@ -3,10 +3,12 @@
 import * as React from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const t = useTranslations('common');
   const [mounted, setMounted] = React.useState(false);
 
   // Avoid hydration mismatch
@@ -29,7 +31,7 @@ export default function ThemeToggle() {
         'hover:bg-emerald-500/5 hover:border-emerald-500/30 active:scale-95 transition-all',
         theme === 'dark' ? 'text-amber-400' : 'text-emerald-600'
       )}
-      aria-label="Toggle theme"
+      aria-label={t('toggleTheme')}
     >
       {theme === 'dark' ? (
         <Sun className="h-6 w-6" aria-hidden="true" />

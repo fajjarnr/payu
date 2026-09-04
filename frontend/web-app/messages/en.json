@@ -21,7 +21,8 @@
     "success": "Success",
     "failed": "Failed",
     "pending": "Pending",
-    "user": "User"
+    "user": "User",
+    "toggleTheme": "Toggle theme"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -85,7 +86,37 @@
     "quickActionsSubtitle": "Quick access to your favorite features",
     "quickActionsDragHint": "Drag to reorder",
     "viewAllAnalytics": "View All Analytics",
-    "manageBudgets": "Manage Budgets"
+    "manageBudgets": "Manage Budgets",
+    "primaryBalance": "Main Balance",
+    "netWorth": "Net Worth",
+    "cardHolder": "Card Holder",
+    "growthFactor": "Growth factor",
+    "totalGrowth": "Total growth",
+    "thisMonth": "This month"
+  },
+  "beneficiaries": {
+    "title": "Beneficiaries",
+    "description": "Manage transfer recipients",
+    "empty": "No beneficiaries yet — add one below.",
+    "addTitle": "Add Beneficiary",
+    "bankCode": "Bank Code",
+    "accountNumber": "Account Number",
+    "nicknameOptional": "Nickname (optional)",
+    "use": "Use",
+    "delete": "Delete {name}",
+    "add": "Add Beneficiary",
+    "added": "Beneficiary added",
+    "removed": "Beneficiary removed",
+    "addFailed": "Failed to add beneficiary",
+    "deleteFailed": "Failed to delete",
+    "errBankCode": "Bank code 1-10 chars",
+    "errAccount": "10-20 digits",
+    "errNickname": "Max 100 chars"
+  },
+  "promo": {
+    "specialOffer": "Special Offer",
+    "claimNow": "Claim Now",
+    "dismissForever": "Don't Show Again"
   },
   "accounts": {
     "accountNumber": "Account Number",
@@ -202,6 +233,24 @@
     "return": "Return",
     "invest": "Invest",
     "withdraw": "Withdraw",
+    "perfTitle": "Investment Performance",
+    "loading": "Loading...",
+    "perfYield": "Annual ROI (Yield)",
+    "annualRoi": "Annual ROI",
+    "target": "Target",
+    "profit": "Profit",
+    "up": "Up",
+    "down": "Down",
+    "thisMonth": "this month",
+    "basedOnTotal": "Based on total investment {amount}",
+    "noData": "No investment data yet",
+    "january2026": "January 2026",
+    "totalValue": "Total Value",
+    "spendingOverview": "Spending Overview",
+    "year2026": "Year 2026",
+    "legendStocks": "Stocks",
+    "legendBonds": "Bonds",
+    "legendGold": "Digital Gold",
     "history": "History",
     "risk": {
       "low": "Low Risk",
@@ -373,14 +422,14 @@
         "title": "Digital Identity Verification.",
         "desc": "Join 2 Million+ users who have entrusted their financial future to the PayU ecosystem.",
         "features": {
-            "ekyc": {
-                "title": "e-KYC Instant Liveness",
-                "desc": "Automated biometric face verification without video call queues."
-            },
-            "data": {
-                "title": "Data Sovereignty",
-                "desc": "Your personal data is fully encrypted and never shared with third parties."
-            }
+          "ekyc": {
+            "title": "e-KYC Instant Liveness",
+            "desc": "Automated biometric face verification without video call queues."
+          },
+          "data": {
+            "title": "Data Sovereignty",
+            "desc": "Your personal data is fully encrypted and never shared with third parties."
+          }
         },
         "system": "System Operational"
       }
@@ -537,19 +586,17 @@
       "openAccount": "Open Account"
     },
     "features": {
-      "title": "Limitless Performance.",
-      "subtitle": "Built on modern microservices infrastructure.",
-      "instantTransfer": {
-        "title": "Instant Transfers",
-        "desc": "Send money to any bank in seconds without hidden fees."
+      "qris": {
+        "title": "Pay with QRIS",
+        "desc": "Scan, confirm, done. Pay and get paid at millions of merchants nationwide."
       },
-      "secure": {
-        "title": "High Security",
-        "desc": "Your data and assets are protected with advanced encryption and biometric authentication."
+      "pockets": {
+        "title": "Pockets & Sub-accounts",
+        "desc": "Separate money for savings, business, and daily needs inside one account."
       },
-      "smartInvesting": {
-        "title": "Smart Investing",
-        "desc": "Grow your wealth with investment products curated specifically for you."
+      "bills": {
+        "title": "Auto Bills",
+        "desc": "Electricity, water, top-ups, and installments paid on time with automatic scheduling."
       }
     },
     "about": {
@@ -616,12 +663,7 @@
       "marketing": "New Banking Standard."
     },
     "footer": {
-      "legal": "2026 PayU. All Rights Reserved.",
-      "rights": "© 2026 PayU Financial Infrastructure.",
-      "features": "Features",
-      "career": "Careers",
-      "blog": "Blog",
-      "privacy": "Privacy"
+      "tagline": "Modern financial solutions for individuals and businesses."
     },
     "ticker": {
       "label": "Trusted by Leaders:"
@@ -662,20 +704,6 @@
       "terms": "Terms & Conditions",
       "privacy": "Privacy Policy"
     },
-    "features": {
-      "qris": {
-        "title": "Pay with QRIS",
-        "desc": "Scan, confirm, done. Pay and get paid at millions of merchants nationwide."
-      },
-      "pockets": {
-        "title": "Pockets & Sub-accounts",
-        "desc": "Separate money for savings, business, and daily needs inside one account."
-      },
-      "bills": {
-        "title": "Auto Bills",
-        "desc": "Electricity, water, top-ups, and installments paid on time with automatic scheduling."
-      }
-    },
     "how": {
       "title": "Up and running in 3 steps",
       "step1": {
@@ -695,9 +723,6 @@
       "item1": "End-to-end encryption",
       "item2": "Biometric verification",
       "item3": "Licensed & audited"
-    },
-    "footer": {
-      "tagline": "Modern financial solutions for individuals and businesses."
     }
   }
 }

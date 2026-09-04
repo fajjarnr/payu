@@ -84,6 +84,6 @@ describe('LanguageSwitcher', () => {
     const button = screen.getByRole('button', { name: /changeLanguage/i });
     fireEvent.click(button);
 
-    expect(screen.getByText('✓')).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { checked: true })).toHaveTextContent('Indonesia');
   });
 });

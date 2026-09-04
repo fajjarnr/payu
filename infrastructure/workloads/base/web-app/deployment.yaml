@@ -131,4 +131,4 @@ spec:
             secretKeyRef:
               name: session-secrets
               key: next-server-actions-encryption-key
-              optional: false
+              optional: true

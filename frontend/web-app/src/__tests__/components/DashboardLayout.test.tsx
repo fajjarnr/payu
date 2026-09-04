@@ -215,8 +215,10 @@ describe('DashboardLayout', () => {
   it('should show notification badge indicator', () => {
     const { container } = renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const notificationIndicator = container.querySelector('[aria-label="Notifikasi baru"]');
-    expect(notificationIndicator).toBeInTheDocument();
+    const notificationButton = screen.getByRole('button', { name: 'Notifikasi' });
+    expect(notificationButton).toBeInTheDocument();
+    const indicator = notificationButton.querySelector('[aria-hidden="true"]');
+    expect(indicator).toBeInTheDocument();
   });
 
   it('should hide mobile navigation on desktop screens', () => {

@@ -164,7 +164,7 @@ export default function QuickActions({
       {/* Decorative background */}
       <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
         <div>
           <CardTitle id="quick-actions-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('quickActionsTitle')}

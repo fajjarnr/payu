@@ -128,7 +128,7 @@ export default function FinancialHealthScore({
       {/* Decorative background gradient */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
         <div>
           <CardTitle id="financial-health-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('financialHealthScore')}
@@ -157,7 +157,7 @@ export default function FinancialHealthScore({
 
       <CardContent>
         {/* Score Display with Circular Progress */}
-        <div className="flex flex-col xl:flex-row items-center gap-10 mb-12">
+        <div className="flex flex-col xl:flex-row items-center gap-6 lg:gap-8 mb-8">
           <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
             {/* Circular Progress */}
             <svg
@@ -221,7 +221,7 @@ export default function FinancialHealthScore({
         </div>
 
         {/* Score Factors */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-10 border-t border-border/30">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8 pt-6 border-t border-border/30">
           {(factors && factors.length > 0) ? (
             factors.map((f) => (
               <ScoreFactor key={f.label} label={f.label} value={f.value} color={f.color} ariaLabel={`Faktor ${f.label}`} />

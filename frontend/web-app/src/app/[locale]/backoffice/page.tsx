@@ -36,7 +36,7 @@ export default function BackofficeDashboard() {
                     <div className={`h-12 w-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
                       <stat.icon className="h-6 w-6" />
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                    <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
                       {stat.change}
                     </span>
                   </div>
@@ -67,7 +67,7 @@ export default function BackofficeDashboard() {
                       <p className="text-sm text-muted-foreground leading-relaxed">{link.description}</p>
                     </div>
                     <div className="mt-8 pt-6 border-t border-border">
-                      <span className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase group-hover:text-primary transition-colors">Open Management &rarr;</span>
+                      <span className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase group-hover:text-primary transition-colors">Open Management &rarr;</span>
                     </div>
                   </div>
                 </Link>

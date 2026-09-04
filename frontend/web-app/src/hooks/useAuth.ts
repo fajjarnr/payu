@@ -52,18 +52,27 @@ export const useLogout = () => {
 };
 
 export const useRefreshToken = () => {
-  const { setAuthenticated, setTokenExpiry } = useAuthStore();
+  const { setAuth, setAuthenticated, setTokenExpiry, logout } = useAuthStore();
 
   return useMutation({
     mutationFn: () => AuthService.refreshToken(),
     ...MutationPresets.nonFinancial,
     onSuccess: (data) => {
       // Tokens are managed via httpOnly cookies by the backend
-      setAuthenticated(true);
       // Re-arm the expiry timer with the new token's lifetime
       const expiresIn = data?.expiresIn ?? 900;
       setTokenExpiry(Date.now() + expiresIn * 1000);
-    }
+      if (data?.user) {
+        const user = data.user;
+        setAuth(user, user.accountId || user.id);
+      } else {
+        setAuthenticated(true);
+      }
+    },
+    onError: (error) => {
+      // Definitive rejection ends the session; transient errors keep it
+      if ((error as Error & { status?: number })?.status === 401) logout();
+    },
   });
 };
 

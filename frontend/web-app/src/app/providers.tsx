@@ -45,6 +45,7 @@ const getQueryClient = () => {
 };
 
 import { ThemeProvider } from 'next-themes';
+import { MotionConfig } from 'framer-motion';
 import { Toaster } from 'sonner';
 import { useSilentRefresh } from '@/hooks/useSilentRefresh';
 import { SessionBootstrap } from '@/components/SessionBootstrap';
@@ -83,6 +84,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => getQueryClient());
 
   return (
+    <MotionConfig reducedMotion="user">
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <SessionBootstrap />
@@ -92,5 +94,6 @@ export default function Providers({ children }: { children: ReactNode }) {
         <Toaster position="top-right" richColors />
       </QueryClientProvider>
     </ThemeProvider>
+    </MotionConfig>
   );
 }

@@ -184,14 +184,14 @@ export default function BillsPage() {
         <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${item.color} flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
          <item.icon className="h-7 w-7 sm:h-9 sm:w-9" />
         </div>
-        <span className="text-[10px] sm:text-xs font-bold text-foreground tracking-widest uppercase">{item.name}</span>
+        <span className="text-xs font-bold text-foreground tracking-widest uppercase">{item.name}</span>
        </button>
       ))}
       <button className="flex flex-col items-center gap-4 transition-all group active:scale-95">
        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
         <Plus className="h-7 w-7 sm:h-9 sm:w-9" />
        </div>
-       <span className="text-[10px] sm:text-xs font-bold text-muted-foreground tracking-widest uppercase">Lainnya</span>
+       <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Lainnya</span>
       </button>
      </div>
     </div>
@@ -209,12 +209,12 @@ export default function BillsPage() {
           </div>
           <div>
            <div className="font-bold text-foreground text-sm uppercase tracking-wider">{bill.billerCode}</div>
-           <div className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase mt-1">Ref: {bill.referenceNumber.slice(0, 10)}...</div>
+           <div className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase mt-1">Ref: {bill.referenceNumber.slice(0, 10)}...</div>
           </div>
          </div>
          <div className="text-right">
           <div className="font-bold text-foreground text-base tabular-nums">{formatCurrency(bill.amount)}</div>
-          <div className="text-[10px] font-bold text-primary tracking-[0.2em] uppercase mt-1">{bill.status}</div>
+          <div className="text-xs font-bold text-primary tracking-[0.2em] uppercase mt-1">{bill.status}</div>
          </div>
         </div>
        ))}
@@ -222,7 +222,7 @@ export default function BillsPage() {
      ) : (
       <div className="bg-card rounded-2xl p-12 text-center border-2 border-dashed border-border flex flex-col items-center justify-center">
        <LifeBuoy className="h-16 w-16 text-muted/20 mb-6" />
-       <p className="text-muted-foreground font-bold tracking-[0.2em] text-[10px] uppercase max-w-xs leading-relaxed opacity-60">Pembayaran tagihan terakhir Anda akan muncul di sini.</p>
+       <p className="text-muted-foreground font-bold tracking-[0.2em] text-xs uppercase max-w-xs leading-relaxed opacity-60">Pembayaran tagihan terakhir Anda akan muncul di sini.</p>
       </div>
      )}
     </div>

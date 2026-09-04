@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { TrendingUp, ArrowUpRight, Target } from 'lucide-react';
 import {
   Label,
@@ -60,16 +61,17 @@ export default function InvestmentPerformance({
   monthlyChange,
   isLoading = false,
 }: InvestmentPerformanceProps) {
+  const t = useTranslations('investments');
   if (isLoading) {
     return (
       <Card className={cn('flex flex-col group overflow-hidden h-full', className)}>
         <CardHeader className="items-start pb-2">
           <CardTitle className="text-sm font-bold text-foreground tracking-widest uppercase">
-            Performa Investasi
+            {t('perfTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 flex items-center justify-center min-h-[200px]">
-          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
+          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">{t('loading')}</p>
         </CardContent>
       </Card>
     );
@@ -88,10 +90,10 @@ export default function InvestmentPerformance({
             <TrendingUp className="h-4 w-4 text-primary" />
           </div>
           <CardTitle className="text-sm font-bold text-foreground tracking-widest uppercase">
-            Performa Investasi
+            {t('perfTitle')}
           </CardTitle>
         </div>
-        <CardDescription>ROI Tahunan (Yield)</CardDescription>
+        <CardDescription>{t('perfYield')}</CardDescription>
       </CardHeader>
       
       <CardContent className="flex-1 pb-4 flex flex-col justify-center">
@@ -141,7 +143,7 @@ export default function InvestmentPerformance({
                           y={(viewBox.cy || 0) + 20}
                           className="fill-muted-foreground text-xs font-bold uppercase tracking-widest"
                         >
-                          Annual ROI
+                          {t('annualRoi')}
                         </tspan>
                       </text>
                     );
@@ -153,15 +155,15 @@ export default function InvestmentPerformance({
         </ChartContainer>
 
         <div className="grid grid-cols-2 gap-4 mt-2">
-          <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
+          <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-              <Target className="h-3 w-3" /> Target
+              <Target className="h-3 w-3" /> {t('target')}
             </p>
             <p className="text-xs font-bold text-foreground">{displayTarget > 0 ? `${displayTarget}%` : '--'}</p>
           </div>
-          <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
+          <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-              <ArrowUpRight className="h-3 w-3" /> Profit
+              <ArrowUpRight className="h-3 w-3" /> {t('profit')}
             </p>
             <p className="text-xs font-bold text-primary">
               {displayProfit > 0 ? `Rp ${(displayProfit / 1000000).toFixed(2)}Jt` : 'Rp 0'}
@@ -173,13 +175,13 @@ export default function InvestmentPerformance({
       <CardFooter className="flex-col gap-2 pt-0 pb-6 border-t border-border/10">
         {displayMonthlyChange !== 0 && (
         <div className="flex items-center gap-2 leading-none font-bold text-xs uppercase tracking-widest text-primary mt-4">
-          {displayMonthlyChange > 0 ? 'Naik' : 'Turun'} {Math.abs(displayMonthlyChange)}% bulan ini <TrendingUp className="h-3 w-3" />
+          {displayMonthlyChange > 0 ? t('up') : t('down')} {Math.abs(displayMonthlyChange)}% {t('thisMonth')} <TrendingUp className="h-3 w-3" />
         </div>
         )}
         <div className="text-xs text-muted-foreground lowercase leading-none">
           {displayInvestment > 0
-            ? `Berdasarkan total investasi Rp ${(displayInvestment / 1000000).toFixed(0)}Jt`
-            : 'Belum ada data investasi'}
+            ? t('basedOnTotal', { amount: `Rp ${(displayInvestment / 1000000).toFixed(0)}Jt` })
+            : t('noData')}
         </div>
       </CardFooter>
     </Card>

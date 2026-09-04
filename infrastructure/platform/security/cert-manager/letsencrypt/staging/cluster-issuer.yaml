@@ -14,7 +14,7 @@ spec:
             accessKeyIDSecretRef:
               name: cert-manager-aws-creds
               key: aws_access_key_id
-            hostedZoneID: 'Z0355604365BIY6CKWOGU'
+            hostedZoneID: 'Z00771482ZN71F761ZGVE'
             region: ap-southeast-1
             secretAccessKeySecretRef:
               key: aws_secret_access_key

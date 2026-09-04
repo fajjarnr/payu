@@ -12,9 +12,9 @@ export interface LoginResponse {
   };
 }
 
-interface UserSession {
-  user: User;
-  accountId: string;
+interface RefreshResult {
+  expiresIn?: number;
+  user?: User;
 }
 
 /**
@@ -46,7 +46,6 @@ export class AuthService {
   private static instance: AuthService;
   // Session state only - no sensitive tokens stored here
   private authenticated: boolean = false;
-  private userSession: UserSession | null = null;
 
   private constructor() { }
 
@@ -65,26 +64,27 @@ export class AuthService {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
       .catch((err) => { console.error('[AuthService] Logout request failed:', err); });
     this.authenticated = false;
-    this.userSession = null;
   }
 
   /**
-   * Sets the current user session data (non-sensitive data only).
-   * Tokens are NOT stored here - they're in httpOnly cookies.
+   * Refreshes the authentication token.
+   * Backend handles token rotation via httpOnly cookies.
    *
-   * @param user User profile data
-   * @param accountId Account identifier
+   * @returns Promise resolving with expiresIn (seconds) and user profile when provided
+   * @throws Error with `status` set to the BFF response status on failure
    */
-  setUserSession(user: User, accountId: string): void {
-    this.userSession = { user, accountId };
-  }
-
-  /**
-   * Gets the current user session if authenticated.
-   */
-  getUserSession() {
-    return this.userSession;
-  }
+  async refreshToken(): Promise<RefreshResult> {
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const err = new Error('Token refresh failed') as Error & { status?: number };
+      err.status = res.status;
+      throw err;
+    }
+    return res.json();
+  };
 
   /**
    * Checks if user is authenticated.
@@ -112,21 +112,6 @@ export class AuthService {
     // Tokens are not accessible from JavaScript (httpOnly cookies)
     console.warn('getRefreshToken() is deprecated. Tokens are managed via httpOnly cookies.');
     return null;
-  }
-
-  /**
-   * Refreshes the authentication token.
-   * Backend handles token rotation via httpOnly cookies.
-   *
-   * @returns Promise resolving with expiresIn (seconds) for the new access token
-   */
-  async refreshToken(): Promise<{ expiresIn?: number }> {
-    const res = await fetch('/api/auth/refresh', {
-      method: 'POST',
-      credentials: 'include',
-    });
-    if (!res.ok) throw new Error('Token refresh failed');
-    return res.json();
   }
 
   /**

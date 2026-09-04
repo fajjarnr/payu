@@ -50,10 +50,10 @@ export class TransactionService {
   }
 
   async initiateTransfer(request: InitiateTransferRequest): Promise<InitiateTransferResponse> {
-    // TRF-AMOUNT-001: gateway schema demands JSON number for amount, but the
-    // domain keeps Money (decimal string). Convert at the transport boundary —
-    // IDR transfers are whole units, exactly representable as JSON numbers.
-    const response = await api.post<InitiateTransferResponse>('/transactions/transfer', { ...request, amount: Number(request.amount) }, {
+    // Money travels as a canonical decimal string end-to-end. The backend
+    // binds it to BigDecimal (DECIMAL(19,4)), which coerces JSON strings
+    // exactly — unlike float64, which cannot represent 4dp fractions.
+    const response = await api.post<InitiateTransferResponse>('/transactions/transfer', request, {
       headers: getFinancialMutationHeaders(),
     });
     return response.data;

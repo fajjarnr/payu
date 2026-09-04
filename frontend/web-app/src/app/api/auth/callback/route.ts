@@ -76,6 +76,7 @@ export async function GET(request: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, codeVerifier, redirectUri }),
+      signal: AbortSignal.timeout(10_000),
     });
 
     const data = await res.json().catch(() => ({}));

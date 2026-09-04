@@ -177,9 +177,20 @@ Verifikasi CRUD: `60 endpoints` `auth_ok` (200/404/405/400 bukan 401/500) `47 PA
 | RELAY-009 | P1 | **Analytics tanpa KEYCLOAK_URL** — `jwt_auth` 401 semua call terautentikasi (termasuk fraud/score). | pod env kosong | CLOSED — overlay `KEYCLOAK_URL` in-cluster per L-408 |
 | RELAY-010 | P2 | **Seed job dev permanen** — wallet/account/seed + realm users hanya manual; dev baru = journey mati lagi. | Temuan sesi ini | OPEN — jadikan Job/Flow terdokumentasi (wallet+account seed, realm import sinkron) |
 | RELAY-011 | P1 | **gRPC deadline beku di shared stub** — `withDeadlineAfter` saat init → semua call 30 dtk pasca-boot `DEADLINE_EXCEEDED` offset negatif membesar (semua service pemakai helper). | `-321s` di log, 0 call sampai wallet | CLOSED (transaction: Wallet+Account adapter per-call) — OPEN sisa: billing/fx/investment/lending pakai pola sama |
-| RELAY-012 | P1 | **Transfer amount string vs schema** — frontend kirim Money string, gateway minta JSON number → semua transfer web 400. | `400 SCHEMA_VALIDATION_FAILED` | CLOSED — konversi di `TransactionService.initiateTransfer`, test ekspektasi angka 9/9 |
+| RELAY-012 | P1 | **Transfer amount string vs schema** — frontend kirim Money string, gateway minta JSON number → semua transfer web 400. | `400 SCHEMA_VALIDATION_FAILED` | CLOSED — konversi di `TransactionService.initiateTransfer`, test ekspektasi angka 9/9 → **REVISED 1.18.84 (L-417)**: klaim schema salah — DTO `BigDecimal` coerce JSON string exact; konversi `Number()` dihapus, kirim string kanonis |
 | RELAY-013 | P1 | **fromAccountId cuma via kontak favorit** — ketik manual → zod gagal diam-diam, confirm mati. | network 0 POST, tombol enabled | CLOSED — `useEffect` default dari session, `TRF-J-001` isi manual |
 | RELAY-014 | P1 | **Riwayat crash untuk status baru** — `statusConfig` tanpa `PENDING_COMPLIANCE_REVIEW`/`PENDING_STEP_UP`/`VALIDATING` → `/transactions` blank `reading 'icon'`. | screenshot error boundary | CLOSED — badge baru di `transactions/page.tsx`, `money-journey` 5/5 (12.2s) |
+
+### Audit 2026-09-04 — Frontend Best-Practice (frontend-architect, 4 slice + Context7)
+
+> Temuan high/medium sudah CLOSED di kode 1.18.84 (95 files vitest 1203, `tsc` 0, paritas i18n 572/572; belum deploy — live `:1.18.83`). Sisa OPEN di bawah.
+
+| Key | Pri | Temuan | Bukti | Status |
+|---|---|---|---|---|
+| FE-AUDIT-001 | P2 | **Race refresh ganda client+server** — `lib/api.ts:76` (401 → refresh, queued browser-side) vs `[...path]/route.ts:313` (tiap proxied request 401 → refresh server-side) pakai cookie refresh single-use yang sama → N-1 rotasi gagal → logout. | audit AuthBffAudit F1 | OPEN — butuh single-flight lintas layer |
+| FE-AUDIT-002 | P3 | **Derivasi flag Secure cookie tak konsisten** — refresh/logout dari env `NEXT_PUBLIC_BASE_URL` vs callback/authorize dari request proto (x-forwarded-proto aware) → flap bila env=http di belakang LB https. | audit AuthBffAudit F2 | OPEN — seragamkan ke request-derived; tidak live di dev (env sudah https) |
+| FE-AUDIT-003 | P2 | **Rehidrasi middleware self-fetch gagal dari pod** — `proxy.ts:147` fetch public URL dari dalam cluster → `fetch failed` (bukti log) → reload-pas-expiry selalu redirect login sebelum `SessionBootstrap` jalan. | `Session rehydration error — fetch failed` | OPEN — fetch via loopback/`PORT` dengan fallback URL request |
+| FE-AUDIT-004 | P3 | **Input `type=number` + helper float tanpa caller hidup** — pockets/split-bill amount `type=number` (e/exponent), `validation.ts parseIndonesianAmount/validateAmount` float, `currency.ts` compact/`parseCurrency`/`roundCurrency` legacy. Display-only/laten. | audit MoneyBoundaryAudit M3–M5 | OPEN — samakan ke pola transfer bila menyentuh file itu |
 
 
 ---
