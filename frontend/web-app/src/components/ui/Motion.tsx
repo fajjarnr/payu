@@ -113,8 +113,13 @@ interface StaggerItemProps {
 export const StaggerItem = ({ children, className }: StaggerItemProps) => {
  const shouldReduceMotion = useReducedMotion();
  return (
+ // Self-sufficient (own animate, not parent propagation): variant context
+ // from StaggerContainer demonstrably stalls in production (async
+ // re-renders orphan children at opacity 0). Container keeps
+ // staggerChildren for ordering; items resolve visibility on their own.
  <motion.div
   initial={shouldReduceMotion ? false : "hidden"}
+  animate="visible"
   variants={{
    hidden: { opacity: 0, y: 20 },
    visible: { opacity: 1, y: 0 },

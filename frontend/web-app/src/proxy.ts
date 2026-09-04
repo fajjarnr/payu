@@ -144,7 +144,11 @@ export async function proxy(request: NextRequest) {
         action: 'middleware',
         path: pathname,
       });
-      const refreshUrl = new URL('/api/auth/refresh', request.url);
+      // FE-AUDIT-003: self-fetch via the public URL fails from inside the
+      // pod (no egress hairpin) — every expired-access navigation dies here.
+      // Middleware runs in the same Node process, so hit it via loopback.
+      const localPort = process.env.PORT ?? '3000';
+      const refreshUrl = new URL('/api/auth/refresh', `http://127.0.0.1:${localPort}`);
       const refreshRes = await fetch(refreshUrl.toString(), {
         method: 'POST',
         headers: {

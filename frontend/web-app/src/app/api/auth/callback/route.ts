@@ -118,7 +118,7 @@ export async function GET(request: Request) {
       response.cookies.set("accessToken", accessToken, {
         httpOnly: true,
         secure: isSecure,
-        sameSite: "strict",
+        sameSite: "lax", // FE-AUDIT-005: session must survive top-level navigation (SSO callback is cross-site-initiated); Lax still blocks cross-site POST CSRF
         maxAge: ACCESS_TOKEN_MAX_AGE,
         path: "/",
       });
@@ -127,7 +127,7 @@ export async function GET(request: Request) {
       response.cookies.set("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isSecure,
-        sameSite: "strict",
+        sameSite: "lax", // FE-AUDIT-005: session must survive top-level navigation (SSO callback is cross-site-initiated); Lax still blocks cross-site POST CSRF
         maxAge: 604_800, // 7 days
         path: "/",
       });

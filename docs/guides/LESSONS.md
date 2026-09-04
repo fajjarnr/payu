@@ -1,5 +1,21 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-420: SameSite=Strict membunuh sesi di navigasi top-level — cookie sesi harus Lax (2026-09-04)
+
+**Context**: goto langsung (`tab.goto`, ketik URL, deep-link) selalu mental ke `/login` detik setelah login sukses, sementara landing via callback SSO render normal. Cookie sesi (`accessToken`/`refreshToken`) diset `SameSite=Strict` — navigasi top-level (termasuk callback SSO yang cross-site-initiated) membuat browser menahan cookie Strict di request pertama. Middleware tak terima cookie apa pun → redirect login. Pola ini menjelaskan seluruh keluhan "selalu logout".
+
+**Fix**: cookie sesi → `sameSite: "lax"` di callback/refresh/logout (CSRF POST lintas-site tetap diblok Lax; mutasi ikut origin policy). Bukti relay: goto `/pockets` langsung render data `Rp 9.865.000` pasca-login. Deploy `:1.18.87`.
+
+**Pelajaran**: cookie sesi yang harus selamat dari navigasi top-level (terutama pasca-SSO) jangan Strict — Strict hanya untuk token yang tak pernah dibutuhkan di request navigasi. Flow cookie (`oidc_state`) memang sudah Lax; sesi harus ikut.
+
+## L-419: Query rate di-gate amount — kalkulator FX spinner selamanya (2026-09-04)
+
+**Context**: halaman exchange tunjukkan spinner + `--:--:--` permanen. `useFxRate(..., amount>0 && ...)` — halaman fresh (amount kosong) = query disabled = tak ada data, tak ada error, spinner abadi. Terpisah: provider FX eksternal 0/7 (bukan salah frontend).
+
+**Fix**: gate cukup `fromCurrency !== toCurrency`; amount hanya gate estimate. Hasil: state jujur ("Unable to fetch exchange rate / Try again" karena provider down) gantikan spinner. Deploy `:1.18.89`, proof relay.
+
+**Pelajaran**: query tampilkan rate/error di first paint — jangan gate query tampilan di input pengguna. `enabled` gabungan input+pair menyembunyikan status asli API.
+
 ## L-418: Stagger orchestration + async re-render = seksi dashboard tak terlihat permanen (2026-09-04)
 
 **Context**: user lapor UI "berantakan". Bukti relay: 8 `StaggerItem` dashboard opacity 0 permanen — bahkan setelah `scrollIntoView` + 1,5 dtk (bukan artefak scroll; bylyin di semua reload). `StaggerContainer` pakai `whileInView="visible"` + `staggerChildren`, item cuma bawa variants (propagasi). Item yang re-render saat query resolve (transaksi/investasi/budget) orphan dari timeline orkestrasi → macet `hidden` selamanya. Bukan regresi `MotionConfig` (bug ada sejak `:1.18.83`).

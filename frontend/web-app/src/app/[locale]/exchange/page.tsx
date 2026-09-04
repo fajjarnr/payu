@@ -42,11 +42,13 @@ export default function ExchangePage() {
   const toCurrency = useWatch({ control, name: 'toCurrency' });
   const amount = useWatch({ control, name: 'amount' });
 
-  // FX Rate query
+  // FX Rate query — gated on the pair only, so the calculator shows a live
+  // rate (or a real error) on first paint instead of a perpetual spinner.
+  // The amount only gates the conversion *estimate* below.
   const { data: fxRate, isLoading: isLoadingRate, error: rateError, refetch: refetchRate } = useFxRate(
     fromCurrency,
     toCurrency,
-    compareCurrency(amount, '0') > 0 && fromCurrency !== toCurrency
+    fromCurrency !== toCurrency
   );
 
   // Estimate conversion (real-time preview)

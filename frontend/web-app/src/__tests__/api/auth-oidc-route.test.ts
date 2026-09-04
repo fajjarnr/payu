@@ -143,7 +143,7 @@ describe("GET /api/auth/callback (OIDC PKCE completion)", () => {
     expect(cookies).toContain("accessToken=at-123");
     expect(cookies).toContain("refreshToken=rt-456");
     expect(cookies).toContain("HttpOnly");
-    expect(cookies).toContain("SameSite=strict");
+    expect(cookies).toContain("SameSite=lax"); // FE-AUDIT-005: session survives top-level navigation
   });
 
   it("rejects a mismatched CSRF state without calling the gateway", async () => {

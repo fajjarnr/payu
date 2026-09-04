@@ -39,7 +39,7 @@ export async function POST() {
         { success: false, message: 'No refresh token' },
         { status: 401 },
       );
-      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
+      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
       return response;
     }
 
@@ -61,8 +61,8 @@ export async function POST() {
       if (res.status === 401 || res.status === 403 || res.status === 400) {
         logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected by gateway');
         const response = NextResponse.json(data, { status: res.status });
-        response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
-        response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
+        response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
+        response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
         return response;
       }
       logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh transient failure — preserving session cookies');
@@ -106,7 +106,7 @@ export async function POST() {
       response.cookies.set('accessToken', newAccessToken, {
         httpOnly: true,
         secure: isSecure,
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: ACCESS_TOKEN_MAX_AGE,
         path: '/',
       });
@@ -116,7 +116,7 @@ export async function POST() {
       response.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: isSecure,
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 604_800,
         path: '/',
       });

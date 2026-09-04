@@ -67,11 +67,6 @@ export default function InvestmentsPage() {
                         : t('accountUnavailable')}
                   </h3>
                   {hasAccount && <p className="mt-3 text-sm text-muted-foreground">{t('accountSource')}</p>}
-                  {!loadingAccount && !hasAccount && (
-                    <p data-testid="investment-account-empty" className="mt-3 text-sm text-muted-foreground">
-                      {t('accountUnavailable')}
-                    </p>
-                  )}
                   <div className="mt-6 flex flex-wrap gap-4">
                     <button
                       onClick={handleBuy}

@@ -36,8 +36,8 @@ export async function POST() {
     // Secure flag must match NEXT_PUBLIC_BASE_URL scheme — http://18.143.199.84:3001 is http, not https
     const isSecure = (process.env.NEXT_PUBLIC_BASE_URL ?? "").startsWith("https://");
     const response = NextResponse.json({ success: true });
-    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
-    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
+    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
 
     logger.info({ action: 'logout' }, 'Logout successful — cookies cleared');
     return response;
@@ -46,8 +46,8 @@ export async function POST() {
     // Even on error, clear cookies
     const isSecure = (process.env.NEXT_PUBLIC_BASE_URL ?? "").startsWith("https://");
     const response = NextResponse.json({ success: true });
-    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
-    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'strict' });
+    response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
     return response;
   }
 }

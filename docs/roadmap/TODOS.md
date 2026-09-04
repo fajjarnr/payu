@@ -189,8 +189,9 @@ Verifikasi CRUD: `60 endpoints` `auth_ok` (200/404/405/400 bukan 401/500) `47 PA
 |---|---|---|---|---|
 | FE-AUDIT-001 | P2 | **Race refresh ganda client+server** — `lib/api.ts:76` (401 → refresh, queued browser-side) vs `[...path]/route.ts:313` (tiap proxied request 401 → refresh server-side) pakai cookie refresh single-use yang sama → N-1 rotasi gagal → logout. | audit AuthBffAudit F1 | OPEN — butuh single-flight lintas layer |
 | FE-AUDIT-002 | P3 | **Derivasi flag Secure cookie tak konsisten** — refresh/logout dari env `NEXT_PUBLIC_BASE_URL` vs callback/authorize dari request proto (x-forwarded-proto aware) → flap bila env=http di belakang LB https. | audit AuthBffAudit F2 | OPEN — seragamkan ke request-derived; tidak live di dev (env sudah https) |
-| FE-AUDIT-003 | P2 | **Rehidrasi middleware self-fetch gagal dari pod** — `proxy.ts:147` fetch public URL dari dalam cluster → `fetch failed` (bukti log) → reload-pas-expiry selalu redirect login sebelum `SessionBootstrap` jalan. | `Session rehydration error — fetch failed` | OPEN — fetch via loopback/`PORT` dengan fallback URL request |
+| FE-AUDIT-003 | P2 | **Rehidrasi middleware self-fetch gagal dari pod** — `proxy.ts:147` fetch public URL dari dalam cluster → `fetch failed` (bukti log) → reload-pas-expiry selalu redirect login sebelum `SessionBootstrap` jalan. | `Session rehydration error — fetch failed` | CLOSED 1.18.86 — refresh via `127.0.0.1:$PORT`, bukti log "Session rehydrated successfully" |
 | FE-AUDIT-004 | P3 | **Input `type=number` + helper float tanpa caller hidup** — pockets/split-bill amount `type=number` (e/exponent), `validation.ts parseIndonesianAmount/validateAmount` float, `currency.ts` compact/`parseCurrency`/`roundCurrency` legacy. Display-only/laten. | audit MoneyBoundaryAudit M3–M5 | OPEN — samakan ke pola transfer bila menyentuh file itu |
+| FE-AUDIT-005 | P1 | **Cookie sesi Strict mati di navigasi top-level** — tiap goto langsung mental login detik pasca-login. | proof relay `/pockets` bounce | CLOSED 1.18.87 — cookie sesi → `Lax` (L-420); goto render data langsung |
 
 
 ---

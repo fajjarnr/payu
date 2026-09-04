@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.89] - 2026-09-04
+
+### Fixed
+- **Kalkulator FX spinner abadi (L-419)**: `useFxRate` di-gate `amount>0` → query disabled di halaman fresh. Gate cukup pair; amount hanya gate estimate. Proof relay: "Unable to fetch exchange rate" (provider eksternal 0/7 terpisah). Duplikat pesan investments dihapus + copy "dari backend" dibersihkan.
+
+## [1.18.87] - 2026-09-04
+
+### Fixed
+- **Sesi mati di navigasi top-level (L-420)**: cookie sesi `SameSite=Strict` ditahan browser di request navigasi → tiap goto mental login. Cookie sesi → `Lax` (callback/refresh/logout). Proof relay: goto `/pockets` render data langsung.
+
+## [1.18.86] - 2026-09-04
+
+### Fixed
+- **Rehidrasi middleware via loopback (FE-AUDIT-003)**: self-fetch public URL gagal dari pod (`fetch failed`) → refresh via `127.0.0.1:$PORT`. Bukti log: "Session rehydrated successfully".
+
 ## [1.18.85] - 2026-09-04
 
 ### Fixed
