@@ -114,6 +114,12 @@ export class AccountService {
     });
   }
 
+  // === Budgets (read-only; mutations live in account-service console) ===
+  async getBudgets(accountId: string): Promise<AccountBudget[]> {
+    const response = await api.get<AccountBudget[]>(`/accounts/${accountId}/budgets`);
+    return response.data;
+  }
+
   // BUG-FE-025: Deprecated methods removed — use useAuthStore hook instead
 }
 
@@ -126,6 +132,15 @@ export interface Beneficiary {
   status: string;
   verifiedAt?: string;
   createdAt?: string;
+}
+
+export interface AccountBudget {
+  id: string;
+  category: string;
+  limitAmount: string | number;
+  currentSpent: string | number;
+  warningThreshold?: number;
+  active: boolean;
 }
 
 export interface BeneficiaryRequest {

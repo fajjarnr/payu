@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.97] - 2026-09-04
+
+### Fixed
+- **Widget budget tak pernah ada data**: `BudgetTracking` tanpa sumber (prop tak diisi) → `AccountService.getBudgets` + `useBudgets` + wiring dashboard + status derive. Test hook hijau. Catatan: API 403 untuk customer1 (FE-AUDIT-007, tanpa baris User) — widget tampilkan empty state sampai seed.
+
 ## [1.18.96] - 2026-09-04
 
 ### Fixed

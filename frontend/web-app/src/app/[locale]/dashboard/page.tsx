@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useLogout, useBalance, useUserMetrics, useSpendingTrends, useCashFlow, useInvestmentAccount } from '@/hooks';
+import { useBudgets } from '@/hooks/useBudgets';
 import { useAuthStore } from '@/stores';
 import DashboardLayout from '@/components/DashboardLayout';
 import BalanceCard from '@/components/dashboard/BalanceCard';
@@ -64,6 +65,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
  const { data: cashFlow } = useCashFlow(userId);
  const { isLoading: spendingLoading } = useSpendingTrends(userId);
  const { isLoading: investmentLoading } = useInvestmentAccount();
+ const { data: budgets, isLoading: budgetsLoading } = useBudgets(accountId || undefined);
 
  return (
   <DashboardLayout username={username} onLogout={handleLogout}>
@@ -119,7 +121,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
 
       {/* Budget & Offers - 4/8 Split */}
       <StaggerItem className="lg:col-span-4">
-        <BudgetTracking isLoading={spendingLoading} className="h-full" />
+        <BudgetTracking budgets={budgets} isLoading={budgetsLoading} className="h-full" />
       </StaggerItem>
 
       <StaggerItem className="lg:col-span-8">
