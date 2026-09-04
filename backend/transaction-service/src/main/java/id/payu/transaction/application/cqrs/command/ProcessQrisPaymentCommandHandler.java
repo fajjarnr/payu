@@ -83,7 +83,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                 .build();
 
         transaction = transactionPersistencePort.save(transaction);
-        eventPublisherPort.publishTransactionInitiated(transaction);
+        eventPublisherPort.publishTransactionInitiated(transaction, command.userId());
 
         // BUG-BE-110 FIX: Reserve balance from wallet BEFORE calling QRIS service
         ReserveBalanceResponse balanceResponse = walletServicePort.reserveBalance(
@@ -122,7 +122,7 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
                 );
                 transaction.setStatus(TransactionStatus.COMPLETED);
                 transaction.setCompletedAt(Instant.now());
-                eventPublisherPort.publishTransactionCompleted(transaction);
+                eventPublisherPort.publishTransactionCompleted(transaction, command.userId());
             } else {
                 // QRIS failed — release the reserved balance back to the wallet
                 walletServicePort.releaseBalance(

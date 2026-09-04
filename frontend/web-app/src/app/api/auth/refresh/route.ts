@@ -55,17 +55,14 @@ export async function POST() {
     const data = await res.json();
 
     if (!res.ok) {
-      // Definitive rejection (bad/expired refresh token) ends the session.
-      // Anything else (gateway 5xx, timeouts surfaced as !ok) is transient:
-      // keep the existing cookies so the client can retry with backoff.
-      if (res.status === 401 || res.status === 403 || res.status === 400) {
-        logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected by gateway');
-        const response = NextResponse.json(data, { status: res.status });
-        response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
-        response.cookies.set('refreshToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
-        return response;
-      }
-      logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh transient failure — preserving session cookies');
+      // NEVER wipe cookies here — not even on 401/403/400. Keycloak reports
+      // rotation races and revoked grants alike as 400 invalid_grant, and a
+      // concurrent refresh (client timer + middleware rehydration sharing one
+      // single-use token) routinely loses: wiping turns that race into a
+      // forced logout. Stale cookies expire on their own; an actually-dead
+      // session simply fails validation and lands on login, where SSO
+      // silently re-authenticates while the IdP session lives.
+      logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected — preserving session cookies');
       return NextResponse.json(data, { status: res.status });
     }
 

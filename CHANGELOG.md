@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.95] - 2026-09-04
+
+### Fixed
+- **Refresh tak pernah wipe cookie**: Keycloak laporkan race rotasi sebagai 400 invalid_grant — wipe = logout paksa. Sekarang semua status gagal preserve cookie; sesi mati tetap redirect login + SSO re-auth. Test 4/4.
+- **Pipeline event mati total (L-426)**: bean `OutboxPublisher` tak pernah terbuat (condition lawan auto-config order) → 68 event nyangkut; consumer analytics bind `None` + fraud key salah + completed tanpa identitas. Fix starter + `user_id` di event + consumer guard. Drain 68+40 terbukti; tx `:1.8.115`, wallet/analytics `:1.18.75/76`. Catatan: event lama keyed account-id, agregasi user terisi mulai transaksi baru.
+
 ## [1.18.94] - 2026-09-04
 
 ### Fixed

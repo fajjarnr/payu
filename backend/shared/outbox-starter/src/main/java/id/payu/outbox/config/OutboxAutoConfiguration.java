@@ -84,23 +84,36 @@ public class OutboxAutoConfiguration {
 
     /**
      * Creates the OutboxPublisher bean if not already defined.
+     * <p>
+     * BUG-BE-XXX: must NOT condition on {@code KafkaTemplate} — this
+     * auto-configuration runs <em>before</em> {@code KafkaAutoConfiguration},
+     * so no template exists yet at condition time and the publisher was
+     * silently never created (68-row outbox backlog, empty topics). Condition
+     * on our own {@code ProducerFactory} (declared above) instead, and build
+     * the String,String template here: serializers are String-based, so the
+     * bridge is exact at runtime.
      *
      * @param outboxRepository the outbox repository
-     * @param kafkaTemplate the Kafka template for publishing
+     * @param producerFactory the producer factory declared above
      * @param meterRegistry the meter registry for metrics
      * @param transactionManager the platform transaction manager for mark-before-send pattern
      * @return the configured OutboxPublisher
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnBean(KafkaTemplate.class)
+    @ConditionalOnBean(ProducerFactory.class)
     @ConditionalOnProperty(prefix = "payu.outbox.publisher", name = "enabled", havingValue = "true", matchIfMissing = true)
     public OutboxPublisher outboxPublisher(OutboxRepository outboxRepository,
-                                           KafkaTemplate<String, String> kafkaTemplate,
+                                           ProducerFactory<Object, Object> producerFactory,
                                            MeterRegistry meterRegistry,
                                            PlatformTransactionManager transactionManager) {
         log.info("Initializing OutboxPublisher with auto-configuration");
-        return new OutboxPublisher(outboxRepository, kafkaTemplate, meterRegistry, transactionManager);
+        // Unchecked bridge: factory serializers are String-based, so a
+        // String,String template over it serializes exactly.
+        @SuppressWarnings("unchecked")
+        final ProducerFactory<String, String> stringFactory =
+                (ProducerFactory<String, String>) (ProducerFactory<?, ?>) producerFactory;
+        return new OutboxPublisher(outboxRepository, new KafkaTemplate<>(stringFactory), meterRegistry, transactionManager);
     }
 
     /**

@@ -36,10 +36,11 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
     private static final String SERVICE_NAME = "transaction-service";
 
     @Override
-    public void publishTransactionInitiated(TransactionEntity transaction) {
+    public void publishTransactionInitiated(TransactionEntity transaction, String userId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
+        payload.put("user_id", userId);
         payload.put("senderAccountId", transaction.getSenderAccountId().toString());
         payload.put("amount", transaction.getAmount().getAmount());
         payload.put("currency", transaction.getAmount().getCurrency().getCurrencyCode());
@@ -90,10 +91,12 @@ public class TransactionEventPublisherAdapter implements TransactionEventPublish
     }
 
     @Override
-    public void publishTransactionCompleted(TransactionEntity transaction) {
+    public void publishTransactionCompleted(TransactionEntity transaction, String userId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("transactionId", transaction.getId().toString());
         payload.put("referenceNumber", transaction.getReferenceNumber());
+        payload.put("user_id", userId);
+        payload.put("senderAccountId", transaction.getSenderAccountId().toString());
         payload.put("amount", transaction.getAmount().getAmount());
         payload.put("currency", transaction.getAmount().getCurrency().getCurrencyCode());
         payload.put("type", transaction.getType().name());

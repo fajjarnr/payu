@@ -11,8 +11,8 @@ from structlog import get_logger
 from typing import Dict, Any
 
 from app.config import get_settings
+from app import database
 from app.database import (
-    async_session_maker,
     TransactionAnalyticsEntity,
     WalletBalanceEntity,
     UserActivityEntity,
@@ -163,7 +163,10 @@ class KafkaConsumerService:
             logger.error("Skipping Kafka message without event identity", error=str(exc))
             return
 
-        async with async_session_maker() as session:
+        maker = database.async_session_maker
+        if maker is None:
+            raise RuntimeError("DB session factory not initialized; skipping message without commit")
+        async with maker() as session:
             if not await _claim_event(session, source, event_id, topic, event_type):
                 logger.info(
                     "Skipping duplicate analytics event",
@@ -190,8 +193,10 @@ class KafkaConsumerService:
         if not event_id:
             raise ValueError("Transaction completed event identity missing")
         user_id = message.get('user_id') or message.get('senderAccountId') or message.get('accountId')
+        if not user_id:
+            logger.warning("Skipping completed event without user identity")
+            return
         amount = _to_money(message.get('amount', 0))
-        transaction_type = message.get('type', 'TRANSFER')
         transaction_id = message.get('transaction_id') or message.get('transactionId')
         timestamp = datetime.utcnow()
 
@@ -380,11 +385,12 @@ class KafkaConsumerService:
                 account_age_days=0,
                 kyc_status=None
             )
-            session.add(new_metrics)
-
     async def _handle_fraud_detection(self, session, message):
-        transaction_id = message.get('transactionId')
-        user_id = message.get('senderAccountId')
+        transaction_id = message.get('transaction_id') or message.get('transactionId')
+        user_id = message.get('user_id') or message.get('senderAccountId') or message.get('accountId')
+        if not transaction_id or not user_id:
+            logger.warning("Skipping fraud detection without transaction identity")
+            return
 
         try:
             user_history = await self._get_user_history(session, user_id)

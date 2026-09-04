@@ -1,5 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-426: Auto-config `before` + `@ConditionalOnBean` = bean mati diam-diam (2026-09-04)
+
+**Context**: analytics NOL padahal 16 transaksi COMPLETED. Rantai: outbox transaction 68 pending/0 published; poller tak pernah jalan (tanpa lock row, tanpa log); Kafka topic kosong; analytics consumer hidup tapi Python `from app.database import async_session_maker` bind `None` saat import (init belakangan) → tiap pesan error + offset tetap commit (data loss senyap); fraud handler baca key camelCase yang tak ada → poison + rollback per pesan.
+
+**Fix**: starter: condition ke `ProducerFactory` (milik sendiri, dideklarasi duluan) + bangun `KafkaTemplate<String,String>` eksplisit (serializer string, bridge exact); tx events bawa `user_id` (interbank null + guard skip di consumer); consumer live-lookup factory + fallback key + skip tanpa identitas. Bukti: lock row muncul, 68 drain, replay, tabel terisi. Deploy tx `:1.8.115`, wallet `:1.18.75` (40 drain), analytics `:1.18.75/76`.
+
+**Pelajaran**: `@AutoConfiguration(before=X)` + `@ConditionalOnBean` (bean milik X) = mati diam-diam — condition harus ke bean sekelas/sebelumnya. `from m import mutable` untuk state init-belakangan adalah bug; akses atribut modul live. Consumer yang commit offset saat gagal = data loss — bedakan skip vs fail.
+
 ## L-424: Review transfer buta untuk ketikan manual — resolve dari favorit saja (2026-09-04)
 
 **Context**: review "Tinjau Transfer" tampilkan nama+avatar kosong + "ID Akun:" kosong untuk nomor yang diketik manual. `recentContacts` cuma dari beneficiaries (kosong untuk user ini); `find` gagal tanpa fallback. Sepupu L-412 (fromAccountId manual sudah diperbaiki untuk submit, tapi display review tertinggal). Bukti relay sebelum: avatar kosong + "ID Akun:" tanpa angka.

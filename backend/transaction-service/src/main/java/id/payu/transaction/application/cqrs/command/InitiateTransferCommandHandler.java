@@ -143,7 +143,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         // Create and persist the transaction
         TransactionEntity transaction = createTransaction(command);
         transaction = transactionPersistencePort.save(transaction);
-        eventPublisherPort.publishTransactionInitiated(transaction);
+        eventPublisherPort.publishTransactionInitiated(transaction, command.userId());
 
         // IMP-1: internal transfers are atomic 1-hop on the wallet side (debit+credit in one
         // transaction, idempotent by reference) — no reservation and no saga compensation needed.
@@ -359,7 +359,8 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                         transaction.getAmount().getAmount());
                 transaction.setStatus(TransactionStatus.COMPLETED);
                 transaction.setCompletedAt(Instant.now());
-                eventPublisherPort.publishTransactionCompleted(transaction);
+                // Bank callback carries no user context; consumer attributes by sender account fallback.
+                eventPublisherPort.publishTransactionCompleted(transaction, null);
             }
             case "FAILED", "REJECTED", "CANCELLED" -> {
                 requireReservation(transaction);
@@ -469,7 +470,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
         if (transferSucceeded) {
             try {
-                eventPublisherPort.publishTransactionCompleted(transaction);
+                eventPublisherPort.publishTransactionCompleted(transaction, command.userId());
             } catch (Exception e) {
                 log.warn("Failed to publish transaction completed event for {}: {}", transaction.getId(), e.getMessage());
             }

@@ -64,8 +64,7 @@ describe("POST /api/auth/refresh", () => {
     expect(response.cookies.get("accessToken")).toBeUndefined();
     expect(response.cookies.get("refreshToken")).toBeUndefined();
   });
-
-  it("clears cookies only on definitive 401 rejection", async () => {
+  it('preserves cookies even on definitive 401 rejection', async () => {
     vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(
       new Response(JSON.stringify({ success: false }), {
         status: 401,
@@ -76,7 +75,7 @@ describe("POST /api/auth/refresh", () => {
     const response = await POST();
 
     expect(response.status).toBe(401);
-    expect(response.cookies.get("accessToken")?.value).toBe("");
-    expect(response.cookies.get("refreshToken")?.value).toBe("");
+    expect(response.cookies.get("accessToken")).toBeUndefined();
+    expect(response.cookies.get("refreshToken")).toBeUndefined();
   });
 });

@@ -105,7 +105,7 @@ class InitiateTransferCommandHandlerTest {
         assertThat(result.getCompletedAt()).isNotNull();
         verify(walletServicePort).commitBalance(
                 eq(senderAccountId), eq(transactionId.toString()), eq("reservation-001"), eq(Money.idr("100000").getAmount()));
-        verify(eventPublisherPort).publishTransactionCompleted(transaction);
+        verify(eventPublisherPort).publishTransactionCompleted(transaction, null); // bank callback carries no user context
     }
 
     @Test
@@ -158,7 +158,7 @@ class InitiateTransferCommandHandlerTest {
         assertThat(second.getStatus()).isEqualTo(TransactionStatus.COMPLETED);
         verify(walletServicePort, times(1)).commitBalance(
                 eq(senderAccountId), eq(transactionId.toString()), eq("reservation-003"), eq(Money.idr("100000").getAmount()));
-        verify(eventPublisherPort, times(1)).publishTransactionCompleted(transaction);
+        verify(eventPublisherPort, times(1)).publishTransactionCompleted(eq(transaction), org.mockito.ArgumentMatchers.isNull());
     }
 
     @Test

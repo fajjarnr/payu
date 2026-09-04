@@ -13,7 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
@@ -36,13 +36,16 @@ class TransactionEventPublisherAdapterTest {
                 .createdAt(Instant.parse("2026-08-04T00:00:00Z"))
                 .build();
 
-        new TransactionEventPublisherAdapter(deferredOutboxService).publishTransactionInitiated(transaction);
+        new TransactionEventPublisherAdapter(deferredOutboxService).publishTransactionInitiated(transaction, "user-001");
 
         verify(deferredOutboxService).publishAfterCommit(
                 eq("TransactionEntity"),
                 eq(transactionId.toString()),
                 eq("TransactionInitiated"),
-                anyMap(),
+                argThat(envelope ->
+                        envelope.get("data") instanceof java.util.Map<?, ?> data
+                                && "user-001".equals(data.get("user_id"))
+                                && transaction.getSenderAccountId().toString().equals(data.get("senderAccountId"))),
                 eq("payu.transaction.initiated.v1"));
     }
 }
