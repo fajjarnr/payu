@@ -77,6 +77,31 @@ const SCHEDULE_TYPES: { type: TransferScheduleType; label: string; description: 
     description: 'Pengiriman rutin bulanan'
   }
 ];
+export interface ReviewContact {
+  name: string;
+  initial: string;
+  color: string;
+  accountId: string;
+}
+
+/**
+ * Resolve the review-screen recipient. Favorites/beneficiaries win; a
+ * manually typed account id falls back to itself so the review never
+ * renders a nameless recipient.
+ */
+export function resolveReviewContact(
+  contacts: ReviewContact[],
+  selected: string | null,
+  typedAccountId: string | null | undefined,
+): ReviewContact | undefined {
+  const accountId = selected ?? typedAccountId ?? '';
+  return (
+    contacts.find((c) => c.accountId === accountId) ??
+    (accountId
+      ? { name: accountId, initial: accountId.charAt(0).toUpperCase(), color: 'bg-muted text-muted-foreground', accountId }
+      : undefined)
+  );
+}
 
 export default function TransferPage() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
@@ -209,7 +234,8 @@ export default function TransferPage() {
   const selectedTransferType = TRANSFER_TYPES.find(t => t.type === transferType);
 
   if (showReview) {
-    const selectedContactData = recentContacts.find(c => c.accountId === selectedContact);
+    const reviewAccountId = selectedContact ?? formValues.toAccountId ?? '';
+    const selectedContactData = resolveReviewContact(recentContacts, selectedContact, formValues.toAccountId);
     const selectedScheduleType = SCHEDULE_TYPES.find(s => s.type === scheduleType);
     const TransferTypeIcon = selectedTransferType?.icon || Zap;
 
@@ -245,7 +271,7 @@ export default function TransferPage() {
                       <div>
                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">Kepada Penerima</p>
                         <h3 className="text-2xl font-bold text-foreground">{selectedContactData?.name}</h3>
-                        <p className="text-xs font-bold text-primary tracking-tight">ID Akun: {selectedContact}</p>
+                        <p className="text-xs font-bold text-primary tracking-tight">ID Akun: {reviewAccountId}</p>
                       </div>
                     </div>
                     <div className="text-left md:text-right">

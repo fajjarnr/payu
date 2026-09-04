@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.94] - 2026-09-04
+
+### Fixed
+- **Review transfer tanpa nama untuk ketikan manual (L-424)**: penerima resolve cuma dari favorit → fallback ke nomor ketikan (nama + inisial + ID Akun). Helper `resolveReviewContact` ter-export + unit test. Proof relay.
+
 ## [1.18.93] - 2026-09-04
 
 ### Fixed

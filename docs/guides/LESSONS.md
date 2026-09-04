@@ -1,5 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-424: Review transfer buta untuk ketikan manual — resolve dari favorit saja (2026-09-04)
+
+**Context**: review "Tinjau Transfer" tampilkan nama+avatar kosong + "ID Akun:" kosong untuk nomor yang diketik manual. `recentContacts` cuma dari beneficiaries (kosong untuk user ini); `find` gagal tanpa fallback. Sepupu L-412 (fromAccountId manual sudah diperbaiki untuk submit, tapi display review tertinggal). Bukti relay sebelum: avatar kosong + "ID Akun:" tanpa angka.
+
+**Fix**: `resolveReviewContact` (exported, unit-tested): favorit menang, ketikan manual fallback ke nomor itu sendiri (inisial + chip muted). `ID Akun:` pakai `reviewAccountId` (bukan `selectedContact` yang null untuk manual). Deploy `:1.18.94`, proof relay ("1001001002" + inisial "1").
+
+**Pelajaran**: tiap sumber display harus punya fallback untuk path input yang lolos validasi — kalau form menerima ketikan manual, SEMUA downstream display (bukan cuma submit) harus menanganinya. Test review-state, bukan cuma submit-state.
+
 ## L-423: L-421 jilid 3 — campaigns/partners/fx/broadcast/compliance (2026-09-04)
 
 **Context**: "SHOWING 4 CAMPAIGNS" vs tabel kosong; partners `142/98/12/Rp 82B` + fallback `|| '142'`; fx "CONNECTED" padahal provider 0/7; compliance `98/100` + fallback `'1,245'` + `: 4`; broadcast "—" semua (sudah jujur). CMS lebih dalam: tab tanpa query (L-422).
