@@ -1,5 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-418: Stagger orchestration + async re-render = seksi dashboard tak terlihat permanen (2026-09-04)
+
+**Context**: user lapor UI "berantakan". Bukti relay: 8 `StaggerItem` dashboard opacity 0 permanen — bahkan setelah `scrollIntoView` + 1,5 dtk (bukan artefak scroll; bylyin di semua reload). `StaggerContainer` pakai `whileInView="visible"` + `staggerChildren`, item cuma bawa variants (propagasi). Item yang re-render saat query resolve (transaksi/investasi/budget) orphan dari timeline orkestrasi → macet `hidden` selamanya. Bukan regresi `MotionConfig` (bug ada sejak `:1.18.83`).
+
+**Fix**: `StaggerContainer` mount-driven (`animate="visible"`, hapus `whileInView`/`viewport`) — state `visible` latch, anak yang re-render belakangan selalu resolve ke visible. `FadeIn`/`ScaleIn` tetap whileInView (tanpa orkestrasi, aman). Deploy `:1.18.85`, proof live tertunda login (rollout memutus sesi relay lagi — lihat FE-AUDIT-003).
+
+**Pelajaran**: jangan pernah gate VISIBILITY pada orkestrasi animasi — animasi gagal = konten hilang. `whileInView` + `staggerChildren` + data async = kombinasi yang pasti orphan; pilih `animate` untuk container orkestrasi, `whileInView` hanya untuk reveal mandiri tanpa anak.
+
 ## L-417: Jackson BigDecimal coerce JSON string exact — frontend Money string end-to-end (2026-09-04)
 
 **Context**: `TransactionService.initiateTransfer` konversi `Number(request.amount)` dengan klaim "gateway minta JSON number" (RELAY-012/TRF-AMOUNT-001, test ekspektasi angka). Padahal DTO `InitiateTransferRequest.amount` adalah `BigDecimal` — Jackson coerce JSON string → BigDecimal secara exact, sementara float64 tak bisa wakili fraksi 4dp (`"1500000.50"` → double) dan pecah di atas 2^53. Bug yang sama men-crash dashboard: API kembalikan DECIMAL sebagai JSON number, `TransferActivity.formatAmount` panggil `amount.replace` → `e.replace is not a function` → error boundary seluruh `/dashboard` (bukti relay).

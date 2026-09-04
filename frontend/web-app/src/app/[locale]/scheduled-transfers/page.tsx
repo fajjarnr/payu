@@ -153,13 +153,13 @@ export default function ScheduledTransfersPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-8">
+        <div className="space-y-6 lg:space-y-8">
           {/* Header */}
           <StaggerContainer>
             <StaggerItem>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground">Transfer Terjadwal</h2>
+                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Transfer Terjadwal</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">
                     Kelola dan pantau transfer berulang Anda.
                   </p>
@@ -175,7 +175,7 @@ export default function ScheduledTransfersPage() {
             </StaggerItem>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
               {[
                 {
                   label: 'Total Transfer',
@@ -341,7 +341,7 @@ export default function ScheduledTransfersPage() {
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Transfer Terjadwal</DialogTitle>
             <DialogDescription>
@@ -415,7 +415,7 @@ export default function ScheduledTransfersPage() {
 
       {/* Cancel Confirmation Modal */}
       <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-destructive">Batalkan Transfer</DialogTitle>
             <DialogDescription>

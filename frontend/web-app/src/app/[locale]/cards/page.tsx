@@ -116,13 +116,13 @@ export default function CardsPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
           {/* Header */}
           <StaggerContainer>
             <StaggerItem>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground">Kartu Virtual</h2>
+                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Kartu Virtual</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">Pembayaran online yang aman dengan rincian kartu instan.</p>
                 </div>
                 <ButtonMotion>
@@ -147,14 +147,14 @@ export default function CardsPage() {
             </StaggerItem>
 
             {/* Top Hero Section: Card Visualization & Limits (8/4 Split) */}
-            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 items-stretch">
               {/* Left: Digital Card & Primary Actions (8 units) */}
               <div className="md:col-span-12 lg:col-span-8">
                 <StaggerItem>
                   <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 lg:p-8 h-full relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] -z-0" />
 
-                    <div className="relative z-10 flex flex-col items-center justify-center gap-8 h-full">
+                    <div className="relative z-10 flex flex-col items-center justify-center gap-6 h-full">
                       {/* Digital Card Visualization */}
                       <div className="w-full max-w-[440px] aspect-[1.586/1] rounded-2xl relative overflow-hidden shadow-2xl group-hover:scale-[1.01] transition-all duration-700 border border-white/10">
                         <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-400" />
@@ -225,11 +225,11 @@ export default function CardsPage() {
               {/* Right: Daily Limit (4 units) Styled after Profil Risiko */}
               <div className="md:col-span-12 lg:col-span-4">
                 <StaggerItem>
-                  <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 lg:p-8 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[400px]">
+                  <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 lg:p-8 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[320px]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[60px]" />
 
                     <div className="relative z-10">
-                      <div className="flex justify-between items-center mb-8">
+                      <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold">Limit Harian</h3>
                         <Button size="icon" variant="outline" className="h-10 w-10 bg-white/5 border-white/10 hover:bg-white/10"
                           onClick={handleOpenLimitModal}
@@ -318,7 +318,7 @@ export default function CardsPage() {
 
             {/* Bottom Banner Area (Full Width) Styled after Target Portofolio Banner */}
             <StaggerItem>
-              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-5 sm:p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
+              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-5 sm:p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px]" />
                 <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
                   <div className="h-14 w-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
@@ -342,7 +342,7 @@ export default function CardsPage() {
 
       {/* Limit Update Modal */}
       <Dialog open={isLimitModalOpen} onOpenChange={setIsLimitModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Ubah Batas Transaksi</DialogTitle>
             <DialogDescription>
@@ -400,7 +400,7 @@ export default function CardsPage() {
 
       {/* Delete Confirmation Modal */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-destructive">Hapus Kartu</DialogTitle>
             <DialogDescription>

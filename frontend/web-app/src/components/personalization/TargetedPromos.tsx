@@ -186,7 +186,7 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="h-10 px-4 bg-white text-primary rounded-lg font-bold text-xs tracking-wider flex items-center gap-2 shadow-lg"
+          className="h-11 px-4 bg-white text-primary rounded-lg font-bold text-xs tracking-wider flex items-center gap-2 shadow-lg"
         >
           Klaim
           <ArrowRight className="h-4 w-4" />

@@ -125,13 +125,13 @@ export default function SplitBillPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
           <StaggerContainer>
             {/* Header */}
             <StaggerItem>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground">Split Bill</h2>
+                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Split Bill</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">
                     Bagi tagihan dengan teman, keluarga, atau rekan kerja secara adil.
                   </p>
@@ -400,7 +400,7 @@ export default function SplitBillPage() {
             {/* Empty State */}
             {!isLoading && splitBills.length === 0 && (
               <StaggerItem>
-                <div className="text-center py-20 bg-card border border-border rounded-2xl">
+                <div className="text-center py-8 bg-card border border-border rounded-2xl">
                   <Users className="h-16 w-16 text-muted-foreground mx-auto opacity-20 mb-6" />
                   <h3 className="text-lg font-bold text-foreground mb-2">Belum ada Split Bill</h3>
                   <p className="text-sm text-muted-foreground font-medium mb-6">
@@ -417,7 +417,7 @@ export default function SplitBillPage() {
 
             {isLoading && (
               <StaggerItem>
-                <div className="flex items-center justify-center py-20">
+                <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               </StaggerItem>

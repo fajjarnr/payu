@@ -78,7 +78,7 @@ export default function AnalyticsPage() {
         <div className="space-y-6 lg:space-y-8">
           <div className="flex justify-between items-end">
             <div>
-              <h2 className="text-3xl font-bold text-foreground">Intelijen Keuangan</h2>
+              <h2 className="text-3xl font-bold text-foreground tracking-tight">Intelijen Keuangan</h2>
               <p className="text-sm text-gray-500 font-medium">Wawasan mendalam tentang kebiasaan pengeluaran dan pertumbuhan kekayaan Anda.</p>
             </div>
             <div className="flex items-center gap-4">
@@ -175,13 +175,13 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="md:col-span-6 lg:col-span-4">
-              <Card className="rounded-xl border border-border shadow-sm h-full flex flex-col group p-8">
-                <CardHeader className="p-0 mb-10">
+              <Card className="rounded-xl border border-border shadow-sm h-full flex flex-col group p-5 sm:p-6">
+                <CardHeader className="p-0 mb-6">
                   <CardTitle className="text-xl font-bold text-foreground">Rincian Pengeluaran</CardTitle>
                 </CardHeader>
 
                 <CardContent className="p-0 flex flex-col h-full">
-                  <div className="relative aspect-square mb-12 flex items-center justify-center">
+                  <div className="relative aspect-square mb-8 flex items-center justify-center">
                     <ChartContainer config={breakdownConfig} className="w-full h-full">
                       <PieChart>
                         <ChartTooltip

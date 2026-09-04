@@ -458,7 +458,7 @@ export default function TransactionsPage() {
                   </div>
 
                   {!transactions || transactions.length === 0 ? (
-                    <div className="text-center py-16">
+                    <div className="text-center py-8">
                       <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <AlertCircle className="h-8 w-8 text-muted-foreground" />
                       </div>

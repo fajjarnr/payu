@@ -9,16 +9,16 @@ export default function PrivacyPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
           <StaggerContainer>
             <StaggerItem>
-              <div className="flex flex-col gap-4 mb-8">
+              <div className="flex flex-col gap-4 mb-6">
                 <div className="flex items-center gap-3">
                   <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
                     <Shield className="h-7 w-7 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-bold text-foreground">Kebijakan Privasi</h2>
+                    <h2 className="text-3xl font-bold text-foreground tracking-tight">Kebijakan Privasi</h2>
                     <p className="text-sm text-muted-foreground font-medium">Versi 1.0 - Terakhir diperbarui: Januari 2026</p>
                   </div>
                 </div>

@@ -245,7 +245,7 @@ export default function PocketsPage() {
                         <StaggerItem>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                                 <div>
-                                    <h2 className="text-3xl font-bold text-foreground">Manajemen Kantong</h2>
+                                    <h2 className="text-3xl font-bold text-foreground tracking-tight">Manajemen Kantong</h2>
                                     <p className="text-sm text-muted-foreground font-medium mt-1">Kelola dan alokasikan dana Anda dengan presisi tinggi.</p>
                                 </div>
                                 <div className="flex gap-3">

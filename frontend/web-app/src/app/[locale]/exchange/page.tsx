@@ -147,21 +147,21 @@ export default function ExchangePage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
           <StaggerContainer>
             {/* Header */}
             <StaggerItem>
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-foreground">Currency Exchange</h2>
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold text-foreground tracking-tight">Currency Exchange</h2>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
                   Real-time foreign exchange rates with competitive pricing.
                 </p>
               </div>
             </StaggerItem>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Main Exchange Form */}
-              <StaggerItem className="lg:col-span-8 space-y-8">
+              <StaggerItem className="lg:col-span-8 space-y-6">
                 <div className="bg-card rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                   {/* Ambient glow effect */}
                   <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
@@ -171,7 +171,7 @@ export default function ExchangePage() {
                     <h3 className="text-sm font-bold text-foreground mb-6 tracking-widest uppercase">Exchange Calculator</h3>
 
                     {/* Currency Selector Row */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-8">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6">
                       {/* From Currency */}
                       <div className="flex-1">
                         <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">
@@ -234,7 +234,7 @@ export default function ExchangePage() {
                     </div>
 
                     {/* Amount Input */}
-                    <div className="space-y-4 mb-8">
+                    <div className="space-y-4 mb-6">
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
                           Amount
@@ -269,7 +269,7 @@ export default function ExchangePage() {
 
                     {/* Rate Display */}
                     {fromCurrency !== toCurrency && (
-                      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-6 border border-primary/20 mb-8">
+                      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-6 border border-primary/20 mb-6">
                         {rateError ? (
                           <div className="flex items-center gap-3 text-destructive">
                             <AlertCircle className="h-5 w-5 flex-shrink-0" />
@@ -323,7 +323,7 @@ export default function ExchangePage() {
 
                     {/* Conversion Preview */}
                     {displayAmount !== null && fromCurrency !== toCurrency && (
-                      <div className="bg-card rounded-xl p-6 border-2 border-primary/30 mb-8 relative overflow-hidden">
+                      <div className="bg-card rounded-xl p-6 border-2 border-primary/30 mb-6 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
                         <div className="relative z-10 flex items-center justify-between">
                           <div>
@@ -343,7 +343,7 @@ export default function ExchangePage() {
 
                     {/* Info Box */}
                     {fromCurrency === toCurrency ? (
-                      <div className="bg-info/10 rounded-xl p-6 border border-info/20 mb-8">
+                      <div className="bg-info/10 rounded-xl p-6 border border-info/20 mb-6">
                         <div className="flex items-start gap-3">
                           <Info className="h-5 w-5 text-info flex-shrink-0 mt-0.5" />
                           <p className="text-sm font-medium text-foreground">
@@ -352,7 +352,7 @@ export default function ExchangePage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-muted/50 rounded-xl p-6 border border-border mb-8">
+                      <div className="bg-muted/50 rounded-xl p-6 border border-border mb-6">
                         <div className="flex items-start gap-3">
                           <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                           <div className="text-sm text-muted-foreground">

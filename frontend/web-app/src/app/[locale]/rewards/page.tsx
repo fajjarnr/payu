@@ -74,18 +74,18 @@ export default function RewardsPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
           <StaggerContainer>
             <Tabs defaultValue="points" className="w-full">
               <StaggerItem>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                   <div>
-                    <h2 className="text-3xl font-bold text-foreground">Rewards & Gamifikasi</h2>
+                    <h2 className="text-3xl font-bold text-foreground tracking-tight">Rewards & Gamifikasi</h2>
                     <p className="text-sm text-muted-foreground font-medium mt-1">Kumpulkan poin, dapatkan cashback, dan raih lebih banyak keuntungan.</p>
                   </div>
                 </div>
 
-                <TabsList className="mb-8">
+                <TabsList className="mb-6">
                   <TabsTrigger value="points" className="px-6 flex items-center gap-2">
                     <Coins className="h-4 w-4" /> Poin Loyalty
                   </TabsTrigger>
@@ -98,12 +98,12 @@ export default function RewardsPage() {
                 </TabsList>
               </StaggerItem>
 
-              <TabsContent value="points" className="mt-0 space-y-12">
+              <TabsContent value="points" className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   <StaggerItem className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-8 sm:p-8 text-white relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
-                        <div className="flex items-start justify-between mb-8">
+                        <div className="flex items-start justify-between mb-6">
                           <div>
                             <div className="flex items-center gap-3 mb-3">
                               <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/10">
@@ -118,7 +118,7 @@ export default function RewardsPage() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6 mb-8">
+                        <div className="grid grid-cols-2 gap-6 mb-6">
                           <div>
                             <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Total Diperoleh</p>
                             <p className="text-2xl font-bold">{loyaltyStats.totalEarned.toLocaleString()}</p>
@@ -146,7 +146,7 @@ export default function RewardsPage() {
                   </StaggerItem>
 
                   <StaggerItem className="lg:col-span-2">
-                    <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Cara Mendapatkan Poin</h3>
                       <div className="space-y-6">
                         <div className="flex items-start gap-4">
@@ -190,7 +190,7 @@ export default function RewardsPage() {
                   </StaggerItem>
                 </div>
 
-                <div className="space-y-8 mt-12">
+                <div className="space-y-6 mt-8">
                   <h3 className="text-xl font-bold text-foreground">Riwayat Poin</h3>
                   <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                     <div className="divide-y divide-border">
@@ -225,12 +225,12 @@ export default function RewardsPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="cashback" className="mt-0 space-y-12">
+              <TabsContent value="cashback" className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <StaggerItem className="lg:col-span-1">
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-8 sm:p-8 text-white relative overflow-hidden shadow-2xl h-full">
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl h-full">
                       <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-8">
+                        <div className="flex items-center gap-3 mb-6">
                           <div className="h-14 w-14 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                             <DollarSign className="h-7 w-7" />
                           </div>
@@ -258,7 +258,7 @@ export default function RewardsPage() {
                   </StaggerItem>
 
                   <StaggerItem className="lg:col-span-2">
-                    <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Promosi Aktif</h3>
                       <div className="space-y-4">
                         {activePromotions.map((promo, i) => (
@@ -283,7 +283,7 @@ export default function RewardsPage() {
                   </StaggerItem>
                 </div>
 
-                <div className="space-y-8 mt-12">
+                <div className="space-y-6 mt-8">
                   <h3 className="text-xl font-bold text-foreground">Riwayat Cashback</h3>
                   <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                     <div className="divide-y divide-border">
@@ -322,19 +322,19 @@ export default function RewardsPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="referral" className="mt-0 space-y-12">
+              <TabsContent value="referral" className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <StaggerItem>
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-8 sm:p-8 text-white relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center justify-between mb-6">
                           <h3 className="text-xl font-bold">Kode Referral Anda</h3>
                           <div className="h-12 w-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                             <Gift className="h-6 w-6" />
                           </div>
                         </div>
 
-                        <div className="bg-white/10 rounded-xl p-6 mb-8 border border-white/10">
+                        <div className="bg-white/10 rounded-xl p-6 mb-6 border border-white/10">
                           <div className="flex items-center justify-between">
                             <span className="text-4xl font-bold tracking-widest">{referralStats.code}</span>
                             <ButtonMotion>
@@ -362,7 +362,7 @@ export default function RewardsPage() {
                   </StaggerItem>
 
                   <StaggerItem>
-                    <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Ringkasan Referral</h3>
                       <div className="space-y-6">
                         <div className="flex items-start gap-4">

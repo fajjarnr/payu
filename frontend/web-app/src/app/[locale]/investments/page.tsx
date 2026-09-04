@@ -46,10 +46,10 @@ export default function InvestmentsPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
           <StaggerContainer>
             <StaggerItem>
-              <div className="mb-8">
+              <div className="mb-6">
                 <h2 className="text-3xl font-bold tracking-tight text-foreground">{t('title')}</h2>
                 <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
               </div>
@@ -77,14 +77,14 @@ export default function InvestmentsPage() {
                       onClick={handleBuy}
                       disabled={buyDeposit.isPending || createAccount.isPending}
                       data-testid="invest-buy-button"
-                      className="rounded-xl bg-primary px-6 py-3 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50">
+                      className="rounded-xl bg-primary px-6 py-3 min-h-[44px] text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50">
                       {buyDeposit.isPending ? 'Memproses...' : 'Beli Produk'}
                     </button>
                     <button
                       onClick={handleSell}
                       disabled={sellInvestment.isPending}
                       data-testid="invest-sell-button"
-                      className="rounded-xl border border-border bg-muted/40 px-6 py-3 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-muted/60 transition-all active:scale-95 disabled:opacity-50">
+                      className="rounded-xl border border-border bg-muted/40 px-6 py-3 min-h-[44px] text-xs font-bold uppercase tracking-wider text-foreground hover:bg-muted/60 transition-all active:scale-95 disabled:opacity-50">
                       {sellInvestment.isPending ? 'Memproses...' : 'Jual Produk'}
                     </button>
                   </div>

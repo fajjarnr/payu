@@ -229,7 +229,7 @@ export default function TransferPage() {
                   >
                     <ChevronRight className="h-6 w-6 rotate-180" />
                   </Button>
-                  <h2 className="text-3xl font-bold text-foreground">Tinjau Transfer</h2>
+                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Tinjau Transfer</h2>
                 </div>
               </StaggerItem>
 
@@ -455,7 +455,7 @@ export default function TransferPage() {
                   )}
 
                   {scheduleType === 'RECURRING' && (
-                    <div className="mt-8 space-y-12 animate-fade-in">
+                    <div className="mt-8 space-y-6 lg:space-y-8 animate-fade-in">
                       <div className="space-y-4">
                         <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2">Pilih Tanggal Tagihan / Transfer</label>
                         <Controller
@@ -540,7 +540,7 @@ export default function TransferPage() {
                 <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -z-0" />
 
-                  <div className="flex justify-between items-center mb-6 sm:mb-10 relative z-10 gap-2">
+                  <div className="flex justify-between items-center mb-6 relative z-10 gap-2">
                     <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Nominal Transfer</span>
                     <div className="flex items-center gap-2 sm:gap-3 bg-success-light px-3 sm:px-4 py-1.5 rounded-full border border-primary/10 shadow-sm shrink-0">
                       <div className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse" />
@@ -548,7 +548,7 @@ export default function TransferPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-10 relative z-10">
+                  <div className="flex items-center gap-4 sm:gap-6 mb-6 relative z-10">
                       <input
                         type="text"
                         value={formattedAmount}
@@ -587,7 +587,7 @@ export default function TransferPage() {
 
               <StaggerItem className="lg:col-span-4 space-y-6 sm:space-y-8">
                 <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card h-full flex flex-col">
-                  <div className="flex justify-between items-center mb-6 sm:mb-10">
+                  <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">Penerima Favorit</h3>
                     <div className="h-1 w-8 bg-primary rounded-full" />
                   </div>

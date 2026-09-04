@@ -81,7 +81,7 @@ export default function MerchantRegisterPage() {
 
  return (
   <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12 px-4">
-   <div className="max-w-4xl mx-auto space-y-12">
+   <div className="max-w-4xl mx-auto space-y-6 lg:space-y-8">
     <div className="text-center space-y-4">
      <div className="inline-flex items-center justify-center h-20 w-20 bg-bank-green/10 rounded-2xl mb-4">
       <Building2 className="h-10 w-10 text-bank-green" />
@@ -163,7 +163,7 @@ export default function MerchantRegisterPage() {
 
      <div className="bg-card rounded-[3rem] p-5 sm:p-6 lg:p-8 border border-border shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
-      <h3 className="text-xl font-bold text-foreground  mb-10 relative z-10">Tipe Merchant</h3>
+      <h3 className="text-xl font-bold text-foreground mb-6 relative z-10">Tipe Merchant</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
        {merchantTypes.map((type) => (
         <button

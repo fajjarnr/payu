@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.85] - 2026-09-04
+
+### Fixed
+- **Seksi dashboard tak terlihat (L-418)**: `StaggerContainer` `whileInView` + `staggerChildren` orphan-kan anak yang re-render saat query resolve (8 wrapper opacity 0 permanen, bukti relay) → mount-driven `animate="visible"`. `tsc` 0, Motion+dashboard 72 test hijau; image `:1.18.85`, rollout green.
+
 ## [1.18.84] - 2026-09-04
 
 ### Fixed

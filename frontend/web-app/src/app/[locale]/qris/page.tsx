@@ -47,7 +47,7 @@ export default function QRISPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-12">
+      <div className="space-y-6 lg:space-y-8">
         <input
           type="file"
           ref={fileInputRef}
@@ -63,15 +63,15 @@ export default function QRISPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8 xl:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
           {/* Main Scanner Column (8 units) */}
-          <div className="md:col-span-12 lg:col-span-8 space-y-8 xl:space-y-12">
-            <div className="bg-card rounded-2xl border border-border shadow-2xl relative overflow-hidden group min-h-[480px] xl:min-h-[550px] flex flex-col items-center justify-center p-8 sm:p-14 xl:p-8">
+          <div className="md:col-span-12 lg:col-span-8 space-y-6">
+            <div className="bg-card rounded-2xl border border-border shadow-2xl relative overflow-hidden group min-h-[320px] lg:min-h-[400px] flex flex-col items-center justify-center p-5 sm:p-8 lg:p-10">
               {/* Premium Background Effects */}
               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -z-0" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] -z-0" />
               
-              <div className="relative z-10 w-full max-w-md text-center space-y-12">
+              <div className="relative z-10 w-full max-w-md text-center space-y-6">
                 <div className="relative aspect-square max-w-[350px] xl:max-w-[400px] mx-auto">
                     {/* Scanner Frame */}
                     <div className={`absolute inset-0 rounded-2xl border-2 border-dashed transition-all duration-700 ${isScanning ? 'bg-emerald-500/10 border-emerald-500' : 'bg-muted/20 border-border group-hover:border-emerald-500/40'}`} />
@@ -112,8 +112,8 @@ export default function QRISPage() {
             </div>
 
             {/* Recent Payments Section */}
-            <div className="bg-card rounded-2xl border border-border shadow-sm p-8 sm:p-8 xl:p-8">
-              <div className="flex justify-between items-center mb-8">
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 lg:p-8">
+              <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
                     <History className="h-5 w-5 text-emerald-500" />
                     <h3 className="text-lg xl:text-xl font-bold text-foreground">Aktivitas Terakhir</h3>
@@ -126,7 +126,7 @@ export default function QRISPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="py-20 text-center bg-muted/10 rounded-2xl border border-dashed border-border/50">
+                <div className="py-8 text-center bg-muted/10 rounded-2xl border border-dashed border-border/50">
                    <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4 opacity-30">
                       <History className="h-8 w-8 text-foreground" />
                    </div>
@@ -137,11 +137,11 @@ export default function QRISPage() {
           </div>
 
           {/* Right Sidebar Column (4 units) */}
-          <div className="md:col-span-12 lg:col-span-4 space-y-8 xl:space-y-12">
+          <div className="md:col-span-12 lg:col-span-4 space-y-6">
             {/* Security Status Card */}
             <div className="bg-card rounded-2xl p-5 sm:p-6 lg:p-8 xl:p-8 border border-border shadow-sm">
-              <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] mb-8 uppercase opacity-60">Protokol Keamanan</h3>
-              <div className="space-y-8">
+              <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] mb-6 uppercase opacity-60">Protokol Keamanan</h3>
+              <div className="space-y-6">
                 <div className="flex gap-4">
                   <div className="h-10 w-10 bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/10">
                     <ShieldCheck className="h-5 w-5 text-emerald-500" />
@@ -166,7 +166,7 @@ export default function QRISPage() {
             {/* My QR Card */}
             <div className="bg-gray-900 rounded-2xl p-5 sm:p-6 lg:p-8 xl:p-8 text-white relative overflow-hidden shadow-2xl group border border-white/5">
               <div className="relative z-10">
-                <div className="flex justify-between items-start mb-8">
+                <div className="flex justify-between items-start mb-6">
                     <div>
                         <h4 className="font-bold text-xl tracking-tight">QRIS Personal</h4>
                         <p className="text-xs text-emerald-400 font-bold tracking-widest uppercase">E-Wallet Access</p>
@@ -174,7 +174,7 @@ export default function QRISPage() {
                     <QrCode className="h-7 w-7 text-emerald-500/40" />
                 </div>
                 
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 mb-8 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 mb-6 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
                    <QrCode className={`h-32 w-32 transition-all ${showMyQr ? 'text-emerald-400 scale-105' : 'text-white/20'}`} />
                    {!showMyQr && (
                      <div className="absolute inset-0 flex items-center justify-center">

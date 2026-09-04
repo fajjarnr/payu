@@ -71,11 +71,11 @@ export default function NotificationsPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="w-full space-y-12">
+        <div className="w-full space-y-6 lg:space-y-8">
           <StaggerContainer>
             {/* Header */}
             <StaggerItem>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
                   <h2 className="text-3xl font-bold text-foreground tracking-tight">Kotak Masuk</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">Kelola notifikasi, promo, dan peringatan keamanan Anda.</p>
@@ -132,7 +132,7 @@ export default function NotificationsPage() {
             <StaggerItem>
               <div className="space-y-4 mt-8">
                 {filteredNotifs.length === 0 ? (
-                  <div className="text-center py-20 bg-card border border-border rounded-2xl">
+                  <div className="text-center py-8 bg-card border border-border rounded-2xl">
                     <Inbox className="h-16 w-16 text-muted-foreground mx-auto opacity-20 mb-6" />
                     <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Tidak ada notifikasi</p>
                   </div>

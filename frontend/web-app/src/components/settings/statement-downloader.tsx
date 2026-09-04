@@ -369,7 +369,7 @@ export default function StatementDownloader() {
                       onClick={() => handleDownload(statement)}
                       disabled={statement.status !== 'COMPLETED' || isDownloading === statement.id}
                       className={clsx(
-                        'h-10 px-4 rounded-lg flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-all',
+                        'h-11 px-4 rounded-lg flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-all',
                         statement.status === 'COMPLETED' && !isDownloading
                           ? 'bg-primary text-primary-foreground hover:bg-bank-emerald shadow-md hover:shadow-lg'
                           : 'bg-muted text-muted-foreground cursor-not-allowed'

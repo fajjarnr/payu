@@ -36,7 +36,7 @@ export default function MerchantDashboard() {
  if (loading) {
   return (
    <DashboardLayout>
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex items-center justify-center min-h-[320px]">
      <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
    </DashboardLayout>
@@ -47,7 +47,7 @@ export default function MerchantDashboard() {
   return (
    <DashboardLayout>
     <PageTransition>
-     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6">
+     <div className="flex flex-col items-center justify-center min-h-[320px] space-y-6">
       <Building2 className="h-16 w-16 text-muted-foreground/50" />
       <h1 className="text-2xl font-bold">{t('title')}</h1>
       <p className="text-muted-foreground">{t('notRegistered')}</p>
@@ -68,7 +68,7 @@ export default function MerchantDashboard() {
       <StaggerItem>
        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
         <div>
-         <h2 className="text-3xl font-bold text-foreground">{t('dashboard')}</h2>
+         <h2 className="text-3xl font-bold text-foreground tracking-tight">{t('dashboard')}</h2>
          <p className="text-sm text-muted-foreground font-medium mt-1">{t('subtitle')}</p>
         </div>
        </div>

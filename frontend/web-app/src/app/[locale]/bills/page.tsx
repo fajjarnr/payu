@@ -85,7 +85,7 @@ export default function BillsPage() {
  if (selectedBiller) {
   return (
    <DashboardLayout>
-    <div className="space-y-12">
+    <div className="space-y-6 lg:space-y-8">
      <div className="flex items-center gap-4">
       <Button
        variant="outline"
@@ -101,7 +101,7 @@ export default function BillsPage() {
      <div className="bg-card rounded-2xl p-6 sm:p-10 border border-border relative overflow-hidden group shadow-sm">
       <div className={cn("absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 opacity-10 rounded-full blur-3xl -z-0", selectedBiller.color.split(' ')[0])} />
 
-      <div className="relative z-10 flex items-center gap-4 sm:gap-6 mb-6 sm:mb-10 pb-6 sm:pb-10 border-b border-border">
+      <div className="relative z-10 flex items-center gap-4 sm:gap-6 mb-6 pb-6 border-b border-border">
        <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl ${selectedBiller.color} flex items-center justify-center shadow-xl transition-transform group-hover:scale-110`}>
         <selectedBiller.icon className="h-8 w-8 sm:h-10 sm:w-10" />
        </div>
@@ -112,7 +112,7 @@ export default function BillsPage() {
        </div>
       </div>
 
-      <div className="space-y-6 sm:space-y-12 relative z-10">
+      <div className="space-y-6 lg:space-y-8 relative z-10">
        <div className="group">
         <label className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block mb-4 group-focus-within:text-primary transition-colors">ID Pelanggan / Nomor Rekening</label>
         <Input
@@ -159,7 +159,7 @@ export default function BillsPage() {
 
  return (
   <DashboardLayout>
-   <div className="space-y-12">
+   <div className="space-y-6 lg:space-y-8">
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
      <div>
       <h2 className="text-3xl font-bold text-foreground tracking-tight">Tagihan & Top-up</h2>
@@ -173,7 +173,7 @@ export default function BillsPage() {
     {/* Biller Grid */}
     <div className="bg-card rounded-2xl p-8 sm:p-12 border border-border relative overflow-hidden shadow-sm">
      <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-primary/5 rounded-full blur-3xl" />
-     <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase mb-10 text-center opacity-60">Kategori Layanan</h3>
+     <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase mb-6 text-center opacity-60">Kategori Layanan</h3>
      <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-12 relative z-10">
       {billers.map((item) => (
        <button
@@ -200,7 +200,7 @@ export default function BillsPage() {
     <div className="space-y-8">
      <h3 className="text-xl font-bold text-foreground tracking-tight">Aktivitas Terakhir</h3>
      {!isLoading && recentBills.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
        {recentBills.map((bill: PaymentResponse) => (
         <div key={bill.id} className="bg-card p-6 sm:p-8 rounded-2xl flex items-center justify-between border border-border hover:shadow-xl transition-all group shadow-sm">
          <div className="flex items-center gap-6">

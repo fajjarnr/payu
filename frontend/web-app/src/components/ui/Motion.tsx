@@ -83,9 +83,12 @@ export const StaggerContainer = ({ children, staggerDelay = 0.1, className }: St
  const shouldReduceMotion = useReducedMotion();
  return (
  <motion.div
+  // Mount-driven (not whileInView): async data re-renders during the
+  // stagger orchestration window permanently orphaned late children at
+  // opacity 0 (invisible dashboard sections). With animate latched,
+  // re-rendering children always resolve to "visible".
   initial={shouldReduceMotion ? false : "hidden"}
-  whileInView="visible"
-  viewport={{ once: true, margin: '-50px' }}
+  animate="visible"
   variants={{
    hidden: { opacity: 0 },
    visible: {

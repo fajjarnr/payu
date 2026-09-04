@@ -78,25 +78,25 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
           {/* Header */}
           <StaggerContainer>
             <StaggerItem>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground">{t('header.title')}</h2>
+                  <h2 className="text-3xl font-bold text-foreground tracking-tight">{t('header.title')}</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">{t('header.subtitle')}</p>
                 </div>
               </div>
             </StaggerItem>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
               {/* Sidebar Profiles */}
               <StaggerItem className="md:col-span-6 lg:col-span-4 space-y-6">
                 <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
-                  <div className="relative w-24 h-24 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-bold text-4xl shadow-xl shadow-primary/20 mb-8 transition-transform group-hover:scale-110">
+                  <div className="relative w-24 h-24 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-bold text-4xl shadow-xl shadow-primary/20 mb-6 transition-transform group-hover:scale-110">
                     {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : 'P'}
                   </div>
                   <h3 className="text-xl font-bold text-foreground">{formData.fullName || 'PENGGUNA PAYU'}</h3>
@@ -143,7 +143,7 @@ export default function SettingsPage() {
               {/* Main Settings Form */}
               <StaggerItem className="md:col-span-6 lg:col-span-8">
                 {activeTab === 'profile' ? (
-                  <div className="bg-card rounded-xl p-8 sm:p-8 border border-border shadow-card space-y-12 relative overflow-hidden h-full">
+                  <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-6 relative overflow-hidden h-full">
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
 
                     {/* Success Alert */}
@@ -166,7 +166,7 @@ export default function SettingsPage() {
                     )}
 
                     {/* Personal Details */}
-                    <section className="space-y-12 relative z-10">
+                    <section className="space-y-6 relative z-10">
                       <div className="flex items-center gap-4">
                         <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
                           <User className="h-6 w-6 text-primary" />
@@ -174,7 +174,7 @@ export default function SettingsPage() {
                         <h3 className="text-xl font-bold text-foreground">{t('profileCredentials')}</h3>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
                           <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
                             {t('form.fullName')}
@@ -220,7 +220,7 @@ export default function SettingsPage() {
                     <div className="h-[1px] w-full bg-border" />
 
                     {/* Preferences */}
-                    <section className="space-y-12 relative z-10">
+                    <section className="space-y-6 relative z-10">
                       <div className="flex items-center gap-4">
                         <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
                           <Bell className="h-6 w-6 text-primary" />
@@ -228,7 +228,7 @@ export default function SettingsPage() {
                         <h3 className="text-xl font-bold text-foreground">{t('systemPreferences')}</h3>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-8">
+                      <div className="grid grid-cols-1 gap-6">
                         {preferences.map((pref, i) => (
                           <div key={i} className="flex items-center justify-between group p-2 hover:bg-muted/20 rounded-xl transition-all">
                             <div>
@@ -273,7 +273,7 @@ export default function SettingsPage() {
                     <StaggerItem>
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                         <div>
-                          <h2 className="text-3xl font-bold text-foreground">{t('menu.eStatement')}</h2>
+                          <h2 className="text-3xl font-bold text-foreground tracking-tight">{t('menu.eStatement')}</h2>
                           <p className="text-sm text-muted-foreground font-medium mt-1">
                             {t('eStatementSubtitle')}
                           </p>
