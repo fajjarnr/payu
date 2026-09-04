@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 - **Whitespace hemat + saldo satu baris**: root halaman `space-y-12→6/8`, hero `min-h-400→280/320`, banner `p-16→10`, empty `py-20→8`, header/sidebar dipadatkan; saldo hero cap `lg:text-4xl` (tak lagi wrap 2 baris di kolom ⅓).
 
 ### Added
-- **Local Verify (1.18.84, kode saja — belum deploy; live `:1.18.83` mendahuluinya)**: `tsc --noEmit` 0; vitest **95 files 1203 (1202 pass 1 skip)**; `check-i18n-coverage` paritas; eslint file terdampak 0; Context7 `/vercel/next.js` (v16.2.9≈16.2.12) + `/react/react` (v19.2.7≈19.2.3) + `/tailwindlabs/tailwindcss.com` + framer-motion terverifikasi di paket terpasang 12.29.0.
+- **Local Verify + Deploy dev (1.18.84)**: `tsc --noEmit` 0; vitest **95 files 1203 (1202 pass 1 skip)**; `check-i18n-coverage` paritas; eslint file terdampak 0; Context7 `/vercel/next.js` (v16.2.9≈16.2.12) + `/react/react` (v19.2.7≈19.2.3) + `/tailwindlabs/tailwindcss.com` + framer-motion terverifikasi di paket terpasang 12.29.0; image `:1.18.84` push internal registry, `oc apply -k payu-dev/web-app`, rollout green `web-app-79c58f7567-4vdcs` 1/1 `health:200`.
 
 ## [1.18.79] - 2026-09-03
 
