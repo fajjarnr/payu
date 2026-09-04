@@ -1,5 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-427: Early-return tanpa reset loading = spinner abadi (2026-09-04)
+
+**Context**: riwayat e-statement tampil header + spinner selamanya. `loadStatements` early-return saat `accountId` null (store hydrate async, null saat mount) tanpa `setIsLoading(false)` — initial `true` tak pernah turun. Efek cuma jalan sekali pula, jadi akun yang datang belakangan tak pernah me-reload.
+
+**Fix**: early-return reset loading + subscribe `accountId` + refire effect. Regression `StatementDownloader` (tanpa akun → empty state). Deploy `:1.18.96`, proof relay.
+
+**Pelajaran**: tiap early-return sebelum `setIsLoading(true)` wajib reset loading; tiap load-on-mount atas state async wajib dependensi state itu di effect.
+
 ## L-426: Auto-config `before` + `@ConditionalOnBean` = bean mati diam-diam (2026-09-04)
 
 **Context**: analytics NOL padahal 16 transaksi COMPLETED. Rantai: outbox transaction 68 pending/0 published; poller tak pernah jalan (tanpa lock row, tanpa log); Kafka topic kosong; analytics consumer hidup tapi Python `from app.database import async_session_maker` bind `None` saat import (init belakangan) → tiap pesan error + offset tetap commit (data loss senyap); fraud handler baca key camelCase yang tak ada → poison + rollback per pesan.

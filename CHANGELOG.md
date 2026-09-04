@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.96] - 2026-09-04
+
+### Fixed
+- **Riwayat e-statement spinner abadi (L-427)**: early-return tanpa akun tak reset loading + effect sekali jalan → empty state tak pernah tampil. Subscribe `accountId` + refire. Regression + proof relay.
+
 ## [1.18.95] - 2026-09-04
 
 ### Fixed

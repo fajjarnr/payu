@@ -23,6 +23,7 @@ import { useAuthStore } from '@/stores/authStore';
  */
 export default function StatementDownloader() {
   const t = useTranslations('settings.statements');
+  const accountId = useAuthStore((state) => state.accountId);
   const [statements, setStatements] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
@@ -43,8 +44,10 @@ export default function StatementDownloader() {
 
   // Load statements from API
   const loadStatements = useCallback(async (pageNum: number = 0) => {
-    const { accountId: acctId } = useAuthStore.getState();
-    if (!acctId) return;
+    if (!accountId) {
+      setIsLoading(false);
+      return;
+    }
     try {
       setIsLoading(true);
       setError(null);
@@ -63,9 +66,9 @@ export default function StatementDownloader() {
     } finally {
       setIsLoading(false);
     }
-  }, [t]);
+  }, [t, accountId]);
 
-  // Load statements on mount
+  // Reload once the session account arrives after mount (store hydrates async).
   useEffect(() => {
     loadStatements(0);
   }, [loadStatements]);
