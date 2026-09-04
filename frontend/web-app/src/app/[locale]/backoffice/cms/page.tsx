@@ -47,14 +47,20 @@ export default function CMSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<string>('ALL');
 
-  const { data: cmsData, isLoading, error } = useActiveContent('BANNER');
+  const { data: banners, isLoading: bannersLoading, error: bannersError } = useActiveContent('BANNER');
+  const { data: promos, isLoading: promosLoading } = useActiveContent('PROMO');
+  const { data: alerts, isLoading: alertsLoading } = useActiveContent('ALERT');
+  const { data: popups, isLoading: popupsLoading } = useActiveContent('POPUP');
+  const isLoading = bannersLoading || promosLoading || alertsLoading || popupsLoading;
+  const error = bannersError;
+  const allContent = [...(banners ?? []), ...(promos ?? []), ...(alerts ?? []), ...(popups ?? [])];
+  const cmsData = allContent;
   const filteredContent = (cmsData ?? []).filter(content => {
-    const matchesSearch = content.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = content.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           content.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === 'ALL' || content.contentType === activeTab;
     return matchesSearch && matchesTab;
   });
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
@@ -92,10 +98,10 @@ export default function CMSPage() {
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Total Content', value: '—', color: 'bg-blue-500', icon: FileText },
-              { label: 'Active Now', value: '—', color: 'bg-emerald-500', icon: CheckCircle2 },
-              { label: 'Scheduled', value: '—', color: 'bg-amber-500', icon: Clock },
-              { label: 'Pending Review', value: '—', color: 'bg-rose-500', icon: AlertCircle },
+              { label: 'Total Content', value: String(allContent.length), color: 'bg-blue-500', icon: FileText },
+              { label: 'Active Now', value: String(allContent.filter((c) => c.status === 'ACTIVE').length), color: 'bg-emerald-500', icon: CheckCircle2 },
+              { label: 'Scheduled', value: String(allContent.filter((c) => c.status === 'SCHEDULED').length), color: 'bg-amber-500', icon: Clock },
+              { label: 'Pending Review', value: String(allContent.filter((c) => c.status === 'DRAFT').length), color: 'bg-rose-500', icon: AlertCircle },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>

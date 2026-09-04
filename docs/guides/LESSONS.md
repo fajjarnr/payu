@@ -1,5 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-422: L-421 pola berulang — customers/CMS juga angka mati (2026-09-04)
+
+**Context**: "OPEN: 42" customers + stat CMS "—" ×4, tabel kosong (API 403/empty). CMS lebih dalam: cuma fetch `BANNER` tapi sediakan tab PROMO/ALERT/POPUP → 3 tab mati by construction.
+
+**Fix**: customers badge + baris error pola L-421; CMS fetch 4 tipe, gabung client-side, stat derive (total/active/scheduled/draft). Regression `BackofficeQueuesPage` (2 test). Deploy `:1.18.92`, proof relay ("OPEN: 0" + akses ditolak; CMS 0 jujur).
+
+**Pelajaran**: tiap tab/filter WAJIB punya sumber data — tab tanpa query adalah dead UI. Saat tambah tab, tambah fetch-nya di commit yang sama.
+
 ## L-421: Counter hardcode berbohong saat API menolak — angka harus dari data (2026-09-04)
 
 **Context**: backoffice tampilkan "TERTUNDA: 24" / "KRITIS: 12" sementara tabel "TIDAK ADA DITEMUKAN" — angka hardcode, kontradiktif. Akar: API 403 `IP_NOT_ALLOWED` (customer1 tanpa grant backoffice; konsisten CRUD-004) sehingga list kosong, tapi badge tak baca data. Command center lebih parah: semua stat "—" hardcode.

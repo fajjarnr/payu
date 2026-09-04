@@ -16,11 +16,12 @@ export default function CustomerCasesPage() {
  const [priority, setPriority] = useState<string>('');
  const [page, setPage] = useState(0);
 
-  const { data: rawCases, isLoading } = useQuery({
+  const { data: rawCases, isLoading, isError } = useQuery({
    queryKey: ['customer-cases', status, priority, page],
    queryFn: () => BackofficeService.getCustomerCases(status || undefined, priority || undefined, page),
   });
   const cases = Array.isArray(rawCases) ? rawCases : [];
+  const openCount = cases.filter((c) => c.status === CustomerCaseStatus.OPEN).length;
 
  return (
     <div className="space-y-6">
@@ -31,7 +32,7 @@ export default function CustomerCasesPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="bg-primary/10 px-4 py-2 rounded-lg border border-primary/20">
-            <span className="text-xs font-bold text-primary tracking-widest uppercase">Open: 42</span>
+            <span className="text-xs font-bold text-primary tracking-widest uppercase">Open: {isLoading ? '…' : openCount}</span>
           </div>
         </div>
       </div>
@@ -80,6 +81,10 @@ export default function CustomerCasesPage() {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Memuat data...</TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Akses ditolak — hubungi administrator</TableCell>
               </TableRow>
             ) : cases.length === 0 ? (
               <TableRow>

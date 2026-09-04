@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.92] - 2026-09-04
+
+### Fixed
+- **Antrian backoffice jujur susulan (L-422)**: "OPEN: 42" customers + stat CMS "—" ×4 → live count + baris akses-ditolak; CMS fetch 4 tipe (tab PROMO/ALERT/POPUP mati by construction sebelumnya). Regression `BackofficeQueuesPage` 2 test. Proof relay.
+
 ## [1.18.91] - 2026-09-04
 
 ### Fixed
