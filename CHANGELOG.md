@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.93] - 2026-09-04
+
+### Fixed
+- **Stat backoffice jujur jilid 3 (L-423)**: footer "SHOWING 4 CAMPAIGNS" vs kosong → live; partners hapus fallback `|| '142/98/12'` + volume '—'; fx provider/market + footer konektor jujur (LIVE/DEGRADED); broadcast sent live; compliance score '—' + logs/high-risk live. Regression `BackofficeStatsPage` 2 test. Proof relay.
+
 ## [1.18.92] - 2026-09-04
 
 ### Fixed

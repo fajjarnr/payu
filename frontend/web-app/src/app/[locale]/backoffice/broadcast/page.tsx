@@ -61,13 +61,13 @@ export default function BroadcastPage() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 lg:space-y-8">
       <StaggerContainer>
         {/* Header Stats */}
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Broadcasts Sent', value: '—', color: 'bg-emerald-500', icon: Send },
+              { label: 'Broadcasts Sent', value: isLoading ? '…' : String(notifications?.length ?? 0), color: 'bg-emerald-500', icon: Send },
               { label: 'Total Messages', value: '—', color: 'bg-blue-500', icon: Smartphone },
               { label: 'Avg Open Rate', value: '—', color: 'bg-indigo-500', icon: CheckCircle2 },
               { label: 'Unsubscribe Rate', value: '—', color: 'bg-rose-500', icon: AlertCircle },

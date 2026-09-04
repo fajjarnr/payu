@@ -33,16 +33,16 @@ export default function FxRatesAdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: fxRates, isLoading, error } = useAllFxRates();
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 lg:space-y-8">
       <StaggerContainer>
         {/* Header Stats */}
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Active Currencies', value: '—', color: 'bg-emerald-500', icon: TrendingUp },
-              { label: 'Auto-Sync Provider', value: '—', color: 'bg-blue-500', icon: RefreshCw },
+              { label: 'Active Currencies', value: isLoading ? '…' : String(fxRates?.length ?? 0), color: 'bg-emerald-500', icon: TrendingUp },
+              { label: 'Auto-Sync Provider', value: isLoading ? '…' : (error ? 'DOWN' : 'LIVE'), color: 'bg-blue-500', icon: RefreshCw },
               { label: 'Manual Overrides', value: '—', color: 'bg-amber-500', icon: Lock },
-              { label: 'Market Status', value: '—', color: 'bg-indigo-500', icon: CheckCircle2 },
+              { label: 'Market Status', value: isLoading ? '…' : (error || (fxRates?.length ?? 0) === 0 ? 'DEGRADED' : 'LIVE'), color: 'bg-indigo-500', icon: CheckCircle2 },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>
@@ -165,7 +165,7 @@ export default function FxRatesAdminPage() {
             
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                Market Connector Status: <span className="text-emerald-500">Connected</span>
+                Market Connector Status: {isLoading ? <span className="text-muted-foreground">…</span> : error || (fxRates?.length ?? 0) === 0 ? <span className="text-rose-500">Degraded</span> : <span className="text-emerald-500">Connected</span>}
               </p>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50" disabled>

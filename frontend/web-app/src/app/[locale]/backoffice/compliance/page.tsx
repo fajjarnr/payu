@@ -94,15 +94,15 @@ export default function CompliancePage() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 lg:space-y-8">
       <StaggerContainer>
         {/* Header Stats */}
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Security Score', value: '98/100', color: 'bg-emerald-500', icon: Shield },
-              { label: 'Audit Logs (24h)', value: isLoading ? '...' : String(auditLogs.length || '1,245'), color: 'bg-blue-500', icon: History },
-              { label: 'High Risk Events', value: String(highRiskCount), color: 'bg-rose-500', icon: AlertTriangle },
+              { label: 'Security Score', value: '—', color: 'bg-emerald-500', icon: Shield },
+              { label: 'Audit Logs (24h)', value: isLoading ? '...' : String(auditLogs.length), color: 'bg-blue-500', icon: History },
+              { label: 'High Risk Events', value: String(Array.isArray(failedAccessData) ? failedAccessData.length : 0), color: 'bg-rose-500', icon: AlertTriangle },
               { label: 'Regulatory Status', value: 'Compliant', color: 'bg-indigo-500', icon: ClipboardCheck },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">

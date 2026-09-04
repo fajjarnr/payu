@@ -1,5 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-423: L-421 jilid 3 — campaigns/partners/fx/broadcast/compliance (2026-09-04)
+
+**Context**: "SHOWING 4 CAMPAIGNS" vs tabel kosong; partners `142/98/12/Rp 82B` + fallback `|| '142'`; fx "CONNECTED" padahal provider 0/7; compliance `98/100` + fallback `'1,245'` + `: 4`; broadcast "—" semua (sudah jujur). CMS lebih dalam: tab tanpa query (L-422).
+
+**Fix**: stat derive per halaman (campaigns total/rewards/active/draft + footer live; partners hapus fallback, volume '—'; fx provider/market LIVE/DEGRADED jujur + footer konektor; broadcast sent live; compliance score '—', logs/high-risk live). Regression `BackofficeStatsPage` 2 test. Deploy `:1.18.93`, proof relay.
+
+**Pelajaran**: pola `value || 'fakta'` dan footer hardcode adalah L-421 yang sama — grep `|| '` + `Showing <span>` di tiap audit. Kartu tanpa sumber data = '—', bukan angka cantik.
+
 ## L-422: L-421 pola berulang — customers/CMS juga angka mati (2026-09-04)
 
 **Context**: "OPEN: 42" customers + stat CMS "—" ×4, tabel kosong (API 403/empty). CMS lebih dalam: cuma fetch `BANNER` tapi sediakan tab PROMO/ALERT/POPUP → 3 tab mati by construction.

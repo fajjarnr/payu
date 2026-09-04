@@ -80,16 +80,16 @@ export default function PartnersPage() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 lg:space-y-8">
       <StaggerContainer>
         {/* Header Stats */}
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Total Partners', value: isLoading ? '...' : String(partners.length || '142'), color: 'bg-emerald-500', icon: Store },
-              { label: 'Active Merchants', value: String(activeCount || '98'), color: 'bg-blue-500', icon: CheckCircle2 },
-              { label: 'Pending Apps', value: String(pendingCount || '12'), color: 'bg-amber-500', icon: AlertCircle },
-              { label: 'SNAP BI Volume', value: 'Rp 82B', color: 'bg-indigo-500', icon: Globe },
+              { label: 'Total Partners', value: isLoading ? '…' : String(partners.length), color: 'bg-emerald-500', icon: Store },
+              { label: 'Active Merchants', value: isLoading ? '…' : String(activeCount), color: 'bg-blue-500', icon: CheckCircle2 },
+              { label: 'Pending Apps', value: isLoading ? '…' : String(pendingCount), color: 'bg-amber-500', icon: AlertCircle },
+              { label: 'SNAP BI Volume', value: '—', color: 'bg-indigo-500', icon: Globe },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>

@@ -68,16 +68,16 @@ export default function CampaignsPage() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 lg:space-y-8">
       <StaggerContainer>
         {/* Header Stats */}
         <StaggerItem>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Total Budget', value: '—', color: 'bg-emerald-500', icon: Gift },
-              { label: 'Total Rewards Sent', value: '—', color: 'bg-blue-500', icon: CheckCircle2 },
-              { label: 'Active Campaigns', value: '—', color: 'bg-indigo-500', icon: Timer },
-              { label: 'Conversion Lift', value: '—', color: 'bg-orange-500', icon: BarChart3 },
+              { label: 'Total Campaigns', value: isLoading ? '…' : String(campaigns?.length ?? 0), color: 'bg-emerald-500', icon: Gift },
+              { label: 'Rewards Sent', value: isLoading ? '…' : String((campaigns ?? []).reduce((s, c) => s + (c.currentClaims ?? 0), 0)), color: 'bg-blue-500', icon: CheckCircle2 },
+              { label: 'Active Campaigns', value: isLoading ? '…' : String((campaigns ?? []).filter((c) => c.status === 'ACTIVE').length), color: 'bg-indigo-500', icon: Timer },
+              { label: 'Draft Campaigns', value: isLoading ? '…' : String((campaigns ?? []).filter((c) => c.status === 'DRAFT').length), color: 'bg-orange-500', icon: BarChart3 },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
                 <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>
@@ -212,7 +212,7 @@ export default function CampaignsPage() {
             
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                Showing <span className="text-foreground">4</span> campaigns
+                Showing <span className="text-foreground">{(campaigns ?? []).filter((cmp) => cmp.name.toLowerCase().includes(searchTerm.toLowerCase())).length}</span> campaigns
               </p>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50">
