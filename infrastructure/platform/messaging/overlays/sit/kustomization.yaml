@@ -40,7 +40,7 @@ patches:
         value: 1
       - op: replace
         path: /spec/resources/requests/cpu
-        value: 50m
+        value: 250m
   - target:
       group: broker.amq.io
       version: v1beta1
