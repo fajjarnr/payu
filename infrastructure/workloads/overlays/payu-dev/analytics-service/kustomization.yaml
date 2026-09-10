@@ -37,4 +37,4 @@ patches:
                   # it every authenticated call 401s (fraud scoring included).
                   # In-cluster URL per L-408 (public route 503s from pods).
                   - name: KEYCLOAK_URL
-                    value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
+                    value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080"

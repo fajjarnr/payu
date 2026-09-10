@@ -35,7 +35,7 @@ patches:
                   - name: OIDC_ISSUER
                     value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
                   - name: OIDC_JWK_SET_URI
-                    value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+                    value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
   # WEB-CSP-001 issuer alignment: tokens carry the PUBLIC SSO issuer
   # (https://sso-dev...); validators must expect it. JWK/auth-server URLs stay
   # internal (in-cluster).
