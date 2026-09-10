@@ -11,8 +11,9 @@ kind: Kustomization
 resources:
   - ../common
   - identity-dev-secrets.yaml
+  - ../../operator
 
-namespace: payu-sso
+namespace: payu-dev
 
 # Dev-specific patches
 patches:
@@ -54,3 +55,24 @@ patches:
           - http://payu-dev.apps.fajjjar.my.id
           - https://payu-dev.apps.fajjjar.my.id
           - "+"
+# Operator watches the env namespace (mirrors sit overlay).
+  - target:
+      kind: OperatorGroup
+      name: rhbk-operator-group
+    patch: |-
+      - op: replace
+        path: /spec/targetNamespaces/0
+        value: payu-dev
+# Realm lives in the shared `keycloak` DB (moved, not recreated):
+# never re-import over live state (L-377). Fresh envs import once manually.
+  - target:
+      group: k8s.keycloak.org
+      version: v2beta1
+      kind: KeycloakRealmImport
+      name: payu-realm-import
+    patch: |-
+      apiVersion: k8s.keycloak.org/v2beta1
+      kind: KeycloakRealmImport
+      metadata:
+        name: payu-realm-import
+      $patch: delete
