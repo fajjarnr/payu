@@ -30,8 +30,8 @@ spec:
 
 
       # -----------------------------------------------------------------------
-      # Zone 2 (ACTIVE): payu.ocp branch → Z04778201KDWI0E0OG3Z2 (verified live 2026-09-10,
-      # *.apps.payu.ocp A lives in this zone, no parent delegation)
+      # Zone 2 (ACTIVE): payu.ocp branch → Z0368342YBF7WZUD5033 (recreated 2026-09-10,
+      # old Z047 data-plane dead REFUSED; *.apps.payu.ocp A lives here, delegation fixed)
       # Covers: *.apps.payu.ocp.fajjjar.my.id, payu.ocp.fajjjar.my.id
       # Credentials: cert-manager-aws-creds (student, via kube-system/aws-creds)
       # -----------------------------------------------------------------------
@@ -43,7 +43,7 @@ spec:
             secretAccessKeySecretRef:
               name: cert-manager-aws-creds
               key: aws_secret_access_key
-            hostedZoneID: 'Z04778201KDWI0E0OG3Z2'
+            hostedZoneID: 'Z0368342YBF7WZUD5033'
             region: ap-southeast-1
         selector:
           dnsZones:
