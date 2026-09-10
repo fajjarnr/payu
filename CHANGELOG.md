@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **Drift guard `scripts/verify-overlay-drift.sh` + root tag sync**: audit per-service overlay render vs live (image, env) + root-vs-service tag agreement + registry tag existence. Menemukan: root pin basi (analytics/tx/wallet) → sinkron ke tag live (`1.18.103`/`1.8.116`/`1.18.103`) agar root-apply tak downgrade; 171 baris env base-vs-live fleet-wide (sejak ≤1.7.9, imperative apply, tanpa GitOps) → item `PLAT-DRIFT-001` antre maintenance window, bukan apply massal siang hari. HotRod wallet dicoba lalu di-revert (konteks SSL DataGrid butuh cert platform — fail-open status quo dipertahankan).
+- **E2E recipient number alignment (`V114`)**: `V113` invented `1001002001`, but the canonical `money-journey.spec.ts` sends customer2 as historic `1001001002` (RELAY-002). `V114` renames the 0004 account number (idempotent guarded UPDATE); live COMPLETED proof to `1001001002`. Full suites: web-app 101 files 1189 pass; tx 232/240 (8 errors = Testcontainers needs Docker, absent here — covered by Tekton); account adapter suites green.
 
 ## [1.18.103] - 2026-09-10
 
