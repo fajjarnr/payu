@@ -17,6 +17,34 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
+      # RELAY-006 parity: SIT Redis (payu-cache-resp:11222, user developer).
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_DATA_REDIS_HOST
+          value: payu-cache-resp
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_DATA_REDIS_PORT
+          value: "11222"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_DATA_REDIS_USERNAME
+          value: developer
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_DATA_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: payu-cache-credentials
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SERVICES_ANALYTICS_URL
+          value: "http://analytics-service:8080"
   - patch: |-
       apiVersion: apps/v1
       kind: Deployment
