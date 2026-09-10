@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/promotion-service
-    newTag: "1.18.74"
+    newTag: "1.18.98"
 patches:
   - target:
       kind: Deployment
@@ -31,4 +31,4 @@ patches:
                   - name: OIDC_ISSUER
                     value: "https://sso-sit.apps.fajjjar.my.id/realms/payu"
                   - name: OIDC_JWK_SET_URI
-                    value: "https://sso-sit.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
+                    value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"

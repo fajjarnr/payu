@@ -9,7 +9,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/account-service
-    newTag: "1.18.74"
+    newTag: "1.18.102"
 
 patches:
   - target:
@@ -33,7 +33,7 @@ patches:
                   - name: OIDC_ISSUER
                     value: https://sso-sit.apps.fajjjar.my.id/realms/payu
                   - name: OIDC_JWK_SET_URI
-                    value: https://sso-sit.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs
+                    value: http://payu-keycloak-service.payu-sit.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
                   - name: QUARKUS_OIDC_AUTH_SERVER_URL
                     value: https://sso-sit.apps.fajjjar.my.id/realms/payu
                   - name: QUARKUS_OIDC_TOKEN_ISSUER
