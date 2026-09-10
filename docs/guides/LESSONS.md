@@ -7249,3 +7249,15 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: SIT single-broker crashloop `waiting for controller caught up` (ShutdownEvent batalkan wait) tepat saat 118 topik RF1 dibuat sekaligus. Dua "fix" tanpa root cause (restart pod, CPU 50m→250m) tak mengubah apa-apa; kube TIDAK kill (tanpa event Killing/Liveness, exit 1 dari proses sendiri).
 
 **Fix**: REVISI — bukan storm transien: crash berlanjut deterministik (`UnknownHostException` voters-short-name, 10+ JVM segar) padahal DNS terbukti sehat dari 3 tipe pod lain + Python resolve instant. Drill-down penuh (EndpointSlice/CoreDNS/pod-label/netpol/Corefile/ndots/search-expansion JVM-vs-glibc) tak temukan penyebab; PARKED. Uang tak terdampak (COMPLETED + double-entry tanpa Kafka), 8 event outbox aman di DB. Pelajaran: 3+ hipotesis gagal = berhenti (skill §4.5), catat + parkir, bukan fix ke-4. Tuas berikut: `hostAliases`/tiket Strimzi/RF1.
+
+## L-441: Route 503 padahal pod 200 — cek label ns untuk shared-ingress (2026-09-10)
+
+**Context**: Keycloak pindah ns, pod serve 200 in-cluster, route admitted, backend haproxy UP — tapi publik 503 semua. Dua router: `default` + `shared-ingress` (namespaceSelector `payu…/ingress=shared`). Label ns hilang kena apply overlay → route cuma di default.
+
+**Fix**: `oc label ns …/ingress=shared`, verifikasi route admitted di DUA router (` {.status.ingress[*].routerName}`), baru 200. Pelajaran: saat pindah workload antar-ns, label ns ikut pindah; 503 HTML (HTTP/1.0) = router default-backend, bukan app.
+
+## L-442: KEDA min live vs git + drain RS lama untuk deadlock rollout (2026-09-10)
+
+**Context**: Rollout macet Pending spread + pod lama stale layani trafik (401). Live KEDA min 3, git min 1 (drift tak pernah apply). `oc scale` dimentahkan KEDA.
+
+**Fix**: apply overlay KEDA dev (deklaratif, min 1) + pecah deadlock ala L-438 (pause → scale RS lama 0 → resume) — TAPI pastikan RS yang di-scale memang yang live (cek nama RS pod, bukan tebak). Pelajaran: autoscaler adalah owner replika; `oc scale` melawannya sia-sia.

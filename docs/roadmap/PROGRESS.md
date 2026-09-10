@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## IdP per-env — dev Keycloak payu-sso → payu-dev (2026-09-10)
+
+- **Move**: DB dipakai bersama (tanpa migrasi data/person/keys) — overlay dev di-retarget `payu-sso→payu-dev` + operator + RealmImport di-delete eksplisit (anti-clobber L-377) + OG duplikat di-drop (pre-existing `payu-dev-operatorgroup`); STS lama scale 0 → CR lama delete → Keycloak baru Ready di DB yang sama (users/subs/keys/mapper utuh, tanpa re-link).
+- **Gotcha**: route 503 walau pod 200 —Test `shared-ingress` hanya layani ns berlabel (`payu-sit`/`payu-sso` punya, `payu-dev` live labelnya hilang kena apply overlay identity) → relabel + admitted dua router → 200. Workload cutover 23 deployment via `oc set env` (cermin git per-service+root sesudahnya); KEDA min live 3 vs git 1 (drift) → apply overlay dev → min 1; deadlock rollout L-438 2× (pause+drain RS lama).
+- **Verification**: PKCE customer1 → transfer Rp15.000 → `201 COMPLETED` (`TXN-CA0205253CBA4AE4`) + double-entry exact; `payu-sso` di-delete (NotFound); `sso-dev` 200 tetap. Dev realm secret = template `dev-2026!` (generator workloads out-of-sync, pre-existing — jangan hardcode baru).
+
 ## SIT Provision from Scratch + Live Money Journey (2026-09-10)
 
 - **Provision**: ns `payu-sit` tak ada live (cluster cuma `payu-dev/sso/cicd/api-mgmt`) → provision penuh: `namespace.yaml`, data overlay SIT (CNPG 1×20Gi+10Gi Ready, 30 DB, 3 bootstrap jobs Complete, Infinispan, Redis parity RELAY-006, barman plugin dropped eksplisit tanpa S3 creds), messaging overlay SIT (Kafka RF1 118 topik, Artemis), identity overlay SIT (RHBK operator + Keycloak `sso-sit` Ready + RealmImport Complete + route).
