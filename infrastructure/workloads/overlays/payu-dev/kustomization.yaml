@@ -381,6 +381,8 @@ patches:
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
               value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+            - name: PAYU_KEYCLOAK_SERVER_URL
+              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080"
 - target:
     kind: Deployment
     name: backoffice-service
@@ -609,6 +611,8 @@ patches:
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
               value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+            - name: PAYU_KEYCLOAK_SERVER_URL
+              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080"
             # PARTNER-PROD-005: run SNAP reconciliation every 5 minutes in dev so
             # unmatched cases surface quickly; production keeps the hourly default.
             - name: PAYU_RECONCILIATION_SNAP_INTERVAL_MS
@@ -771,6 +775,8 @@ patches:
               value: "false"
             - name: QUARKUS_OIDC_JWKS_PATH
               value: "/protocol/openid-connect/certs"
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
 - target:
     kind: Deployment
     name: gateway-service
@@ -792,6 +798,8 @@ patches:
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: QUARKUS_TLS_TRUST_ALL
               value: "true"
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
 - target:
     kind: Deployment
     name: notification-service
@@ -822,6 +830,28 @@ patches:
               value: "false"
             - name: QUARKUS_OIDC_JWKS_PATH
               value: "/protocol/openid-connect/certs"
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
+            # loan-origination-process inherits base IdP env (in-cluster shape,
+            # preserved as-is — only the namespace segment moves to payu-dev).
+- target:
+    kind: Deployment
+    name: loan-origination-process
+  patch: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: loan-origination-process
+    spec:
+      template:
+        spec:
+          containers:
+          - name: app
+            env:
+            - name: OIDC_ISSUER
+              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
+            - name: OIDC_JWK_SET_URI
+              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 
 # Dev simulators use the profile's local OTLP endpoint; no collector is required.
 - target:
