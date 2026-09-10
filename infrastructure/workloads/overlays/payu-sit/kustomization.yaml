@@ -730,6 +730,19 @@ patches:
               value: "https://sso-sit.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
               value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+            - name: SPRING_DATA_REDIS_HOST
+              value: payu-cache-resp
+            - name: SPRING_DATA_REDIS_PORT
+              value: "11222"
+            - name: SPRING_DATA_REDIS_USERNAME
+              value: developer
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payu-cache-credentials
+                  key: password
+            - name: SERVICES_ANALYTICS_URL
+              value: "http://analytics-service:8080"
 - target:
     kind: Deployment
     name: wallet-service

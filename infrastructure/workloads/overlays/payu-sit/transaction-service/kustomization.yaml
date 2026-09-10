@@ -46,6 +46,10 @@ patches:
         value:
           name: SERVICES_ANALYTICS_URL
           value: "http://analytics-service:8080"
+      # SIT runs lean single replica (root monolith count:1 parity for Argo path).
+      - op: replace
+        path: /spec/replicas
+        value: 1
   - patch: |-
       apiVersion: apps/v1
       kind: Deployment
