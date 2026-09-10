@@ -139,7 +139,7 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-  newTag: "1.18.74"
+  newTag: "1.18.99"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newTag: "1.18.74"

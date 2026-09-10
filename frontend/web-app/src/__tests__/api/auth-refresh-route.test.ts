@@ -21,11 +21,37 @@ describe("POST /api/auth/refresh", () => {
     vi.clearAllMocks();
   });
 
-  it("does not keep a process-local attempt counter", async () => {
+  it("coalesces concurrent refreshes sharing one single-use cookie into one upstream rotation (FE-AUDIT-001)", async () => {
+    let releaseUpstream!: (value: Response) => void;
+    const upstreamGate = new Promise<Response>((resolve) => { releaseUpstream = resolve; });
+    const fetchMock = vi.fn().mockImplementation(() => upstreamGate);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pending = Promise.all(Array.from({ length: 6 }, () => POST()));
+    await Promise.resolve();
+    await Promise.resolve();
+    releaseUpstream(new Response(JSON.stringify({
+      access_token: "access-token",
+      refresh_token: "refresh-token-2",
+      expires_in: 900,
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }));
+    const responses = await pending;
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(responses.every(response => response.status === 200)).toBe(true);
+    for (const response of responses) {
+      expect(response.cookies.get("refreshToken")?.value).toBe("refresh-token-2");
+    }
+  });
+
+  it("rotates independently for different session cookies", async () => {
     const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(
       new Response(JSON.stringify({
         access_token: "access-token",
-        refresh_token: "refresh-token",
+        refresh_token: "refresh-token-2",
         expires_in: 900,
       }), {
         status: 200,
@@ -33,11 +59,14 @@ describe("POST /api/auth/refresh", () => {
       }),
     ));
     vi.stubGlobal("fetch", fetchMock);
+    getCookies
+      .mockReturnValueOnce({ get: vi.fn(() => ({ value: "session-A" })) })
+      .mockReturnValueOnce({ get: vi.fn(() => ({ value: "session-B" })) });
 
-    const responses = await Promise.all(Array.from({ length: 6 }, () => POST()));
+    const responses = await Promise.all([POST(), POST()]);
 
     expect(responses.every(response => response.status === 200)).toBe(true);
-    expect(fetchMock).toHaveBeenCalledTimes(6);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("preserves cookies when the gateway is unreachable (transient)", async () => {

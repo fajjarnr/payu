@@ -26,6 +26,58 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
  * The browser never sees the raw tokens — old refresh token is read from
  * the httpOnly cookie, sent to the backend, and replaced by the new pair.
  */
+/**
+ * FE-AUDIT-001: single-flight per refresh cookie. Keycloak refresh tokens
+ * are single-use — N concurrent rotations (BFF proxy retry + middleware
+ * rehydration + client timer + axios queue) burn N-1 into invalid_grant
+ * logout. Concurrent callers sharing one cookie await the same upstream
+ * rotation and each receive the same new pair.
+ * ponytail: per-pod memory map. Distributed lock (Redis) only if
+ * multi-replica rotation collisions observed in metrics.
+ */
+const inflightRotations = new Map<string, Promise<RotationResult>>();
+interface RotationResult {
+  status: number;
+  data: Record<string, unknown>;
+}
+
+function recordOf(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === 'object' && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function firstString(...candidates: unknown[]): string | undefined {
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.length > 0) return candidate;
+  }
+  return undefined;
+}
+
+async function performRotation(refreshToken: string): Promise<RotationResult> {
+  const res = await fetch(`${GATEWAY_URL}/api/v1/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  // Passthrough proxy: unknown gateway fields forwarded verbatim below; consumers narrow per field.
+  const data = (await res.json()) as unknown as Record<string, unknown>;
+  return { status: res.status, data };
+}
+
+function rotateSingleFlight(refreshToken: string): Promise<RotationResult> {
+  const existing = inflightRotations.get(refreshToken);
+  if (existing) return existing;
+  const rotation = performRotation(refreshToken).finally(() => {
+    if (inflightRotations.get(refreshToken) === rotation) {
+      inflightRotations.delete(refreshToken);
+    }
+  });
+  inflightRotations.set(refreshToken, rotation);
+  return rotation;
+}
+
 export async function POST() {
   const startTime = Date.now();
   const isSecure = (process.env.NEXT_PUBLIC_BASE_URL ?? "").startsWith("https://");
@@ -45,16 +97,10 @@ export async function POST() {
 
     logger.info({ action: 'refresh' }, 'Token refresh attempt');
 
-    const res = await fetch(`${GATEWAY_URL}/api/v1/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-      signal: AbortSignal.timeout(10_000),
-    });
+    // FE-AUDIT-001: concurrent same-cookie callers share one rotation.
+    const { status, data } = await rotateSingleFlight(refreshToken);
 
-    const data = await res.json();
-
-    if (!res.ok) {
+    if (status < 200 || status >= 300) {
       // NEVER wipe cookies here — not even on 401/403/400. Keycloak reports
       // rotation races and revoked grants alike as 400 invalid_grant, and a
       // concurrent refresh (client timer + middleware rehydration sharing one
@@ -62,20 +108,22 @@ export async function POST() {
       // forced logout. Stale cookies expire on their own; an actually-dead
       // session simply fails validation and lands on login, where SSO
       // silently re-authenticates while the IdP session lives.
-      logger.warn({ action: 'refresh', status: res.status, durationMs: Date.now() - startTime }, 'Token refresh rejected — preserving session cookies');
-      return NextResponse.json(data, { status: res.status });
+      logger.warn({ action: 'refresh', status, durationMs: Date.now() - startTime }, 'Token refresh rejected — preserving session cookies');
+      return NextResponse.json(data, { status });
     }
 
-    const newAccessToken =
-      data.access_token ?? data.data?.access_token ?? data.data?.accessToken;
-    const newRefreshToken =
-      data.refresh_token ?? data.data?.refresh_token ?? data.data?.refreshToken;
+    const nested = recordOf(data.data);
+    const newAccessToken = firstString(data.access_token, nested?.access_token, nested?.accessToken);
+    const newRefreshToken = firstString(data.refresh_token, nested?.refresh_token, nested?.refreshToken);
 
     // BUG-CROSS-001: Read expires_in from Keycloak response instead of hardcoding 900s
-    const ACCESS_TOKEN_MAX_AGE = data.expires_in ?? data.data?.expires_in ?? 900;
+    const expiresRaw = typeof data.expires_in === 'number'
+      ? data.expires_in
+      : typeof nested?.expires_in === 'number' ? nested.expires_in : 900;
+    const ACCESS_TOKEN_MAX_AGE = expiresRaw;
 
     // BUG-AUTH-035: Rehydrate user data from refresh token response
-    let user = data.user ?? data.data?.user;
+    let user: unknown = data.user ?? nested?.user;
     if (!user && newAccessToken) {
       const claims = decodeJwtPayload(newAccessToken);
       if (claims) {

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.99] - 2026-09-10
+
+### Fixed
+- **Race refresh ganda client+server (FE-AUDIT-001)**: tiap 401 proxied (`[...path]/route.ts`) + interceptor axios (`api.ts`) + middleware + silent-refresh berlomba rotasi refresh cookie single-use yang sama → N-1 `invalid_grant` → logout. Sesuai ADR-0039 (BFF satu-satunya refresher, single-flight per sesi): `POST /api/auth/refresh` kini coalesce concurrent same-cookie ke satu upstream rotation via `inflightRotations` (key = cookie, hapus on settle; beda sesi independen). Test lama yang pin 6 rotasi diganti 2 test (coalesce 6→1 + independen per sesi). Bukti: vitest 5/5 route + 79/79 suite api/hooks/services + `tsc` bersih, image `:1.18.99` live `payu-dev` root 200 + `/api/health` 200.
+
 ## [1.18.98] - 2026-09-10
 
 ### Fixed
