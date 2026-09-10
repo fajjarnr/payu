@@ -7225,3 +7225,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: FE-AUDIT-006 "backend nol": event `user_id`=accountId, WS accountId, tapi frontend query sub → nol. Tiga bug pendamping di pipa yang sama: consumer `NameError transaction_type` (COMPLETED tak persist), metrics user-baru tak `session.add`, wallet `change_amount` nol (cashflow lumpuh) + recipient number tak ter-resolve + schema gateway tolak string + port gRPC 9090 tak terekspos + blind-index hash NULL di seed.
 
 **Fix**: selaraskan SEMUA lapis ke accountId (konvensi BUG-AUTH-013), perbaiki producer (delta eksplisit per sisi, bukan derivasi), terima string kanonis di schema (aturan BigDecimal), ekspos port gRPC tiap server. Bukti akhir: journey Rp15.000 COMPLETED + agregasi penuh + REST accountId→data vs sub→null. Phone-lookup hash seed tetap OPEN (butuh kunci HMAC live — jangan commit).
+
+## L-437: Producer tanpa caller + topik tanpa consumer = hapus keduanya (2026-09-10)
+
+**Context**: `publishKycCompleted` (account-service, topik `payu.account.kyc-completed.v1`) tanpa caller dan tanpa consumer — alur KYC live lewat `payu.kyc.verified.v1` (kyc-service → analytics) yang tak terkait. Kode mati ini menunggu disambung orang ke topik yang salah.
+
+**Fix**: hapus method port + adapter + const + test pengunci + deklarasi `KafkaTopic` + topik live (`oc delete kafkatopic`, NotFound terverifikasi). Verifikasi "mati" dua sisi: grep caller/producer DAN consumer/topic-declaration — satu sisi hidup berarti remediasi, bukan penghapusan. `kycStatus` metrik tak dibaca UI → tak ada perilaku berubah, tanpa image baru.

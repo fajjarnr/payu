@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Removed
+- **Dead KYC producer + topic (hygiene, tanpa image baru)**: `UserEventPublisherPort.publishKycCompleted` tanpa caller + topic `payu.account.kyc-completed.v1` tanpa consumer (alur KYC live lewat `payu.kyc.verified.v1` kyc-service → analytics langsung). Hapus method port + adapter + const + test pengunci + deklarasi `KafkaTopic` (live topic dihapus, NotFound terverifikasi). `kycStatus` metrik tak dibaca UI mana pun — tak ada perubahan perilaku; ikut build account berikut. Bukti: adapter test 2/2 hijau.
+
 ## [1.18.103] - 2026-09-10
 
 ### Fixed

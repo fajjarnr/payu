@@ -69,20 +69,4 @@ class KafkaUserEventPublisherAdapterTest {
                 org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.eq("payu.account.user-updated.v1"));
     }
-
-    @Test
-    @DisplayName("publishKycCompleted targets kyc-completed topic with KycCompleted type")
-    void publishKycCompletedUsesCorrectTopicAndType() {
-        UUID userId = UUID.randomUUID();
-        adapter.publishKycCompleted(new UserCreatedEvent(
-                userId, "iam-external-id", LocalDateTime.of(2026, 8, 11, 10, 0)));
-
-        verify(outboxService).createEvent(
-                org.mockito.ArgumentMatchers.eq("User"),
-                org.mockito.ArgumentMatchers.eq(userId.toString()),
-                org.mockito.ArgumentMatchers.eq("KycCompleted"),
-                org.mockito.ArgumentMatchers.anyMap(),
-                org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.eq("payu.account.kyc-completed.v1"));
-    }
 }

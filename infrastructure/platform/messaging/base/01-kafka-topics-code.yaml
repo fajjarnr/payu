@@ -2,23 +2,6 @@
 # RF 3, partitions 3. Generated from `grep payu.*.v<n>` over backend/.
 # Auto-create should be OFF at the Kafka cluster level; these topics are the contract.
 
-# KafkaTopic - payu.account.kyc-completed.v1
-apiVersion: kafka.strimzi.io/v1
-kind: KafkaTopic
-metadata:
-  name: payu.account.kyc-completed.v1
-  labels:
-    app.kubernetes.io/name: payu.account.kyc-completed.v1
-    app.kubernetes.io/part-of: payu
-    app.kubernetes.io/component: messaging
-    strimzi.io/cluster: payu-kafka
-spec:
-  partitions: 3
-  replicas: 3
-  config:
-    retention.ms: 604800000
-    cleanup.policy: delete
----
 # KafkaTopic - payu.account.opened.v10
 apiVersion: kafka.strimzi.io/v1
 kind: KafkaTopic

@@ -5,5 +5,4 @@ import id.payu.account.interfaces.dto.UserCreatedEvent;
 public interface UserEventPublisherPort {
     void publishUserCreated(UserCreatedEvent event);
     void publishUserUpdated(UserCreatedEvent event);
-    void publishKycCompleted(UserCreatedEvent event);
 }

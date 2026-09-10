@@ -32,7 +32,6 @@ public class KafkaUserEventPublisherAdapter implements UserEventPublisherPort {
     private static final String AGGREGATE_TYPE = "User";
     private static final String TOPIC_USER_CREATED = "payu.account.user-created.v1";
     private static final String TOPIC_USER_UPDATED = "payu.account.user-updated.v1";
-    private static final String TOPIC_KYC_COMPLETED = "payu.account.kyc-completed.v1";
 
     @Override
     public void publishUserCreated(UserCreatedEvent event) {
@@ -57,19 +56,6 @@ public class KafkaUserEventPublisherAdapter implements UserEventPublisherPort {
                 buildPayload(event),
                 null,
                 TOPIC_USER_UPDATED
-        );
-    }
-
-    @Override
-    public void publishKycCompleted(UserCreatedEvent event) {
-        log.info("Creating outbox event for KycCompleted: userId={}", event.userId());
-        outboxService.createEvent(
-                AGGREGATE_TYPE,
-                event.userId().toString(),
-                "KycCompleted",
-                buildPayload(event),
-                null,
-                TOPIC_KYC_COMPLETED
         );
     }
 
