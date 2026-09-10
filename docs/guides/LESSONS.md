@@ -7186,4 +7186,10 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 
 **Context**: RELAY-004 (`tab.goto /transfer → /login`, SPA aman) OPEN dengan opsi "middleware refresh vs persist store". Empat rilis (1.18.86 loopback `127.0.0.1:$PORT`, 1.18.87 Lax, 1.18.99 single-flight, 1.18.100 Secure) masing-masing menutup satu penyebab — tapi tak ada regression test untuk path gabungannya, jadi tiket tak kunjung ditutup.
 
+
 **Fix**: tulis regression `proxy-auth` untuk path gabungan (expired access + valid refresh → 200 + Set-Cookie, bukan 307) — hijau di kode existing = bukti rantai fix bekerja, tiket CLOSED tanpa perubahan production/image baru. Keputusan persist: TIDAK — token tetap httpOnly (catatan PCI-DSS di `authStore.ts`), `SessionBootstrap` repopulasi dari refresh; persist profil ke storage hanya bila metrik tunjukkan storm refresh saat reload. Pelajaran: tiap tiket OPEN butuh tepat satu acceptance test; tanpa itu fix terverifikasi pun terlihat belum selesai.
+## L-430: Unmanaged-attr policy di /users/profile, bukan realm — dan import CR tak sync ulang (2026-09-10)
+
+**Context**: RELAY-005 — live `payu` cuma `customer1` tanpa attrs padahal git definisikan 4 user + attrs + `unmanagedAttributePolicy=ENABLED` diklaim parsial-CLOSED. Live check: policy=`None`, attrs=`{}`.
+
+**Fix**: `PUT /admin/realms/payu/users/profile` full-roundtrip dengan `unmanagedAttributePolicy=ENABLED` (PUT realm full-roundtrip 400; minimal PUT 400 `Unrecognized field` — field ini milik UPConfig). User update via GET→PUT full representation (L-377). Realm import CR hanya berlaku saat create — sinkronisasi parsial = Admin REST, dan klaim "parsial CLOSED" untuk state live harus dibuktikan dengan GET ulang, bukan sekali PUT 204. Sisa: `probe1@x.id` asing — biarkan, bukan milik git; hapus hanya atas instruksi pemilik.

@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Verified
 - **Full-reload sesi pulih via rehidrasi (RELAY-004, tanpa image baru)**: tanpa perubahan production — regression `proxy-auth.test.ts` (`expired access + valid refresh → 200 + Set-Cookie`, bukan 307 login; 4/4 hijau) buktikan rantai fix 1.18.86/87/99/100 menutup bounce `tab.goto /transfer → /login`. Live `payu-dev`: tanpa cookie → 307 login+callback (gate benar). Keputusan: tanpa persist zustand — token tetap httpOnly (PCI-DSS), `SessionBootstrap` repopulasi dari refresh saat mount; persist hanya bila metrik tunjukkan storm refresh saat reload.
+- **Live realm drift disinkronkan (RELAY-005, tanpa image baru)**: live `payu` hanya `customer1/2+probe1` attrs kosong + `unmanagedAttributePolicy=None` (klaim ENABLED parsial tak bertahan — import CR tak update realm existing, L-377). Via Admin REST: `PUT /users/profile` `unmanagedAttributePolicy→ENABLED` (PUT realm 400 `Unrecognized field` — policy di profile, bukan realm), `customer1/2` attrs+roles per `keycloak-realm-import.yaml` (PUT 200, attrs persist = bukti policy bekerja), `admin`+`backoffice` created 201 + roles. `probe1@x.id` asing dibiarkan. Direct grant mati di `payu-web-app` (PKCE-only) — sengaja tak diubah.
 
 ## [1.18.99] - 2026-09-10
 
