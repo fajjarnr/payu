@@ -14,7 +14,6 @@ import {
   validateCreditCard,
   validateCVV,
   validatePassword,
-  validateAmount,
   validateName,
   validateOTP,
 } from '../../lib/validation';
@@ -570,60 +569,6 @@ describe('validation.ts - validatePassword', () => {
 
     it('should classify as strong', () => {
       expect(validatePassword('Abcdefgh1!@#').strength).toBe('strong');
-    });
-  });
-});
-
-describe('validation.ts - validateAmount', () => {
-  it('should accept valid amounts', () => {
-    expect(validateAmount(50000)).toEqual({
-      isValid: true,
-      parsed: 50000,
-    });
-    expect(validateAmount('100000')).toEqual({
-      isValid: true,
-      parsed: 100000,
-    });
-  });
-
-  it('should reject below minimum', () => {
-    expect(validateAmount(5000)).toEqual({
-      isValid: false,
-      error: 'Nominal minimal 10.000',
-    });
-  });
-
-  it('should reject above maximum', () => {
-    expect(validateAmount(60000000)).toEqual({
-      isValid: false,
-      error: 'Nominal maksimal 50.000.000',
-    });
-  });
-
-  it('should reject zero by default', () => {
-    expect(validateAmount(0)).toEqual({
-      isValid: false,
-      error: 'Nominal tidak boleh nol',
-    });
-  });
-
-  it('should accept zero when allowed', () => {
-    // When allowZero is true, zero is valid but still subject to min/max constraints
-    // Need to also set min: 0 to allow zero values
-    expect(validateAmount(0, { allowZero: true, min: 0 })).toEqual({
-      isValid: true,
-      parsed: 0,
-    });
-  });
-
-  it('should reject invalid values', () => {
-    expect(validateAmount(null)).toEqual({
-      isValid: false,
-      error: 'Nominal wajib diisi',
-    });
-    expect(validateAmount('invalid')).toEqual({
-      isValid: false,
-      error: 'Nominal tidak valid',
     });
   });
 });

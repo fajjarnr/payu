@@ -3,18 +3,15 @@
  * Testing Indonesian Rupiah (IDR) formatting and parsing
  */
 
-import { describe, it, expect } from 'vitest';
 import {
   formatCurrency,
   addCurrency,
   compareCurrency,
   divideCurrency,
   formatCurrencyWithoutSymbol,
-  parseCurrency,
+  parseCurrencyExact,
   formatTransactionAmount,
   numberToWords,
-  isValidCurrency,
-  roundCurrency,
   calculatePercentageChange,
 } from '../../lib/currency';
 
@@ -119,73 +116,6 @@ describe('currency.ts - formatCurrencyWithoutSymbol', () => {
   });
 });
 
-describe('currency.ts - parseCurrency', () => {
-  describe('Indonesian format parsing', () => {
-    it('should parse "Rp 1.000.000" correctly', () => {
-      expect(parseCurrency('Rp 1.000.000')).toBe(1000000);
-    });
-
-    it('should parse "1.000.000" without symbol', () => {
-      expect(parseCurrency('1.000.000')).toBe(1000000);
-    });
-
-    it('should parse plain numbers', () => {
-      expect(parseCurrency('1000000')).toBe(1000000);
-      expect(parseCurrency('1000')).toBe(1000);
-    });
-
-    it('should parse with decimal comma', () => {
-      expect(parseCurrency('1.000.000,50')).toBe(1000000.5);
-      expect(parseCurrency('1000,99')).toBe(1000.99);
-    });
-  });
-
-  describe('Edge cases', () => {
-    it('should handle null', () => {
-      expect(parseCurrency(null)).toBe(0);
-    });
-
-    it('should handle undefined', () => {
-      expect(parseCurrency(undefined)).toBe(0);
-    });
-
-    it('should handle empty string', () => {
-      expect(parseCurrency('')).toBe(0);
-    });
-
-    it('should handle numbers directly', () => {
-      expect(parseCurrency(1000000)).toBe(1000000);
-      expect(parseCurrency(0)).toBe(0);
-    });
-
-    it('should handle invalid strings', () => {
-      expect(parseCurrency('invalid')).toBe(0);
-      expect(parseCurrency('abc')).toBe(0);
-    });
-
-    it('should handle negative values', () => {
-      expect(parseCurrency('-1.000.000')).toBe(-1000000);
-      expect(parseCurrency('Rp -1.000.000')).toBe(-1000000);
-    });
-
-    it('should handle various whitespace', () => {
-      expect(parseCurrency('Rp  1.000.000')).toBe(1000000);
-      expect(parseCurrency('  1.000.000  ')).toBe(1000000);
-    });
-  });
-
-  describe('Complex formatting', () => {
-    it('should parse with both dots and commas', () => {
-      expect(parseCurrency('1.000.000,50')).toBe(1000000.5);
-      expect(parseCurrency('50.000,00')).toBe(50000);
-    });
-
-    it('should handle multiple decimal points correctly', () => {
-      expect(parseCurrency('1.000.000')).toBe(1000000);
-    });
-  });
-});
-
 describe('currency.ts - formatTransactionAmount', () => {
   it('should format positive amounts as credit', () => {
     const result = formatTransactionAmount(1000000);
@@ -279,49 +209,6 @@ describe('currency.ts - numberToWords', () => {
   });
 });
 
-describe('currency.ts - isValidCurrency', () => {
-  it('should validate numbers', () => {
-    expect(isValidCurrency(1000)).toBe(true);
-    expect(isValidCurrency(0)).toBe(true);
-    expect(isValidCurrency(-500)).toBe(true);
-    expect(isValidCurrency(NaN)).toBe(false);
-    expect(isValidCurrency(Infinity)).toBe(false);
-  });
-
-  it('should validate formatted strings', () => {
-    expect(isValidCurrency('Rp 1.000.000')).toBe(true);
-    expect(isValidCurrency('1.000.000')).toBe(true);
-    expect(isValidCurrency('1000000')).toBe(true);
-  });
-
-  it('should reject invalid inputs', () => {
-    // "invalid string" gets parsed to 0 by parseCurrency, which is valid
-    // We need to use truly invalid strings
-    expect(isValidCurrency('abcxyz')).toBe(false);
-    expect(isValidCurrency('')).toBe(false);
-    expect(isValidCurrency(null as unknown as string)).toBe(false);
-    expect(isValidCurrency(undefined as unknown as string)).toBe(false);
-  });
-});
-
-describe('currency.ts - roundCurrency', () => {
-  it('should round to 0 decimals by default', () => {
-    expect(roundCurrency(1000.5)).toBe(1000);
-    expect(roundCurrency(1000.4)).toBe(1000);
-  });
-
-  it('should round to specified decimals', () => {
-    expect(roundCurrency(1000.456, 2)).toBe(1000.46);
-    expect(roundCurrency(1000.454, 2)).toBe(1000.45);
-  });
-
-  it('should handle edge cases', () => {
-    expect(roundCurrency(0)).toBe(0);
-    // Note: JavaScript's Math.round rounds -1.5 to -1, not -2
-    expect(roundCurrency(-1000.5)).toBe(-1000);
-  });
-});
-
 describe('currency.ts - calculatePercentageChange', () => {
   it('should calculate positive change', () => {
     const result = calculatePercentageChange(100, 150);
@@ -362,10 +249,6 @@ describe('currency.ts - Edge Cases and Error Handling', () => {
     it('should handle billions', () => {
       expect(formatCurrency(1000000000000)).toMatch(/Rp.*1\.000\.000\.000\.000/);
     });
-
-    it('should parse billions', () => {
-      expect(parseCurrency('Rp 1.000.000.000.000')).toBe(1000000000000);
-    });
   });
 
   describe('Very small decimals', () => {
@@ -375,18 +258,6 @@ describe('currency.ts - Edge Cases and Error Handling', () => {
     });
   });
 
-  describe('Mixed formats', () => {
-    it('should handle string input with commas and dots', () => {
-      // Note: parseCurrency treats dots as thousand separators in Indonesian format
-      // So "1,234.56" becomes "1234.56" after removing commas
-      expect(parseCurrency('1,234.56')).toBeCloseTo(1.23456);
-    });
-
-    it('should handle various currency symbols', () => {
-      expect(parseCurrency('$1.000.000')).toBe(1000000);
-      expect(parseCurrency('€1.000.000')).toBe(1000000);
-    });
-  });
 });
 
 describe('currency.ts - Precision Tests', () => {
@@ -400,23 +271,12 @@ describe('currency.ts - Precision Tests', () => {
     expect(formatCurrency('0.1', { withDecimals: true })).toBe('Rp\u00A00,10');
   });
 
-  it('rounds decimal strings with decimal arithmetic', () => {
-    expect(roundCurrency('1.005', 2)).toBe('1.00');
-    expect(roundCurrency('9007199254740993')).toBe('9007199254740993');
-  });
-
-  it('should maintain precision for large amounts', () => {
+  it('keeps format→parse roundtrip exact via decimal strings', () => {
     const amount = 1234567890.12;
     const formatted = formatCurrency(amount, { withDecimals: true });
-    const parsed = parseCurrency(formatted);
-    expect(parsed).toBeCloseTo(amount, 0);
+    expect(parseCurrencyExact(formatted)).toBe('1234567890.12');
   });
 
-  it('should round correctly at .5 boundaries', () => {
-    expect(roundCurrency(1.5)).toBe(2);
-    expect(roundCurrency(2.5)).toBe(2);
-    expect(roundCurrency(-1.5)).toBe(-2);
-  });
 });
 
 describe('currency.ts - PROD-043 Money Helpers', () => {

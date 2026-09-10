@@ -7199,3 +7199,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: RELAY-010 (dev baru = journey mati) + FE-AUDIT-007 (User row hilang → 403). V122/V23 membuktikan pola seed permanen: migrasi versioned + `ON CONFLICT DO NOTHING`, jalan di semua env termasuk prod (inert reference rows).
 
 **Fix**: wallet `V123` + account `V113`, teraplikasi live sbg role app `payu` (bukti RLS-compliant, L-375). Tiga jebakan apply: (1) `users`/`accounts` tanpa SYSTEM hatch → GUC `default`, bukan SYSTEM (V107/V108 strict); (2) `profiles` tanpa `user_id`/`created_at` (V10 — baca DDL aktual, bukan V1); (3) bare SELECT 0 rows = RLS normal, verifikasi wajib dgn tenant GUC. PII plaintext read-safe (`ENC()` passthrough). Realm: import CR cuma saat create → runbook `docs/operations/runbooks/dev-seed.md` untuk re-sync Admin REST.
+
+## L-432: Helper float "tanpa caller hidup" = hapus, bukan selaraskan (2026-09-10)
+
+**Context**: FE-AUDIT-004 opsinya "samakan ke pola transfer bila menyentuh file itu" — tapi grep repo-wide membuktikan `parseCurrency`/`isValidCurrency`/`roundCurrency`/`validateAmount` nol caller produksi (cuma testnya sendiri). Menyelaraskan kode mati = melestarikan hazard float-money.
+
+**Fix**: hapus helpers + test penguncinya; satu-satunya test campuran (roundtrip presisi) ditulis ulang ke `parseCurrencyExact`. `tsc` 0 = bukti tak ada importer gelap. `type=number` dibiarkan — nilai tetap string → exact-parse → invalid jadi reject, bukan nominal salah. Jebakan edit: multi-CUT satu file dalam satu call memakai nomor ORIGINAL —CUT kedua mendarat di baris bergeser; verifikasi via `tsc`/test langsung menangkapnya.

@@ -231,43 +231,6 @@ export function divideCurrency(value: CurrencyInput, divisor: number, decimals =
   return asMoney(negative && result !== '0' ? `-${result}` : result);
 }
 
-/**
- * Parse Indonesian formatted currency string back to number
- * Handles formats like "Rp 1.000.000", "1.000.000", "1000000"
- * @param value - The currency string to parse
- * @returns Parsed number or 0 if parsing fails
- */
-export function parseCurrency(value: string | number | null | undefined): number {
-  if (value === null || value === undefined) {
-    return 0;
-  }
-
-  if (typeof value === 'number') {
-    return value;
-  }
-
-  // Remove currency symbol and whitespace
-  let cleaned = value
-    .replace(/Rp/gi, '')
-    .replace(/\s/g, '')
-    .replace(/[^\d.,-]/g, '');
-
-  // Handle empty string
-  if (!cleaned) {
-    return 0;
-  }
-
-  // Indonesian format: dots are thousand separators, comma is decimal
-  // Remove thousand separators (dots)
-  cleaned = cleaned.replace(/\./g, '');
-
-  // Replace comma with dot for decimal
-  cleaned = cleaned.replace(/,/g, '.');
-
-  const parsed = Number(cleaned);
-
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
 
 /**
  * Format amount for display in transaction history
@@ -392,46 +355,7 @@ export function numberToWords(amount: number): string {
   return words.trim() || 'nol';
 }
 
-/**
- * Check if a string is a valid currency amount
- * @param value - The value to validate
- * @returns True if valid currency amount
- */
-export function isValidCurrency(value: string | number): boolean {
-  if (typeof value === 'number') {
-    return !isNaN(value) && isFinite(value);
-  }
 
-  if (!value || typeof value !== 'string') {
-    return false;
-  }
-
-  // Check if it contains at least some digits
-  if (!/\d/.test(value)) {
-    return false;
-  }
-
-  // Check if it's a valid number string (with or without formatting)
-  const cleaned = value.replace(/Rp/gi, '').replace(/\s/g, '');
-  const numValue = parseCurrency(cleaned);
-
-  return !isNaN(numValue) && isFinite(numValue) && cleaned.trim().length > 0;
-}
-
-/**
- * Round currency amount to specific decimals
- * @param amount - The amount to round
- * @param decimals - Number of decimal places (default: 0 for IDR)
- * @returns Rounded amount
- */
-export function roundCurrency(amount: number, decimals?: number): number;
-export function roundCurrency(amount: string, decimals?: number): string;
-export function roundCurrency(amount: CurrencyInput, decimals: number = 0): number | string {
-  const normalized = decimalString(amount);
-  if (!normalized) return typeof amount === 'string' ? '0' : 0;
-  const rounded = roundDecimal(normalized, decimals);
-  return typeof amount === 'string' ? rounded : Number(rounded);
-}
 
 /**
  * Calculate percentage change between two values
