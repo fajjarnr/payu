@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - **Dead KYC producer + topic (hygiene, tanpa image baru)**: `UserEventPublisherPort.publishKycCompleted` tanpa caller + topic `payu.account.kyc-completed.v1` tanpa consumer (alur KYC live lewat `payu.kyc.verified.v1` kyc-service → analytics langsung). Hapus method port + adapter + const + test pengunci + deklarasi `KafkaTopic` (live topic dihapus, NotFound terverifikasi). `kycStatus` metrik tak dibaca UI mana pun — tak ada perubahan perilaku; ikut build account berikut. Bukti: adapter test 2/2 hijau.
 
+### Added
+- **Drift guard `scripts/verify-overlay-drift.sh` + root tag sync**: audit per-service overlay render vs live (image, env) + root-vs-service tag agreement + registry tag existence. Menemukan: root pin basi (analytics/tx/wallet) → sinkron ke tag live (`1.18.103`/`1.8.116`/`1.18.103`) agar root-apply tak downgrade; 171 baris env base-vs-live fleet-wide (sejak ≤1.7.9, imperative apply, tanpa GitOps) → item `PLAT-DRIFT-001` antre maintenance window, bukan apply massal siang hari. HotRod wallet dicoba lalu di-revert (konteks SSL DataGrid butuh cert platform — fail-open status quo dipertahankan).
+
 ## [1.18.103] - 2026-09-10
 
 ### Fixed

@@ -7231,3 +7231,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: `publishKycCompleted` (account-service, topik `payu.account.kyc-completed.v1`) tanpa caller dan tanpa consumer — alur KYC live lewat `payu.kyc.verified.v1` (kyc-service → analytics) yang tak terkait. Kode mati ini menunggu disambung orang ke topik yang salah.
 
 **Fix**: hapus method port + adapter + const + test pengunci + deklarasi `KafkaTopic` + topik live (`oc delete kafkatopic`, NotFound terverifikasi). Verifikasi "mati" dua sisi: grep caller/producer DAN consumer/topic-declaration — satu sisi hidup berarti remediasi, bukan penghapusan. `kycStatus` metrik tak dibaca UI → tak ada perilaku berubah, tanpa image baru.
+
+## L-438: Guard drift bandingkan unit deploy, bukan render gabungan (2026-09-10)
+
+**Context**: Guard v1 bandingkan render ROOT overlay vs live → ratusan false positive (base-root patch HotRod tak pernah mendarat via jalur per-service apply). Guard v2 bandingkan tiap per-service overlay render vs live + kesepakatan tag root-vs-service + eksistensi tag registry. Hasil: 0 temuan image/tag/port + 171 baris env base-vs-live fleet-wide (live dibuat 06:35 dari sumber pra-1.7.9, tanpa GitOps).
+
+**Fix**: sinkron tag root (analytics/tx/wallet) agar root-apply tak downgrade; catat 171 baris sebagai `PLAT-DRIFT-001` (maintenance window, bukan apply massal — semua service healthy via default/fail-open). HotRod wallet: coba via overlay, gagal konteks SSL → revert, status quo fail-open dipertahankan; enablement HotRod butuh cert platform, bukan patch env. Pelajaran: guard harus cerminkan unit deploy yang sebenarnya (`oc apply -k .../<service>`), bukan agregat yang tak pernah di-apply.

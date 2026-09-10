@@ -68,7 +68,7 @@ No open gate — PARTNER-PROD-007..011 ✅ Selesai 1.18.9–1.18.21 → `CHANGEL
 
 ## 🚀 Platform Deploy Queue
 
-| Key | Pri | Category | Summary |
+| PLAT-DRIFT-001 | P3 | Env convergence | Fleet-wide base env (Redis/HOTROD/simulator/GRPC vars in `base/*/deployment.yaml` since ≤1.7.9) not present on live Deployments (imperative applies, no GitOps); services healthy via defaults/fail-open; proven-harmful cases fixed individually (auth secret, tx Redis, analytics KEYCLOAK_URL). Converge via full root-overlay apply in maintenance window (restarts ~30 workloads); guard: `scripts/verify-overlay-drift.sh` (currently 171 env lines, 0 image/tag/port findings after 1.18.103 sync). |
 
 ---
 
