@@ -32,3 +32,5 @@ patches:
                     value: "https://sso-sit.apps.fajjjar.my.id/realms/payu"
                   - name: OIDC_JWK_SET_URI
                     value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+                  - name: PAYU_KEYCLOAK_SERVER_URL
+                    value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080"
