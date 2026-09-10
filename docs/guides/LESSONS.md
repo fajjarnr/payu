@@ -7237,3 +7237,15 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Guard v1 bandingkan render ROOT overlay vs live → ratusan false positive (base-root patch HotRod tak pernah mendarat via jalur per-service apply). Guard v2 bandingkan tiap per-service overlay render vs live + kesepakatan tag root-vs-service + eksistensi tag registry. Hasil: 0 temuan image/tag/port + 171 baris env base-vs-live fleet-wide (live dibuat 06:35 dari sumber pra-1.7.9, tanpa GitOps).
 
 **Fix**: sinkron tag root (analytics/tx/wallet) agar root-apply tak downgrade; catat 171 baris sebagai `PLAT-DRIFT-001` (maintenance window, bukan apply massal — semua service healthy via default/fail-open). HotRod wallet: coba via overlay, gagal konteks SSL → revert, status quo fail-open dipertahankan; enablement HotRod butuh cert platform, bukan patch env. Pelajaran: guard harus cerminkan unit deploy yang sebenarnya (`oc apply -k .../<service>`), bukan agregat yang tak pernah di-apply.
+
+## L-439: Kustomize inline patch ganda — tulis gaya root zero-indent (2026-09-10)
+
+**Context**: Tambah 1 JSON patch (`remove /spec/plugins` CNPG SIT, tanpa kredensial S3) ke `data/overlays/sit/kustomization.yaml` yang sudah punya 1 patch literal → `kustomize build` + PyYAML dua-duanya tolak (`did not find expected '-'`, baris item kedua). Biseksi tak isolasi pemicu (bentuk minimal yang sama lolos di kedua parser).
+
+**Fix**: tulis ulang seluruh blok `patches:` gaya root workloads (`- target:` kolom 0, terbukti build dengan puluhan patch literal) — langsung BUILD-OK. Jangan lawan parser: samakan gaya file yang terbukti build di repo ini.
+
+## L-440: Broker Kafka crashloop saat storm topik — observasi dulu, jangan thrash (2026-09-10)
+
+**Context**: SIT single-broker crashloop `waiting for controller caught up` (ShutdownEvent batalkan wait) tepat saat 118 topik RF1 dibuat sekaligus. Dua "fix" tanpa root cause (restart pod, CPU 50m→250m) tak mengubah apa-apa; kube TIDAK kill (tanpa event Killing/Liveness, exit 1 dari proses sendiri).
+
+**Fix**: tak ada — broker pulih sendiri (~2 mnt) setelah controller idle; Kafka Ready. Pelajaran: crash startup transien saat metadata storm = tunggu + verifikasi (event log, usia restart), bukan tambah fix di atasnya. CPU 250m dipertahankan (menyamai base broker, bukan tuning).
