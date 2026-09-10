@@ -61,4 +61,31 @@ describe('proxy authentication boundary', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('location')).toBeNull();
   });
+
+  it('rehydrates an expired-access full reload via refresh instead of bouncing to login (RELAY-004)', async () => {
+    // Full reload sends cookies but the access token is expired: gateway says
+    // 401, the loopback refresh succeeds — the user must reach the page with
+    // rotated cookies, not a login redirect (SPA navigation never hits proxy).
+    const validateRes = new Response(null, { status: 401 });
+    const refreshHeaders = new Headers();
+    refreshHeaders.append('Set-Cookie', 'accessToken=new-access; Path=/; HttpOnly');
+    refreshHeaders.append('Set-Cookie', 'refreshToken=new-refresh; Path=/; HttpOnly');
+    const refreshRes = new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: refreshHeaders,
+    });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(validateRes)
+      .mockResolvedValueOnce(refreshRes);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await proxy(new NextRequest('http://localhost/id/transfer', {
+      headers: { cookie: 'accessToken=expired; refreshToken=valid' },
+    }));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(response.headers.get('location')).toBeNull();
+    const setCookies = response.headers.getSetCookie();
+    expect(setCookies.some((c) => c.startsWith('accessToken=new-access'))).toBe(true);
+  });
 });
