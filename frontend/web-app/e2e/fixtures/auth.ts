@@ -4,9 +4,13 @@ import { Page, BrowserContext, expect } from '@playwright/test';
  * Real authentication - no mocks, hits Keycloak via OIDC PKCE.
  * Requires running: postgres + keycloak (8099) + auth-service + gateway + web-app (3001) + DB with users customer1/admin.
  * Users: customer1 / P@ssw0rd12345, admin / AdminP@ss12345 (see payu-realm-export.json / kcadm.sh).
+ * Override per environment: E2E_USERNAME / E2E_PASSWORD (dev cluster uses P@ssw0rd123).
  */
 
-export async function performRealLogin(page: Page, username = 'customer1', password = 'P@ssw0rd12345') {
+export const E2E_USERNAME = process.env.E2E_USERNAME ?? 'customer1';
+export const E2E_PASSWORD = process.env.E2E_PASSWORD ?? 'P@ssw0rd12345';
+
+export async function performRealLogin(page: Page, username = E2E_USERNAME, password = E2E_PASSWORD) {
   await page.goto('/login');
   // OIDC button - no local phone/pin form
   const oidcButton = page.getByRole('button', { name: /Masuk|Sign in|Log in/i });
@@ -23,7 +27,7 @@ export async function performRealLogin(page: Page, username = 'customer1', passw
   await expect(page).not.toHaveURL(/\/login\?error=/);
 }
 
-export async function gotoWithRealAuth(page: Page, path: string, username = 'customer1', password = 'P@ssw0rd12345') {
+export async function gotoWithRealAuth(page: Page, path: string, username = E2E_USERNAME, password = E2E_PASSWORD) {
   // Try direct goto, if redirected to login then perform real login
   await page.goto(path);
   if (page.url().includes('/login')) {
