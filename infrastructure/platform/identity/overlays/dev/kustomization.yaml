@@ -42,12 +42,15 @@ patches:
       - op: replace
         path: /spec/realm/clients/0/redirectUris
         value:
-          - ${FRONTEND_BASE_URL:-http://localhost:3001}/*
+          - http://localhost:3001/*
           - https://payu-dev.apps.payu.ocp.fajjjar.my.id/*
-          - ${FRONTEND_BASE_URL_EXTRA:-} # optional extra (e.g. EC2 IP) — set to http://18.143.199.84:3001/* if needed
+          - http://payu-dev.apps.fajjjar.my.id/*
+          - https://payu-dev.apps.fajjjar.my.id/*
       - op: replace
         path: /spec/realm/clients/0/webOrigins
         value:
-          - ${FRONTEND_BASE_URL:-http://localhost:3001}
+          - http://localhost:3001
           - https://payu-dev.apps.payu.ocp.fajjjar.my.id
+          - http://payu-dev.apps.fajjjar.my.id
+          - https://payu-dev.apps.fajjjar.my.id
           - "+"

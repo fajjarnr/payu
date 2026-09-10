@@ -10,7 +10,7 @@ spec:
     server: 'https://acme-v02.api.letsencrypt.org/directory'
     solvers:
       # -----------------------------------------------------------------------
-      # Zone 1 (ACTIVE): apps.fajjjar.my.id → Z0964617377Y5SMFEKJFR
+      # Zone 1 (ACTIVE): apps.fajjjar.my.id → Z1020593DR8SM39FHW1U (verified live 2026-09-10)
       # Covers: *.apps.fajjjar.my.id, apps.fajjjar.my.id
       # Credentials: cert-manager-aws-creds (student, via kube-system/aws-creds)
       # -----------------------------------------------------------------------
@@ -22,7 +22,7 @@ spec:
             secretAccessKeySecretRef:
               name: cert-manager-aws-creds
               key: aws_secret_access_key
-            hostedZoneID: 'Z0964617377Y5SMFEKJFR'
+            hostedZoneID: 'Z1020593DR8SM39FHW1U'
             region: ap-southeast-1
         selector:
           dnsZones:
@@ -30,11 +30,9 @@ spec:
 
 
       # -----------------------------------------------------------------------
-      # Zone 2 (ACTIVE): payu.ocp branch — served by ocp.fajjjar.my.id → Z00771482ZN71F761ZGVE
-      # (Z016807015N5JY498AUZI payu.ocp zone is NOT delegated from parent; TXT there is invisible.
-      #  Parent Z0077 holds the live A records, so DNS-01 must present here.)
-      # Covers: *.apps.payu.ocp.fajjjar.my.id, apps.payu.ocp.fajjjar.my.id, payu.ocp.fajjjar.my.id, ocp.fajjjar.my.id
-      # Ingress default: apps.payu.ocp.fajjjar.my.id (oc get ingress.config cluster .spec.domain)
+      # Zone 2 (ACTIVE): payu.ocp branch → Z04778201KDWI0E0OG3Z2 (verified live 2026-09-10,
+      # *.apps.payu.ocp A lives in this zone, no parent delegation)
+      # Covers: *.apps.payu.ocp.fajjjar.my.id, payu.ocp.fajjjar.my.id
       # Credentials: cert-manager-aws-creds (student, via kube-system/aws-creds)
       # -----------------------------------------------------------------------
       - dns01:
@@ -45,12 +43,28 @@ spec:
             secretAccessKeySecretRef:
               name: cert-manager-aws-creds
               key: aws_secret_access_key
-            hostedZoneID: 'Z00771482ZN71F761ZGVE'
+            hostedZoneID: 'Z04778201KDWI0E0OG3Z2'
             region: ap-southeast-1
         selector:
           dnsZones:
             - 'payu.ocp.fajjjar.my.id'
             - 'apps.payu.ocp.fajjjar.my.id'
+      # -----------------------------------------------------------------------
+      # Zone 3 (ACTIVE): ocp.fajjjar.my.id → Z063276236858H64KDJYG (verified live 2026-09-10)
+      # Covers: ocp.fajjjar.my.id (cluster API/api-int live here)
+      # -----------------------------------------------------------------------
+      - dns01:
+          route53:
+            accessKeyIDSecretRef:
+              name: cert-manager-aws-creds
+              key: aws_access_key_id
+            secretAccessKeySecretRef:
+              name: cert-manager-aws-creds
+              key: aws_secret_access_key
+            hostedZoneID: 'Z063276236858H64KDJYG'
+            region: ap-southeast-1
+        selector:
+          dnsZones:
             - 'ocp.fajjjar.my.id'
 
       # -----------------------------------------------------------------------
