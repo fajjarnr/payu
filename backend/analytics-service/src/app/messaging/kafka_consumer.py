@@ -206,7 +206,7 @@ class KafkaConsumerService:
             transaction_id=transaction_id,
             amount=amount,
             currency=message.get('currency', 'IDR'),
-            transaction_type=transaction_type,
+            transaction_type=message.get('type', 'TRANSFER'),
             category=message.get('category', 'OTHER'),
             status='COMPLETED',
             recipient_id=message.get('recipient_id'),
@@ -228,7 +228,7 @@ class KafkaConsumerService:
                     transaction_id=transaction_id,
                     amount=amount,
                     currency=message.get('currency', 'IDR'),
-                    transaction_type=transaction_type,
+                    transaction_type=message.get('type', 'TRANSFER'),
                     category=message.get('category', 'OTHER'),
                     recipient_id=message.get('recipient_id'),
                     merchant_id=message.get('merchant_id')
@@ -385,6 +385,23 @@ class KafkaConsumerService:
                 account_age_days=0,
                 kyc_status=None
             )
+            session.add(new_metrics)
+
+            dashboard_event = DashboardEvent(
+                event_type=DashboardEventType.USER_METRICS_UPDATED,
+                user_id=user_id,
+                timestamp=timestamp,
+                data={
+                    "metrics": UserMetricsUpdatedEvent(
+                        total_transactions=1,
+                        total_amount=amount,
+                        average_transaction=amount,
+                        last_transaction_date=timestamp
+                    ).model_dump(mode="json")
+                }
+            )
+
+            await manager.broadcast_to_user(dashboard_event.model_dump(mode="json"), user_id, DashboardEventType.USER_METRICS_UPDATED.value)
     async def _handle_fraud_detection(self, session, message):
         transaction_id = message.get('transaction_id') or message.get('transactionId')
         user_id = message.get('user_id') or message.get('senderAccountId') or message.get('accountId')

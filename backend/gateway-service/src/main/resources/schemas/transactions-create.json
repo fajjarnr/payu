@@ -6,9 +6,10 @@
   "type": "object",
   "properties": {
     "amount": {
-      "type": "number",
+      "type": ["number", "string"],
       "exclusiveMinimum": 0,
-      "description": "Transaction amount"
+      "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+      "description": "Transaction amount (strings must be canonical decimal, max 4dp)"
     }
   },
   "required": ["amount"],

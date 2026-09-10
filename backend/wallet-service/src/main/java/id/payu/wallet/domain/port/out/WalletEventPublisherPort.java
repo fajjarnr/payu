@@ -10,7 +10,12 @@ public interface WalletEventPublisherPort {
     
     void publishWalletCreated(String accountId, String walletId);
     
-    void publishBalanceChanged(String accountId, BigDecimal newBalance, BigDecimal availableBalance);
+    /**
+     * Balance changed — carries the signed delta so analytics cashflow can sum
+     * income/expenses (FE-AUDIT-006). changeType is CREDIT or DEBIT.
+     */
+    void publishBalanceChanged(String accountId, BigDecimal newBalance, BigDecimal availableBalance,
+                               BigDecimal changeAmount, String changeType);
     
     void publishBalanceReserved(String accountId, String reservationId, BigDecimal amount);
     

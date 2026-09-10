@@ -41,6 +41,12 @@ vi.mock('@/components/ui/Motion', () => ({
   ButtonMotion: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+const { metricsMock, cashFlowMock, trendsMock } = vi.hoisted(() => ({
+  metricsMock: vi.fn((..._args: unknown[]) => ({ isLoading: false })),
+  cashFlowMock: vi.fn((..._args: unknown[]) => ({ data: undefined, isLoading: false })),
+  trendsMock: vi.fn((..._args: unknown[]) => ({ isLoading: false })),
+}));
+
 vi.mock('@/hooks', async (importOriginal) => {
   const actual = await importOriginal() as Record<string, unknown>;
   return {
@@ -51,12 +57,16 @@ vi.mock('@/hooks', async (importOriginal) => {
       isLoading: false,
       error: null,
     }),
+    useUserMetrics: (...args: [unknown]) => metricsMock(...args),
+    useCashFlow: (...args: [unknown]) => cashFlowMock(...args),
+    useSpendingTrends: (...args: [unknown]) => trendsMock(...args),
   };
 });
 
 vi.mock('@/stores/authStore', () => ({
-  useAuthStore: () => ({
+  useAuthStore: (selector: (s: unknown) => unknown) => selector({
     user: { id: 'user_1', username: 'budi', fullName: 'Budi Santoso' },
+    accountId: 'acct_1',
     isAuthenticated: true,
   }),
 }));
@@ -119,6 +129,13 @@ describe('DashboardPage', () => {
   it('should render balance card', () => {
     render(<Home />, { wrapper: createWrapper() });
     expect(screen.getByTestId('balance-card')).toBeInTheDocument();
+  });
+
+  it('queries analytics by accountId, the event key (FE-AUDIT-006)', () => {
+    render(<Home />, { wrapper: createWrapper() });
+    expect(metricsMock).toHaveBeenCalledWith('acct_1');
+    expect(cashFlowMock).toHaveBeenCalledWith('acct_1');
+    expect(trendsMock).toHaveBeenCalledWith('acct_1');
   });
 
   it('should render quick actions', () => {

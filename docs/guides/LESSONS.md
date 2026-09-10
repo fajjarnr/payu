@@ -7198,10 +7198,30 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 
 **Context**: RELAY-010 (dev baru = journey mati) + FE-AUDIT-007 (User row hilang → 403). V122/V23 membuktikan pola seed permanen: migrasi versioned + `ON CONFLICT DO NOTHING`, jalan di semua env termasuk prod (inert reference rows).
 
-**Fix**: wallet `V123` + account `V113`, teraplikasi live sbg role app `payu` (bukti RLS-compliant, L-375). Tiga jebakan apply: (1) `users`/`accounts` tanpa SYSTEM hatch → GUC `default`, bukan SYSTEM (V107/V108 strict); (2) `profiles` tanpa `user_id`/`created_at` (V10 — baca DDL aktual, bukan V1); (3) bare SELECT 0 rows = RLS normal, verifikasi wajib dgn tenant GUC. PII plaintext read-safe (`ENC()` passthrough). Realm: import CR cuma saat create → runbook `docs/operations/runbooks/dev-seed.md` untuk re-sync Admin REST.
+**Fix**: wallet `V124` + account `V113`, teraplikasi live sbg role app `payu` (bukti RLS-compliant, L-375). Tiga jebakan apply: (1) `users`/`accounts` tanpa SYSTEM hatch → GUC `default`, bukan SYSTEM (V107/V108 strict); (2) `profiles` tanpa `user_id`/`created_at` (V10 — baca DDL aktual, bukan V1); (3) bare SELECT 0 rows = RLS normal, verifikasi wajib dgn tenant GUC. PII plaintext read-safe (`ENC()` passthrough). Realm: import CR cuma saat create → runbook `docs/operations/runbooks/dev-seed.md` untuk re-sync Admin REST.
 
 ## L-432: Helper float "tanpa caller hidup" = hapus, bukan selaraskan (2026-09-10)
 
 **Context**: FE-AUDIT-004 opsinya "samakan ke pola transfer bila menyentuh file itu" — tapi grep repo-wide membuktikan `parseCurrency`/`isValidCurrency`/`roundCurrency`/`validateAmount` nol caller produksi (cuma testnya sendiri). Menyelaraskan kode mati = melestarikan hazard float-money.
 
 **Fix**: hapus helpers + test penguncinya; satu-satunya test campuran (roundtrip presisi) ditulis ulang ke `parseCurrencyExact`. `tsc` 0 = bukti tak ada importer gelap. `type=number` dibiarkan — nilai tetap string → exact-parse → invalid jadi reject, bukan nominal salah. Jebakan edit: multi-CUT satu file dalam satu call memakai nomor ORIGINAL —CUT kedua mendarat di baris bergeser; verifikasi via `tsc`/test langsung menangkapnya.
+
+## L-433: Overlay git ≠ live — verifikasi apply, bukan file (2026-09-10)
+
+**Context**: Dalam satu sesi, 4 overlay patch terbukti ada di git tapi tak live: auth `WEB_CLIENT_SECRET` (login 401), tx Redis env (velocity 422), analytics `KEYCLOAK_URL` (fraud 401), `account_id` mapper (klaim hilang). Semuanya "sudah di-fix" menurut riwayat, tapi pod live tak pernah menerima. `oc apply -k` + baca env pod adalah satu-satunya bukti.
+
+**Fix**: pola drill — untuk tiap klaim "sudah di-fix": (1) baca env pod live, (2) bandingkan hash dengan nilai git/realm, (3) `oc apply -k` overlay spesifik + `rollout status`. Jangan `oc rollout restart` buta (menutupi drift tanpa menutupnya).
+
+## L-434: Tag overlay wajib ada di registry SEBELUM apply (2026-09-10)
+
+**Context**: `oc apply -k` dengan `newTag: 1.8.115` yang tak ada di registry → ImagePullBackOff + rollout gantung + pod lama layani kode basi (400/422 intermiten). Cek `tags/list` dulu; bangun dari source bila hilang. Bonus: `V123` ganda (`fix_ledger` vs seed) → Flyway `more than one migration` crash-loop; `ls | sort -V` sebelum penomoran.
+
+## L-435: Rollout 3-replika deadlock spread — pause, scale RS lama 0, resume (2026-09-10)
+
+**Context**: `maxUnavailable 25%` pada 3 replika = 0 + `DoNotSchedule` hostname-spread → pod baru ke-3 tak terjadwal, pod lama tak terminasi, 1/3 trafik layani kode basi selamanya. Aman karena dev + reversibel: `rollout pause` → `scale rs/<old> --replicas=0` (slot spread kosong → pending terjadwal) → `rollout resume` → converged, RS lama tetap 0. Jangan hapus pod lama mentah (RS membuatnya lagi — balapan yang kalah).
+
+## L-436: Analytics key = accountId di semua lapis; sub hanya untuk login (2026-09-10)
+
+**Context**: FE-AUDIT-006 "backend nol": event `user_id`=accountId, WS accountId, tapi frontend query sub → nol. Tiga bug pendamping di pipa yang sama: consumer `NameError transaction_type` (COMPLETED tak persist), metrics user-baru tak `session.add`, wallet `change_amount` nol (cashflow lumpuh) + recipient number tak ter-resolve + schema gateway tolak string + port gRPC 9090 tak terekspos + blind-index hash NULL di seed.
+
+**Fix**: selaraskan SEMUA lapis ke accountId (konvensi BUG-AUTH-013), perbaiki producer (delta eksplisit per sisi, bukan derivasi), terima string kanonis di schema (aturan BigDecimal), ekspos port gRPC tiap server. Bukti akhir: journey Rp15.000 COMPLETED + agregasi penuh + REST accountId→data vs sub→null. Phone-lookup hash seed tetap OPEN (butuh kunci HMAC live — jangan commit).

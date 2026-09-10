@@ -56,6 +56,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     private final SknServicePort sknServicePort;
     private final RgsServicePort rgsServicePort;
     private final TransactionEventPublisherPort eventPublisherPort;
+    private final AccountServicePort accountServicePort;
     private final AuthorizationService authorizationService;
     private final VelocityGuard velocityGuard;
     private final RiskEvaluationPort riskEvaluationPort;
@@ -65,13 +66,13 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
 
     @org.springframework.beans.factory.annotation.Value("${payu.step-up.amount-threshold:10000000}")
     private BigDecimal stepUpAmountThreshold = new BigDecimal("10000000");
-
     public InitiateTransferCommandHandler(TransactionPersistencePort transactionPersistencePort,
                                           WalletServicePort walletServicePort,
                                           BifastServicePort bifastServicePort,
                                           SknServicePort sknServicePort,
                                           RgsServicePort rgsServicePort,
                                           TransactionEventPublisherPort eventPublisherPort,
+                                          AccountServicePort accountServicePort,
                                           AuthorizationService authorizationService,
                                           VelocityGuard velocityGuard,
                                           RiskEvaluationPort riskEvaluationPort,
@@ -84,6 +85,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
         this.sknServicePort = sknServicePort;
         this.rgsServicePort = rgsServicePort;
         this.eventPublisherPort = eventPublisherPort;
+        this.accountServicePort = accountServicePort;
         this.authorizationService = authorizationService;
         this.velocityGuard = velocityGuard;
         this.riskEvaluationPort = riskEvaluationPort;
@@ -445,9 +447,16 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     private void processInternalTransfer(TransactionEntity transaction, InitiateTransferCommand command) {
         boolean transferSucceeded = false;
         try {
+            // FE-AUDIT-006: recipient arrives as an account NUMBER (1001002001);
+            // wallets are keyed by account UUID — resolve via the account port.
+            // Unknown/unreachable recipient fails safe (no guessed destination).
+            UUID recipientAccountId = accountServicePort
+                    .getAccountIdByNumber(command.recipientAccountNumber())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Recipient account not found: " + command.recipientAccountNumber()));
             walletServicePort.transferBalance(
                     command.senderAccountId().toString(),
-                    command.recipientAccountNumber(),
+                    recipientAccountId.toString(),
                     command.amount().getAmount(),
                     transaction.getId().toString()
             );

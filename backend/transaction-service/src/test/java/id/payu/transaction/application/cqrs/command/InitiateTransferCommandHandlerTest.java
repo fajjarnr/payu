@@ -13,6 +13,7 @@ import id.payu.transaction.domain.port.out.SknServicePort;
 import id.payu.transaction.domain.port.out.TransactionEventPublisherPort;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.domain.port.out.WalletServicePort;
+import id.payu.transaction.domain.port.out.AccountServicePort;
 import id.payu.transaction.application.service.AuthorizationService;
 import id.payu.transaction.exception.TransactionDomainException;
 import id.payu.transaction.interfaces.dto.ReserveBalanceResponse;
@@ -53,6 +54,8 @@ class InitiateTransferCommandHandlerTest {
     private SknServicePort sknServicePort;
     @Mock
     private RgsServicePort rgsServicePort;
+    @Mock(strictness = org.mockito.Mock.Strictness.LENIENT)
+    private AccountServicePort accountServicePort;
     @Mock
     private TransactionEventPublisherPort eventPublisherPort;
     @Mock
@@ -309,6 +312,7 @@ class InitiateTransferCommandHandlerTest {
     void usesAtomicTransferForInternalTransfer() {
         UUID transactionId = UUID.randomUUID();
         UUID senderAccountId = UUID.randomUUID();
+        UUID recipientAccountId = UUID.randomUUID();
         String recipientAccountNumber = "1234567890";
         InitiateTransferCommand command = new InitiateTransferCommand(
                 senderAccountId,
@@ -321,6 +325,8 @@ class InitiateTransferCommandHandlerTest {
                 "idem-internal-atomic-001",
                 "user-001",
                 null);
+        when(accountServicePort.getAccountIdByNumber(recipientAccountNumber))
+                .thenReturn(java.util.Optional.of(recipientAccountId));
         when(transactionPersistencePort.save(any(TransactionEntity.class)))
                 .thenAnswer(invocation -> {
                     TransactionEntity transaction = invocation.getArgument(0);
@@ -334,7 +340,7 @@ class InitiateTransferCommandHandlerTest {
 
         assertThat(result.status()).isEqualTo(TransactionStatus.COMPLETED.name());
         verify(walletServicePort).transferBalance(
-                eq(senderAccountId.toString()), eq(recipientAccountNumber),
+                eq(senderAccountId.toString()), eq(recipientAccountId.toString()),
                 eq(Money.idr("100").getAmount()), eq(transactionId.toString()));
         verify(walletServicePort, never()).reserveBalance(any(UUID.class), anyString(), any(java.math.BigDecimal.class));
         verify(walletServicePort, never()).commitBalance(any(UUID.class), anyString(), anyString(), any(java.math.BigDecimal.class));
@@ -342,10 +348,79 @@ class InitiateTransferCommandHandlerTest {
         verify(walletServicePort, never()).releaseBalance(any(UUID.class), anyString(), anyString(), any(java.math.BigDecimal.class));
     }
 
+
+    @Test
+    void resolvesRecipientAccountNumberToWalletAccountId() {
+        UUID transactionId = UUID.randomUUID();
+        UUID senderAccountId = UUID.randomUUID();
+        UUID recipientAccountId = UUID.randomUUID();
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                senderAccountId,
+                "1234567890",
+                Money.idr("100"),
+                "internal transfer",
+                id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER,
+                null,
+                null,
+                "idem-internal-resolve-001",
+                "user-001",
+                null);
+        when(accountServicePort.getAccountIdByNumber("1234567890"))
+                .thenReturn(java.util.Optional.of(recipientAccountId));
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        InitiateTransferCommandResult result = handler.handle(command);
+
+        assertThat(result.status()).isEqualTo(TransactionStatus.COMPLETED.name());
+        verify(walletServicePort).transferBalance(
+                eq(senderAccountId.toString()), eq(recipientAccountId.toString()),
+                eq(Money.idr("100").getAmount()), eq(transactionId.toString()));
+    }
+
+    @Test
+    void failsTransferWhenRecipientAccountUnknown() {
+        UUID transactionId = UUID.randomUUID();
+        UUID senderAccountId = UUID.randomUUID();
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                senderAccountId,
+                "0000000000",
+                Money.idr("100"),
+                "internal transfer",
+                id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER,
+                null,
+                null,
+                "idem-internal-resolve-002",
+                "user-001",
+                null);
+        when(accountServicePort.getAccountIdByNumber("0000000000"))
+                .thenReturn(java.util.Optional.empty());
+        when(transactionPersistencePort.save(any(TransactionEntity.class)))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        InitiateTransferCommandResult result = handler.handle(command);
+
+        assertThat(result.status()).isEqualTo(TransactionStatus.FAILED.name());
+        verify(walletServicePort, never()).transferBalance(anyString(), anyString(),
+                any(java.math.BigDecimal.class), anyString());
+    }
     @Test
     void marksInternalTransferFailedWhenAtomicTransferFails() {
         UUID transactionId = UUID.randomUUID();
         UUID senderAccountId = UUID.randomUUID();
+        UUID recipientAccountId = UUID.randomUUID();
         InitiateTransferCommand command = new InitiateTransferCommand(
                 senderAccountId,
                 "1234567890",
@@ -357,6 +432,8 @@ class InitiateTransferCommandHandlerTest {
                 "idem-internal-atomic-fail-001",
                 "user-001",
                 null);
+        when(accountServicePort.getAccountIdByNumber("1234567890"))
+                .thenReturn(java.util.Optional.of(recipientAccountId));
         when(transactionPersistencePort.save(any(TransactionEntity.class)))
                 .thenAnswer(invocation -> {
                     TransactionEntity transaction = invocation.getArgument(0);
@@ -367,7 +444,7 @@ class InitiateTransferCommandHandlerTest {
                 });
         doThrow(new RuntimeException("Insufficient available balance"))
                 .when(walletServicePort).transferBalance(
-                        eq(senderAccountId.toString()), eq("1234567890"),
+                        eq(senderAccountId.toString()), eq(recipientAccountId.toString()),
                         eq(Money.idr("100").getAmount()), eq(transactionId.toString()));
 
         InitiateTransferCommandResult result = handler.handle(command);
@@ -381,6 +458,7 @@ class InitiateTransferCommandHandlerTest {
     @Test
     void persistsRecipientAccountNumberForInternalTransferRefunds() {
         UUID transactionId = UUID.randomUUID();
+        UUID recipientAccountId = UUID.randomUUID();
         String recipientAccountNumber = "1234567890";
         InitiateTransferCommand command = new InitiateTransferCommand(
                 UUID.randomUUID(),
@@ -393,8 +471,10 @@ class InitiateTransferCommandHandlerTest {
                 "idem-internal-refund-001",
                 "user-001",
                 null);
+        when(accountServicePort.getAccountIdByNumber(recipientAccountNumber))
+                .thenReturn(java.util.Optional.of(recipientAccountId));
         when(walletServicePort.transferBalance(
-                eq(command.senderAccountId().toString()), eq("1234567890"),
+                eq(command.senderAccountId().toString()), eq(recipientAccountId.toString()),
                 eq(command.amount().getAmount()), eq(transactionId.toString())))
                 .thenReturn("ledger-tx-id");
         when(transactionPersistencePort.save(any(TransactionEntity.class)))

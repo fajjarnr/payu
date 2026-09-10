@@ -175,5 +175,43 @@ class RequestValidationFilterTest {
             var errors = schema.validate(node);
             assertTrue(errors.isEmpty(), "Valid transfer should pass: " + errors);
         }
+
+        @Test
+        @DisplayName("should accept canonical decimal string amount (money-safe, FE-AUDIT-006)")
+        void shouldAcceptStringAmount() {
+            JsonSchema schema = filter.getSchemaForPath("/api/v1/transactions/transfer");
+            assertNotNull(schema);
+
+            var node = new ObjectMapper().createObjectNode()
+                    .put("senderAccountId", "acc-1")
+                    .put("recipientAccountNumber", "1234567890")
+                    .put("amount", "15000.5000")
+                    .put("currency", "IDR")
+                    .put("description", "Test transfer")
+                    .put("type", "INTERNAL_TRANSFER");
+
+            var errors = schema.validate(node);
+            assertTrue(errors.isEmpty(), "Canonical decimal string should pass: " + errors);
+        }
+
+        @Test
+        @DisplayName("should reject non-canonical amount strings")
+        void shouldRejectNonCanonicalAmount() {
+            JsonSchema schema = filter.getSchemaForPath("/api/v1/transactions/transfer");
+            assertNotNull(schema);
+
+            for (String bad : new String[]{"1.000.000", "abc", "15000.50000", "", " 15000"}) {
+                var node = new ObjectMapper().createObjectNode()
+                        .put("senderAccountId", "acc-1")
+                        .put("recipientAccountNumber", "1234567890")
+                        .put("amount", bad)
+                        .put("currency", "IDR")
+                        .put("description", "Test transfer")
+                        .put("type", "INTERNAL_TRANSFER");
+
+                var errors = schema.validate(node);
+                assertFalse(errors.isEmpty(), "Non-canonical amount should fail: " + bad);
+            }
+        }
     }
 }

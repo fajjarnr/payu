@@ -33,12 +33,15 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
     private static final String SERVICE_NAME = "wallet-service";
 
     @Override
-    public void publishBalanceChanged(String accountId, BigDecimal newBalance, BigDecimal availableBalance) {
-        Map<String, Object> payload = Map.of(
-                "accountId", accountId,
-                "newBalance", newBalance,
-                "availableBalance", availableBalance,
-                "timestamp", LocalDateTime.now().toString());
+    public void publishBalanceChanged(String accountId, BigDecimal newBalance, BigDecimal availableBalance,
+                                      BigDecimal changeAmount, String changeType) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("accountId", accountId);
+        payload.put("newBalance", newBalance);
+        payload.put("availableBalance", availableBalance);
+        payload.put("change_amount", changeAmount);
+        payload.put("change_type", changeType);
+        payload.put("timestamp", LocalDateTime.now().toString());
 
         CloudEventEnvelope<Map<String, Object>> envelope = CloudEventBuilder
                 .<Map<String, Object>>forService(SERVICE_NAME)

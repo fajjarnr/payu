@@ -61,7 +61,7 @@ class WalletScaleValidationTest {
 
         verify(walletPersistencePort, never()).save(any());
         verify(walletPersistencePort, never()).saveLedgerEntry(any());
-        verify(walletEventPublisher, never()).publishBalanceChanged(anyString(), any(), any());
+        verify(walletEventPublisher, never()).publishBalanceChanged(anyString(), any(), any(), any(), anyString());
     }
 
     @Test

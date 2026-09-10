@@ -4,6 +4,7 @@ import id.payu.grpc.starter.config.GrpcChannelSupport;
 import id.payu.transaction.domain.port.out.AccountServicePort;
 import id.payu.account.grpc.AccountResponse;
 import id.payu.account.grpc.AccountServiceGrpc;
+import id.payu.account.grpc.GetAccountByNumberRequest;
 import id.payu.account.grpc.GetAccountsByUserRequest;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -84,5 +85,40 @@ public class AccountServiceAdapter implements AccountServicePort {
         log.warn("Circuit breaker fallback for getAccountIdsByUserId: {}. UserId: {}", e.getMessage(), userId);
         // Fail-safe: return empty list so authorization fails (deny by default)
         return Collections.emptyList();
+    }
+
+    @Override
+    @CircuitBreaker(name = "accountService", fallbackMethod = "getAccountIdByNumberFallback")
+    @Retry(name = "accountService")
+    public java.util.Optional<UUID> getAccountIdByNumber(String accountNumber) {
+        if (accountNumber == null || accountNumber.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        try {
+            AccountResponse response = stub
+                    .withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS)
+                    .getAccountByNumber(GetAccountByNumberRequest.newBuilder()
+                            .setAccountNumber(accountNumber)
+                            .build());
+            return java.util.Optional.of(UUID.fromString(response.getAccountId()));
+        } catch (StatusRuntimeException e) {
+            // NOT_FOUND means unknown recipient — fail-safe empty, caller rejects.
+            // Other statuses propagate to the retry/circuit-breaker path.
+            if (e.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
+                log.info("Recipient account number not found: {}", accountNumber);
+                return java.util.Optional.empty();
+            }
+            log.error("Failed to resolve account number {}: {}", accountNumber, e.getStatus());
+            throw e;
+        }
+    }
+
+    /**
+     * Fallback: account-service down — fail-safe empty so the transfer is rejected,
+     * never routed to a guessed account.
+     */
+    private java.util.Optional<UUID> getAccountIdByNumberFallback(String accountNumber, Exception e) {
+        log.warn("Circuit breaker fallback for getAccountIdByNumber: {}. AccountNumber: {}", e.getMessage(), accountNumber);
+        return java.util.Optional.empty();
     }
 }

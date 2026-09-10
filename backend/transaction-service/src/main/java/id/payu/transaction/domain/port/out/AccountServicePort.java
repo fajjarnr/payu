@@ -16,4 +16,12 @@ public interface AccountServicePort {
      * @return list of account UUIDs belonging to the user
      */
     List<UUID> getAccountIdsByUserId(String userId);
+
+    /**
+     * Resolves an account number (e.g. {@code 1001002001}) to its account UUID.
+     *
+     * @param accountNumber the human-readable account number
+     * @return the account UUID, or empty when unknown (fail-safe: caller rejects)
+     */
+    java.util.Optional<UUID> getAccountIdByNumber(String accountNumber);
 }

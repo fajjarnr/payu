@@ -17,9 +17,10 @@
       "description": "Customer number at the biller"
     },
     "amount": {
-      "type": "number",
+      "type": ["number", "string"],
       "exclusiveMinimum": 0,
-      "description": "Payment amount"
+      "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+      "description": "Payment amount (strings must be canonical decimal, max 4dp)"
     },
     "sourceAccountId": {
       "type": "string",

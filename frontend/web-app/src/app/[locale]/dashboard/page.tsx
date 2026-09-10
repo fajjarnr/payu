@@ -59,11 +59,12 @@ export default function Home() {
 function Dashboard({ username, handleLogout }: { username: string; handleLogout: () => void }) {
  const t = useTranslations('dashboard');
  const accountId = useAuthStore((state) => state.accountId);
- const userId = useAuthStore((state) => state.user?.id);
+ // FE-AUDIT-006: analytics events are keyed by account_id (backend BUG-AUTH-013),
+ // so queries must use accountId — Keycloak sub returns zero rows.
  const { data: balance, isLoading: balanceLoading } = useBalance(accountId || undefined);
- const { isLoading: metricsLoading } = useUserMetrics(userId);
- const { data: cashFlow } = useCashFlow(userId);
- const { isLoading: spendingLoading } = useSpendingTrends(userId);
+ const { isLoading: metricsLoading } = useUserMetrics(accountId || undefined);
+ const { data: cashFlow } = useCashFlow(accountId || undefined);
+ const { isLoading: spendingLoading } = useSpendingTrends(accountId || undefined);
  const { isLoading: investmentLoading } = useInvestmentAccount();
  const { data: budgets, isLoading: budgetsLoading } = useBudgets(accountId || undefined);
 

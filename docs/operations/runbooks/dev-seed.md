@@ -6,7 +6,7 @@ each with an owner file. Live proof 2026-09-10: applied as app role `payu`
 
 ## 1. Wallets — automatic via Flyway
 
-`backend/wallet-service/.../db/migration/V123__seed_dev_journey_wallets.sql`
+`backend/wallet-service/.../db/migration/V124__seed_dev_journey_wallets.sql`
 (SYSTEM bypass + `ON CONFLICT (account_id) DO NOTHING`, no ledger rows —
 ledger is created by transfers, never hand-seeded). Runs on every
 wallet-service boot/migrate. Balances mirror `db/seed/wallet-test-data.sql`

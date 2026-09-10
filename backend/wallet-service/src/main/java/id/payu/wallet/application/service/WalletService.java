@@ -258,7 +258,7 @@ public class WalletService implements WalletUseCase {
         walletPersistencePort.saveLedgerEntry(commitEntry);
 
         walletEventPublisher.publishReservationCommitted(accountId, reservationId, reservedAmount);
-        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance(), reservedAmount, "DEBIT");
 
         log.info("Committed reservation {} for account {}, amount: {}", reservationId, reservedAmount);
     }
@@ -312,7 +312,7 @@ public class WalletService implements WalletUseCase {
         walletPersistencePort.saveLedgerEntry(creditEntry);
 
         walletEventPublisher.publishReservationReleased(accountId, reservationId, reservedAmount);
-        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance(), reservedAmount, "CREDIT");
 
         log.info("Released reservation {} for account {}, amount: {}", reservationId, reservedAmount);
     }
@@ -398,7 +398,7 @@ public class WalletService implements WalletUseCase {
                 .build();
         walletPersistencePort.saveTransaction(walletTransaction);
 
-        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance(), amount, "CREDIT");
 
         log.info("Credited {} to account {}, transactionId: {}", amount, accountId, transactionId);
         return transactionId.toString();
@@ -465,7 +465,7 @@ public class WalletService implements WalletUseCase {
                 .build();
         walletPersistencePort.saveTransaction(walletTransaction);
 
-        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance(), amount, "DEBIT");
 
         log.info("Debited {} from account {}, transactionId: {}", amount, accountId, transactionId);
         return transactionId.toString();
@@ -577,8 +577,8 @@ public class WalletService implements WalletUseCase {
                 .createdAt(now)
                 .build());
 
-        walletEventPublisher.publishBalanceChanged(sender.getAccountId(), sender.getBalance(), sender.getAvailableBalance());
-        walletEventPublisher.publishBalanceChanged(recipient.getAccountId(), recipient.getBalance(), recipient.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(sender.getAccountId(), sender.getBalance(), sender.getAvailableBalance(), amount, "DEBIT");
+        walletEventPublisher.publishBalanceChanged(recipient.getAccountId(), recipient.getBalance(), recipient.getAvailableBalance(), amount, "CREDIT");
         invalidateWalletCaches(sender);
         invalidateWalletCaches(recipient);
         return transactionId.toString();
@@ -670,7 +670,7 @@ public class WalletService implements WalletUseCase {
         cacheService.invalidate("balance:available:account:" + accountId);
         cacheService.invalidate("wallet:account:" + accountId);
         cacheService.invalidate("wallet:id:" + wallet.getId());
-        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(accountId, wallet.getBalance(), wallet.getAvailableBalance(), amount, "DEBIT");
         return transactionId.toString();
     }
 
@@ -733,8 +733,8 @@ public class WalletService implements WalletUseCase {
                 .createdAt(now)
                 .build());
 
-        walletEventPublisher.publishBalanceChanged(recipient.getAccountId(), recipient.getBalance(), recipient.getAvailableBalance());
-        walletEventPublisher.publishBalanceChanged(sender.getAccountId(), sender.getBalance(), sender.getAvailableBalance());
+        walletEventPublisher.publishBalanceChanged(recipient.getAccountId(), recipient.getBalance(), recipient.getAvailableBalance(), amount, "DEBIT");
+        walletEventPublisher.publishBalanceChanged(sender.getAccountId(), sender.getBalance(), sender.getAvailableBalance(), amount, "CREDIT");
         invalidateWalletCaches(recipient);
         invalidateWalletCaches(sender);
         log.info("Reversed transfer for refund {}: {} -> {} amount {}", refundId, recipientAccountId, senderAccountId, amount);

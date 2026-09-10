@@ -29,10 +29,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
-  const userId = useAuthStore((state) => state.user?.id);
+  // FE-AUDIT-006: analytics events are keyed by account_id (backend BUG-AUTH-013),
+  // so queries must use accountId — Keycloak sub returns zero rows.
   const { analytics, isConnected } = useAnalyticsWebSocket(accountId || undefined);
-  const { data: cashFlow } = useCashFlow(userId);
-  const { data: trends } = useSpendingTrends(userId);
+  const { data: cashFlow } = useCashFlow(accountId || undefined);
+  const { data: trends } = useSpendingTrends(accountId || undefined);
 
   // REST baseline: the WS feed is enhancement-only (it may never connect —
   // no WS proxy exists in this environment), so seed the page from REST.

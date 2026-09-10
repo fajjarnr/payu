@@ -33,6 +33,7 @@ class StepUpWiringTest {
     @Mock SknServicePort sknServicePort;
     @Mock RgsServicePort rgsServicePort;
     @Mock TransactionEventPublisherPort eventPublisherPort;
+    @Mock id.payu.transaction.domain.port.out.AccountServicePort accountServicePort;
     @Mock AuthorizationService authorizationService;
     @Mock VelocityGuard velocityGuard;
     @Mock RiskEvaluationPort riskEvaluationPort;
@@ -46,7 +47,7 @@ class StepUpWiringTest {
     void setUp() {
         handler = new InitiateTransferCommandHandler(
                 transactionPersistencePort, walletServicePort, bifastServicePort,
-                sknServicePort, rgsServicePort, eventPublisherPort,
+                sknServicePort, rgsServicePort, eventPublisherPort, accountServicePort,
                 authorizationService, velocityGuard, riskEvaluationPort, stepUpVerificationPort, inboxService, aggregateResultService);
         ReflectionTestUtils.setField(handler, "stepUpAmountThreshold", new BigDecimal("10000000"));
         lenient().when(velocityGuard.isAllowed(anyString(), any(BigDecimal.class))).thenReturn(true);

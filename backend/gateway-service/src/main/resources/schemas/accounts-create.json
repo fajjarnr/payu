@@ -22,9 +22,10 @@
       "description": "Custom account label"
     },
     "initialDeposit": {
-      "type": "number",
+      "type": ["number", "string"],
       "minimum": 0,
-      "description": "Initial deposit amount"
+      "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+      "description": "Initial deposit amount (strings must be canonical decimal, max 4dp)"
     }
   },
   "required": [],

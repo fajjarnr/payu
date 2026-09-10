@@ -23,9 +23,10 @@
       "description": "Partner UUID"
     },
     "amount": {
-      "type": "number",
+      "type": ["number", "string"],
       "exclusiveMinimum": 0,
-      "description": "Virtual account amount"
+      "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+      "description": "Virtual account amount (strings must be canonical decimal, max 4dp)"
     },
     "currency": {
       "type": "string",

@@ -1,5 +1,5 @@
 -- PayU Wallet Service - Seed Test Data (LOCAL-COMPOSE REFERENCE ONLY)
--- OpenShift/dev clusters seed automatically via db/migration/V123__seed_dev_journey_wallets.sql
+-- OpenShift/dev clusters seed automatically via db/migration/V124__seed_dev_journey_wallets.sql
 -- (Flyway, idempotent). Do NOT run this file manually against shared environments.
 
 -- Insert wallets for test users

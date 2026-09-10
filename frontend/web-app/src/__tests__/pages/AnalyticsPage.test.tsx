@@ -16,13 +16,14 @@ vi.mock('@/components/ui/Motion', () => ({
 }));
 
 vi.mock('@/stores/authStore', () => ({
-  useAuthStore: () => ({
+  useAuthStore: (selector: (s: unknown) => unknown) => selector({
     user: { id: 'user_1' },
+    accountId: 'acct_1',
     isAuthenticated: true,
   }),
 }));
 const { wsMock, cashFlowMock, trendsMock } = vi.hoisted(() => ({
-  wsMock: vi.fn((): { isConnected: boolean; data: unknown } => ({
+  wsMock: vi.fn((..._args: unknown[]): { isConnected: boolean; data: unknown } => ({
     isConnected: true,
     data: {
       totalIncome: 25000000,
@@ -33,14 +34,14 @@ const { wsMock, cashFlowMock, trendsMock } = vi.hoisted(() => ({
       monthlyTrend: [],
     },
   })),
-  cashFlowMock: vi.fn((): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false })),
-  trendsMock: vi.fn((): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false })),
+  cashFlowMock: vi.fn((..._args: unknown[]): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false })),
+  trendsMock: vi.fn((..._args: unknown[]): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false })),
 }));
 
 vi.mock('@/hooks/useAnalytics', () => ({
-  useAnalyticsWebSocket: () => wsMock(),
-  useCashFlow: () => cashFlowMock(),
-  useSpendingTrends: () => trendsMock(),
+  useAnalyticsWebSocket: (...args: [unknown]) => wsMock(...args),
+  useCashFlow: (...args: [unknown]) => cashFlowMock(...args),
+  useSpendingTrends: (...args: [unknown]) => trendsMock(...args),
 }));
 // Mock recharts to avoid canvas rendering issues
 vi.mock('recharts', () => ({
@@ -122,5 +123,14 @@ describe('AnalyticsPage', () => {
     render(<AnalyticsPage />);
     expect(screen.getByText('Rp 5.000.000')).toBeInTheDocument();
     expect(screen.getByText('Makanan')).toBeInTheDocument();
+  });
+
+  it('queries analytics by accountId, the event key (FE-AUDIT-006)', () => {
+    render(<AnalyticsPage />);
+    // Transaction/wallet events are keyed by account_id (backend BUG-AUTH-013);
+    // querying by Keycloak sub returns zero rows.
+    expect(cashFlowMock).toHaveBeenCalledWith('acct_1');
+    expect(trendsMock).toHaveBeenCalledWith('acct_1');
+    expect(wsMock).toHaveBeenCalledWith('acct_1');
   });
 });

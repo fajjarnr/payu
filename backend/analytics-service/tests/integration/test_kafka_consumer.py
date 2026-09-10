@@ -132,7 +132,7 @@ async def test_replayed_cloud_event_is_processed_once(kafka_consumer, mock_sessi
     session_context.__aenter__ = AsyncMock(return_value=mock_session)
     session_context.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("app.messaging.kafka_consumer.async_session_maker", return_value=session_context):
+    with patch("app.database.async_session_maker", return_value=session_context):
         with patch.object(
             kafka_consumer, "_handle_transaction_completed", new_callable=AsyncMock
         ) as handler:

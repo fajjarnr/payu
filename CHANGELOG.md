@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.103] - 2026-09-10
+
+### Fixed
+- **Agregasi analytics terisi dari transfer baru (FE-AUDIT-006 remainder)**: consumer `_handle_transaction_completed` crash `NameError transaction_type` → COMPLETED tak pernah persist (event ter-claim lalu rollback → redelivery gagal terus); `_update_user_metrics` bangun row user-baru tapi tak `session.add` → metrics user pertama hilang. Wallet `balance-changed` tanpa `change_amount/type` (cashflow sum nol) → producer kini kirim delta+arah eksplisit di 9 situs (commit DEBIT, release CREDIT, credit/debit, transfer sender/recipient, repayLoan DEBIT, refund-reversal terbalik). Transfer internal resolve `recipientAccountNumber→UUID` via `AccountServicePort.getAccountIdByNumber` (gRPC, CB+fail-safe empty) — sebelumnya nomor rekening dilempar mentah ke wallet → `Wallet not found`. Gateway schema terima string desimal kanonis (`type:[number,string]` + pattern 4dp, 5 field money) — `type:number` melanggar kontrak Money-string frontend + aturan BigDecimal. Bukti: pytest consumer 11/11, handler tx 26/26, wallet 13/13, gateway schema 14/14.
+- **gRPC 9090 tak terekspos (discovery live)**: `account-service` + `transaction-service` Service hanya buka 8080 → semua klien gRPC (`tx→account`, `lending→account`, `statement→tx`) `UNAVAILABLE` connect-timeout. Tambah port `grpc:9090` di kedua base Service (wallet sudah punya). Tanpa ini recipient-resolve di atas takkan pernah sampai.
+
+### Verified
+- **Live money journey COMPLETED + agregasi penuh (FE-AUDIT-006 CLOSED)**: login PKCE scripted customer1 → transfer Rp15.000 string ke `1001002001` → `201 COMPLETED` fee 0; double-entry exact (`750e…0001` −15000, `750e…0004` +15000, DECIMAL 19,4); `transaction_analytics` initiated PENDING + completed COMPLETED; `user_metrics` 1/15000.0000; `wallet_balance_history` DEBIT/CREDIT 15000; REST `…/metrics` by accountId→data vs by sub→null (bukti frontend key-fix 1.18.102 benar). Image live: wallet `:1.18.103`, analytics `:1.18.103`, tx `:1.8.116`, gateway rebuilt `:1.18.74`, account `:1.18.102`; semua rollout converged, RS lama 0.
+- **Drift git-vs-live yang diperbaiki sepanjang sesi**: overlay `auth-service` (WEB secret) + `transaction-service` (Redis) + `analytics-service` (KEYCLOAK_URL) ada di git tapi tak pernah teraplikasi → login 401, velocity 422, fraud 401; `account_id` mapper hilang di live realm (recreate 201); tag overlay tanpa image (`tx:1.8.115`, `analytics:1.18.76`) → ImagePullBackOff (build+push dari source); `V123` ganda (ada `V123__fix_ledger…`) → seed jadi `V124`; rollout 3-replika deadlock spread (maxUnavailable 0 + DoNotSchedule) → pause + scale RS lama 0 + resume.
+
+## [1.18.102] - 2026-09-10
+
+### Fixed
+- **Query analytics pakai accountId, bukan sub (FE-AUDIT-006)**: event `user_id` = `account_id` claim (konvensi BUG-AUTH-013), WS sudah accountId — tapi dashboard+analytics page query pakai Keycloak sub → nol baris. 5 call-site (`useUserMetrics`/`useCashFlow`/`useSpendingTrends`) → `accountId`. Bukti: TDD merah→hijau (key-identity test 2/2), `tsc` 0, 28/28 analytics suites, image `:1.18.102` live OpenShift root 200 + `/api/health` 200.
+
 ## [1.18.101] - 2026-09-10
 
 ### Fixed
@@ -14,7 +29,7 @@ All notable changes to this project will be documented in this file.
 ### Verified
 - **Full-reload sesi pulih via rehidrasi (RELAY-004, tanpa image baru)**: tanpa perubahan production — regression `proxy-auth.test.ts` (`expired access + valid refresh → 200 + Set-Cookie`, bukan 307 login; 4/4 hijau) buktikan rantai fix 1.18.86/87/99/100 menutup bounce `tab.goto /transfer → /login`. Live `payu-dev`: tanpa cookie → 307 login+callback (gate benar). Keputusan: tanpa persist zustand — token tetap httpOnly (PCI-DSS), `SessionBootstrap` repopulasi dari refresh saat mount; persist hanya bila metrik tunjukkan storm refresh saat reload.
 - **Live realm drift disinkronkan (RELAY-005, tanpa image baru)**: live `payu` hanya `customer1/2+probe1` attrs kosong + `unmanagedAttributePolicy=None` (klaim ENABLED parsial tak bertahan — import CR tak update realm existing, L-377). Via Admin REST: `PUT /users/profile` `unmanagedAttributePolicy→ENABLED` (PUT realm 400 `Unrecognized field` — policy di profile, bukan realm), `customer1/2` attrs+roles per `keycloak-realm-import.yaml` (PUT 200, attrs persist = bukti policy bekerja), `admin`+`backoffice` created 201 + roles. `probe1@x.id` asing dibiarkan. Direct grant mati di `payu-web-app` (PKCE-only) — sengaja tak diubah.
-- **Seed dev permanen (RELAY-010 + FE-AUDIT-007, migrasi ikut build berikut)**: wallet `V123` (5 wallet 10/5/3/5/0jt, SYSTEM bypass V122, tanpa ledger) + account `V113` (users `external_id`=live KC sub + profiles shared-PK + accounts `1001001001/2001/9001`, ON CONFLICT). Live `payu-dev` teraplikasi sbg role `payu` (RLS aktif): wallets exact 5/5, `users⋈accounts` 3/3, re-run 0/0/0; Flyway deploy berikut jadi no-op tercatat. Pelajaran apply: `users/accounts` tanpa SYSTEM hatch → GUC `default`; `profiles` tanpa `user_id`/`created_at` (V10); bare SELECT 0 rows = RLS normal. Runbook `docs/operations/runbooks/dev-seed.md`.
+- **Seed dev permanen (RELAY-010 + FE-AUDIT-007, migrasi ikut build berikut)**: wallet `V124` (5 wallet 10/5/3/5/0jt, SYSTEM bypass V122, tanpa ledger) + account `V113` (users `external_id`=live KC sub + profiles shared-PK + accounts `1001001001/2001/9001`, ON CONFLICT). Live `payu-dev` teraplikasi sbg role `payu` (RLS aktif): wallets exact 5/5, `users⋈accounts` 3/3, re-run 0/0/0; Flyway deploy berikut jadi no-op tercatat. Pelajaran apply: `users/accounts` tanpa SYSTEM hatch → GUC `default`; `profiles` tanpa `user_id`/`created_at` (V10); bare SELECT 0 rows = RLS normal. Runbook `docs/operations/runbooks/dev-seed.md`.
 
 ## [1.18.99] - 2026-09-10
 
