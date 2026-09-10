@@ -40,6 +40,7 @@ patches:
           valueFrom:
             secretKeyRef:
               name: payu-cache-credentials
+              key: password
       - op: add
         path: /spec/template/spec/containers/0/env/-
         value:
