@@ -34,3 +34,10 @@ patches:
                     value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
                   - name: PAYU_KEYCLOAK_SERVER_URL
                     value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080"
+                  - name: PAYU_KEYCLOAK_WEB_CLIENT_ID
+                    value: "payu-web-app"
+                  - name: PAYU_KEYCLOAK_WEB_CLIENT_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-keycloak-client-secrets
+                        key: payu-web-client-secret

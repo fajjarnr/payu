@@ -32,3 +32,7 @@ patches:
                     value: "https://sso-sit.apps.fajjjar.my.id/realms/payu"
                   - name: OIDC_JWK_SET_URI
                     value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+                  - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+                    value: "https://sso-sit.apps.fajjjar.my.id/realms/payu"
+                  - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+                    value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"

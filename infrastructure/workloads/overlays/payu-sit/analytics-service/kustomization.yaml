@@ -17,3 +17,16 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
+      # RELAY-009 parity: jwt_auth requires KEYCLOAK_URL for JWKS; without
+      # it every authenticated call 401s (fraud scoring included).
+      # In-cluster URL per L-408 (public route 503s from pods).
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OIDC_ISSUER
+          value: "https://sso-sit.apps.fajjjar.my.id/realms/payu"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: KEYCLOAK_URL
+          value: "http://payu-keycloak-service.payu-sit.svc.cluster.local:8080"
