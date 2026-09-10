@@ -7193,3 +7193,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: RELAY-005 — live `payu` cuma `customer1` tanpa attrs padahal git definisikan 4 user + attrs + `unmanagedAttributePolicy=ENABLED` diklaim parsial-CLOSED. Live check: policy=`None`, attrs=`{}`.
 
 **Fix**: `PUT /admin/realms/payu/users/profile` full-roundtrip dengan `unmanagedAttributePolicy=ENABLED` (PUT realm full-roundtrip 400; minimal PUT 400 `Unrecognized field` — field ini milik UPConfig). User update via GET→PUT full representation (L-377). Realm import CR hanya berlaku saat create — sinkronisasi parsial = Admin REST, dan klaim "parsial CLOSED" untuk state live harus dibuktikan dengan GET ulang, bukan sekali PUT 204. Sisa: `probe1@x.id` asing — biarkan, bukan milik git; hapus hanya atas instruksi pemilik.
+
+## L-431: Seed permanen = Flyway idempotent, bukan Job — tapi hormati policy tanpa hatch (2026-09-10)
+
+**Context**: RELAY-010 (dev baru = journey mati) + FE-AUDIT-007 (User row hilang → 403). V122/V23 membuktikan pola seed permanen: migrasi versioned + `ON CONFLICT DO NOTHING`, jalan di semua env termasuk prod (inert reference rows).
+
+**Fix**: wallet `V123` + account `V113`, teraplikasi live sbg role app `payu` (bukti RLS-compliant, L-375). Tiga jebakan apply: (1) `users`/`accounts` tanpa SYSTEM hatch → GUC `default`, bukan SYSTEM (V107/V108 strict); (2) `profiles` tanpa `user_id`/`created_at` (V10 — baca DDL aktual, bukan V1); (3) bare SELECT 0 rows = RLS normal, verifikasi wajib dgn tenant GUC. PII plaintext read-safe (`ENC()` passthrough). Realm: import CR cuma saat create → runbook `docs/operations/runbooks/dev-seed.md` untuk re-sync Admin REST.

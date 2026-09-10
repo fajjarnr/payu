@@ -1,6 +1,6 @@
--- PayU Wallet Service - Seed Test Data
--- This migration creates test wallets and ledger entries for development/testing
--- Run this manually after all V* migrations are complete
+-- PayU Wallet Service - Seed Test Data (LOCAL-COMPOSE REFERENCE ONLY)
+-- OpenShift/dev clusters seed automatically via db/migration/V123__seed_dev_journey_wallets.sql
+-- (Flyway, idempotent). Do NOT run this file manually against shared environments.
 
 -- Insert wallets for test users
 INSERT INTO wallets (id, account_id, currency, balance, reserved_balance, status, created_at, updated_at) VALUES
