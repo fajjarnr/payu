@@ -7175,3 +7175,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Setelah realm di-recreate dari git, token `iss = https://sso-dev.apps.fajjjar.my.id/realms/payu` (publik) padahal validator (gateway `QUARKUS_OIDC_TOKEN_ISSUER`, service `OIDC_ISSUER`) expect URL internal → 401 semua request authenticated meski login sukses. Gejala samar: exchange sukses, cookie ada, dashboard langsung bounce ke /login.
 
 **Fix**: samakan expected issuer di SEMUA validator dengan issuer yang benar-benar ditanam di token (cek dengan decode JWT dari cookie, jangan asumsi). JWK/auth-server URL boleh tetap internal (in-cluster). Sama polanya untuk env lain — audit per env.
+
+## L-428: Cookie Secure env-derived vs request-derived = logout tak pernah clear di belakang LB (2026-09-10)
+
+**Context**: FE-AUDIT-002 — `POST /api/auth/refresh` + `POST /api/auth/logout` turunkan flag `Secure` dari env `NEXT_PUBLIC_BASE_URL`, sementara `callback`/`authorize` dari request proto (`x-forwarded-proto` aware). OpenShift route terminasi TLS di edge (`edge/Allow`) → pod terima http + `x-forwarded-proto=https`. Bila env=http, refresh/logout tulis cookie tanpa `Secure` menimpa cookie `Secure` dari callback (atau sebaliknya) → browser tolak → sesi lengket/logout semu. Di dev tak live (env sudah https) tapi flap laten.
+
+**Fix**: `resolveIsSecure(request?)` per-route — `x-forwarded-proto` → URL proto → env fallback (param optional, caller lama/tests tanpa request tetap jalan). Pola verbatim callback, tanpa util bersama (2 file). Bukti live: `POST /api/auth/refresh` tanpa cookie → 401 `Set-Cookie: accessToken=; ... Secure; HttpOnly; SameSite=lax` konsisten dengan callback.

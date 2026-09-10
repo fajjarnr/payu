@@ -78,9 +78,21 @@ function rotateSingleFlight(refreshToken: string): Promise<RotationResult> {
   return rotation;
 }
 
-export async function POST() {
+// FE-AUDIT-002: Secure must follow the browser-facing scheme (x-forwarded-proto
+// aware, like callback/authorize) — env-derived flaps when env=http behind an
+// https LB and the browser then rejects the overwritten/cleared cookie.
+function resolveIsSecure(request?: Request): boolean {
+  if (request) {
+    const proto = request.headers.get("x-forwarded-proto")
+      ?? new URL(request.url).protocol.replace(":", "");
+    return `${proto}://`.startsWith("https://");
+  }
+  return (process.env.NEXT_PUBLIC_BASE_URL ?? "").startsWith("https://");
+}
+
+export async function POST(request?: Request) {
   const startTime = Date.now();
-  const isSecure = (process.env.NEXT_PUBLIC_BASE_URL ?? "").startsWith("https://");
+  const isSecure = resolveIsSecure(request);
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get('refreshToken')?.value;

@@ -107,4 +107,32 @@ describe("POST /api/auth/refresh", () => {
     expect(response.cookies.get("accessToken")).toBeUndefined();
     expect(response.cookies.get("refreshToken")).toBeUndefined();
   });
+  it('derives Secure from the request proto, not env (FE-AUDIT-002)', async () => {
+
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(
+      new Response(JSON.stringify({
+        access_token: "access-token",
+        refresh_token: "refresh-token-2",
+        expires_in: 900,
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    )));
+    const prevBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    // Env says http (insecure) but the request arrived via https behind the LB.
+    process.env.NEXT_PUBLIC_BASE_URL = "http://payu-dev.apps.fajjjar.my.id";
+    try {
+      const req = new Request("https://payu-dev.apps.fajjjar.my.id/api/auth/refresh", {
+        method: "POST",
+        headers: { "x-forwarded-proto": "https" },
+      });
+      const response = await POST(req);
+      const setCookies = response.headers.getSetCookie();
+      expect(setCookies.some((c) => c.startsWith("accessToken=") && c.includes("Secure"))).toBe(true);
+    } finally {
+      if (prevBaseUrl === undefined) delete process.env.NEXT_PUBLIC_BASE_URL;
+      else process.env.NEXT_PUBLIC_BASE_URL = prevBaseUrl;
+    }
+  });
 });

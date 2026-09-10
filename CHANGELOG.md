@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.100] - 2026-09-10
+
+### Fixed
+- **Derivasi flag Secure cookie konsisten (FE-AUDIT-002)**: `POST /api/auth/refresh` + `POST /api/auth/logout` baca Secure dari env `NEXT_PUBLIC_BASE_URL` sementara callback/authorize dari request proto (`x-forwarded-proto` aware) → flap bila env=http di belakang LB https (browser tolak overwrite/clear tak matching). Kini request-derived (`x-forwarded-proto` → URL proto → env fallback, param optional jaga caller lama) di kedua route, pola verbatim callback. Bukti: TDD merah→hijau (`derives Secure from the request proto` env http + proto https → `Secure`), vitest 6/6 route + 83/83 auth + `tsc` 0, image `:1.18.100` live OpenShift `payu-dev` root 200 + `/api/health` 200 + `POST /api/auth/refresh` 401 `Set-Cookie: accessToken=; ... Secure; HttpOnly; SameSite=lax`.
 ## [1.18.99] - 2026-09-10
 
 ### Fixed
