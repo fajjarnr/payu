@@ -37,9 +37,8 @@ public class WalletGrpcPaymentAdapter implements WalletPaymentPort {
     @PostConstruct
     void init() {
         channel = GrpcChannelSupport.channel(walletServiceAddress);
-        walletStub = GrpcChannelSupport.withDeadline(
-                WalletServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        // GRPC-012 / RELAY-011: base stub deadline-free. Per-call withDeadlineAfter(3s) below replaces.
+        walletStub = WalletServiceGrpc.newBlockingStub(channel);
     }
 
     @PreDestroy

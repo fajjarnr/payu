@@ -62,11 +62,16 @@ public class WalletGrpcAdapter implements WalletServicePort {
         String host = parts[0];
         int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 9090;
 
+        // GRPC-012 / RELAY-011: NEVER bake deadline into shared stub — freezes at creation.
+        // Deadline applies per call via stubWithDeadline().
         channel = channelFactory.channel(walletServiceAddress);
-        walletStub = channelFactory.blockingStub(
-                WalletServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        walletStub = channelFactory.interceptedStub(
+                WalletServiceGrpc.newBlockingStub(channel));
         log.info("Initialized gRPC wallet-service stub at {}:{}", host, port);
+    }
+
+    private WalletServiceGrpc.WalletServiceBlockingStub stubWithDeadline() {
+        return walletStub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS);
     }
 
     @PreDestroy
@@ -98,7 +103,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setDescription("Investment purchase deduction")
                     .build();
 
-            ReservationResponse reserveResponse = walletStub.reserveBalance(reserveRequest);
+            ReservationResponse reserveResponse = stubWithDeadline().reserveBalance(reserveRequest);
 
             if (!reserveResponse.getSuccess()) {
                 throw new RuntimeException("Failed to reserve balance: " + reserveResponse.getError().getMessage());
@@ -112,7 +117,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setReservationId(reservationId)
                     .build();
 
-            TransactionResponse commitResponse = walletStub.commitReservation(commitRequest);
+            TransactionResponse commitResponse = stubWithDeadline().commitReservation(commitRequest);
 
             if (!commitResponse.getSuccess()) {
                 throw new RuntimeException("Failed to commit reservation: " + commitResponse.getError().getMessage());
@@ -141,7 +146,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setDescription("Investment redemption credit")
                     .build();
 
-            TransactionResponse response = walletStub.credit(request);
+            TransactionResponse response = stubWithDeadline().credit(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC balance credited: userId={}, txId={}", userId, response.getTransactionId());
@@ -165,7 +170,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setAccountId(userId)
                     .build();
 
-            BalanceResponse response = walletStub.getAvailableBalance(request);
+            BalanceResponse response = stubWithDeadline().getAvailableBalance(request);
 
             if (response.getAvailableBalance() != null
                     && !response.getAvailableBalance().getAmount().isEmpty()) {

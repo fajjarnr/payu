@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.98] - 2026-09-10
+
+### Fixed
+- **gRPC deadline beku sisa (RELAY-011 remainder)**: `GrpcChannelFactory.blockingStub` + `GrpcChannelSupport.withDeadline` di init → stub shared mati 30 dtk pasca-boot (`DEADLINE_EXCEEDED`). Pola transaction-service (`stubWithDeadline` per-call) kini di billing/fx/investment/promotion/statement `WalletGrpcAdapter` + lending `AccountGrpcClient` + statement `TransactionServiceClient` (lending payment init raw, per-call 3 dtk kept). Factory tambah `interceptedStub` (interceptor tanpa deadline) + regression `GrpcChannelFactoryTest.interceptedStubHasNoFrozenDeadline`. Bukti: starter tests 5/5, 6 service compile+package bersih, bytecode per-call 2/2/2, image `:1.18.98` 6/6 push + pod `payu-dev` 6/6 Running (boot hanya mentok DB, cluster fresh tanpa postgres).
+
 ## [1.18.97] - 2026-09-04
 
 ### Fixed

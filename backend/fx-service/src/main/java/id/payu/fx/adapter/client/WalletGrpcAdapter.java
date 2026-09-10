@@ -57,11 +57,16 @@ public class WalletGrpcAdapter implements WalletServicePort {
         String host = parts[0];
         int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 9090;
 
+        // GRPC-012 / RELAY-011: NEVER bake deadline into shared stub — freezes at creation.
+        // Deadline applies per call via stubWithDeadline().
         channel = channelFactory.channel(walletServiceAddress);
-        walletStub = channelFactory.blockingStub(
-                WalletServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        walletStub = channelFactory.interceptedStub(
+                WalletServiceGrpc.newBlockingStub(channel));
         log.info("Initialized gRPC wallet-service stub at {}:{}", host, port);
+    }
+
+    private WalletServiceGrpc.WalletServiceBlockingStub stubWithDeadline() {
+        return walletStub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS);
     }
 
     @PreDestroy
@@ -92,7 +97,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setDescription("FX debit")
                     .build();
 
-            TransactionResponse response = walletStub.debit(request);
+            TransactionResponse response = stubWithDeadline().debit(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC debit successful: accountId={}, txId={}", accountId, response.getTransactionId());
@@ -124,7 +129,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setDescription("FX credit")
                     .build();
 
-            TransactionResponse response = walletStub.credit(request);
+            TransactionResponse response = stubWithDeadline().credit(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC credit successful: accountId={}, txId={}", accountId, response.getTransactionId());
@@ -156,7 +161,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setDescription("FX reversal")
                     .build();
 
-            TransactionResponse response = walletStub.credit(request);
+            TransactionResponse response = stubWithDeadline().credit(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC reverseDebit successful: accountId={}, txId={}", accountId, response.getTransactionId());

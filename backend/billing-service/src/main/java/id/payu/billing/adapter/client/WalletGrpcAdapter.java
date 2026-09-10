@@ -60,11 +60,16 @@ public class WalletGrpcAdapter implements WalletPort {
         String host = parts[0];
         int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 9090;
 
+        // GRPC-012 / RELAY-011: NEVER bake deadline into shared stub — freezes at creation.
+        // Deadline applies per call via stubWithDeadline().
         channel = channelFactory.channel(walletServiceAddress);
-        walletStub = channelFactory.blockingStub(
-                WalletServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        walletStub = channelFactory.interceptedStub(
+                WalletServiceGrpc.newBlockingStub(channel));
         log.info("Initialized gRPC wallet-service stub at {}:{}", host, port);
+    }
+
+    private WalletServiceGrpc.WalletServiceBlockingStub stubWithDeadline() {
+        return walletStub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS);
     }
 
     @PreDestroy
@@ -95,7 +100,7 @@ public class WalletGrpcAdapter implements WalletPort {
                     .setDescription("Billing payment reserve")
                     .build();
 
-            ReservationResponse response = walletStub.reserveBalance(request);
+            ReservationResponse response = stubWithDeadline().reserveBalance(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC balance reserved: reservationId={}", response.getReservationId());
@@ -119,7 +124,7 @@ public class WalletGrpcAdapter implements WalletPort {
                     .setReservationId(reservationId)
                     .build();
 
-            TransactionResponse response = walletStub.commitReservation(request);
+            TransactionResponse response = stubWithDeadline().commitReservation(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC reservation committed: reservationId={}, txId={}", reservationId, response.getTransactionId());
@@ -142,7 +147,7 @@ public class WalletGrpcAdapter implements WalletPort {
                     .setReservationId(reservationId)
                     .build();
 
-            TransactionResponse response = walletStub.releaseReservation(request);
+            TransactionResponse response = stubWithDeadline().releaseReservation(request);
 
             if (response.getSuccess()) {
                 log.info("gRPC reservation released: reservationId={}", reservationId);

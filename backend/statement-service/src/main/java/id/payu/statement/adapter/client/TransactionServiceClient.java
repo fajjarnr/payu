@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Client for Transaction Service over gRPC (GRPC-005).
@@ -38,9 +39,9 @@ public class TransactionServiceClient implements TransactionServicePort {
     @PostConstruct
     void init() {
         channel = GrpcChannelSupport.channel(transactionServiceAddress);
-        stub = GrpcChannelSupport.withDeadline(
-                TransactionServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        // GRPC-012 / RELAY-011: NEVER bake deadline into shared stub — freezes at creation.
+        // Deadline applies per call below.
+        stub = TransactionServiceGrpc.newBlockingStub(channel);
     }
 
     @PreDestroy
@@ -62,7 +63,7 @@ public class TransactionServiceClient implements TransactionServicePort {
                     .setAccountId(accountId)
                     .setPage(id.payu.grpc.common.PageRequest.newBuilder().setPage(0).setSize(500).build())
                     .build();
-            stub.getHistory(request).forEachRemaining(tx -> {
+            stub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS).getHistory(request).forEachRemaining(tx -> {
                 LocalDate date = toLocalDate(tx.getCreatedAt());
                 if (date != null && !date.isBefore(startDate) && !date.isAfter(endDate)) {
                     records.add(new TransactionRecord(
@@ -88,7 +89,7 @@ public class TransactionServiceClient implements TransactionServicePort {
      */
     public TransactionRecord getTransaction(String transactionId) {
         try {
-            TransactionResponse tx = stub.getTransaction(GetTransactionRequest.newBuilder()
+            TransactionResponse tx = stub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS).getTransaction(GetTransactionRequest.newBuilder()
                     .setTransactionId(transactionId)
                     .build());
             return new TransactionRecord(

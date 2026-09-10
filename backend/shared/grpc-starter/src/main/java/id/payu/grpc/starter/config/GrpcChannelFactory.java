@@ -25,15 +25,27 @@ public class GrpcChannelFactory {
     }
 
     /**
-     * Build a blocking stub with the starter's client interceptors + a bounded
-     * deadline (GRPC-011).
+     * Attach interceptors without deadline. Store result at init.
+     * Apply deadline per call via {@link GrpcChannelSupport#withDeadline}.
+     * RELAY-011: NEVER bake deadline into shared stub, freezes at creation.
      */
-    public <T extends AbstractStub<T>> T blockingStub(T stub, int deadlineSeconds) {
+    public <T extends AbstractStub<T>> T interceptedStub(T stub) {
         T intercepted = stub;
         for (ClientInterceptor interceptor : clientInterceptors) {
             intercepted = intercepted.withInterceptors(interceptor);
         }
-        return GrpcChannelSupport.withDeadline(intercepted, deadlineSeconds);
+        return intercepted;
+    }
+
+    /**
+     * Build a blocking stub with interceptors + bounded deadline (GRPC-011).
+     * RELAY-011: NEVER store result in field. Deadline freezes at creation,
+     * every call 30s after boot fails DEADLINE_EXCEEDED. Use
+     * {@link #interceptedStub} at init plus per-call
+     * {@link GrpcChannelSupport#withDeadline}.
+     */
+    public <T extends AbstractStub<T>> T blockingStub(T stub, int deadlineSeconds) {
+        return GrpcChannelSupport.withDeadline(interceptedStub(stub), deadlineSeconds);
     }
 
     public List<ClientInterceptor> getClientInterceptors() {

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * gRPC client for account-service (GRPC-001 server live).
@@ -31,9 +32,9 @@ public class AccountGrpcClient {
     @PostConstruct
     void init() {
         channel = GrpcChannelSupport.channel(accountServiceAddress);
-        stub = GrpcChannelSupport.withDeadline(
-                AccountServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        // GRPC-012 / RELAY-011: NEVER bake deadline into shared stub — freezes at creation.
+        // Deadline applies per call below.
+        stub = AccountServiceGrpc.newBlockingStub(channel);
     }
 
     @PreDestroy
@@ -48,7 +49,8 @@ public class AccountGrpcClient {
      */
     public id.payu.lending.interfaces.dto.UserResponse getUserProfile(String userId) {
         try {
-            id.payu.account.grpc.UserProfileResponse profile = stub.getUserProfile(
+            id.payu.account.grpc.UserProfileResponse profile = stub
+                    .withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS).getUserProfile(
                     GetUserProfileRequest.newBuilder().setUserId(userId).build());
             return new id.payu.lending.interfaces.dto.UserResponse(
                     java.util.UUID.fromString(profile.getUserId()),
@@ -71,7 +73,8 @@ public class AccountGrpcClient {
     public List<UUID> getAccountIdsByUserId(String userId) {
         try {
             List<UUID> accountIds = new ArrayList<>();
-            stub.getAccountsByUser(GetAccountsByUserRequest.newBuilder()
+            stub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS)
+                    .getAccountsByUser(GetAccountsByUserRequest.newBuilder()
                     .setUserId(userId)
                     .build())
                     .forEachRemaining(account -> accountIds.add(UUID.fromString(account.getAccountId())));

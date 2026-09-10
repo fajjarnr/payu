@@ -56,11 +56,16 @@ public class WalletGrpcAdapter implements WalletServicePort {
         String host = parts[0];
         int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 9090;
 
+        // GRPC-012 / RELAY-011: NEVER bake deadline into shared stub — freezes at creation.
+        // Deadline applies per call via stubWithDeadline().
         channel = channelFactory.channel(walletServiceAddress);
-        walletStub = channelFactory.blockingStub(
-                WalletServiceGrpc.newBlockingStub(channel),
-                GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS);
+        walletStub = channelFactory.interceptedStub(
+                WalletServiceGrpc.newBlockingStub(channel));
         log.info("Initialized gRPC wallet-service stub at {}:{}", host, port);
+    }
+
+    private WalletServiceGrpc.WalletServiceBlockingStub stubWithDeadline() {
+        return walletStub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS);
     }
 
     @PreDestroy
@@ -85,7 +90,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
                     .setAccountId(customerId)
                     .build();
 
-            BalanceResponse response = walletStub.getBalance(request);
+            BalanceResponse response = stubWithDeadline().getBalance(request);
 
             if (response.getBalance() != null && !response.getBalance().getAmount().isEmpty()) {
                 BigDecimal balance = new BigDecimal(response.getBalance().getAmount());
@@ -116,7 +121,7 @@ public class WalletGrpcAdapter implements WalletServicePort {
             long cutoffSeconds = endDate.atTime(23, 59, 59)
                     .atZone(java.time.ZoneId.systemDefault()).toEpochSecond();
 
-            java.util.Iterator<id.payu.wallet.grpc.LedgerEntry> entries = walletStub.getHistory(request);
+            java.util.Iterator<id.payu.wallet.grpc.LedgerEntry> entries = stubWithDeadline().getHistory(request);
             while (entries.hasNext()) {
                 id.payu.wallet.grpc.LedgerEntry entry = entries.next();
                 if (entry.hasTimestamp() && entry.getTimestamp().getSeconds() <= cutoffSeconds) {
