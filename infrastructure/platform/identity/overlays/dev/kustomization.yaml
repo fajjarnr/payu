@@ -55,14 +55,17 @@ patches:
           - http://payu-dev.apps.fajjjar.my.id
           - https://payu-dev.apps.fajjjar.my.id
           - "+"
-# Operator watches the env namespace (mirrors sit overlay).
+# payu-dev already has payu-dev-operatorgroup (pre-existing): adding a second
+# OperatorGroup breaks ALL OLM installs in the namespace. Use it, don't create.
   - target:
       kind: OperatorGroup
       name: rhbk-operator-group
     patch: |-
-      - op: replace
-        path: /spec/targetNamespaces/0
-        value: payu-dev
+      apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        name: rhbk-operator-group
+      $patch: delete
 # Realm lives in the shared `keycloak` DB (moved, not recreated):
 # never re-import over live state (L-377). Fresh envs import once manually.
   - target:
