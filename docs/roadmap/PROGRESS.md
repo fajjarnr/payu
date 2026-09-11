@@ -1,4 +1,9 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## RHACS scan hijau beneran via roxctl 4.11.1 (2026-09-11)
+
+- **Fix**: cert-manager PKI privat + `defaultTLSSecret.name` + `tls.additionalCAs` service-signer (`security/acs/rhacs.yaml`); pipeline pin CA issuer 10y (`tekton/rhacs-central-ca.yaml`); integration `payu-internal-registry` (Generic Docker Registry, insecure, username pendek — registry OCP 401 untuk username `system:serviceaccount:` panjang); RoleBinding `registry-viewer` (`security/acs/registry-reader-rbac.yaml`, L-453). Password integration = token SA live-only `payu-dev/rhacs-registry-reader-token`.
+- **Verification**: `roxctl 4.11.1 image scan` → 417 components / 252 CVE / 55 fixable / topCvss 8.6 / Scanner V4, 0 ERROR. Pilot build run-2 `nexus-t2pbt` True/Completed 6m29s (run-1 9m36s) — tinggal run-3 untuk klaim target ≤10m.
+
 ## Tekton Nexus-mirror auth + build 9m36s (2026-09-11)
 
 - **Fix**: `mirrorOf central → Nexus` tanpa auth = 401 massal (anonymous OFF default). Role `tekton-ci-maven-read` (read/browse `maven-public`) + user via REST + `<servers>` + `<blocked>false</blocked>` di `ci-secrets.yaml` (`01b1b1b0a`, L-452). Komentar fallback-repo1 yang salah dikoreksi (mirror intersepsi id `central`).

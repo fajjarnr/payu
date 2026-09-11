@@ -16,6 +16,12 @@ spec:
     declarativeConfiguration:
       secrets:
         - name: rhacs-m2m-config
+    # Serving cert from cert-manager (stable private CA) instead of Central's
+    # auto-generated cert: reinstalls used to rotate the CA and silently break
+    # every pipeline scan (x509 unknown authority, L-453). Leaf auto-renews;
+    # pipeline pins the 10y issuer CA in rhacs-central-ca (tekton/).
+    defaultTLSSecret:
+      name: payu-central-serving-tls
     exposure:
       route:
         enabled: true
@@ -26,6 +32,34 @@ spec:
       requests:
         cpu: 500m
         memory: 1Gi
+  # Trust OpenShift service-serving signer so Central/Scanner can reach the
+  # internal image registry over TLS (strict verify, no skipTLSVerify).
+  # Cluster-managed, rotates ~2y — refresh from configmap
+  # openshift-service-ca.crt/service-ca.crt if scans start x509-failing.
+  tls:
+    additionalCAs:
+    - name: openshift-service-serving-signer
+      content: |
+        -----BEGIN CERTIFICATE-----
+        MIIDUTCCAjmgAwIBAgIIIujRGHQUHlIwDQYJKoZIhvcNAQELBQAwNjE0MDIGA1UE
+        Awwrb3BlbnNoaWZ0LXNlcnZpY2Utc2VydmluZy1zaWduZXJAMTc4OTAxNTIwODAe
+        Fw0yNjA5MTAwNDQwMDhaFw0yODExMDgwNDQwMDlaMDYxNDAyBgNVBAMMK29wZW5z
+        aGlmdC1zZXJ2aWNlLXNlcnZpbmctc2lnbmVyQDE3ODkwMTUyMDgwggEiMA0GCSqG
+        SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDGq61qRPz771PqwSe+utaW7c/JiU9dDlv7
+        c0ULW9QC6So9pQLMEYRNylsUk7+Zpdu1FluYwISivAVtZjp3l5+/RF4mKT47h+tv
+        WX6yKLTqRhthzaYOcPxrYzVL5evVYclq5sz6k9vo5VF7p4ISaN4W0ZHAIQhcWcnL
+        ZH7KGro2UQPu/4cQCsxpOBP2PrK/qp+CX/wP6mY3HjHw8UGNH5xw1H6BXC3FU2k0
+        O+g/oGucDMqd5qxZ+ksKqBEsdKTFznppkYfpXvD+nuAJvMRJHBSIdlmgTznjCVpq
+        xTirLgjnJYy/sgthvX9E/EA/57PbwXuv8wYLOk+t2pSTmMK4buJrAgMBAAGjYzBh
+        MA4GA1UdDwEB/wQEAwICpDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTLc8rR
+        VlzQ/Int9jlsOhHPDHuB8DAfBgNVHSMEGDAWgBTLc8rRVlzQ/Int9jlsOhHPDHuB
+        8DANBgkqhkiG9w0BAQsFAAOCAQEAtm0XvdbWWyMrqwWSL8giBZNN9tQ9+geObnAy
+        EspQvOOw0lHMWdwmKRkbskiV5wUn50T8Tg+iRffsCnLnqqq2/X3i4m+cpR3mWGvD
+        LJmPLgewwcakYfGuQrjrsv0OQdjJF4xTfuqV0NLc0oGmUJWamMEbe//ecYMXMMVM
+        8rM7n0GhDbMsiZhBA3ScSUk/PoVmreOHB4hKUuxNLhLgV+fyhaVfy9eM5xxvmq+a
+        prBnHM9VB+c8dYwEDDS4F0sBqBzDdCgzFIb77MYHPEyNdqvrlkSP64mRESeQyAbs
+        i2wHs+iiQtBn1WGeb+01lWzsop/aSPi+7i9pK8Zc3c+oLs7igw==
+        -----END CERTIFICATE-----
   # Keep the operator-supported scanner alongside Scanner V4.
   scanner:
     analyzer:
@@ -82,3 +116,57 @@ spec:
       requests:
         cpu: 250m
         memory: 512Mi
+---
+# Private PKI for Central serving cert (cert-manager). LE can't issue .svc
+# names, so a private CA: pipeline pins this CA once (rhacs-central-ca),
+# leaf auto-renews every 90d without breaking scans.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: payu-central-selfsigned
+  namespace: stackrox
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: payu-central-ca
+  namespace: stackrox
+spec:
+  secretName: payu-central-ca-secret
+  commonName: PayU Central CA
+  isCA: true
+  duration: 87600h # 10y
+  privateKey:
+    algorithm: ECDSA
+    size: 384
+  issuerRef:
+    name: payu-central-selfsigned
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: payu-central-ca-issuer
+  namespace: stackrox
+spec:
+  ca:
+    secretName: payu-central-ca-secret
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: payu-central-serving
+  namespace: stackrox
+spec:
+  secretName: payu-central-serving-tls
+  duration: 2160h # 90d, auto-renewed by cert-manager
+  renewBefore: 360h
+  dnsNames:
+  - central.stackrox.svc
+  - central.stackrox
+  - central.stackrox.svc.cluster.local
+  issuerRef:
+    name: payu-central-ca-issuer
+    kind: Issuer
