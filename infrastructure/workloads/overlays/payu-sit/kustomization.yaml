@@ -137,7 +137,7 @@ images:
   digest: sha256:8f8d22ea0205e8a506cfc3dba8f9614577bf76755d88ae2c0eae14219633021f
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/wallet-service
-  newTag: "1.18.103"
+  digest: sha256:d1525c6575951735233ff67a6588610749c6467945cf81fb7bf62663a4c8be70
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/web-app
   newTag: "1.18.102"
