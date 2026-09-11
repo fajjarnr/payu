@@ -113,7 +113,10 @@ rules:
   - apiGroups: ["kafka.strimzi.io"]
     resources: ["*"]
     verbs: ["*"]
-  # Service Mesh / Istio
+  # Kogito / RHPAM (loan-origination-process runtime CR)
+  - apiGroups: ["rhpam.kiegroup.org"]
+    resources: ["*"]
+    verbs: ["create", "update", "patch", "delete"]
   - apiGroups: ["maistra.io"]
     resources: ["*"]
     verbs: ["*"]
