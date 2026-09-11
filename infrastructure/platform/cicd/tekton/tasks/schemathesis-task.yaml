@@ -101,7 +101,7 @@ spec:
             --exclude-checks not_a_server_error \
             --header "$HEADER" \
             --experimental=openapi-3.1 \
-            --report-dir "$REPORT_DIR" || STATUS=$?
+            --report-junit-path "$REPORT_DIR/junit.xml" || STATUS=$?
           STATUS=${STATUS:-0}
           echo "[*] schemathesis exit $STATUS, reports in $REPORT_DIR"
           exit $STATUS
@@ -115,7 +115,7 @@ spec:
             --exclude-checks status_code_conformance \
             --exclude-checks not_a_server_error \
             --experimental=openapi-3.1 \
-            --report-dir "$REPORT_DIR" || STATUS=$?
+            --report-junit-path "$REPORT_DIR/junit-fallback.xml" || STATUS=$?
           STATUS=${STATUS:-0}
           echo "[*] schemathesis exit $STATUS (fallback), reports in $REPORT_DIR"
           exit $STATUS
