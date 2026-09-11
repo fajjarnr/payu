@@ -7315,3 +7315,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Sync gagal `forbidden` bertahap: core/apps (awal), `rhpam`, `k8s.keycloak.org`, `routes/custom-host` (custom spec.host butuh verb subresource).
 
 **Fix**: tambah grup ke `argocd-sa-supplement.yaml` satu per satu, verifikasi via `oc auth can-i --list`. Pelajaran: pola error `cannot <verb> <resource>` = peta jalan; satu grup per komit agar revertibel.
+
+## L-452: Mirror tanpa auth = build berikut mati fail-closed + dependency:get bukan bukti (2026-09-11)
+
+**Context**: `mirrorOf central → Nexus maven-public` (3fffe01) tanpa kredensial: Nexus tolak anonymous (401, default operator) → build Tekton berikut 401 massal. Terpisah, komentar settings klaim repo1 sebagai fallback — salah: mirror intersepsi id `central`, jadi URL repo1 tak pernah dipakai.
+
+**Fix**: role `tekton-ci-maven-read` (read+browse `maven-public` saja, anonymous tetap OFF karena Route publik ada) + user `tekton-ci` via REST + `<servers>` di `ci-secrets.yaml` + `<blocked>false</blocked>` eksplisit untuk HTTP in-cluster. Bukti: pod verifikasi `dependency:resolve` → `Downloaded from payu-nexus junit-4.13.2.pom+jar BUILD SUCCESS`. Pelajaran: (1) sebelum switch mirrorOf, buktikan `mvn` sungguhan (bukan cuma curl) sebagai user CI; (2) `dependency:get` resolve standalone me-mirror ulang repo id hasil mirror → `maven-default-http-blocker` — validasi proxy harus pakai goal sekeluarga produksi (`package`/`dependency:resolve`); (3) tiap edit Secret XML validasi dulu sebelum apply (sekali PUT menelan `</mirrors>`).
