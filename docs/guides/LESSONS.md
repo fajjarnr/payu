@@ -7357,3 +7357,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Register SIT/UAT `500 Identity provider unavailable` (`ProcessingException`). UAT: base hardcode `PAYU_KEYCLOAK_SERVER_URL=payu-sso` (namespace kosong) + `ADMIN_USERNAME=admin` (master cuma punya `keycloak-admin`) → `user_not_found`. SIT: user `admin` ada tapi password secret ≠ master (`invalid_user_credentials`, 3 kombinasi gagal).
 
 **Fix**: URL per-env di root overlay (ikuti pola SIT/DEV) + username → `valueFrom payu-keycloak-admin/username` (dev `admin` tak berubah). UAT `201` tanpa sentuh password. Metode bukti: `curl` password-grant `admin-cli` langsung dari pod — `access_token` vs `invalid_grant` vs `user_not_found` (di log Keycloak `events`) membedakan URL-mati vs user-hilang vs password-salah tanpa tebak-tebakan. Sisa SIT (IDN-002) butuh reset kredensial master — tanpa jalur GitOps-only, minta persetujuan.
+
+## L-459: Gate merah → baca log app dulu, dan bedakan generate vs login password (2026-09-11)
+
+**Context**: k6 UAT tetap 0/50 setelah assert + identity diperbaiki. Dugaan awal rate-limit salah — log account-service tunjukkan `AUTH_BUS_001 Password must be at least 12 characters`: default generate k6 `P@ssw0rd123` 11 char.
+
+**Fix**: default generate → 12 char; `TEST_USERS` (login user existing) sengaja tak diubah + revert — password login harus sama dengan provisioning Keycloak yang tak terlihat, menebak = merusak. Pelajaran: (1) tiap gate merah, baca log service target di window run sebelum berteori; (2) kredensial generate (ikut policy backend saat ini) vs kredensial login (ikut data provisioning) diperlakukan beda.
