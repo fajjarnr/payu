@@ -1,0 +1,25 @@
+apiVersion: sonatype.com/v1alpha1
+kind: NexusRepo
+metadata:
+  name: payu-nexus
+  namespace: payu-nexus
+  labels:
+    app.kubernetes.io/name: nexus
+    app.kubernetes.io/part-of: payu
+spec:
+  statefulset:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: "2"
+    storageClass:
+      enabled: false
+  service:
+    enabled: true
+    name: payu-nexus
+    port: 8081
+  ingress:
+    enabled: false
