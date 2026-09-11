@@ -71,7 +71,7 @@ replicas:
 images:
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/analytics-service
-  newTag: "1.18.74"
+  newTag: "1.18.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/api-portal-service
   newTag: "1.18.74"
@@ -83,7 +83,7 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/billing-service
-  newTag: "1.18.74"
+  newTag: "1.18.98"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/cms-service
   newTag: "1.18.74"
@@ -95,7 +95,7 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/fx-service
-  newTag: "1.18.74"
+  newTag: "1.18.98"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/gateway-service
   newTag: "1.18.74"
@@ -104,13 +104,13 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/investment-service
-  newTag: "1.18.74"
+  newTag: "1.18.98"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/kyc-service
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/lending-service
-  newTag: "1.18.74"
+  newTag: "1.18.98"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/loan-origination-process
   newTag: "1.18.74"
@@ -119,28 +119,28 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/partner-service
-  newTag: "1.18.74"
+  newTag: "1.18.78"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/product-catalog-service
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/promotion-service
-  newTag: "1.18.74"
+  newTag: "1.18.98"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/statement-service
-  newTag: "1.18.74"
+  newTag: "1.18.98"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/support-service
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/transaction-service
-  newTag: "1.18.74"
+  newTag: "1.8.116"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/wallet-service
-  newTag: "1.18.74"
+  newTag: "1.18.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/web-app
-  newTag: "1.18.74"
+  newTag: "1.18.102"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-preprod/bi-fast-simulator
   newTag: "1.18.74"
