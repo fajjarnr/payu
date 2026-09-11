@@ -43,6 +43,7 @@ spec:
       args:
         - -ceu
         - |
+          mkdir -p "$XDG_CACHE_HOME" "$TMPDIR"
           # Scope suppressions to the scanned service: derive service name from
           # TARGET (registry/ns/<svc>[:tag][@digest] or sbom path) so a backend
           # image never inherits another service's .grype.yaml (e.g. web-app's
