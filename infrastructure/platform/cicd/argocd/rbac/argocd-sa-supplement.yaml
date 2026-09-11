@@ -144,6 +144,10 @@ rules:
   - apiGroups: ["postgresql.cnpg.io"]
     resources: ["*"]
     verbs: ["*"]
+  # Keycloak / RHBK (identity overlays manage Keycloak CRs per env)
+  - apiGroups: ["k8s.keycloak.org"]
+    resources: ["*"]
+    verbs: ["create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
