@@ -400,6 +400,7 @@ spec:
           type: Utilization
           averageUtilization: 70
 ---
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: lending-service-hpa
