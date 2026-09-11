@@ -26,7 +26,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Security Patches (RHACS Compliance) -->
+        <!-- CVE-2026-65182/65905/68525 tomcat 11.0.22→11.0.25, CVE-2026-75595 netty 4.2.15→4.2.17 (Trivy 2026-09-11 account-service:1.18.74). -->
         <!-- Jackson 2 versions are managed by SB 4.1.0's jackson-2-bom (currently 2.21.4 + annotations 2.21 which provides JsonSerializeAs required by Jackson 3 BOM). Do NOT pin <jackson.version> here unless you also bump the SB parent BOM. -->
+        <tomcat.version>11.0.25</tomcat.version>
+        <netty.version>4.2.17.Final</netty.version>
         <commons-io.version>2.18.0</commons-io.version>
         <commons-fileupload.version>1.6.0</commons-fileupload.version>
         <postgresql.version>42.7.12</postgresql.version>
