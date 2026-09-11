@@ -67,10 +67,11 @@ rules:
     resources:
       - customresourcedefinitions
     verbs: ["create", "update", "patch", "delete"]
-  # OpenShift Route
+  # OpenShift Route (+ custom-host: setting spec.host needs the subresource verb)
   - apiGroups: ["route.openshift.io"]
     resources:
       - routes
+      - routes/custom-host
     verbs: ["create", "update", "patch", "delete"]
   # OpenShift SCC (use only, NOT create/delete — too dangerous)
   - apiGroups: ["security.openshift.io"]
