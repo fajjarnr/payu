@@ -7261,3 +7261,57 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Rollout macet Pending spread + pod lama stale layani trafik (401). Live KEDA min 3, git min 1 (drift tak pernah apply). `oc scale` dimentahkan KEDA.
 
 **Fix**: apply overlay KEDA dev (deklaratif, min 1) + pecah deadlock ala L-438 (pause → scale RS lama 0 → resume) — TAPI pastikan RS yang di-scale memang yang live (cek nama RS pod, bukan tebak). Pelajaran: autoscaler adalah owner replika; `oc scale` melawannya sia-sia.
+
+## L-443: ArgoCD controller OOM = status fosil + operasi macet (2026-09-11)
+
+**Context**: Sync gagal misterius (pesan error basi berulang, operasi "Running" tanpa aktivitas controller berjam-jam, `another operation in progress` permanen). Pod controller restart 16x OOMKilled limit 2Gi.
+
+**Fix**: naikkan ke 4Gi via `argocd-cr.yaml` (git, bukan patch). Operator rollout, restart 0. Pelajaran: sebelum debug isi sync, cek `restartCount` + `lastState` controller dulu; OOM menjelaskan SEMUA gejala status basi.
+
+## L-444: CR cluster-scoped di workload sync ditolak AppProject whitelist (2026-09-11)
+
+**Context**: Env app gagal sync "tasks not valid" tanpa detail resource. Akar: `kogito-crd.yaml` (cluster-scoped) ikut base workload, sementara AppProject hanya allowlist Namespace.
+
+**Fix**: keluarkan CRD dari base workload (milik platform layer, apply sekali). Jangan lebarkan whitelist untuk tutupi manifest salah tempat.
+
+## L-445: Secret ganda antar Argo app = flap abadi (2026-09-11)
+
+**Context**: `payu-sit` tak pernah Synced: `payu-keycloak-admin` didefinisikan workloads DAN identity dengan konten beda → dua app saling timpa.
+
+**Fix**: single owner (identity), hapus dari 5 overlay workloads. Pelajaran: SharedResourceWarning = bug kepemilikan, bukan noise.
+
+## L-446: DoNotSchedule spread deadlock di cluster shared multi-env (2026-09-11)
+
+**Context**: Pod Pending "didn't match topology spread" walau node kosong: skew hostname menghitung pod se-label lintas namespace (5 env × pod sama).
+
+**Fix**: `ScheduleAnyway` di semua base (24 file). Spread tetap preferensi, tak pernah blocker. Sync Argo yang macet "waiting for healthy" karenanya ikut sembuh.
+
+## L-447: Tekton v1 + S2I entrypoint jebakan build Java (2026-09-11)
+
+**Context**: Task maven lama gagal schema (`steps[].resources` dihapus di v1) lalu gagal aneh (`java -jar <goals>`): step tanpa `command` membuat argumen dimakan entrypoint S2I run-java.
+
+**Fix**: `resources` → `computeResources`, tambah `command: ["mvn"]`. Pelajaran: error "tried to run goals as app" = entrypoint menelan args.
+
+## L-448: Flag tool ikut image terpin, bukan docs latest (2026-09-11)
+
+**Context**: Schemathesis gagal `No such option: --report-dir`, lalu `--report-junit-path` juga ditolak — docs Context7 versi terbaru beda dengan digest terpin.
+
+**Fix**: introspeksi langsung (`podman run <digest> run -h`) → `--junit-xml`. Pelajaran: pin digest = pin CLI; verifikasi flag ke image, bukan docs.
+
+## L-449: Arsip WAL tanpa bucket = DB mati berantai (2026-09-11)
+
+**Context**: Dev DB CrashLoop "no free disk space for WALs" + cascade CLBO semua service. Akar: plugin barman aktif tapi bucket S3 tak ada + secret hilang → WAL menumpuk 10Gi penuh.
+
+**Fix**: disable plugin archiver di base (catat utang PITR), lebarkan PVC WAL 10→20Gi, restart pod. Pelajaran: backup yang "terkonfigurasi" tanpa backend yang ada lebih buruk dari tanpa backup ( memberi rasa aman palsu + membunuh DB).
+
+## L-450: Nexus operator: SC hardcoded + template sts immutable (2026-09-11)
+
+**Context**: (1) Helm gagal import SC `gp3-csi` (butuh label helm) → `storageClass.enabled: false`. (2) Template PVC default ke SC fiktif `nexusrepo-storage` → sediakan SC bernama itu (EBS gp3). (3) Ubah volume template = recreate StatefulSet (immutable), bukan patch.
+
+**Fix**: urutan benar + PVC 50Gi Bound. Pelajaran: baca pesan error operator harfiah; SC yang diminta operator harus ada persis namanya.
+
+## L-451: Supplement RBAC controller bertumbuh per error (2026-09-11)
+
+**Context**: Sync gagal `forbidden` bertahap: core/apps (awal), `rhpam`, `k8s.keycloak.org`, `routes/custom-host` (custom spec.host butuh verb subresource).
+
+**Fix**: tambah grup ke `argocd-sa-supplement.yaml` satu per satu, verifikasi via `oc auth can-i --list`. Pelajaran: pola error `cannot <verb> <resource>` = peta jalan; satu grup per komit agar revertibel.
