@@ -16,6 +16,10 @@ spec:
     - Ingress
   ingress:
     - from:
+        # Same-namespace platform traffic (gateway → SNAP-BI). Without this,
+        # selecting these pods denies everything except tokobapak-dev in
+        # environments without a separate intra-namespace allow policy.
+        - podSelector: {}
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: tokobapak-dev
