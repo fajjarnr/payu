@@ -104,7 +104,7 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/investment-service
-  newTag: "1.18.98"
+  digest: sha256:64f5ce86473c3121740c3a2a3ee90a820070bb231526f60323b1e95ba442e1ee
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/kyc-service
   newTag: "1.18.74"
