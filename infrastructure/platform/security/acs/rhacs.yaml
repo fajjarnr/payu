@@ -64,8 +64,10 @@ spec:
   clusterName: payu-openshift
   centralEndpoint: central.stackrox.svc:443
   admissionControl:
-    enforcement: Enabled
-    failurePolicy: Fail
+    # Audit-first rollout 2026-09-11: sensor/collector detect, nothing blocked.
+    # Promote to Enabled/Fail after policy validation evidence on dev/sit.
+    enforcement: Disabled
+    failurePolicy: Ignore
     bypass: BreakGlassAnnotation
   perNode:
     collector:
