@@ -7375,3 +7375,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: (1) Grant password RHBK via `admin-cli` return access token TANPA `sub`/`aud` → gateway tolak (`JWT missing subject`). (2) Broker Kafka `UnknownHostException` sementara pod lain resolve instan.
 
 **Fix**: (1) `scope=openid` → ambil `id_token` (ada `sub`) untuk bearer k6; buktikan via decode klaim, bukan asumsi shape. (2) Debug DNS dengan matriks: `getent` dari pod sakit vs pod sehat se-node + cek policy/endpoint/sertifikat/nsswitch satu per satu; bila semua identik kecuali perilaku → catat sebagai anomali platform (CNI) dengan bukti eliminasi, jangan bongkar node dari app-loop.
+
+## L-462: Pipeline hygiene — namespace eksplisit, jangan hapus baris saat ganti blok, fallback butuh RBAC (2026-09-11)
+
+**Context**: Tiga kegagalan beruntun di loop transaction-service, semuanya non-app: (1) `oc apply` tanpa `-n` mendarat di namespace aktif (`default`) — PipelineRun `CouldntGetPipeline`; (2) edit scoping grype menimpa blok termasuk `mkdir -p` → `prepare-cache-dirs` exit 1; (3) `argocd-sync-wait` fallback Deployment loop diam — SA `pipeline` hanya boleh baca Argo apps, tak bisa `get deploy` (`oc auth can-i --as` membuktikan).
+
+**Fix**: (1) Selalu `-n payu-cicd` (current project `default` menipu); hapus objek nyasarnya. (2) Saat ganti isi blok script, diff dulu vs aslinya baris-per-baris. (3) Role `deployment-rollout-reader` (get deployments, dev/sit/uat) + binding; task lolos di poll berikut tanpa rebuild. Pelajaran: fallback silent-loop = curigai RBAC dulu via `can-i --as`; template pipelinerun bisa menunjuk Pipeline yang belum live (`30 file, 1 applied`) — verifikasi `oc get pipeline` sebelum trigger.
