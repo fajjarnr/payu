@@ -7363,3 +7363,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: k6 UAT tetap 0/50 setelah assert + identity diperbaiki. Dugaan awal rate-limit salah — log account-service tunjukkan `AUTH_BUS_001 Password must be at least 12 characters`: default generate k6 `P@ssw0rd123` 11 char.
 
 **Fix**: default generate → 12 char; `TEST_USERS` (login user existing) sengaja tak diubah + revert — password login harus sama dengan provisioning Keycloak yang tak terlihat, menebak = merusak. Pelajaran: (1) tiap gate merah, baca log service target di window run sebelum berteori; (2) kredensial generate (ikut policy backend saat ini) vs kredensial login (ikut data provisioning) diperlakukan beda.
+
+## L-460: Load-test auth harus ikut arsitektur auth (PKCE-only ⇒ grant langsung) (2026-09-11)
+
+**Context**: k6 `login()` POST password ke gateway/auth ditolak (`MISSING_TOKEN`/`401`) — platform PKCE-only by design (LOGIN-003), endpoint password-login memang tak ada. Perbaikan assert+password+identity tak cukup; sesi tak pernah terbentuk.
+
+**Fix**: `login()` grant `password` langsung ke Keycloak via public `admin-cli` (directAccessGrants, tanpa secret — pola `smoke-test.js`), `KEYCLOAK_URL` per-env dari task (derivasi host gateway). Terbukti manual `access_token`. Pelajaran: saat test auth gagal total padahal kredensial benar, verifikasi dulu endpoint-nya memang ada di kontrak platform — jangan asumsikan flow login konvensional.
