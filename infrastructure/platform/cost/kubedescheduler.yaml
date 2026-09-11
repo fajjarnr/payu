@@ -35,7 +35,13 @@ spec:
   # Automatic = actually evict and reschedule pods
   mode: Automatic
 
-  # Profile customizations — no namespace filter = applies to entire cluster
+  # Profile customizations — default already excludes openshift-*/kube-system.
+  # Excluded: monitoring/security (restart = blind spot) + CI/CD (kill running runs).
   profileCustomizations:
     # Low threshold = more aggressive rebalancing (triggers even at small imbalance)
     devLowNodeUtilizationThresholds: Low
+    namespaces:
+      excluded:
+        - stackrox
+        - rhacs-operator
+        - payu-cicd
