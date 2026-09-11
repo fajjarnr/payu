@@ -1,53 +1,52 @@
-# PayU MachineAutoscaler — current cluster (payu-kn6xr, ap-southeast-1)
+# PayU MachineAutoscaler — current cluster (payu-c5pjf, ap-southeast-1)
 # Worker pool: 3 AZs (ap-southeast-1a, 1b, 1c).
-# Min 1 per AZ (3 total) = current baseline (42+ pods in payu-dev + platform services).
-# Max 4 per AZ (12 total) = dynamic scaling ceiling for SIT/UAT/preprod/prod + k6 load runs.
+# Min 1 per AZ (3 total) = current baseline.
+# Max 2 per AZ (6 total) = live ceiling 2026-09-11; raise only with capacity evidence.
 ---
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
 metadata:
-  name: payu-worker-ap-southeast-1a
+  name: payu-c5pjf-worker-ap-southeast-1a
   namespace: openshift-machine-api
   annotations:
-    payu.io/updated-at: "2026-08-21"
-    payu.io/reason: "worker pool growth for promotion environments and k6 performance runs"
+    payu.io/updated-at: "2026-09-11"
+    payu.io/reason: "aligned to live cluster payu-c5pjf, min1/max2 per AZ"
 spec:
   minReplicas: 1
-  maxReplicas: 4
+  maxReplicas: 2
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
-    name: payu-kn6xr-worker-ap-southeast-1a
+    name: payu-c5pjf-worker-ap-southeast-1a
 ---
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
 metadata:
-  name: payu-worker-ap-southeast-1b
+  name: payu-c5pjf-worker-ap-southeast-1b
   namespace: openshift-machine-api
   annotations:
-    payu.io/updated-at: "2026-08-21"
-    payu.io/reason: "worker pool growth for promotion environments and k6 performance runs"
+    payu.io/updated-at: "2026-09-11"
+    payu.io/reason: "aligned to live cluster payu-c5pjf, min1/max2 per AZ"
 spec:
   minReplicas: 1
-  maxReplicas: 4
+  maxReplicas: 2
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
-    name: payu-kn6xr-worker-ap-southeast-1b
+    name: payu-c5pjf-worker-ap-southeast-1b
 ---
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
 metadata:
-  name: payu-worker-ap-southeast-1c
+  name: payu-c5pjf-worker-ap-southeast-1c
   namespace: openshift-machine-api
   annotations:
-    payu.io/updated-at: "2026-08-21"
-    payu.io/reason: "worker pool growth for promotion environments and k6 performance runs"
+    payu.io/updated-at: "2026-09-11"
+    payu.io/reason: "aligned to live cluster payu-c5pjf, min1/max2 per AZ"
 spec:
   minReplicas: 1
-  maxReplicas: 4
+  maxReplicas: 2
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
-    name: payu-kn6xr-worker-ap-southeast-1c
-
+    name: payu-c5pjf-worker-ap-southeast-1c

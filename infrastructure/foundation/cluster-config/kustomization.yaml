@@ -11,4 +11,3 @@ resources:
   - efs-storage.yaml
   - machines/cluster-autoscaler.yaml
   - machines/worker-machineautoscalers.yaml
-  - machines/machinesets/workers-us-east-1f.yaml
