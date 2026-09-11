@@ -81,8 +81,13 @@ spec:
       # enabling now puts cluster into ContinuousArchiving=False + reconciler loop.
       # Upgrade path: after CNPG operator syncs, re-enable postgresql.synchronous block.
 
+  # 2026-09-11: barman WAL archiver DISABLED — bucket s3://payu-backups-*
+  # nonexistent + secret payu-backup-s3 absent (no Vault) on this cluster.
+  # Archiving failed -> WAL pileup -> 10Gi full -> DB down -> app cascade.
+  # Re-enable with valid bucket+creds before claiming PITR/RPO=0.
   plugins:
     - name: barman-cloud.cloudnative-pg.io
+      enabled: false
       isWALArchiver: true
       parameters:
         barmanObjectName: payu-database-backup
