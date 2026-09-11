@@ -21,6 +21,7 @@ spec:
       enabled: false
     volumeClaimTemplate:
       enabled: true
+      storageClassName: gp3-csi
   service:
     docker:
       enabled: false
