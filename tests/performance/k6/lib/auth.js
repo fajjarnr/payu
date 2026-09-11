@@ -80,7 +80,8 @@ export function login(gatewayUrl, username, password) {
     grant_type: 'password',
     client_id: clientId,
     username: username,
-    password: password
+    password: password,
+    scope: 'openid profile email'
   };
 
   const response = http.post(loginUrl, payload, {
@@ -93,13 +94,17 @@ export function login(gatewayUrl, username, password) {
 
   const body = parseJson(response.body);
 
+  // Prefer the ID token: it carries `sub` (RHBK password-grant access tokens
+  // omit subject/audience claims, which the gateway requires).
+  const token = body.id_token !== undefined ? body.id_token : body.access_token;
+
   const success = check(response, {
     'login status is 200': (r) => r.status === 200,
-    'login returns access token': () => body.access_token !== undefined
+    'login returns access token': () => token !== undefined
   });
 
   if (success) {
-    return body.access_token;
+    return token;
   }
 
   return null;
