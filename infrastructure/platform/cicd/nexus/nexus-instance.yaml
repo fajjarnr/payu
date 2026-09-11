@@ -20,7 +20,7 @@ spec:
     storageClass:
       enabled: false
     volumeClaimTemplate:
-      enabled: false
+      enabled: true
   service:
     docker:
       enabled: false
