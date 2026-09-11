@@ -809,6 +809,9 @@ patches:
         spec:
           containers:
           - name: app
+            resources:
+              limits:
+                memory: 2Gi
             env:
             - name: QUARKUS_OIDC_TOKEN_ISSUER
               value: "https://sso-sit.apps.fajjjar.my.id/realms/payu"
