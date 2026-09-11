@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-nexus
+  labels:
+    app.kubernetes.io/name: nexus
+    app.kubernetes.io/part-of: payu
+    payu.io/managed-by: platform-team
+    payu.io/environment-class: platform
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: nexus-operator
+  namespace: payu-nexus
+spec:
+  targetNamespaces:
+    - payu-nexus
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: nexus-repository-ha-operator
+  namespace: payu-nexus
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: nexus-repository-ha-operator-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
