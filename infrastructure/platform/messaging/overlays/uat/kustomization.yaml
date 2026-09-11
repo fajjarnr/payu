@@ -33,14 +33,26 @@ patches:
       group: kafka.strimzi.io
       version: v1
       kind: KafkaNodePool
-      name: "^(controller|broker)$"
+      name: "^(controller)$"
     patch: |-
       - op: replace
         path: /spec/replicas
         value: 1
       - op: replace
         path: /spec/resources/requests/cpu
-        value: 50m
+        value: 250m
+  - target:
+      group: kafka.strimzi.io
+      version: v1
+      kind: KafkaNodePool
+      name: "^(broker)$"
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/resources/requests/cpu
+        value: 1000m
   - target:
       group: broker.amq.io
       version: v1beta1
