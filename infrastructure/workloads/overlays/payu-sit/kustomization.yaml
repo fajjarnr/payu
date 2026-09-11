@@ -116,7 +116,7 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/notification-service
-  newTag: "1.18.74"
+  digest: sha256:6f066fbb43c52b28346b9ae8764b9ec1f5b091a7ab0d7db70d191a6909930c24
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/partner-service
   digest: sha256:266480d3eb3a388f03235b783ceda254c24cd22a3aff0e301d1f81a6eb321a6c
