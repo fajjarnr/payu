@@ -106,7 +106,25 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- PayU Shared Modules -->
+            <!-- CVE-2026-75595 fleet pin: explicit io.netty pins beat nested-BOM property games (statement-service re-imports spring-boot-dependencies directly, so <netty.version> property never reaches its nested netty-bom import -> 4.2.15 lolos; explicit pins menang seperti pola gateway). Quarkus services tak terdampak (parent quarkus-bom sendiri). -->
+            <dependency><groupId>io.netty</groupId><artifactId>netty-buffer</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec-base</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec-compression</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec-dns</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec-http2</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec-http</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec-marshalling</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec-protobuf</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec-socks</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-codec</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-common</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-handler-proxy</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-handler</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-resolver-dns</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-resolver</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-transport-classes-epoll</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-transport-native-unix-common</artifactId><version>4.2.17.Final</version></dependency>
+            <dependency><groupId>io.netty</groupId><artifactId>netty-transport</artifactId><version>4.2.17.Final</version></dependency>
             <dependency>
                 <groupId>id.payu.shared</groupId>
                 <artifactId>api-commons</artifactId>
