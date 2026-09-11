@@ -1,4 +1,10 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Tekton Nexus-mirror auth + build 9m36s (2026-09-11)
+
+- **Fix**: `mirrorOf central → Nexus` tanpa auth = 401 massal (anonymous OFF default). Role `tekton-ci-maven-read` (read/browse `maven-public`) + user via REST + `<servers>` + `<blocked>false</blocked>` di `ci-secrets.yaml` (`01b1b1b0a`, L-452). Komentar fallback-repo1 yang salah dikoreksi (mirror intersepsi id `central`).
+- **Verification**: `account-service-build-nexus-pvhbw` True/Completed 13:34:48→13:44:24Z (**9m36s** vs 30m cwxtc / 23m r97sk; semua TaskRun green) — compile 3m30s, 252 artifact `Downloaded from payu-nexus`, 0 401. Pilot CICD-PERF run-1 ≤10m; butuh ≥3 run sebelum klaim target.
+- **Parked (butuh keputusan)**: prod `account-service` Degraded = env tak pernah provision (ns `payu` dibuat hari ini, 0 ImageStream) — JANGAN dorong image gagal-UAT ke prod; UAT `9vxn9` k6 gagal valid (gateway down saat itu, gate bekerja) → re-run deploy-UAT pasca-sync 13:16Z menunggu approval; identity OutOfSync kosmetik (secret realm-aligned L-408 + label ns platform) + ghost ns `payu-sso` (destination stale pra-migrasi, auto-recreate via CreateNamespace) — tak disentuh (area SSO).
+
 ## IdP per-env — dev Keycloak payu-sso → payu-dev (2026-09-10)
 
 - **Move**: DB dipakai bersama (tanpa migrasi data/person/keys) — overlay dev di-retarget `payu-sso→payu-dev` + operator + RealmImport di-delete eksplisit (anti-clobber L-377) + OG duplikat di-drop (pre-existing `payu-dev-operatorgroup`); STS lama scale 0 → CR lama delete → Keycloak baru Ready di DB yang sama (users/subs/keys/mapper utuh, tanpa re-link).
