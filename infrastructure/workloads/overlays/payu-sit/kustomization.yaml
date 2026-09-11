@@ -128,7 +128,7 @@ images:
   newTag: "1.18.98"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/statement-service
-  newTag: "1.18.98"
+  digest: sha256:b78c1e9318ac8842c1bdde8abfad70ccb635ebfb095157ab7be69c0eb6f72ec1
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/support-service
   newTag: "1.18.74"
