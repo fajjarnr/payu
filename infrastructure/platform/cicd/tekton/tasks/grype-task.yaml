@@ -43,21 +43,25 @@ spec:
       args:
         - -ceu
         - |
-          mkdir -p "$XDG_CACHE_HOME" "$TMPDIR"
-          # A service may ship a .grype.yaml documenting targeted suppressions
-          # (e.g. framework-vendored copies under next/dist/compiled).
+          # Scope suppressions to the scanned service: derive service name from
+          # TARGET (registry/ns/<svc>[:tag][@digest] or sbom path) so a backend
+          # image never inherits another service's .grype.yaml (e.g. web-app's
+          # next/dist/compiled excludes). Falls back to repo-root config, else empty.
           cfg=""
           base="$(workspaces.source.path)"
-          for cand in "$base/.grype.yaml" \
-                      "$base"/*"/.grype.yaml" \
-                      "$base"/*/*"/.grype.yaml"; do
+          svc="$(printf '%s' "$(params.TARGET)" | sed -E 's|.*\/||; s|[@:].*||')"
+          for cand in "$base/backend/$svc/.grype.yaml" \
+                      "$base/frontend/$svc/.grype.yaml" \
+                      "$base/$svc/.grype.yaml" \
+                      "$base/.grype.yaml"; do
             if [ -f "$cand" ]; then cfg="$cand"; break; fi
           done
           if [ -n "$cfg" ]; then
             cp "$cfg" "$TMPDIR/grype-config.yaml"
-            echo "[grype] using project suppressions: $cfg"
+            echo "[grype] using project suppressions: $cfg (service: $svc)"
           else
             printf 'ignore: []\n' > "$TMPDIR/grype-config.yaml"
+            echo "[grype] no suppressions for service: $svc"
           fi
     - name: update-db
       image: docker.io/anchore/grype@sha256:647f6ed684917a9b6c3ae51bd15f8baf92cdc7bdcf59a4fdfb431256a8860166
