@@ -384,6 +384,15 @@ patches:
               value: "https://sso-uat.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
               value: "https://sso-uat.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
+            - name: PAYU_KEYCLOAK_SERVER_URL
+              value: "http://payu-keycloak-service.payu-uat.svc.cluster.local:8080"
+            - name: PAYU_KEYCLOAK_WEB_CLIENT_ID
+              value: "payu-web-app"
+            - name: PAYU_KEYCLOAK_WEB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: payu-keycloak-client-secrets
+                  key: payu-web-client-secret
 - target:
     kind: Deployment
     name: backoffice-service
