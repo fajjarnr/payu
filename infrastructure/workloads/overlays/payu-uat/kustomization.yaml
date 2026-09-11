@@ -783,6 +783,8 @@ patches:
               value: "false"
             - name: QUARKUS_OIDC_JWKS_PATH
               value: "/protocol/openid-connect/certs"
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              value: "http://payu-keycloak-service.payu-uat.svc.cluster.local:8080/realms/payu"
 - target:
     kind: Deployment
     name: gateway-service
@@ -804,6 +806,8 @@ patches:
               value: "https://sso-uat.apps.fajjjar.my.id/realms/payu"
             - name: QUARKUS_TLS_TRUST_ALL
               value: "true"
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              value: "http://payu-keycloak-service.payu-uat.svc.cluster.local:8080/realms/payu"
 - target:
     kind: Deployment
     name: notification-service
@@ -834,6 +838,8 @@ patches:
               value: "false"
             - name: QUARKUS_OIDC_JWKS_PATH
               value: "/protocol/openid-connect/certs"
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              value: "http://payu-keycloak-service.payu-uat.svc.cluster.local:8080/realms/payu"
 
 # Dev simulators use the profile's local OTLP endpoint; no collector is required.
 - target:
