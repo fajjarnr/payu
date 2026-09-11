@@ -7351,3 +7351,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Fix URL Keycloak UAT ditulis ke `overlays/payu-uat/auth-service/kustomization.yaml`, Argo `Synced` tapi live tak berubah. Ternyata root `overlays/payu-uat/kustomization.yaml` hanya referensikan `../../base` (monolith), bukan direktori per-service — patch mati. Pola sama menjelaskan kenapa SIT/DEV bekerja (patch ada di root masing-masing).
 
 **Fix**: revert patch per-service, tulis di root overlay (blok OIDC `auth-service` yang sama), `kustomize build` root membuktikan nilai baru sebelum push. Pelajaran: sebelum edit overlay, `grep` dulu direktori itu direferensikan root `resources:`; render root adalah bukti, bukan isi file.
+
+## L-458: Username admin IAM jangan di-hardcode; buktikan kredensial via token grant (2026-09-11)
+
+**Context**: Register SIT/UAT `500 Identity provider unavailable` (`ProcessingException`). UAT: base hardcode `PAYU_KEYCLOAK_SERVER_URL=payu-sso` (namespace kosong) + `ADMIN_USERNAME=admin` (master cuma punya `keycloak-admin`) → `user_not_found`. SIT: user `admin` ada tapi password secret ≠ master (`invalid_user_credentials`, 3 kombinasi gagal).
+
+**Fix**: URL per-env di root overlay (ikuti pola SIT/DEV) + username → `valueFrom payu-keycloak-admin/username` (dev `admin` tak berubah). UAT `201` tanpa sentuh password. Metode bukti: `curl` password-grant `admin-cli` langsung dari pod — `access_token` vs `invalid_grant` vs `user_not_found` (di log Keycloak `events`) membedakan URL-mati vs user-hilang vs password-salah tanpa tebak-tebakan. Sisa SIT (IDN-002) butuh reset kredensial master — tanpa jalur GitOps-only, minta persetujuan.
