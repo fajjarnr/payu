@@ -7327,3 +7327,21 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: `rhacs-image-scan` TaskRun hijau tapi log ERROR tiap run (fail-open "dev non-blocking"): (1) `x509 unknown authority` — CA di `rhacs-central-ca` (install lama) ≠ CA Central aktif (reinstall ganti CA, git sendiri suruh refresh manual); (2) setelah TLS pulih, `no matching image registries` — belum ada integration; (3) setelah integration, `401 manifest` — username basic `system:serviceaccount:ns:name` ditolak registry OCP (cuma short name yang lolos, terbukti matriks curl 404-vs-401); token valid + image-puller saja tak cukup.
 
 **Fix**: cert-manager PKI privat (`defaultTLSSecret.name` — bukan `secretName`, biar explain/apply yang bicara) + `spec.tls.additionalCAs` service-signer; pipeline pin CA issuer 10y (leaf auto-renew, reinstall aman); integration `payu-internal-registry` (Generic Docker Registry, `insecure:true` sesuai docs UI, `skipTestIntegration`, username pendek) + RoleBinding `registry-viewer` (manifest authorize ke objek imagestream — tanpa ini 401). Bukti: `roxctl 4.11.1 image scan` → 417 components / 252 CVE / 55 fixable / topCvss 8.6. Pelajaran: (1) Task hijau ≠ gate jalan — baca log step security; (2) password integration = token SA `payu-dev/rhacs-registry-reader-token` (live only) — hapus secret itu = token baru = update ulang password integration; (3) PEM di git wajib diff byte-vs-live sebelum apply (sekali salah salin merusak trust).
+
+## L-454: k6 assert harus ikut kontrak API aktual, bukan tebakan (2026-09-11)
+
+**Context**: UAT `k6-load-test` `crud_create_success 0/50` + `http_req_failed 94%` — dikira app down, ternyata `registerUser` assert status 200 + `body.id` sementara `OnboardingController` return `201 CREATED` + `RegisterUserResponse{userId,…}`. Gate selalu-merah sejak lahir, tak pernah bisa hijau.
+
+**Fix**: terima 200/201 + `userId|id|data.*`; readiness tambah `/q/health` (Quarkus root). Pelajaran: gate merah abadi = curigai ekspektasi test dulu sebelum vonis app; pin status+shape dari controller, bukan dari ingatan.
+
+## L-455: Suppression scanner first-found bocor antar-service di monorepo (2026-09-11)
+
+**Context**: Grype `account-service` log `using project suppressions: frontend/web-app/.grype.yaml` — `prepare-cache-dirs` ambil `.grype.yaml` pertama (`$base`, `$base/*`, `$base/*/*`) di workspace repo-root. Excludes `next/dist/compiled` + ignore `jsonwebtoken` milik web-app ikut melemahkan scan backend (praktis nihil untuk image Java, tapi preseden berbahaya).
+
+**Fix**: derive service dari `TARGET` (`sed 's|.*/||; s|[@:].*||'`) → `backend/<svc>` → `frontend/<svc>` → root → kosong. Pelajaran: workspace monorepo ≠ direktori service; tiap file config yang di-glob harus di-scope ke service yang di-scan.
+
+## L-456: Override versi managed Spring Boot via properti BOM, bukan bump parent (2026-09-11)
+
+**Context**: Trivy 4 CRITICAL Java (tomcat 11.0.22, netty 4.2.15) di semua image. Bump `spring-boot-starter-parent` 4.1.0 = risiko kompatibilitas fleet-wide.
+
+**Fix**: `<tomcat.version>11.0.25</tomcat.version>` + `<netty.version>4.2.17.Final</netty.version>` di parent POM (nama properti diverifikasi di `spring-boot-dependencies-4.1.0.pom` lokal + pola Context7) → Trivy `Total: 0 (CRITICAL: 0)`, tabel Java hilang. Fleet ter-cover karena parent satu-satunya pin. Pelajaran: tiap rilis SB bawa BOM baru — CVE lib managed = override properti dulu, bump parent hanya bila fix tak tersedia di lini itu.
