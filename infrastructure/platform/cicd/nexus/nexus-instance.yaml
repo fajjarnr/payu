@@ -7,19 +7,58 @@ metadata:
     app.kubernetes.io/name: nexus
     app.kubernetes.io/part-of: payu
 spec:
-  statefulset:
-    replicas: 1
-    resources:
-      requests:
-        cpu: 500m
-        memory: 2Gi
-      limits:
-        cpu: "2"
-    storageClass:
-      enabled: false
-  service:
-    enabled: true
-    name: payu-nexus
-    port: 8081
   ingress:
     enabled: false
+  license: null
+  secret:
+    nexusSecret:
+      enabled: false
+  nexusData:
+    pvc:
+      accessMode: ReadWriteOnce
+      size: 50Gi
+    storageClass:
+      enabled: false
+    volumeClaimTemplate:
+      enabled: false
+  service:
+    docker:
+      enabled: false
+    nexus:
+      # ClusterIP Service payu-nexus dikelola terpisah (nexus-service.yaml);
+      # service operator (NodePort) dinonaktifkan agar tak bentrok.
+      enabled: false
+  statefulset:
+    name: nxrm-ha-nexusrepo-statefulset
+    replicaCount: 1
+    terminationGracePeriod: 120
+    imagePullSecrets: {}
+    container:
+      containerPort: 8081
+      imageName: registry.connect.redhat.com/sonatype/nexus-repository-manager@sha256:87d89a42198057226493951b88db172e8cfb888679020fe41092c71645eef8eb
+      pullPolicy: IfNotPresent
+      env:
+        clustered: false
+        install4jAddVmParams: -Xms1500m -Xmx2703m
+        jdbcUrl: null
+        nexusInitialPassword: nexusabc
+        user: nexus
+        password: nexus
+        zeroDowntimeEnabled: false
+      resources:
+        requests:
+          cpu: 1
+          memory: 3Gi
+        limits:
+          cpu: "2"
+          memory: 4Gi
+    livenessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 240
+      path: /
+      periodSeconds: 60
+    readinessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 240
+      path: /
+      periodSeconds: 60
