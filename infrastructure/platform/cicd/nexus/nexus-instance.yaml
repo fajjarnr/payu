@@ -29,7 +29,6 @@ spec:
       # service operator (NodePort) dinonaktifkan agar tak bentrok.
       enabled: false
   statefulset:
-    name: nxrm-ha-nexusrepo-statefulset
     replicaCount: 1
     terminationGracePeriod: 120
     imagePullSecrets: {}
