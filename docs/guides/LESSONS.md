@@ -7393,3 +7393,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: CVE netty Quarkus: import `netty-bom 4.1.137` di child pom, build hijau, tapi Trivy tetap `4.1.136`. Verifikasi lokal `mvn dependency:list` buktikan import tak berpengaruh (literal `quarkus-bom` menang).
 
 **Fix**: pin 15 artifact `io.netty:* 4.1.137.Final` eksplisit di child `dependencyManagement` (child direct management menang) → Trivy bersih. Pelajaran: (1) fix CVE versi JANGAN percaya build hijau — baca hasil Trivy/dependency:list; (2) properti BOM > literal > import: cek dulu apakah versi di-parent berupa properti (override 1 baris) atau literal (pin eksplisit); (3) bump minor framework (Quarkus 3.34/3.36) bisa memuat lib LEBIH tua — cek versi artifact di BOM target sebelum bump.
+
+## L-465: Commit dulu baru verifikasi — Argo selfHeal revert apply manual (2026-09-11)
+
+**Context**: Policy payu-cicd di-apply manual (`configured`) tapi live tetap lama — Argo selfHeal kembalikan ke git (yang belum di-commit). Waktu terbuang debug "apply tak mempan".
+
+**Fix**: urutan baku workload: edit → commit → push → tunggu sync → verifikasi live. `oc apply` langsung hanya untuk resource TANPA pemilik GitOps (Task/Pipeline/Role di `payu-cicd` yang tak ada Argo app-nya — itupun pastikan dulu). Pelajaran: bila live tak berubah pasca-apply, cek `git status` sebelum curigai cluster.
