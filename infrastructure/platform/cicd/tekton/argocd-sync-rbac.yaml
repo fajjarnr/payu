@@ -25,3 +25,88 @@ subjects:
   - kind: ServiceAccount
     name: pipeline
     namespace: payu-cicd
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-rollout-reader
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/part-of: payu
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-tekton-deployment-reader
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/part-of: payu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployment-rollout-reader
+subjects:
+  - kind: ServiceAccount
+    name: pipeline
+    namespace: payu-cicd
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-rollout-reader
+  namespace: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-tekton-deployment-reader
+  namespace: payu-sit
+  labels:
+    app.kubernetes.io/part-of: payu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployment-rollout-reader
+subjects:
+  - kind: ServiceAccount
+    name: pipeline
+    namespace: payu-cicd
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-rollout-reader
+  namespace: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-tekton-deployment-reader
+  namespace: payu-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployment-rollout-reader
+subjects:
+  - kind: ServiceAccount
+    name: pipeline
+    namespace: payu-cicd
