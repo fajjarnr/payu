@@ -4,9 +4,11 @@ metadata:
   name: m2-cache-shared
   namespace: payu-cicd
 spec:
+  # No RWX storage live (efs-csi absent): RWO shared cache, serial builds only.
+  # Concurrent Java builds will contend on this PVC; add EFS/RWX to parallelize.
   accessModes:
-    - ReadWriteMany
-  storageClassName: efs-csi
+    - ReadWriteOnce
+  storageClassName: gp3-csi
   resources:
     requests:
       storage: 20Gi

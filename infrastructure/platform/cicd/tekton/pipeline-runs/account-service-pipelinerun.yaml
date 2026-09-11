@@ -36,13 +36,10 @@ spec:
       secret:
         secretName: dockerconfig
     - name: m2-cache
-      volumeClaimTemplate:
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 1Gi
+      # Shared gp3 PVC (serial builds): warm .m2 across runs. First run
+      # still cold (~20m); subsequent runs reuse artifacts (~3-5m).
+      persistentVolumeClaim:
+        claimName: m2-cache-shared
     - name: signing-secrets
       secret:
         secretName: signing-secrets
