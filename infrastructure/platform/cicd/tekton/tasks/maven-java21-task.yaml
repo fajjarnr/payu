@@ -50,6 +50,7 @@ spec:
     - name: maven-goals
       image: $(params.MAVEN_IMAGE)
       workingDir: $(workspaces.source.path)/$(params.SUBDIRECTORY)
+      command: ["mvn"]
       env:
         - name: HOME
           value: /tekton/home
@@ -66,7 +67,7 @@ spec:
         # ponytail: shared m2-cache PVC via claimName; repo.local now points to workspace mount not source
         - -s
         - $(workspaces.maven-settings.path)/settings.xml
-      resources:
+      computeResources:
         requests:
           memory: "2Gi"
           cpu: "250m"
