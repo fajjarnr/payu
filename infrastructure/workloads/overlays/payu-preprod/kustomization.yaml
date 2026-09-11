@@ -923,6 +923,7 @@ patches:
       path: /spec/template/spec/containers/0/env/-
       value:
         name: QUARKUS_OTEL_SDK_DISABLED
+        value: "true"
 # PARTNER-PROD-007: HPA min 3 max 10, PDB minAvailable 2 for preprod
 - target:
     kind: HorizontalPodAutoscaler
