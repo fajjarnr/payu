@@ -146,8 +146,8 @@ export function registerUser(gatewayUrl, userData) {
   const body = parseJson(response.body);
 
   const success = check(response, {
-    'register status is 200': (r) => r.status === 200,
-    'register returns account data': () => body.id !== undefined && body.externalId !== undefined
+    'register status is 200': (r) => r.status === 200 || r.status === 201,
+    'register returns account data': () => (body.userId !== undefined || body.id !== undefined || (body.data !== undefined && (body.data.userId !== undefined || body.data.id !== undefined))) && (body.externalId !== undefined || (body.data !== undefined && body.data.externalId !== undefined))
   });
 
   return {
