@@ -56,18 +56,36 @@ export function generateUserData(prefix = 'k6user') {
 }
 
 /**
- * Login and obtain access token
- * @param {string} gatewayUrl - Gateway base URL
+ * Login and obtain access token.
+ * Platform is PKCE-only (no password-login endpoint: gateway rejects
+ * `/api/v1/auth/login` without JWT), so k6 authenticates like smoke-test.js:
+ * Resource Owner Password grant directly against Keycloak using the public
+ * `admin-cli` client (directAccessGrantsEnabled, no secret). Override via
+ * `K6_KEYCLOAK_CLIENT_ID`; Keycloak host via `KEYCLOAK_URL` (set by the k6
+ * Tekton task per-env) or derived from the gateway host.
+ * @param {string} gatewayUrl - Gateway base URL (fallback host source)
  * @param {string} username - Username
  * @param {string} password - Password
  * @returns {string|null} Access token or null if failed
  */
 export function login(gatewayUrl, username, password) {
-  const loginUrl = `${gatewayUrl}/api/v1/auth/login`;
+  const configuredKeycloakUrl = (typeof __ENV !== 'undefined' && __ENV.KEYCLOAK_URL) || '';
+  const keycloakUrl = configuredKeycloakUrl !== ''
+    ? configuredKeycloakUrl
+    : String(gatewayUrl).replace('gateway-service', 'payu-keycloak-service');
+  const clientId = (typeof __ENV !== 'undefined' && __ENV.K6_KEYCLOAK_CLIENT_ID) || 'admin-cli';
+  const loginUrl = `${keycloakUrl}/realms/payu/protocol/openid-connect/token`;
 
-  const response = http.post(loginUrl, JSON.stringify({ username, password }), {
+  const payload = {
+    grant_type: 'password',
+    client_id: clientId,
+    username: username,
+    password: password
+  };
+
+  const response = http.post(loginUrl, payload, {
     headers: Object.assign({
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
       'X-Forwarded-For': getSyntheticForwardedFor()
     }, getOptionalTestHeaders()),
     tags: { endpoint: 'auth-login' }
@@ -77,11 +95,11 @@ export function login(gatewayUrl, username, password) {
 
   const success = check(response, {
     'login status is 200': (r) => r.status === 200,
-    'login returns access token': () => body.data !== undefined && body.data.access_token !== undefined
+    'login returns access token': () => body.access_token !== undefined
   });
 
   if (success) {
-    return body.data.access_token;
+    return body.access_token;
   }
 
   return null;

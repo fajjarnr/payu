@@ -42,6 +42,11 @@ spec:
       script: |
         #!/bin/sh
         set -eu
+        # ponytail: k6 login() authenticates directly against Keycloak (platform
+        # is PKCE-only, no password-login endpoint). Derive the per-env Keycloak
+        # host from BASE_URL so crud scripts never hit the dead payu-sso default.
+        export KEYCLOAK_URL="${KEYCLOAK_URL:-$(printf '%s' "$BASE_URL" | sed -E 's|gateway-service|payu-keycloak-service|')}"
+        echo "[*] KEYCLOAK_URL=$KEYCLOAK_URL"
 
         SCRIPT="$(workspaces.source.path)/$(params.SCRIPT_PATH)"
         if [ ! -f "$SCRIPT" ]; then
