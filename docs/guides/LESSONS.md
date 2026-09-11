@@ -7369,3 +7369,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: k6 `login()` POST password ke gateway/auth ditolak (`MISSING_TOKEN`/`401`) — platform PKCE-only by design (LOGIN-003), endpoint password-login memang tak ada. Perbaikan assert+password+identity tak cukup; sesi tak pernah terbentuk.
 
 **Fix**: `login()` grant `password` langsung ke Keycloak via public `admin-cli` (directAccessGrants, tanpa secret — pola `smoke-test.js`), `KEYCLOAK_URL` per-env dari task (derivasi host gateway). Terbukti manual `access_token`. Pelajaran: saat test auth gagal total padahal kredensial benar, verifikasi dulu endpoint-nya memang ada di kontrak platform — jangan asumsikan flow login konvensional.
+
+## L-461: Token tanpa sub = minta scope openid + pakai id_token; DNS gagal per-pod = matriks per-pod (2026-09-11)
+
+**Context**: (1) Grant password RHBK via `admin-cli` return access token TANPA `sub`/`aud` → gateway tolak (`JWT missing subject`). (2) Broker Kafka `UnknownHostException` sementara pod lain resolve instan.
+
+**Fix**: (1) `scope=openid` → ambil `id_token` (ada `sub`) untuk bearer k6; buktikan via decode klaim, bukan asumsi shape. (2) Debug DNS dengan matriks: `getent` dari pod sakit vs pod sehat se-node + cek policy/endpoint/sertifikat/nsswitch satu per satu; bila semua identik kecuali perilaku → catat sebagai anomali platform (CNI) dengan bukti eliminasi, jangan bongkar node dari app-loop.
