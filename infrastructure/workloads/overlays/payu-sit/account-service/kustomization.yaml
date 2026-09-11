@@ -9,7 +9,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/account-service
-    newTag: "1.18.102"
+    digest: sha256:db91c8021d79041d73e98cfe7576edb60cda7f2751e33d20d6aa5b9444c537e8
 
 patches:
   - target:
