@@ -7381,3 +7381,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Tiga kegagalan beruntun di loop transaction-service, semuanya non-app: (1) `oc apply` tanpa `-n` mendarat di namespace aktif (`default`) — PipelineRun `CouldntGetPipeline`; (2) edit scoping grype menimpa blok termasuk `mkdir -p` → `prepare-cache-dirs` exit 1; (3) `argocd-sync-wait` fallback Deployment loop diam — SA `pipeline` hanya boleh baca Argo apps, tak bisa `get deploy` (`oc auth can-i --as` membuktikan).
 
 **Fix**: (1) Selalu `-n payu-cicd` (current project `default` menipu); hapus objek nyasarnya. (2) Saat ganti isi blok script, diff dulu vs aslinya baris-per-baris. (3) Role `deployment-rollout-reader` (get deployments, dev/sit/uat) + binding; task lolos di poll berikut tanpa rebuild. Pelajaran: fallback silent-loop = curigai RBAC dulu via `can-i --as`; template pipelinerun bisa menunjuk Pipeline yang belum live (`30 file, 1 applied`) — verifikasi `oc get pipeline` sebelum trigger.
+
+## L-463: NetworkPolicy yang select pod = deny sisanya; localhost-vs-remote bedakan app vs network (2026-09-11)
+
+**Context**: Fuzz gagal timeout di path partner; app Running 1/1, CPU/mem normal, boot bersih. Investigasi panjang (socket, filter, HotRod, DB) — ternyata `partner-service-allow-tokobapak` select pod partner dengan ingress HANYA tokobapak-dev → di SIT gateway ikut diblokir.
+
+**Fix**: `podSelector: {}` intra-namespace di base policy. Pelajaran: (1) pod Running + probe flapping + hang semua request = curigai policy DULU (`oc get networkpolicy`, baca selector); (2) tes decisive: `curl localhost` dari dalam pod (app OK 80ms) vs remote timeout = network, bukan app — menghemat seluruh investigasi code-level; (3) policy yang aman di satu env (dev punya intra-allow) bisa fatal di env lain.
