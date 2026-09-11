@@ -7345,3 +7345,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Trivy 4 CRITICAL Java (tomcat 11.0.22, netty 4.2.15) di semua image. Bump `spring-boot-starter-parent` 4.1.0 = risiko kompatibilitas fleet-wide.
 
 **Fix**: `<tomcat.version>11.0.25</tomcat.version>` + `<netty.version>4.2.17.Final</netty.version>` di parent POM (nama properti diverifikasi di `spring-boot-dependencies-4.1.0.pom` lokal + pola Context7) → Trivy `Total: 0 (CRITICAL: 0)`, tabel Java hilang. Fleet ter-cover karena parent satu-satunya pin. Pelajaran: tiap rilis SB bawa BOM baru — CVE lib managed = override properti dulu, bump parent hanya bila fix tak tersedia di lini itu.
+
+## L-457: Overlay per-service yang tak direferensikan root = config mati (2026-09-11)
+
+**Context**: Fix URL Keycloak UAT ditulis ke `overlays/payu-uat/auth-service/kustomization.yaml`, Argo `Synced` tapi live tak berubah. Ternyata root `overlays/payu-uat/kustomization.yaml` hanya referensikan `../../base` (monolith), bukan direktori per-service — patch mati. Pola sama menjelaskan kenapa SIT/DEV bekerja (patch ada di root masing-masing).
+
+**Fix**: revert patch per-service, tulis di root overlay (blok OIDC `auth-service` yang sama), `kustomize build` root membuktikan nilai baru sebelum push. Pelajaran: sebelum edit overlay, `grep` dulu direktori itu direferensikan root `resources:`; render root adalah bukti, bukan isi file.
