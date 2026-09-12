@@ -113,7 +113,7 @@ images:
   digest: sha256:477b015f870d2ffab7456cbca142dfb6751ab3bab31819b601b6f4a6d284ff6a
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/loan-origination-process
-  newTag: "1.18.74"
+  digest: sha256:7074a6cce8786af8db067cce469dd5e4e6dc061b85bb2b56e16f49e9a645fa4b
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/notification-service
   digest: sha256:6f066fbb43c52b28346b9ae8764b9ec1f5b091a7ab0d7db70d191a6909930c24
