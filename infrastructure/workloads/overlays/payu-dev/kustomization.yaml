@@ -154,7 +154,7 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
-  newTag: "1.18.74"
+  newTag: "1.18.104"
 patches:
 # Dev cache is an internal, non-TLS Hot Rod endpoint. Keep mTLS in promoted
 # environments; do not make dev depend on Vault-provisioned client material.
