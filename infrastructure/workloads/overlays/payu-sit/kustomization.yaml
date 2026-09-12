@@ -92,7 +92,7 @@ images:
   newTag: "1.18.74"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/dispute-service
-  newTag: "1.18.74"
+  digest: sha256:642adcc30bbdb94f4f0922d5fdbc451ddc97035325093db38bdbd0fe07221670
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/fx-service
   digest: sha256:43b0fd9b9e89a33b06cf5913c523c7da2a346e8fffa9124b06e5d5b47cd26841
