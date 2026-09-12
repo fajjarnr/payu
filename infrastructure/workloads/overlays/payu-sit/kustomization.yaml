@@ -107,7 +107,7 @@ images:
   digest: sha256:64f5ce86473c3121740c3a2a3ee90a820070bb231526f60323b1e95ba442e1ee
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/kyc-service
-  newTag: "1.18.74"
+  digest: sha256:5add11575172aab2039482a3bef93636a5474485dce6b891bdd12e7aafcee7b2
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/lending-service
   digest: sha256:477b015f870d2ffab7456cbca142dfb6751ab3bab31819b601b6f4a6d284ff6a
