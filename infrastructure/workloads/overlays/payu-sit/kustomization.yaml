@@ -101,7 +101,7 @@ images:
   digest: sha256:51c9bd085d98ec3039e769f42108f8196869ff3066c5b3d91c19337fb178f531
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/integration-service
-  newTag: "1.18.74"
+  digest: sha256:f04b32a12b503520f01c45324d870cd93a95c1938616b408b5b4cc9cbd3363a4
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/investment-service
   digest: sha256:64f5ce86473c3121740c3a2a3ee90a820070bb231526f60323b1e95ba442e1ee
