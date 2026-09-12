@@ -386,7 +386,7 @@ public class BatchDisbursementEntity {
         return key != null && key.equals(this.idempotencyKey);
     }
 
-    // ==================== VALIDATION METHODS ====================
+    // Validation methods
 
     private static void validateSourceAccountId(UUID sourceAccountId) {
         if (sourceAccountId == null) {

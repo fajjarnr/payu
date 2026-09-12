@@ -13,7 +13,7 @@ test.describe('Account CRUD Operations', () => {
     });
 
     test('should create new account with valid data', async ({ page }) => {
-      // Step 1: KYC Upload page
+      // KYC Upload page
       await expect(page.getByText('Unggah e-KTP')).toBeVisible();
 
       // Upload a KTP file to enable the "Lanjut ke Profil Data" button.
@@ -30,7 +30,7 @@ test.describe('Account CRUD Operations', () => {
       // Click to proceed to profile form
       await page.click('button:has-text("Lanjut ke Profil Data")');
 
-      // Step 2: Fill profile form using actual app selectors
+      // Fill profile form using actual app selectors
       await expect(page.getByText('Lengkapi Profil')).toBeVisible();
 
       await page.getByPlaceholder('16 digit angka...').fill('1234567890123456');
@@ -97,7 +97,7 @@ test.describe('Account CRUD Operations', () => {
     });
 
     test('should upload KTP for account verification', async ({ page }) => {
-      // Step 1: On KYC upload page
+      // On KYC upload page
       await expect(page.getByText('Unggah e-KTP')).toBeVisible();
 
       // Upload a KTP file

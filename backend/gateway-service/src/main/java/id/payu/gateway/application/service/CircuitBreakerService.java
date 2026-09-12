@@ -172,7 +172,7 @@ public class CircuitBreakerService {
                 .replace("\r", "\\r");
     }
 
-    // ==================== Inner Classes ====================
+    // Inner classes
 
     /**
      * DTO for circuit breaker state info (exposed via health endpoint).

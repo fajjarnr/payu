@@ -20,7 +20,7 @@ public final class ErrorCode {
     private ErrorCode() {
     }
 
-    // ==================== COMMON ERROR CODES ====================
+    // Common error codes
 
     /**
      * Validation: Invalid request format or data
@@ -100,7 +100,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo SERVICE_UNAVAILABLE = new ErrorInfo("SERVICE_UNAVAILABLE", "Service temporarily unavailable");
 
-    // ==================== AUTH SERVICE (AUTH) ====================
+    // Auth service (AUTH)
 
     @Getter
     public static final ErrorInfo AUTH_VAL_001 = new ErrorInfo("AUTH_VAL_001", "Username is required");
@@ -133,7 +133,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo AUTH_BUS_009 = new ErrorInfo("AUTH_BUS_009", "Invalid or expired authorization code");
 
-    // ==================== ACCOUNT SERVICE (ACC) ====================
+    // Account service (ACC)
 
     @Getter
     public static final ErrorInfo ACC_VAL_001 = new ErrorInfo("ACC_VAL_001", "External ID is required");
@@ -157,7 +157,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo ACC_BUS_006 = new ErrorInfo("ACC_BUS_006", "Account is not eligible for this operation");
 
-    // ==================== TRANSACTION SERVICE (TXN) ====================
+    // Transaction service (TXN)
 
     @Getter
     public static final ErrorInfo TXN_VAL_001 = new ErrorInfo("TXN_VAL_001", "Sender account ID is required");
@@ -210,7 +210,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo TXN_EXT_QRIS_003 = new ErrorInfo("TXN_EXT_QRIS_003", "QRIS payment failed");
 
-    // ==================== WALLET SERVICE (WAL) ====================
+    // Wallet service (WAL)
 
     @Getter
     public static final ErrorInfo WAL_VAL_001 = new ErrorInfo("WAL_VAL_001", "Account ID is required");
@@ -226,7 +226,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo WAL_BUS_004 = new ErrorInfo("WAL_BUS_004", "Pocket name already exists");
 
-    // ==================== INVESTMENT SERVICE (INV) ====================
+    // Investment service (INV)
 
     @Getter
     public static final ErrorInfo INV_VAL_001 = new ErrorInfo("INV_VAL_001", "Mutual fund code is required");
@@ -244,7 +244,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo INV_BUS_004 = new ErrorInfo("INV_BUS_004", "Trading hours: Monday-Friday 08:00-17:00 WIB");
 
-    // ==================== LENDING SERVICE (LEN) ====================
+    // Lending service (LEN)
 
     @Getter
     public static final ErrorInfo LEN_VAL_001 = new ErrorInfo("LEN_VAL_001", "Loan amount is required");
@@ -266,7 +266,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo LEN_BUS_006 = new ErrorInfo("LEN_BUS_006", "Payment amount is less than minimum installment");
 
-    // ==================== KYC SERVICE (KYC) ====================
+    // Kyc service (KYC)
 
     @Getter
     public static final ErrorInfo KYC_VAL_001 = new ErrorInfo("KYC_VAL_001", "KTP image is required");
@@ -291,7 +291,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo KYC_EXT_DUKCAPIL_002 = new ErrorInfo("KYC_EXT_DUKCAPIL_002", "Data not found in Dukcapil");
 
-    // ==================== PARTNER SERVICE (PTR) ====================
+    // Partner service (PTR)
 
     @Getter
     public static final ErrorInfo PTR_VAL_001 = new ErrorInfo("PTR_VAL_001", "Partner ID is required");
@@ -307,7 +307,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo PTR_BUS_004 = new ErrorInfo("PTR_BUS_004", "Rate limit exceeded for partner");
 
-    // ==================== FX SERVICE (FX) ====================
+    // Fx service (FX)
 
     @Getter
     public static final ErrorInfo FX_VAL_001 = new ErrorInfo("FX_VAL_001", "From currency is required");
@@ -323,7 +323,7 @@ public final class ErrorCode {
     @Getter
     public static final ErrorInfo FX_BUS_003 = new ErrorInfo("FX_BUS_003", "Amount below minimum for FX transaction");
 
-    // ==================== INNER CLASS FOR ERROR INFO ====================
+    // Inner class for error info
 
     @Getter
     public static class ErrorInfo {

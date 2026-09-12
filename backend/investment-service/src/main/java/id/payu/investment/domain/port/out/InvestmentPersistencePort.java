@@ -20,7 +20,7 @@ import java.util.List;
  */
 public interface InvestmentPersistencePort {
 
-    // ========== Investment Account ==========
+    // Investment account
 
     /**
      * Save an investment account.
@@ -62,7 +62,7 @@ public interface InvestmentPersistencePort {
      */
     void updateAccountBalance(UUID accountId, BigDecimal amount);
 
-    // ========== Deposit ==========
+    // Deposit
 
     /**
      * Save a deposit.
@@ -80,7 +80,7 @@ public interface InvestmentPersistencePort {
      */
     Optional<Deposit> findDepositById(UUID id);
 
-    // ========== Mutual Fund ==========
+    // Mutual fund
 
     /**
      * Save a mutual fund.
@@ -106,7 +106,7 @@ public interface InvestmentPersistencePort {
      */
     MutualFund getLatestFundPrice(String code);
 
-    // ========== Gold ==========
+    // Gold
 
     /**
      * Save gold holdings.
@@ -131,7 +131,7 @@ public interface InvestmentPersistencePort {
      */
     BigDecimal getLatestGoldPrice();
 
-    // ========== Investment Transaction ==========
+    // Investment transaction
 
     /**
      * Save an investment transaction.

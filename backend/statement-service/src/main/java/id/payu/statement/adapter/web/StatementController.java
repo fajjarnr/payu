@@ -166,7 +166,7 @@ public class StatementController extends BaseController {
         return ResponseEntity.accepted().body(ApiResponse.success(response));
     }
 
-    // ==================== Receipt Endpoints (Epic E-19) ====================
+    // Receipt endpoints (Epic E-19)
 
     @PostMapping("/receipts/generate")
     @Operation(summary = "Generate transaction receipt", description = "Generate a receipt for a specific transaction")

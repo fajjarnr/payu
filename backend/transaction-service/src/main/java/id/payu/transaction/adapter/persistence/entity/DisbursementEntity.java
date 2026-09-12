@@ -607,7 +607,7 @@ public class DisbursementEntity {
         return status == DisbursementStatus.COMPLETED || status == DisbursementStatus.FAILED;
     }
 
-    // ==================== VALIDATION METHODS ====================
+    // Validation methods
 
     private static void validateSourceAccountId(UUID sourceAccountId) {
         if (sourceAccountId == null) {

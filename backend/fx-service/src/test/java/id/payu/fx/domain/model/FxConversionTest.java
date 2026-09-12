@@ -36,9 +36,6 @@ class FxConversionTest {
                 .build();
     }
 
-    // ========================================================================
-    // Status transitions
-    // ========================================================================
     @Nested
     @DisplayName("Status transitions")
     class StatusTransitions {
@@ -89,9 +86,6 @@ class FxConversionTest {
         }
     }
 
-    // ========================================================================
-    // getEffectiveAmount
-    // ========================================================================
     @Nested
     @DisplayName("getEffectiveAmount")
     class EffectiveAmount {
@@ -133,9 +127,6 @@ class FxConversionTest {
         }
     }
 
-    // ========================================================================
-    // ConversionStatus enum
-    // ========================================================================
     @Nested
     @DisplayName("ConversionStatus enum")
     class ConversionStatusEnum {
@@ -154,9 +145,6 @@ class FxConversionTest {
         }
     }
 
-    // ========================================================================
-    // Builder
-    // ========================================================================
     @Nested
     @DisplayName("Builder")
     class Builder {
@@ -200,9 +188,6 @@ class FxConversionTest {
         }
     }
 
-    // ========================================================================
-    // Setters
-    // ========================================================================
     @Nested
     @DisplayName("Setters")
     class Setters {

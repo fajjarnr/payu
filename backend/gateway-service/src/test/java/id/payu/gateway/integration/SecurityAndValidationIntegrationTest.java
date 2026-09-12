@@ -34,7 +34,7 @@ public class SecurityAndValidationIntegrationTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    // ==================== API Key Validation Tests ====================
+    // API key validation tests
 
     @Test
     @Order(1)
@@ -91,7 +91,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
 
-    // ==================== Request Signing Tests ====================
+    // Request signing tests
 
     @Test
     @Order(10)
@@ -148,7 +148,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(401), is(400), is(404), is(503)));
     }
 
-    // ==================== IP Whitelist Tests ====================
+    // IP whitelist tests
 
     @Test
     @Order(20)
@@ -202,7 +202,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
 
-    // ==================== Request Validation Tests ====================
+    // Request validation tests
 
     @Test
     @Order(30)
@@ -291,7 +291,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(201), is(400), is(503)));
     }
 
-    // ==================== Idempotency Tests ====================
+    // Idempotency tests
 
     @Test
     @Order(40)
@@ -393,7 +393,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(204), is(404), is(503)));
     }
 
-    // ==================== Content Type Tests ====================
+    // Content type tests
 
     @Test
     @Order(50)
@@ -433,7 +433,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(201), is(400), is(415), is(503)));
     }
 
-    // ==================== Security Headers Tests ====================
+    // Security headers tests
 
     @Test
     @Order(60)
@@ -447,7 +447,7 @@ public class SecurityAndValidationIntegrationTest {
         // Note: Specific security headers depend on Quarkus configuration
     }
 
-    // ==================== Cross-Site Scripting Tests ====================
+    // Cross-site scripting tests
 
     @Test
     @Order(70)
@@ -479,7 +479,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(400), is(429), is(503))); // SQLi payload must NOT succeed (no 201)
     }
 
-    // ==================== Special Characters Tests ====================
+    // Special characters tests
 
     @Test
     @Order(80)
@@ -507,7 +507,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(201), is(400), is(503)));
     }
 
-    // ==================== Concurrent Request Tests ====================
+    // Concurrent request tests
 
     @Test
     @Order(90)
@@ -535,7 +535,7 @@ public class SecurityAndValidationIntegrationTest {
         }
     }
 
-    // ==================== Encoding Tests ====================
+    // Encoding tests
 
     @Test
     @Order(100)
@@ -549,7 +549,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
 
-    // ==================== Multiple Security Headers Tests ====================
+    // Multiple security headers tests
 
     @Test
     @Order(110)
@@ -568,7 +568,7 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(201), is(400), is(503)));
     }
 
-    // ==================== Authentication Bypass Tests ====================
+    // Authentication bypass tests
 
     @Test
     @Order(120)
@@ -595,7 +595,7 @@ public class SecurityAndValidationIntegrationTest {
         given().when().get("/q/metrics").then().statusCode(anyOf(is(200), is(404), is(406)));
     }
 
-    // ==================== Error Response Tests ====================
+    // Error response tests
 
     @Test
     @Order(130)
@@ -611,7 +611,7 @@ public class SecurityAndValidationIntegrationTest {
                 .body(notNullValue());
     }
 
-    // ==================== Tenant Context Tests ====================
+    // Tenant context tests
 
     @Test
     @Order(140)

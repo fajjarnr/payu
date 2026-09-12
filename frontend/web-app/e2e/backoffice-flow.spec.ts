@@ -5,9 +5,7 @@
 import { test, expect } from './fixtures';
 import { waitForPageStable } from './utils';
 
-// ============================================================
 // BUG-TEST-099: /backoffice dashboard (Command Center)
-// ============================================================
 test.describe('Backoffice Dashboard', () => {
   test('should display command center heading', async ({ authPage: page }) => {
     await page.goto('/backoffice');
@@ -43,9 +41,7 @@ test.describe('Backoffice Dashboard', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-100: /backoffice/kyc
-// ============================================================
 test.describe('Backoffice KYC Reviews', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/kyc');
@@ -81,9 +77,7 @@ test.describe('Backoffice KYC Reviews', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-101: /backoffice/fraud
-// ============================================================
 test.describe('Backoffice Fraud Monitoring', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/fraud');
@@ -115,9 +109,7 @@ test.describe('Backoffice Fraud Monitoring', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-102: /backoffice/partners
-// ============================================================
 test.describe('Backoffice Partner Management', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/partners');
@@ -147,9 +139,7 @@ test.describe('Backoffice Partner Management', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-103: /backoffice/customers
-// ============================================================
 test.describe('Backoffice Customer Operations', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/customers');
@@ -178,9 +168,7 @@ test.describe('Backoffice Customer Operations', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-104: /backoffice/compliance
-// ============================================================
 test.describe('Backoffice Compliance / Audit Logs', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/compliance');
@@ -213,9 +201,7 @@ test.describe('Backoffice Compliance / Audit Logs', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-105: /backoffice/cms
-// ============================================================
 test.describe('Backoffice CMS Content', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/cms');
@@ -248,9 +234,7 @@ test.describe('Backoffice CMS Content', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-106: /backoffice/campaigns
-// ============================================================
 test.describe('Backoffice Campaign Management', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/campaigns');
@@ -280,9 +264,7 @@ test.describe('Backoffice Campaign Management', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-107: /backoffice/broadcast
-// ============================================================
 test.describe('Backoffice Broadcast Messaging', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/broadcast');
@@ -312,9 +294,7 @@ test.describe('Backoffice Broadcast Messaging', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-108: /backoffice/fx-rates
-// ============================================================
 test.describe('Backoffice FX Rates Admin', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/backoffice/fx-rates');

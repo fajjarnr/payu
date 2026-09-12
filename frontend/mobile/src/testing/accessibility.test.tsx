@@ -41,9 +41,7 @@ import {
   useAccessibleForm,
 } from '@/src/hooks/useAccessibility';
 
-// ============================================================================
-// Mock Setup
-// ============================================================================
+// Mock setup
 
 // Use global mocks from jest.setup.js
 const mockIsScreenReaderEnabled = global.mockAccessibility?.mockIsScreenReaderEnabled || jest.fn();
@@ -63,9 +61,7 @@ jest.mock('react-native', () => {
   };
 });
 
-// ============================================================================
-// Utility Function Tests
-// ============================================================================
+// Utility function tests
 
 describe('Accessibility Utilities', () => {
   describe('generateA11yProps', () => {
@@ -316,9 +312,7 @@ describe('Accessibility Utilities', () => {
   });
 });
 
-// ============================================================================
-// Component Tests
-// ============================================================================
+// Component tests
 
 describe('Accessible Components', () => {
   describe('AccessibleButton', () => {
@@ -448,9 +442,7 @@ describe('Accessible Components', () => {
   });
 });
 
-// ============================================================================
-// Hook Tests
-// ============================================================================
+// Hook tests
 
 describe('Accessibility Hooks', () => {
   beforeEach(() => {
@@ -566,9 +558,7 @@ describe('Accessibility Hooks', () => {
   });
 });
 
-// ============================================================================
-// Integration Tests
-// ============================================================================
+// Integration tests
 
 describe('Accessibility Integration', () => {
   it('should validate PayU color palette contrast', () => {
@@ -652,9 +642,7 @@ describe('Accessibility Integration', () => {
   });
 });
 
-// ============================================================================
-// WCAG Compliance Tests
-// ============================================================================
+// WCAG compliance tests
 
 describe('WCAG 2.1 Compliance', () => {
   describe('Level A Requirements', () => {
@@ -716,9 +704,7 @@ describe('WCAG 2.1 Compliance', () => {
   });
 });
 
-// ============================================================================
-// Performance Tests
-// ============================================================================
+// Performance tests
 
 describe('Accessibility Performance', () => {
   it('should calculate contrast ratios efficiently', () => {
@@ -744,9 +730,7 @@ describe('Accessibility Performance', () => {
   });
 });
 
-// ============================================================================
-// Export Test Suite Info
-// ============================================================================
+// Export test suite info
 
 export const testSuiteInfo = {
   name: 'PayU Mobile Accessibility Tests',

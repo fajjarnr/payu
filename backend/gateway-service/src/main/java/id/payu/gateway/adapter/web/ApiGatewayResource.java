@@ -46,7 +46,7 @@ public class ApiGatewayResource {
     @Context
     UriInfo uriInfo;
 
-    // ==================== Single Catch-All Dispatcher ====================
+    // Single catch-all dispatcher
 
     @GET
     @Path("/{path: .*}")

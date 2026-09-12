@@ -85,7 +85,7 @@ public class AnalyticsEndpointsIntegrationTest {
             ));
     }
 
-    // ==================== Analytics Health Tests ====================
+    // Analytics health tests
 
     @Test
     @Order(1)
@@ -101,7 +101,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body("service", equalTo("analytics"));
     }
 
-    // ==================== Metrics Endpoint Tests ====================
+    // Metrics endpoint tests
 
     @Test
     @Order(10)
@@ -153,7 +153,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body("error", equalTo("path parameter is required"));
     }
 
-    // ==================== Different Path Tests ====================
+    // Different path tests
 
     @Test
     @Order(20)
@@ -191,7 +191,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Different Method Tests ====================
+    // Different method tests
 
     @Test
     @Order(30)
@@ -219,7 +219,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Metrics Not Found Tests ====================
+    // Metrics not found tests
 
     @Test
     @Order(40)
@@ -236,7 +236,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body("message", containsString("No metrics found"));
     }
 
-    // ==================== Special Characters in Path Tests ====================
+    // Special characters in path tests
 
     @Test
     @Order(50)
@@ -264,7 +264,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Case Sensitivity Tests ====================
+    // Case sensitivity tests
 
     @Test
     @Order(60)
@@ -298,7 +298,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Response Format Tests ====================
+    // Response format tests
 
     @Test
     @Order(70)
@@ -313,7 +313,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .contentType(containsString("application/json"));
     }
 
-    // ==================== HTTP Methods Tests ====================
+    // HTTP methods tests
 
     @Test
     @Order(80)
@@ -352,7 +352,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(405), is(404)));
     }
 
-    // ==================== Concurrent Requests Tests ====================
+    // Concurrent requests tests
 
     @Test
     @Order(90)
@@ -376,7 +376,7 @@ public class AnalyticsEndpointsIntegrationTest {
         }
     }
 
-    // ==================== Response Time Tests ====================
+    // Response time tests
 
     @Test
     @Order(100)
@@ -411,7 +411,7 @@ public class AnalyticsEndpointsIntegrationTest {
         Assertions.assertTrue(responseTime < 1000, "Analytics health endpoint should respond within 1 second");
     }
 
-    // ==================== CORS Tests ====================
+    // CORS tests
 
     @Test
     @Order(110)
@@ -425,7 +425,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(200);
     }
 
-    // ==================== Error Response Tests ====================
+    // Error response tests
 
     @Test
     @Order(120)
@@ -452,7 +452,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body(notNullValue());
     }
 
-    // ==================== Query Parameter Encoding Tests ====================
+    // Query parameter encoding tests
 
     @Test
     @Order(130)
@@ -466,7 +466,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Root Path Tests ====================
+    // Root path tests
 
     @Test
     @Order(140)
@@ -480,7 +480,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Multiple Parameters Tests ====================
+    // Multiple parameters tests
 
     @Test
     @Order(150)
@@ -497,7 +497,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Analytics Configuration Tests ====================
+    // Analytics configuration tests
 
     @Test
     @Order(160)
@@ -512,7 +512,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body("status", equalTo("UP"));
     }
 
-    // ==================== Empty Response Tests ====================
+    // Empty response tests
 
     @Test
     @Order(170)
@@ -529,7 +529,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Cross-Origin Tests ====================
+    // Cross-origin tests
 
     @Test
     @Order(180)
@@ -551,7 +551,7 @@ public class AnalyticsEndpointsIntegrationTest {
         }
     }
 
-    // ==================== Metrics Aggregation Tests ====================
+    // Metrics aggregation tests
 
     @Test
     @Order(190)
@@ -566,7 +566,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Long Path Tests ====================
+    // Long path tests
 
     @Test
     @Order(200)
@@ -582,7 +582,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Custom Header Tests ====================
+    // Custom header tests
 
     @Test
     @Order(210)
@@ -598,7 +598,7 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // ==================== Analytics Error Handling Tests ====================
+    // Analytics error handling tests
 
     @Test
     @Order(220)

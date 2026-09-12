@@ -42,7 +42,7 @@ import static org.hamcrest.Matchers.not;
 @DisplayName("Gateway Filter Chain Integration Tests")
 public class GatewayFilterChainIntegrationTest {
 
-    // ==================== Health Check Tests ====================
+    // Health check tests
 
     @Test
     @DisplayName("Health check should return UP status")
@@ -72,7 +72,7 @@ public class GatewayFilterChainIntegrationTest {
                 .body("status", equalTo("UP"));
     }
 
-    // ==================== CORS Filter Tests ====================
+    // CORS filter tests
 
     @Nested
     @DisplayName("CORS Filter Tests")
@@ -118,7 +118,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Tenant Filter Tests ====================
+    // Tenant filter tests
 
     @Nested
     @DisplayName("Tenant Filter Tests")
@@ -159,7 +159,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== API Version Filter Tests ====================
+    // API version filter tests
 
     @Nested
     @DisplayName("API Version Filter Tests")
@@ -195,7 +195,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Correlation ID Filter Tests ====================
+    // Correlation ID filter tests
 
     @Nested
     @DisplayName("Correlation ID Filter Tests")
@@ -237,7 +237,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Request Validation Tests ====================
+    // Request validation tests
 
     @Nested
     @DisplayName("Request Validation Tests")
@@ -279,7 +279,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Error Handling Tests ====================
+    // Error handling tests
 
     @Nested
     @DisplayName("Error Handling Tests")
@@ -318,7 +318,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== HTTP Methods Tests ====================
+    // HTTP methods tests
 
     @Nested
     @DisplayName("HTTP Methods Tests")
@@ -379,7 +379,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Query Parameters Tests ====================
+    // Query parameters tests
 
     @Nested
     @DisplayName("Query Parameters Tests")
@@ -423,7 +423,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Headers Tests ====================
+    // Headers tests
 
     @Nested
     @DisplayName("Headers Tests")
@@ -464,7 +464,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Metrics and OpenAPI Tests ====================
+    // Metrics and openapi tests
 
     @Test
     @DisplayName("Gateway should expose Prometheus metrics")
@@ -485,7 +485,7 @@ public class GatewayFilterChainIntegrationTest {
                 .contentType(anyOf(containsString("yaml"), containsString("json")));
     }
 
-    // ==================== Different Service Routes Tests ====================
+    // Different service routes tests
 
     @Nested
     @DisplayName("Service Routes Tests")
@@ -582,7 +582,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Request Body Tests ====================
+    // Request body tests
 
     @Nested
     @DisplayName("Request Body Tests")
@@ -631,7 +631,7 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // ==================== Path Parameters Tests ====================
+    // Path parameters tests
 
     @Nested
     @DisplayName("Path Parameters Tests")

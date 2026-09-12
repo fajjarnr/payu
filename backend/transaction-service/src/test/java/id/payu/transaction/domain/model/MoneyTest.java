@@ -37,8 +37,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("Money Value Object Tests")
 class MoneyTest {
 
-    // ==================== FACTORY METHOD TESTS ====================
-
     @Nested
     @DisplayName("Factory Methods")
     class FactoryMethodsTests {
@@ -105,8 +103,6 @@ class MoneyTest {
             assertThat(money.getAmount()).isEqualByComparingTo(new BigDecimal("100.1234"));
         }
     }
-
-    // ==================== ARITHMETIC OPERATIONS TESTS ====================
 
     @Nested
     @DisplayName("Arithmetic Operations")
@@ -187,8 +183,6 @@ class MoneyTest {
         }
     }
 
-    // ==================== CURRENCY VALIDATION TESTS ====================
-
     @Nested
     @DisplayName("Currency Validation")
     class CurrencyValidationTests {
@@ -226,8 +220,6 @@ class MoneyTest {
                     .hasMessageContaining("Currency mismatch");
         }
     }
-
-    // ==================== NEGATIVE VALUE TESTS ====================
 
     @Nested
     @DisplayName("Negative Value Protection")
@@ -284,8 +276,6 @@ class MoneyTest {
                     .hasMessageContaining("Divisor cannot be null or zero");
         }
     }
-
-    // ==================== COMPARISON OPERATIONS TESTS ====================
 
     @Nested
     @DisplayName("Comparison Operations")
@@ -347,8 +337,6 @@ class MoneyTest {
         }
     }
 
-    // ==================== ROUNDING TESTS ====================
-
     @Nested
     @DisplayName("Rounding Operations")
     class RoundingOperationsTests {
@@ -395,8 +383,6 @@ class MoneyTest {
             assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33300.00"));
         }
     }
-
-    // ==================== EQUALITY AND HASHCODE TESTS ====================
 
     @Nested
     @DisplayName("Equality and HashCode")
@@ -457,8 +443,6 @@ class MoneyTest {
         }
     }
 
-    // ==================== ABSOLUTE VALUE TESTS ====================
-
     @Nested
     @DisplayName("Absolute Value Operations")
     class AbsoluteValueOperationsTests {
@@ -494,8 +478,6 @@ class MoneyTest {
         }
     }
 
-    // ==================== FORMAT TESTS ====================
-
     @Nested
     @DisplayName("Formatting")
     class FormattingTests {
@@ -522,8 +504,6 @@ class MoneyTest {
             assertThat(formatted).contains("100.00");
         }
     }
-
-    // ==================== EDGE CASES TESTS ====================
 
     @Nested
     @DisplayName("Edge Cases")
@@ -611,8 +591,6 @@ class MoneyTest {
         }
     }
 
-    // ==================== PRECISION & SCALE TESTS ====================
-
     @Nested
     @DisplayName("Precision and Scale")
     class PrecisionAndScaleTests {
@@ -647,8 +625,6 @@ class MoneyTest {
             assertThat(result.getAmount()).isEqualByComparingTo(new BigDecimal("33.3333"));
         }
     }
-
-    // ==================== STRING REPRESENTATION TESTS ====================
 
     @Nested
     @DisplayName("String Representation")

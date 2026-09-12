@@ -85,8 +85,7 @@ export class WalletService {
     return response.data;
   }
 
-  // === Virtual Cards (FE-GAP-009) ===
-
+  // Virtual cards (FE-GAP-009)
   /** POST /cards — Create a virtual card */
   async createCard(request: CreateCardRequest): Promise<VirtualCard> {
     const response = await api.post<VirtualCard>('/cards', request, {
@@ -138,8 +137,7 @@ export class WalletService {
     return response.data;
   }
 
-  // === Pockets (FE-GAP-010) ===
-
+  // Pockets (FE-GAP-010)
   /** POST /pockets — Create a pocket */
   async createPocket(request: CreatePocketRequest): Promise<Pocket> {
     const response = await api.post<Pocket>('/pockets', request, {
@@ -203,8 +201,7 @@ export class WalletService {
   }
 }
 
-// === Card Types ===
-
+// Card types
 // BUG-CROSS-047: Aligned VirtualCard interface with backend CardResponse
 export interface VirtualCard {
   id: string;
@@ -228,8 +225,7 @@ export interface UpdateCardRequest {
   dailyLimit?: Money;
 }
 
-// === Pocket Types ===
-
+// Pocket types
 
 // BUG-CROSS-043: Aligned CreatePocketRequest with backend — removed target/type, added description
 export interface CreatePocketRequest {
@@ -239,8 +235,7 @@ export interface CreatePocketRequest {
   description?: string;
 }
 
-// === Ledger Types ===
-
+// Ledger types
 export interface LedgerEntry {
   id: string;
   accountId: string;

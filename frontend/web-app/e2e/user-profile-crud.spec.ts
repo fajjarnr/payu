@@ -18,7 +18,7 @@ test.describe('User Profile CRUD Operations', () => {
       await page.goto('/onboarding');
       await page.waitForLoadState('domcontentloaded');
 
-      // Step 1: KYC Upload page
+      // KYC Upload page
       await expect(page.getByText('Unggah e-KTP')).toBeVisible();
       await expect(page.getByText('Klik untuk ambil foto')).toBeVisible();
 
@@ -41,7 +41,7 @@ test.describe('User Profile CRUD Operations', () => {
       await page.click('button:has-text("Lanjut ke Profil Data")');
       await page.waitForTimeout(1000);
 
-      // Step 2: Registration form
+      // Registration form
       await expect(page.getByText('Lengkapi Profil')).toBeVisible();
     });
 

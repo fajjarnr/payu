@@ -6,9 +6,7 @@ import { test, expect } from './fixtures';
 import { test as publicTest, expect as publicExpect } from '@playwright/test';
 import { waitForPageStable } from './utils';
 
-// ============================================================
 // BUG-TEST-113: /dashboard — functional tests beyond basic render
-// ============================================================
 test.describe('Dashboard Functional Tests', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/dashboard');
@@ -53,9 +51,7 @@ test.describe('Dashboard Functional Tests', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-115: / landing page — functional tests
-// ============================================================
 publicTest.describe('Landing Page Tests', () => {
   publicTest('should display landing page with hero section', async ({ page }) => {
     await page.goto('/');

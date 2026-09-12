@@ -253,8 +253,7 @@ export class PromotionService {
     return response.data;
   }
 
-  // === Rewards (FE-GAP-012) ===
-
+  // Rewards (FE-GAP-012)
   /** GET /rewards/{id} — Get specific reward */
   async getReward(id: string): Promise<Reward> {
     const response = await api.get<Reward>(`/rewards/${id}`);
@@ -274,8 +273,7 @@ export class PromotionService {
   }
 }
 
-// === Gamification Types ===
-
+// Gamification types
 export interface RewardsSummary {
   accountId: string;
   totalRewards: number;

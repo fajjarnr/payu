@@ -51,8 +51,6 @@ class PromotionServiceIntegrationTest {
         promotionRepository.deleteAll();
     }
 
-    // ==================== CREATE PROMOTION TESTS ====================
-
     @Test
     void testCreatePromotion_WithValidData_ShouldPersistToDatabase() {
         LocalDateTime now = LocalDateTime.now();
@@ -130,8 +128,6 @@ class PromotionServiceIntegrationTest {
             promotionService.createPromotion(request);
         });
     }
-
-    // ==================== UPDATE PROMOTION TESTS ====================
 
     @Test
     void testUpdatePromotion_WithValidData_ShouldUpdateDatabase() {
@@ -223,8 +219,6 @@ class PromotionServiceIntegrationTest {
         });
     }
 
-    // ==================== ACTIVATE PROMOTION TESTS ====================
-
     @Test
     void testActivatePromotion_WithinValidityPeriod_ShouldActivate() {
         LocalDateTime now = LocalDateTime.now();
@@ -285,8 +279,6 @@ class PromotionServiceIntegrationTest {
             promotionService.activatePromotion(nonExistentId);
         });
     }
-
-    // ==================== CLAIM PROMOTION TESTS ====================
 
     @Test
     void testClaimPromotion_WithPercentageReward_ShouldCalculateCorrectly() {
@@ -563,8 +555,6 @@ class PromotionServiceIntegrationTest {
         });
     }
 
-    // ==================== GET PROMOTION TESTS ====================
-
     @Test
     void testGetPromotion_WithValidId_ShouldReturnPromotion() {
         LocalDateTime now = LocalDateTime.now();
@@ -626,8 +616,6 @@ class PromotionServiceIntegrationTest {
 
         Assertions.assertTrue(fetched.isEmpty());
     }
-
-    // ==================== CAMPAIGN MANAGEMENT TESTS ====================
 
     @Test
     void testCampaignLifecycle_FromDraftToExpired() {

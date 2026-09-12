@@ -60,7 +60,7 @@ class BackofficeIntegrationTest {
     @Autowired
     CustomerCaseService customerCaseService;
 
-    // ===== KYC Review Integration Tests =====
+    // KYC review integration tests
 
     @Test
     @DisplayName("Should create and retrieve KYC review from database")
@@ -206,7 +206,7 @@ class BackofficeIntegrationTest {
             .forEach(r -> kycReviewService.delete(r.getId()));
     }
 
-    // ===== Fraud Case Integration Tests =====
+    // Fraud case integration tests
 
     @Test
     @DisplayName("Should create and retrieve fraud case from database")
@@ -352,7 +352,7 @@ class BackofficeIntegrationTest {
             .forEach(c -> fraudCaseService.delete(c.getId()));
     }
 
-    // ===== Customer Case Integration Tests =====
+    // Customer case integration tests
 
     @Test
     @DisplayName("Should create and retrieve customer case from database")
@@ -496,7 +496,7 @@ class BackofficeIntegrationTest {
             .forEach(c -> customerCaseService.delete(c.getId()));
     }
 
-    // ===== Audit Trail Tests =====
+    // Audit trail tests
 
     @Test
     @DisplayName("Should maintain audit trail for KYC review operations")
@@ -597,7 +597,7 @@ class BackofficeIntegrationTest {
         customerCaseService.delete(customerCase.getId());
     }
 
-    // ===== Error Handling Tests =====
+    // Error handling tests
 
     @Test
     @DisplayName("Should throw exception when reviewing non-existent KYC review")
@@ -639,7 +639,7 @@ class BackofficeIntegrationTest {
         });
     }
 
-    // ===== Complex Workflow Tests =====
+    // Complex workflow tests
 
     @Test
     @DisplayName("Should handle complete KYC review workflow from creation to approval")
@@ -782,7 +782,7 @@ class BackofficeIntegrationTest {
         customerCaseService.delete(customerCase.getId());
     }
 
-    // ===== Dashboard Data Tests =====
+    // Dashboard data tests
 
     @Test
     @DisplayName("Should retrieve paginated KYC reviews for dashboard")

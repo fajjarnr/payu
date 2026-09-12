@@ -88,7 +88,7 @@ export class AccountService {
     return response.data;
   }
 
-  // === Beneficiary CRUD (FEATURES A3) ===
+  // Beneficiary CRUD (FEATURES A3)
   async getBeneficiaries(accountId: string): Promise<Beneficiary[]> {
     const response = await api.get<Beneficiary[]>(`/accounts/${accountId}/beneficiaries`);
     return response.data;
@@ -114,7 +114,7 @@ export class AccountService {
     });
   }
 
-  // === Budgets (read-only; mutations live in account-service console) ===
+  // Budgets (read-only; mutations live in account-service console)
   async getBudgets(accountId: string): Promise<AccountBudget[]> {
     const response = await api.get<AccountBudget[]>(`/accounts/${accountId}/budgets`);
     return response.data;

@@ -15,20 +15,19 @@ import { waitForPageStable } from './utils';
  * - Lending: READ (loan options)
  */
 
-// ==================== ACCOUNT CRUD ====================
 test.describe('Account CRUD', () => {
   test('CREATE - Register new user account', async ({ page }) => {
     await page.goto('/onboarding');
     await page.waitForLoadState('domcontentloaded');
 
-    // Step 1: KYC Upload page
+    // KYC Upload page
     await expect(page.getByText('Unggah e-KTP')).toBeVisible();
 
     // Click to proceed to profile form
     await page.click('button:has-text("Lanjut ke Profil Data")');
     await page.waitForTimeout(1000);
 
-    // Step 2: Fill registration form using actual placeholders
+    // Fill registration form using actual placeholders
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
 
     await page.getByPlaceholder('16 digit angka...').fill('1234567890123456');
@@ -68,7 +67,6 @@ test.describe('Account CRUD', () => {
   });
 });
 
-// ==================== WALLET/POCKET CRUD ====================
 test.describe('Wallet & Pocket CRUD', () => {
   test('READ - View wallet balance', async ({ authPage }) => {
     await authPage.goto('/pockets');
@@ -140,7 +138,6 @@ test.describe('Wallet & Pocket CRUD', () => {
   });
 });
 
-// ==================== TRANSACTION CRUD ====================
 test.describe('Transaction CRUD', () => {
   test('CREATE - Initiate transfer', async ({ authPage }) => {
     await authPage.goto('/transfer');
@@ -203,7 +200,6 @@ test.describe('Transaction CRUD', () => {
   });
 });
 
-// ==================== CARD CRUD ====================
 test.describe('Card CRUD', () => {
   test('READ - View cards list', async ({ authPage }) => {
     await authPage.goto('/cards');
@@ -244,7 +240,6 @@ test.describe('Card CRUD', () => {
   });
 });
 
-// ==================== PROFILE/SETTINGS CRUD ====================
 test.describe('Profile & Settings CRUD', () => {
   test('READ - View profile information', async ({ authPage }) => {
     await authPage.goto('/settings');
@@ -290,7 +285,6 @@ test.describe('Profile & Settings CRUD', () => {
   });
 });
 
-// ==================== BILL PAYMENT CRUD ====================
 test.describe('Bill Payment CRUD', () => {
   test('READ - View billers list', async ({ authPage }) => {
     await authPage.goto('/bills');
@@ -323,7 +317,6 @@ test.describe('Bill Payment CRUD', () => {
   });
 });
 
-// ==================== INVESTMENT CRUD ====================
 test.describe('Investment CRUD', () => {
   test('READ - View investment portfolio', async ({ authPage }) => {
     await authPage.goto('/investments');
@@ -354,7 +347,6 @@ test.describe('Investment CRUD', () => {
   });
 });
 
-// ==================== LENDING CRUD ====================
 test.describe('Lending CRUD', () => {
   test('READ - View loan options', async ({ authPage }) => {
     await authPage.goto('/lending');
@@ -373,7 +365,6 @@ test.describe('Lending CRUD', () => {
   });
 });
 
-// ==================== DATABASE CONSISTENCY ====================
 test.describe('Database Consistency Tests', () => {
   test('Verify data consistency after operations', async ({ authPage }) => {
     // Navigate to pockets and verify data loads consistently

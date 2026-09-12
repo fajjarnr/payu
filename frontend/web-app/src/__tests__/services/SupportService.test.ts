@@ -65,8 +65,6 @@ describe('SupportService', () => {
     vi.clearAllMocks();
   });
 
-  // === Training Status ===
-
   // BUG-CROSS-060: getTrainingStatus returns { activeAgents, trainedAgents, trainingPercentage }
   describe('getTrainingStatus', () => {
     it('should fetch training status overview', async () => {
@@ -79,8 +77,6 @@ describe('SupportService', () => {
       expect(result.trainingPercentage).toBe(75.0);
     });
   });
-
-  // === Agent Management ===
 
   describe('listAgents', () => {
     it('should list all agents', async () => {
@@ -147,8 +143,6 @@ describe('SupportService', () => {
     });
   });
 
-  // === Training Module Management ===
-
   describe('listModules', () => {
     it('should list all modules', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: [mockModule] });
@@ -212,8 +206,6 @@ describe('SupportService', () => {
       expect(result.status).toBe('ARCHIVED');
     });
   });
-
-  // === Training Assignments ===
 
   describe('listTrainings', () => {
     it('should list all training assignments', async () => {
@@ -293,8 +285,6 @@ describe('SupportService', () => {
       expect(result.agentId).toBe(1);
     });
   });
-
-  // === User-facing Ticket/FAQ ===
 
   describe('createTicket', () => {
     it('should create a support ticket', async () => {

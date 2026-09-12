@@ -71,8 +71,6 @@ class ApiKeyServiceTest {
         activeKey.setRateLimitRpd(10000);
     }
 
-    // ==================== Key Creation ====================
-
     @Nested
     @DisplayName("API Key Creation")
     class CreateApiKey {
@@ -237,8 +235,6 @@ class ApiKeyServiceTest {
         }
     }
 
-    // ==================== Key Rotation ====================
-
     @Nested
     @DisplayName("API Key Rotation")
     class RotateApiKey {
@@ -313,8 +309,6 @@ class ApiKeyServiceTest {
         }
     }
 
-    // ==================== Key Revocation ====================
-
     @Nested
     @DisplayName("API Key Revocation")
     class RevokeApiKey {
@@ -374,8 +368,6 @@ class ApiKeyServiceTest {
             assertEquals(KeyStatus.REVOKED, captor.getValue().getStatus());
         }
     }
-
-    // ==================== Key Validation ====================
 
     @Nested
     @DisplayName("API Key Validation")
@@ -484,8 +476,6 @@ class ApiKeyServiceTest {
         }
     }
 
-    // ==================== Key Hashing ====================
-
     @Nested
     @DisplayName("Key Hashing (SHA-256)")
     class KeyHashing {
@@ -518,8 +508,6 @@ class ApiKeyServiceTest {
                     "Hash should be 64 lowercase hex characters");
         }
     }
-
-    // ==================== List & Get ====================
 
     @Nested
     @DisplayName("List and Get API Keys")
@@ -566,8 +554,6 @@ class ApiKeyServiceTest {
         }
     }
 
-    // ==================== Update ====================
-
     @Nested
     @DisplayName("Update API Key Settings")
     class UpdateApiKey {
@@ -607,8 +593,6 @@ class ApiKeyServiceTest {
             assertEquals(100, result.getRateLimitRpm()); // unchanged
         }
     }
-
-    // ==================== Expiry Scheduler ====================
 
     @Nested
     @DisplayName("Expiry Scheduler")
@@ -669,8 +653,6 @@ class ApiKeyServiceTest {
             verify(apiKeyRepository, never()).save(any());
         }
     }
-
-    // ==================== Domain Entity ====================
 
     @Nested
     @DisplayName("ApiKeyEntity Domain Methods")

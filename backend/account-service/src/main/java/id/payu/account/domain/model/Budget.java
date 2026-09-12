@@ -62,7 +62,7 @@ public class Budget {
         this.version = version;
     }
 
-    // ==================== DOMAIN BEHAVIORS ====================
+    // Domain behaviors
 
     /**
      * Checks if a spending amount is allowed within this budget.
@@ -172,7 +172,7 @@ public class Budget {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // ==================== QUERY METHODS ====================
+    // Query methods
 
     /**
      * Gets the current budget status based on spending.
@@ -237,7 +237,7 @@ public class Budget {
         return currentSpent.compareTo(threshold) >= 0 && !isExceeded();
     }
 
-    // ==================== GETTERS AND SETTERS ====================
+    // Getters and setters
 
     public UUID getId() {
         return id;
@@ -335,7 +335,7 @@ public class Budget {
         this.version = version;
     }
 
-    // ==================== BUILDER ====================
+    // Builder
 
     public static Builder builder() {
         return new Builder();

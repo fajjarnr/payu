@@ -495,7 +495,7 @@ class InitiateTransferCommandHandlerTest {
                         && transaction.getMetadata().contains("\"recipientAccountNumber\":\"1234567890\""));
     }
 
-    // === ADR-0030: real-time velocity & AML risk enforcement (B1.3) ===
+    // ADR-0030: real-time velocity & AML risk enforcement (B1.3)
 
     @Test
     void rejectsTransferWhenVelocityLimitExceeded() {
@@ -566,7 +566,7 @@ class InitiateTransferCommandHandlerTest {
         verify(walletServicePort, never()).reserveBalance(any(UUID.class), anyString(), any(java.math.BigDecimal.class));
     }
 
-    // === GLOBAL-IMP-007: payload fingerprint tamper guard ===
+    // GLOBAL-IMP-007: payload fingerprint tamper guard
     @Test
     void reusesExistingTransactionWhenIdempotencyKeyAndPayloadMatch() {
         UUID sender = UUID.randomUUID();

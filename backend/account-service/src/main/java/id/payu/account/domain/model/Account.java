@@ -39,7 +39,7 @@ public class Account {
     // Balance limits by account type
     private static final BigDecimal MINIMUM_SAVINGS_BALANCE = new BigDecimal("10000");
     private static final BigDecimal MINIMUM_CHECKING_BALANCE = new BigDecimal("50000");
-    private static final BigDecimal MAXIMUM_BALANCE = new BigDecimal("999999999999.99"); // Maximum allowed balance
+    private static final BigDecimal MAXIMUM_BALANCE = new BigDecimal("999999999999.99");
     private static final BigDecimal ZERO = BigDecimal.ZERO;
 
     // Constructors
@@ -62,7 +62,7 @@ public class Account {
         this.version = version;
     }
 
-    // ==================== DOMAIN BEHAVIORS ====================
+    // Domain behaviors
 
     /**
      * Credits (adds) funds to this account.
@@ -178,7 +178,7 @@ public class Account {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // ==================== QUERY METHODS ====================
+    // Query methods
 
     /**
      * Checks if this account is active and can process transactions.
@@ -248,7 +248,7 @@ public class Account {
         return postDebitBalance.compareTo(minimumRequired) >= 0;
     }
 
-    // ==================== PRIVATE HELPERS ====================
+    // Private helpers
 
     private void assertAccountActive() {
         if (!isActive()) {
@@ -298,7 +298,7 @@ public class Account {
         }
     }
 
-    // ==================== EXCEPTIONS ====================
+    // Exceptions
 
     /**
      * Exception thrown when account has insufficient funds.
@@ -309,7 +309,7 @@ public class Account {
         }
     }
 
-    // ==================== GETTERS AND SETTERS ====================
+    // Getters and setters
 
     public UUID getId() {
         return id;

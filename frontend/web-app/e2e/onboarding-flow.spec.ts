@@ -7,7 +7,7 @@ test.describe('Onboarding Flow - Complete Journey', () => {
   });
 
   test('should complete full onboarding journey', async ({ page }) => {
-    // Step 1: KYC Upload - use Indonesian translations (locale=id)
+    // KYC Upload - use Indonesian translations (locale=id)
     await expect(page.getByText('Unggah e-KTP')).toBeVisible();
     await expect(page.getByText('Foto KTP asli Anda untuk validasi data otomatis')).toBeVisible();
 
@@ -20,7 +20,7 @@ test.describe('Onboarding Flow - Complete Journey', () => {
     });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Step 2: Profile Form
+    // Profile Form
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
     await expect(page.getByPlaceholder('16 digit angka...')).toBeVisible();
 

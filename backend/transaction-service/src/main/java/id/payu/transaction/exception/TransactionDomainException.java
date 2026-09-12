@@ -31,7 +31,7 @@ public abstract class TransactionDomainException extends BusinessException {
         super(code, message, args);
     }
 
-    // === Validation Errors (6000-6099) ===
+    // Validation errors (6000-6099)
 
     public static class InvalidAmountException extends TransactionDomainException {
         public InvalidAmountException(String reason) {
@@ -57,7 +57,7 @@ public abstract class TransactionDomainException extends BusinessException {
         }
     }
 
-    // === Business Rule Errors (6100-6199) ===
+    // Business rule errors (6100-6199)
 
     public static class DuplicateTransactionException extends ConflictException {
         public DuplicateTransactionException(String referenceId) {
@@ -89,7 +89,7 @@ public abstract class TransactionDomainException extends BusinessException {
         }
     }
 
-    // === Balance/Wallet Errors (6200-6299) ===
+    // Balance/wallet errors (6200-6299)
 
     public static class TxnInsufficientBalanceException extends InsufficientFundsException {
         public TxnInsufficientBalanceException(String accountId) {
@@ -137,7 +137,7 @@ public abstract class TransactionDomainException extends BusinessException {
         }
     }
 
-    // === External Service Errors (6300-6399) ===
+    // External service errors (6300-6399)
 
     public static class BiFastTransferFailedException extends ExternalServiceException {
         public BiFastTransferFailedException(String reason) {
@@ -197,7 +197,7 @@ public abstract class TransactionDomainException extends BusinessException {
         }
     }
 
-    // === AML / Risk (ADR-0030, 6400-6499) ===
+    // AML / risk (ADR-0030, 6400-6499)
 
     /**
      * ADR-0030: fraud risk score &gt; 85 (CRITICAL_RISK) — transfer auto-blocked (HTTP 403).
@@ -223,7 +223,7 @@ public abstract class TransactionDomainException extends BusinessException {
         }
     }
 
-    // === Step-Up & Dynamic Linking (ADR-0028, 6500-6599) ===
+    // Step-up and dynamic linking (ADR-0028, 6500-6599)
 
     /**
      * ADR-0028: step-up required — risk 40-70 or amount > threshold and no proof supplied.
@@ -257,7 +257,7 @@ public abstract class TransactionDomainException extends BusinessException {
         }
     }
 
-    // === Idempotency Errors (6600-6699) === GLOBAL-IMP-007 Stripe/Adyen payload fingerprint
+    // Idempotency errors (6600-6699) GLOBAL-IMP-007 Stripe/Adyen payload fingerprint
     public static class IdempotencyPayloadMismatchException extends ConflictException {
         public IdempotencyPayloadMismatchException(String idempotencyKey) {
             super("IDEMPOTENCY_PAYLOAD_MISMATCH",
@@ -266,7 +266,7 @@ public abstract class TransactionDomainException extends BusinessException {
     }
 
 
-    // === System Errors (6900-6999) ===
+    // System errors (6900-6999)
 
     public static class TransactionProcessingException extends TransactionDomainException {
         public TransactionProcessingException(String reason) {

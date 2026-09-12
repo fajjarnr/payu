@@ -34,7 +34,7 @@ public class HealthEndpointsIntegrationTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    // ==================== Custom Health Endpoint Tests ====================
+    // Custom health endpoint tests
 
     @Test
     @Order(1)
@@ -65,7 +65,7 @@ public class HealthEndpointsIntegrationTest {
                 .body("version", equalTo("1.0.0"));
     }
 
-    // ==================== Status Endpoint Tests ====================
+    // Status endpoint tests
 
     @Test
     @Order(10)
@@ -126,7 +126,7 @@ public class HealthEndpointsIntegrationTest {
                 .body("uptime", matchesPattern("^(\\d+d )?\\d+h \\d+m \\d+s$|^\\d+m \\d+s$|^\\d+s$"));
     }
 
-    // ==================== Version Endpoint Tests ====================
+    // Version endpoint tests
 
     @Test
     @Order(20)
@@ -140,7 +140,7 @@ public class HealthEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(400)));
     }
 
-    // ==================== Quarkus Health Endpoint Tests ====================
+    // Quarkus health endpoint tests
 
     @Test
     @Order(30)
@@ -191,7 +191,7 @@ public class HealthEndpointsIntegrationTest {
                 .body("checks", notNullValue());
     }
 
-    // ==================== Analytics Health Tests ====================
+    // Analytics health tests
 
     @Test
     @Order(40)
@@ -206,7 +206,7 @@ public class HealthEndpointsIntegrationTest {
                 .body("service", equalTo("analytics"));
     }
 
-    // ==================== Concurrent Health Check Tests ====================
+    // Concurrent health check tests
 
     @Test
     @Order(50)
@@ -230,7 +230,7 @@ public class HealthEndpointsIntegrationTest {
         }
     }
 
-    // ==================== Response Time Tests ====================
+    // Response time tests
 
     @Test
     @Order(60)
@@ -264,7 +264,7 @@ public class HealthEndpointsIntegrationTest {
         Assertions.assertTrue(responseTime < 1000, "Status endpoint should respond within 1 second");
     }
 
-    // ==================== Different HTTP Methods Tests ====================
+    // Different HTTP methods tests
 
     @Test
     @Order(70)
@@ -299,7 +299,7 @@ public class HealthEndpointsIntegrationTest {
                 .statusCode(anyOf(is(405), is(404)));
     }
 
-    // ==================== JSON Format Tests ====================
+    // JSON format tests
 
     @Test
     @Order(80)
@@ -325,7 +325,7 @@ public class HealthEndpointsIntegrationTest {
                 .contentType(containsString("application/json"));
     }
 
-    // ==================== Cache Control Tests ====================
+    // Cache control tests
 
     @Test
     @Order(90)
@@ -339,7 +339,7 @@ public class HealthEndpointsIntegrationTest {
                 .header("Cache-Control", anyOf(containsString("no-cache"), nullValue()));
     }
 
-    // ==================== Uptime Tracking Tests ====================
+    // Uptime tracking tests
 
     @Test
     @Order(100)
@@ -367,7 +367,7 @@ public class HealthEndpointsIntegrationTest {
         Assertions.assertTrue(laterUptime.longValue() > initialUptime.longValue(), "Uptime should increase over time");
     }
 
-    // ==================== Error Handling Tests ====================
+    // Error handling tests
 
     @Test
     @Order(110)
@@ -380,7 +380,7 @@ public class HealthEndpointsIntegrationTest {
                 .statusCode(anyOf(is(404), is(405)));
     }
 
-    // ==================== Memory Validation Tests ====================
+    // Memory validation tests
 
     @Test
     @Order(120)
@@ -412,7 +412,7 @@ public class HealthEndpointsIntegrationTest {
         Assertions.assertTrue(used.longValue() + free.longValue() <= total.longValue(), "Used + Free should not exceed Total");
     }
 
-    // ==================== Service Identification Tests ====================
+    // Service identification tests
 
     @Test
     @Order(130)
@@ -440,7 +440,7 @@ public class HealthEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(400)));
     }
 
-    // ==================== Timestamp Tests ====================
+    // Timestamp tests
 
     @Test
     @Order(140)
@@ -479,7 +479,7 @@ public class HealthEndpointsIntegrationTest {
                 "Timestamp should be recent");
     }
 
-    // ==================== CORS Tests ====================
+    // CORS tests
 
     @Test
     @Order(150)
@@ -494,7 +494,7 @@ public class HealthEndpointsIntegrationTest {
                 .statusCode(anyOf(is(204), is(200)));
     }
 
-    // ==================== Cross-Service Health Tests ====================
+    // Cross-service health tests
 
     @Test
     @Order(160)
@@ -518,7 +518,7 @@ public class HealthEndpointsIntegrationTest {
         }
     }
 
-    // ==================== Content Type Tests ====================
+    // Content type tests
 
     @Test
     @Order(170)
@@ -532,7 +532,7 @@ public class HealthEndpointsIntegrationTest {
                 .contentType(containsString("application/json"));
     }
 
-    // ==================== Start Time Tests ====================
+    // Start time tests
 
     @Test
     @Order(180)

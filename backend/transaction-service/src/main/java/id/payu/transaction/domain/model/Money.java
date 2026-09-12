@@ -373,7 +373,7 @@ public class Money implements Comparable<Money> {
                 '}';
     }
 
-    // ==================== COMPARABLE IMPLEMENTATION ====================
+    // Comparable implementation
 
     /**
      * Compares this Money instance with another.

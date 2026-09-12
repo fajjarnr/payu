@@ -50,8 +50,6 @@ class AccountFinancialIntegrityTest {
         accountNumber = "1234567890";
     }
 
-    // ==================== BIGDECIMAL PRECISION TESTS ====================
-
     @Nested
     @DisplayName("BigDecimal Precision - No Floating Point Errors")
     class BigDecimalPrecisionTests {
@@ -111,8 +109,6 @@ class AccountFinancialIntegrityTest {
             assertThat(account.getBalance()).isEqualTo(new BigDecimal("2000.00"));
         }
     }
-
-    // ==================== NO NEGATIVE BALANCE TESTS ====================
 
     @Nested
     @DisplayName("No Negative Balance Protection")
@@ -177,8 +173,6 @@ class AccountFinancialIntegrityTest {
         }
     }
 
-    // ==================== MAXIMUM BALANCE TESTS ====================
-
     @Nested
     @DisplayName("Maximum Balance Protection")
     class MaximumBalanceTests {
@@ -230,8 +224,6 @@ class AccountFinancialIntegrityTest {
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
-
-    // ==================== CONCURRENT OPERATIONS TESTS ====================
 
     @Nested
     @DisplayName("Concurrent Operations (P0 - Data Integrity)")
@@ -334,8 +326,6 @@ class AccountFinancialIntegrityTest {
         }
     }
 
-    // ==================== MINIMUM BALANCE BY TYPE TESTS ====================
-
     @Nested
     @DisplayName("Minimum Balance Requirements by Account Type")
     class MinimumBalanceByTypeTests {
@@ -382,8 +372,6 @@ class AccountFinancialIntegrityTest {
                     .isInstanceOf(Account.InsufficientFundsException.class);
         }
     }
-
-    // ==================== ACCOUNT STATUS TESTS ====================
 
     @Nested
     @DisplayName("Account Status Validation")
@@ -441,8 +429,6 @@ class AccountFinancialIntegrityTest {
         }
     }
 
-    // ==================== OWNERSHIP VERIFICATION TESTS ====================
-
     @Nested
     @DisplayName("Resource Ownership Verification")
     class OwnershipVerificationTests {
@@ -483,8 +469,6 @@ class AccountFinancialIntegrityTest {
             assertThat(account.isOwnedBy(UUID.randomUUID())).isFalse();
         }
     }
-
-    // ==================== QUERY METHOD TESTS ====================
 
     @Nested
     @DisplayName("Query Methods")
@@ -540,8 +524,6 @@ class AccountFinancialIntegrityTest {
             assertThat(account.isClosed()).isTrue();
         }
     }
-
-    // ==================== ACCOUNT LIFECYCLE TESTS ====================
 
     @Nested
     @DisplayName("Account Lifecycle Operations")
@@ -627,8 +609,6 @@ class AccountFinancialIntegrityTest {
             assertThat(account.getStatus()).isEqualTo(AccountStatus.ACTIVE);
         }
     }
-
-    // ==================== HELPER METHODS ====================
 
     private Account createSavingsAccount(BigDecimal balance) {
         return Account.builder()

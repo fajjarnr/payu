@@ -186,7 +186,7 @@ public class EventConsumer {
         }
     }
 
-    // ==================== KYC Events (ADR-001: Hybrid KYC) ====================
+    // KYC events (ADR-001: Hybrid KYC)
 
     @Incoming("kyc-verified-events")
     public void onKycVerified(String payload) {

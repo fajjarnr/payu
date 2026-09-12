@@ -5,9 +5,7 @@
 import { test, expect } from './fixtures';
 import { waitForPageStable } from './utils';
 
-// ============================================================
 // BUG-TEST-111: /legal/terms
-// ============================================================
 test.describe('Terms and Conditions Page', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/legal/terms');
@@ -38,9 +36,7 @@ test.describe('Terms and Conditions Page', () => {
   });
 });
 
-// ============================================================
 // BUG-TEST-112: /legal/privacy
-// ============================================================
 test.describe('Privacy Policy Page', () => {
   test.beforeEach(async ({ authPage: page }) => {
     await page.goto('/legal/privacy');

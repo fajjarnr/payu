@@ -30,7 +30,7 @@ public abstract class AccountDomainException extends BusinessException {
         super(code, message, args);
     }
 
-    // === Validation Errors (5000-5099) ===
+    // Validation errors (5000-5099)
 
     public static class InvalidPhoneNumberException extends AccountDomainException {
         public InvalidPhoneNumberException(String phone) {
@@ -56,7 +56,7 @@ public abstract class AccountDomainException extends BusinessException {
         }
     }
 
-    // === Business Rule Errors (5100-5199) ===
+    // Business rule errors (5100-5199)
 
     public static class AccountAlreadyExistsException extends ConflictException {
         public AccountAlreadyExistsException(String identifier) {
@@ -89,7 +89,7 @@ public abstract class AccountDomainException extends BusinessException {
         }
     }
 
-    // === External Service Errors (5200-5299) ===
+    // External service errors (5200-5299)
 
     public static class DukcapilVerificationFailedException extends ExternalServiceException {
         public DukcapilVerificationFailedException(String reason) {
@@ -123,7 +123,7 @@ public abstract class AccountDomainException extends BusinessException {
         }
     }
 
-    // === System Errors (5900-5999) ===
+    // System errors (5900-5999)
 
     public static class AccountCreationFailedException extends AccountDomainException {
         public AccountCreationFailedException(String reason) {

@@ -41,8 +41,6 @@ export interface SnapBiPayment {
 }
 
 export const PartnerService = {
-  // === Partner CRUD ===
-
   /** GET /partners — List all partners */
   async listPartners() {
     const response = await api.get<Partner[]>('/partners');
@@ -83,8 +81,6 @@ export const PartnerService = {
   async deletePartner(id: number) {
     await api.delete(`/partners/${id}`);
   },
-
-  // === Certificate Management ===
 
   /** GET /partners/{partnerId}/certificates */
   async getCertificates(partnerId: number) {
@@ -151,7 +147,6 @@ export const PartnerService = {
     return response.data;
   },
 
-  // === SNAP-BI Integration ===
   // BUG-FE-033: getSnapBiToken via client credentials removed from frontend.
 
   /** POST /partner/payments — Create SNAP-BI payment */

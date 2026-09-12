@@ -30,7 +30,7 @@ public abstract class AuthDomainException extends BusinessException {
         super(code, message, args);
     }
 
-    // === Validation Errors (4000-4099) ===
+    // Validation errors (4000-4099)
 
     public static class InvalidPasswordException extends AuthDomainException {
         public InvalidPasswordException(String reason) {
@@ -64,7 +64,7 @@ public abstract class AuthDomainException extends BusinessException {
         }
     }
 
-    // === Business Rule Errors (4100-4199) ===
+    // Business rule errors (4100-4199)
 
     public static class InvalidCredentialsException extends AuthDomainException {
         public InvalidCredentialsException() {
@@ -129,7 +129,7 @@ public abstract class AuthDomainException extends BusinessException {
         }
     }
 
-    // === External Service Errors (4200-4299) ===
+    // External service errors (4200-4299)
 
     public static class KeycloakUnavailableException extends ExternalServiceException {
         public KeycloakUnavailableException() {
@@ -179,7 +179,7 @@ public abstract class AuthDomainException extends BusinessException {
         }
     }
 
-    // === System Errors (4900-4999) ===
+    // System errors (4900-4999)
 
     public static class AuthenticationSystemException extends AuthDomainException {
         public AuthenticationSystemException(String reason) {

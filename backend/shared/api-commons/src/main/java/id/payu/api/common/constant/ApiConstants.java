@@ -9,7 +9,7 @@ public final class ApiConstants {
     private ApiConstants() {
     }
 
-    // ==================== PAGINATION ====================
+    // Pagination
 
     /**
      * Default page number (0-based).
@@ -41,7 +41,7 @@ public final class ApiConstants {
      */
     public static final String DEFAULT_SORT_FIELD = "createdAt";
 
-    // ==================== RATE LIMITING ====================
+    // Rate limiting
 
     /**
      * Default rate limit requests per minute.
@@ -58,7 +58,7 @@ public final class ApiConstants {
      */
     public static final int DEFAULT_RATE_LIMIT_WINDOW_SECONDS = 60;
 
-    // ==================== TIME LIMITS ====================
+    // Time limits
 
     /**
      * Default timeout for external service calls in seconds.
@@ -80,7 +80,7 @@ public final class ApiConstants {
      */
     public static final long SLOW_TIMEOUT_MS = 30000;
 
-    // ==================== RETRY CONFIGURATION ====================
+    // Retry configuration
 
     /**
      * Default maximum retry attempts.
@@ -97,7 +97,7 @@ public final class ApiConstants {
      */
     public static final long MAX_RETRY_DELAY_MS = 10000;
 
-    // ==================== IDEMPOTENCY ====================
+    // Idempotency
 
     /**
      * Idempotency key header name.
@@ -109,7 +109,7 @@ public final class ApiConstants {
      */
     public static final long IDEMPOTENCY_KEY_EXPIRATION_SECONDS = 86400;
 
-    // ==================== REQUEST HEADERS ====================
+    // Request headers
 
     /**
      * Request ID header name.
@@ -156,7 +156,7 @@ public final class ApiConstants {
      */
     public static final String DEFAULT_LANGUAGE = "id-ID";
 
-    // ==================== RESPONSE HEADERS ====================
+    // Response headers
 
     /**
      * Rate limit remaining header name.
@@ -193,7 +193,7 @@ public final class ApiConstants {
      */
     public static final String LINK_HEADER = "Link";
 
-    // ==================== DATE FORMATS ====================
+    // Date formats
 
     /**
      * ISO 8601 date format.
@@ -215,7 +215,7 @@ public final class ApiConstants {
      */
     public static final String INDONESIAN_DATETIME_FORMAT = "dd-MM-yyyy HH:mm:ss";
 
-    // ==================== CURRENCY ====================
+    // Currency
 
     /**
      * Default currency code.
@@ -232,7 +232,7 @@ public final class ApiConstants {
      */
     public static final long MAX_BIFAST_AMOUNT = 250000000;
 
-    // ==================== PHONE NUMBER ====================
+    // Phone number
 
     /**
      * Indonesian phone number pattern.
@@ -249,7 +249,7 @@ public final class ApiConstants {
      */
     public static final String MOBILE_NUMBER_PATTERN = "^08[1-9][0-9]{6,9}$";
 
-    // ==================== NIK (Indonesian ID) ====================
+    // Nik (Indonesian ID)
 
     /**
      * NIK length.
@@ -261,7 +261,7 @@ public final class ApiConstants {
      */
     public static final String NIK_PATTERN = "^[0-9]{16}$";
 
-    // ==================== ACCOUNT NUMBER ====================
+    // Account number
 
     /**
      * Account number length.
@@ -273,21 +273,21 @@ public final class ApiConstants {
      */
     public static final String ACCOUNT_NUMBER_PATTERN = "^[0-9]{10}$";
 
-    // ==================== EMAIL ====================
+    // Email
 
     /**
      * Email pattern.
      */
     public static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@(.+)$";
 
-    // ==================== UUID ====================
+    // Uuid
 
     /**
      * UUID pattern.
      */
     public static final String UUID_PATTERN = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
 
-    // ==================== API VERSION ====================
+    // Api version
 
     /**
      * Current API version.
@@ -299,7 +299,7 @@ public final class ApiConstants {
      */
     public static final String API_VERSION_PREFIX = "/api/v1/";
 
-    // ==================== TRANSACTION REFERENCE ====================
+    // Transaction reference
 
     /**
      * Transaction reference number length.

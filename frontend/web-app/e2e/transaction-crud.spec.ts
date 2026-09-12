@@ -311,11 +311,9 @@ test.describe('Transaction CRUD Operations', () => {
         return input && input.value.length > 0 && input.value !== '0';
       }, { timeout: 5000 });
 
-      // Step 1: Review
       await authPage.locator('[data-testid="review-transfer-button"]').click();
       await authPage.waitForTimeout(1000);
 
-      // Step 2: Confirm should now be visible
       await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible();
     });
 

@@ -224,7 +224,7 @@ public class RouteRegistry {
         ));
     }
 
-    // ==================== Inner Classes ====================
+    // Inner classes
 
     /**
      * A registered route definition.

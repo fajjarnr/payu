@@ -77,7 +77,7 @@ public class BackofficeController extends BaseController {
         return "unknown-admin";
     }
 
-    // ==================== KYC Review Endpoints ====================
+    // KYC review endpoints
 
     @PostMapping("/kyc-reviews")
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
@@ -298,7 +298,7 @@ public class BackofficeController extends BaseController {
         return noContent();
     }
 
-    // ==================== Fraud Case Endpoints ====================
+    // Fraud case endpoints
 
     // BUG-BE-158 FIX: Changed from form-encoded @RequestParam to JSON @RequestBody
     @PostMapping(value = "/fraud-cases")
@@ -413,7 +413,7 @@ public class BackofficeController extends BaseController {
         return noContent();
     }
 
-    // ==================== Customer Case Endpoints ====================
+    // Customer case endpoints
 
     @PostMapping("/customer-cases")
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")
@@ -511,7 +511,7 @@ public class BackofficeController extends BaseController {
         return noContent();
     }
 
-    // ==================== Universal Search Endpoints ====================
+    // Universal search endpoints
 
     @PostMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")

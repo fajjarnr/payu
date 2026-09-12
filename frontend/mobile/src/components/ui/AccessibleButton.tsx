@@ -26,9 +26,7 @@ import type { AccessibilityRole } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { generateA11yProps, PayUAccessibilityProps, validateTouchTarget } from '@/src/utils/accessibility';
 
-// ============================================================================
-// Types & Interfaces
-// ============================================================================
+// Types and interfaces
 
 /**
  * Props for the AccessibleButton component
@@ -70,9 +68,7 @@ export interface AccessibleButtonProps extends Omit<TouchableOpacityProps, 'styl
   onTouchTargetError?: (error: string) => void;
 }
 
-// ============================================================================
 // Constants
-// ============================================================================
 
 const TOUCH_TARGET_SIZE = 44;
 
@@ -97,9 +93,7 @@ const BUTTON_SIZES = {
   },
 };
 
-// ============================================================================
 // Component
-// ============================================================================
 
 /**
  * AccessibleButton - A fully accessible button component
@@ -299,9 +293,7 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
   );
 };
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
+// Helper functions
 
 /**
  * Generates a testID from a label string
@@ -313,9 +305,7 @@ function generateTestID(label: string): string {
     .replace(/^-|-$/g, '');
 }
 
-// ============================================================================
 // Styles
-// ============================================================================
 
 const styles = StyleSheet.create({
   loadingSpinner: {
@@ -332,8 +322,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// ============================================================================
 // Export
-// ============================================================================
 
 export default AccessibleButton;

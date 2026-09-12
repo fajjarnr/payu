@@ -134,8 +134,7 @@ export class AuthService {
     }
   }
 
-  // === Biometric Authentication (FE-GAP-011) ===
-
+  // Biometric authentication (FE-GAP-011)
   /** GET /biometric/challenge — Get biometric challenge */
   async getBiometricChallenge(): Promise<BiometricChallenge> {
     const { default: api } = await import('@/lib/api');
@@ -171,8 +170,7 @@ export class AuthService {
   }
 }
 
-// === Biometric Types ===
-
+// Biometric types
 export interface BiometricChallenge {
   challengeId: string;
   challenge: string;

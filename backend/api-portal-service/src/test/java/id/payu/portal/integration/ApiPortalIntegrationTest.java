@@ -87,7 +87,7 @@ class ApiPortalIntegrationTest {
     @Test
     @DisplayName("should complete full sandbox payment lifecycle end-to-end")
     void sandbox_fullPaymentLifecycle() {
-        // Step 1: Verify initial state - no payments
+        // Verify initial state - no payments
         given()
             .get("/api/v1/sandbox/stats")
             .then()
@@ -95,7 +95,6 @@ class ApiPortalIntegrationTest {
             .body("totalPayments", equalTo(0))
             .body("totalRefunds", equalTo(0));
 
-        // Step 2: Create a payment
         String paymentRef = given()
             .contentType(ContentType.JSON)
             .body("""
@@ -124,7 +123,6 @@ class ApiPortalIntegrationTest {
 
         assertNotNull(paymentRef);
 
-        // Step 3: Get payment status
         given()
             .when().get("/api/v1/sandbox/payments/" + paymentRef)
             .then()
@@ -134,7 +132,6 @@ class ApiPortalIntegrationTest {
             .body("paymentStatus", equalTo("COMPLETED"))
             .body("amount.value", equalTo(250000.00f));
 
-        // Step 4: Create a refund
         String refundRef = given()
             .contentType(ContentType.JSON)
             .body("""
@@ -155,7 +152,7 @@ class ApiPortalIntegrationTest {
 
         assertNotNull(refundRef);
 
-        // Step 5: Verify stats reflect the operations
+        // Verify stats reflect the operations
         given()
             .get("/api/v1/sandbox/stats")
             .then()
@@ -163,14 +160,14 @@ class ApiPortalIntegrationTest {
             .body("totalPayments", equalTo(1))
             .body("totalRefunds", equalTo(1));
 
-        // Step 6: Clear all data
+        // Clear all data
         given()
             .delete("/api/v1/sandbox/data")
             .then()
             .statusCode(200)
             .body("message", containsString("cleared"));
 
-        // Step 7: Verify data is cleared
+        // Verify data is cleared
         given()
             .get("/api/v1/sandbox/stats")
             .then()
@@ -178,7 +175,7 @@ class ApiPortalIntegrationTest {
             .body("totalPayments", equalTo(0))
             .body("totalRefunds", equalTo(0));
 
-        // Step 8: Verify payment no longer exists
+        // Verify payment no longer exists
         given()
             .when().get("/api/v1/sandbox/payments/" + paymentRef)
             .then()

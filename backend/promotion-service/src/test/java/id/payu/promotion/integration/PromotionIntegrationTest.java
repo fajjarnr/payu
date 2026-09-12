@@ -97,8 +97,6 @@ class PromotionIntegrationTest {
         return mockMvc.perform(get(url)).andReturn();
     }
 
-    // ==================== LOYALTY POINTS TESTS ====================
-
     @Test
     void testPointsCalculationAndAwarding() throws Exception {
         CreateLoyaltyPointsRequest earnRequest = new CreateLoyaltyPointsRequest(
@@ -159,8 +157,6 @@ class PromotionIntegrationTest {
                 .andExpect(jsonPath("$.totalRedeemed").value(75));
     }
 
-    // ==================== CASHBACK PROCESSING TESTS ====================
-
     @Test
     void testCashbackProcessing() throws Exception {
         CreateCashbackRequest cashbackRequest = new CreateCashbackRequest(
@@ -198,8 +194,6 @@ class PromotionIntegrationTest {
         );
         postJson("/api/v1/cashbacks", shoppingRequest);
     }
-
-    // ==================== REFERRAL PROGRAM TESTS ====================
 
     @Test
     void testReferralProgramRewards() throws Exception {
@@ -265,8 +259,6 @@ class PromotionIntegrationTest {
         Assertions.assertTrue(refereePoints.stream()
                 .anyMatch(p -> p.getTransactionType() == TransactionType.REFERRAL_BONUS && p.getPoints() == 50));
     }
-
-    // ==================== KAFKA EVENT TESTS ====================
 
     @Test
     void testCashbackCreation_HttpPostSucceeds() throws Exception {

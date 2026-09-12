@@ -57,7 +57,6 @@ public class WalletServiceAdapter implements WalletServicePort {
     @Retry(name = "walletService")
     public void deductBalance(String userId, BigDecimal amount, String referenceId) {
 
-        // Step 1: Reserve balance
         String reserveUrl = walletServiceUrl + "/api/v1/wallets/" + userId + "/reserve";
         log.info("Reserving balance for investment: accountId={}, amount={}, ref={}", userId, amount, referenceId);
 
@@ -80,7 +79,6 @@ public class WalletServiceAdapter implements WalletServicePort {
             String reservationId = reserveResponse.get("reservationId").toString();
             log.info("Balance reserved: reservationId={}", reservationId);
 
-            // Step 2: Commit the reservation
             String commitUrl = walletServiceUrl + "/api/v1/wallets/reservations/" + reservationId + "/commit";
             restTemplate.postForObject(commitUrl, null, Map.class);
             log.info("Reservation committed: reservationId={}, amount={}", reservationId, amount);

@@ -42,8 +42,6 @@ class DisputeTest {
     private static final String CURRENCY = "IDR";
     private static final String REASON = "Product not received";
 
-    // ==================== CREATION TESTS ====================
-
     @Nested
     @DisplayName("Creation")
     class CreationTests {
@@ -116,8 +114,6 @@ class DisputeTest {
                     .hasMessageContaining("Reason cannot be null or empty");
         }
     }
-
-    // ==================== STATE TRANSITION TESTS ====================
 
     @Nested
     @DisplayName("State Transitions")
@@ -210,8 +206,6 @@ class DisputeTest {
         }
     }
 
-    // ==================== EVIDENCE MANAGEMENT TESTS ====================
-
     @Nested
     @DisplayName("Evidence Management")
     class EvidenceManagementTests {
@@ -284,8 +278,6 @@ class DisputeTest {
                     .hasMessageContaining("Cannot add evidence to dispute in status");
         }
     }
-
-    // ==================== INVALID TRANSITION TESTS ====================
 
     @Nested
     @DisplayName("Invalid State Transitions")
@@ -382,8 +374,6 @@ class DisputeTest {
         }
     }
 
-    // ==================== BUSINESS RULE TESTS ====================
-
     @Nested
     @DisplayName("Business Rules")
     class BusinessRuleTests {
@@ -478,8 +468,6 @@ class DisputeTest {
                     .hasMessageContaining("Investigation ID cannot be null or empty");
         }
     }
-
-    // ==================== EQUALITY TESTS ====================
 
     @Nested
     @DisplayName("Equality and Identity")

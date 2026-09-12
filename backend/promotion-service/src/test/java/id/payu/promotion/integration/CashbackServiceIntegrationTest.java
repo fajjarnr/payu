@@ -44,8 +44,6 @@ class CashbackServiceIntegrationTest {
         cashbackRepository.deleteAll();
     }
 
-    // ==================== CREATE CASHBACK TESTS ====================
-
     @Test
     void testCreateCashback_WithDiningCategory_ShouldApply3Percent() {
         CreateCashbackRequest request = new CreateCashbackRequest(
@@ -181,8 +179,6 @@ class CashbackServiceIntegrationTest {
         Assertions.assertEquals(new BigDecimal("2999.97"), cashback.getCashbackAmount());
     }
 
-    // ==================== GET CASHBACK TESTS ====================
-
     @Test
     void testGetCashback_WithValidId_ShouldReturnCashback() {
         CreateCashbackRequest request = new CreateCashbackRequest(
@@ -238,8 +234,6 @@ class CashbackServiceIntegrationTest {
         Assertions.assertTrue(cashbacks.isEmpty());
     }
 
-    // ==================== CASHBACK SUMMARY TESTS ====================
-
     @Test
     void testGetCashbackSummary_WithMultipleTransactions_ShouldCalculateCorrectly() {
         String accountId = "acc-cashback-summary";
@@ -294,8 +288,6 @@ class CashbackServiceIntegrationTest {
         Assertions.assertEquals(0, new BigDecimal("4000").compareTo(summary2.totalCashback()));
     }
 
-    // ==================== CASHBACK BY CATEGORY TESTS ====================
-
     @Test
     void testCashbackByCategory_AllCategories_ShouldApplyCorrectRates() {
         // Test all supported categories
@@ -335,8 +327,6 @@ class CashbackServiceIntegrationTest {
         Assertions.assertEquals(0, new BigDecimal("2000").compareTo(mixed.getCashbackAmount()));
     }
 
-    // ==================== MERCHANT-SPECIFIC CASHBACK TESTS ====================
-
     @Test
     void testCashbackWithMerchantCode_ShouldStoreMerchantInfo() {
         CreateCashbackRequest request = new CreateCashbackRequest(
@@ -359,8 +349,6 @@ class CashbackServiceIntegrationTest {
         Assertions.assertEquals("MERCHANT-ABC-123", fetched.get().getMerchantCode());
         Assertions.assertEquals("PROMO-MERCHANT", fetched.get().getCashbackCode());
     }
-
-    // ==================== HIGH VOLUME TRANSACTION TESTS ====================
 
     @Test
     void testCashback_WithLargeTransactionAmount_ShouldCalculateCorrectly() {
@@ -395,8 +383,6 @@ class CashbackServiceIntegrationTest {
         // 2% of 1,000 = 20
         Assertions.assertEquals(0, new BigDecimal("20").compareTo(cashback.getCashbackAmount()));
     }
-
-    // ==================== MULTIPLE CASHBACK ACCUMULATION TESTS ====================
 
     @Test
     void testMultipleCashbacks_SummaryAccumulation() {

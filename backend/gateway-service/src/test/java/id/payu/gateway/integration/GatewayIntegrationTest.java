@@ -106,7 +106,7 @@ public class GatewayIntegrationTest {
         if (walletServiceMock != null) walletServiceMock.resetAll();
     }
 
-    // ==================== Health Check Tests ====================
+    // Health check tests
 
     @Test
     @Order(1)
@@ -141,7 +141,7 @@ public class GatewayIntegrationTest {
                 .body("status", equalTo("UP"));
     }
 
-    // ==================== CORS Filter Tests ====================
+    // CORS filter tests
 
     @Test
     @Order(10)
@@ -181,7 +181,7 @@ public class GatewayIntegrationTest {
                 .header("Access-Control-Allow-Origin", notNullValue());
     }
 
-    // ==================== Tenant Filter Tests ====================
+    // Tenant filter tests
 
     @Test
     @Order(20)
@@ -218,7 +218,7 @@ public class GatewayIntegrationTest {
                 .statusCode(200);
     }
 
-    // ==================== API Version Filter Tests ====================
+    // API version filter tests
 
     @Test
     @Order(30)
@@ -264,7 +264,7 @@ public class GatewayIntegrationTest {
                 .statusCode(400); // Unsupported version should be a client error (Bad Request)
     }
 
-    // ==================== API Key Validation Tests ====================
+    // API key validation tests
 
     @Test
     @Order(40)
@@ -294,7 +294,7 @@ public class GatewayIntegrationTest {
                 .statusCode(200);
     }
 
-    // ==================== Request Routing Tests ====================
+    // Request routing tests
 
     @Test
     @Order(50)
@@ -399,7 +399,7 @@ public class GatewayIntegrationTest {
         accountServiceMock.verify(1, getRequestedFor(urlPathMatching("/api/v1/accounts/.*")));
     }
 
-    // ==================== Error Handling Tests ====================
+    // Error handling tests
 
     @Test
     @Order(60)
@@ -471,7 +471,7 @@ public class GatewayIntegrationTest {
                 .statusCode(400); // Malformed JSON must be a 400 Bad Request
     }
 
-    // ==================== Request Header Forwarding Tests ====================
+    // Request header forwarding tests
 
     @Test
     @Order(70)
@@ -534,7 +534,7 @@ public class GatewayIntegrationTest {
         accountServiceMock.verify(1, getRequestedFor(urlPathEqualTo("/api/v1/accounts")));
     }
 
-    // ==================== Response Headers Tests ====================
+    // Response headers tests
 
     @Test
     @Order(80)
@@ -571,7 +571,7 @@ public class GatewayIntegrationTest {
                 .statusCode(200);
     }
 
-    // ==================== Different HTTP Methods Tests ====================
+    // Different HTTP methods tests
 
     @Test
     @Order(90)
@@ -633,7 +633,7 @@ public class GatewayIntegrationTest {
         accountServiceMock.verify(1, patchRequestedFor(urlPathMatching("/api/v1/accounts/.*")));
     }
 
-    // ==================== Metrics and OpenAPI Tests ====================
+    // Metrics and openapi tests
 
     @Test
     @Order(100)
@@ -656,7 +656,7 @@ public class GatewayIntegrationTest {
                 .body("openapi", notNullValue());
     }
 
-    // ==================== Timeout and Retry Tests ====================
+    // Timeout and retry tests
 
     @Test
     @Order(110)
@@ -676,7 +676,7 @@ public class GatewayIntegrationTest {
                 .statusCode(200); // With 5s delay and 30s timeout, this should succeed
     }
 
-    // ==================== Request Body Tests ====================
+    // Request body tests
 
     @Test
     @Order(120)
@@ -743,7 +743,7 @@ public class GatewayIntegrationTest {
                 .statusCode(400); // Empty body on POST should be Bad Request
     }
 
-    // ==================== Query Parameters Tests ====================
+    // Query parameters tests
 
     @Test
     @Order(130)
@@ -770,7 +770,7 @@ public class GatewayIntegrationTest {
                 .withQueryParam("size", WireMock.equalTo("10")));
     }
 
-    // ==================== Complex Scenarios Tests ====================
+    // Complex scenarios tests
 
     @Test
     @Order(140)

@@ -44,8 +44,6 @@ describe('ComplianceService', () => {
     vi.clearAllMocks();
   });
 
-  // === Compliance Audit Report ===
-
   describe('createAuditReport', () => {
     it('should create an audit report', async () => {
       const request: CreateAuditReportRequest = {
@@ -86,8 +84,6 @@ describe('ComplianceService', () => {
       expect(result).toHaveLength(1);
     });
   });
-
-  // === GDPR Audit ===
 
   describe('createGdprAudit', () => {
     it('should create a GDPR audit entry', async () => {

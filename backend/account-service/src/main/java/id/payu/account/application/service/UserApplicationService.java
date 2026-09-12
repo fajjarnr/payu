@@ -50,7 +50,7 @@ public class UserApplicationService implements RegisterUserUseCase {
             throw new IllegalArgumentException("Username already exists");
         }
 
-        // Step 1: Provision identity in Keycloak BEFORE creating account.
+        // Provision identity in Keycloak before creating account.
         // If IAM provisioning fails, we don't create an orphaned DB record.
         String iamUserId = identityProviderPort.provisionUser(
             command.username(),
@@ -69,7 +69,7 @@ public class UserApplicationService implements RegisterUserUseCase {
         }
         String externalId = iamUserId;
 
-        // Step 2: Attempt KYC verification — if unavailable, register with PENDING status.
+        // Attempt KYC verification — if unavailable, register with PENDING status.
         // Simple try-catch replaces resilience4j annotations which caused double-fallback
         // (both @CircuitBreaker and @Bulkhead fired registerFallback, leading to duplicate key errors).
         // Registration is low-throughput and non-idempotent — circuit breaking adds no value here.

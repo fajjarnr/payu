@@ -91,8 +91,7 @@ export class TransactionService {
     return response.data;
   }
 
-  // === Scheduled Transfers (FE-GAP-007) ===
-
+  // Scheduled transfers (FE-GAP-007)
   async createScheduledTransfer(request: CreateScheduledTransferRequest): Promise<ScheduledTransfer> {
     // BUG-FE-021: Add idempotency key for financial mutation
     const response = await api.post<ScheduledTransfer>('/scheduled-transfers', request, {
@@ -139,8 +138,7 @@ export class TransactionService {
     return response.data;
   }
 
-  // === Split Bills (FE-GAP-008) ===
-
+  // Split bills (FE-GAP-008)
   async createSplitBill(request: CreateSplitBillRequest): Promise<SplitBill> {
     const response = await api.post<SplitBill>('/split-bills', request, {
       headers: { 'X-Idempotency-Key': idempotencyKeyFor('split-bill:create', request.creatorAccountId ?? '') }
@@ -216,8 +214,7 @@ export class TransactionService {
   }
 }
 
-// === Scheduled Transfer Types ===
-
+// Scheduled transfer types
 // BUG-CROSS-030: Align field names with backend ScheduledTransferResponse
 export interface ScheduledTransfer {
   id: string;
@@ -260,8 +257,7 @@ export interface CreateScheduledTransferRequest {
   occurrenceCount?: number;
 }
 
-// === Split Bill Types ===
-
+// Split bill types
 // BUG-CROSS-020: Align status with backend SplitStatus (removed phantom 'SETTLED')
 export interface SplitBill {
   id: string;

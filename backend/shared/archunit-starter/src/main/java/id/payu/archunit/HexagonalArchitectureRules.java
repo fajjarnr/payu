@@ -46,9 +46,7 @@ public final class HexagonalArchitectureRules {
         // Utility class - prevent instantiation
     }
 
-    // ============================================================================
-    // Layer Package Patterns
-    // ============================================================================
+    // Layer package patterns
 
     /**
      * Standard package patterns for hexagonal architecture layers.
@@ -106,9 +104,7 @@ public final class HexagonalArchitectureRules {
         "..external.."
     };
 
-    // ============================================================================
-    // Rule 1: Domain Independence
-    // ============================================================================
+    // Rule 1: domain independence
 
     /**
      * Rule: Domain layer should not depend on infrastructure, adapters, or Spring framework.
@@ -151,9 +147,7 @@ public final class HexagonalArchitectureRules {
                         "Application layer depends on domain, not vice versa");
     }
 
-    // ============================================================================
-    // Rule 2: Application Layer Port Access
-    // ============================================================================
+    // Rule 2: application layer port access
 
     /**
      * Rule: Application layer should only access repositories through port interfaces.
@@ -197,9 +191,7 @@ public final class HexagonalArchitectureRules {
                         "should be in infrastructure layer");
     }
 
-    // ============================================================================
-    // Rule 3: Adapter Isolation
-    // ============================================================================
+    // Rule 3: adapter isolation
 
     /**
      * Rule: Adapters should not leak into domain layer.
@@ -237,9 +229,7 @@ public final class HexagonalArchitectureRules {
                 .because("Adapters should be in infrastructure layer and implement Port interfaces");
     }
 
-    // ============================================================================
-    // Rule 4: Transactional Use Cases
-    // ============================================================================
+    // Rule 4: transactional use cases
 
     /**
      * Rule: All use case methods should be annotated with @Transactional.
@@ -311,9 +301,7 @@ public final class HexagonalArchitectureRules {
                         "data consistency. Query methods are excluded");
     }
 
-    // ============================================================================
-    // Rule 5: Repository Port Contracts
-    // ============================================================================
+    // Rule 5: repository port contracts
 
     /**
      * Rule: Repository port methods should return domain objects, not entities.
@@ -372,9 +360,7 @@ public final class HexagonalArchitectureRules {
                         "This keeps the domain layer independent of persistence technology");
     }
 
-    // ============================================================================
-    // Additional Helper Rules
-    // ============================================================================
+    // Additional helper rules
 
     /**
      * Rule: Domain entities should be in domain.model package.

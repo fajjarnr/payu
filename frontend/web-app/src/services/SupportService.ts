@@ -120,16 +120,12 @@ class SupportService {
     return SupportService.instance;
   }
 
-  // === Training Status (overview) ===
-
   // BUG-CROSS-060: Backend getTrainingStatus returns Map<String,Object> with activeAgents, trainedAgents, trainingPercentage
   /** GET /support/training-status */
   async getTrainingStatus(): Promise<{ activeAgents: number; trainedAgents: number; trainingPercentage: number }> {
     const response = await api.get('/support/training-status');
     return response.data;
   }
-
-  // === Agent Management ===
 
   /** GET /support/agents */
   async listAgents(): Promise<SupportAgent[]> {
@@ -163,8 +159,6 @@ class SupportService {
     return response.data;
   }
 
-  // === Training Module Management ===
-
   /** GET /support/modules */
   async listModules(): Promise<TrainingModule[]> {
     const response = await api.get('/support/modules');
@@ -194,8 +188,6 @@ class SupportService {
     const response = await api.patch(`/support/modules/${id}/status`, { status });
     return response.data;
   }
-
-  // === Training Assignments ===
 
   /** GET /support/trainings */
   async listTrainings(): Promise<TrainingAssignment[]> {
@@ -234,8 +226,6 @@ class SupportService {
     const response = await api.get(`/support/trainings/agent/${agentId}/status`);
     return response.data;
   }
-
-  // === User-facing ticket/FAQ endpoints (pending backend implementation) ===
 
   /** POST /support/tickets — Create support ticket (future) */
   async createTicket(request: CreateTicketRequest): Promise<SupportTicket> {

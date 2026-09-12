@@ -57,8 +57,6 @@ class ReferralServiceIntegrationTest {
         referralRepository.deleteAll();
     }
 
-    // ==================== CREATE REFERRAL TESTS ====================
-
     @Test
     void testCreateReferral_WithCashbackReward_ShouldGenerateUniqueCode() {
         CreateReferralRequest request = new CreateReferralRequest(
@@ -148,8 +146,6 @@ class ReferralServiceIntegrationTest {
         Assertions.assertEquals(referrerId, referral1.getReferrerAccountId());
         Assertions.assertEquals(referrerId, referral2.getReferrerAccountId());
     }
-
-    // ==================== COMPLETE REFERRAL TESTS ====================
 
     @Test
     void testCompleteReferral_WithCashbackReward_ShouldGrantRewards() {
@@ -300,8 +296,6 @@ class ReferralServiceIntegrationTest {
         Assertions.assertEquals(ReferralStatus.EXPIRED, fetched.get().getStatus());
     }
 
-    // ==================== GET REFERRAL TESTS ====================
-
     @Test
     void testGetReferral_WithValidId_ShouldReturnReferral() {
         CreateReferralRequest request = new CreateReferralRequest(
@@ -351,8 +345,6 @@ class ReferralServiceIntegrationTest {
 
         Assertions.assertTrue(fetched.isEmpty());
     }
-
-    // ==================== GET REFERRALS BY REFERRER TESTS ====================
 
     @Test
     void testGetReferralsByReferrer_ShouldReturnAllReferrals() {
@@ -410,8 +402,6 @@ class ReferralServiceIntegrationTest {
         Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == ReferralStatus.COMPLETED));
         Assertions.assertTrue(referrals.stream().anyMatch(r -> r.getStatus() == ReferralStatus.PENDING));
     }
-
-    // ==================== REFERRAL SUMMARY TESTS ====================
 
     @Test
     void testGetReferralSummary_WithMultipleReferrals_ShouldCalculateCorrectly() {
@@ -478,8 +468,6 @@ class ReferralServiceIntegrationTest {
         Assertions.assertEquals(referral2.getReferralCode(), summary2.referralCode());
     }
 
-    // ==================== REFERRAL CODE GENERATION TESTS ====================
-
     @Test
     void testReferralCodeGeneration_ShouldCreateUniqueCodes() {
         // Create 100 referrals and verify all codes are unique
@@ -514,8 +502,6 @@ class ReferralServiceIntegrationTest {
         Assertions.assertEquals(8, referral.getReferralCode().length());
         Assertions.assertTrue(referral.getReferralCode().matches("[A-Z0-9]+"));
     }
-
-    // ==================== MULTI-ACCOUNT REFERRAL SCENARIOS ====================
 
     @Test
     void testMultipleReferrers_IndependentReferralPrograms() {

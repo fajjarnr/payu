@@ -43,8 +43,6 @@ class LoyaltyPointsServiceIntegrationTest {
         loyaltyPointsRepository.deleteAll();
     }
 
-    // ==================== ADD POINTS TESTS ====================
-
     @Test
     void testAddPoints_WithValidData_ShouldPersistToDatabase() {
         CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
@@ -175,8 +173,6 @@ class LoyaltyPointsServiceIntegrationTest {
         Assertions.assertEquals(150, adjustment.getBalanceAfter());
     }
 
-    // ==================== REDEEM POINTS TESTS ====================
-
     @Test
     void testRedeemPoints_WithSufficientBalance_ShouldDeductSuccessfully() {
         String accountId = "acc-redeem-001";
@@ -305,8 +301,6 @@ class LoyaltyPointsServiceIntegrationTest {
         Assertions.assertEquals(650, balance.totalRedeemed()); // sum of redeemed points (200+150+300)
     }
 
-    // ==================== GET POINTS TESTS ====================
-
     @Test
     void testGetLoyaltyPoints_WithValidId_ShouldReturnPoints() {
         CreateLoyaltyPointsRequest request = new CreateLoyaltyPointsRequest(
@@ -366,8 +360,6 @@ class LoyaltyPointsServiceIntegrationTest {
 
         Assertions.assertTrue(transactions.isEmpty());
     }
-
-    // ==================== BALANCE TESTS ====================
 
     @Test
     void testGetBalance_WithNewAccount_ShouldReturnZero() {
@@ -479,8 +471,6 @@ class LoyaltyPointsServiceIntegrationTest {
         Assertions.assertTrue(balance.expiredPoints() >= 1);
     }
 
-    // ==================== EXPIRY DATE TESTS ====================
-
     @Test
     void testAddPoints_WithExpiryDate_ShouldStoreCorrectly() {
         LocalDateTime expiryDate = LocalDateTime.now().plusMonths(12);
@@ -517,8 +507,6 @@ class LoyaltyPointsServiceIntegrationTest {
 
         Assertions.assertNull(points.getExpiryDate());
     }
-
-    // ==================== HIGH VOLUME TESTS ====================
 
     @Test
     void testHighVolumePointsAccumulation() {

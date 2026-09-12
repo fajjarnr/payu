@@ -91,7 +91,6 @@ public class WalletGrpcAdapter implements WalletServicePort {
         log.info("gRPC deductBalance (reserve+commit): userId={}, amount={}, referenceId={}", userId, amount, referenceId);
 
         try {
-            // Step 1: Reserve balance
             ReserveBalanceRequest reserveRequest = ReserveBalanceRequest.newBuilder()
                     .setWalletId(userId)
                     .setAccountId(userId)
@@ -112,7 +111,6 @@ public class WalletGrpcAdapter implements WalletServicePort {
             String reservationId = reserveResponse.getReservationId();
             log.info("gRPC balance reserved: reservationId={}", reservationId);
 
-            // Step 2: Commit reservation
             CommitReservationRequest commitRequest = CommitReservationRequest.newBuilder()
                     .setReservationId(reservationId)
                     .build();

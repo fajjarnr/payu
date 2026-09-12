@@ -39,8 +39,6 @@ class RefundTest {
     private static final String REASON = "Customer request";
     private static final String CURRENCY = "IDR";
 
-    // ==================== CREATION TESTS ====================
-
     @Nested
     @DisplayName("Creation")
     class CreationTests {
@@ -132,8 +130,6 @@ class RefundTest {
         }
     }
 
-    // ==================== STATE TRANSITION TESTS ====================
-
     @Nested
     @DisplayName("State Transitions")
     class StateTransitionTests {
@@ -186,8 +182,6 @@ class RefundTest {
             assertThat(refund.getCancelledAt()).isNotNull();
         }
     }
-
-    // ==================== INVALID TRANSITION TESTS ====================
 
     @Nested
     @DisplayName("Invalid State Transitions")
@@ -295,8 +289,6 @@ class RefundTest {
         }
     }
 
-    // ==================== BUSINESS RULE TESTS ====================
-
     @Nested
     @DisplayName("Business Rules")
     class BusinessRuleTests {
@@ -376,8 +368,6 @@ class RefundTest {
                     .hasMessageContaining("Cancellation reason cannot be null or empty");
         }
     }
-
-    // ==================== EQUALITY TESTS ====================
 
     @Nested
     @DisplayName("Equality and Identity")

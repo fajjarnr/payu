@@ -106,8 +106,6 @@ class ComplianceService {
     return ComplianceService.instance;
   }
 
-  // === Compliance Audit Report ===
-
   /** POST /compliance/audit-report — Create audit report */
   async createAuditReport(request: CreateAuditReportRequest): Promise<AuditReport> {
     const response = await api.post('/compliance/audit-report', request);
@@ -131,8 +129,6 @@ class ComplianceService {
     const response = await api.get('/compliance/audit-report', { params });
     return response.data;
   }
-
-  // === GDPR Audit ===
 
   /** POST /gdpr-audit — Create GDPR audit entry */
   async createGdprAudit(request: CreateGdprAuditRequest): Promise<GdprAudit> {

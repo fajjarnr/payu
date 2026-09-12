@@ -192,8 +192,7 @@ export class LendingService {
     return response.data;
   }
 
-  // === Pre-Approval (FE-GAP-013) ===
-
+  // Pre-approval (FE-GAP-013)
   /** POST /lending/pre-approval/check — Check pre-approval eligibility */
   async checkPreApproval(request: PreApprovalCheckRequest): Promise<PreApproval> {
     const response = await api.post<PreApproval>('/lending/pre-approval/check', request, {
@@ -215,8 +214,7 @@ export class LendingService {
   }
 }
 
-// === Pre-Approval Types ===
-
+// Pre-approval types
 export interface PreApprovalCheckRequest {
   userId: string;
   loanType: 'PERSONAL_LOAN' | 'INSTALMENT_LOAN' | 'MICRO_LOAN';

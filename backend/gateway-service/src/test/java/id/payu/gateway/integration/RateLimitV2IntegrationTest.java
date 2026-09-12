@@ -38,7 +38,7 @@ public class RateLimitV2IntegrationTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    // ==================== Per-IP Rate Limiting Tests ====================
+    // Per-ip rate limiting tests
 
     @Test
     @Order(1)
@@ -78,7 +78,7 @@ public class RateLimitV2IntegrationTest {
         // but we verified all responses are valid status codes (no 500)
     }
 
-    // ==================== Per-User Rate Limiting Tests ====================
+    // Per-user rate limiting tests
 
     @Test
     @Order(10)
@@ -119,7 +119,7 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // ==================== Endpoint-Specific Rate Limiting Tests ====================
+    // Endpoint-specific rate limiting tests
 
     @Test
     @Order(20)
@@ -156,7 +156,7 @@ public class RateLimitV2IntegrationTest {
         // Each endpoint should have its own rate limit counter
     }
 
-    // ==================== Health Endpoint Bypass Tests ====================
+    // Health endpoint bypass tests
 
     @Test
     @Order(30)
@@ -185,7 +185,7 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // ==================== Rate Limit Response Headers Tests ====================
+    // Rate limit response headers tests
 
     @Test
     @Order(40)
@@ -223,7 +223,7 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // ==================== Concurrent Requests Tests ====================
+    // Concurrent requests tests
 
     @Test
     @Order(50)
@@ -247,7 +247,7 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // ==================== X-Forwarded-For Tests ====================
+    // X-forwarded-for tests
 
     @Test
     @Order(60)
@@ -273,7 +273,7 @@ public class RateLimitV2IntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
 
-    // ==================== Different HTTP Methods Tests ====================
+    // Different HTTP methods tests
 
     @Test
     @Order(70)
@@ -318,7 +318,7 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // ==================== Token Bucket Refill Tests ====================
+    // Token bucket refill tests
 
     @Test
     @Order(80)
@@ -346,7 +346,7 @@ public class RateLimitV2IntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
 
-    // ==================== Rate Limit Disabled Tests ====================
+    // Rate limit disabled tests
 
     @Test
     @Order(90)
@@ -363,7 +363,7 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // ==================== Combined User and IP Rate Limiting Tests ====================
+    // Combined user and IP rate limiting tests
 
     @Test
     @Order(100)
@@ -379,7 +379,7 @@ public class RateLimitV2IntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
 
-    // ==================== Default Rate Limit Tests ====================
+    // Default rate limit tests
 
     @Test
     @Order(110)
@@ -393,7 +393,7 @@ public class RateLimitV2IntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503), is(429)));
     }
 
-    // ==================== Rate Limit Reset Time Tests ====================
+    // Rate limit reset time tests
 
     @Test
     @Order(120)

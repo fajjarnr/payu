@@ -124,9 +124,7 @@ jest.mock('lucide-react-native', () => ({
   Unlock: () => null,
 }));
 
-// ============================================================================
-// Accessibility Testing Setup
-// ============================================================================
+// Accessibility testing setup
 
 // Mock react-native AccessibilityInfo for a11y tests
 const mockAccessibilityEventListeners = new Map();

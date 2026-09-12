@@ -66,7 +66,7 @@ public class SimulatorGatewayIntegrationTest {
         if (qrisSimulatorMock != null) qrisSimulatorMock.resetAll();
     }
 
-    // ==================== BI-FAST Simulator Tests ====================
+    // BI-FAST simulator tests
 
     @Test
     @Order(1)
@@ -203,7 +203,7 @@ public class SimulatorGatewayIntegrationTest {
                 .body("responseCode", containsString("01"));
     }
 
-    // ==================== Dukcapil Simulator Tests ====================
+    // Dukcapil simulator tests
 
     @Test
     @Order(10)
@@ -338,7 +338,7 @@ public class SimulatorGatewayIntegrationTest {
                 .body("responseCode", containsString("01"));
     }
 
-    // ==================== QRIS Simulator Tests ====================
+    // QRIS simulator tests
 
     @Test
     @Order(20)
@@ -479,7 +479,7 @@ public class SimulatorGatewayIntegrationTest {
                 .body("responseCode", containsString("01"));
     }
 
-    // ==================== Timeout and Retry Tests ====================
+    // Timeout and retry tests
 
     @Test
     @Order(30)
@@ -532,7 +532,7 @@ public class SimulatorGatewayIntegrationTest {
                 .statusCode(200);
     }
 
-    // ==================== Correlation ID Tests ====================
+    // Correlation ID tests
 
     @Test
     @Order(40)
@@ -559,7 +559,7 @@ public class SimulatorGatewayIntegrationTest {
                 .withHeader("X-Correlation-Id", WireMock.equalTo(correlationId)));
     }
 
-    // ==================== Simulator Not Configured Tests ====================
+    // Simulator not configured tests
 
     @Test
     @Order(50)
@@ -570,7 +570,7 @@ public class SimulatorGatewayIntegrationTest {
         // For now, we just verify the error handling structure
     }
 
-    // ==================== Multiple Simulator Requests Tests ====================
+    // Multiple simulator requests tests
 
     @Test
     @Order(60)
@@ -611,7 +611,7 @@ public class SimulatorGatewayIntegrationTest {
         qrisSimulatorMock.verify(1, postRequestedFor(urlPathEqualTo("/api/v1/generate")));
     }
 
-    // ==================== Fault Tolerance Tests ====================
+    // Fault tolerance tests
 
     @Test
     @Order(70)

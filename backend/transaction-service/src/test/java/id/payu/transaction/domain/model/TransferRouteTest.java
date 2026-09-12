@@ -33,8 +33,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("TransferRoute Value Object Tests")
 class TransferRouteTest {
 
-    // ==================== FACTORY METHOD TESTS ====================
-
     @Nested
     @DisplayName("Factory Methods")
     class FactoryMethodsTests {
@@ -94,8 +92,6 @@ class TransferRouteTest {
         }
     }
 
-    // ==================== ELIGIBILITY TESTS ====================
-
     @Nested
     @DisplayName("Eligibility Checks")
     class EligibilityTests {
@@ -154,8 +150,6 @@ class TransferRouteTest {
         }
     }
 
-    // ==================== FEE CALCULATION TESTS ====================
-
     @Nested
     @DisplayName("Fee Calculation")
     class FeeCalculationTests {
@@ -205,8 +199,6 @@ class TransferRouteTest {
         }
     }
 
-    // ==================== COMPARISON TESTS ====================
-
     @Nested
     @DisplayName("Comparison")
     class ComparisonTests {
@@ -247,8 +239,6 @@ class TransferRouteTest {
         }
     }
 
-    // ==================== ESTIMATED TIME TESTS ====================
-
     @Nested
     @DisplayName("Estimated Time")
     class EstimatedTimeTests {
@@ -278,8 +268,6 @@ class TransferRouteTest {
         }
     }
 
-    // ==================== EQUALITY TESTS ====================
-
     @Nested
     @DisplayName("Equality")
     class EqualityTests {
@@ -304,7 +292,7 @@ class TransferRouteTest {
         }
     }
 
-    // ==================== HELPER METHODS ====================
+    // Helper methods
 
     private TransferRoute createSampleRoute() {
         return TransferRoute.biFast();

@@ -46,7 +46,7 @@ public class SimulatorGatewayResource {
         this.webClient = WebClient.create(vertx);
     }
 
-    // ==================== BI-FAST Simulator ====================
+    // BI-FAST simulator
 
     @POST
     @Path("/bifast/inquiry")
@@ -74,7 +74,7 @@ public class SimulatorGatewayResource {
         return proxy("bi-fast", "/api/v1/status/" + ref, "GET", null, headers);
     }
 
-    // ==================== Dukcapil Simulator ====================
+    // Dukcapil simulator
 
     @POST
     @Path("/dukcapil/verify")
@@ -102,7 +102,7 @@ public class SimulatorGatewayResource {
         return proxy("dukcapil", "/api/v1/nik/" + nik, "GET", null, headers);
     }
 
-    // ==================== QRIS Simulator ====================
+    // QRIS simulator
 
     @POST
     @Path("/qris/generate")
@@ -130,7 +130,7 @@ public class SimulatorGatewayResource {
         return proxy("qris", "/api/v1/status/" + qrId, "GET", null, headers);
     }
 
-    // ==================== Proxy Logic ====================
+    // Proxy logic
 
     private Uni<Response> proxy(String simulator, String path, String method, 
                                  String body, HttpHeaders headers) {

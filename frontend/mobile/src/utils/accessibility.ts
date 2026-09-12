@@ -10,9 +10,7 @@
 
 import { AccessibilityProps, AccessibilityRole, AccessibilityState } from 'react-native';
 
-// ============================================================================
-// Types & Interfaces
-// ============================================================================
+// Types and interfaces
 
 /**
  * Extended accessibility props with additional PayU-specific attributes
@@ -103,9 +101,7 @@ export interface ContrastValidation {
   background: string;
 }
 
-// ============================================================================
 // Constants
-// ============================================================================
 
 /** Minimum touch target size per WCAG 2.1 guidelines */
 export const MIN_TOUCH_TARGET_SIZE = 44;
@@ -140,9 +136,7 @@ export const A11Y_ROLES = {
   NONE: 'none',
 } as const;
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
+// Helper functions
 
 /**
  * Generates comprehensive accessibility props for a component
@@ -462,9 +456,7 @@ export function validateA11yLabels(
   };
 }
 
-// ============================================================================
-// Export Default
-// ============================================================================
+// Export default
 
 export default {
   generateA11yProps,

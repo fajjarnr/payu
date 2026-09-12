@@ -17,7 +17,7 @@ public final class OpenApiConstants {
     private OpenApiConstants() {
     }
 
-    // ==================== TAGS ====================
+    // Tags
 
     public static final class Tags {
         public static final String AUTH = "Authentication";
@@ -35,7 +35,7 @@ public final class OpenApiConstants {
         public static final String HEALTH = "Health Checks";
     }
 
-    // ==================== COMMON RESPONSES ====================
+    // Common responses
 
     /**
      * Creates a 400 Bad Request response.

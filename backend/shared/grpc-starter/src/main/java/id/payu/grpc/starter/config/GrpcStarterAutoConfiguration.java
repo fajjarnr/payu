@@ -44,7 +44,7 @@ public class GrpcStarterAutoConfiguration {
 
     private final GrpcStarterProperties properties;
 
-    // ==================== Server Interceptors ====================
+    // Server interceptors
 
     @Bean
     @ConditionalOnProperty(prefix = "payu.grpc.interceptors.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -72,7 +72,7 @@ public class GrpcStarterAutoConfiguration {
         return new GrpcErrorHandlingInterceptor.ServerInterceptor();
     }
 
-    // ==================== Client Interceptors ====================
+    // Client interceptors
 
     @Bean
     @ConditionalOnMissingBean(name = "grpcChannelFactory")
@@ -118,7 +118,7 @@ public class GrpcStarterAutoConfiguration {
         );
     }
 
-    // ==================== Server Configuration ====================
+    // Server configuration
 
     @Bean
     @ConditionalOnProperty(prefix = "payu.grpc.server", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -170,7 +170,7 @@ public class GrpcStarterAutoConfiguration {
         return server;
     }
 
-    // ==================== Client Interceptor Provider ====================
+    // Client interceptor provider
 
     /**
      * Provider for client interceptors that can be used by gRPC channels.

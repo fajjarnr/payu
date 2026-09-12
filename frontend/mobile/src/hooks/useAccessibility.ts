@@ -21,9 +21,7 @@ import {
   AccessibilityAnnouncementFinishedEvent,
 } from 'react-native';
 
-// ============================================================================
-// Types & Interfaces
-// ============================================================================
+// Types and interfaces
 
 /**
  * Screen reader state
@@ -73,9 +71,7 @@ export interface AccessibilityPreferences {
   screenReaderEnabled: boolean;
 }
 
-// ============================================================================
 // Hook: useScreenReader
-// ============================================================================
 
 /**
  * Hook to detect and monitor screen reader status
@@ -158,9 +154,7 @@ export function useScreenReader(): ScreenReaderState & {
   return { isEnabled, isActive, refresh };
 }
 
-// ============================================================================
 // Hook: useAccessibilityAnnounce
-// ============================================================================
 
 /**
  * Hook for announcing messages to screen readers
@@ -281,9 +275,7 @@ export function useAccessibilityAnnounce() {
   };
 }
 
-// ============================================================================
 // Hook: useAccessibilityFocus
-// ============================================================================
 
 /**
  * Hook for managing focus in an accessible way
@@ -377,9 +369,7 @@ export function useAccessibilityFocus() {
   };
 }
 
-// ============================================================================
 // Hook: useAccessibilityPreferences
-// ============================================================================
 
 /**
  * Hook to get user's accessibility preferences
@@ -486,9 +476,7 @@ export function useAccessibilityPreferences() {
   return { preferences, isLoading };
 }
 
-// ============================================================================
 // Hook: useAccessibleForm
-// ============================================================================
 
 /**
  * Hook for managing accessible form interactions
@@ -565,9 +553,7 @@ export function useAccessibleForm() {
   };
 }
 
-// ============================================================================
-// Hook: useAccessibility (Main Hook)
-// ============================================================================
+// Hook: useAccessibility (main hook)
 
 /**
  * Main accessibility hook combining all accessibility features
@@ -612,8 +598,6 @@ export function useAccessibility() {
   );
 }
 
-// ============================================================================
 // Export
-// ============================================================================
 
 export default useAccessibility;

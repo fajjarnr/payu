@@ -28,9 +28,7 @@ import { useTheme } from '@react-navigation/native';
 import { Eye, EyeOff, X } from 'lucide-react-native';
 import { createInputA11yProps, PayUAccessibilityProps } from '@/src/utils/accessibility';
 
-// ============================================================================
-// Types & Interfaces
-// ============================================================================
+// Types and interfaces
 
 /**
  * Props for the AccessibleInput component
@@ -94,9 +92,7 @@ export interface AccessibleInputRef {
   announceError: (message: string) => void;
 }
 
-// ============================================================================
 // Constants
-// ============================================================================
 
 const INPUT_SIZES = {
   sm: {
@@ -119,9 +115,7 @@ const INPUT_SIZES = {
   },
 };
 
-// ============================================================================
 // Component
-// ============================================================================
 
 /**
  * AccessibleInput - A fully accessible text input component
@@ -434,9 +428,7 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
   }
 );
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
+// Helper functions
 
 function generateTestID(label: string): string {
   return label
@@ -445,9 +437,7 @@ function generateTestID(label: string): string {
     .replace(/^-|-$/g, '');
 }
 
-// ============================================================================
 // Styles
-// ============================================================================
 
 const styles = StyleSheet.create({
   requiredIndicator: {
@@ -465,9 +455,7 @@ const styles = StyleSheet.create({
   },
 });
 
-// ============================================================================
 // Export
-// ============================================================================
 
 AccessibleInput.displayName = 'AccessibleInput';
 

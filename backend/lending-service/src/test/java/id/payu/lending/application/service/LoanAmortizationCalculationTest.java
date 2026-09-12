@@ -95,9 +95,7 @@ class LoanAmortizationCalculationTest {
         return service.createRepaymentSchedule(loanId);
     }
 
-    // ========================================================================
     // Exact amortization verification: 3-month, 12% annual, principal 3,000,000
-    // ========================================================================
     @Nested
     @DisplayName("3-month 12% loan — exact figures")
     class ThreeMonthTwelvePercent {
@@ -183,9 +181,7 @@ class LoanAmortizationCalculationTest {
         }
     }
 
-    // ========================================================================
     // Zero interest-rate edge case
-    // ========================================================================
     @Nested
     @DisplayName("Zero interest rate")
     class ZeroInterest {
@@ -232,9 +228,7 @@ class LoanAmortizationCalculationTest {
         }
     }
 
-    // ========================================================================
     // Single-month tenure
-    // ========================================================================
     @Nested
     @DisplayName("1-month tenure")
     class SingleMonth {
@@ -273,9 +267,7 @@ class LoanAmortizationCalculationTest {
         }
     }
 
-    // ========================================================================
     // 12-month 14% loan invariants (the default test loan from other tests)
-    // ========================================================================
     @Nested
     @DisplayName("12-month 14% loan — invariant checks")
     class TwelveMonthFourteenPercent {
@@ -405,9 +397,7 @@ class LoanAmortizationCalculationTest {
         }
     }
 
-    // ========================================================================
     // Repayment overpayment edge case (not covered by existing tests)
-    // ========================================================================
     @Nested
     @DisplayName("processRepayment — rejects overpayment")
     class OverpaymentCapping {
