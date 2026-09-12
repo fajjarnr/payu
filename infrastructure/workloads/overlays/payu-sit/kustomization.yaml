@@ -74,7 +74,7 @@ images:
   newTag: "1.18.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/api-portal-service
-  newTag: "1.18.74"
+  digest: sha256:bd2a930c4bddd36829085fdbff6a60489aa7b7577e40a162591485816700d0e2
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/auth-service
   digest: sha256:e7656bae06be288fc9bbe55eb0df16469818698feb17123bd6a78f33b7fb97e8
