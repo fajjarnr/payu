@@ -118,6 +118,7 @@ Catatan sesi 2026-08-26: audit + fix + E2E — login 3/3 stabil → dashboard; r
 
 | Key | Pri | Temuan | Bukti | Sisa |
 | CICD-PERF-004 | P3 | **Kapasitas batch** — kontensi terbukti (3 build bersamaan = 36–60m vs 18m single-run) tapi profil beban akan berubah total pasca CICD-PERF-001 (download dependency = bottleneck dominan hari ini) | Batch 2026-08-24 21:25 wallet/va-simulator/support; cluster 4 worker | DEFERRED dengan pemicu objektif: pasca-pilot, uji ulang batch 3 build; bila p95 >15m → eval concurrency policy dulu, baru tambah worker |
+| CICD-FUZZ-001 | P3 | **Schemathesis SIT flaky** — `request_timeout` 0/N pada path sampah fuzz (`GET /v1.0/{bytes}`, `/v1/partner/{bytes}`), `[FLAKY]` tak terreproduksi; direct curl path sama → 400 0.25s. Tiap fail = 44-45 passed + 1-2 timeout; biller lolos percobaan ke-5, dukcapil+qris ke-4, va ke-6 (`wwf96` 8/8, fuzz 6m46s bersih). Teori kontensi GUGUR: run solo tetap gagal pola sama → murni luck per-run | `biller gwvwl/hksbp/smqvn/qzg8p FAIL → 6b4tm PASS`; `dukcapil 7n6px/24mjc/5z2f6`, `qris 9jkrb/666f8/j7xxf`, `va vd9xj/lgjfp/qkg6f/pfp5c` FAIL; `dukcapil slhmg`, `qris dkhl7`, `va wwf96` PASS 2026-09-12 | Semua hijau 2026-09-12; tindak lanjut DEFERRED = timeout khusus fuzz-path atau seed tetap agar reproduksibel |
 
 ### Audit 2026-08-28 — E2E Podman Compose FULL JOURNEY (FINAL)
 
