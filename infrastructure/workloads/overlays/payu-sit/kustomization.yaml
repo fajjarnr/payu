@@ -143,7 +143,7 @@ images:
   newTag: "1.18.102"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/bi-fast-simulator
-  newTag: "1.18.74"
+  digest: sha256:ff3dbcf2f9c5d09b4bd50c9d15ff3d7043ea643911573126a6d32dbfb414e6b4
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/biller-simulator
   newTag: "1.18.74"
