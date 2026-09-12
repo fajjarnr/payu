@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - **Loop promotion-service 1.18.104 (CVE rebuild, LIVE SIT)**: Spring + fleet pin bekerja (Trivy `Total: 0` langsung) → build `zv4cl` 15/15; deploy SIT `j7th8` 8/8 hijau langsung (k6 hijau + fuzz `46 passed` bersih). Digest `sha256:2d6ccfcb…` LIVE SIT (rollout sukses, `/actuator/health UP`).
 - **Loop dispute-service 1.18.104 (CVE rebuild, LIVE SIT)**: Spring + fleet pin (Trivy `Total: 0`) → build `jggkr` 15/15; deploy SIT `4jsbr` 8/8 hijau langsung. Digest `sha256:642adcc3…` LIVE SIT (rollout sukses, `/actuator/health UP`, Argo Synced Healthy).
 - **Loop compliance-service 1.18.104 (CVE rebuild, LIVE SIT)**: Spring + fleet pin (Trivy `Total: 0`) → build `lwhgf` 15/15; deploy SIT pertama `lqf4n` gagal ganda di window KEDA scale (k6 timeout + fuzz `44 passed, 2 failed` keduanya `request_timeout`, conformance 3881/3881 PASSED) → rerun `jfhkk` k6 hijau tapi fuzz `45 passed, 1 failed` satu `request_timeout` → rerun kedua `4gvzw` 8/8 hijau (fuzz `46 passed` bersih). Digest `sha256:f5b212a0…` LIVE SIT (rollout sukses, `/actuator/health UP`, Argo Synced Healthy).
+- **Loop cms-service 1.18.104 (CVE rebuild, LIVE SIT)**: Spring + fleet pin (Trivy `Total: 0`) → build `2mjj6` 15/15; deploy SIT `8w9qx` 8/8 hijau langsung (k6 hijau + fuzz `46 passed` bersih). Digest `sha256:a74e5dd3…` LIVE SIT (rollout sukses, `/actuator/health UP`, Argo Synced Healthy).
 
 ## [1.18.103] - 2026-09-10
 
