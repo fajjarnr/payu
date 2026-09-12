@@ -6,4 +6,4 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/va-simulator
-    newTag: "1.18.74"
+    digest: sha256:b1a5b51b25a7d9fd710cdbd5fe7037e4b042a0be2ddec1bc88c0bdfaf7adb21e
