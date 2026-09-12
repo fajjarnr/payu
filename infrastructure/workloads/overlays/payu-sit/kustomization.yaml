@@ -122,7 +122,7 @@ images:
   digest: sha256:266480d3eb3a388f03235b783ceda254c24cd22a3aff0e301d1f81a6eb321a6c
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/product-catalog-service
-  newTag: "1.18.74"
+  digest: sha256:120133d7b2777c3965fc41a90311f2fd6af5abdd85be3d5d024af582e0209624
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/promotion-service
   digest: sha256:2d6ccfcba2de1f16bd05b5292ce3321c84ac66239910654d1e0182b6be080113
