@@ -26,7 +26,7 @@ spec:
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/path: /metrics
-        prometheus.io/port: '8085'
+        prometheus.io/port: '8080'
     spec:
       securityContext:
         runAsNonRoot: true
@@ -38,7 +38,7 @@ spec:
         image: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator:1.18.74
         imagePullPolicy: Always
         ports:
-        - containerPort: 8085
+        - containerPort: 8080
           name: http
           protocol: TCP
         volumeMounts:
@@ -86,21 +86,21 @@ spec:
         startupProbe:
           httpGet:
             path: /q/health/live
-            port: 8085
+            port: 8080
           initialDelaySeconds: 30
           periodSeconds: 5
           failureThreshold: 90
         livenessProbe:
           httpGet:
             path: /q/health/live
-            port: 8085
+            port: 8080
           initialDelaySeconds: 10
           periodSeconds: 30
           timeoutSeconds: 5
         readinessProbe:
           httpGet:
             path: /q/health/ready
-            port: 8085
+            port: 8080
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 3
@@ -124,8 +124,8 @@ spec:
   selector:
     app: va-simulator
   ports:
-  - port: 8085
-    targetPort: 8085
+  - port: 8080
+    targetPort: 8080
     name: http
   type: ClusterIP
 ---
