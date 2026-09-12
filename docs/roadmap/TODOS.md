@@ -69,6 +69,7 @@ No open gate — PARTNER-PROD-007..011 ✅ Selesai 1.18.9–1.18.21 → `CHANGEL
 ## 🚀 Platform Deploy Queue
 
 | PLAT-DRIFT-001 | P3 | Env convergence | Fleet-wide base env (Redis/HOTROD/simulator/GRPC vars in `base/*/deployment.yaml` since ≤1.7.9) not present on live Deployments (imperative applies, no GitOps); services healthy via defaults/fail-open; proven-harmful cases fixed individually (auth secret, tx Redis, analytics KEYCLOAK_URL). Converge via full root-overlay apply in maintenance window (restarts ~30 workloads); guard: `scripts/verify-overlay-drift.sh` (currently 171 env lines, 0 image/tag/port findings after 1.18.103 sync). |
+| KAFKA-QUORUM-001 | P2 | Broker down di semua env 1+1 (sit/uat/preprod CrashLoop 25 jam+, dev 3+3 sehat) — `FATAL waiting for controller to acknowledge caught up`; wipe PVC broker + restart controller di SIT tak mempan (volume fresh ikut fatal) → akar di sisi controller/quorum tunggal, bukan data broker | `payu-kafka-broker-0` 228 restart SIT; operator `Error getting controller config TimeoutException` di semua env non-dev; dev `3 broker + 3 controller 1/1` vs lainnya `1+1` | OPEN: opsi (a) scale controller 1→3 samakan dev, (b) reset KRaft penuh (topik via KafkaTopic CR bila ada), (c) eskalasi AMQ Streams 3.2.1; butuh keputusan platform (di luar loop service) |
 
 ---
 
