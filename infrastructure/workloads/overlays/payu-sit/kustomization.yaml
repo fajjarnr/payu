@@ -80,7 +80,7 @@ images:
   digest: sha256:e7656bae06be288fc9bbe55eb0df16469818698feb17123bd6a78f33b7fb97e8
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/backoffice-service
-  newTag: "1.18.74"
+  digest: sha256:0bf5fd8c9fa37ded3ab3c10dd38b841fceca171c0c61ac11dd35449224af2f5b
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-sit/billing-service
   digest: sha256:0836d9125677a2185e5b9d0a7662762a467f400a2ba8706b4ce2ca90ac6059d5
