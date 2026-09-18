@@ -5,7 +5,7 @@ set -euo pipefail
 # Usage: chmod +x scripts/tools.sh && ./scripts/tools.sh
 #   ./scripts/tools.sh --check   # cek versi saja
 #   ./scripts/tools.sh --infra   # hanya infra CLI (podman/skopeo/tkn/kustomize/dll)
-#   ./scripts/tools.sh --dev     # hanya dev stack (java/node/uv/rtk/codegraph/caveman)
+#   ./scripts/tools.sh --dev     # hanya dev stack (java/node/uv/rtk/codegraph)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -34,11 +34,17 @@ ensure_jq() {
   # fallback: download static binary via gh release if still missing
   if ! command_exists jq; then
     echo -e "${YELLOW}jq fallback via binary...${NC}"
-    curl -sL "https://github.com/jqlang/jq/releases/latest/download/jq-linux-${ARCH}" -o "$BIN_DIR/jq" 2>/dev/null && chmod +x "$BIN_DIR/jq" || true
+    if curl -fsSL "https://github.com/jqlang/jq/releases/latest/download/jq-linux-${ARCH}" -o "$BIN_DIR/jq" 2>/dev/null; then
+      chmod +x "$BIN_DIR/jq"
+    else
+      rm -f "$BIN_DIR/jq" 2>/dev/null || true
+    fi || true
   fi
 }
 
 ensure_path_in_shellrc() {
+  # single quotes intentional: expand at shell startup, not now
+  # shellcheck disable=SC2016
   local line='export PATH="$HOME/.local/bin:$PATH"'
   for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
     [ -f "$rc" ] || continue
@@ -49,29 +55,35 @@ ensure_path_in_shellrc() {
 # Download + extract GitHub release binary to $BIN_DIR (idempotent helper)
 # usage: gh_release_bin <repo> <asset-substring> <output-name>
 gh_release_bin() {
-  local repo=$1 asset_match=$2 out=$3 url tmp
+  local repo=$1 asset_match=$2 out=$3 url
   ensure_jq
-  if ! command_exists jq; then echo -e "${YELLOW}skip $out: jq missing${NC}"; return 1; fi
-  if ! command_exists curl; then echo -e "${YELLOW}skip $out: curl missing${NC}"; return 1; fi
-  url=$(curl -sL "https://api.github.com/repos/${repo}/releases/latest" 2>/dev/null | jq -r '.assets[] | select(.name | contains("'"$asset_match"'")) | .browser_download_url' 2>/dev/null | head -1)
-  if [ -z "$url" ] || [ "$url" = "null" ]; then echo -e "${YELLOW}skip $out: asset not found ${repo} ${asset_match}${NC}"; return 1; fi
+  if ! command_exists jq; then echo -e "${RED}skip $out: jq missing${NC}"; return 1; fi
+  if ! command_exists curl; then echo -e "${RED}skip $out: curl missing${NC}"; return 1; fi
+  url=$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" 2>/dev/null | jq -r --arg m "$asset_match" '.assets[] | select(.name | contains($m)) | .browser_download_url' 2>/dev/null | head -1 || true)
+  if [ -z "${url:-}" ] || [ "$url" = "null" ]; then echo -e "${YELLOW}skip $out: asset not found ${repo} ${asset_match}${NC}"; return 1; fi
   echo -e "${GREEN}installing $out <- $url${NC}"
-  tmp="/tmp/${out}.dl"
   if [[ "$url" == *.tar.gz ]]; then
-    curl -sL "$url" -o "/tmp/${out}.tar.gz"
-    rm -rf "/tmp/${out}_extract" && mkdir -p "/tmp/${out}_extract"
-    tar -xzf "/tmp/${out}.tar.gz" -C "/tmp/${out}_extract" 2>/dev/null || tar -xzf "/tmp/${out}.tar.gz" -C /tmp 2>/dev/null || true
-    # cari binary $out paling baru di extract dir
-    local found
-    found=$(find "/tmp/${out}_extract" /tmp -type f -name "$out" 2>/dev/null | head -1)
-    if [ -n "$found" ]; then install -m 0755 "$found" "$BIN_DIR/$out"
+    local tarball extract_dir found
+    tarball="/tmp/${out}.tar.gz"
+    extract_dir="/tmp/${out}_extract"
+    rm -f "$tarball" 2>/dev/null || true
+    rm -rf "$extract_dir" 2>/dev/null || true
+    mkdir -p "$extract_dir"
+    if ! curl -fsSL "$url" -o "$tarball" 2>/dev/null; then echo -e "${RED}fail: download $out gagal${NC}"; rm -f "$tarball" 2>/dev/null || true; return 1; fi
+    if [ ! -s "$tarball" ]; then echo -e "${RED}fail: tarball $out kosong${NC}"; rm -f "$tarball" 2>/dev/null || true; return 1; fi
+    if ! tar -xzf "$tarball" -C "$extract_dir" 2>/dev/null; then echo -e "${RED}fail: extract $out gagal${NC}"; rm -rf "$extract_dir" "$tarball" 2>/dev/null || true; return 1; fi
+    # cari binary $out hanya di extract dir (jangan scan seluruh /tmp)
+    found=$(find "$extract_dir" -type f -name "$out" 2>/dev/null | head -1 || true)
+    if [ -n "${found:-}" ] && [ -f "$found" ]; then install -m 0755 "$found" "$BIN_DIR/$out"
     else echo -e "${YELLOW}warn: binary $out not found in tarball${NC}"; return 1; fi
-    rm -rf "/tmp/${out}_extract" "/tmp/${out}.tar.gz" 2>/dev/null || true
+    rm -rf "$extract_dir" "$tarball" 2>/dev/null || true
   else
-    curl -sL "$url" -o "$BIN_DIR/$out"
+    rm -f "$BIN_DIR/$out" 2>/dev/null || true
+    if ! curl -fsSL "$url" -o "$BIN_DIR/$out" 2>/dev/null; then echo -e "${RED}fail: download $out gagal${NC}"; rm -f "$BIN_DIR/$out" 2>/dev/null || true; return 1; fi
+    if [ ! -s "$BIN_DIR/$out" ]; then echo -e "${RED}fail: binary $out kosong${NC}"; rm -f "$BIN_DIR/$out" 2>/dev/null || true; return 1; fi
     chmod +x "$BIN_DIR/$out"
   fi
-  "$BIN_DIR/$out" version 2>/dev/null | head -1 || "$BIN_DIR/$out" --version 2>/dev/null | head -1 || true
+  "$BIN_DIR/$out" --version 2>/dev/null | head -1 || "$BIN_DIR/$out" version 2>/dev/null | head -1 || true
 }
 
 print_section() { echo ""; echo -e "${BLUE}════════════════════════════════════════════════${NC}"; echo -e "${BLUE}  $1${NC}"; echo -e "${BLUE}════════════════════════════════════════════════${NC}"; }
@@ -80,7 +92,7 @@ print_section() { echo ""; echo -e "${BLUE}════════════�
 # DEV STACK
 # ─────────────────────────────────────────────
 install_dev() {
-  print_section "Dev stack (opencode/java/node/uv/rtk/codegraph/caveman/graphify)"
+  print_section "Dev stack (opencode/java/node/uv/rtk/codegraph/graphify)"
 
   # --- opencode ---
   if ! command_exists opencode; then
@@ -91,16 +103,23 @@ install_dev() {
 
   # --- SDKMAN + Java 25 (backend/pom.xml:23) + Maven ---
   if [ ! -d "$HOME/.sdkman" ]; then
-    curl -s "https://get.sdkman.io" | bash
+    curl -fsSL "https://get.sdkman.io" | bash
   fi
-  # shellcheck source=/dev/null — sdkman internals need nounset off
+  # shellcheck disable=SC1091
+  # sdkman internals need nounset off
   set +u
+  # shellcheck disable=SC1091
   [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-  if ! sdk list java 2>/dev/null | grep -q "25.*tem.*installed" 2>/dev/null; then
-    sdk install java 25-tem || sdk install java 25-tem -y 2>/dev/null || true
+  if [ -d "$HOME/.sdkman/candidates/java/25-tem" ]; then
+    sdk default java 25-tem 2>/dev/null || sdk use java 25-tem 2>/dev/null || true
+  elif sdk current java 2>/dev/null | grep -q "25-tem"; then
+    echo -e "${GREEN}java 25-tem sudah aktif${NC}"
+  else
+    sudo apt-get install -y -qq zip unzip 2>/dev/null || true
+    sdk install java 25-tem 2>/dev/null || true
+    sdk default java 25-tem 2>/dev/null || sdk use java 25-tem 2>/dev/null || true
   fi
-  sdk default java 25-tem 2>/dev/null || sdk use java 25-tem 2>/dev/null || true
-  if ! command_exists mvn; then sdk install maven; else echo -e "${GREEN}maven sudah ada: $(mvn -v 2>/dev/null | head -1)${NC}"; fi
+  if ! command_exists mvn; then sdk install maven 2>/dev/null || true; else echo -e "${GREEN}maven sudah ada: $(mvn -v 2>/dev/null | head -1)${NC}"; fi
   set -u
 
   # --- Node.js 24 via nvm (frontend/web-app engines >=24) ---
@@ -108,22 +127,29 @@ install_dev() {
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
   fi
   export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-  # shellcheck source=/dev/null — nvm.sh also needs nounset off
+  # shellcheck disable=SC1091
+  # nvm.sh also needs nounset off
   set +u
+  # shellcheck disable=SC1091
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
   set -u
   # nvm is a shell function, must run with nounset off to avoid unbound vars in nvm internals
   set +u
-  nvm install 24
-  nvm alias default 24 >/dev/null 2>&1 || true
-  nvm use 24
+  if command -v nvm >/dev/null 2>&1; then
+    nvm install 24 2>/dev/null || true
+    nvm alias default 24 >/dev/null 2>&1 || true
+    nvm use 24 2>/dev/null || true
+  else
+    echo -e "${YELLOW}skip node: nvm tidak tersedia setelah install${NC}"
+  fi
   set -u
-  node -v; npm -v
+  command_exists node && node -v || true
+  command_exists npm && npm -v || true
 
   # --- uv ---
   if ! command_exists uv; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$BIN_DIR:$PATH"
+    export PATH="$BIN_DIR:$HOME/.cargo/bin:$PATH"
   else echo -e "${GREEN}uv sudah ada: $(uv --version 2>/dev/null | head -1)${NC}"; fi
   ensure_path_in_shellrc
 
@@ -138,12 +164,6 @@ install_dev() {
     curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
   else echo -e "${GREEN}codegraph sudah ada${NC}"; codegraph upgrade 2>/dev/null || true; fi
   if command_exists codegraph; then codegraph install 2>/dev/null || true; (cd "$PROJECT_ROOT" && codegraph init 2>/dev/null || true); fi
-
-  # --- caveman ---
-  if ! command_exists caveman; then npm install -g @caveman-ai/cli && caveman setup --install 2>/dev/null || true
-  else echo -e "${GREEN}caveman sudah ada${NC}"; fi
-  command_exists caveman && caveman opencode 2>/dev/null || true
-  npx --yes skills add JuliusBrussee/caveman 2>/dev/null || true
 
   # --- graphify (via uv) ---
   if command_exists uv; then uv tool install graphify 2>/dev/null || uv tool install graphifyy 2>/dev/null || true; fi
@@ -172,7 +192,7 @@ install_infra() {
       sudo dnf install -y -q podman podman-compose 2>/dev/null || sudo dnf install -y -q podman 2>/dev/null || true
     elif command_exists brew; then
       brew install podman podman-compose 2>/dev/null || brew install podman 2>/dev/null || true
-      command_exists podman && podman machine init 2>/dev/null || true; podman machine start 2>/dev/null || true
+      if command_exists podman; then podman machine init 2>/dev/null || true; podman machine start 2>/dev/null || true; fi
     else
       echo -e "${YELLOW}skip podman: no apt/dnf/brew — install manual${NC}"
     fi
@@ -180,19 +200,26 @@ install_infra() {
     echo -e "${GREEN}podman sudah ada: $(podman --version 2>/dev/null | head -1)${NC}"
   fi
   # podman-compose fallback via pipx/uv if apt didn't provide it
-  if ! command_exists podman-compose && ! podman compose version >/dev/null 2>&1; then
-    echo -e "${YELLOW}installing podman-compose...${NC}"
-    if command_exists pipx; then pipx install podman-compose 2>/dev/null || true
-    elif command_exists uv; then uv tool install podman-compose 2>/dev/null || true
-    elif command_exists pip3; then pip3 install --user podman-compose 2>/dev/null || true
+  if ! command_exists podman-compose; then
+    if command_exists podman && podman compose version >/dev/null 2>&1; then
+      echo -e "${GREEN}podman compose plugin sudah ada${NC}"
+    else
+      echo -e "${YELLOW}installing podman-compose...${NC}"
+      if command_exists pipx; then pipx install podman-compose 2>/dev/null || true
+      elif command_exists uv; then uv tool install podman-compose 2>/dev/null || true
+      elif command_exists pip3; then pip3 install --user podman-compose 2>/dev/null || true
+      fi
     fi
   fi
-  command_exists podman && podman --version 2>/dev/null | head -1 || true
-  command_exists podman-compose && podman-compose --version 2>/dev/null | head -1 || podman compose version 2>/dev/null | head -1 || true
+  if command_exists podman; then podman --version 2>/dev/null | head -1 || true; fi
+  if command_exists podman-compose; then podman-compose --version 2>/dev/null | head -1 || true
+  elif command_exists podman && podman compose version >/dev/null 2>&1; then podman compose version 2>/dev/null | head -1 || true
+  fi
 
   # podman socket untuk Testcontainers (idempotent, no duplicate .bashrc)
   if command_exists podman && command_exists systemctl; then
     systemctl --user enable --now podman.socket 2>/dev/null || true
+    local SOCK
     SOCK="/run/user/$(id -u)/podman/podman.sock"
     if [ -S "$SOCK" ]; then
       echo -e "${GREEN}podman socket OK: $SOCK${NC}"
@@ -213,6 +240,8 @@ EOF
   fi
 
   # --- skopeo (copy image antar registry, untuk build-push & mirror) ---
+  # NOTE: containers/skopeo tidak menyediakan binary Linux di GitHub releases,
+  # jadi hanya install via package manager. Jangan pakai gh_release_bin fallback.
   if ! command_exists skopeo; then
     echo -e "${YELLOW}installing skopeo...${NC}"
     if command_exists apt-get; then
@@ -222,9 +251,8 @@ EOF
     elif command_exists brew; then
       brew install skopeo 2>/dev/null || true
     fi
-    # fallback: static binary dari GitHub jika apt gagal
     if ! command_exists skopeo; then
-      gh_release_bin "containers/skopeo" "linux-${ARCH}" "skopeo" 2>/dev/null || echo -e "${YELLOW}skip skopeo: install manual https://github.com/containers/skopeo${NC}"
+      echo -e "${YELLOW}skip skopeo: install manual https://github.com/containers/skopeo/blob/main/INSTALL.md${NC}"
     fi
   else
     echo -e "${GREEN}skopeo sudah ada: $(skopeo --version 2>/dev/null | head -1)${NC}"
@@ -233,24 +261,35 @@ EOF
   # --- kubectl (stable) ---
   if ! command_exists kubectl; then
     echo -e "${GREEN}installing kubectl...${NC}"
-    KVER=$(curl -sL https://dl.k8s.io/release/stable.txt 2>/dev/null || echo "v1.31.0")
-    curl -sL "https://dl.k8s.io/release/${KVER}/bin/linux/${ARCH}/kubectl" -o "$BIN_DIR/kubectl" && chmod +x "$BIN_DIR/kubectl"
-    kubectl version --client 2>/dev/null | head -1 || true
+    local KVER
+    KVER=$(curl -fsSL https://dl.k8s.io/release/stable.txt 2>/dev/null || echo "v1.31.0")
+    if [ -z "${KVER:-}" ]; then KVER="v1.31.0"; fi
+    if curl -fsSL "https://dl.k8s.io/release/${KVER}/bin/linux/${ARCH}/kubectl" -o "$BIN_DIR/kubectl" 2>/dev/null && [ -s "$BIN_DIR/kubectl" ]; then
+      chmod +x "$BIN_DIR/kubectl"
+      kubectl version --client 2>/dev/null | head -1 || true
+    else
+      echo -e "${RED}fail: download kubectl ${KVER} gagal${NC}"
+      rm -f "$BIN_DIR/kubectl" 2>/dev/null || true
+    fi
   else echo -e "${GREEN}kubectl sudah ada: $(kubectl version --client 2>/dev/null | head -1)${NC}"; fi
 
   # --- oc (OpenShift CLI) — untuk oc get pods / oc apply -k ---
   if ! command_exists oc; then
     echo -e "${GREEN}installing oc...${NC}"
     # detect stable oc via mirror
+    local OC_TAR
     OC_TAR="/tmp/openshift-client-linux.tar.gz"
-    curl -sL "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz" -o "$OC_TAR" 2>/dev/null || true
-    if [ -f "$OC_TAR" ]; then
-      tar -xzf "$OC_TAR" -C /tmp 2>/dev/null || true
-      [ -f /tmp/oc ] && install -m 0755 /tmp/oc "$BIN_DIR/oc" 2>/dev/null || true
-      [ -f /tmp/kubectl ] && [ ! -f "$BIN_DIR/kubectl" ] && install -m 0755 /tmp/kubectl "$BIN_DIR/kubectl" 2>/dev/null || true
+    rm -f "$OC_TAR" 2>/dev/null || true
+    if curl -fsSL "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz" -o "$OC_TAR" 2>/dev/null && [ -s "$OC_TAR" ]; then
+      if tar -xzf "$OC_TAR" -C /tmp 2>/dev/null; then
+        if [ -f /tmp/oc ]; then install -m 0755 /tmp/oc "$BIN_DIR/oc" 2>/dev/null || true; fi
+        if [ -f /tmp/kubectl ] && [ ! -f "$BIN_DIR/kubectl" ]; then install -m 0755 /tmp/kubectl "$BIN_DIR/kubectl" 2>/dev/null || true; fi
+      else
+        echo -e "${RED}fail: extract oc gagal${NC}"
+      fi
       rm -f /tmp/oc /tmp/kubectl "$OC_TAR" 2>/dev/null || true
-      oc version --client 2>/dev/null | head -1 || true
-    else echo -e "${YELLOW}skip oc: download failed${NC}"; fi
+      command_exists oc && oc version --client 2>/dev/null | head -1 || true
+    else echo -e "${YELLOW}skip oc: download failed${NC}"; rm -f "$OC_TAR" 2>/dev/null || true; fi
   else echo -e "${GREEN}oc sudah ada: $(oc version --client 2>/dev/null | head -1)${NC}"; fi
 
   # --- kustomize (standalone, oc sudah bundle tapi standalone berguna untuk local) ---
@@ -260,21 +299,25 @@ EOF
   # --- helm (chart rendering, PayU pakai kustomize primary tapi helm berguna untuk operator charts) ---
   # helm rilis tarball di get.helm.sh, bukan GitHub asset .tar.gz langsung (GitHub cuma .asc). Pakai get.helm.sh.
   if ! command_exists helm; then
+    local HELM_VER HELM_TAR
     HELM_VER="v3.18.4"
     HELM_TAR="/tmp/helm-${HELM_VER}-linux-${ARCH}.tar.gz"
     echo -e "${GREEN}installing helm ${HELM_VER} <- https://get.helm.sh/helm-${HELM_VER}-linux-${ARCH}.tar.gz${NC}"
-    curl -sL "https://get.helm.sh/helm-${HELM_VER}-linux-${ARCH}.tar.gz" -o "$HELM_TAR" 2>/dev/null || true
-    if [ -f "$HELM_TAR" ]; then
-      rm -rf /tmp/linux-${ARCH} 2>/dev/null || true
-      tar -xzf "$HELM_TAR" -C /tmp 2>/dev/null || true
-      if [ -f "/tmp/linux-${ARCH}/helm" ]; then install -m 0755 "/tmp/linux-${ARCH}/helm" "$BIN_DIR/helm" 2>/dev/null || true; fi
-      rm -rf "/tmp/linux-${ARCH}" "$HELM_TAR" 2>/dev/null || true
-      helm version --short 2>/dev/null | head -1 || helm version 2>/dev/null | head -1 || true
-    else echo -e "${YELLOW}skip helm: download failed${NC}"; fi
+    rm -f "$HELM_TAR" 2>/dev/null || true
+    if curl -fsSL "https://get.helm.sh/helm-${HELM_VER}-linux-${ARCH}.tar.gz" -o "$HELM_TAR" 2>/dev/null && [ -s "$HELM_TAR" ]; then
+      rm -rf "/tmp/linux-${ARCH:?}" 2>/dev/null || true
+      if tar -xzf "$HELM_TAR" -C /tmp 2>/dev/null && [ -f "/tmp/linux-${ARCH}/helm" ]; then
+        install -m 0755 "/tmp/linux-${ARCH}/helm" "$BIN_DIR/helm" 2>/dev/null || true
+      else
+        echo -e "${RED}fail: extract helm gagal${NC}"
+      fi
+      rm -rf "/tmp/linux-${ARCH:?}" "$HELM_TAR" 2>/dev/null || true
+      command_exists helm && (helm version --short 2>/dev/null | head -1 || helm version 2>/dev/null | head -1) || true
+    else echo -e "${YELLOW}skip helm: download failed${NC}"; rm -f "$HELM_TAR" 2>/dev/null || true; fi
   else echo -e "${GREEN}helm sudah ada: $(helm version --short 2>/dev/null | head -1 || helm version 2>/dev/null | head -1)${NC}"; fi
 
   # --- yq (YAML processor, dipakai scripts & kustomize patching) ---
-  if ! command_exists yq; then gh_release_bin "mikefarah/yq" "linux_${ARCH}" "yq" 2>/dev/null || gh_release_bin "mikefarah/yq" "linux_amd64" "yq" 2>/dev/null || true
+  if ! command_exists yq; then gh_release_bin "mikefarah/yq" "yq_linux_${ARCH}" "yq" 2>/dev/null || true
   else echo -e "${GREEN}yq sudah ada: $(yq --version 2>/dev/null | head -1)${NC}"; fi
 
   # --- gh (GitHub CLI, untuk gh pr & API) ---
@@ -284,12 +327,15 @@ EOF
   # --- tkn (Tekton CLI, untuk tkn pipeline/pipelinerun logs) ---
   if ! command_exists tkn; then
     # tektoncd/cli asset: tkn_0.46.0_Linux_x86_64.tar.gz (amd64) / tkn_..._Linux_aarch64.tar.gz (arm64)
-    TKN_ARCH="$(case "$ARCH" in amd64) echo "x86_64" ;; arm64) echo "aarch64" ;; *) echo "x86_64" ;; esac)"
-    gh_release_bin "tektoncd/cli" "Linux_${TKN_ARCH}.tar.gz" "tkn" 2>/dev/null || gh_release_bin "tektoncd/cli" "tkn_" "tkn" 2>/dev/null || true
+    # NOTE: jangan pakai fallback contains("tkn_") — itu match Darwin duluan di head -1.
+    local TKN_ARCH
+    TKN_ARCH="x86_64"
+    if [ "$ARCH" = "arm64" ]; then TKN_ARCH="aarch64"; fi
+    gh_release_bin "tektoncd/cli" "Linux_${TKN_ARCH}.tar.gz" "tkn" 2>/dev/null || true
   else echo -e "${GREEN}tkn sudah ada: $(tkn version 2>/dev/null | head -1)${NC}"; fi
 
   # --- argocd (ArgoCD CLI, GitOps sync) ---
-  if ! command_exists argocd; then gh_release_bin "argoproj/argo-cd" "linux-${ARCH}" "argocd" 2>/dev/null || gh_release_bin "argoproj/argo-cd" "linux_${ARCH}" "argocd" 2>/dev/null || true
+  if ! command_exists argocd; then gh_release_bin "argoproj/argo-cd" "argocd-linux-${ARCH}" "argocd" 2>/dev/null || true
   else echo -e "${GREEN}argocd sudah ada: $(argocd version --client 2>/dev/null | head -1)${NC}"; fi
 
   # --- jq (dependency gh_release_bin, pastiin ada untuk scripts lain) ---
@@ -299,21 +345,20 @@ EOF
 
 check_versions() {
   print_section "Versi tools"
-  for t in opencode java mvn node npm uv rtk codegraph caveman graphify podman podman-compose skopeo tkn kustomize helm kubectl oc yq gh argocd jq python3; do
+  for t in opencode java mvn node npm uv rtk codegraph graphify podman podman-compose skopeo tkn kustomize helm kubectl oc yq gh argocd jq python3; do
     if command_exists "$t"; then
       ver=""
       case "$t" in
         helm)      ver="$(helm version --short 2>/dev/null | head -1 || helm version 2>/dev/null | head -1)" ;;
         argocd)    ver="$(argocd version --client 2>/dev/null | head -1 || argocd version 2>/dev/null | head -1)" ;;
         kustomize) ver="$(kustomize version --short 2>/dev/null | head -1 || kustomize version 2>/dev/null | head -1)" ;;
-        caveman)   ver="caveman $(caveman version 2>/dev/null | jq -r .version 2>/dev/null || caveman version 2>/dev/null | head -1)" ;;
         oc)        ver="$(oc version --client 2>/dev/null | head -1)" ;;
         kubectl)   ver="$(kubectl version --client 2>/dev/null | head -1)" ;;
         yq)        ver="$(yq --version 2>/dev/null | head -1)" ;;
         *)         ver="$("$t" --version 2>/dev/null | head -1 || "$t" version 2>/dev/null | head -1 || "$t" --version 2>&1 | head -1)" ;;
       esac
       # fallback generic if case produced empty
-      if [ -z "$ver" ] || [ "$ver" = "caveman " ]; then ver="$("$t" --version 2>/dev/null | head -1 || "$t" version 2>/dev/null | head -1 || echo "installed")"; fi
+      if [ -z "$ver" ]; then ver="$("$t" --version 2>/dev/null | head -1 || "$t" version 2>/dev/null | head -1 || echo "installed")"; fi
       printf "${GREEN}%-18s${NC} %s\n" "$t" "$ver"
     else
       printf "${YELLOW}%-18s${NC} MISSING\n" "$t"
@@ -321,8 +366,6 @@ check_versions() {
   done
   if command_exists podman && [ -S "/run/user/$(id -u)/podman/podman.sock" ]; then echo -e "${GREEN}podman socket        OK${NC}"
   elif command_exists podman; then echo -e "${YELLOW}podman socket        tidak aktif (systemctl --user start podman.socket)${NC}"; fi
-  command_exists kubectl && kubectl version --client 2>/dev/null | head -1 || true
-  command_exists oc && oc version --client 2>/dev/null | head -1 || true
   if command_exists java; then java -version 2>&1 | head -1 || true; fi
 }
 
@@ -330,6 +373,7 @@ setup_podman_tc_only() {
   # shim for legacy --podman-tc from scripts/setup/install-tools.sh
   if command_exists podman && command_exists systemctl; then
     systemctl --user enable --now podman.socket 2>/dev/null || true
+    local SOCK
     SOCK="/run/user/$(id -u)/podman/podman.sock"
     if [ -S "$SOCK" ]; then
       echo -e "${GREEN}podman socket OK: $SOCK${NC}"
@@ -354,7 +398,7 @@ case "$MODE" in
   --help|-h)
     echo "Usage: ./scripts/tools.sh [OPTION]"
     echo "  (none)    full install (dev + infra)"
-    echo "  --dev     hanya dev stack (java/node/uv/rtk/codegraph/caveman/graphify/mcp)"
+    echo "  --dev     hanya dev stack (java/node/uv/rtk/codegraph/graphify/mcp)"
     echo "  --infra   hanya infra CLI (podman/skopeo/tkn/kustomize/helm/oc/kubectl/yq/gh/argocd)"
     echo "  --podman-tc hanya setup podman socket untuk Testcontainers (legacy)"
     echo "  --check   cek versi tools terinstall"
