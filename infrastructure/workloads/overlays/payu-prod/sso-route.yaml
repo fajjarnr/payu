@@ -1,0 +1,25 @@
+# SSO route for prod — Keycloak via shared-ingress (apps.fajjjar.my.id).
+# Edge TLS served by shared-ingress-cert (*.apps.fajjjar.my.id, LE YR2).
+# Label ingress.payu.io/class=shared keeps the default router from also
+# admitting this host with the wrong (*.apps.payu.ocp) cert. Verified live 2026-09-18.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: sso-prod
+  namespace: payu
+  labels:
+    app.kubernetes.io/name: payu-keycloak
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: sso
+    ingress.payu.io/class: shared
+spec:
+  host: sso.apps.fajjjar.my.id
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: payu-keycloak-service
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

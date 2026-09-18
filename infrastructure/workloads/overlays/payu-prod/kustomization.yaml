@@ -8,6 +8,7 @@ resources:
   - keycloak-client-secret-generator.yaml
   - network-policy-payu-sso-postgres.yaml
   - gateway-route.yaml
+  - sso-route.yaml
 replicas:
 - name: analytics-service
   count: 1

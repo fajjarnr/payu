@@ -14,6 +14,13 @@ spec:
     matchExpressions:
       - key: hypershift.openshift.io/hosted-control-plane
         operator: DoesNotExist
+      # Shared-ingress routes (label ingress.payu.io/class=shared) are served
+      # ONLY by shared-ingress; default router would present the wrong
+      # (*.apps.payu.ocp) LE cert and break TLS. Verified live 2026-09-18.
+      - key: ingress.payu.io/class
+        operator: NotIn
+        values:
+          - shared
   tuningOptions:
     reloadInterval: 0s
   clientTLS:
