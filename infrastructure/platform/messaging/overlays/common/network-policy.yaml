@@ -31,47 +31,14 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: openshift-monitoring
+  # KAFKA-QUORUM-001/KAFKA-UAT-001: fine-grained egress (notably the
+  # namespaceSelector->openshift-dns :53 rule) blackholed DNS for
+  # Strimzi pods on OVN-Kubernetes (pod-IP OK, ClusterIP FAIL) and
+  # crashed brokers 25h+. OVN-K cannot enforce fine-grained egress
+  # (L-188; precedents: allow-api-egress `- {}`, logging `- {}`,
+  # wazuh Ingress-only). Ingress stays zero-trust; egress allow-all.
   egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: payu-environment
-        - podSelector: {}
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-dns
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    - to:
-        - ipBlock:
-            cidr: 172.30.0.1/32
-      ports:
-        - protocol: TCP
-          port: 443
-    - to:
-        - ipBlock:
-            cidr: 10.0.0.0/8
-      ports:
-        - protocol: TCP
-          port: 6443
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: payu-sso
-      ports:
-        - protocol: TCP
-          port: 8080
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-monitoring
-      ports:
-        - protocol: TCP
-          port: 9091
+    - {}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -103,33 +70,10 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: openshift-monitoring
+  # Same OVN-K limitation as allow-kafka-platform (L-188): fine-grained
+  # egress unenforceable — ingress stays zero-trust, egress allow-all.
   egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: payu-environment
-        - podSelector: {}
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-dns
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    - to:
-        - ipBlock:
-            cidr: 172.30.0.1/32
-      ports:
-        - protocol: TCP
-          port: 443
-    - to:
-        - ipBlock:
-            cidr: 10.0.0.0/8
-      ports:
-        - protocol: TCP
-          port: 6443
+    - {}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -160,43 +104,7 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: openshift-monitoring
+  # Same OVN-K limitation as allow-kafka-platform (L-188): fine-grained
+  # egress unenforceable — ingress stays zero-trust, egress allow-all.
   egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: payu-environment
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-dns
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    - to:
-        - ipBlock:
-            cidr: 172.30.0.1/32
-      ports:
-        - protocol: TCP
-          port: 443
-    - to:
-        - ipBlock:
-            cidr: 10.0.0.0/8
-      ports:
-        - protocol: TCP
-          port: 6443
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: payu-sso
-      ports:
-        - protocol: TCP
-          port: 8080
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-monitoring
-      ports:
-        - protocol: TCP
-          port: 9091
+    - {}

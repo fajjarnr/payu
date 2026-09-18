@@ -147,7 +147,6 @@ replacements:
           labelSelector: payu.io/environment-selector=true
         fieldPaths:
           - spec.ingress.0.from.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
-          - spec.egress.0.to.0.namespaceSelector.matchLabels.kubernetes\.io/metadata\.name
   - source:
       kind: ConfigMap
       name: messaging-environment

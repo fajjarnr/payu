@@ -7399,3 +7399,9 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: Policy payu-cicd di-apply manual (`configured`) tapi live tetap lama — Argo selfHeal kembalikan ke git (yang belum di-commit). Waktu terbuang debug "apply tak mempan".
 
 **Fix**: urutan baku workload: edit → commit → push → tunggu sync → verifikasi live. `oc apply` langsung hanya untuk resource TANPA pemilik GitOps (Task/Pipeline/Role di `payu-cicd` yang tak ada Argo app-nya — itupun pastikan dulu). Pelajaran: bila live tak berubah pasca-apply, cek `git status` sebelum curigai cluster.
+
+## L-466: Egress fine-grained OVN-K = blackhole DNS; guard dengan render-test + hapus replacement target (2026-09-18)
+
+**Context**: `allow-kafka-platform` egress (namespaceSelector→`openshift-dns` `:53` + ipBlock API + SSO/monitoring) blackhole DNS khusus pod label-Strimzi (pod-IP OK vs ClusterIP FAIL, pod fresh tanpa label OK, dev tanpa policy sehat) → broker `FATAL caught up` 25 jam+. Policy dihapus live tapi masih ada di git dengan anotasi ArgoCD sync-wave → bisa kembali saat sync. KAFKA-UAT-001 cocok dengan signature yang sama.
+
+**Fix**: egress `- {}` di ketiga messaging policy (ingress zero-trust utuh) + hapus `spec.egress.0…` replacement target di 4 overlay (ingress replacement dipertahankan) + 2 contract test render-based. Pelajaran: (1) setiap policy egress fine-grained yang select pod stateful (Kafka/CNPG/DataGrid) = curigai DNS dulu — preseden L-188/logging `- {}`/api-egress `- {}`/wazuh Ingress-only; (2) ubah egress = cek `replacements:` yang menunjuk field lama — render gagal justru jadi sinyal bagus sebelum Argo sync; (3) dev-tanpa-policy vs nondev-dengan-policy adalah bukti diferensial yang cukup untuk klaim akar tanpa akses node.

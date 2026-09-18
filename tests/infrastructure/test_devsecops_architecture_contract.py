@@ -1273,6 +1273,59 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             chains_ingress["from"][0]["podSelector"]["matchLabels"]["app"],
         )
         self.assertEqual([{"protocol": "TCP", "port": 3000}], chains_ingress["ports"])
+    def test_messaging_kafka_policies_allow_unrestricted_egress(self) -> None:
+        # KAFKA-QUORUM-001: `allow-kafka-platform` egress with a
+        # namespaceSelector->openshift-dns :53 rule blackholed DNS for
+        # Strimzi pods on OVN-Kubernetes (pod-IP OK, ClusterIP FAIL),
+        # crashing brokers 25h+. KAFKA-UAT-001 matches the same
+        # signature. OVN-K cannot enforce fine-grained egress
+        # (L-188; wazuh Ingress-only; logging/api-egress `- {}`).
+        overlays = (
+            "infrastructure/platform/messaging/overlays/sit",
+            "infrastructure/platform/messaging/overlays/uat",
+            "infrastructure/platform/messaging/overlays/preprod",
+            "infrastructure/platform/messaging/overlays/prod",
+        )
+        names = (
+            "allow-kafka-platform",
+            "allow-amq-platform",
+            "allow-kafka-console-platform",
+        )
+        for overlay in overlays:
+            with self.subTest(overlay=overlay):
+                result = self.render(overlay)
+                self.assertEqual(0, result.returncode, result.stderr)
+                policies = {
+                    item["metadata"]["name"]: item
+                    for item in load_documents_from_text(result.stdout)
+                    if item.get("kind") == "NetworkPolicy"
+                }
+                for name in names:
+                    with self.subTest(policy=name):
+                        policy = policies[name]
+                        self.assertIn({}, policy["spec"]["egress"])
+                        for rule in policy["spec"]["egress"]:
+                            ports = rule.get("ports", [])
+                            self.assertNotIn(
+                                {"protocol": "UDP", "port": 53}, ports
+                            )
+                            self.assertNotIn(
+                                {"protocol": "TCP", "port": 53}, ports
+                            )
+
+    def test_dev_messaging_has_no_kafka_egress_policy(self) -> None:
+        # Differential evidence for KAFKA-QUORUM-001: dev (no policy)
+        # stayed healthy while sit/uat/preprod (policy) lost DNS.
+        result = self.render(
+            "infrastructure/platform/messaging/overlays/payu-dev"
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        names = {
+            item["metadata"]["name"]
+            for item in load_documents_from_text(result.stdout)
+            if item.get("kind") == "NetworkPolicy"
+        }
+        self.assertNotIn("allow-kafka-platform", names)
 
 
 if __name__ == "__main__":
