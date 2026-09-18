@@ -82,3 +82,14 @@ variable "default_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "public_hosted_zones" {
+  description = "Public Route53 hosted zones for OpenShift base and apps domains."
+  type        = list(string)
+  default     = ["ocp.fajjjar.my.id", "apps.fajjjar.my.id"]
+
+  validation {
+    condition     = length(var.public_hosted_zones) > 0 && alltrue([for z in var.public_hosted_zones : can(regex("^([a-z0-9-]+\\.)+[a-z]+$", z))])
+    error_message = "public_hosted_zones must be a non-empty list of valid DNS zone names."
+  }
+}
