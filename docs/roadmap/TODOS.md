@@ -131,7 +131,6 @@ Catatan sesi 2026-08-26: audit + fix + E2E — login 3/3 stabil → dashboard; r
 | E2E-FULL-03 | P2 | **Wallet #3 guard PASS** — `GET /wallets/{userId}/balance` + service JWT → 404 `Wallet not found` (auth OK, bukan 401); tanpa token → `MISSING_TOKEN` | `curl :8004 .../balance` 13:10:44 404 | CLOSED — wallet belum provision untuk user PENDING (butuh KYC ACTIVE) |
 | E2E-FULL-04 | P2 | **Gateway guards PASS** — `/api/v1/billers`, `/contents`, `/api/v1/fx/rates` tanpa JWT → `MISSING_TOKEN`/`403 ACCESS_DENIED`; dengan JWT → route OK | `curl :8080` 13:10:39/44 + `curl :8080/api/v1/fx/rates` 13:39:49 200 | CLOSED — AuthorizationFilter OK |
 | E2E-FULL-05 | P3 | **Partner SNAP-BI #4-5 guard PASS** — `POST /v1/partner/auth/token` tanpa `X-TIMESTAMP` → 400 `MISSING_REQUIRED_HEADER` (HMAC validation OK) | `curl :8080/v1/partner/auth/token` 13:10:40 | CLOSED |
-| E2E-FULL-06 | P3 | **Compose `--profile apps` required** — `up -d` saja = 7 infra; `--profile apps` = 34 | `podman ps` 34 Up | Docs update |
 
 ### Audit 2026-08-28 — CRUD Web-App ↔ Gateway ↔ Backend (FULL 60 endpoints)
 

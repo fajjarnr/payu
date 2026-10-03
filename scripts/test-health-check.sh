@@ -129,7 +129,7 @@ if [ "$RUNNING_COUNT" -gt 0 ]; then
     APP_CONTAINERS=$(echo "$RUNNING_CONTAINERS" | grep -vE 'payu-database|payu-kafka|payu-cache|payu-keycloak|payu-broker|payu-apicast|payu-rustfs|payu-artemis|entity-operator' | sort || true)
     if [ -z "$APP_CONTAINERS" ]; then
         print_info "No application containers running. Start with:"
-        echo "  podman compose --profile app -f $COMPOSE_FILE up -d"
+        echo "  podman compose --profile apps -f $COMPOSE_FILE up -d"
     fi
 
     # Known port mapping — add new services here as they get local ports

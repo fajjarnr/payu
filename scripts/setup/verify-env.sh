@@ -146,7 +146,7 @@ check_project_structure() {
 
     echo ""
     local required_files=(
-        "infrastructure/local-podman/podman-compose.yml"
+        "infrastructure/local/podman/podman-compose.yml"
         ".env.example"
         "pom.xml"
         "Makefile"
@@ -175,7 +175,7 @@ check_containers() {
 
     if [ -z "$containers" ]; then
         print_fail "No PayU containers running"
-        print_info "Run: podman-compose up -d"
+        print_info "Run: podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps up -d"
         return
     fi
 

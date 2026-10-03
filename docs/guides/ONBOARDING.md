@@ -85,8 +85,9 @@ Jika kamu ingin kontrol lebih detail:
 # 1. Build shared libraries
 cd backend/shared && mvn clean install -DskipTests
 
-# 2. Start Infrastruktur
-cd ../.. && podman compose up -d postgres redis kafka keycloak
+# 2. Start Infrastruktur (PostgreSQL, Data Grid, Kafka, Artemis, Keycloak)
+cd ../.. && podman compose -f infrastructure/local/podman/podman-compose.yml up -d \
+  payu-database-rw payu-cache payu-kafka-kafka-bootstrap payu-broker-hdls-svc payu-keycloak-service
 
 # 3. Jalankan service spesifik
 cd backend/account-service && mvn spring-boot:run

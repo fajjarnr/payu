@@ -630,7 +630,7 @@ main() {
         --infra|-i)
             echo "Starting Podman infrastructure..."
             PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-            cd "$PROJECT_ROOT/infrastructure/local-podman"
+            cd "$PROJECT_ROOT/infrastructure/local/podman"
             if command -v podman-compose > /dev/null 2>&1; then
                 podman-compose up -d
             else
@@ -674,14 +674,14 @@ main() {
             echo ""
             echo "Next steps:"
             echo "  1. Start infrastructure:"
-            echo "     cd infrastructure/local-podman && podman compose up -d"
+            echo "     cd infrastructure/local/podman && podman compose up -d"
             echo "  2. Start frontend:"
             echo "     cd frontend/web-app && npm run dev"
             echo "  3. Check health:"
             echo "     ./scripts/test-health-check.sh"
             echo ""
             echo "Compose file:"
-            echo "  infrastructure/local-podman/podman-compose.yml"
+            echo "  infrastructure/local/podman/podman-compose.yml"
             echo ""
             echo "For help: ./setup.sh --help"
             echo ""

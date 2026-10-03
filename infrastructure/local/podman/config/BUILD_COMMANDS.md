@@ -1207,8 +1207,8 @@ services:
 volumes:
   postgres-data:
 
-# Build and run with podman-compose
-podman-compose up --build -d
+# Build and run with podman-compose (repo compose file, apps profile)
+podman-compose -f infrastructure/local/podman/podman-compose.yml --profile apps up --build -d
 ```
 
 ---

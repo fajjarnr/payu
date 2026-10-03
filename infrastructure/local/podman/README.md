@@ -38,6 +38,11 @@ infrastructure/local/podman/containers/manage-podman.sh stop
 `stop` preserves named volumes. Remove volumes manually only when an intentional
 database reset is required.
 
+A bare `podman compose -f infrastructure/local/podman/podman-compose.yml up -d`
+starts the 7 infrastructure services only. The 30 backend, web-app, and
+simulator services are tagged `profiles: [apps]`; add `--profile apps` (or set
+`COMPOSE_PROFILES=apps`) to start them. `manage-podman.sh apps` is the wrapper.
+
 ## Host-run development
 
 After `core`, start a backend service with its `local` profile from the host.

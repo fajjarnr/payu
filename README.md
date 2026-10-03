@@ -229,8 +229,9 @@ payu/
 git clone <repository-url>
 cd payu
 
-# 2. Start local infrastructure (PostgreSQL, Kafka, Redis, Keycloak)
+# 2. Start local infrastructure (payu-database-rw, payu-cache, payu-kafka-kafka-bootstrap, payu-keycloak-service)
 cd infrastructure/local/podman && podman compose up -d
+#    Full app stack: podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps up -d
 cd ../../..
 
 # 3. Build all shared starters first

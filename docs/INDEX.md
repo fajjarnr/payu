@@ -110,7 +110,10 @@ make test
 
 ```bash
 # Start infrastructure
-podman compose up -d
+podman compose -f infrastructure/local/podman/podman-compose.yml up -d
+
+# Full app stack (backend services, web-app, simulators)
+podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps up -d
 
 # Run service
 cd backend/account-service && mvn spring-boot:run

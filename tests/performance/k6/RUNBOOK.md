@@ -31,9 +31,9 @@ k6 run stress-test.js --out json=stress-results.json
 Jalankan setelah Podman terinstall dan infrastructure running:
 
 ```bash
-# 1. Start infrastructure
-cd /home/ubuntu/payu/infrastructure/local-podman
-podman compose up -d
+# 1. Start infrastructure + app stack (tests hit gateway, account, wallet)
+cd /home/ubuntu/payu
+infrastructure/local/podman/containers/manage-podman.sh apps
 
 # 2. Tunggu health check
 sleep 60

@@ -160,8 +160,9 @@ Container/Pod tidak jalan?
 
 ### Podman Compose (Lokal)
 ```bash
-# Start total (clean)
-podman-compose down -v && podman-compose up -d
+# Start total (clean) — infrastructure + app stack
+podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps down -v
+podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps up -d
 
 # Cek logs stream
 podman logs -f payu-account-service
