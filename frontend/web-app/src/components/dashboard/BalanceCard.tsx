@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight } from '@/components/icons';
 import VIPBadge from '@/components/personalization/VIPBadge';
+import { Card } from 'antd';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/currency';
 
 interface BalanceCardProps {
@@ -41,23 +41,23 @@ export default function BalanceCard({
     <div data-testid="balance-card" className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-3 gap-6 lg:gap-8">
       {/* Col 1: Primary Balance & Net Worth */}
       <div className="lg:col-span-12 xl:col-span-1 flex flex-col gap-6 lg:gap-8">
-        <Card data-testid="primary-balance-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
+        <Card data-testid="primary-balance-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]" styles={{ body: { display: 'contents' } }}>
+          <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-start justify-between space-y-0 pb-6">
             <div>
-              <CardTitle className="text-xs sm:text-sm font-bold text-emerald-500 tracking-[0.2em] uppercase">
+              <h3 className="text-2xl font-bold leading-none tracking-tight text-xs sm:text-sm font-bold text-emerald-500 tracking-[0.2em] uppercase">
                 {t('primaryBalance')}
-              </CardTitle>
-              <CardDescription className="mt-2 text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60">
+              </h3>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] mt-2 text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60">
                 {new Date().toLocaleDateString(bcp47Locale, { day: 'numeric', month: 'short', year: 'numeric' })}
-              </CardDescription>
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <VIPBadge size="sm" variant="badge" />
               <div className="h-2 w-2 bg-primary rounded-full shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
             </div>
-          </CardHeader>
+          </div>
 
-          <CardContent>
+          <div className="p-6 pt-0">
             <div className="space-y-4">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight break-words">
                 {formatCurrency(balance, { symbol: currency, locale: bcp47Locale })}
@@ -76,20 +76,20 @@ export default function BalanceCard({
                 <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">{t('growthFactor')}</span>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
-        <Card data-testid="net-worth-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
-            <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
+        <Card data-testid="net-worth-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]" styles={{ body: { display: 'contents' } }}>
+          <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-start justify-between space-y-0 pb-6">
+            <h3 className="text-2xl font-bold leading-none tracking-tight text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
               {t('netWorth')}
-            </CardTitle>
+            </h3>
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-emerald-500/10">
               <ArrowUpRight className="h-6 w-6" />
             </div>
-          </CardHeader>
+          </div>
 
-          <CardContent>
+          <div className="p-6 pt-0">
             <div className="space-y-4">
               <h3 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground tabular-nums leading-none tracking-tight break-words">
                 {formatCurrency(netWorth ?? 0, { symbol: currency, locale: bcp47Locale })}
@@ -108,7 +108,7 @@ export default function BalanceCard({
                 <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">{t('totalGrowth')}</span>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
 
@@ -189,20 +189,20 @@ interface SummaryItemProps {
 function SummaryItem({ label, amount, change, isPositive, currency, bcp47Locale, 'data-testid': testId }: SummaryItemProps) {
   const t = useTranslations('dashboard');
   return (
-    <Card data-testid={testId} className="flex flex-col justify-between h-full relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6 gap-2">
-        <CardTitle className="text-xs lg:text-sm font-bold text-muted-foreground tracking-[0.15em] sm:tracking-[0.2em] uppercase leading-tight">
+    <Card data-testid={testId} className="flex flex-col justify-between h-full relative overflow-hidden group border border-border bg-card shadow-sm hover:shadow-md transition-shadow" styles={{ body: { display: 'contents' } }}>
+      <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-start justify-between space-y-0 pb-6 gap-2">
+        <h3 className="text-2xl font-bold leading-none tracking-tight text-xs lg:text-sm font-bold text-muted-foreground tracking-[0.15em] sm:tracking-[0.2em] uppercase leading-tight">
           {label}
-        </CardTitle>
+        </h3>
         <div className={cn(
           "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-white/5 shrink-0",
           isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
         )}>
           {isPositive ? <ArrowUpRight className="h-5 w-5 sm:h-6 sm:w-6" /> : <ArrowDownRight className="h-5 w-5 sm:h-6 sm:w-6" />}
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent>
+      <div className="p-6 pt-0">
         <div className="space-y-4">
           <h4 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground tabular-nums tracking-tight break-words leading-none">
             {formatCurrency(amount, { symbol: currency, locale: bcp47Locale })}
@@ -217,7 +217,7 @@ function SummaryItem({ label, amount, change, isPositive, currency, bcp47Locale,
             <span className="text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">{t('thisMonth')}</span>
           </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

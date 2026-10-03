@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button, Input, Form, Select } from 'antd';
+import { zodFieldRule } from '@/lib/zodForm';
 import {
   ArrowRightLeft,
   TrendingUp,
@@ -13,32 +11,25 @@ import {
   Info,
   Loader2,
   AlertCircle
-} from 'lucide-react';
+} from '@/components/icons';
 import { exchangeSchema, type ExchangeRequest } from '@/types';
 import { useFxRate, useFxEstimate, useFxConversion, useFxConversions } from '@/hooks';
 import { useAuthStore, useUIStore } from '@/stores';
 import { SUPPORTED_CURRENCIES } from '@/services/FxService';
 import { compareCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
 import DashboardLayout from "@/components/DashboardLayout";
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
 import clsx from 'clsx';
 
 export default function ExchangePage() {
   const accountId = useAuthStore((state) => state.accountId);
   const addToast = useUIStore((state) => state.addToast);
 
-  const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<ExchangeRequest>({
-    resolver: zodResolver(exchangeSchema),
-    defaultValues: {
-      fromCurrency: 'IDR',
-      toCurrency: 'USD',
-      amount: '',
-    }
-  });
+  const [form] = Form.useForm<ExchangeRequest>();
+  const rule = (field: string) => zodFieldRule(form, exchangeSchema, field);
 
-  const fromCurrency = useWatch({ control, name: 'fromCurrency' });
-  const toCurrency = useWatch({ control, name: 'toCurrency' });
-  const amount = useWatch({ control, name: 'amount' });
+  const fromCurrency = Form.useWatch('fromCurrency', form) ?? 'IDR';
+  const toCurrency = Form.useWatch('toCurrency', form) ?? 'USD';
+  const amount = Form.useWatch('amount', form) ?? '';
 
   // FX Rate query — gated on the pair only, so the calculator shows a live
   // rate (or a real error) on first paint instead of a perpetual spinner.
@@ -57,10 +48,9 @@ export default function ExchangePage() {
   const { data: conversions, isLoading: isLoadingConversions } = useFxConversions(!!accountId);
 
   const handleSwap = useCallback(() => {
-    setValue('fromCurrency', toCurrency);
-    setValue('toCurrency', fromCurrency);
+    form.setFieldsValue({ fromCurrency: toCurrency, toCurrency: fromCurrency });
     setEstimatedAmount(null);
-  }, [fromCurrency, toCurrency, setValue]);
+  }, [form, fromCurrency, toCurrency]);
 
   // BUG-FE-022: Use ref for estimateMutation to avoid infinite loop
   // (mutation object is new every render, causing useEffect to re-run)
@@ -101,6 +91,9 @@ export default function ExchangePage() {
     return `${currency.symbol}${formatExactDecimal(value, currency.decimalPlaces)}`;
   };
 
+  const onValid = (values: ExchangeRequest) => {
+    onSubmit(exchangeSchema.parse(values));
+  };
   const onSubmit = async (data: ExchangeRequest) => {
     if (!accountId) {
       addToast('Please log in to perform currency exchange', 'error');
@@ -119,7 +112,7 @@ export default function ExchangePage() {
     }, {
       onSuccess: () => {
         addToast(`Successfully exchanged ${formatCurrency(parseCurrencyExact(data.amount), data.fromCurrency)} to ${data.toCurrency}`, 'success');
-        setValue('amount', '');
+        form.setFieldsValue({ amount: '' });
         setEstimatedAmount(null);
       },
       onError: (error: Error) => {
@@ -131,96 +124,73 @@ export default function ExchangePage() {
   };
 
   const fromCurrencyInfo = SUPPORTED_CURRENCIES[fromCurrency];
-  const toCurrencyInfo = SUPPORTED_CURRENCIES[toCurrency];
 
   const recentConversions = Array.isArray(conversions) ? conversions.slice(0, 5) : [];
 
   return (
     <DashboardLayout>
-      <PageTransition>
+
         <div className="space-y-6 lg:space-y-8">
-          <StaggerContainer>
+
             {/* Header */}
-            <StaggerItem>
+
               <div className="mb-6">
                 <h2 className="text-3xl font-bold text-foreground tracking-tight">Currency Exchange</h2>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
                   Real-time foreign exchange rates with competitive pricing.
                 </p>
               </div>
-            </StaggerItem>
+
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Main Exchange Form */}
-              <StaggerItem className="lg:col-span-8 space-y-6">
+              <div className="lg:col-span-8 space-y-6">
                 <div className="bg-card rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                   {/* Ambient glow effect */}
                   <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/3 rounded-full blur-3xl pointer-events-none" />
 
-                  <div className="relative z-10">
+                  <Form form={form} onFinish={onValid} initialValues={{ fromCurrency: 'IDR', toCurrency: 'USD', amount: '' }} layout="vertical" className="relative z-10">
                     <h3 className="text-sm font-bold text-foreground mb-6 tracking-widest uppercase">Exchange Calculator</h3>
 
                     {/* Currency Selector Row */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6">
                       {/* From Currency */}
                       <div className="flex-1">
-                        <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">
-                          From Currency
-                        </label>
-                        <div className="relative group">
-                          <select
-                            {...register('fromCurrency')}
-                            className="w-full pl-6 pr-14 h-16 rounded-xl border border-border bg-muted/20 hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-foreground appearance-none cursor-pointer outline-none"
+                        <Form.Item name="fromCurrency" rules={[rule('fromCurrency')]} className="mb-0" label={<label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">From Currency</label>}>
+                          <Select
+                            value={fromCurrency}
+                            onChange={(v) => form.setFieldsValue({ fromCurrency: v as ExchangeRequest['fromCurrency'] })}
+                            className="w-full"
                             aria-label="From currency"
-                          >
-                            {Object.values(SUPPORTED_CURRENCIES).map((currency) => (
-                              <option key={currency.code} value={currency.code}>
-                                {currency.flag} {currency.code} - {currency.name}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute right-6 top-1/2 -translate-y-1/2 text-2xl pointer-events-none group-focus-within:scale-110 transition-transform">
-                            {fromCurrencyInfo?.flag}
-                          </div>
-                        </div>
+                            options={Object.values(SUPPORTED_CURRENCIES).map((currency) => ({ value: currency.code, label: `${currency.flag} ${currency.code} - ${currency.name}` }))}
+                          />
+                        </Form.Item>
                       </div>
 
                       {/* Swap Button */}
-                        <ButtonMotion className="sm:mt-8">
+
                           <Button
-                            type="button"
-                            size="icon"
-                            variant="secondary"
+                            htmlType="button"
+                            shape="circle"
                             onClick={handleSwap}
-                            className="h-14 w-14 rounded-xl shadow-lg"
+                            className="h-14 w-14 rounded-xl shadow-lg sm:mt-8"
                             aria-label="Swap currencies"
-                          >
-                            <ArrowRightLeft className="h-6 w-6" />
-                          </Button>
-                        </ButtonMotion>
+                            icon={<ArrowRightLeft className="h-6 w-6" />}
+                          />
+
 
                       {/* To Currency */}
                       <div className="flex-1">
-                        <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">
-                          To Currency
-                        </label>
-                        <div className="relative group">
-                          <select
-                            {...register('toCurrency')}
-                            className="w-full pl-6 pr-14 h-16 rounded-xl border border-border bg-muted/20 hover:border-primary/30 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-foreground appearance-none cursor-pointer outline-none"
+                        <Form.Item name="toCurrency" rules={[rule('toCurrency')]} className="mb-0" label={<label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">To Currency</label>}>
+                          <Select
+                            value={toCurrency}
+                            onChange={(v) => form.setFieldsValue({ toCurrency: v as ExchangeRequest['toCurrency'] })}
+                            className="w-full"
                             aria-label="To currency"
-                          >
-                            {Object.values(SUPPORTED_CURRENCIES).map((currency) => (
-                              <option key={currency.code} value={currency.code}>
-                                {currency.flag} {currency.code} - {currency.name}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute right-6 top-1/2 -translate-y-1/2 text-2xl pointer-events-none group-focus-within:scale-110 transition-transform">
-                            {toCurrencyInfo?.flag}
-                          </div>
-                        </div>
+                            options={Object.values(SUPPORTED_CURRENCIES).map((currency) => ({ value: currency.code, label: `${currency.flag} ${currency.code} - ${currency.name}` }))}
+                          />
+                        </Form.Item>
                       </div>
                     </div>
 
@@ -237,9 +207,9 @@ export default function ExchangePage() {
                           </div>
                         )}
                       </div>
+                      <Form.Item name="amount" rules={[rule('amount')]} className="mb-0">
                       <div className="relative group">
                         <Input
-                          {...register('amount')}
                           type="number"
                           step="any"
                           min="0"
@@ -251,11 +221,7 @@ export default function ExchangePage() {
                           {fromCurrencyInfo?.symbol}
                         </div>
                       </div>
-                      {errors.amount && (
-                        <p className="text-destructive text-xs ml-2 font-bold tracking-widest uppercase">
-                          {errors.amount.message}
-                        </p>
-                      )}
+                      </Form.Item>
                     </div>
 
                     {/* Rate Display */}
@@ -266,12 +232,9 @@ export default function ExchangePage() {
                             <AlertCircle className="h-5 w-5 flex-shrink-0" />
                             <div>
                               <p className="text-sm font-bold">Unable to fetch exchange rate</p>
-                              <button
-                                onClick={() => refetchRate()}
-                                className="text-xs font-bold underline mt-1"
-                              >
+                              <Button type="link" onClick={() => refetchRate()} className="text-xs font-bold underline mt-1">
                                 Try again
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         ) : fxRate ? (
@@ -359,12 +322,13 @@ export default function ExchangePage() {
                     )}
 
                     {/* CTA Button */}
-                    <ButtonMotion className="w-full">
+
                       <Button
-                        type="submit"
+                        type="primary"
+                        htmlType="submit"
+                        size="large"
+                        className="w-full"
                         disabled={conversionMutation.isPending || (fromCurrency === toCurrency) || compareCurrency(amount, '0') <= 0 || !fxRate}
-                        className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20"
-                        onClick={handleSubmit(onSubmit)}
                       >
                         {conversionMutation.isPending ? (
                           <div className="flex items-center gap-2">
@@ -375,13 +339,13 @@ export default function ExchangePage() {
                           <span>Exchange Currency Now</span>
                         )}
                       </Button>
-                    </ButtonMotion>
-                  </div>
+
+                  </Form>
                 </div>
-              </StaggerItem>
+              </div>
 
               {/* Sidebar - Recent Conversions & Info */}
-              <StaggerItem className="lg:col-span-4 space-y-8">
+              <div className="lg:col-span-4 space-y-8">
                 {/* Rate Updates Card */}
                 <div className="bg-card rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card">
                   <div className="flex justify-between items-center mb-6">
@@ -486,16 +450,16 @@ export default function ExchangePage() {
                     <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mb-6">
                       Currency exchange support
                     </p>
-                    <button className="text-xs font-bold tracking-widest uppercase bg-white/10 px-6 py-3 rounded-xl border border-white/10 hover:bg-white/20 transition-all">
+                    <Button type="default" className="text-xs font-bold tracking-widest uppercase bg-white/10 px-6 py-3 rounded-xl border border-white/10 hover:bg-white/20 transition-all">
                       Contact Support
-                    </button>
+                    </Button>
                   </div>
                 </div>
-              </StaggerItem>
+              </div>
             </div>
-          </StaggerContainer>
+
         </div>
-      </PageTransition>
+
     </DashboardLayout>
   );
 }

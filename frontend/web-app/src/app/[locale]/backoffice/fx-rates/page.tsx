@@ -12,30 +12,75 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-
-
+} from '@/components/icons';
+import { Badge, Button, Input, Table } from 'antd';
+import type { TableColumnsType } from 'antd';
+import type { FxRateResponse } from '@/services';
 import { useAllFxRates } from '@/hooks/useFx';
 
 export default function FxRatesAdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: fxRates, isLoading, error } = useAllFxRates();
+  const filteredRates = (fxRates ?? []).filter((fx) => `${fx.fromCurrency}/${fx.toCurrency}`.toLowerCase().includes(searchTerm.toLowerCase()));
+  const columns: TableColumnsType<FxRateResponse> = [
+    {
+      key: 'pair',
+      title: 'Currency Pair',
+      render: (_, fx) => (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+            <ArrowRightLeft className="h-5 w-5 text-emerald-600" />
+          </div>
+          <span className="font-bold text-foreground text-sm tracking-widest">{fx.fromCurrency}/{fx.toCurrency}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'rate',
+      title: 'Current Rate',
+      render: (_, fx) => <span className="font-mono text-sm font-bold text-foreground">{fx.rate}</span>,
+    },
+    {
+      key: 'trend',
+      title: 'Trend',
+      render: () => <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">—</span>,
+    },
+    {
+      key: 'spread',
+      title: 'Spread (%)',
+      render: () => <span className="text-xs font-bold text-foreground">—</span>,
+    },
+    {
+      key: 'mode',
+      title: 'Sync Mode',
+      render: () => <Badge count="Auto" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-emerald-500/10 [&_sup]:text-emerald-500 [&_sup]:border [&_sup]:border-emerald-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />,
+    },
+    {
+      key: 'updated',
+      title: 'Last Update',
+      render: (_, fx) => (
+        <div>
+          <p className="text-xs font-medium text-foreground">{new Date(fx.validFrom).toLocaleTimeString()}</p>
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(fx.validFrom).toLocaleDateString()}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      title: 'Actions',
+      align: 'right',
+      render: () => (
+        <div className="flex items-center justify-end gap-2">
+          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<Edit className="h-4 w-4" />} />
+          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<Lock className="h-4 w-4" />} />
+        </div>
+      ),
+    },
+  ];
   return (
     <div className="space-y-6 lg:space-y-8">
-      <StaggerContainer>
-        <StaggerItem>
+      <>
+        <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { label: 'Active Currencies', value: isLoading ? '…' : String(fxRates?.length ?? 0), color: 'bg-emerald-500', icon: TrendingUp },
@@ -54,131 +99,58 @@ export default function FxRatesAdminPage() {
               </div>
             ))}
           </div>
-        </StaggerItem>
-
-        <StaggerItem>
+        </>
+        <>
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-5 sm:p-6 lg:p-8 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4 w-full lg:w-auto">
-              <div className="relative flex-1 lg:w-96">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search currency pairs..." 
-                  className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest"
+              <div className="relative flex-1 lg:w-96 flex items-center">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+                <Input
+                  placeholder="Search currency pairs..."
+                  className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
-            
             <div className="flex items-center gap-4 w-full lg:w-auto">
-              <Button variant="outline" className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
+              <Button className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
                 <History className="h-4 w-4" />
                 Rate History
               </Button>
-              <Button className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
+              <Button type="primary" className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Sync All Rates
               </Button>
             </div>
           </div>
-        </StaggerItem>
-
-        <StaggerItem>
+        </>
+        <>
           <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-border">
-                  <TableHead className="text-xs font-bold uppercase tracking-widest p-6">Currency Pair</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Current Rate</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Trend</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Spread (%)</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Sync Mode</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Last Update</TableHead>
-                  <TableHead className="text-right text-xs font-bold uppercase tracking-widest p-6">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="p-6 text-center">
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                        <RefreshCw className="h-4 w-4 animate-spin" /> Loading rates...
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : error ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="p-6 text-center text-destructive">Failed to load rates</TableCell>
-                  </TableRow>
-                ) : !fxRates || fxRates.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="p-6 text-center text-muted-foreground">No rates found</TableCell>
-                  </TableRow>
-                ) : (
-                  fxRates.filter((fx) => `${fx.fromCurrency}/${fx.toCurrency}`.toLowerCase().includes(searchTerm.toLowerCase())).map((fx) => (
-                  <TableRow key={fx.id} className="border-border hover:bg-muted/10 transition-colors">
-                    <TableCell className="p-6">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                          <ArrowRightLeft className="h-5 w-5 text-emerald-600" />
-                        </div>
-                        <span className="font-bold text-foreground text-sm tracking-widest">{fx.fromCurrency}/{fx.toCurrency}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 font-mono text-sm font-bold text-foreground">
-                      {fx.rate}
-                    </TableCell>
-                    <TableCell className="px-6">
-                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">—</span>
-                    </TableCell>
-                    <TableCell className="px-6 text-xs font-bold text-foreground">
-                      —
-                    </TableCell>
-                    <TableCell className="px-6">
-                      <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 uppercase tracking-widest text-xs gap-1.5 flex items-center justify-center w-fit">
-                        <RefreshCw className="h-3 w-3" />
-                        Auto
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-6">
-                      <p className="text-xs font-medium text-foreground">{new Date(fx.validFrom).toLocaleTimeString()}</p>
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(fx.validFrom).toLocaleDateString()}</p>
-                    </TableCell>
-                    <TableCell className="text-right p-6">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted/50">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted/50">
-                          <Lock className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-                )}
-              </TableBody>
-            </Table>
+            <Table<FxRateResponse>
+              columns={columns}
+              dataSource={filteredRates}
+              rowKey="id"
+              pagination={false}
+              loading={isLoading}
+              locale={{ emptyText: error ? 'Failed to load rates' : 'No rates found' }}
+            />
             
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 Market Connector Status: {isLoading ? <span className="text-muted-foreground">…</span> : error || (fxRates?.length ?? 0) === 0 ? <span className="text-rose-500">Degraded</span> : <span className="text-emerald-500">Connected</span>}
               </p>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50" disabled>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
+                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
                 <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
                   1
                 </div>
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50" disabled>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
               </div>
             </div>
           </div>
-        </StaggerItem>
-      </StaggerContainer>
+        </>
+      </>
     </div>
   );
 }

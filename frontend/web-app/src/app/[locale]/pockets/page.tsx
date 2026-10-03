@@ -3,15 +3,14 @@
 /* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
 
 import React, { useState } from 'react';
-import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, ArrowDownLeft, Trash2, TriangleAlert } from "lucide-react";
+import { Plus, Target, Lock, TrendingUp, ChevronRight, Wallet, History, ArrowUpRight, ShieldCheck, Coins, Users, UserPlus, MoreVertical, ArrowDownLeft, Trash2, TriangleAlert } from '@/components/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import { BalanceResponse, WalletTransaction, Pocket } from '@/types';
 import api from '@/lib/api';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
-import { SkeletonBalance, SkeletonTransaction } from '@/components/ui/skeleton';
+import { Skeleton } from 'antd';
 import { useAuthStore } from '@/stores';
 import {
   usePockets,
@@ -23,25 +22,8 @@ import {
   useUnfreezePocket,
   useClosePocket
 } from '@/hooks';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { toast } from 'sonner';
+import { Button, Dropdown, Input, Modal, Tag, Typography } from 'antd';
+import { notify as toast } from '@/lib/notify';
 import { addCurrency, formatCurrency, formatCurrencyWithoutSymbol, parseCurrencyExact } from '@/lib/currency';
 
 interface SharedMember {
@@ -238,37 +220,31 @@ export default function PocketsPage() {
 
     return (
         <DashboardLayout>
-            <PageTransition>
                 <div className="space-y-6 lg:space-y-8">
-                    <StaggerContainer>
-                        <StaggerItem>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                                 <div>
                                     <h2 className="text-3xl font-bold text-foreground tracking-tight">Manajemen Kantong</h2>
                                     <p className="text-sm text-muted-foreground font-medium mt-1">Kelola dan alokasikan dana Anda dengan presisi tinggi.</p>
                                 </div>
                                 <div className="flex gap-3">
-                                    <ButtonMotion>
-                                        <button
-                                            className="bg-muted lg:bg-card text-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest border border-border shadow-lg hover:bg-muted/80 transition-all flex items-center gap-2 uppercase"
-                                        >
-                                            <Users className="h-4 w-4 text-emerald-500" /> Kantong Bersama
-                                        </button>
-                                    </ButtonMotion>
-                                    <ButtonMotion>
-                                        <button
-                                            onClick={() => setIsCreateModalOpen(true)}
-                                            className="bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-emerald-500/20 flex items-center gap-2 hover:bg-emerald-500 transition-all uppercase"
-                                        >
-                                            <Plus className="h-4 w-4" /> Tambah Kantong
-                                        </button>
-                                    </ButtonMotion>
-                                </div>
+                                    <Button
+                                        type="default"
+                                        className="bg-muted lg:bg-card text-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest border border-border shadow-lg hover:bg-muted/80 transition-all flex items-center gap-2 uppercase"
+                                    >
+                                        <Users className="h-4 w-4 text-emerald-500" /> Kantong Bersama
+                                    </Button>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => setIsCreateModalOpen(true)}
+                                        className="bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-emerald-500/20 flex items-center gap-2 hover:bg-emerald-500 transition-all uppercase"
+                                    >
+                                        <Plus className="h-4 w-4" /> Tambah Kantong
+                                    </Button>
                             </div>
-                        </StaggerItem>
+                            </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
-                            <StaggerItem className="md:col-span-12 lg:col-span-8">
+                            <div className="md:col-span-12 lg:col-span-8">
                                 <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col justify-between min-h-[280px] lg:min-h-[320px] relative overflow-hidden group shadow-2xl">
                                     <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -z-0" />
 
@@ -290,7 +266,7 @@ export default function PocketsPage() {
                                             <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2 opacity-60">Likuiditas Tersedia</p>
                                             <h4 className="text-5xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tighter tabular-nums">
                                                 {balanceLoading ? (
-                                                    <SkeletonBalance />
+                                                    <Skeleton.Input active size="large" className="!h-16 !w-64 !rounded" />
                                                 ) : (
                                                     formatCurrency(balance?.balance ?? '0', { locale: bcp47Locale })
                                                 )}
@@ -299,14 +275,12 @@ export default function PocketsPage() {
                                     </div>
 
                                     <div className="absolute bottom-6 right-6">
-                                        <button className="p-4 bg-emerald-600/10 text-emerald-500 rounded-xl shadow-sm border border-emerald-500/20 hover:bg-emerald-600 hover:text-white transition-all active:scale-95">
-                                            <ArrowUpRight className="h-6 w-6" />
-                                        </button>
+                                        <Button type="text" icon={<ArrowUpRight className="h-6 w-6" />} className="p-4 bg-emerald-600/10 text-emerald-500 rounded-xl shadow-sm border border-emerald-500/20 hover:bg-emerald-600 hover:text-white transition-all active:scale-95" />
                                     </div>
                                 </div>
-                            </StaggerItem>
+                            </div>
 
-                            <StaggerItem className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-6">
+                            <div className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-6">
                                 <div className="bg-card p-5 sm:p-6 lg:p-8 rounded-2xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group min-h-[180px]">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl" />
                                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1 opacity-60">Protokol Cadangan</p>
@@ -337,16 +311,16 @@ export default function PocketsPage() {
                                     </div>
                                     <Coins className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/[0.03] -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
                                 </div>
-                            </StaggerItem>
+                            </div>
                         </div>
 
                         {/* Pockets List with CRUD */}
                         <div className="mt-8">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold text-foreground">Kantong Saya</h3>
-                                <Badge variant="outline" className="font-mono">
+                                <Tag bordered className="font-mono">
                                     Total: {formatCurrency(totalBalance?.totalBalance ?? '0', { locale: bcp47Locale })}
-                                </Badge>
+                                </Tag>
                             </div>
 
                             {pocketsLoading ? (
@@ -372,43 +346,28 @@ export default function PocketsPage() {
                                                         </div>
                                                         <div>
                                                             <h4 className="font-bold text-foreground text-sm">{pocket.name}</h4>
-                                                            <Badge variant="outline" className="text-xs mt-1">
+                                                            <Tag bordered className="text-xs mt-1">
                                                                 {pocket.type}
-                                                            </Badge>
+                                                            </Tag>
                                                         </div>
                                                     </div>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-                                                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                                                            </button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-48">
-                                                            <DropdownMenuItem onClick={() => openCreditModal(pocket)} className="cursor-pointer">
-                                                                <ArrowDownLeft className="h-4 w-4 mr-2 text-emerald-500" />
-                                                                Tambah Dana
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => openDebitModal(pocket)} className="cursor-pointer">
-                                                                <ArrowUpRight className="h-4 w-4 mr-2 text-blue-500" />
-                                                                Ambil Dana
-                                                            </DropdownMenuItem>
-                                                            {pocket.status === 'ACTIVE' ? (
-                                                                <DropdownMenuItem onClick={() => handleFreeze(pocket.id)} className="cursor-pointer">
-                                                                    <Lock className="h-4 w-4 mr-2 text-yellow-500" />
-                                                                    Bekukan
-                                                                </DropdownMenuItem>
-                                                            ) : (
-                                                                <DropdownMenuItem onClick={() => handleUnfreeze(pocket.id)} className="cursor-pointer">
-                                                                    <UnlockIcon className="h-4 w-4 mr-2 text-emerald-500" />
-                                                                    Aktifkan
-                                                                </DropdownMenuItem>
-                                                            )}
-                                                            <DropdownMenuItem onClick={() => openCloseModal(pocket)} className="cursor-pointer text-red-600 focus:text-red-600">
-                                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                                Tutup Kantong
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
+                                                    <Dropdown
+                                                        trigger={['click']}
+                                                        placement="bottomRight"
+                                                        menu={{
+                                                            className: 'w-48',
+                                                            items: [
+                                                                { key: 'credit', label: <span className="flex items-center gap-2"><ArrowDownLeft className="h-4 w-4 mr-2 text-emerald-500" />Tambah Dana</span>, onClick: () => openCreditModal(pocket) },
+                                                                { key: 'debit', label: <span className="flex items-center gap-2"><ArrowUpRight className="h-4 w-4 mr-2 text-blue-500" />Ambil Dana</span>, onClick: () => openDebitModal(pocket) },
+                                                                pocket.status === 'ACTIVE'
+                                                                    ? { key: 'freeze', label: <span className="flex items-center gap-2"><Lock className="h-4 w-4 mr-2 text-yellow-500" />Bekukan</span>, onClick: () => handleFreeze(pocket.id) }
+                                                                    : { key: 'unfreeze', label: <span className="flex items-center gap-2"><UnlockIcon className="h-4 w-4 mr-2 text-emerald-500" />Aktifkan</span>, onClick: () => handleUnfreeze(pocket.id) },
+                                                                { key: 'close', danger: true, label: <span className="flex items-center gap-2"><Trash2 className="h-4 w-4 mr-2" />Tutup Kantong</span>, onClick: () => openCloseModal(pocket) },
+                                                            ],
+                                                        }}
+                                                    >
+                                                        <Button type="text" aria-label="Opsi kantong" icon={<MoreVertical className="h-4 w-4 text-muted-foreground" />} className="p-2 hover:bg-muted rounded-lg transition-colors" />
+                                                    </Dropdown>
                                                 </div>
 
                                                 <div className="space-y-3">
@@ -422,9 +381,9 @@ export default function PocketsPage() {
                                                         </div>
                                                     )}
                                                     <div className="flex items-center justify-between pt-2">
-                                                        <Badge variant={pocket.status === 'ACTIVE' ? 'default' : 'secondary'} className="text-xs">
+                                                        <Tag bordered={false} color={pocket.status === 'ACTIVE' ? 'green' : undefined} className="text-xs">
                                                             {pocket.status}
-                                                        </Badge>
+                                                        </Tag>
                                                         <span className="text-xs text-muted-foreground">{pocket.currency}</span>
                                                     </div>
                                                 </div>
@@ -437,7 +396,7 @@ export default function PocketsPage() {
                                     <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                                     <h4 className="text-lg font-bold text-foreground mb-2">Belum Ada Kantong</h4>
                                     <p className="text-sm text-muted-foreground mb-4">Buat kantong pertama Anda untuk mulai mengalokasikan dana</p>
-                                    <Button onClick={() => setIsCreateModalOpen(true)}>
+                                    <Button type="primary" onClick={() => setIsCreateModalOpen(true)}>
                                         <Plus className="h-4 w-4 mr-2" /> Buat Kantong
                                     </Button>
                                 </div>
@@ -448,7 +407,7 @@ export default function PocketsPage() {
                             <div className="lg:col-span-7 space-y-6">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold text-foreground">Tujuan Khusus</h3>
-                                    <button className="text-xs font-bold text-primary hover:underline">Kelola Portofolio</button>
+                                    <Button type="link" className="text-xs font-bold text-primary hover:underline">Kelola Portofolio</Button>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6">
@@ -509,7 +468,7 @@ export default function PocketsPage() {
                                 <div className="bg-card rounded-xl border border-border shadow-sm min-h-[280px] lg:min-h-[320px] flex flex-col">
                                     {transactionsLoading ? (
                                         <div className="p-6 space-y-4">
-                                            {[1, 2, 3, 4, 5].map(i => <SkeletonTransaction key={i} />)}
+                                            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} active avatar={{ shape: "square" }} paragraph={{ rows: 1 }} title={false} className="!p-4" />)}
                                         </div>
                                     ) : (
                                         <div className="flex-1">
@@ -554,7 +513,7 @@ export default function PocketsPage() {
                                         </div>
                                     )}
                                     <div className="p-6 mt-auto">
-                                        <button className="w-full py-4 bg-muted/50 rounded-xl font-bold text-xs tracking-widest uppercase border border-border hover:bg-muted transition-all text-muted-foreground">Lihat Rekening Koran</button>
+                                        <Button type="default" className="w-full py-4 bg-muted/50 rounded-xl font-bold text-xs tracking-widest uppercase border border-border hover:bg-muted transition-all text-muted-foreground">Lihat Rekening Koran</Button>
                                     </div>
                                 </div>
                             </div>
@@ -566,11 +525,9 @@ export default function PocketsPage() {
                                     <Users className="h-5 w-5 text-primary" />
                                     Kantong Bersama
                                 </h3>
-                                <ButtonMotion>
-                                    <button className="bg-primary/10 text-primary px-6 py-3 rounded-xl font-bold text-xs tracking-widest border border-primary/10 hover:bg-primary/20 transition-all flex items-center gap-2">
-                                        <UserPlus className="h-4 w-4" /> Buat Kantong Baru
-                                    </button>
-                                </ButtonMotion>
+                                <Button type="default" className="bg-primary/10 text-primary px-6 py-3 rounded-xl font-bold text-xs tracking-widest border border-primary/10 hover:bg-primary/20 transition-all flex items-center gap-2">
+                                    <UserPlus className="h-4 w-4" /> Buat Kantong Baru
+                                </Button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -616,9 +573,7 @@ export default function PocketsPage() {
                                                 <div className="border-t border-border p-4 bg-muted/20">
                                                     <div className="flex justify-between items-center mb-3">
                                                         <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Anggota</p>
-                                                        <button className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
-                                                            <UserPlus className="h-3 w-3" /> Undang
-                                                        </button>
+                                                        <Button type="link" icon={<UserPlus className="h-3 w-3" />} className="text-xs font-bold text-primary hover:underline flex items-center gap-1">Undang</Button>
                                                     </div>
                                                     <div className="space-y-2">
                                                         {pocket.sharedMembers.map((member, i) => (
@@ -636,9 +591,7 @@ export default function PocketsPage() {
                                                                     )}>
                                                                         {member.role}
                                                                     </span>
-                                                                    <button className="p-1 hover:bg-muted rounded transition-colors">
-                                                                        <MoreVertical className="h-3 w-3 text-muted-foreground" />
-                                                                    </button>
+                                                                    <Button type="text" icon={<MoreVertical className="h-3 w-3 text-muted-foreground" />} className="p-1 hover:bg-muted rounded transition-colors" />
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -651,7 +604,7 @@ export default function PocketsPage() {
                             </div>
                         </div>
 
-                        <StaggerItem className="mt-8">
+                        <div className="mt-8">
                             <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 relative overflow-hidden group shadow-card">
                                 <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
                                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -666,30 +619,26 @@ export default function PocketsPage() {
                                             Pindahkan dana mengendap dari kantong ke reksa dana yield tinggi atau emas digital. AI kami menyarankan Anda bisa berhemat hingga <span className="text-bank-green font-bold">Rp 12,5 Juta</span> lebih per tahun.
                                         </p>
                                     </div>
-                                    <ButtonMotion>
-                                        <button className="whitespace-nowrap px-8 py-4 bg-bank-green text-white rounded-xl font-bold text-xs tracking-widest shadow-2xl shadow-bank-green/40 hover:bg-bank-emerald transition-all">
-                                            Jelajahi Marketplace
-                                        </button>
-                                    </ButtonMotion>
+                                    <Button type="primary" className="whitespace-nowrap px-8 py-4 bg-bank-green text-white rounded-xl font-bold text-xs tracking-widest shadow-2xl shadow-bank-green/40 hover:bg-bank-emerald transition-all">
+                                        Jelajahi Marketplace
+                                    </Button>
                                 </div>
                             </div>
-                        </StaggerItem>
-                    </StaggerContainer>
+                        </div>
                 </div>
-            </PageTransition>
 
             {/* Create Pocket Modal */}
-            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Buat Kantong Baru</DialogTitle>
-                        <DialogDescription>
+            <Modal open={isCreateModalOpen} onCancel={() => setIsCreateModalOpen(false)} footer={null} centered width={512} title={undefined}>
+                <div>
+                    <div>
+                        <Typography.Title level={4}>Buat Kantong Baru</Typography.Title>
+                        <Typography.Text type="secondary">
                             Buat kantong untuk mengalokasikan dana sesuai tujuan Anda
-                        </DialogDescription>
-                    </DialogHeader>
+                        </Typography.Text>
+                    </div>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">Nama Kantong</Label>
+                            <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Nama Kantong</label>
                             <Input
                                 id="name"
                                 placeholder="Contoh: Dana Darurat, Liburan"
@@ -698,7 +647,7 @@ export default function PocketsPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="target">Target Dana (Opsional)</Label>
+                            <label htmlFor="target" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Target Dana (Opsional)</label>
                             <Input
                                 id="target"
                                 type="number"
@@ -708,19 +657,19 @@ export default function PocketsPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>Tipe Kantong</Label>
+                            <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Tipe Kantong</span>
                             <div className="flex gap-2">
                                 <Button
-                                    type="button"
-                                    variant={newPocketType === 'SAVINGS' ? 'default' : 'outline'}
+                                    htmlType="button"
+                                    type={newPocketType === 'SAVINGS' ? 'primary' : 'default'}
                                     className="flex-1"
                                     onClick={() => setNewPocketType('SAVINGS')}
                                 >
                                     <Wallet className="h-4 w-4 mr-2" /> Tabungan
                                 </Button>
                                 <Button
-                                    type="button"
-                                    variant={newPocketType === 'GOAL' ? 'default' : 'outline'}
+                                    htmlType="button"
+                                    type={newPocketType === 'GOAL' ? 'primary' : 'default'}
                                     className="flex-1"
                                     onClick={() => setNewPocketType('GOAL')}
                                 >
@@ -729,36 +678,37 @@ export default function PocketsPage() {
                             </div>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                    <div>
+                        <Button onClick={() => setIsCreateModalOpen(false)}>
                             Batal
                         </Button>
                         <Button
+                            type="primary"
                             onClick={handleCreatePocket}
                             disabled={createPocket.isPending || !newPocketName.trim()}
                         >
                             {createPocket.isPending ? 'Membuat...' : 'Buat Kantong'}
                         </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Credit Modal */}
-            <Dialog open={isCreditModalOpen} onOpenChange={setIsCreditModalOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Tambah Dana</DialogTitle>
-                        <DialogDescription>
+            <Modal open={isCreditModalOpen} onCancel={() => setIsCreditModalOpen(false)} footer={null} centered width={512} title={undefined}>
+                <div>
+                    <div>
+                        <Typography.Title level={4}>Tambah Dana</Typography.Title>
+                        <Typography.Text type="secondary">
                             Tambahkan dana ke {selectedPocketForAction?.name}
-                        </DialogDescription>
-                    </DialogHeader>
+                        </Typography.Text>
+                    </div>
                     <div className="space-y-4 py-4">
                         <div className="p-4 bg-muted rounded-xl">
                             <p className="text-sm text-muted-foreground">Saldo Saat Ini</p>
                             <p className="text-2xl font-bold">{formatCurrency(selectedPocketForAction?.balance ?? '0', { locale: bcp47Locale })}</p>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="amount">Jumlah Dana</Label>
+                            <label htmlFor="amount" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Jumlah Dana</label>
                             <Input
                                 id="amount"
                                 type="number"
@@ -768,36 +718,37 @@ export default function PocketsPage() {
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCreditModalOpen(false)}>
+                    <div>
+                        <Button onClick={() => setIsCreditModalOpen(false)}>
                             Batal
                         </Button>
                         <Button
+                            type="primary"
                             onClick={handleCredit}
                             disabled={creditPocket.isPending || !amount}
                         >
                             {creditPocket.isPending ? 'Memproses...' : 'Tambah Dana'}
                         </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Debit Modal */}
-            <Dialog open={isDebitModalOpen} onOpenChange={setIsDebitModalOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Ambil Dana</DialogTitle>
-                        <DialogDescription>
+            <Modal open={isDebitModalOpen} onCancel={() => setIsDebitModalOpen(false)} footer={null} centered width={512} title={undefined}>
+                <div>
+                    <div>
+                        <Typography.Title level={4}>Ambil Dana</Typography.Title>
+                        <Typography.Text type="secondary">
                             Ambil dana dari {selectedPocketForAction?.name}
-                        </DialogDescription>
-                    </DialogHeader>
+                        </Typography.Text>
+                    </div>
                     <div className="space-y-4 py-4">
                         <div className="p-4 bg-muted rounded-xl">
                             <p className="text-sm text-muted-foreground">Saldo Tersedia</p>
                             <p className="text-2xl font-bold">{formatCurrency(selectedPocketForAction?.balance ?? '0', { locale: bcp47Locale })}</p>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="debit-amount">Jumlah Dana</Label>
+                            <label htmlFor="debit-amount" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Jumlah Dana</label>
                             <Input
                                 id="debit-amount"
                                 type="number"
@@ -807,50 +758,52 @@ export default function PocketsPage() {
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDebitModalOpen(false)}>
+                    <div>
+                        <Button onClick={() => setIsDebitModalOpen(false)}>
                             Batal
                         </Button>
                         <Button
                             onClick={handleDebit}
                             disabled={debitPocket.isPending || !amount}
-                            variant="destructive"
+                            danger
+                            type="primary"
                         >
                             {debitPocket.isPending ? 'Memproses...' : 'Ambil Dana'}
                         </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Close Modal */}
-            <Dialog open={isCloseModalOpen} onOpenChange={setIsCloseModalOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="text-red-600 flex items-center gap-2">
+            <Modal open={isCloseModalOpen} onCancel={() => setIsCloseModalOpen(false)} footer={null} centered width={512} title={undefined}>
+                <div>
+                    <div>
+                        <Typography.Title level={4} className="text-red-600 flex items-center gap-2">
                             <Trash2 className="h-5 w-5" />
                             Tutup Kantong?
-                        </DialogTitle>
-                        <DialogDescription>
+                        </Typography.Title>
+                        <Typography.Text type="secondary">
                             Apakah Anda yakin ingin menutup kantong &ldquo;{selectedPocketForAction?.name}&rdquo;? Dana yang tersisa akan dikembalikan ke dompet utama.
-                        </DialogDescription>
-                    </DialogHeader>
+                        </Typography.Text>
+                    </div>
                     <div className="p-4 bg-red-50 rounded-xl border border-red-100">
                         <p className="text-sm text-red-600 font-medium flex items-center gap-2"><TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" /> Tindakan ini tidak dapat dibatalkan</p>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCloseModalOpen(false)}>
+                    <div>
+                        <Button onClick={() => setIsCloseModalOpen(false)}>
                             Batal
                         </Button>
                         <Button
                             onClick={handleClose}
                             disabled={closePocket.isPending}
-                            variant="destructive"
+                            danger
+                            type="primary"
                         >
                             {closePocket.isPending ? 'Menutup...' : 'Ya, Tutup Kantong'}
                         </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                </div>
+            </Modal>
         </DashboardLayout>
     );
 }

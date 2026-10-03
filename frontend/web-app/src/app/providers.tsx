@@ -44,13 +44,11 @@ const getQueryClient = () => {
  return browserQueryClient;
 };
 
-import { ThemeProvider } from 'next-themes';
-import { MotionConfig } from 'framer-motion';
-import { Toaster } from 'sonner';
+import { AntdProvider } from '@/components/AntdProvider';
 import { useSilentRefresh } from '@/hooks/useSilentRefresh';
 import { SessionBootstrap } from '@/components/SessionBootstrap';
 import { useEffect } from 'react';
-import { useAuthStore } from '@/stores';
+import { useAuthStore, useUIStore } from '@/stores';
 import { createLocaleHref } from '@/lib/navigation';
 import { useLocale } from 'next-intl';
 
@@ -80,20 +78,34 @@ function AuthSessionExpiredHandler() {
   return null;
 }
 
+/**
+ * Bridges uiStore theme + next-intl into the antd ConfigProvider,
+ * and syncs the `dark` class on <html> so Tailwind `dark:` variants work.
+ */
+function AntdShell({ children }: { children: ReactNode }) {
+  const theme = useUIStore((s) => s.theme);
+  const locale = useLocale();
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
+  return (
+    <AntdProvider locale={locale} isDark={theme === 'dark'}>
+      {children}
+    </AntdProvider>
+  );
+}
+
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => getQueryClient());
 
   return (
-    <MotionConfig reducedMotion="user">
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <QueryClientProvider client={queryClient}>
-        <SessionBootstrap />
-        <SilentRefreshRunner />
-        <AuthSessionExpiredHandler />
-        {children}
-        <Toaster position="top-right" richColors />
-      </QueryClientProvider>
-    </ThemeProvider>
-    </MotionConfig>
+    <QueryClientProvider client={queryClient}>
+      <SessionBootstrap />
+      <SilentRefreshRunner />
+      <AuthSessionExpiredHandler />
+      <AntdShell>{children}</AntdShell>
+    </QueryClientProvider>
   );
 }

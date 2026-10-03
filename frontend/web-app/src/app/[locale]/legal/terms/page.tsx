@@ -2,16 +2,12 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { FileText, Shield, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { FileText, Shield, AlertCircle, CheckCircle2 } from '@/components/icons';
 
 export default function TermsPage() {
   return (
     <DashboardLayout>
-      <PageTransition>
         <div className="space-y-6 lg:space-y-8">
-          <StaggerContainer>
-            <StaggerItem>
               <div className="flex flex-col gap-4 mb-6">
                 <div className="flex items-center gap-3">
                   <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
@@ -23,9 +19,7 @@ export default function TermsPage() {
                   </div>
                 </div>
               </div>
-            </StaggerItem>
 
-            <StaggerItem>
               <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-8">
                 <div className="prose prose-sm max-w-none">
                   <section className="space-y-4">
@@ -103,10 +97,7 @@ export default function TermsPage() {
                   </p>
                 </div>
               </div>
-            </StaggerItem>
-          </StaggerContainer>
         </div>
-      </PageTransition>
     </DashboardLayout>
   );
 }

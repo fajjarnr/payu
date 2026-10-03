@@ -4,28 +4,13 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { TrendingUp, TrendingDown, Calendar, ArrowUpRight, Activity, Wifi, WifiOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, ArrowUpRight, Activity, Wifi, WifiOff } from '@/components/icons';
 import clsx from 'clsx';
 import { useAnalyticsWebSocket, useCashFlow, useSpendingTrends } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { PageTransition } from '@/components/ui/Motion';
-import { 
-  Bar, 
-  BarChart, 
-  CartesianGrid, 
-  Cell,
-  Pie, 
-  PieChart, 
-  XAxis, 
-  YAxis,
-} from "recharts"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Column, Pie } from '@ant-design/plots';
+import { Button, Card } from 'antd';
+import { cn } from '@/lib/utils';
 
 export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
@@ -77,35 +62,21 @@ export default function AnalyticsPage() {
   // ponytail: Money string HALF_EVEN 4 preferred, number legacy — chart coerces via Number()
   const trajectoryData: { day: string; masuk: number | string; keluar: number | string }[] = (analytics?.trajectoryData ?? []) as { day: string; masuk: number | string; keluar: number | string }[]
 
-  const breakdownData = analyticsData.spendingBreakdown.map(cat => ({
+  const PIE_PALETTE = ['#0a6b48', '#34d399', '#f59e0b', '#8b5cf6', '#f43f5e', '#64748b'];
+  const breakdownData = analyticsData.spendingBreakdown.map((cat, i) => ({
     name: cat.label,
     value: cat.amount,
-    fill: cat.color.includes('green') ? 'hsl(var(--primary))' : 
-          cat.color.includes('emerald') ? 'hsl(var(--primary)/0.6)' : 
-          'hsl(var(--muted-foreground)/0.4)'
+    fill: PIE_PALETTE[i % PIE_PALETTE.length],
   }))
 
-  const trajectoryConfig = {
-    masuk: {
-      label: "Masuk",
-      color: "hsl(var(--primary))",
-    },
-    keluar: {
-      label: "Keluar",
-      color: "hsl(var(--muted-foreground)/0.3)",
-    },
-  } satisfies ChartConfig
-
-  const breakdownConfig = {
-    amount: {
-      label: "Jumlah",
-    },
-  } satisfies ChartConfig
+  // Canvas-rendered charts cannot resolve CSS var() colors, so use literals.
+  // Primary matches the antd colorPrimary token (#0a6b48).
+  const PRIMARY = '#0a6b48';
+  const TRACK = '#9ca3af';
 
   return (
     <DashboardLayout>
-      <PageTransition>
-        <div className="space-y-6 lg:space-y-8">
+      <div className="space-y-6 lg:space-y-8">
           <div className="flex justify-between items-end">
             <div>
               <h2 className="text-3xl font-bold text-foreground tracking-tight">Intelijen Keuangan</h2>
@@ -118,9 +89,9 @@ export default function AnalyticsPage() {
                   {isConnected ? 'Live Update' : 'Offline'}
                 </span>
               </div>
-              <button className="bg-gray-50 dark:bg-gray-900 border border-border px-6 py-3 rounded-xl font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-gray-100 transition-all shadow-sm">
+              <Button type="default" className="bg-gray-50 dark:bg-gray-900 border border-border px-6 py-3 rounded-xl font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-gray-100 transition-all shadow-sm">
                 <Calendar className="h-4 w-4" /> Januari 2026
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -151,12 +122,12 @@ export default function AnalyticsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
             <div className="md:col-span-6 lg:col-span-8">
-              <Card className="rounded-xl border border-border shadow-sm h-full relative overflow-hidden group">
+              <Card className={cn("rounded-2xl border border-border bg-card text-card-foreground shadow-card", "rounded-xl border border-border shadow-sm h-full relative overflow-hidden group")} styles={{ body: { display: "contents" } }}>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
-                <CardHeader className="flex flex-row items-center justify-between pb-6 relative z-10 p-6 sm:p-6 lg:p-8">
+                <div className={cn("flex flex-col space-y-1.5 p-6", "flex flex-row items-center justify-between pb-6 relative z-10 p-6 sm:p-6 lg:p-8")}>
                   <div>
-                    <CardTitle className="text-xl font-bold text-foreground">Trajektori Pengeluaran</CardTitle>
-                    <CardDescription className="text-xs text-gray-400 font-bold tracking-widest mt-1 lowercase">Analisis arus kas harian periode ini</CardDescription>
+                    <h3 className={cn("text-2xl font-bold leading-none tracking-tight", "text-xl font-bold text-foreground")}>Trajektori Pengeluaran</h3>
+                    <p className={cn("text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]", "text-xs text-gray-400 font-bold tracking-widest mt-1 lowercase")}>Analisis arus kas harian periode ini</p>
                   </div>
                   <div className="flex gap-4">
                     <div className="flex items-center gap-2 px-4 py-2 bg-bank-green/10 rounded-xl border border-bank-green/10">
@@ -168,71 +139,52 @@ export default function AnalyticsPage() {
                       <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">Keluar</span>
                     </div>
                   </div>
-                </CardHeader>
+                </div>
 
-                <CardContent className="h-[400px] relative z-10 px-6 pb-10">
-                  <ChartContainer config={trajectoryConfig} className="h-full w-full">
-                    <BarChart data={trajectoryData}>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--muted)/0.3)" />
-                      <XAxis
-                        dataKey="day"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }}
-                        dy={10}
-                      />
-                      <YAxis hide />
-                      <ChartTooltip
-                        cursor={false}
-                        content={<ChartTooltipContent indicator="dashed" />}
-                      />
-                      <Bar
-                        dataKey="masuk"
-                        fill="var(--color-masuk)"
-                        radius={[4, 4, 0, 0]}
-                        barSize={32}
-                      />
-                      <Bar
-                        dataKey="keluar"
-                        fill="var(--color-keluar)"
-                        radius={[4, 4, 0, 0]}
-                        barSize={32}
-                      />
-                    </BarChart>
-                  </ChartContainer>
-                </CardContent>
+                <div className={cn("p-6 pt-0", "h-[400px] relative z-10 px-6 pb-10")}>
+                  <div className="h-full w-full">
+                    <Column
+                      data={trajectoryData.flatMap((d) => [
+                        { day: d.day, type: 'Masuk', amount: Number(d.masuk) },
+                        { day: d.day, type: 'Keluar', amount: Number(d.keluar) },
+                      ])}
+                      xField="day"
+                      yField="amount"
+                      colorField="type"
+                      group={true}
+                      scale={{ color: { range: [PRIMARY, TRACK] } }}
+                      style={{ radiusTopLeft: 4, radiusTopRight: 4, maxWidth: 32 }}
+                      axis={{
+                        x: { title: false, labelFill: '#6b7280', labelFontSize: 10, labelFontWeight: 700 },
+                        y: false,
+                      }}
+                      label={false}
+                    />
+                  </div>
+                </div>
               </Card>
             </div>
 
             <div className="md:col-span-6 lg:col-span-4">
-              <Card className="rounded-xl border border-border shadow-sm h-full flex flex-col group p-5 sm:p-6">
-                <CardHeader className="p-0 mb-6">
-                  <CardTitle className="text-xl font-bold text-foreground">Rincian Pengeluaran</CardTitle>
-                </CardHeader>
+              <Card className={cn("rounded-2xl border border-border bg-card text-card-foreground shadow-card", "rounded-xl border border-border shadow-sm h-full flex flex-col group p-5 sm:p-6")} styles={{ body: { display: "contents" } }}>
+                <div className={cn("flex flex-col space-y-1.5 p-6", "p-0 mb-6")}>
+                  <h3 className={cn("text-2xl font-bold leading-none tracking-tight", "text-xl font-bold text-foreground")}>Rincian Pengeluaran</h3>
+                </div>
 
-                <CardContent className="p-0 flex flex-col h-full">
+                <div className={cn("p-6 pt-0", "p-0 flex flex-col h-full")}>
                   <div className="relative aspect-square mb-8 flex items-center justify-center">
-                    <ChartContainer config={breakdownConfig} className="w-full h-full">
-                      <PieChart>
-                        <ChartTooltip
-                          cursor={false}
-                          content={<ChartTooltipContent hideLabel />}
-                        />
-                        <Pie
-                          data={breakdownData}
-                          dataKey="value"
-                          nameKey="name"
-                          innerRadius={90}
-                          outerRadius={120}
-                          strokeWidth={10}
-                          stroke="transparent"
-                        >
-                          {breakdownData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ChartContainer>
+                    <div className="w-full h-full">
+                      <Pie
+                        data={breakdownData.map((d) => ({ name: d.name, value: Number(d.value) }))}
+                        angleField="value"
+                        colorField="name"
+                        scale={{ color: { range: breakdownData.map((d) => d.fill) } }}
+                        innerRadius={0.65}
+                        style={{ lineWidth: 4, stroke: '#fff' }}
+                        legend={false}
+                        label={false}
+                      />
+                    </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
                       <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-1">Total Keluar</p>
                       <p className="text-2xl font-bold text-foreground">Rp {Number(analyticsData.totalExpenses).toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</p>
@@ -253,7 +205,7 @@ export default function AnalyticsPage() {
                       </div>
                     ))}
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </div>
           </div>
@@ -267,14 +219,12 @@ export default function AnalyticsPage() {
                   Sistem AI kami mendeteksi Anda dapat menabung tambahan <span className="text-bank-green font-bold">Rp 2.500.000</span> setiap bulan dengan mengoptimalkan tagihan utilitas dan langganan berulang Anda.
                 </p>
               </div>
-              <button className="whitespace-nowrap bg-bank-green text-white px-8 py-4 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20">
+              <Button type="primary" className="whitespace-nowrap bg-bank-green text-white px-8 py-4 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20">
                 Terapkan Optimasi
-              </button>
+              </Button>
             </div>
-            <Activity className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
           </div>
-        </div>
-      </PageTransition>
+      </div>
     </DashboardLayout>
   );
 }

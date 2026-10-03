@@ -40,28 +40,6 @@ vi.mock('@tanstack/react-query', () => ({
   }),
 }));
 
-vi.mock('react-hook-form', () => ({
-  useForm: () => ({
-    register: () => ({}),
-    handleSubmit: (fn: (...args: unknown[]) => void) => (e: Event) => { e?.preventDefault?.(); fn({}); },
-    formState: { errors: {} },
-    watch: () => '',
-    setValue: vi.fn(),
-    trigger: vi.fn(),
-  }),
-}));
-
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: { children?: React.ReactNode }) => <div {...props}>{children}</div>,
-    form: ({ children, ...props }: { children?: React.ReactNode }) => <form {...props}>{children}</form>,
-    button: ({ children, ...props }: { children?: React.ReactNode }) => <button {...props}>{children}</button>,
-    p: ({ children, ...props }: { children?: React.ReactNode }) => <p {...props}>{children}</p>,
-    span: ({ children, ...props }: { children?: React.ReactNode }) => <span {...props}>{children}</span>,
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 vi.mock('@/components/ui/stepper', () => ({
   default: () => <div data-testid="stepper">Stepper</div>,
   Stepper: () => <div data-testid="stepper">Stepper</div>,

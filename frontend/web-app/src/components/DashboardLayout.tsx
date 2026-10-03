@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Link } from '@/lib/navigation';
-import { usePathname, useRouter } from '@/lib/navigation';
+import React, { useEffect, useState } from 'react';
+import { Link, usePathname, useRouter } from '@/lib/navigation';
 import {
   LayoutDashboard,
   BarChart3,
@@ -13,80 +12,49 @@ import {
   Settings,
   LifeBuoy,
   Bell,
-  Search,
-  Menu,
+  Menu as MenuIcon,
   User,
   LogOut,
   QrCode,
   Receipt,
   TrendingUp,
   Calendar,
-  History
-} from 'lucide-react';
-import clsx from 'clsx';
+  History,
+} from '@/components/icons';
+import { useTranslations, useLocale } from 'next-intl';
+import { useUIStore } from '@/stores';
+import { Layout, Menu, Dropdown, Badge, Avatar, Input, Button, Drawer, theme } from 'antd';
+import type { MenuProps } from 'antd';
 import MobileNav from './MobileNav';
 import LanguageSwitcher from './LanguageSwitcher';
 import ThemeToggle from './ThemeToggle';
-import { useTranslations, useLocale } from 'next-intl';
-import { Avatar, AvatarFallback } from './ui/avatar';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { PersonalizedGreeting } from './personalization';
 import { useLogout } from '@/hooks';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-interface SidebarItemProps {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-  active?: boolean;
-}
-
-const SidebarItem = ({ href, icon: Icon, label, active }: SidebarItemProps) => (
-  <Link
-    href={href}
-    className={clsx(
-      "flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group text-base font-bold cursor-pointer",
-      active
-        ? "bg-primary/10 text-primary shadow-[inset_0_0_20px_rgba(16,185,129,0.05)] border border-primary/20"
-        : "text-foreground/40 hover:bg-foreground/5 hover:text-foreground"
-    )}
-    aria-label={label}
-    aria-current={active ? 'page' : undefined}
-  >
-    <Icon className={clsx(
-      "h-6 w-6 transition-colors",
-      active ? "text-primary" : "text-foreground/30 group-hover:text-foreground"
-    )} aria-hidden="true" />
-    <span className="tracking-tight uppercase text-xs sm:text-sm tracking-[0.12em]">{label}</span>
-  </Link>
-);
+const { Sider, Header, Content } = Layout;
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   username?: string;
   onLogout?: () => void;
 }
 
-export default function DashboardLayout({ children, username = 'Pengguna', onLogout }: DashboardLayoutProps) {
+export default function DashboardLayout({
+  children,
+  username = 'Pengguna',
+  onLogout,
+}: DashboardLayoutProps) {
   const t = useTranslations('nav');
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
   const logoutMutation = useLogout();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const mode = useUIStore((s) => s.theme);
+  const { token } = theme.useToken();
+  const [mounted, setMounted] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const mainMenu = [
     { href: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
@@ -108,173 +76,214 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
     { href: '/support', icon: LifeBuoy, label: t('support') },
   ];
 
-  return (
-    <div className="h-screen bg-background flex overflow-hidden font-inter text-foreground">
-      {/* Desktop Sidebar - Increased spacing and font weight */}
-      <aside
-        className="hidden lg:flex flex-col w-[320px] 2xl:w-[380px] border-r border-border bg-background p-5 sm:p-6 lg:p-8 2xl:p-8 h-screen overflow-y-auto shrink-0 sticky top-0"
-        aria-label="Sidebar Navigasi Desktop"
-      >
-        <div className="flex items-center gap-5 mb-10 px-2 group cursor-pointer">
-          <Link href="/" className="flex items-center gap-5">
-            <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-primary/20 rotate-3 transition-transform group-hover:rotate-0">
-              U
-            </div>
-            <span className="text-4xl 2xl:text-5xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
-          </Link>
+  const selectedKeys = [
+    ...mainMenu
+      .filter(
+        (item) =>
+          pathname === item.href ||
+          (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard')),
+      )
+      .map((item) => item.href),
+    ...otherMenu.filter((item) => pathname.includes(item.href)).map((item) => item.href),
+  ];
+
+  const menuItems: MenuProps['items'] = [
+    {
+      type: 'group',
+      label: t('main'),
+      children: mainMenu.map(({ href, icon: Icon, label }) => ({
+        key: href,
+        icon: <Icon className="h-5 w-5" aria-hidden="true" />,
+        label,
+      })),
+    },
+    {
+      type: 'group',
+      label: t('others'),
+      children: otherMenu.map(({ href, icon: Icon, label }) => ({
+        key: href,
+        icon: <Icon className="h-5 w-5" aria-hidden="true" />,
+        label,
+      })),
+    },
+  ];
+
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    setDrawerOpen(false);
+    router.push(`/${locale}${key}`);
+  };
+
+  const profileItems: MenuProps['items'] = [
+    {
+      key: 'identity',
+      disabled: true,
+      label: (
+        <div className="py-1">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.3em] text-primary/50">
+            Authenticated User
+          </p>
+          <p className="truncate text-lg font-bold uppercase tracking-tight">{username}</p>
         </div>
+      ),
+    },
+    { type: 'divider' },
+    {
+      key: 'logout',
+      danger: true,
+      icon: <LogOut className="h-5 w-5" aria-hidden="true" />,
+      label: t('logout'),
+      onClick: () => (onLogout ? onLogout() : logoutMutation.mutate()),
+    },
+  ];
 
-        <div className="space-y-6 2xl:space-y-8 mb-10">
-          <p className="text-xs sm:text-sm font-bold text-primary/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('main')}</p>
-          {mainMenu.map((item) => (
-            <SidebarItem
-              key={item.href}
-              {...item}
-              active={pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'))}
-            />
-          ))}
-        </div>
-
-        <div className="space-y-6 2xl:space-y-8 mt-auto">
-          <p className="text-xs sm:text-sm font-bold text-primary/60 uppercase tracking-[0.3em] px-6 mb-6 opacity-70">{t('others')}</p>
-          {otherMenu.map((item) => (
-            <SidebarItem
-              key={item.href}
-              {...item}
-              active={pathname.includes(item.href)}
-            />
-          ))}
-        </div>
-      </aside>
-
-
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-16 sm:h-20 lg:h-20 xl:h-24 border-b border-border bg-background/80 backdrop-blur-3xl sticky top-0 z-30 shrink-0">
-          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 h-full flex items-center justify-between gap-2 sm:gap-4">
-            <div className="flex items-center gap-3 sm:gap-6 lg:gap-8 min-w-0 flex-1">
-              <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    data-testid="mobile-menu-trigger"
-                    className="lg:hidden w-11 h-11 sm:w-12 sm:h-12 -ml-2 text-foreground/60 hover:text-foreground hover:bg-foreground/5 rounded-xl sm:rounded-2xl shrink-0 cursor-pointer"
-                    aria-label="Buka menu navigasi"
-                  >
-                    <Menu className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0 border-r border-border bg-background shadow-3xl">
-                  <SheetHeader className="p-8 pb-4">
-                    <SheetTitle className="sr-only">Navigasi Utama</SheetTitle>
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                        U
-                      </div>
-                      <span className="text-2xl font-bold text-foreground uppercase tracking-tighter">PayU</span>
-                    </div>
-                  </SheetHeader>
-                  <nav className="px-4 py-4 space-y-2 overflow-y-auto h-[calc(100vh-120px)] scrollbar-hide">
-                    <p className="text-xs font-bold text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('main')}</p>
-                    {mainMenu.map((item) => (
-                      <SidebarItem
-                        key={item.href}
-                        {...item}
-                        active={pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'))}
-                      />
-                    ))}
-
-                    <div className="h-8" />
-
-                    <p className="text-xs font-bold text-emerald-500/60 uppercase tracking-[0.25em] px-6 mb-4">{t('others')}</p>
-                    {otherMenu.map((item) => (
-                      <SidebarItem
-                        key={item.href}
-                        {...item}
-                        active={pathname.includes(item.href)}
-                      />
-                    ))}
-                  </nav>
-                </SheetContent>
-              </Sheet>
-              <div className="hidden sm:flex flex-col justify-center">
-                <PersonalizedGreeting showTimeBased={true} showSegment={true} className="leading-tight text-lg font-bold" />
-                <p className="text-xs sm:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-2 ml-0.5 opacity-60">
-                  AI Financial Forecaster Active
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
-               <ThemeToggle />
-               <LanguageSwitcher />
-
-                <div className="hidden xl:flex items-center bg-card rounded-2xl px-6 w-96 gap-4 border border-primary/10 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 transition-all shadow-sm focus-within:shadow-md group">
-                  <Search className="h-5 w-5 text-primary/40 group-focus-within:text-primary transition-colors" />
-                  <Input
-                    type="text"
-                    data-testid="search-input"
-                    placeholder="Pencarian cerdas..."
-                    className="bg-transparent border-none focus-visible:ring-0 text-sm font-bold uppercase tracking-widest w-full placeholder:text-muted-foreground/40 text-foreground h-14 shadow-none"
-                  />
-                </div>
-
-               <Button
-                 variant="ghost"
-                 size="icon"
-                 data-testid="notification-button"
-                 className="w-11 h-11 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-card text-foreground/60 hover:text-primary hover:bg-primary/5 rounded-xl sm:rounded-2xl relative shadow-sm border border-primary/10 hover:border-primary/30 transition-all cursor-pointer shrink-0"
-                 aria-label="Notifikasi"
-                 onClick={() => router.push(`/${locale}/notifications`)}
-               >
-                 <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 lg:top-5 lg:right-5 h-2 w-2 sm:h-2.5 sm:w-2.5 bg-primary rounded-full border-2 border-card shadow-sm" aria-hidden="true" />
-                 <Bell className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
-               </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      data-testid="profile-menu-trigger"
-                      className="p-0 h-auto rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary shadow-lg border border-primary/10"
-                      aria-label="Menu profil pengguna"
-                    >
-                      <Avatar className="h-10 w-10 sm:h-11 sm:w-11 lg:h-14 lg:w-14 border-2 border-card shadow-md">
-                        <AvatarFallback className="bg-primary/5">
-                          <User className="h-7 w-7 text-primary" aria-hidden="true" />
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-80 bg-card border border-border rounded-2xl shadow-[0_40px_80px_rgba(0,0,0,0.25)] py-6 glass" align="end" sideOffset={16}>
-                    <div className="px-8 py-5 border-b border-border/10 mb-4">
-                      <p className="text-xs font-bold text-primary/50 uppercase tracking-[0.3em] mb-2">Authenticated User</p>
-                      <p className="text-xl font-bold truncate text-foreground uppercase tracking-tight">{username}</p>
-                    </div>
-                    <DropdownMenuItem className="p-0">
-                      <Button
-                        variant="ghost"
-                        onClick={() => onLogout ? onLogout() : logoutMutation.mutate()}
-                        data-testid="logout-button"
-                        className="w-full text-left px-8 py-5 text-xs sm:text-sm text-red-500 hover:bg-red-500/10 hover:text-red-500 font-bold uppercase tracking-[0.3em] flex items-center justify-between transition-colors h-auto border-none focus-visible:ring-0"
-                      >
-                        <span>{t('logout')}</span>
-                        <LogOut className="h-6 w-6 opacity-70" />
-                      </Button>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-y-auto scrollbar-hide bg-background overflow-x-hidden">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-8 pb-28 lg:pb-12 transition-all duration-300">
-            {children}
-          </div>
-        </main>
-      </div>
-      <MobileNav />
+  const logoMark = (
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-white shadow-lg">
+      U
     </div>
+  );
+
+  const sidebarMenu = (
+    <Menu
+      mode="inline"
+      selectedKeys={selectedKeys}
+      items={menuItems}
+      onClick={handleMenuClick}
+      style={{ borderInlineEnd: 'none', background: 'transparent' }}
+    />
+  );
+
+  return (
+    <Layout hasSider style={{ height: '100vh', overflow: 'hidden' }}>
+      <Sider
+        breakpoint="lg"
+        collapsedWidth={0}
+        collapsible
+        trigger={null}
+        width={288}
+        theme={mounted && mode === 'dark' ? 'dark' : 'light'}
+        style={{
+          height: '100vh',
+          overflowY: 'auto',
+          background: token.colorBgContainer,
+          borderRight: `1px solid ${token.colorBorderSecondary}`,
+        }}
+      >
+        <Link href="/" className="flex items-center gap-4 px-2 py-4" aria-label="PayU">
+          {logoMark}
+          <span className="text-2xl font-bold uppercase tracking-tighter">PayU</span>
+        </Link>
+        {sidebarMenu}
+      </Sider>
+
+      <Layout style={{ height: '100vh', overflow: 'hidden' }}>
+        <Header
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            height: 80,
+            lineHeight: 'normal',
+            padding: '0 24px',
+            background: token.colorBgContainer,
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            position: 'sticky',
+            top: 0,
+            zIndex: 30,
+          }}
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <Button
+              type="text"
+              className="lg:hidden"
+              icon={<MenuIcon className="h-5 w-5" aria-hidden="true" />}
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Buka menu navigasi"
+              data-testid="mobile-menu-trigger"
+            />
+            <div className="hidden flex-col justify-center sm:flex">
+              <PersonalizedGreeting
+                showTimeBased={true}
+                showSegment={true}
+                className="text-lg font-bold leading-tight"
+              />
+              <p className="ml-0.5 mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60">
+                AI Financial Forecaster Active
+              </p>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+            <ThemeToggle />
+            <LanguageSwitcher />
+
+            <Input.Search
+              data-testid="search-input"
+              placeholder="Pencarian cerdas..."
+              allowClear
+              className="hidden w-80 xl:flex"
+            />
+
+            <Badge dot color={token.colorPrimary} offset={[-4, 4]}>
+              <Button
+                type="text"
+                data-testid="notification-button"
+                icon={<Bell className="h-5 w-5" aria-hidden="true" />}
+                aria-label="Notifikasi"
+                onClick={() => router.push(`/${locale}/notifications`)}
+                style={{ width: 44, height: 44 }}
+              />
+            </Badge>
+
+            <Dropdown menu={{ items: profileItems }} trigger={['click']} placement="bottomRight">
+              <Button
+                type="text"
+                data-testid="profile-menu-trigger"
+                aria-label="Menu profil pengguna"
+                style={{ width: 48, height: 48, padding: 0 }}
+              >
+                <Avatar
+                  size={40}
+                  icon={<User className="h-5 w-5" aria-hidden="true" />}
+                  style={{ background: token.colorPrimaryBg, color: token.colorPrimary }}
+                />
+              </Button>
+            </Dropdown>
+          </div>
+        </Header>
+
+        <Content
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            background: token.colorBgLayout,
+            padding: '24px',
+          }}
+        >
+          {children}
+        </Content>
+      </Layout>
+
+      <Drawer
+        placement="left"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        width={288}
+        title={
+          <Link href="/" className="flex items-center gap-4 px-2 py-4" aria-label="PayU">
+            {logoMark}
+          </Link>
+        }
+        styles={{
+          header: { borderBottom: `1px solid ${token.colorBorderSecondary}` },
+          body: { padding: 0, background: token.colorBgContainer },
+        }}
+      >
+        {sidebarMenu}
+      </Drawer>
+
+      <MobileNav />
+    </Layout>
   );
 }

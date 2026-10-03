@@ -1,13 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Moon, Sun } from '@/components/icons';
+import { useUIStore } from '@/stores';
 import { useTranslations } from 'next-intl';
+import { Button } from 'antd';
 import clsx from 'clsx';
 
 export default function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const theme = useUIStore((s) => s.theme);
+  const toggleTheme = useUIStore((s) => s.toggleTheme);
   const t = useTranslations('common');
   const [mounted, setMounted] = React.useState(false);
 
@@ -22,22 +24,28 @@ export default function ThemeToggle() {
     );
   }
 
+  const isDark = theme === 'dark';
+
   return (
-    <button
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+    <Button
+      type="text"
+      shape="circle"
+      onClick={toggleTheme}
       data-testid="theme-toggle-button"
-      className={clsx(
-        'w-12 h-12 flex items-center justify-center rounded-full transition-all cursor-pointer shadow-md border border-emerald-500/10 bg-card',
-        'hover:bg-emerald-500/5 hover:border-emerald-500/30 active:scale-95 transition-all',
-        theme === 'dark' ? 'text-amber-400' : 'text-emerald-600'
-      )}
       aria-label={t('toggleTheme')}
-    >
-      {theme === 'dark' ? (
-        <Sun className="h-6 w-6" aria-hidden="true" />
-      ) : (
-        <Moon className="h-6 w-6" aria-hidden="true" />
+      icon={
+        isDark ? (
+          <Sun className="h-6 w-6" aria-hidden="true" />
+        ) : (
+          <Moon className="h-6 w-6" aria-hidden="true" />
+        )
+      }
+      style={{ width: 48, height: 48 }}
+      className={clsx(
+        'flex items-center justify-center rounded-full transition-all cursor-pointer shadow-md border border-emerald-500/10 bg-card',
+        'hover:bg-emerald-500/5 hover:border-emerald-500/30 active:scale-95',
+        isDark ? 'text-amber-400' : 'text-emerald-600',
       )}
-    </button>
+    />
   );
 }

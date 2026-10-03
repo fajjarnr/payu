@@ -45,17 +45,6 @@ vi.mock('next/image', () => ({
   default: (props: Record<string, unknown>) => <img {...props} />,
 }));
 
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: { children?: React.ReactNode }) => <div {...props}>{children}</div>,
-    form: ({ children, ...props }: { children?: React.ReactNode }) => <form {...props}>{children}</form>,
-    button: ({ children, ...props }: { children?: React.ReactNode }) => <button {...props}>{children}</button>,
-    p: ({ children, ...props }: { children?: React.ReactNode }) => <p {...props}>{children}</p>,
-    span: ({ children, ...props }: { children?: React.ReactNode }) => <span {...props}>{children}</span>,
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 vi.mock('@tanstack/react-query', () => ({
   useMutation: () => ({
     mutateAsync: vi.fn(),

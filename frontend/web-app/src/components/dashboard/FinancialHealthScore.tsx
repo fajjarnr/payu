@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { TrendingUp, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { TrendingUp, AlertCircle, CheckCircle2, Info } from '@/components/icons';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Card, Progress } from 'antd';
+
 
 interface ScoreFactorData {
   label: string;
@@ -48,17 +47,18 @@ export default function FinancialHealthScore({
         role="region"
         aria-labelledby="financial-health-title"
         className={cn("relative overflow-hidden flex flex-col justify-between group", className)}
+        styles={{ body: { display: 'contents' } }}
       >
-        <CardHeader>
-          <CardTitle id="financial-health-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+        <div className="flex flex-col space-y-1.5 p-6">
+          <h3 id="financial-health-title" className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('financialHealthScore')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center min-h-[200px]">
+          </h3>
+        </div>
+        <div className="p-6 pt-0 flex items-center justify-center min-h-[200px]">
           <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
             {isLoading ? 'Memuat...' : 'Belum ada data'}
           </p>
-        </CardContent>
+        </div>
       </Card>
     );
   }
@@ -122,23 +122,22 @@ export default function FinancialHealthScore({
       role="region"
       aria-labelledby="financial-health-title"
       className={cn("relative overflow-hidden flex flex-col justify-between group", className)}
+      styles={{ body: { display: 'contents' } }}
     >
       {/* Decorative background gradient */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
+      <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-start justify-between space-y-0 pb-6">
         <div>
-          <CardTitle id="financial-health-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+          <h3 id="financial-health-title" className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('financialHealthScore')}
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
+          </h3>
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
             Update terakhir: {new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-          </CardDescription>
+          </p>
         </div>
         {previousScore != null && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div
             className={cn(
               'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm',
               isImprovement ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'
@@ -149,11 +148,11 @@ export default function FinancialHealthScore({
           >
             {isImprovement ? <TrendingUp className="h-4 w-4" aria-hidden="true" /> : <AlertCircle className="h-4 w-4" aria-hidden="true" />}
             {isImprovement ? '+' : ''}{scoreChange}
-          </motion.div>
+          </div>
         )}
-      </CardHeader>
+      </div>
 
-      <CardContent>
+      <div className="p-6 pt-0">
         {/* Score Display with Circular Progress */}
         <div className="flex flex-col xl:flex-row items-center gap-6 lg:gap-8 mb-8">
           <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
@@ -176,7 +175,7 @@ export default function FinancialHealthScore({
                 strokeWidth="6"
                 className="opacity-10"
               />
-              <motion.circle
+              <circle
                 cx="60"
                 cy="60"
                 r="54"
@@ -185,22 +184,17 @@ export default function FinancialHealthScore({
                 strokeWidth="10"
                 strokeLinecap="round"
                 strokeDasharray={strokeDasharray}
-                initial={{ strokeDashoffset: circumference }}
-                animate={{ strokeDashoffset }}
-                transition={{ duration: 1, ease: 'easeOut' }}
+                strokeDashoffset={strokeDashoffset}
                 className="filter drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]"
               />
             </svg>
 
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <motion.span
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
+              <span
                 className="text-4xl sm:text-4xl lg:text-6xl font-bold text-foreground tabular-nums tracking-tighter"
               >
                 {score}
-              </motion.span>
+              </span>
               <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest opacity-60">dari 100</span>
             </div>
           </div>
@@ -232,7 +226,7 @@ export default function FinancialHealthScore({
             </>
           )}
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }
@@ -247,10 +241,13 @@ interface ScoreFactorProps {
 function ScoreFactor({ label, value, color, ariaLabel }: ScoreFactorProps) {
   return (
     <div className="text-center space-y-3">
-      <Progress 
-        value={value} 
-        className="h-2 w-full" 
-        indicatorClassName={color}
+      <Progress
+        percent={value}
+        showInfo={false}
+        railColor="transparent"
+        className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50 h-2 w-full"
+        classNames={{ track: `bg-primary transition-all duration-500 ease-in-out ${color}` }}
+        styles={{ body: { height: '100%' }, rail: { height: '100%' }, track: { height: '100%' } }}
         aria-label={ariaLabel}
       />
       <div>

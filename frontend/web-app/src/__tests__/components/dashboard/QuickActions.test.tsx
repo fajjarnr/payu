@@ -3,7 +3,7 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import { screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
-import { ArrowRightLeft, QrCode } from 'lucide-react';
+import { ArrowRightLeft, QrCode } from '@/components/icons';
 import QuickActions from '@/components/dashboard/QuickActions';
 
 expect.extend(toHaveNoViolations);
@@ -73,7 +73,7 @@ describe('QuickActions', () => {
     const editButton = screen.getByLabelText('Edit urutan aksi cepat');
     fireEvent.click(editButton);
 
-    expect(screen.getByText(/Gunakan Tab untuk navigasi/)).toBeInTheDocument();
+    expect(screen.getByText(/tombol panah atau tombol naik\/turun/)).toBeInTheDocument();
   });
 
   it('should exit edit mode when Selesai button is clicked', () => {
@@ -92,11 +92,11 @@ describe('QuickActions', () => {
     const onReorder = vi.fn();
     renderWithIntl(<QuickActions actions={mockActions} onReorder={onReorder} />);
 
-    const editButton = screen.getByLabelText('Edit urutan aksi cepat');
-    fireEvent.click(editButton);
+    fireEvent.click(screen.getByLabelText('Edit urutan aksi cepat'));
+    fireEvent.click(screen.getByLabelText('Pindahkan Transfer ke bawah'));
 
-    // Full drag-drop testing requires dnd-kit setup
-    expect(onReorder).toBeDefined();
+    expect(onReorder).toHaveBeenCalledTimes(1);
+    expect(onReorder.mock.calls[0][0].map((a: { id: string }) => a.id)).toEqual(['qris', 'transfer']);
   });
 
   it('should have no accessibility violations', async () => {
@@ -145,7 +145,7 @@ describe('QuickActions', () => {
     const editButton = screen.getByLabelText('Edit urutan aksi cepat');
     fireEvent.click(editButton);
 
-    const dragHint = screen.getByText(/Gunakan Tab untuk navigasi/);
+    const dragHint = screen.getByText(/tombol panah atau tombol naik\/turun/);
     expect(dragHint).toBeInTheDocument();
     expect(dragHint.closest('[role="status"]')).toBeInTheDocument();
     expect(dragHint.closest('[aria-live="polite"]')).toBeInTheDocument();
@@ -159,16 +159,23 @@ describe('QuickActions', () => {
   });
 
   it('should be keyboard navigable', () => {
-    renderWithIntl(<QuickActions actions={mockActions} />);
+    const onReorder = vi.fn();
+    renderWithIntl(<QuickActions actions={mockActions} onReorder={onReorder} />);
 
     const transferLink = screen.getByLabelText('Transfer uang ke akun lain');
     const qrisLink = screen.getByLabelText('Pembayaran QRIS');
 
     expect(transferLink.tagName).toBe('A');
     expect(transferLink).toHaveAttribute('href', '/transfer');
-    expect(transferLink).toHaveAttribute('draggable', 'false');
+    expect(transferLink).not.toHaveAttribute('draggable');
 
     expect(qrisLink.tagName).toBe('A');
     expect(qrisLink).toHaveAttribute('href', '/qris');
+
+    fireEvent.click(screen.getByLabelText('Edit urutan aksi cepat'));
+    fireEvent.keyDown(screen.getByTestId('quick-action-transfer'), { key: 'ArrowDown' });
+
+    expect(onReorder).toHaveBeenCalledTimes(1);
+    expect(onReorder.mock.calls[0][0].map((a: { id: string }) => a.id)).toEqual(['qris', 'transfer']);
   });
 });

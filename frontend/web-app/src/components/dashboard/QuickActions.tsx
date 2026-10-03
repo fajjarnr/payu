@@ -1,7 +1,4 @@
-'use client';
-
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRightLeft,
   QrCode,
@@ -12,26 +9,11 @@ import {
   MoreHorizontal,
   GripVertical,
   ChevronRight,
-} from 'lucide-react';
+} from '@/components/icons';
 import { useTranslations } from 'next-intl';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
+import { cn } from '@/lib/utils';
+import { Button, Card } from 'antd';
 
 interface QuickAction {
   id: string;
@@ -114,10 +96,6 @@ const defaultActions: QuickAction[] = [
   },
 ];
 
-import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-
 export default function QuickActions({
   actions = defaultActions,
   maxActions = 6,
@@ -128,30 +106,16 @@ export default function QuickActions({
   const [items, setItems] = useState(actions.slice(0, maxActions));
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      setItems((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        const newItems = arrayMove(items, oldIndex, newIndex);
-
-        onReorder?.(newItems);
-        return newItems;
-      });
-    }
+  const moveItem = (id: string, dir: -1 | 1) => {
+    setItems((prev) => {
+      const idx = prev.findIndex((item) => item.id === id);
+      const next = idx + dir;
+      if (idx < 0 || next < 0 || next >= prev.length) return prev;
+      const newItems = [...prev];
+      [newItems[idx], newItems[next]] = [newItems[next], newItems[idx]];
+      onReorder?.(newItems);
+      return newItems;
+    });
   };
 
   return (
@@ -160,23 +124,24 @@ export default function QuickActions({
       role="region"
       aria-labelledby="quick-actions-title"
       className={cn("relative overflow-hidden group", className)}
+      styles={{ body: { display: 'contents' } }}
     >
       {/* Decorative background */}
       <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
+      <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-start justify-between space-y-0 pb-6">
         <div>
-          <CardTitle id="quick-actions-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+          <h3 id="quick-actions-title" className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('quickActionsTitle')}
-          </CardTitle>
-          <CardDescription className="uppercase tracking-widest text-xs sm:text-xs font-bold opacity-60">
+          </h3>
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] uppercase tracking-widest text-xs sm:text-xs font-bold opacity-60">
             {t('quickActionsSubtitle')}
-          </CardDescription>
+          </p>
         </div>
 
         <Button
-          variant={isEditMode ? "default" : "outline"}
-          size="sm"
+          type={isEditMode ? "primary" : "default"}
+          size="small"
           data-testid="edit-quick-actions-button"
           onClick={() => setIsEditMode(!isEditMode)}
           aria-label={isEditMode ? 'Selesai mengedit' : 'Edit urutan aksi cepat'}
@@ -185,115 +150,97 @@ export default function QuickActions({
         >
           {isEditMode ? 'Selesai' : 'Edit'}
         </Button>
-      </CardHeader>
+      </div>
 
-      <CardContent>
-        {/* Drag hint in edit mode */}
-        <AnimatePresence>
-          {isEditMode && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl"
-              role="status"
-              aria-live="polite"
-            >
-              <p className="text-xs text-muted-foreground flex items-center gap-3">
-                <GripVertical className="h-5 w-5" aria-hidden="true" />
-                {t('quickActionsDragHint')} - Gunakan Tab untuk navigasi, Spasi/Enter untuk drag
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="p-6 pt-0">
+        {/* Reorder hint in edit mode */}
+        {isEditMode && (
+          <div
+            className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl"
+            role="status"
+            aria-live="polite"
+          >
+            <p className="text-xs text-muted-foreground flex items-center gap-3">
+              <GripVertical className="h-5 w-5" aria-hidden="true" />
+              {t('quickActionsDragHint')} - Gunakan tombol panah atau tombol naik/turun untuk mengatur ulang
+            </p>
+          </div>
+        )}
 
         {/* Actions Grid */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-8">
-              {items.map((action, index) => (
-                <SortableQuickAction
-                  key={action.id}
-                  action={action}
-                  isEditMode={isEditMode}
-                  index={index}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
-
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-8">
+          {items.map((action, index) => (
+            <QuickActionItem
+              key={action.id}
+              action={action}
+              isEditMode={isEditMode}
+              isFirst={index === 0}
+              isLast={index === items.length - 1}
+              onMoveUp={() => moveItem(action.id, -1)}
+              onMoveDown={() => moveItem(action.id, 1)}
+            />
+          ))}
+        </div>
         {/* More Actions Link */}
         <div className="mt-8 pt-6 border-t border-border">
           <Button
-            variant="ghost"
+            type="default"
             data-testid="view-all-features-button"
             aria-label="Lihat semua fitur"
-            className="w-full text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground justify-center gap-3 h-12"
+            className="w-full text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground justify-center gap-3 h-12 border-transparent bg-transparent hover:bg-muted hover:border-transparent active:bg-transparent active:border-transparent"
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
             Lihat Semua Fitur
             <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }
 
-interface SortableQuickActionProps {
+interface QuickActionItemProps {
   action: QuickAction;
   isEditMode: boolean;
-  index: number;
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }
-
-function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: action.id,
-  });
-
+function QuickActionItem({ action, isEditMode, isFirst, isLast, onMoveUp, onMoveDown }: QuickActionItemProps) {
   const Icon = action.icon;
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isEditMode) return;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      onMoveUp();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      onMoveDown();
+    }
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative">
-      <motion.a
+    <div className="relative" onKeyDown={handleKeyDown}>
+      <a
         href={action.href}
         data-testid={`quick-action-${action.id}`}
         className={clsx(
           'group relative p-6 rounded-2xl border transition-all flex flex-col items-center text-center',
           'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset',
-          isDragging && 'opacity-50',
           isEditMode
-            ? 'cursor-grab active:cursor-grabbing border-dashed border-primary/30 bg-muted/30'
+            ? 'border-dashed border-primary/30 bg-muted/30'
             : 'border-border bg-card hover:border-primary/30 hover:shadow-xl hover:bg-primary/5 shadow-sm'
         )}
         aria-label={action.ariaLabel}
-        draggable={isEditMode}
-        {...(isEditMode && { ...attributes, ...listeners })}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2, delay: index * 0.05 }}
-        whileHover={!isEditMode ? { scale: 1.05 } : undefined}
-        tabIndex={isEditMode ? 0 : undefined}
       >
-        {/* Drag Handle Indicator */}
         {isEditMode && (
           <div className="absolute top-4 right-4 flex items-center gap-1">
             <GripVertical className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             <span className="sr-only">Drag untuk mengatur ulang</span>
           </div>
         )}
-
-        {/* Icon */}
         <div
           className={clsx(
             'h-16 w-16 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 shadow-lg',
@@ -302,13 +249,31 @@ function SortableQuickAction({ action, isEditMode, index }: SortableQuickActionP
         >
           <Icon className={clsx('h-8 w-8', action.color)} aria-hidden="true" />
         </div>
-
-        {/* Label */}
         <p className="text-sm font-bold text-foreground mb-1 shadow-sm">{action.label}</p>
         {action.description && (
           <p className="text-xs sm:text-xs text-muted-foreground font-medium line-clamp-1 opacity-80 uppercase tracking-[0.05em]">{action.description}</p>
         )}
-      </motion.a>
+      </a>
+      {isEditMode && (
+        <div className="mt-2 flex justify-center gap-2">
+          <Button
+            size="small"
+            disabled={isFirst}
+            onClick={onMoveUp}
+            aria-label={`Pindahkan ${action.label} ke atas`}
+          >
+            Naik
+          </Button>
+          <Button
+            size="small"
+            disabled={isLast}
+            onClick={onMoveDown}
+            aria-label={`Pindahkan ${action.label} ke bawah`}
+          >
+            Turun
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

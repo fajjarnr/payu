@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, AlertTriangle, Info, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { X, AlertTriangle, Info, AlertCircle } from '@/components/icons';
 import clsx from 'clsx';
 import { useRouter } from '@/lib/navigation';
 import { useEmergencyAlerts } from '@/hooks';
 import type { Content } from '@/services/CMSService';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Alert, Button } from 'antd';
 
 interface EmergencyAlertProps {
   className?: string;
@@ -113,58 +111,57 @@ export default function EmergencyAlert({
 
   return (
     <div className={clsx("w-full space-y-2", className)}>
-      <AnimatePresence>
-        {activeAlerts.map((alert) => {
-          const alertType = getAlertType(alert);
-          const Icon = ALERT_ICONS[alert.metadata?.alertType as string] || ALERT_ICONS.DEFAULT;
+      {activeAlerts.map((alert) => {
+        const alertType = getAlertType(alert);
+        const Icon = ALERT_ICONS[alert.metadata?.alertType as string] || ALERT_ICONS.DEFAULT;
 
-          return (
-            <motion.div
-              key={alert.id}
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Alert
-                variant={alertType}
-                className={clsx(
-                  "relative pr-12 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 bg-background/50 backdrop-blur-md border-b-2",
-                  getAlertClasses(alert),
-                  alertType === 'default' && "border-primary/20"
-                )}
-                onClick={() => handleAlertClick(alert)}
-                tabIndex={alert.actionUrl ? 0 : undefined}
-                onKeyDown={alert.actionUrl ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAlertClick(alert); } } : undefined}
-              >
-                <Icon className="h-4 w-4" />
-                <AlertTitle className="font-bold uppercase tracking-tight text-xs mb-1">
+        return (
+          <div
+            key={alert.id}
+            tabIndex={alert.actionUrl ? 0 : undefined}
+            onKeyDown={alert.actionUrl ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAlertClick(alert); } } : undefined}
+          >
+            <Alert
+              type={alertType === 'destructive' ? 'error' : 'info'}
+              title={
+                <span className="inline-flex items-center gap-2 font-bold uppercase tracking-tight text-xs mb-1">
+                  <Icon className="h-4 w-4" />
                   {alert.title}
-                </AlertTitle>
-                <AlertDescription className="text-xs font-medium opacity-80 line-clamp-2">
-                  {alert.description}
-                </AlertDescription>
-                {alert.endDate && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Valid until {new Date(alert.endDate).toLocaleDateString()}
-                  </p>
-                )}
-                
-                {/* Dismiss Button */}
+                </span>
+              }
+              description={
+                <>
+                  <span className="text-xs font-medium opacity-80 line-clamp-2">
+                    {alert.description}
+                  </span>
+                  {alert.endDate && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Valid until {new Date(alert.endDate).toLocaleDateString()}
+                    </p>
+                  )}
+                </>
+              }
+              action={
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 h-11 w-11 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+                  type="text"
+                  shape="circle"
+                  className="absolute top-2 right-2 hover:bg-black/5 dark:hover:bg-white/5"
+                  style={{ width: 44, height: 44 }}
                   onClick={(e) => handleDismiss(alert.id, e)}
                   aria-label="Dismiss alert"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </Alert>
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
+                  icon={<X className="h-4 w-4" />}
+                />
+              }
+              className={clsx(
+                "relative p-4 pr-12 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 bg-background/50 backdrop-blur-md border-b-2",
+                getAlertClasses(alert),
+                alertType === 'default' && "border-primary/20"
+              )}
+              onClick={() => handleAlertClick(alert)}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }

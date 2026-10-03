@@ -43,25 +43,10 @@ vi.mock('@/hooks/useAnalytics', () => ({
   useCashFlow: (...args: [unknown]) => cashFlowMock(...args),
   useSpendingTrends: (...args: [unknown]) => trendsMock(...args),
 }));
-// Mock recharts to avoid canvas rendering issues
-vi.mock('recharts', () => ({
-  BarChart: ({ children }: { children: React.ReactNode }) => <div data-testid="bar-chart">{children}</div>,
-  Bar: () => <div />,
-  PieChart: ({ children }: { children: React.ReactNode }) => <div data-testid="pie-chart">{children}</div>,
-  Pie: () => <div />,
-  Cell: () => <div />,
-  XAxis: () => <div />,
-  YAxis: () => <div />,
-  CartesianGrid: () => <div />,
-  Tooltip: () => <div />,
-  Legend: () => <div />,
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-vi.mock('@/components/ui/chart', () => ({
-  ChartContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ChartTooltip: () => <div />,
-  ChartTooltipContent: () => <div />,
+// Mock plots to avoid canvas rendering issues in jsdom
+vi.mock('@ant-design/plots', () => ({
+  Column: ({ data }: { data: unknown[] }) => <div data-testid="trajectory-column">{data.length}</div>,
+  Pie: ({ data }: { data: unknown[] }) => <div data-testid="breakdown-pie">{data.length}</div>,
 }));
 
 vi.mock('@/components/ui/card', () => ({

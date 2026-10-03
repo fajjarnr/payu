@@ -1,16 +1,8 @@
-import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { vi } from 'vitest';
 import EmergencyAlert from '@/components/cms/EmergencyAlert';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
-
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode; initial?: unknown; animate?: unknown; exit?: unknown; transition?: unknown }) => <div {...props}>{children}</div>,
-  },
-  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-}));
 
 const mockPush = vi.fn();
 vi.mock('@/lib/navigation', async (importOriginal) => ({

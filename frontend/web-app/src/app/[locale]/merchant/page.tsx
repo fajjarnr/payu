@@ -5,10 +5,8 @@ import { PartnerService, Partner } from '@/services/PartnerService';
 import { Link } from '@/lib/navigation';
 import { useTranslations } from 'next-intl';
 import DashboardLayout from "@/components/DashboardLayout";
-import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
-import { Button } from '@/components/ui/button';
-import { Building2, Key, ShieldCheck, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Input, Tag } from 'antd';
+import { Building2, Key, ShieldCheck, Loader2 } from '@/components/icons';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function MerchantDashboard() {
@@ -46,35 +44,27 @@ export default function MerchantDashboard() {
  if (!partner) {
   return (
    <DashboardLayout>
-    <PageTransition>
      <div className="flex flex-col items-center justify-center min-h-[320px] space-y-6">
       <Building2 className="h-16 w-16 text-muted-foreground/50" />
       <h1 className="text-2xl font-bold">{t('title')}</h1>
       <p className="text-muted-foreground">{t('notRegistered')}</p>
-      <Button asChild>
-       <Link href="/merchant/register">{t('register')}</Link>
-      </Button>
+      <Link href="/merchant/register" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-primary px-6 py-2 h-12 text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95">{t('register')}</Link>
      </div>
-    </PageTransition>
    </DashboardLayout>
   );
  }
 
  return (
   <DashboardLayout>
-   <PageTransition>
-    <div className="space-y-8">
-     <StaggerContainer>
-      <StaggerItem>
+   <div className="space-y-8">
        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
         <div>
          <h2 className="text-3xl font-bold text-foreground tracking-tight">{t('dashboard')}</h2>
          <p className="text-sm text-muted-foreground font-medium mt-1">{t('subtitle')}</p>
         </div>
        </div>
-      </StaggerItem>
 
-      <StaggerItem>
+     <div>
        <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm mb-6">
         <div className="flex items-center gap-3 mb-6">
          <ShieldCheck className="h-5 w-5 text-primary" />
@@ -95,15 +85,15 @@ export default function MerchantDashboard() {
          </div>
          <div>
           <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">{t('status')}</p>
-          <Badge variant={partner.active ? 'default' : 'destructive'} className={partner.active ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : ''}>
+          <Tag bordered={false} color={partner.active ? 'green' : 'red'} className={partner.active ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : ''}>
            {partner.active ? t('active') : t('inactive')}
-          </Badge>
+          </Tag>
          </div>
         </div>
        </div>
-      </StaggerItem>
+     </div>
 
-      <StaggerItem>
+     <div>
        <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm">
         <div className="flex items-center gap-3 mb-6">
          <Key className="h-5 w-5 text-primary" />
@@ -116,7 +106,7 @@ export default function MerchantDashboard() {
          </div>
          <div>
           <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">{t('publicKey')}</p>
-          <textarea
+          <Input.TextArea
            readOnly
            className="w-full bg-muted/30 p-3 rounded-lg mt-1 h-24 font-mono text-sm resize-none border-0"
            value={partner.publicKey || t('noPublicKey')}
@@ -124,10 +114,8 @@ export default function MerchantDashboard() {
          </div>
         </div>
        </div>
-      </StaggerItem>
-     </StaggerContainer>
-    </div>
-   </PageTransition>
+     </div>
+   </div>
   </DashboardLayout>
  );
 }

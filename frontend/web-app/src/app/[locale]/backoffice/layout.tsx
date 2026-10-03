@@ -18,12 +18,9 @@ import {
   Bell,
   Menu,
   ChevronRight
-} from 'lucide-react';
+} from '@/components/icons';
 import clsx from 'clsx';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { PageTransition } from '@/components/ui/Motion';
+import { Avatar, Button, Input } from 'antd';
 
 interface SidebarItemProps {
   href: string;
@@ -126,13 +123,11 @@ export default function BackofficeLayout({
           <div className="px-8 h-full flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
+                type="text"
+                className="h-10 w-10 p-0 lg:hidden"
                 onClick={() => setIsSidebarOpen(true)}
-              >
-                <Menu className="h-6 w-6" />
-              </Button>
+                icon={<Menu className="h-6 w-6" />}
+              />
               <div className="hidden md:flex flex-col">
                 <h2 className="text-xl font-bold text-foreground">
                   {activeNav?.name || 'Dashboard'}
@@ -153,8 +148,11 @@ export default function BackofficeLayout({
                 />
               </div>
 
-              <Button variant="ghost" size="icon" className="relative h-12 w-12 rounded-xl bg-muted/30 border border-border">
-                <Bell className="h-5 w-5 text-muted-foreground" />
+              <Button
+                type="text"
+                className="relative h-12 w-12 rounded-xl bg-muted/30 border border-border"
+                icon={<Bell className="h-5 w-5 text-muted-foreground" />}
+              >
                 <span className="absolute top-3 right-3 h-2 w-2 bg-primary rounded-full border-2 border-background" />
               </Button>
 
@@ -163,8 +161,8 @@ export default function BackofficeLayout({
                   <p className="text-xs font-bold text-foreground uppercase">Administrator</p>
                   <p className="text-xs font-bold text-primary uppercase tracking-widest">Super User</p>
                 </div>
-                <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-lg shadow-primary/10">
-                  <AvatarFallback className="bg-primary/5 text-primary font-bold">AD</AvatarFallback>
+                <Avatar size={48} className="border-2 border-primary/20 shadow-lg shadow-primary/10 bg-primary/5 text-primary font-bold">
+                  AD
                 </Avatar>
               </div>
             </div>
@@ -172,9 +170,7 @@ export default function BackofficeLayout({
         </header>
 
         <main className="p-8 lg:p-8 overflow-y-auto">
-          <PageTransition>
-            {children}
-          </PageTransition>
+          <>{children}</>
         </main>
       </div>
     </div>

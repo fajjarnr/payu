@@ -1,9 +1,10 @@
 'use client';
 
-import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar as CalendarIcon, Zap, Truck } from "lucide-react";
-import { useForm, useWatch, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { transferSchema, TransferRequest, TransferType, TransferScheduleType } from '@/types';
+import { Search, ChevronRight, PlusCircle, LifeBuoy, ArrowRight, Clock, Calendar as CalendarIcon, Zap, Truck } from '@/components/icons';
+import { Button, DatePicker, Form, Input } from 'antd';
+import dayjs from 'dayjs';
+import { transferSchema, type TransferRequest, type TransferType, type TransferScheduleType } from '@/types';
+import { zodFieldRule } from '@/lib/zodForm';
 import { compareCurrency, parseCurrencyExact } from '@/lib/currency';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useInitiateTransfer } from '@/hooks';
@@ -12,11 +13,6 @@ import { useBeneficiaries } from '@/hooks/useBeneficiaries';
 import { useUIStore } from '@/stores';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { formatCurrencyWithoutSymbol } from '@/lib/currency';
@@ -118,41 +114,33 @@ export default function TransferPage() {
         accountId: b.accountNumber,
       }));
 
-  const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<TransferRequest>({
-    resolver: zodResolver(transferSchema),
-    defaultValues: {
-      amount: '0',
-      transferType: 'INTERNAL_TRANSFER',
-      scheduleType: 'NOW'
-    }
-  });
+  const [form] = Form.useForm<TransferRequest>();
+  const rule = (field: string) => zodFieldRule(form, transferSchema, field);
+  const onValid = (values: TransferRequest) => onSubmit(transferSchema.parse(values) as TransferRequest);
+
+  const amount = Form.useWatch('amount', form) ?? '0';
+  const transferType = Form.useWatch('transferType', form) ?? 'INTERNAL_TRANSFER';
+  const scheduleType = Form.useWatch('scheduleType', form) ?? 'NOW';
+  const toAccountId = Form.useWatch('toAccountId', form);
+  const description = Form.useWatch('description', form);
+  const scheduledAt = Form.useWatch('scheduledAt', form);
+  const recurringDay = Form.useWatch('recurringDay', form);
+  const recurringMonth = Form.useWatch('recurringMonth', form);
 
   // TRF-SUBMIT-001: sender must default from the session account so typing a
   // recipient manually (no favorite contact) still passes schema validation.
   useEffect(() => {
-    if (accountId) setValue('fromAccountId', accountId);
-  }, [accountId, setValue]);
-
-  // Use useWatch for individual fields to prevent React Compiler warnings
-  // useWatch returns stable values that work with React Compiler memoization
-  const amount = useWatch({ control, name: 'amount' });
-  const transferType = useWatch({ control, name: 'transferType' });
-  const scheduleType = useWatch({ control, name: 'scheduleType' });
-  const toAccountId = useWatch({ control, name: 'toAccountId' });
-  const description = useWatch({ control, name: 'description' });
-  const scheduledAt = useWatch({ control, name: 'scheduledAt' });
-  const recurringDay = useWatch({ control, name: 'recurringDay' });
-  const recurringMonth = useWatch({ control, name: 'recurringMonth' });
+    if (accountId) form.setFieldsValue({ fromAccountId: accountId });
+  }, [accountId, form]);
 
   const handleContactSelect = (contact: { name: string; accountId: string }) => {
     setSelectedContact(contact.accountId);
-    setValue('toAccountId', contact.accountId);
-    setValue('fromAccountId', accountId || '');
+    form.setFieldsValue({ toAccountId: contact.accountId, fromAccountId: accountId || '' });
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '');
-    setValue('amount', rawValue || '0', { shouldValidate: true });
+    form.setFieldsValue({ amount: rawValue || '0' });
   };
 
   const formattedAmount = amount === '0' ? '' : formatCurrencyWithoutSymbol(amount);
@@ -190,8 +178,7 @@ export default function TransferPage() {
           addToast(message, 'success');
           setShowReview(false);
           setSelectedContact(null);
-          setValue('amount', '0');
-          setValue('description', '');
+          form.setFieldsValue({ amount: '0', description: '' });
         },
         onError: () => {
           addToast('Transfer gagal. Silakan coba lagi.', 'error');
@@ -241,14 +228,10 @@ export default function TransferPage() {
 
     return (
       <DashboardLayout>
-        <PageTransition>
           <div className="space-y-6 lg:space-y-8">
-            <StaggerContainer>
-              <StaggerItem>
                 <div className="flex items-center gap-6">
                   <Button
-                    variant="ghost"
-                    size="icon"
+                    type="default"
                     data-testid="back-from-review-button"
                     onClick={() => setShowReview(false)}
                     className="w-14 h-14 bg-card rounded-xl border border-border shadow-sm"
@@ -257,9 +240,7 @@ export default function TransferPage() {
                   </Button>
                   <h2 className="text-3xl font-bold text-foreground tracking-tight">Tinjau Transfer</h2>
                 </div>
-              </StaggerItem>
 
-              <StaggerItem>
                 <div className="bg-card rounded-xl p-5 sm:p-6 shadow-card border border-border relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
 
@@ -325,41 +306,41 @@ export default function TransferPage() {
                     )}
                   </div>
                 </div>
-              </StaggerItem>
 
-              <StaggerItem>
-                <ButtonMotion className="w-full">
                   <Button
-                    onClick={handleSubmit(onSubmit)}
+                    type="primary"
+                    onClick={() => form.submit()}
                     data-testid="confirm-transfer-button"
                     disabled={transferMutation.isPending}
                     className="w-full h-16 rounded-2xl shadow-2xl shadow-emerald-500/20"
                   >
                     {transferMutation.isPending ? 'Memvalidasi Transaksi...' : 'Otorisasi Transfer Sekarang'}
                   </Button>
-                </ButtonMotion>
-              </StaggerItem>
-            </StaggerContainer>
           </div>
-        </PageTransition>
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      <PageTransition>
         <div className="space-y-6 lg:space-y-8">
-          <StaggerContainer>
-            <StaggerItem>
               <div className="mb-6 sm:mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Transfer Instan</h2>
                 <p className="text-sm text-muted-foreground font-medium mt-1">Kirim dana secara aman dalam hitungan detik.</p>
               </div>
-            </StaggerItem>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
-              <StaggerItem className="lg:col-span-8 space-y-6 sm:space-y-8">
+              <div className="lg:col-span-8 space-y-6 sm:space-y-8">
+              <Form form={form} onFinish={onValid} initialValues={{ amount: '0', transferType: 'INTERNAL_TRANSFER', scheduleType: 'NOW' }} layout="vertical">
+                <Form.Item name="transferType" rules={[rule('transferType')]} noStyle>
+                  <Input type="hidden" />
+                </Form.Item>
+                <Form.Item name="scheduleType" rules={[rule('scheduleType')]} noStyle>
+                  <Input type="hidden" />
+                </Form.Item>
+                <Form.Item name="fromAccountId" rules={[rule('fromAccountId')]} noStyle>
+                  <Input type="hidden" />
+                </Form.Item>
                 <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card">
                   <h3 className="text-xs sm:text-sm font-bold text-foreground mb-4 sm:mb-6 tracking-widest uppercase">Pilih Metode Transfer</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -367,9 +348,9 @@ export default function TransferPage() {
                       const Icon = t.icon;
                       const isSelected = transferType === t.type;
                       return (
-                        <button
+                        <Button type="text" htmlType="button"
                           key={t.type}
-                          onClick={() => setValue('transferType', t.type)}
+                          onClick={() => form.setFieldsValue({ transferType: t.type })}
                           data-testid={`transfer-type-${t.type.toLowerCase()}`}
                           className={clsx(
                             "flex flex-col gap-4 p-6 rounded-xl border-2 transition-all group",
@@ -392,7 +373,7 @@ export default function TransferPage() {
                               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/50 px-2 py-1 rounded">{t.processingTime}</span>
                             </div>
                           </div>
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
@@ -404,9 +385,9 @@ export default function TransferPage() {
                     {SCHEDULE_TYPES.map((s) => {
                       const isSelected = scheduleType === s.type;
                       return (
-                        <button
+                        <Button type="text" htmlType="button"
                           key={s.type}
-                          onClick={() => setValue('scheduleType', s.type)}
+                          onClick={() => form.setFieldsValue({ scheduleType: s.type })}
                           data-testid={`schedule-type-${s.type.toLowerCase()}`}
                           className={clsx(
                             "flex flex-col gap-3 p-6 rounded-xl border-2 transition-all group",
@@ -427,56 +408,22 @@ export default function TransferPage() {
                             <h4 className="font-bold text-foreground text-sm mb-1">{s.label}</h4>
                             <p className="text-xs text-muted-foreground">{s.description}</p>
                           </div>
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
 
                   {scheduleType === 'SCHEDULED' && (
                     <div className="mt-6 bg-muted/50 p-6 rounded-xl border border-border">
-                      <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">Tanggal Transfer</label>
-                      <Controller
-                        control={control}
-                        name="scheduledAt"
-                        render={({ field }) => (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={clsx(
-                                  "w-full h-16 justify-start text-left font-bold rounded-xl border border-border bg-card hover:bg-muted/50 transition-all shadow-sm",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-4 h-6 w-6 text-primary" />
-                                {field.value ? (
-                                  <span className="text-base text-foreground font-bold">{format(new Date(field.value), "PPP", { locale: id })}</span>
-                                ) : (
-                                  <span className="text-muted-foreground/30 font-bold uppercase tracking-[0.2em] text-xs">Pilih Tanggal Transfer</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full sm:w-[400px] p-0 border-border bg-card shadow-2xl rounded-2xl overflow-hidden border" align="start" sideOffset={16}>
-                              <div className="px-8 py-6 border-b border-border bg-muted/30 flex items-center justify-between">
-                                <div className="space-y-1">
-                                  <p className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase">Konfigurasi Jadwal</p>
-                                  <p className="text-sm font-bold text-foreground">Pilih Tanggal Transfer</p>
-                                </div>
-                                <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                              </div>
-                              <Calendar
-                                mode="single"
-                                selected={field.value ? new Date(field.value) : undefined}
-                                onSelect={(date) => field.onChange(date?.toISOString())}
-                                initialFocus
-                                locale={id}
-                                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        )}
-                      />
-                      {errors.scheduledAt && <p className="text-destructive text-xs mt-3 font-bold tracking-widest uppercase">{errors.scheduledAt.message}</p>}
+                      <Form.Item name="scheduledAt" rules={[rule('scheduledAt')]} className="mb-0" label={<label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">Tanggal Transfer</label>}>
+                        <DatePicker
+                          className="w-full h-16 rounded-xl font-bold"
+                          placeholder="Pilih Tanggal Transfer"
+                          format="DD MMM YYYY"
+                          disabledDate={(current) => current && current < dayjs().startOf('day')}
+                          onChange={(date) => form.setFieldsValue({ scheduledAt: date ? date.toDate().toISOString() : undefined })}
+                        />
+                      </Form.Item>
                     </div>
                   )}
 
@@ -484,83 +431,69 @@ export default function TransferPage() {
                     <div className="mt-8 space-y-6 lg:space-y-8 animate-fade-in">
                       <div className="space-y-4">
                         <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2">Pilih Tanggal Tagihan / Transfer</label>
-                        <Controller
-                          control={control}
-                          name="recurringDay"
-                          render={({ field }) => (
+                        <Form.Item name="recurringDay" rules={[rule('recurringDay')]} className="mb-0" noStyle>
+                          <Input type="hidden" />
+                        </Form.Item>
                             <div className="grid grid-cols-7 gap-2 bg-muted/30 p-4 rounded-xl border border-border">
                               {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                                <button
+                                <Button type="text" htmlType="button"
                                   key={d}
-                                  type="button"
-                                  onClick={() => field.onChange(d)}
+                                  onClick={() => form.setFieldsValue({ recurringDay: d })}
                                   className={clsx(
                                     "aspect-square rounded-xl flex items-center justify-center font-bold text-sm transition-all active:scale-90",
-                                    field.value === d
+                                    recurringDay === d
                                       ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105"
                                       : "bg-card text-foreground/60 hover:bg-emerald-500/10 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20"
                                   )}
                                 >
                                   {d}
-                                </button>
+                                </Button>
                               ))}
                             </div>
-                          )}
-                        />
                       </div>
 
                       <div className="space-y-4">
                         <div className="flex items-center justify-between ml-2">
                           <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase">Pilih Bulan (Opsional)</label>
-                          <button
-                            type="button"
-                            onClick={() => setValue('recurringMonth', undefined)}
+                          <Button type="link" htmlType="button"
+                            onClick={() => form.setFieldsValue({ recurringMonth: undefined })}
                             className="text-xs font-bold text-emerald-600 tracking-widest uppercase hover:underline"
                           >
                             Reset ke Setiap Bulan
-                          </button>
+                          </Button>
                         </div>
-                        <Controller
-                          control={control}
-                          name="recurringMonth"
-                          render={({ field }) => (
+                        <Form.Item name="recurringMonth" rules={[rule('recurringMonth')]} className="mb-0" noStyle>
+                          <Input type="hidden" />
+                        </Form.Item>
                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 bg-muted/30 p-4 rounded-2xl border border-border">
                               {['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'].map((m, idx) => {
                                 const val = idx + 1;
                                 return (
-                                  <button
+                                  <Button type="text" htmlType="button"
                                     key={m}
-                                    type="button"
-                                    onClick={() => field.onChange(val)}
+                                    onClick={() => form.setFieldsValue({ recurringMonth: val })}
                                     className={clsx(
                                       "py-4 rounded-xl flex items-center justify-center font-bold text-xs tracking-widest transition-all active:scale-95",
-                                      field.value === val
+                                      recurringMonth === val
                                         ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
                                         : "bg-card text-foreground/60 hover:bg-emerald-500/10 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20"
                                     )}
                                   >
                                     {m}
-                                  </button>
+                                  </Button>
                                 );
                               })}
                             </div>
-                          )}
-                        />
                       </div>
                     </div>
                   )}
                 </div>
 
                 <div className="relative group">
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
-                  <Input
-                    {...register('toAccountId')}
-                    data-testid="recipient-account-input"
-                    type="text"
-                    placeholder="Masukkan ID Akun atau Nomor Rekening"
-                    className="pl-16 h-16 text-lg"
-                  />
-                  {errors.toAccountId && <p className="text-destructive text-xs mt-4 ml-6 font-bold tracking-widest uppercase">{errors.toAccountId.message}</p>}
+                  <Form.Item name="toAccountId" rules={[rule('toAccountId')]} className="mb-0" noStyle>
+                    <Input data-testid="recipient-account-input" type="text" placeholder="Masukkan ID Akun atau Nomor Rekening" className="pl-16 h-16 text-lg" />
+                  </Form.Item>
+                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors z-10 pointer-events-none" />
                 </div>
 
                 <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
@@ -575,32 +508,25 @@ export default function TransferPage() {
                   </div>
 
                   <div className="flex items-center gap-4 sm:gap-6 mb-6 relative z-10">
-                      <input
-                        type="text"
-                        value={formattedAmount}
-                        onChange={handleAmountChange}
-                        data-testid="amount-input"
-                        placeholder="0"
-                        className="w-full bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/10 text-3xl sm:text-4xl lg:text-5xl xl:text-7xl font-bold outline-none text-foreground truncate"
-                      />
+                      <Form.Item name="amount" rules={[rule('amount')]} className="mb-0" noStyle>
+                        <Input type="hidden" data-testid="amount-input" />
+                      </Form.Item>
+                      <Input value={formattedAmount} onChange={handleAmountChange} placeholder="0" aria-label="Nominal Transfer" className="w-full bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/10 text-3xl sm:text-4xl lg:text-5xl xl:text-7xl font-bold outline-none text-foreground truncate" variant="borderless" />
                   </div>
 
-                  {errors.amount && <p className="text-destructive text-xs mb-6 sm:mb-8 font-bold tracking-widest uppercase">{errors.amount.message}</p>}
+
 
                   <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-xl border border-border relative z-10">
                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3">Memo Transaksi</p>
-                    <input
-                      {...register('description')}
-                      data-testid="description-input"
-                      type="text"
-                      placeholder="Apa tujuan transfer ini?"
-                      className="w-full text-base font-bold bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/40 outline-none"
-                    />
+                    <Form.Item name="description" rules={[rule('description')]} className="mb-0" noStyle>
+                      <Input data-testid="description-input" type="text" placeholder="Apa tujuan transfer ini?" className="w-full text-base font-bold bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/40 outline-none" />
+                    </Form.Item>
                   </div>
                 </div>
 
-                <ButtonMotion className="w-full">
                   <Button
+                    type="primary"
+                    htmlType="button"
                     onClick={handleReview}
                     data-testid="review-transfer-button"
                     className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20 group"
@@ -608,10 +534,10 @@ export default function TransferPage() {
                     Tinjau Ringkasan Transfer
                     <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-2 transition-transform" />
                   </Button>
-                </ButtonMotion>
-              </StaggerItem>
+              </Form>
+              </div>
 
-              <StaggerItem className="lg:col-span-4 space-y-6 sm:space-y-8">
+              <div className="lg:col-span-4 space-y-6 sm:space-y-8">
                 <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card h-full flex flex-col">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">Penerima Favorit</h3>
@@ -620,8 +546,7 @@ export default function TransferPage() {
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-6">
                     {recentContacts.map((c) => (
-                      <button
-                        key={c.name}
+                      <Button type="text" htmlType="button"
                         onClick={() => handleContactSelect(c)}
                         data-testid={`favorite-contact-${c.name.toLowerCase()}`}
                         className={clsx(
@@ -635,14 +560,14 @@ export default function TransferPage() {
                           {c.initial}
                         </div>
                         <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{c.name}</span>
-                      </button>
+                      </Button>
                     ))}
-                    <button className="flex flex-col items-center gap-4 p-6 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all group">
+                    <Button type="text" htmlType="button" className="flex flex-col items-center gap-4 p-6 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all group">
                       <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
                         <PlusCircle className="h-6 w-6" />
                       </div>
                       <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Tambah</span>
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="mt-auto pt-10">
@@ -650,17 +575,15 @@ export default function TransferPage() {
                       <div className="relative z-10">
                         <h4 className="font-bold text-xl mb-2">Bantuan?</h4>
                         <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mb-8 leading-relaxed">Proteksi & panduan transaksi aman.</p>
-                        <button className="text-xs font-bold tracking-widest uppercase bg-white/10 px-6 py-3 rounded-xl border border-white/10 hover:bg-white/20 transition-all">Hubungi Kami</button>
+                        <Button type="default" htmlType="button" className="text-xs font-bold tracking-widest uppercase bg-white/10 px-6 py-3 rounded-xl border border-white/10 hover:bg-white/20 transition-all">Hubungi Kami</Button>
                       </div>
                       <LifeBuoy className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 rotate-12" />
                     </div>
                   </div>
                 </div>
-              </StaggerItem>
+              </div>
             </div>
-          </StaggerContainer>
         </div>
-      </PageTransition>
     </DashboardLayout>
   );
 }

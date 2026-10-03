@@ -2,20 +2,14 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Camera, AlertCircle, CheckCircle, Bug, Lightbulb } from 'lucide-react';
+import { Camera, AlertCircle, CheckCircle, Bug, Lightbulb } from '@/components/icons';
 import { a11yUtils } from '@/lib/a11y';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { Button, Checkbox, Input, Modal } from 'antd';
+
+
+
+
+const { TextArea } = Input;
 
 declare global {
   interface Window {
@@ -174,21 +168,35 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
   return (
     <>
       <Button
+        type="primary"
+        shape="circle"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-40 h-14 w-14 rounded-full shadow-2xl bg-bank-green hover:bg-bank-emerald text-white animate-in slide-in-from-bottom-10"
+        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-40 shadow-2xl bg-bank-green hover:bg-bank-emerald text-white animate-in slide-in-from-bottom-10"
+        style={{ width: 56, height: 56 }}
         aria-label="Kirim Feedback"
-      >
-        <Camera className="w-6 h-6" />
-      </Button>
+        icon={<Camera className="w-6 h-6" />}
+      />
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-lg bg-card rounded-3xl p-0 overflow-hidden border-border/10 shadow-3xl">
-          <DialogHeader className="p-8 pb-4 border-b border-border/5">
-            <DialogTitle className="text-xl font-bold uppercase tracking-tight">Kirim Feedback</DialogTitle>
-            <DialogDescription className="text-xs font-bold uppercase tracking-[0.2em] opacity-60">
+      <Modal
+        open={isOpen}
+        onCancel={() => setIsOpen(false)}
+        footer={null}
+        centered
+        width={512}
+        styles={{ body: { padding: 0 }, mask: { background: 'rgba(0,0,0,0.8)' }, container: { background: 'transparent', boxShadow: 'none', padding: 0, borderRadius: 0, overflow: 'visible' }, root: { background: 'transparent', boxShadow: 'none' } }}
+        className="max-w-lg"
+        aria-modal="true"
+      >
+        <div ref={modalRef} className="relative z-50 mx-auto grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg max-w-lg bg-card rounded-3xl p-0 overflow-hidden border-border/10 shadow-3xl">
+          <button type="button" onClick={() => setIsOpen(false)} aria-label="Close" className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+            <span className="sr-only">Close</span>
+          </button>
+          <div className="flex flex-col space-y-1.5 text-center sm:text-left p-8 pb-4 border-b border-border/5">
+            <div className="text-lg font-semibold leading-none tracking-tight text-xl font-bold uppercase tracking-tight">Kirim Feedback</div>
+            <div className="text-sm text-muted-foreground text-xs font-bold uppercase tracking-[0.2em] opacity-60">
               Bantu kami meningkatkan layanan PayU
-            </DialogDescription>
-          </DialogHeader>
+            </div>
+          </div>
 
           <div className="p-8 pt-6">
             {submitted ? (
@@ -204,15 +212,15 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
             ) : (
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div>
-                  <Label className="text-xs font-bold uppercase tracking-[0.2em] mb-4 block opacity-70">
+                  <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-[0.2em] mb-4 block opacity-70">
                     Kategori Feedback
-                  </Label>
+                  </label>
                   <div className="grid grid-cols-3 gap-3">
                     {categories.map((cat) => (
                       <Button
                         key={cat.value}
-                        type="button"
-                        variant={category === cat.value ? 'default' : 'outline'}
+                        type={category === cat.value ? 'primary' : 'default'}
+                        size="large"
                         onClick={() => setCategory(cat.value as FeedbackData['category'])}
                         className={`h-24 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 transition-all ${
                           category === cat.value
@@ -228,32 +236,32 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="feedback-subject" className="text-xs font-bold uppercase tracking-[0.2em] opacity-70">
+                  <label htmlFor="feedback-subject" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-[0.2em] opacity-70">
                     Subjek
-                  </Label>
+                  </label>
                   <Input
                     id="feedback-subject"
                     aria-label="Subjek"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Masalah atau saran singkat..."
-                    className="h-14 rounded-xl font-bold bg-muted/30 border-border/50 focus:border-bank-green/50 transition-all px-5"
+                    className="flex h-14 min-h-[44px] w-full rounded-xl border border-border bg-muted/20 px-6 py-3 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 h-14 rounded-xl font-bold bg-muted/30 border-border/50 focus:border-bank-green/50 transition-all px-5"
                     required
                     maxLength={100}
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="feedback-message" className="text-xs font-bold uppercase tracking-[0.2em] opacity-70">
+                  <label htmlFor="feedback-message" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-[0.2em] opacity-70">
                     Pesan Detail
-                  </Label>
-                  <Textarea
+                  </label>
+                  <TextArea
                     id="feedback-message"
                     aria-label="Pesan"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Ceritakan detail lebih lanjut..."
-                    className="rounded-xl font-bold bg-muted/30 border-border/50 focus:border-bank-green/50 transition-all p-5 min-h-[120px]"
+                    className="flex min-h-[120px] w-full rounded-xl border border-border bg-muted/20 px-6 py-4 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 rounded-xl font-bold bg-muted/30 border-border/50 focus:border-bank-green/50 transition-all p-5 min-h-[120px]"
                     required
                     maxLength={1000}
                   />
@@ -265,15 +273,17 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                 <div className="flex items-center space-x-3 p-4 bg-muted/20 rounded-xl border border-border/5">
                   <Checkbox
                     id="include-screenshot"
+                    aria-label="Sertakan tangkapan layar otomatis"
                     checked={includeScreenshot}
-                    onCheckedChange={(checked) => {
-                      setIncludeScreenshot(!!checked);
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setIncludeScreenshot(checked);
                       if (checked && !screenshot) captureScreenshot();
                     }}
                   />
-                  <Label htmlFor="include-screenshot" className="flex-1 text-xs font-bold cursor-pointer opacity-80">
+                  <label htmlFor="include-screenshot" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 text-xs font-bold cursor-pointer opacity-80">
                     Sertakan tangkapan layar otomatis
-                  </Label>
+                  </label>
                   {screenshot && (
                     <div className="text-xs font-bold text-bank-green flex items-center gap-1.5 uppercase tracking-widest">
                       <div className="h-1.5 w-1.5 bg-bank-green rounded-full animate-pulse" />
@@ -287,7 +297,9 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                 </p>
 
                 <Button
-                  type="submit"
+                  htmlType="submit"
+                  type="primary"
+                  size="large"
                   disabled={isSubmitting || !subject.trim() || !message.trim()}
                   className="w-full h-16 bg-bank-green hover:bg-bank-emerald text-white font-bold uppercase tracking-[0.25em] text-xs rounded-2xl shadow-xl shadow-bank-green/20"
                 >
@@ -296,8 +308,8 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
               </form>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
     </>
   );
 };

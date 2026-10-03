@@ -51,7 +51,7 @@ describe('BudgetTracking', () => {
   it('should expand budget details on click', async () => {
     renderWithIntl(<BudgetTracking budgets={mockBudgets} />);
 
-    const budgetButton = screen.getByText('Makanan & Minuman').closest('button');
+    const budgetButton = screen.getByText('Makanan & Minuman').closest('[role="tab"]');
     expect(budgetButton).toBeInTheDocument();
 
     fireEvent.click(budgetButton!);
@@ -128,7 +128,7 @@ describe('BudgetTracking', () => {
   it('should have accessible action buttons', () => {
     renderWithIntl(<BudgetTracking budgets={mockBudgets} />);
 
-    const budgetButton = screen.getByText('Makanan & Minuman').closest('button');
+    const budgetButton = screen.getByText('Makanan & Minuman').closest('[role="tab"]');
     fireEvent.click(budgetButton!);
 
     const editButton = screen.getByLabelText('Edit anggaran Makanan & Minuman');

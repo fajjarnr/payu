@@ -1,9 +1,18 @@
 import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import '@testing-library/jest-dom';
 import StatsCharts from '@/components/dashboard/StatsCharts';
 
+vi.mock('@ant-design/plots', () => ({
+  Column: ({ data }: { data: { month: string; amount: number }[] }) => (
+    <div data-testid="spending-column">{data.map((d) => d.month).join(',')}</div>
+  ),
+  RadialBar: ({ data }: { data: { category: string; value: number }[] }) => (
+    <div data-testid="investment-radial">{data.map((d) => d.value).join(',')}</div>
+  ),
+}));
 describe('StatsCharts', () => {
  it('renders investment performance section', () => {
   renderWithIntl(<StatsCharts />);
@@ -46,22 +55,24 @@ describe('StatsCharts', () => {
   expect(screen.getAllByText('--').length).toBeGreaterThan(0);
  });
 
- it('renders donut chart SVG', () => {
-  const { container } = renderWithIntl(<StatsCharts />);
+ it('renders plots charts with chart data', () => {
+   const { container } = renderWithIntl(
+     <StatsCharts
+       investmentChartData={[{ category: 'return', value: 12.5, fill: '#0a6b48' }]}
+       spendingChartData={[{ month: 'Jan', amount: 100 }, { month: 'Feb', amount: 200 }]}
+       totalValue="Rp 1Jt"
+     />,
+   );
 
-  expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+   expect(container.querySelector('[data-testid="investment-radial"]')).toBeInTheDocument();
+   expect(container.querySelector('[data-testid="spending-column"]')).toBeInTheDocument();
+   expect(screen.getByText('Rp 1Jt')).toBeInTheDocument();
  });
 
- it('displays active bar tooltip', () => {
-   renderWithIntl(<StatsCharts />);
+  it('applies mobile-specific styling', () => {
+    const { container } = renderWithIntl(<StatsCharts />);
 
-   expect(screen.getByText('Ikhtisar Pengeluaran')).toBeInTheDocument();
-  });
-
- it('applies mobile-specific styling', () => {
-   const { container } = renderWithIntl(<StatsCharts />);
-
-   const investmentSection = container.querySelector('.bg-card');
-   expect(investmentSection).toHaveClass('rounded-2xl');
+    const grid = container.querySelector('.grid-cols-1');
+    expect(grid).toBeInTheDocument();
   });
 });

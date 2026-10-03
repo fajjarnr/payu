@@ -1,7 +1,7 @@
 'use client';
 
 export { useLogout, useRefreshToken, useAuth } from './useAuth';
-export { useSilentRefresh } from './useSilentRefresh';
+export { useAntdMessage } from './useAntdMessage';
 export {
   useBalance,
   useReserveBalance,

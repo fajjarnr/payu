@@ -69,7 +69,7 @@ describe('MobileNav', () => {
     renderWithIntl(<MobileNav />);
 
     const activeLink = screen.getByText('Transfer').closest('a');
-    expect(activeLink).toHaveClass('text-primary');
+    expect(activeLink).toHaveAttribute('aria-current', 'page');
   });
 
   it('should render navigation items as links', () => {
@@ -115,17 +115,6 @@ describe('MobileNav', () => {
     expect(results).toHaveNoViolations();
   });
 
-  it('should display labels for active items only', () => {
-    mockPathname = '/transfer';
-    const { container } = renderWithIntl(<MobileNav />);
-
-    const activeLabels = container.querySelectorAll('.opacity-100');
-    expect(activeLabels.length).toBeGreaterThan(0);
-
-    // Responsive keeps inactive labels visible
-    const dimmedLabels = container.querySelectorAll('.opacity-70');
-    expect(dimmedLabels.length).toBeGreaterThan(0);
-  });
   it('should render icons for all navigation items', () => {
     const { container } = renderWithIntl(<MobileNav />);
 
@@ -133,18 +122,6 @@ describe('MobileNav', () => {
     expect(icons.length).toBe(4);
   });
 
-  it('should apply hover effects to navigation items', () => {
-    mockPathname = '/transfer';
-    const { container } = renderWithIntl(<MobileNav />);
-
-    const navItems = container.querySelectorAll('a');
-    navItems.forEach((item) => {
-      // Only inactive items have hover:text-foreground
-      if (!item.classList.contains('text-primary')) {
-        expect(item).toHaveClass('hover:text-foreground');
-      }
-    });
-  });
 
   it('should have proper spacing between navigation items', () => {
     const { container } = renderWithIntl(<MobileNav />);
@@ -158,19 +135,10 @@ describe('MobileNav', () => {
     mockPathname = '/pockets';
     renderWithIntl(<MobileNav />);
 
-    const activeIconContainer = screen.getByText('Akun').closest('a')?.querySelector('div');
-    expect(activeIconContainer).toBeInTheDocument();
+    const activeLink = screen.getByText('Akun').closest('a');
+    expect(activeLink).toHaveAttribute('aria-current', 'page');
   });
 
-  it('should scale active icon', () => {
-    mockPathname = '/bills';
-    const { container: _container } = renderWithIntl(<MobileNav />);
-
-    const activeLink = screen.getByText('Tagihan').closest('a');
-    expect(activeLink).toHaveClass('text-primary');
-    const activeIconBg = activeLink?.querySelector('.bg-primary\\/10');
-    expect(activeIconBg).toBeInTheDocument();
-  });
 
   it('should use increased stroke width for active icon', () => {
     mockPathname = '/dashboard';
@@ -188,10 +156,4 @@ describe('MobileNav', () => {
   });
 
 
-  it('should render with correct height', () => {
-    const { container } = renderWithIntl(<MobileNav />);
-
-    const navContainer = container.querySelector('.h-14');
-    expect(navContainer).toBeInTheDocument();
-  });
 });

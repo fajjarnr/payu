@@ -56,12 +56,9 @@ describe('LanguageSwitcher', () => {
 
     expect(screen.getByText('Indonesia')).toBeInTheDocument();
 
-    const overlay = document.querySelector('.fixed');
-    if (overlay) {
-      fireEvent.click(overlay);
-    }
+    fireEvent.mouseDown(document.body);
 
-    expect(screen.queryByText('Indonesia')).not.toBeInTheDocument();
+    expect(button).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('should switch locale when English is clicked', () => {
@@ -84,6 +81,7 @@ describe('LanguageSwitcher', () => {
     const button = screen.getByRole('button', { name: /changeLanguage/i });
     fireEvent.click(button);
 
-    expect(screen.getByRole('menuitemradio', { checked: true })).toHaveTextContent('Indonesia');
+    const currentLocaleItem = screen.getByRole('menuitem', { name: /Indonesia/ });
+    expect(currentLocaleItem).toHaveClass('ant-dropdown-menu-item-selected');
   });
 });

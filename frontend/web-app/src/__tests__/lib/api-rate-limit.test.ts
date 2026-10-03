@@ -9,8 +9,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { InternalAxiosRequestConfig } from 'axios';
 // Hoisted: vi.mock factory runs before imports
 const { mockToastError } = vi.hoisted(() => ({ mockToastError: vi.fn() }));
-vi.mock('sonner', () => ({
-  toast: {
+vi.mock('@/lib/notify', () => ({
+  notify: {
     error: mockToastError,
   },
 }));

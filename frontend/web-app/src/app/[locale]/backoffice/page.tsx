@@ -2,8 +2,7 @@
 
 import { Link } from '@/lib/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Users, AlertTriangle, Headphones, FileText, ClipboardCheck, ArrowUpRight } from 'lucide-react';
-import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+import { Users, AlertTriangle, Headphones, FileText, ClipboardCheck, ArrowUpRight } from '@/components/icons';
 import { BackofficeService, BackofficeKycStatus, FraudCaseStatus, CustomerCaseStatus } from '@/services';
 
 export default function BackofficeDashboard() {
@@ -35,17 +34,17 @@ export default function BackofficeDashboard() {
   ];
 
   return (
-    <PageTransition>
+    <>
       <div className="space-y-12 pb-12">
-        <StaggerContainer>
-          <StaggerItem>
+        <>
+          <>
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-foreground tracking-tight">Command Center</h2>
               <p className="text-sm text-muted-foreground font-medium mt-1">Sistem orkestrasi internal PayU Digital Banking.</p>
             </div>
-          </StaggerItem>
+          </>
 
-          <StaggerItem>
+          <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
               {stats.map((stat, i) => (
                 <div key={i} className="bg-card p-5 sm:p-6 lg:p-8 rounded-2xl border border-border shadow-sm group hover:shadow-card transition-all">
@@ -64,9 +63,9 @@ export default function BackofficeDashboard() {
                 </div>
               ))}
             </div>
-          </StaggerItem>
+          </>
 
-          <StaggerItem>
+          <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {quickLinks.map((link, i) => (
                 <Link key={i} href={link.href} className="group">
@@ -90,9 +89,9 @@ export default function BackofficeDashboard() {
                 </Link>
               ))}
             </div>
-          </StaggerItem>
-        </StaggerContainer>
+          </>
+        </>
       </div>
-    </PageTransition>
+    </>
   );
 }

@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Tag, TrendingUp, Star, ArrowRight } from 'lucide-react';
+import { Tag, TrendingUp, Star, ArrowRight } from '@/components/icons';
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
 import { useAuthStore } from '@/stores';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from 'antd';
 import clsx from 'clsx';
+import { cn } from '@/lib/utils';
 import type { SegmentedOffer } from '@/services/SegmentationService';
 
 interface TargetedPromosProps {
@@ -33,7 +33,7 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2 }: 
   if (isLoading) {
     return (
       <div className={clsx('space-y-3', className)}>
-        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton title={false} paragraph={false} className={cn('block animate-pulse rounded-xl bg-muted/50', 'h-32 rounded-xl')} />
       </div>
     );
   }
@@ -50,8 +50,8 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2 }: 
       </div>
 
       <div className="space-y-3">
-        {filteredOffers.map((promo, index) => (
-          <PromoItem key={promo.id} promo={promo} index={index} />
+        {filteredOffers.map((promo) => (
+          <PromoItem key={promo.id} promo={promo} />
         ))}
       </div>
     </div>
@@ -60,10 +60,9 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2 }: 
 
 interface PromoItemProps {
   promo: SegmentedOffer;
-  index: number;
 }
 
-function PromoItem({ promo, index }: PromoItemProps) {
+function PromoItem({ promo }: PromoItemProps) {
   const daysLeft = Math.ceil((new Date(promo.validUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
   const isExpiringSoon = daysLeft <= 3;
 
@@ -78,12 +77,7 @@ function PromoItem({ promo, index }: PromoItemProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="group relative overflow-hidden"
-    >
+    <div className="group relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="relative bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-all duration-300">
@@ -142,7 +136,7 @@ function PromoItem({ promo, index }: PromoItemProps) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -161,9 +155,7 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={clsx(
         'bg-gradient-to-r from-primary to-emerald-600 rounded-xl p-4 text-white relative overflow-hidden',
         className
@@ -183,15 +175,13 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
           <p className="text-xs opacity-80 line-clamp-1">{topPromo.description}</p>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="h-11 px-4 bg-white text-primary rounded-lg font-bold text-xs tracking-wider flex items-center gap-2 shadow-lg"
+        <button
+          className="h-11 px-4 bg-white text-primary rounded-lg font-bold text-xs tracking-wider flex items-center gap-2 shadow-lg transition-transform hover:scale-105 active:scale-95"
         >
           Klaim
           <ArrowRight className="h-4 w-4" />
-        </motion.button>
+        </button>
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -44,29 +44,6 @@ vi.mock('@/hooks/useTransactions', () => ({
   }),
 }));
 
-vi.mock('react-hook-form', () => ({
-  useForm: () => ({
-    register: () => ({}),
-    handleSubmit: (fn: (...args: unknown[]) => void) => (e: Event) => { e?.preventDefault?.(); fn({}); },
-    formState: { errors: {}, isSubmitting: false },
-    watch: () => '',
-    setValue: vi.fn(),
-    reset: vi.fn(),
-    control: {},
-  }),
-  useWatch: () => '',
-}));
-
-vi.mock('@/components/ui/popover', () => ({
-  Popover: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PopoverTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PopoverContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-vi.mock('@/components/ui/calendar', () => ({
-  Calendar: () => <div data-testid="calendar">Calendar</div>,
-}));
-
 describe('TransferPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();

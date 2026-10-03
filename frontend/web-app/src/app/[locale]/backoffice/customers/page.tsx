@@ -1,14 +1,12 @@
 'use client';
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BackofficeService, CustomerCaseStatus, CustomerCasePriority } from '@/services';
+import type { CustomerCaseResponse } from '@/services';
 import { Link } from '@/lib/navigation';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Search, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Search, ChevronLeft, ChevronRight, MessageSquare } from '@/components/icons';
+import { Badge, Button, Input, Select, Table } from 'antd';
+import type { TableColumnsType } from 'antd';
 import clsx from 'clsx';
 
 export default function CustomerCasesPage() {
@@ -22,6 +20,67 @@ export default function CustomerCasesPage() {
   });
   const cases = Array.isArray(rawCases) ? rawCases : [];
   const openCount = cases.filter((c) => c.status === CustomerCaseStatus.OPEN).length;
+  const columns: TableColumnsType<CustomerCaseResponse> = [
+    {
+      key: 'caseNumber',
+      title: 'No. Tiket',
+      render: (_, c) => <span className="font-bold text-muted-foreground tabular-nums">#{c.caseNumber}</span>,
+    },
+    {
+      key: 'subject',
+      title: 'Subjek & Nasabah',
+      render: (_, c) => (
+        <div>
+          <div className="text-sm font-bold text-foreground">{c.subject}</div>
+          <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{c.userId}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'priority',
+      title: 'Prioritas',
+      render: (_, c) => (
+        <Badge
+          count={c.priority}
+          color={c.priority === CustomerCasePriority.URGENT ? 'red' : undefined}
+          showZero
+          className={clsx(
+            "font-bold uppercase tracking-widest",
+            c.priority === CustomerCasePriority.HIGH && "[&_sup]:border-orange-500 [&_sup]:text-orange-500 [&_sup]:bg-orange-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.priority === CustomerCasePriority.MEDIUM && "[&_sup]:border-blue-500 [&_sup]:text-blue-500 [&_sup]:bg-blue-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.priority === CustomerCasePriority.LOW && "[&_sup]:border-slate-500 [&_sup]:text-slate-500 [&_sup]:bg-slate-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+          )}
+        />
+      ),
+    },
+    {
+      key: 'status',
+      title: 'Status',
+      render: (_, c) => (
+        <Badge
+          count={c.status}
+          showZero
+          className={clsx(
+            "font-bold uppercase tracking-widest",
+            c.status === CustomerCaseStatus.OPEN && "[&_sup]:text-blue-600 [&_sup]:bg-blue-600/5 [&_sup]:border-blue-600/10 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.status === CustomerCaseStatus.RESOLVED && "[&_sup]:text-emerald-600 [&_sup]:bg-emerald-600/5 [&_sup]:border-emerald-600/10 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+          )}
+        />
+      ),
+    },
+    {
+      key: 'actions',
+      title: 'Aksi',
+      align: 'right',
+      render: (_, c) => (
+        <Link href={`/backoffice/customers/${c.id}`}>
+          <Button type="text" size="small" className="h-9 gap-2 font-bold uppercase tracking-widest">
+            <MessageSquare className="h-4 w-4" /> Buka
+          </Button>
+        </Link>
+      ),
+    },
+  ];
 
  return (
     <div className="space-y-6">
@@ -38,104 +97,40 @@ export default function CustomerCasesPage() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Cari tiket atau ID nasabah..." className="pl-12 h-12" />
+        <div className="relative flex-1 flex items-center">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+          <Input placeholder="Cari tiket atau ID nasabah..." className="pl-12 h-12 w-full" />
         </div>
         <div className="flex gap-4">
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className="h-12 rounded-xl border-border bg-muted/20 px-4 text-sm font-bold tracking-widest uppercase focus:ring-2 focus:ring-primary/20 outline-none"
-          >
-            <option value="">Semua Prioritas</option>
-            {Object.values(CustomerCasePriority).map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="h-12 rounded-xl border-border bg-muted/20 px-4 text-sm font-bold tracking-widest uppercase focus:ring-2 focus:ring-primary/20 outline-none"
-          >
-            <option value="">Semua Status</option>
-            {Object.values(CustomerCaseStatus).map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+          <Select
+            value={priority || undefined}
+            placeholder="Semua Prioritas"
+            onChange={(value: string) => setPriority(value ?? '')}
+            className="min-w-44 h-12"
+            options={[{ value: '', label: 'Semua Prioritas' }, ...Object.values(CustomerCasePriority).map((s) => ({ value: s, label: s }))]}
+          />
+          <Select
+            value={status || undefined}
+            placeholder="Semua Status"
+            onChange={(value: string) => setStatus(value ?? '')}
+            className="min-w-44 h-12"
+            options={[{ value: '', label: 'Semua Status' }, ...Object.values(CustomerCaseStatus).map((s) => ({ value: s, label: s }))]}
+          />
         </div>
       </div>
 
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="text-xs font-bold tracking-widest uppercase">No. Tiket</TableHead>
-              <TableHead className="text-xs font-bold tracking-widest uppercase">Subjek & Nasabah</TableHead>
-              <TableHead className="text-xs font-bold tracking-widest uppercase">Prioritas</TableHead>
-              <TableHead className="text-xs font-bold tracking-widest uppercase">Status</TableHead>
-              <TableHead className="text-right text-xs font-bold tracking-widest uppercase">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Memuat data...</TableCell>
-              </TableRow>
-            ) : isError ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Akses ditolak — hubungi administrator</TableCell>
-              </TableRow>
-            ) : cases.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-40 text-center text-muted-foreground font-bold tracking-widest uppercase">Tidak ada tiket ditemukan</TableCell>
-              </TableRow>
-            ) : (
-              cases.map((c) => (
-                <TableRow key={c.id} className="group cursor-pointer">
-                  <TableCell className="font-bold text-muted-foreground tabular-nums">#{c.caseNumber}</TableCell>
-                  <TableCell>
-                    <div className="text-sm font-bold text-foreground">{c.subject}</div>
-                    <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{c.userId}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={c.priority === CustomerCasePriority.URGENT ? "destructive" : "outline"}
-                      className={clsx(
-                        "font-bold uppercase tracking-widest",
-                        c.priority === CustomerCasePriority.HIGH && "border-orange-500 text-orange-500 bg-orange-500/5",
-                        c.priority === CustomerCasePriority.MEDIUM && "border-blue-500 text-blue-500 bg-blue-500/5",
-                        c.priority === CustomerCasePriority.LOW && "border-slate-500 text-slate-500 bg-slate-500/5"
-                      )}
-                    >
-                      {c.priority}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className={clsx(
-                      "font-bold uppercase tracking-widest",
-                      c.status === CustomerCaseStatus.OPEN && "text-blue-600 bg-blue-600/5 border-blue-600/10",
-                      c.status === CustomerCaseStatus.RESOLVED && "text-emerald-600 bg-emerald-600/5 border-emerald-600/10"
-                    )}>
-                      {c.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Link href={`/backoffice/customers/${c.id}`}>
-                      <Button variant="ghost" size="sm" className="h-9 gap-2 font-bold uppercase tracking-widest">
-                        <MessageSquare className="h-4 w-4" /> Buka
-                      </Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <Table<CustomerCaseResponse>
+          columns={columns}
+          dataSource={cases}
+          rowKey="id"
+          pagination={false}
+          loading={isLoading}
+          locale={{ emptyText: isError ? 'Akses ditolak — hubungi administrator' : 'Tidak ada tiket ditemukan' }}
+        />
 
         <div className="px-8 py-6 border-t border-border flex justify-between items-center bg-muted/10">
           <Button
-            variant="outline"
             onClick={() => setPage(p => Math.max(0, p - 1))}
             disabled={page === 0}
             className="h-10 px-6 gap-2 font-bold uppercase tracking-widest"
@@ -144,7 +139,6 @@ export default function CustomerCasesPage() {
           </Button>
           <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Halaman {page + 1}</span>
           <Button
-            variant="outline"
             onClick={() => setPage(p => p + 1)}
             disabled={cases.length < 20}
             className="h-10 px-6 gap-2 font-bold uppercase tracking-widest"

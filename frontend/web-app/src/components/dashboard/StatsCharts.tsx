@@ -2,23 +2,10 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronDown } from 'lucide-react';
-import { 
-  Bar, 
-  BarChart, 
-  CartesianGrid, 
-  Label, 
-  PolarGrid, 
-  PolarRadiusAxis, 
-  RadialBar, 
-  RadialBarChart, 
-  XAxis,
-  YAxis,
-  ResponsiveContainer
-} from "recharts"
+import { Column, RadialBar } from '@ant-design/plots';
+import { ChevronDown } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Card } from 'antd';
 
 function ChartLegend({ color, label, percentage }: { color: string; label: string; percentage: string }) {
   return (
@@ -32,22 +19,9 @@ function ChartLegend({ color, label, percentage }: { color: string; label: strin
   );
 }
 
-const investmentConfig = {
-  value: {
-    label: "Return",
-  },
-  return: {
-    label: "ROI",
-    color: "hsl(var(--primary))",
-  },
-} satisfies ChartConfig
-
-const spendingConfig = {
-  amount: {
-    label: "Jumlah",
-    color: "hsl(var(--primary))",
-  },
-} satisfies ChartConfig
+// Canvas-rendered charts cannot resolve CSS var() colors, so use literals.
+// Primary matches the antd colorPrimary token (#0a6b48).
+const PRIMARY = '#0a6b48';
 
 interface StatsChartsProps {
   className?: string;
@@ -88,19 +62,23 @@ export default function StatsCharts({
       </div>
     );
   }
+
+  const spendingData = spdData.map((d) => ({ month: d.month, amount: Number(d.amount) }));
+  const leadValue = invData[0]?.value ?? 0;
+
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8", className)}>
-      <Card className="lg:col-span-5 relative overflow-hidden group">
-        <CardHeader className="flex flex-row items-center justify-between pb-6">
-          <CardTitle className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+      <Card className="lg:col-span-5 relative overflow-hidden group" styles={{ body: { display: 'contents' } }}>
+        <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-center justify-between pb-6">
+          <h3 className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('perfTitle')}
-          </CardTitle>
+          </h3>
           <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-5 py-2.5 rounded-xl cursor-pointer hover:bg-muted transition-colors uppercase tracking-widest shadow-sm">
             {t('january2026')} <ChevronDown className="h-4 w-4" />
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-6 lg:gap-8">
+        <div className="p-6 pt-0 flex flex-col sm:flex-row items-center justify-between gap-6 lg:gap-8">
           <div className="space-y-6 w-full sm:w-auto">
             {legend.map((item) => (
               <ChartLegend key={item.label} color={item.color} label={item.label} percentage={item.percentage} />
@@ -108,109 +86,77 @@ export default function StatsCharts({
           </div>
 
           <div className="relative h-64 w-64 flex-shrink-0">
-            <ChartContainer
-              config={investmentConfig}
-              className="mx-auto aspect-square h-full w-full"
-            >
-              <RadialBarChart
-                data={invData}
-                startAngle={0}
-                endAngle={250}
-                innerRadius={90}
-                outerRadius={120}
-              >
-                <PolarGrid
-                  gridType="circle"
-                  radialLines={false}
-                  stroke="none"
-                  className="first:fill-muted/20 last:fill-background"
-                  polarRadius={[95, 85]}
-                />
-                <RadialBar 
-                  dataKey="value" 
-                  background 
-                  cornerRadius={12}
-                />
-                <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-                  <Label
-                    content={({ viewBox }) => {
-                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                        return (
-                          <text
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                          >
-                            <tspan
-                              x={viewBox.cx}
-                               y={viewBox.cy}
-                              className="fill-foreground text-4xl font-bold tabular-nums tracking-tighter"
-                            >
-                             +{invData[0]?.value ?? 0}%
-                            </tspan>
-                            <tspan
-                              x={viewBox.cx}
-                              y={(viewBox.cy || 0) + 30}
-                              className="fill-muted-foreground text-xs font-bold uppercase tracking-[0.2em] opacity-60"
-                            >
-                              Yield
-                            </tspan>
-                          </text>
-                        )
-                      }
-                    }}
-                  />
-                </PolarRadiusAxis>
-              </RadialBarChart>
-            </ChartContainer>
+            <RadialBar
+              data={invData}
+              xField="category"
+              yField="value"
+              maxAngle={250}
+              innerRadius={0.75}
+              colorField="category"
+              scale={{ color: { range: invData.length > 0 ? invData.map((d) => d.fill || PRIMARY) : [PRIMARY] } }}
+              legend={false}
+              tooltip={false}
+              label={false}
+              annotations={[
+                {
+                  type: 'text',
+                  style: {
+                    text: `+${leadValue}%`,
+                    x: '50%',
+                    y: '46%',
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 700,
+                    fill: '#0f172a',
+                  },
+                },
+                {
+                  type: 'text',
+                  style: {
+                    text: 'Yield',
+                    x: '50%',
+                    y: '56%',
+                    textAlign: 'center',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    fill: '#6b7280',
+                  },
+                },
+              ]}
+            />
           </div>
 
           <div className="text-right w-full sm:w-auto shrink-0 space-y-2">
             <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">{t('totalValue')}</p>
             <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">{displayTotal}</h4>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      {/* Spending Overview (Official Shadcn Bar Chart) */}
-      <Card className="lg:col-span-7 group overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between pb-6">
-          <CardTitle className="text-xl font-bold text-foreground">{t('spendingOverview')}</CardTitle>
+      {/* Spending Overview (Column chart) */}
+      <Card className="lg:col-span-7 group overflow-hidden" styles={{ body: { display: 'contents' } }}>
+        <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-center justify-between pb-6">
+          <h3 className="text-2xl font-bold leading-none tracking-tight text-xl font-bold text-foreground">{t('spendingOverview')}</h3>
           <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-5 py-2.5 rounded-xl cursor-pointer hover:bg-muted transition-colors uppercase tracking-widest shadow-sm">
             {t('year2026')} <ChevronDown className="h-4 w-4" />
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent>
-          <ChartContainer config={spendingConfig} className="h-80 w-full mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={spdData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--muted)/0.3)" />
-                <XAxis
-                  dataKey="month"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }}
-                  dy={10}
-                />
-                <YAxis
-                  hide
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
-                />
-                <Bar
-                  dataKey="amount"
-                  fill="var(--color-amount)"
-                  radius={[8, 8, 0, 0]}
-                  barSize={40}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </CardContent>
+        <div className="p-6 pt-0">
+          <div className="h-80 w-full mt-4">
+            <Column
+              data={spendingData}
+              xField="month"
+              yField="amount"
+              style={{ fill: PRIMARY, radiusTopLeft: 8, radiusTopRight: 8, maxWidth: 40 }}
+              axis={{
+                x: { title: false, labelFill: '#6b7280', labelFontSize: 10, labelFontWeight: 700 },
+                y: false,
+              }}
+              label={false}
+            />
+          </div>
+        </div>
       </Card>
     </div>
   );

@@ -3,8 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import { Link } from '@/lib/navigation';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { CheckCircle2, ShieldCheck, ArrowRight, Lock } from 'lucide-react';
+import { Button } from 'antd';
+import { CheckCircle2, ShieldCheck, ArrowRight, Lock } from '@/components/icons';
 import { useTranslations } from 'next-intl';
 import { Suspense, useEffect } from 'react';
 
@@ -117,7 +117,8 @@ function LoginForm() {
 
             <div className="space-y-6">
                 <Button
-                    type="button"
+                    type="primary"
+                    htmlType="button"
                     data-testid="login-submit-button"
                     className="w-full h-12 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-base shadow-lg shadow-emerald-800/20 transition-all active:scale-[0.98]"
                     onClick={() => { window.location.href = '/api/auth/authorize'; }}

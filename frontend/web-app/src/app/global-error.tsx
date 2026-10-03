@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertOctagon, RefreshCw, Mail, Phone } from 'lucide-react';
+import { AlertOctagon, RefreshCw, Mail, Phone } from '@/components/icons';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };

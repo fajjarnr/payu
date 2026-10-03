@@ -42,18 +42,6 @@ vi.mock('@/services/FxService', () => ({
   },
 }));
 
-vi.mock('react-hook-form', () => ({
-  useForm: () => ({
-    register: () => ({}),
-    handleSubmit: (fn: (...args: unknown[]) => void) => (e: Event) => { e?.preventDefault?.(); fn({}); },
-    formState: { errors: {} },
-    watch: () => 'IDR',
-    setValue: vi.fn(),
-    control: {},
-  }),
-  useWatch: () => 'IDR',
-}));
-
 describe('ExchangePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();

@@ -2,14 +2,12 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { ShieldCheck, Fingerprint, Key, Lock, Monitor, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, Fingerprint, Key, Lock, Monitor, ShieldAlert } from '@/components/icons';
 import clsx from 'clsx';
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import { Button, Switch } from 'antd';
 import { useBiometricRegistrations, useRegisterBiometric, useRevokeBiometric } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 import { AuthService } from '@/services/AuthService';
 
 export default function SecurityPage() {
@@ -80,10 +78,7 @@ export default function SecurityPage() {
 
   return (
     <DashboardLayout>
-      <PageTransition>
         <div className="space-y-6 lg:space-y-8">
-          <StaggerContainer>
-            <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
                   <h2 className="text-3xl font-bold text-foreground tracking-tight">Keamanan & Tata Kelola</h2>
@@ -94,10 +89,8 @@ export default function SecurityPage() {
                   <span className="text-xs font-bold text-primary tracking-widest uppercase">Proteksi Level 4 Aktif</span>
                 </div>
               </div>
-            </StaggerItem>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <StaggerItem>
                 <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden group h-full">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all" />
 
@@ -117,13 +110,11 @@ export default function SecurityPage() {
                     </p>
                     <div className="flex items-center justify-between p-5 bg-muted/20 rounded-xl border border-border group-hover:border-primary/20 transition-all">
                       <span className="text-xs font-bold text-foreground tracking-widest uppercase">Status Keamanan: {hasBiometric ? 'Aktif' : 'Non-aktif'}</span>
-                       <Switch checked={hasBiometric} onCheckedChange={handleBiometricToggle} />
+                       <Switch checked={hasBiometric} onChange={handleBiometricToggle} />
                     </div>
                   </div>
                 </div>
-              </StaggerItem>
 
-              <StaggerItem>
                 <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden group h-full">
                   <div className="flex items-center gap-4 mb-6 relative z-10">
                     <div className="h-16 w-16 bg-blue-500/10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
@@ -139,15 +130,14 @@ export default function SecurityPage() {
                     <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                       Gunakan kunci keamanan fisik atau aplikasi autentikator digital untuk login pada perangkat baru.
                     </p>
-                    <Button className="w-full h-14 rounded-xl shadow-xl">
+                    <Button type="primary" className="w-full h-14 rounded-xl shadow-xl">
                       Atur Autentikator Sekarang
                     </Button>
                   </div>
                 </div>
-              </StaggerItem>
             </div>
 
-            <StaggerItem className="mt-8">
+            <div className="mt-8">
               <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6 relative z-10">
                   <h3 className="text-xl font-bold text-foreground">Sesi Terautentikasi</h3>
@@ -175,32 +165,28 @@ export default function SecurityPage() {
                           <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mt-0.5">{session.location} • {session.status}</p>
                         </div>
                       </div>
-                      <Button variant="ghost" className="sm:mt-0 mt-4 text-xs font-bold text-destructive tracking-widest uppercase hover:bg-destructive/5 px-4 h-10 border border-transparent hover:border-destructive/10 whitespace-nowrap">Putuskan Sesi</Button>
+                      <Button type="text" danger className="sm:mt-0 mt-4 text-xs font-bold text-destructive tracking-widest uppercase hover:bg-destructive/5 px-4 h-10 border border-transparent hover:border-destructive/10 whitespace-nowrap">Putuskan Sesi</Button>
                     </div>
                   )))}
                 </div>
               </div>
-            </StaggerItem>
+            </div>
 
-            <StaggerItem className="mt-8">
+            <div className="mt-8">
               <div className="bg-destructive rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-card group">
                 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
                   <div className="text-center lg:text-left space-y-4">
                     <h3 className="text-3xl font-bold">Protokol Panic.</h3>
                     <p className="text-sm font-medium text-white/70 max-w-xl leading-relaxed">Membekukan semua dompet, menonaktifkan kartu virtual, dan mencabut semua sesi aktif secara instan. Gunakan hanya jika akun Anda dalam bahaya besar.</p>
                   </div>
-                  <ButtonMotion className="w-full lg:w-auto">
-                    <Button variant="secondary" className="px-12 h-16 rounded-xl shadow-2xl text-destructive hover:bg-white bg-white">
+                    <Button className="w-full lg:w-auto px-12 h-16 rounded-xl shadow-2xl text-destructive hover:bg-white bg-white">
                       Inisialisasi Lockdown Global
                     </Button>
-                  </ButtonMotion>
                 </div>
                 <Lock className="absolute bottom-[-60px] right-[-60px] h-72 w-72 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
               </div>
-            </StaggerItem>
-          </StaggerContainer>
+            </div>
         </div>
-      </PageTransition>
     </DashboardLayout>
   );
 }

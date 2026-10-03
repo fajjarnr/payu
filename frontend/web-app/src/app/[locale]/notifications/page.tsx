@@ -11,17 +11,14 @@ import {
   ArrowRight,
   MoreVertical,
   Inbox,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/icons';
+import { Button, Input, Tag } from 'antd';
 import DashboardLayout from '@/components/DashboardLayout';
-import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import clsx from 'clsx';
 import { useNotifications, useMarkNotificationRead } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from '@/lib/navigation';
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 
 export default function NotificationsPage() {
   const { user } = useAuthStore();
@@ -70,35 +67,31 @@ export default function NotificationsPage() {
 
   return (
     <DashboardLayout>
-      <PageTransition>
         <div className="w-full space-y-6 lg:space-y-8">
-          <StaggerContainer>
             {/* Header */}
-            <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
                   <h2 className="text-3xl font-bold text-foreground tracking-tight">Kotak Masuk</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">Kelola notifikasi, promo, dan peringatan keamanan Anda.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button 
+                  <Button
+                    type="text"
                     onClick={handleMarkAllRead}
-                    variant="ghost" 
                     className="text-xs font-bold tracking-widest uppercase hover:text-emerald-500">
                     Tandai Semua Dibaca
                   </Button>
-                  <Button 
+                  <Button
+                    type="text"
+                    danger
                     onClick={handleClearAll}
-                    variant="ghost" 
-                    className="text-xs font-bold tracking-widest uppercase text-rose-500 hover:bg-rose-500/5">
+                    className="text-xs font-bold tracking-widest uppercase hover:bg-rose-500/5">
                     Hapus Semua
                   </Button>
                 </div>
               </div>
-            </StaggerItem>
 
             {/* Toolbar */}
-            <StaggerItem>
               <div className="flex flex-col md:flex-row gap-4 bg-card border border-border p-3 rounded-2xl shadow-sm">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -111,25 +104,24 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex items-center gap-2 pr-2">
                   {['ALL', 'UNREAD', 'PROMO', 'SECURITY'].map((f) => (
-                    <button
+                    <Button
+                      type="text"
                       key={f}
                       onClick={() => setFilter(f)}
                       className={clsx(
                         "px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase transition-all",
-                        filter === f 
-                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" 
+                        filter === f
+                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
                           : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                       )}
                     >
                       {f === 'ALL' ? 'Semua' : f === 'UNREAD' ? 'Belum Dibaca' : f}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
-            </StaggerItem>
 
             {/* Notifications List */}
-            <StaggerItem>
               <div className="space-y-4 mt-8">
                 {filteredNotifs.length === 0 ? (
                   <div className="text-center py-8 bg-card border border-border rounded-2xl">
@@ -157,9 +149,9 @@ export default function NotificationsPage() {
 
                       <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-start">
-                          <Badge variant="outline" className="text-xs font-bold uppercase tracking-widest px-2 py-0 border-emerald-500/20 text-emerald-500">
+                          <Tag bordered={false} color="green" className="text-xs font-bold uppercase tracking-widest px-2 py-0 border-emerald-500/20 text-emerald-500">
                             {n.type}
-                          </Badge>
+                          </Tag>
                           <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                             {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
@@ -171,7 +163,8 @@ export default function NotificationsPage() {
                           {n.content}
                         </p>
                         <div className="pt-4 flex items-center justify-between">
-                          <button
+                          <Button
+                            type="link"
                             onClick={() => {
                               if (!n.read) {
                                 markRead.mutate(n.id);
@@ -182,14 +175,10 @@ export default function NotificationsPage() {
                           >
                             Lihat Detail
                             <ArrowRight className="h-3 w-3 transition-transform group-hover/btn:translate-x-1" />
-                          </button>
+                          </Button>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/5">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
+                            <Button type="text" shape="circle" size="small" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/5" icon={<Trash2 className="h-4 w-4" />} aria-label="Hapus notifikasi" />
+                            <Button type="text" shape="circle" size="small" className="h-8 w-8 rounded-lg text-muted-foreground" icon={<MoreVertical className="h-4 w-4" />} aria-label="Opsi notifikasi" />
                           </div>
                         </div>
                       </div>
@@ -197,10 +186,7 @@ export default function NotificationsPage() {
                   ))
                 )}
               </div>
-            </StaggerItem>
-          </StaggerContainer>
         </div>
-      </PageTransition>
     </DashboardLayout>
   );
 }

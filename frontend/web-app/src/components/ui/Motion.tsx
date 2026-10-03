@@ -1,147 +1,188 @@
 'use client';
 
-import { motion, HTMLMotionProps, useReducedMotion } from 'framer-motion';
-import { ReactNode } from 'react';
+import { CSSProperties, ReactNode, forwardRef, useEffect, useState } from 'react';
 
-interface PageTransitionProps {
- children: ReactNode;
- className?: string;
+const FRAMER_PROPS: Record<string, true> = {
+  whileHover: true, whileTap: true, whileFocus: true, whileInView: true, whileDrag: true,
+  drag: true, dragConstraints: true, dragElastic: true, dragMomentum: true,
+  initial: true, animate: true, exit: true, variants: true, transition: true,
+  layout: true, layoutId: true, onAnimationStart: true, onAnimationComplete: true, viewport: true,
+};
+
+function stripFramer<T extends object>(props: T): Partial<T> {
+  const clean: Record<string, unknown> = {};
+  for (const key of Object.keys(props)) {
+    if (!FRAMER_PROPS[key]) clean[key] = (props as Record<string, unknown>)[key];
+  }
+  return clean as Partial<T>;
 }
 
-export const PageTransition = ({ children, className }: PageTransitionProps) => {
- const shouldReduceMotion = useReducedMotion();
- return (
- <motion.div
-  initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  exit={{ opacity: 0, y: -20 }}
-  transition={{ duration: shouldReduceMotion ? 0 : 0.3, ease: 'easeInOut' }}
-  className={className}
- >
-  {children}
- </motion.div>
- );
-};
-
-interface FadeInProps {
- children: ReactNode;
- delay?: number;
- direction?: 'up' | 'down' | 'left' | 'right';
- className?: string;
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return reduced;
 }
 
-export const FadeIn = ({ children, delay = 0, direction = 'up', className }: FadeInProps) => {
- const shouldReduceMotion = useReducedMotion();
- const directions = {
-  up: { y: 20 },
-  down: { y: -20 },
-  left: { x: 20 },
-  right: { x: -20 },
- };
+const KEYFRAMES = `
+@keyframes payu-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes payu-fade-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes payu-fade-left { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes payu-fade-right { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes payu-scale-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .payu-motion { animation: none !important; }
+}
+`;
 
- return (
-  <motion.div
-   initial={shouldReduceMotion ? false : { opacity: 0, ...directions[direction] }}
-   whileInView={{ opacity: 1, x: 0, y: 0 }}
-   viewport={{ once: true, margin: '-50px' }}
-   transition={{ duration: shouldReduceMotion ? 0 : 0.5, delay: shouldReduceMotion ? 0 : delay, ease: 'easeOut' }}
-   className={className}
-  >
-   {children}
-  </motion.div>
- );
-};
+type DivExtras = Record<string, unknown>;
 
-interface ScaleInProps {
- children: ReactNode;
- delay?: number;
- className?: string;
+interface PageTransitionProps extends DivExtras {
+  children: ReactNode;
+  className?: string;
 }
 
-export const ScaleIn = ({ children, delay = 0, className }: ScaleInProps) => {
- const shouldReduceMotion = useReducedMotion();
- return (
- <motion.div
-  initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.9 }}
-  whileInView={{ opacity: 1, scale: 1 }}
-  viewport={{ once: true }}
-  transition={{ duration: 0.4, delay, ease: 'easeOut' }}
-  className={className}
- >
-  {children}
- </motion.div>
- );
+export const PageTransition = ({ children, className, ...rest }: PageTransitionProps) => {
+  const reduce = usePrefersReducedMotion();
+  const style: CSSProperties = reduce ? {} : { animation: 'payu-fade-up 0.3s ease-in-out' };
+  return (
+    <>
+      <style>{KEYFRAMES}</style>
+      <div className={`payu-motion${className ? ` ${className}` : ''}`} style={style} {...stripFramer(rest)}>
+        {children}
+      </div>
+    </>
+  );
 };
 
-interface StaggerContainerProps {
- children: ReactNode;
- staggerDelay?: number;
- className?: string;
+interface FadeInProps extends DivExtras {
+  children: ReactNode;
+  delay?: number;
+  direction?: 'up' | 'down' | 'left' | 'right';
+  className?: string;
 }
 
-export const StaggerContainer = ({ children, staggerDelay = 0.1, className }: StaggerContainerProps) => {
- const shouldReduceMotion = useReducedMotion();
- return (
- <motion.div
-  // Mount-driven, not whileInView: async re-renders during stagger
-  // orphaned late children at opacity 0.
-  initial={shouldReduceMotion ? false : "hidden"}
-  animate="visible"
-  variants={{
-   hidden: { opacity: 0 },
-   visible: {
-    opacity: 1,
-    transition: {
-     staggerChildren: shouldReduceMotion ? 0 : staggerDelay,
-    },
-   },
-  }}
-  className={className}
- >
-  {children}
- </motion.div>
- );
+const FADE_ANIMATION = {
+  up: 'payu-fade-up',
+  down: 'payu-fade-down',
+  left: 'payu-fade-left',
+  right: 'payu-fade-right',
+} as const;
+
+export const FadeIn = ({ children, delay = 0, direction = 'up', className, ...rest }: FadeInProps) => {
+  const reduce = usePrefersReducedMotion();
+  const style: CSSProperties = reduce
+    ? {}
+    : { animation: `${FADE_ANIMATION[direction]} 0.5s ease-out`, animationDelay: `${delay}s` };
+  return (
+    <>
+      <style>{KEYFRAMES}</style>
+      <div className={`payu-motion${className ? ` ${className}` : ''}`} style={style} {...stripFramer(rest)}>
+        {children}
+      </div>
+    </>
+  );
 };
 
-interface StaggerItemProps {
- children: ReactNode;
- className?: string;
+interface ScaleInProps extends DivExtras {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
 }
 
-export const StaggerItem = ({ children, className }: StaggerItemProps) => {
- const shouldReduceMotion = useReducedMotion();
- return (
- // Own animate, not parent propagation: variant context from
- // StaggerContainer orphans children at opacity 0 on async re-render.
- <motion.div
-  initial={shouldReduceMotion ? false : "hidden"}
-  animate="visible"
-  variants={{
-   hidden: { opacity: 0, y: 20 },
-   visible: { opacity: 1, y: 0 },
-  }}
-  transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: 'easeOut' }}
-  className={className}
- >
-  {children}
- </motion.div>
- );
+export const ScaleIn = ({ children, delay = 0, className, ...rest }: ScaleInProps) => {
+  const reduce = usePrefersReducedMotion();
+  const style: CSSProperties = reduce
+    ? {}
+    : { animation: 'payu-scale-in 0.4s ease-out', animationDelay: `${delay}s` };
+  return (
+    <>
+      <style>{KEYFRAMES}</style>
+      <div className={`payu-motion${className ? ` ${className}` : ''}`} style={style} {...stripFramer(rest)}>
+        {children}
+      </div>
+    </>
+  );
 };
 
-export const AnimatedButton = motion.button;
-export const AnimatedDiv = motion.div;
+interface StaggerContainerProps extends DivExtras {
+  children: ReactNode;
+  staggerDelay?: number;
+  className?: string;
+}
 
-type ButtonMotionProps = HTMLMotionProps<'button'>;
-export const ButtonMotion = ({ children, ...props }: ButtonMotionProps) => {
- const shouldReduceMotion = useReducedMotion();
- return (
- <motion.button
-  whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
-  whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-  transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 17 }}
-  {...props}
- >
-  {children}
- </motion.button>
-);
+export const StaggerContainer = ({ children, staggerDelay = 0.1, className, ...rest }: StaggerContainerProps) => {
+  const reduce = usePrefersReducedMotion();
+  const style: CSSProperties = reduce
+    ? {}
+    : { animation: 'payu-fade-up 0.4s ease-out', animationDelay: `${staggerDelay}s` };
+  return (
+    <>
+      <style>{KEYFRAMES}</style>
+      <div className={`payu-motion${className ? ` ${className}` : ''}`} style={style} {...stripFramer(rest)}>
+        {children}
+      </div>
+    </>
+  );
 };
+
+interface StaggerItemProps extends DivExtras {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}
+
+export const StaggerItem = ({ children, delay = 0, className, ...rest }: StaggerItemProps) => {
+  const reduce = usePrefersReducedMotion();
+  const style: CSSProperties = reduce
+    ? {}
+    : { animation: 'payu-fade-up 0.4s ease-out', animationDelay: `${delay}s` };
+  return (
+    <>
+      <style>{KEYFRAMES}</style>
+      <div className={`payu-motion${className ? ` ${className}` : ''}`} style={style} {...stripFramer(rest)}>
+        {children}
+      </div>
+    </>
+  );
+};
+
+type AnyDivProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> & { children?: ReactNode; [key: string]: unknown };
+type AnyButtonProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & { children?: ReactNode; [key: string]: unknown };
+
+export const AnimatedDiv = forwardRef<HTMLDivElement, AnyDivProps>(function AnimatedDiv(props, ref) {
+  const { children, ...rest } = props as { children?: ReactNode } & Record<string, unknown>;
+  return (
+    <div ref={ref} {...stripFramer(rest)}>
+      {children}
+    </div>
+  );
+});
+
+export const AnimatedButton = forwardRef<HTMLButtonElement, AnyButtonProps>(function AnimatedButton(props, ref) {
+  const { children, ...rest } = props as { children?: ReactNode } & Record<string, unknown>;
+  return (
+    <button ref={ref} {...stripFramer(rest)}>
+      {children}
+    </button>
+  );
+});
+
+export const ButtonMotion = forwardRef<HTMLButtonElement, AnyButtonProps>(function ButtonMotion(props, ref) {
+  const { children, className, ...rest } = props as { children?: ReactNode; className?: string } & Record<string, unknown>;
+  return (
+    <button
+      ref={ref}
+      className={`transition-transform active:scale-95${className ? ` ${className}` : ''}`}
+      {...stripFramer(rest)}
+    >
+      {children}
+    </button>
+  );
+});

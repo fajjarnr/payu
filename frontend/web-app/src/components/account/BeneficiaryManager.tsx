@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, Building2, CreditCard, Plus, Loader2 } from 'lucide-react';
+import { Trash2, Building2, CreditCard, Plus, Loader2 } from '@/components/icons';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button, Input } from 'antd';
+
+
+import { Card } from 'antd';
 import { useBeneficiaries, useCreateBeneficiary, useDeleteBeneficiary } from '@/hooks/useBeneficiaries';
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 
 interface BeneficiaryManagerProps {
   accountId: string;
@@ -56,15 +56,15 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
   };
 
   return (
-    <Card data-testid="beneficiary-manager" className="overflow-hidden">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-base">
+    <Card data-testid="beneficiary-manager" className="overflow-hidden" styles={{ body: { display: 'contents' } }}>
+      <div className="flex flex-col space-y-1.5 p-6 pb-4">
+        <h3 className="text-2xl font-bold leading-none tracking-tight flex items-center gap-2 text-base">
           <Building2 className="h-5 w-5 text-primary" aria-hidden="true" />
           {t('title')}
-        </CardTitle>
-        <CardDescription>{t('description')}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+        </h3>
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]">{t('description')}</p>
+      </div>
+      <div className="p-6 pt-0 space-y-6">
         {/* List */}
         <div className="space-y-3" role="list" aria-label="Beneficiary list">
           {isLoading ? (
@@ -88,11 +88,11 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {onSelect && (
-                    <Button variant="ghost" size="sm" onClick={() => onSelect(b.accountNumber)} data-testid={`beneficiary-select-${b.id}`} className="cursor-pointer">
+                    <Button type="default" size="small" onClick={() => onSelect(b.accountNumber)} data-testid={`beneficiary-select-${b.id}`} className="cursor-pointer border-transparent bg-transparent hover:bg-muted hover:text-foreground hover:border-transparent active:bg-transparent active:border-transparent">
                       {t('use')}
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(b.id)} disabled={deleteMut.isPending} aria-label={t('delete', { name: b.nickname || b.accountNumber })} data-testid={`beneficiary-delete-${b.id}`} className="h-11 w-11 cursor-pointer">
+                  <Button type="default" onClick={() => handleDelete(b.id)} disabled={deleteMut.isPending} aria-label={t('delete', { name: b.nickname || b.accountNumber })} data-testid={`beneficiary-delete-${b.id}`} className="h-11 w-11 cursor-pointer border-transparent bg-transparent hover:bg-muted hover:text-foreground hover:border-transparent active:bg-transparent active:border-transparent">
                     {deleteMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                   </Button>
                 </div>
@@ -106,27 +106,27 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
           <h4 className="text-xs font-bold tracking-[0.15em] uppercase text-muted-foreground">{t('addTitle')}</h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="beneficiary-bankCode" className="text-xs font-bold uppercase tracking-widest">{t('bankCode')}</Label>
-              <Input id="beneficiary-bankCode" data-testid="beneficiary-bankCode" value={bankCode} onChange={(e) => setBankCode(e.target.value)} placeholder="014" maxLength={10} className="h-11" />
+              <label htmlFor="beneficiary-bankCode" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-widest">{t('bankCode')}</label>
+              <Input id="beneficiary-bankCode" data-testid="beneficiary-bankCode" value={bankCode} onChange={(e) => setBankCode(e.target.value)} placeholder="014" maxLength={10} className="flex h-14 min-h-[44px] w-full rounded-xl border border-border bg-muted/20 px-6 py-3 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 h-11" />
               {errors.bankCode && <p className="text-xs text-destructive" role="alert">{errors.bankCode}</p>}
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="beneficiary-accountNumber" className="text-xs font-bold uppercase tracking-widest">{t('accountNumber')}</Label>
-              <Input id="beneficiary-accountNumber" data-testid="beneficiary-accountNumber" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g,''))} placeholder="1234567890" inputMode="numeric" className="h-11" />
+              <label htmlFor="beneficiary-accountNumber" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-widest">{t('accountNumber')}</label>
+              <Input id="beneficiary-accountNumber" data-testid="beneficiary-accountNumber" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g,''))} placeholder="1234567890" inputMode="numeric" className="flex h-14 min-h-[44px] w-full rounded-xl border border-border bg-muted/20 px-6 py-3 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 h-11" />
               {errors.accountNumber && <p className="text-xs text-destructive" role="alert">{errors.accountNumber}</p>}
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="beneficiary-nickname" className="text-xs font-bold uppercase tracking-widest">{t('nicknameOptional')}</Label>
-            <Input id="beneficiary-nickname" data-testid="beneficiary-nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="My BCA" maxLength={100} className="h-11" />
+            <label htmlFor="beneficiary-nickname" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-widest">{t('nicknameOptional')}</label>
+            <Input id="beneficiary-nickname" data-testid="beneficiary-nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="My BCA" maxLength={100} className="flex h-14 min-h-[44px] w-full rounded-xl border border-border bg-muted/20 px-6 py-3 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 h-11" />
             {errors.nickname && <p className="text-xs text-destructive" role="alert">{errors.nickname}</p>}
           </div>
-          <Button onClick={handleCreate} disabled={createMut.isPending} data-testid="beneficiary-create" className="w-full sm:w-auto cursor-pointer">
+          <Button type="primary" size="large" onClick={handleCreate} disabled={createMut.isPending} data-testid="beneficiary-create" className="w-full sm:w-auto cursor-pointer">
             {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
             {t('add')}
           </Button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

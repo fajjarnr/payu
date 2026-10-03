@@ -1,9 +1,7 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Progress } from '@/components/ui/progress';
-import { Sun, Moon, Sparkles, Crown } from 'lucide-react';
+import { Progress, Typography } from 'antd';
+import { Sun, Moon, Sparkles, Crown } from '@/components/icons';
 import { useUserSegment } from '@/hooks/useUserSegment';
 import { useAuthStore } from '@/stores';
 import clsx from 'clsx';
@@ -52,45 +50,41 @@ export default function PersonalizedGreeting({
 
   return (
     <div className={clsx('space-y-1', className)}>
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="flex items-center gap-2"
       >
         {showTimeBased && (
           <>
             <TimeIcon className="h-4 w-4 text-emerald-500" />
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            <Typography.Text className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               {timeGreeting.text}
-            </span>
+            </Typography.Text>
           </>
         )}
-      </motion.div>
+      </div>
 
-      <motion.h1
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      <div
         className="flex items-center gap-3 flex-wrap"
       >
-        <span className="text-2xl font-bold text-foreground uppercase tracking-tighter">
+        <Typography.Title
+          level={1}
+          style={{ margin: 0 }}
+          className="text-2xl font-bold text-foreground uppercase tracking-tighter"
+        >
           {user?.fullName?.split(' ')[0] || 'User'}!
-        </span>
+        </Typography.Title>
 
         {showSegment && isVIP && (
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
+          <span
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20"
           >
             <Crown className="h-3.5 w-3.5 text-white" />
             <span className="text-xs font-bold tracking-[0.15em] text-white uppercase">
               {segmentGreeting}
             </span>
-          </motion.span>
+          </span>
         )}
-      </motion.h1>
+      </div>
     </div>
   );
 }
@@ -130,9 +124,7 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
   const welcome = getWelcomeMessage();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={clsx(
         'bg-gradient-to-br rounded-2xl p-6 text-white relative overflow-hidden',
         welcome.gradient,
@@ -146,37 +138,46 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4" />
-          <p className="text-xs font-bold tracking-widest opacity-80">
+          <Typography.Text className="text-xs font-bold tracking-widest opacity-80 text-white">
             PERSONALIZED EXPERIENCE
-          </p>
+          </Typography.Text>
         </div>
 
-        <h2 className="text-xl sm:text-2xl font-bold mb-2">
+        <Typography.Title
+          level={2}
+          className="text-xl sm:text-2xl font-bold text-white"
+          style={{ margin: '0 0 8px' }}
+        >
           {welcome.title}
-        </h2>
+        </Typography.Title>
 
-        <p className="text-sm opacity-90 mb-4 max-w-xl">
+        <Typography.Paragraph
+          className="text-sm opacity-90 max-w-xl text-white"
+          style={{ marginBottom: 16 }}
+        >
           {welcome.subtitle}
-        </p>
+        </Typography.Paragraph>
 
         {progressToNext && nextTier && !isVIP && (
           <div className="max-w-md">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-bold opacity-80">
+              <Typography.Text className="text-xs font-bold opacity-80 text-white">
                 Progress to {nextTier}
-              </p>
-              <p className="text-xs font-bold">
+              </Typography.Text>
+              <Typography.Text className="text-xs font-bold text-white">
                 {progressToNext.toFixed(0)}%
-              </p>
+              </Typography.Text>
             </div>
-            <Progress 
-              value={progressToNext} 
-              className="h-2 bg-white/20" 
-              indicatorClassName="bg-white"
+            <Progress
+              percent={progressToNext}
+              showInfo={false}
+              strokeColor="#ffffff"
+              railColor="rgba(255,255,255,0.2)"
+              size={['100%', 8]}
             />
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

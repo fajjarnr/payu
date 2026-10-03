@@ -5,16 +5,13 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText, TrendingUp } from 'lucide-react';
+import { CreditCard, Calendar, ShieldCheck, Wallet, ArrowRight, Percent, CheckCircle, Clock, Plus, FileText, TrendingUp } from '@/components/icons';
 import clsx from 'clsx';
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button, Skeleton, Tabs } from 'antd';
 import { useCreditScore, usePayLater, usePayLaterTransactions, useActivePreApprovals, useActivatePayLater, useApplyLoan, usePayLaterPayment } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import { asMoney, formatCurrency } from '@/lib/currency';
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 
 export default function LendingPage() {
   const { user } = useAuthStore();
@@ -123,38 +120,30 @@ export default function LendingPage() {
 
   return (
     <DashboardLayout>
-      <PageTransition>
-        <div className="space-y-6 lg:space-y-8">
-          <StaggerContainer>
-            <Tabs defaultValue="loans" data-testid="lending-tabs" className="w-full">
-              <StaggerItem>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-                  <div>
-                    <h2 className="text-3xl font-bold text-foreground tracking-tight">Pinjaman & Kredit</h2>
-                    <p className="text-sm text-muted-foreground font-medium mt-1">Solusi pembiayaan fleksibel sesuai kebutuhan Anda.</p>
-                  </div>
-                  <TabsContent value="paylater" className="mt-0">
-                    <ButtonMotion>
-                      <Button 
-                        onClick={handleActivatePayLater}
-                        disabled={activatePayLater.isPending}
-                        data-testid="activate-paylater-button" 
-                        className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2 disabled:opacity-50">
-                        <Plus className="h-4 w-4" /> {activatePayLater.isPending ? 'Memproses...' : 'Aktifkan PayLater'}
-                      </Button>
-                    </ButtonMotion>
-                  </TabsContent>
-                </div>
-
-                <TabsList className="mb-6">
-                  <TabsTrigger value="loans" data-testid="loans-tab" className="px-8">Pinjaman</TabsTrigger>
-                  <TabsTrigger value="paylater" data-testid="paylater-tab" className="px-8">PayLater</TabsTrigger>
-                </TabsList>
-              </StaggerItem>
-
-              <TabsContent value="loans" className="mt-0 space-y-6 lg:space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <StaggerItem className="lg:col-span-2">
+      <div className="space-y-6 lg:space-y-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+          <div>
+            <h2 className="text-3xl font-bold text-foreground tracking-tight">Pinjaman & Kredit</h2>
+            <p className="text-sm text-muted-foreground font-medium mt-1">Solusi pembiayaan fleksibel sesuai kebutuhan Anda.</p>
+          </div>
+          <Button
+            type="primary"
+            onClick={handleActivatePayLater}
+            disabled={activatePayLater.isPending}
+            data-testid="activate-paylater-button"
+            className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2 disabled:opacity-50">
+            <Plus className="h-4 w-4" /> {activatePayLater.isPending ? 'Memproses...' : 'Aktifkan PayLater'}
+          </Button>
+        </div>
+        <Tabs defaultActiveKey="loans" data-testid="lending-tabs" className="w-full"
+              items={[
+                {
+                  key: 'loans',
+                  label: <span data-testid="loans-tab" className="px-8">Pinjaman</span>,
+                  children: (
+                <div className="mt-0 space-y-6 lg:space-y-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
                     <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10 flex items-start justify-between mb-8">
                         <div>
@@ -195,9 +184,9 @@ export default function LendingPage() {
                         <div className="bg-gradient-to-r from-success-light to-primary h-full rounded-full" style={{ width: `${(creditScore.score / creditScore.maxScore) * 100}%` }} />
                       </div>
                     </div>
-                  </StaggerItem>
-
-                  <StaggerItem>
+                  </div>
+                  </div>
+                  <div className="lg:col-span-1">
                     <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
                       <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 border border-primary/10">
                         <Wallet className="h-6 w-6 text-primary" />
@@ -208,14 +197,13 @@ export default function LendingPage() {
                        </p>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Tersedia berdasarkan skor kredit</p>
                     </div>
-                  </StaggerItem>
-                </div>
+                  </div>
 
                 <div className="space-y-6 mt-8">
                   <h3 className="text-xl font-bold text-foreground">Produk Pinjaman</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {loanProducts.map((product, i) => (
-                      <StaggerItem key={i} data-testid={`loan-product-${i}`} className="bg-card p-5 sm:p-6 lg:p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
+                      <div key={i} data-testid={`loan-product-${i}`} className="bg-card p-5 sm:p-6 lg:p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]">
                         <div className="flex justify-between items-start mb-6">
                           <div className={clsx("h-16 w-16 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110", product.bg, product.color)}>
                             <product.icon className="h-8 w-8" />
@@ -245,25 +233,29 @@ export default function LendingPage() {
                               <span className="font-bold text-foreground">{product.processingTime}</span>
                             </div>
                           </div>
-                          <ButtonMotion className="w-full">
-                            <Button 
+                            <Button
+                              type="primary"
                               onClick={() => handleApplyLoan(product.name)}
                               disabled={applyLoan.isPending}
                               data-testid={`apply-loan-${i}`} 
                               className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50">
                               {applyLoan.isPending ? 'Memproses...' : <>Ajukan Sekarang <ArrowRight className="h-4 w-4" /></>}
                             </Button>
-                          </ButtonMotion>
+                          </div>
                         </div>
-                      </StaggerItem>
                     ))}
                   </div>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="paylater" className="mt-0 space-y-6 lg:space-y-8">
+              </div>
+            ),
+            },
+            {
+              key: 'paylater',
+              label: <span data-testid="paylater-tab" className="px-8">PayLater</span>,
+              children: (
+                <div className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <StaggerItem className="lg:col-span-2">
+                  <div className="lg:col-span-2">
                     <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
                         <div>
@@ -304,21 +296,17 @@ export default function LendingPage() {
                           <p className="text-xs font-bold text-white/60 tracking-widest uppercase">Pembayaran Minimum</p>
                           <p className="text-xl font-bold">{formatCurrency(payLaterStats.minimumPayment)}</p>
                         </div>
-                        <ButtonMotion>
-                          <Button 
+                          <Button
                             onClick={handlePayBill}
                             disabled={payLaterPayment.isPending}
                             data-testid="pay-bill-button" 
-                            variant="secondary" 
                             className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg disabled:opacity-50">
                             {payLaterPayment.isPending ? 'Memproses...' : 'Bayar Tagihan'}
                           </Button>
-                        </ButtonMotion>
                       </div>
                     </div>
-                  </StaggerItem>
-
-                  <StaggerItem>
+                  </div>
+                  <div className="lg:col-span-1">
                     <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
                       <div className="flex justify-between items-start mb-6">
                         <h3 className="text-lg font-bold text-foreground">Ringkasan Transaksi</h3>
@@ -341,9 +329,9 @@ export default function LendingPage() {
                         </div>
                       </div>
                     </div>
-                  </StaggerItem>
-                </div>
+                  </div>
 
+                </div>
                 <div className="space-y-6 mt-8">
                   <h3 className="text-xl font-bold text-foreground">Riwayat Transaksi PayLater</h3>
                   <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
@@ -378,11 +366,12 @@ export default function LendingPage() {
                     </div>
                   </div>
                 </div>
-              </TabsContent>
-            </Tabs>
-          </StaggerContainer>
+                </div>
+                  ),
+                },
+              ]}
+            />
         </div>
-      </PageTransition>
     </DashboardLayout>
   );
 }

@@ -2,11 +2,9 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { Gift, Coins, DollarSign, Share2, TrendingUp, Copy, ArrowRight, Trophy, CheckCircle, Award, Calendar, Zap, History, Clock } from 'lucide-react';
+import { Gift, Coins, DollarSign, Share2, TrendingUp, Copy, ArrowRight, Trophy, CheckCircle, Award, Calendar, Zap, History, Clock } from '@/components/icons';
 import clsx from 'clsx';
-import { PageTransition, StaggerContainer, StaggerItem, ButtonMotion } from '@/components/ui/Motion';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button, Tabs } from 'antd';
 import { useLoyaltyBalance, useCashbacks, useReferralSummary, useActivePromotions } from '@/hooks';
 import { addCurrency, asMoney, formatExactDecimal, type Money } from '@/lib/currency';
 import { useAuthStore } from '@/stores/authStore';
@@ -72,34 +70,22 @@ export default function RewardsPage() {
 
   return (
     <DashboardLayout>
-      <PageTransition>
         <div className="space-y-6 lg:space-y-8">
-          <StaggerContainer>
-            <Tabs defaultValue="points" className="w-full">
-              <StaggerItem>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-                  <div>
-                    <h2 className="text-3xl font-bold text-foreground tracking-tight">Rewards & Gamifikasi</h2>
-                    <p className="text-sm text-muted-foreground font-medium mt-1">Kumpulkan poin, dapatkan cashback, dan raih lebih banyak keuntungan.</p>
-                  </div>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+                <div>
+                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Rewards & Gamifikasi</h2>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Kumpulkan poin, dapatkan cashback, dan raih lebih banyak keuntungan.</p>
                 </div>
-
-                <TabsList className="mb-6">
-                  <TabsTrigger value="points" className="px-6 flex items-center gap-2">
-                    <Coins className="h-4 w-4" /> Poin Loyalty
-                  </TabsTrigger>
-                  <TabsTrigger value="cashback" className="px-6 flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" /> Cashback
-                  </TabsTrigger>
-                  <TabsTrigger value="referral" className="px-6 flex items-center gap-2">
-                    <Share2 className="h-4 w-4" /> Referral
-                  </TabsTrigger>
-                </TabsList>
-              </StaggerItem>
-
-              <TabsContent value="points" className="mt-0 space-y-6 lg:space-y-8">
+              </div>
+            <Tabs defaultActiveKey="points" className="w-full"
+              items={[
+                {
+                  key: 'points',
+                  label: <span className="px-6 flex items-center gap-2"><Coins className="h-4 w-4" /> Poin Loyalty</span>,
+                  children: (
+                <div className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  <StaggerItem className="lg:col-span-2">
+                  <div className="lg:col-span-2">
                     <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
                         <div className="flex items-start justify-between mb-6">
@@ -142,9 +128,9 @@ export default function RewardsPage() {
                       </div>
                       <Trophy className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-white/5 -rotate-12" />
                     </div>
-                  </StaggerItem>
+                  </div>
 
-                  <StaggerItem className="lg:col-span-2">
+                  <div className="lg:col-span-2">
                     <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Cara Mendapatkan Poin</h3>
                       <div className="space-y-6">
@@ -186,7 +172,7 @@ export default function RewardsPage() {
                         </div>
                       </div>
                     </div>
-                  </StaggerItem>
+                  </div>
                 </div>
 
                 <div className="space-y-6 mt-8">
@@ -222,11 +208,16 @@ export default function RewardsPage() {
                     </div>
                   </div>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="cashback" className="mt-0 space-y-6 lg:space-y-8">
+                </div>
+                  ),
+                },
+                {
+                  key: 'cashback',
+                  label: <span className="px-6 flex items-center gap-2"><DollarSign className="h-4 w-4" /> Cashback</span>,
+                  children: (
+                <div className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <StaggerItem className="lg:col-span-1">
+                  <div className="lg:col-span-1">
                     <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl h-full">
                       <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-6">
@@ -254,9 +245,9 @@ export default function RewardsPage() {
                         </div>
                       </div>
                     </div>
-                  </StaggerItem>
+                  </div>
 
-                  <StaggerItem className="lg:col-span-2">
+                  <div className="lg:col-span-2">
                     <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Promosi Aktif</h3>
                       <div className="space-y-4">
@@ -279,7 +270,7 @@ export default function RewardsPage() {
                         ))}
                       </div>
                     </div>
-                  </StaggerItem>
+                  </div>
                 </div>
 
                 <div className="space-y-6 mt-8">
@@ -319,11 +310,14 @@ export default function RewardsPage() {
                     </div>
                   </div>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="referral" className="mt-0 space-y-6 lg:space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <StaggerItem>
+                </div>
+                  ),
+                },
+                {
+                  key: 'referral',
+                  label: <span className="px-6 flex items-center gap-2"><Share2 className="h-4 w-4" /> Referral</span>,
+                  children: (
+                <div className="mt-0 space-y-6 lg:space-y-8">
                     <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-6">
@@ -336,11 +330,9 @@ export default function RewardsPage() {
                         <div className="bg-white/10 rounded-xl p-6 mb-6 border border-white/10">
                           <div className="flex items-center justify-between">
                             <span className="text-4xl font-bold tracking-widest">{referralStats.code}</span>
-                            <ButtonMotion>
-                              <Button size="icon" variant="ghost" className="h-12 w-12 bg-white/10 rounded-lg border border-white/10 hover:bg-white/30 transition-all text-white">
+                              <Button shape="circle" type="text" className="h-12 w-12 bg-white/10 rounded-lg border border-white/10 hover:bg-white/30 transition-all text-white">
                                 <Copy className="h-6 w-6" />
                               </Button>
-                            </ButtonMotion>
                           </div>
                           <p className="text-sm text-white/80 mt-4">Bagikan kode ini kepada teman dan dapatkan {referralStats.rewardPerReferral} poin untuk setiap teman yang berhasil bergabung</p>
                         </div>
@@ -358,9 +350,7 @@ export default function RewardsPage() {
                       </div>
                       <Share2 className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-white/5 -rotate-12" />
                     </div>
-                  </StaggerItem>
 
-                  <StaggerItem>
                     <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Ringkasan Referral</h3>
                       <div className="space-y-6">
@@ -393,19 +383,16 @@ export default function RewardsPage() {
                         </div>
                       </div>
 
-                      <ButtonMotion className="mt-8 w-full">
-                        <Button className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
-                          Bagikan Link Referral <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </ButtonMotion>
+                      <Button type="primary" size="large" className="mt-8 w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
+                        Bagikan Link Referral <ArrowRight className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </StaggerItem>
                 </div>
-              </TabsContent>
-            </Tabs>
-          </StaggerContainer>
+                  ),
+                },
+              ]}
+            />
         </div>
-      </PageTransition>
     </DashboardLayout>
   );
 }

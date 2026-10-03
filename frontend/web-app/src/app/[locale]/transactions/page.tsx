@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useLocale } from 'next-intl';
 import DashboardLayout from '@/components/DashboardLayout';
-import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { useAuthStore } from '@/stores';
 import { useTransactions, useCancelTransaction } from '@/hooks';
 import {
@@ -18,37 +17,13 @@ import {
   X,
   RotateCcw,
   Filter
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
+} from '@/components/icons';
+import { Button, Card, Dropdown, Modal, Skeleton, Table, Tag, Typography } from 'antd';
+import type { TableColumnsType } from 'antd';
+import { notify as toast } from '@/lib/notify';
 import clsx from 'clsx';
-import type { Transaction, TransactionFilters, TransactionStatus, TransactionType } from '@/types';
 import { addCurrency, formatCurrency } from '@/lib/currency';
+import type { Transaction, TransactionFilters, TransactionStatus, TransactionType } from '@/types';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
@@ -133,10 +108,99 @@ export default function TransactionsPage() {
   const canCancel = (status: string) => {
     return status === 'PENDING' || status === 'PROCESSING';
   };
+  const columns: TableColumnsType<Transaction> = [
+    {
+      key: 'date',
+      title: 'Tanggal',
+      render: (_, transaction) => (
+        <div>
+          <div className="text-sm font-bold text-foreground">{formatDate(transaction.createdAt)}</div>
+          <div className="text-xs text-muted-foreground font-mono mt-1">{transaction.referenceNumber}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'type',
+      title: 'Tipe',
+      render: (_, transaction) => {
+        const type = typeConfig[transaction.type] || typeConfig.INTERNAL_TRANSFER;
+        const TypeIcon = type.icon;
+        const credit = isCreditType(transaction.type, transaction, accountId);
+        return (
+          <div className="flex items-center gap-3">
+            <div className={clsx(
+              "h-10 w-10 rounded-xl flex items-center justify-center border",
+              credit ? "bg-primary/10 border-primary/10" : "bg-muted/50 border-border/50"
+            )}>
+              <TypeIcon className={clsx("h-5 w-5", credit ? "text-primary" : "text-muted-foreground")} />
+            </div>
+            <span className="text-sm font-bold text-foreground">{type.label}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'description',
+      title: 'Deskripsi',
+      render: (_, transaction) => (
+        <p className="text-sm font-medium text-foreground max-w-[200px] truncate">{transaction.description}</p>
+      ),
+    },
+    {
+      key: 'status',
+      title: 'Status',
+      align: 'center',
+      render: (_, transaction) => {
+        const status = statusConfig[transaction.status];
+        const StatusIcon = status.icon;
+        return (
+          <Tag bordered={false} className={clsx("font-bold text-xs", status.color)}>
+            <StatusIcon className="h-3 w-3 mr-1" />
+            {status.label}
+          </Tag>
+        );
+      },
+    },
+    {
+      key: 'amount',
+      title: 'Jumlah',
+      align: 'right',
+      render: (_, transaction) => {
+        const credit = isCreditType(transaction.type, transaction, accountId);
+        return (
+          <span className={clsx("font-bold tabular-nums", credit ? "text-primary" : "text-foreground")}>
+            {credit ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      title: '',
+      align: 'right',
+      render: (_, transaction) => (
+        <Dropdown
+          trigger={['click']}
+          placement="bottomRight"
+          menu={{
+            className: 'w-48',
+            items: [
+              { key: 'detail', label: 'Lihat Detail' },
+              ...(canCancel(transaction.status)
+                ? [{ key: 'cancel', danger: true, label: 'Batalkan Transaksi', onClick: () => handleCancelClick(transaction) }]
+                : []),
+            ],
+          }}
+        >
+          <Button type="text" shape="circle" className="h-9 w-9 rounded-xl" icon={<MoreHorizontal className="h-4 w-4" />} aria-label="Opsi transaksi" />
+        </Dropdown>
+      ),
+    },
+  ];
 
   return (
     <DashboardLayout>
-      <PageTransition>
+      <>
         <div className="space-y-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -148,66 +212,65 @@ export default function TransactionsPage() {
             </div>
             <div className="flex gap-3">
               {(filters.status || filters.type) && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  type="text"
+                  size="small"
                   onClick={() => setFilters({})}
                   className="text-xs font-bold text-muted-foreground hover:text-primary"
                 >
                   Hapus Filter
                 </Button>
               )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Filter className="h-4 w-4" />
-                    {filters.status ? statusConfig[filters.status].label : 'Status'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => setFilters({ ...filters, status: undefined })}>
-                    Semua Status
-                  </DropdownMenuItem>
-                  {Object.keys(statusConfig).map((status) => (
-                    <DropdownMenuItem 
-                      key={status} 
-                      onClick={() => setFilters({ ...filters, status: status as TransactionStatus })}
-                    >
-                      {statusConfig[status].label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Dropdown
+                trigger={['click']}
+                placement="bottomRight"
+                menu={{
+                  className: 'w-48',
+                  selectedKeys: filters.status ? [filters.status] : [],
+                  items: [
+                    { key: 'all', label: 'Semua Status', onClick: () => setFilters({ ...filters, status: undefined }) },
+                    ...Object.keys(statusConfig).map((status) => ({
+                      key: status,
+                      label: statusConfig[status].label,
+                      onClick: () => setFilters({ ...filters, status: status as TransactionStatus }),
+                    })),
+                  ],
+                }}
+              >
+                <Button className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  {filters.status ? statusConfig[filters.status].label : 'Status'}
+                </Button>
+              </Dropdown>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <ArrowLeftRight className="h-4 w-4" />
-                    {filters.type ? typeConfig[filters.type]?.label : 'Tipe'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => setFilters({ ...filters, type: undefined })}>
-                    Semua Tipe
-                  </DropdownMenuItem>
-                  {Object.keys(typeConfig).map((type) => (
-                    <DropdownMenuItem 
-                      key={type} 
-                      onClick={() => setFilters({ ...filters, type: type as TransactionType })}
-                    >
-                      {typeConfig[type].label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Dropdown
+                trigger={['click']}
+                placement="bottomRight"
+                menu={{
+                  className: 'w-56',
+                  selectedKeys: filters.type ? [filters.type] : [],
+                  items: [
+                    { key: 'all', label: 'Semua Tipe', onClick: () => setFilters({ ...filters, type: undefined }) },
+                    ...Object.keys(typeConfig).map((type) => ({
+                      key: type,
+                      label: typeConfig[type].label,
+                      onClick: () => setFilters({ ...filters, type: type as TransactionType }),
+                    })),
+                  ],
+                }}
+              >
+                <Button className="gap-2">
+                  <ArrowLeftRight className="h-4 w-4" />
+                  {filters.type ? typeConfig[filters.type]?.label : 'Tipe'}
+                </Button>
+              </Dropdown>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <StaggerItem>
-              <Card>
-                <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <>
+              <Card className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/10">
                       <ArrowDownLeft className="h-6 w-6 text-primary" />
@@ -215,16 +278,14 @@ export default function TransactionsPage() {
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Total Masuk</p>
                        <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton className="h-7 w-24" /> : formatAmount(totalIn, 'IDR')}
+                        {isLoading ? <Skeleton.Input active size="small" className="!h-7 !w-24" /> : formatAmount(totalIn, 'IDR')}
                       </p>
                     </div>
                   </div>
-                </CardContent>
               </Card>
-            </StaggerItem>
-            <StaggerItem>
-              <Card>
-                <CardContent className="p-6">
+            </>
+            <>
+              <Card className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center">
                       <ArrowUpRight className="h-6 w-6 text-red-500" />
@@ -232,16 +293,14 @@ export default function TransactionsPage() {
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Total Keluar</p>
                       <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton className="h-7 w-24" /> : formatAmount(totalOut, 'IDR')}
+                        {isLoading ? <Skeleton.Input active size="small" className="!h-7 !w-24" /> : formatAmount(totalOut, 'IDR')}
                       </p>
                     </div>
                   </div>
-                </CardContent>
               </Card>
-            </StaggerItem>
-            <StaggerItem>
-              <Card>
-                <CardContent className="p-6">
+            </>
+            <>
+              <Card className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
                       <Clock className="h-6 w-6 text-blue-500" />
@@ -249,16 +308,14 @@ export default function TransactionsPage() {
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Menunggu</p>
                       <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton className="h-7 w-24" /> : String(pendingCount)}
+                        {isLoading ? <Skeleton.Input active size="small" className="!h-7 !w-24" /> : String(pendingCount)}
                       </p>
                     </div>
                   </div>
-                </CardContent>
               </Card>
-            </StaggerItem>
-            <StaggerItem>
-              <Card>
-                <CardContent className="p-6">
+            </>
+            <>
+              <Card className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
                       <CheckCircle2 className="h-6 w-6 text-purple-500" />
@@ -266,139 +323,44 @@ export default function TransactionsPage() {
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Selesai</p>
                       <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton className="h-7 w-24" /> : String(completedCount)}
+                        {isLoading ? <Skeleton.Input active size="small" className="!h-7 !w-24" /> : String(completedCount)}
                       </p>
                     </div>
                   </div>
-                </CardContent>
               </Card>
-            </StaggerItem>
-          </StaggerContainer>
+            </>
+          </div>
 
           {/* Transactions Table */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-bold tracking-widest uppercase">Daftar Transaksi</CardTitle>
-              <Badge variant="outline" className="font-mono">
-                Halaman {page + 1}
-              </Badge>
-            </CardHeader>
-            <CardContent>
+          <Card
+            title={<span className="text-lg font-bold tracking-widest uppercase">Daftar Transaksi</span>}
+            extra={<Tag bordered className="font-mono">Halaman {page + 1}</Tag>}
+          >
+            <div>
               {isLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
+                    <Skeleton.Input key={i} active className="!h-16 !w-full" />
                   ))}
                 </div>
               ) : (
                 <>
                   <div className="hidden md:block">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-b border-border/50 hover:bg-transparent">
-                          <TableHead className="h-14 text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase">
-                            Tanggal
-                          </TableHead>
-                          <TableHead className="h-14 text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase">
-                            Tipe
-                          </TableHead>
-                          <TableHead className="h-14 text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase">
-                            Deskripsi
-                          </TableHead>
-                          <TableHead className="h-14 text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase text-center">
-                            Status
-                          </TableHead>
-                          <TableHead className="h-14 text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase text-right">
-                            Jumlah
-                          </TableHead>
-                          <TableHead className="h-14 w-[50px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {transactions?.map((transaction: Transaction) => {
-                          const status = statusConfig[transaction.status];
-                          const type = typeConfig[transaction.type] || typeConfig.TRANSFER;
-                          const StatusIcon = status.icon;
-                          const TypeIcon = type.icon;
-
-                          return (
-                            <TableRow
-                              key={transaction.id}
-                              className="group border-b border-border/30 hover:bg-muted/30 transition-colors"
-                            >
-                              <TableCell className="py-6 whitespace-nowrap">
-                                <div className="text-sm font-bold text-foreground">
-                                  {formatDate(transaction.createdAt)}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-mono mt-1">
-                                  {transaction.referenceNumber}
-                                </div>
-                              </TableCell>
-                              <TableCell className="py-6">
-                                <div className="flex items-center gap-3">
-                                  <div className={clsx(
-                                    "h-10 w-10 rounded-xl flex items-center justify-center border",
-                                    isCreditType(transaction.type) ? "bg-primary/10 border-primary/10" : "bg-muted/50 border-border/50"
-                                  )}>
-                                    <TypeIcon className={clsx(
-                                      "h-5 w-5",
-                                      isCreditType(transaction.type) ? "text-primary" : "text-muted-foreground"
-                                    )} />
-                                  </div>
-                                  <span className="text-sm font-bold text-foreground">{type.label}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell className="py-6">
-                                <p className="text-sm font-medium text-foreground max-w-[200px] truncate">
-                                  {transaction.description}
-                                </p>
-                              </TableCell>
-                              <TableCell className="py-6 text-center">
-                                <Badge variant="outline" className={clsx("font-bold text-xs", status.color)}>
-                                  <StatusIcon className="h-3 w-3 mr-1" />
-                                  {status.label}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className={clsx(
-                                "py-6 text-right font-bold tabular-nums",
-                                isCreditType(transaction.type) ? "text-primary" : "text-foreground"
-                              )}>
-                                {isCreditType(transaction.type) ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
-                              </TableCell>
-                              <TableCell className="py-6 text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-48">
-                                    <DropdownMenuItem className="cursor-pointer">
-                                      Lihat Detail
-                                    </DropdownMenuItem>
-                                    {canCancel(transaction.status) && (
-                                      <DropdownMenuItem
-                                        className="cursor-pointer text-red-600 focus:text-red-600"
-                                        onClick={() => handleCancelClick(transaction)}
-                                      >
-                                        Batalkan Transaksi
-                                      </DropdownMenuItem>
-                                    )}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                    <Table<Transaction>
+                      columns={columns}
+                      dataSource={transactions ?? []}
+                      rowKey="id"
+                      pagination={false}
+                      loading={isLoading}
+                      locale={{ emptyText: 'Tidak ada transaksi' }}
+                    />
                   </div>
 
                   {/* Mobile Layout */}
                   <div className="md:hidden space-y-4">
                     {transactions?.map((transaction: Transaction) => {
                       const status = statusConfig[transaction.status];
-                      const type = typeConfig[transaction.type] || typeConfig.TRANSFER;
+                      const type = typeConfig[transaction.type] || typeConfig.INTERNAL_TRANSFER;
                       const StatusIcon = status.icon;
                       const TypeIcon = type.icon;
 
@@ -423,10 +385,10 @@ export default function TransactionsPage() {
                                 <p className="text-xs text-muted-foreground">{formatDate(transaction.createdAt)}</p>
                               </div>
                             </div>
-                            <Badge variant="outline" className={clsx("font-bold text-xs", status.color)}>
+                            <Tag bordered={false} className={clsx("font-bold text-xs", status.color)}>
                               <StatusIcon className="h-3 w-3 mr-1" />
                               {status.label}
-                            </Badge>
+                            </Tag>
                           </div>
                           <div className="flex items-center justify-between pt-3 border-t border-border/50">
                             <p className="text-xs text-muted-foreground truncate max-w-[150px]">
@@ -442,8 +404,9 @@ export default function TransactionsPage() {
                           {canCancel(transaction.status) && (
                             <div className="mt-3 pt-3 border-t border-border/50">
                               <Button
-                                variant="ghost"
-                                size="sm"
+                                type="text"
+                                danger
+                                size="small"
                                 className="w-full text-red-600 hover:text-red-600 hover:bg-red-50"
                                 onClick={() => handleCancelClick(transaction)}
                               >
@@ -473,8 +436,7 @@ export default function TransactionsPage() {
                   {transactions && transactions.length > 0 && (
                     <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/50">
                       <Button
-                        variant="outline"
-                        size="sm"
+                        size="small"
                         onClick={() => setPage((p) => Math.max(0, p - 1))}
                         disabled={page === 0}
                       >
@@ -484,8 +446,7 @@ export default function TransactionsPage() {
                         Halaman {page + 1}
                       </span>
                       <Button
-                        variant="outline"
-                        size="sm"
+                        size="small"
                         onClick={() => setPage((p) => p + 1)}
                         disabled={!transactions || transactions.length < 20}
                       >
@@ -495,23 +456,17 @@ export default function TransactionsPage() {
                   )}
                 </>
               )}
-            </CardContent>
+            </div>
           </Card>
         </div>
-      </PageTransition>
+      </>
 
       {/* Cancel Confirmation Dialog */}
-      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-              Batalkan Transaksi?
-            </DialogTitle>
-            <DialogDescription>
-              Apakah Anda yakin ingin membatalkan transaksi ini? Tindakan ini tidak dapat dibatalkan.
-            </DialogDescription>
-          </DialogHeader>
+      <Modal open={isCancelDialogOpen} onCancel={() => setIsCancelDialogOpen(false)} footer={null} centered width={512} title={<Typography.Title level={4} className="!mb-1 flex items-center gap-2"><AlertCircle className="h-5 w-5 text-red-500" />Batalkan Transaksi?</Typography.Title>}>
+        <div>
+          <Typography.Text type="secondary">
+            Apakah Anda yakin ingin membatalkan transaksi ini? Tindakan ini tidak dapat dibatalkan.
+          </Typography.Text>
           {selectedTransaction && (
             <div className="bg-muted/50 p-4 rounded-xl space-y-2">
               <div className="flex justify-between">
@@ -530,20 +485,21 @@ export default function TransactionsPage() {
               </div>
             </div>
           )}
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2">
+            <Button onClick={() => setIsCancelDialogOpen(false)}>
               Batal
             </Button>
             <Button
-              variant="destructive"
+              danger
+              type="primary"
               onClick={handleConfirmCancel}
               disabled={cancelTransaction.isPending}
             >
               {cancelTransaction.isPending ? 'Membatalkan...' : 'Ya, Batalkan'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </Modal>
     </DashboardLayout>
   );
 }

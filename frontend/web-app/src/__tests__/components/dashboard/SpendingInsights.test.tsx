@@ -2,7 +2,7 @@ import React from 'react';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { Utensils, ShoppingCart } from 'lucide-react';
+import { Utensils, ShoppingCart } from '@/components/icons';
 import SpendingInsights from '@/components/dashboard/SpendingInsights';
 
 expect.extend(toHaveNoViolations);
@@ -57,8 +57,8 @@ describe('SpendingInsights', () => {
   it('should expand category details on click', async () => {
     renderWithIntl(<SpendingInsights data={mockCategories} />);
 
-    const categoryButtons = screen.getAllByRole('button');
-    const foodCategoryButton = categoryButtons.find(btn =>
+    const categoryHeaders = screen.getAllByRole('tab');
+    const foodCategoryButton = categoryHeaders.find((btn) =>
       btn.textContent?.includes('Makanan')
     );
 
@@ -99,23 +99,31 @@ describe('SpendingInsights', () => {
     const region = screen.getByRole('region');
     expect(region).toHaveAttribute('aria-labelledby', 'spending-insights-title');
 
-    const list = screen.getByRole('list');
+    const list = screen.getByRole('tablist');
     expect(list).toHaveAttribute('aria-label', 'Daftar kategori pengeluaran');
   });
 
   it('should have keyboard-navigable category items', () => {
     renderWithIntl(<SpendingInsights data={mockCategories} />);
 
-    const categoryButtons = screen.getAllByRole('button').filter((btn) =>
-      btn.textContent?.includes('Makanan') || btn.textContent?.includes('Belanja')
+    const categoryTabs = screen.getAllByRole('tab').filter((tab) =>
+      tab.textContent?.includes('Makanan') || tab.textContent?.includes('Belanja')
     );
 
-    expect(categoryButtons.length).toBeGreaterThan(0);
+    expect(categoryTabs.length).toBeGreaterThan(0);
 
-    categoryButtons.forEach((button) => {
-      expect(button).toHaveAttribute('aria-expanded');
-      expect(button).toHaveAttribute('aria-controls');
-    });
+    const firstTab = categoryTabs[0];
+    expect(firstTab).toHaveAttribute('aria-expanded', 'false');
+    expect(firstTab).toHaveAttribute('tabindex', '0');
+
+    firstTab.focus();
+    expect(firstTab).toHaveFocus();
+
+    fireEvent.keyDown(firstTab, { key: 'Enter', code: 'Enter', keyCode: 13 });
+    expect(firstTab).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.keyDown(firstTab, { key: 'Enter', code: 'Enter', keyCode: 13 });
+    expect(firstTab).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('should announce trend changes to screen readers', () => {

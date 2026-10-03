@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from '@/lib/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { Building2, Mail, Phone, User, CreditCard, ArrowRight, ShieldCheck, CheckCircle2, FileText } from 'lucide-react';
+import { Building2, Mail, Phone, User, CreditCard, ArrowRight, ShieldCheck, CheckCircle2, FileText } from '@/components/icons';
 import { PartnerService } from '@/services/PartnerService';
 import { z } from 'zod';
 import clsx from 'clsx';
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 
 const merchantSchema = z.object({
  name: z.string().min(3, 'Nama merchant minimal 3 karakter'),

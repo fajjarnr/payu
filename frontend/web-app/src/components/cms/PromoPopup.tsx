@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { X } from 'lucide-react';
+import { X } from '@/components/icons';
 import clsx from 'clsx';
 import { useRouter } from '@/lib/navigation';
 import { usePopups } from '@/hooks';
-import { Button } from '@/components/ui/button';
+import { Button, Modal } from 'antd';
 
 /** Read dismissed/shown popup id sets from localStorage + sessionStorage. */
 function readPopupSetsFromStorage(
@@ -27,13 +27,7 @@ function readPopupSetsFromStorage(
   }
   return { dismissed, shown };
 }
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+
 
 interface PromoPopupProps {
   segment?: string;
@@ -198,23 +192,32 @@ export default function PromoPopup({
   if (!currentPopup) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose(false)}>
-      <DialogContent className="p-0 border-none bg-card max-w-lg rounded-3xl overflow-hidden shadow-2xl">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{currentPopup.title}</DialogTitle>
-          <DialogDescription>{currentPopup.description}</DialogDescription>
-        </DialogHeader>
+    <Modal
+      open={isOpen}
+      onCancel={() => handleClose(false)}
+      footer={null}
+      centered
+      width={512}
+      styles={{ body: { padding: 0 }, mask: { background: 'rgba(0,0,0,0.8)' }, container: { background: 'transparent', boxShadow: 'none', padding: 0, borderRadius: 0, overflow: 'visible' }, root: { background: 'transparent', boxShadow: 'none' } }}
+      className="p-0"
+      aria-modal="true"
+    >
+      <div className="relative z-50 mx-auto grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg p-0 border-none bg-card max-w-lg rounded-3xl overflow-hidden shadow-2xl">
+        <div className="flex flex-col space-y-1.5 text-center sm:text-left sr-only">
+          <div className="text-lg font-semibold leading-none tracking-tight">{currentPopup.title}</div>
+          <div className="text-sm text-muted-foreground">{currentPopup.description}</div>
+        </div>
 
         {/* Close Button - Premium Position */}
         <Button
-          variant="ghost"
-          size="icon"
+          type="text"
+          shape="circle"
           onClick={() => handleClose(false)}
-          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-all h-9 w-9"
+          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-all"
+          style={{ width: 36, height: 36 }}
           aria-label="Close popup"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+          icon={<X className="h-4 w-4" />}
+        />
 
         {/* Image Banner */}
         {currentPopup.imageUrl && (
@@ -255,13 +258,16 @@ export default function PromoPopup({
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <Button
+              type="primary"
+              size="large"
               onClick={handleAction}
               className="flex-1 h-14 bg-bank-green hover:bg-bank-emerald text-white font-bold uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-bank-green/20"
             >
               {t('claimNow')}
             </Button>
             <Button
-              variant="outline"
+              type="default"
+              size="large"
               onClick={() => handleClose(true)}
               className="flex-1 h-14 font-bold uppercase tracking-widest text-xs rounded-2xl border-border hover:bg-muted transition-all"
             >
@@ -298,7 +304,7 @@ export default function PromoPopup({
             </p>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </Modal>
   );
 }

@@ -17,7 +17,7 @@ import {
   Wallet,
   X,
   Zap,
-} from 'lucide-react';
+} from '@/components/icons';
 import { Fragment, useState } from 'react';
 
 export default function LandingPage() {
@@ -71,7 +71,7 @@ export default function LandingPage() {
               aria-expanded={mobileMenuOpen}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileMenuOpen ? <X style={{ fontSize: 20 }} /> : <Menu style={{ fontSize: 20 }} />}
             </button>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function LandingPage() {
                   <dt className="sr-only">{t('secure.item3')}</dt>
                   <dd className="flex items-center gap-1.5 font-heading text-2xl font-bold tracking-tight">
                     ISO
-                    <BadgeCheck size={20} className="text-primary" aria-hidden="true" />
+                    <BadgeCheck style={{ fontSize: 20 }} className="text-primary" aria-hidden="true" />
                   </dd>
                   <p className="mt-0.5 text-xs text-muted-foreground">{t('secure.item3')}</p>
                 </div>
@@ -191,7 +191,7 @@ export default function LandingPage() {
                     ].map(({ icon: Icon, label }) => (
                       <div key={label} className="flex flex-col items-center gap-1.5">
                         <div className="flex size-11 w-full items-center justify-center rounded-xl bg-primary/10 text-primary">
-                          <Icon size={18} />
+                          <Icon style={{ fontSize: 18 }} />
                         </div>
                         <span className="text-xs font-medium text-muted-foreground">{label}</span>
                       </div>
@@ -207,7 +207,7 @@ export default function LandingPage() {
                       <div key={tx.name} className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <div className={`flex size-8 items-center justify-center rounded-full ${tx.positive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                            {tx.positive ? <Plus size={14} /> : <QrCode size={14} />}
+                            {tx.positive ? <Plus style={{ fontSize: 14 }} /> : <QrCode style={{ fontSize: 14 }} />}
                           </div>
                           <span className="text-xs font-medium">{tx.name}</span>
                         </div>
@@ -219,7 +219,7 @@ export default function LandingPage() {
               </div>
 
               <div className="absolute -right-12 top-16 flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 shadow-xl">
-                <CheckCircle2 size={18} className="text-primary" />
+                <CheckCircle2 style={{ fontSize: 18 }} className="text-primary" />
                 <div>
                   <p className="text-[11px] font-semibold">Payment Successful</p>
                   <p className="text-xs text-muted-foreground">QRIS • Rp45.000</p>
@@ -254,7 +254,7 @@ export default function LandingPage() {
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="group rounded-2xl border border-border bg-card p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
                   <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <Icon size={20} />
+                    <Icon style={{ fontSize: 20 }} />
                   </div>
                   <h3 className="mt-5 font-heading text-lg font-bold tracking-tight">{title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
@@ -314,7 +314,7 @@ export default function LandingPage() {
                   ].map(({ icon: Icon, label }) => (
                     <li key={label} className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4 backdrop-blur-sm">
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15">
-                        <Icon size={18} aria-hidden="true" />
+                        <Icon style={{ fontSize: 18 }} aria-hidden="true" />
                       </span>
                       <span className="text-sm font-semibold">{label}</span>
                     </li>

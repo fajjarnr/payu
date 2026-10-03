@@ -9,16 +9,21 @@ interface Toast {
   duration?: number;
 }
 
+export type Theme = 'light' | 'dark';
+
 interface UIState {
   isSidebarOpen: boolean;
   isLoading: boolean;
   toasts: Toast[];
+  theme: Theme;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   setLoading: (loading: boolean) => void;
   addToast: (message: string, type: ToastType, duration?: number) => void;
   removeToast: (id: string) => void;
   clearToasts: () => void;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 }
 
 // BUG-FE-002: Track timeout IDs per toast to clear on removal
@@ -28,7 +33,7 @@ export const useUIStore = create<UIState>((set) => ({
   isSidebarOpen: true,
   isLoading: false,
   toasts: [],
-
+  theme: 'light',
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 
   setSidebarOpen: (open) => set({ isSidebarOpen: open }),
@@ -68,5 +73,9 @@ export const useUIStore = create<UIState>((set) => ({
     toastTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
     toastTimeouts.clear();
     set({ toasts: [] });
-  }
+  },
+
+  setTheme: (theme) => set({ theme }),
+
+  toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
 }));

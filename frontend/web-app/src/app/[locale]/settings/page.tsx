@@ -2,17 +2,14 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight, FileText, Loader2, CheckCircle, Building2 } from 'lucide-react';
+import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight, FileText, Loader2, CheckCircle, Building2 } from '@/components/icons';
 import clsx from 'clsx';
-import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import StatementDownloader from '@/components/settings/statement-downloader';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
+import { Button, Input, Switch } from 'antd';
 import { useAuth, useLogout, useUpdateUser } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import BeneficiaryManager from '@/components/account/BeneficiaryManager';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert } from 'antd';
 import { useTranslations } from 'next-intl';
 
 export default function SettingsPage() {
@@ -76,22 +73,18 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <PageTransition>
         <div className="space-y-6 lg:space-y-8">
           {/* Header */}
-          <StaggerContainer>
-            <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
                   <h2 className="text-3xl font-bold text-foreground tracking-tight">{t('header.title')}</h2>
                   <p className="text-sm text-muted-foreground font-medium mt-1">{t('header.subtitle')}</p>
                 </div>
               </div>
-            </StaggerItem>
 
             <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
               {/* Sidebar Profiles */}
-              <StaggerItem className="md:col-span-6 lg:col-span-4 space-y-6">
+              <div className="md:col-span-6 lg:col-span-4 space-y-6">
                 <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
@@ -118,7 +111,8 @@ export default function SettingsPage() {
                 <div className="bg-card rounded-xl p-3 border border-border shadow-card">
                   <div className="space-y-2">
                     {menuItems.map((item, i) => (
-                      <button
+                      <Button
+                        type="text"
                         key={i}
                         onClick={item.onClick}
                         className={clsx(
@@ -133,35 +127,36 @@ export default function SettingsPage() {
                           <span className="text-xs font-bold tracking-widest uppercase">{item.label}</span>
                         </div>
                         {item.active && <ChevronRight className="h-4 w-4" />}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
-              </StaggerItem>
+              </div>
 
               {/* Main Settings Form */}
-              <StaggerItem className="md:col-span-6 lg:col-span-8">
+              <div className="md:col-span-6 lg:col-span-8">
                 {activeTab === 'profile' ? (
                   <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-6 relative overflow-hidden h-full">
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
 
                     {/* Success Alert */}
                     {updateUser.isSuccess && (
-                      <Alert className="bg-green-500/10 border-green-500/20 relative z-10">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                         <AlertDescription className="text-green-500">
-                          {t('profileUpdateSuccess')}
-                        </AlertDescription>
-                      </Alert>
+                      <Alert
+                        type="success"
+                        showIcon
+                        icon={<CheckCircle className="h-4 w-4 text-green-500" />}
+                        className="bg-green-500/10 border-green-500/20 relative z-10 p-4"
+                        description={<span className="text-green-500">{t('profileUpdateSuccess')}</span>}
+                      />
                     )}
 
                     {/* Error Alert */}
                     {updateUser.isError && (
-                      <Alert className="bg-red-500/10 border-red-500/20 relative z-10">
-                         <AlertDescription className="text-red-500">
-                          {t('profileUpdateError')}
-                        </AlertDescription>
-                      </Alert>
+                      <Alert
+                        type="error"
+                        className="bg-red-500/10 border-red-500/20 relative z-10 p-4"
+                        description={<span className="text-red-500">{t('profileUpdateError')}</span>}
+                      />
                     )}
 
                     {/* Personal Details */}
@@ -242,7 +237,7 @@ export default function SettingsPage() {
 
                     <div className="flex flex-col sm:flex-row gap-4 pt-10 relative z-10">
                       <Button
-                        className="flex-1 shadow-xl"
+                        type="primary"
                         onClick={handleSubmit}
                         disabled={updateUser.isPending || !user?.id}
                       >
@@ -256,7 +251,7 @@ export default function SettingsPage() {
                         )}
                       </Button>
                       <Button
-                        variant="outline"
+                        danger
                         className="text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20"
                         onClick={handleClearSession}
                       >
@@ -269,7 +264,6 @@ export default function SettingsPage() {
                   <BeneficiaryManager accountId={accountId} />
                 ) : (
                   <div className="space-y-8">
-                    <StaggerItem>
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                         <div>
                           <h2 className="text-3xl font-bold text-foreground tracking-tight">{t('menu.eStatement')}</h2>
@@ -278,15 +272,12 @@ export default function SettingsPage() {
                           </p>
                         </div>
                       </div>
-                    </StaggerItem>
                     <StatementDownloader />
                   </div>
                 )}
-              </StaggerItem>
+              </div>
             </div>
-          </StaggerContainer>
         </div>
-      </PageTransition>
     </DashboardLayout>
   );
 }

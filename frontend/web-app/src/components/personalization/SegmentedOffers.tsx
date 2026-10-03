@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Progress } from '@/components/ui/progress';
+import { Progress } from 'antd';
 import {
-Gift, Percent, Coins, Zap, Ticket, ChevronRight } from 'lucide-react';
+Gift, Percent, Coins, Zap, Ticket, ChevronRight } from '@/components/icons';
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
 import { useAuthStore } from '@/stores';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from 'antd';
 import clsx from 'clsx';
+import { cn } from '@/lib/utils';
 import type { SegmentedOffer } from '@/services/SegmentationService';
 
 interface SegmentedOffersProps {
@@ -39,7 +39,7 @@ export default function SegmentedOffers({ className, maxOffers = 3 }: SegmentedO
   if (isLoading) {
     return (
       <div className={clsx('space-y-4', className)}>
-        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton title={false} paragraph={false} className={cn('block animate-pulse rounded-xl bg-muted/50', 'h-48 rounded-xl')} />
       </div>
     );
   }
@@ -63,8 +63,8 @@ export default function SegmentedOffers({ className, maxOffers = 3 }: SegmentedO
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {offers.slice(0, maxOffers).map((offer, index) => (
-          <OfferCard key={offer.id} offer={offer} index={index} />
+        {offers.slice(0, maxOffers).map((offer) => (
+          <OfferCard key={offer.id} offer={offer} />
         ))}
       </div>
     </div>
@@ -73,10 +73,9 @@ export default function SegmentedOffers({ className, maxOffers = 3 }: SegmentedO
 
 interface OfferCardProps {
   offer: SegmentedOffer;
-  index: number;
 }
 
-function OfferCard({ offer, index }: OfferCardProps) {
+function OfferCard({ offer }: OfferCardProps) {
   const Icon = OFFER_ICONS[offer.offerType] || Gift;
   const gradientStyle = OFFER_STYLES[offer.offerType] || OFFER_STYLES.CASHBACK;
 
@@ -96,12 +95,7 @@ function OfferCard({ offer, index }: OfferCardProps) {
   const isValid = new Date(offer.validUntil) > new Date();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="group relative"
-    >
+    <div className="group relative">
       <div className={clsx(
         'absolute inset-0 bg-gradient-to-br rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300',
         gradientStyle
@@ -141,19 +135,17 @@ function OfferCard({ offer, index }: OfferCardProps) {
             </p>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             disabled={!isValid}
             className={clsx(
-              'h-10 w-10 rounded-full flex items-center justify-center transition-all',
+              'h-10 w-10 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95',
               isValid
                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
           >
             <ChevronRight className="h-5 w-5" />
-          </motion.button>
+          </button>
         </div>
 
         {offer.minTransaction && (
@@ -163,13 +155,16 @@ function OfferCard({ offer, index }: OfferCardProps) {
         )}
 
         <div className="mt-3 flex items-center gap-1.5">
-          <Progress 
-            value={Math.max(0, Math.min(100, (
+          <Progress
+            percent={Math.max(0, Math.min(100, (
               (new Date(offer.validUntil).getTime() - new Date().getTime()) /
               (new Date(offer.validUntil).getTime() - new Date(offer.validFrom).getTime())
             ) * 100))}
-            className="h-1.5 flex-1"
-            indicatorClassName={clsx('bg-gradient-to-r', gradientStyle)}
+            showInfo={false}
+            railColor="transparent"
+            className={cn('relative h-2 w-full overflow-hidden rounded-full bg-muted/50', 'h-1.5 flex-1')}
+            classNames={{ track: cn('bg-primary transition-all duration-500 ease-in-out', clsx('bg-gradient-to-r', gradientStyle)) }}
+            styles={{ body: { height: '100%' }, rail: { height: '100%' }, track: { height: '100%' } }}
           />
           <span className={clsx(
             'text-xs font-bold',
@@ -179,6 +174,6 @@ function OfferCard({ offer, index }: OfferCardProps) {
           </span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

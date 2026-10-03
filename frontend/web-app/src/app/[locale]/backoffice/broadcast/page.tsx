@@ -1,36 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Send, 
-  Search, 
-  Users, 
-  MessageSquare, 
-  Mail, 
-  Smartphone, 
-  Bell, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Send,
+  Search,
+  Users,
+  MessageSquare,
+  Mail,
+  Smartphone,
+  Bell,
+  CheckCircle2,
+  AlertCircle,
   ChevronLeft,
   ChevronRight,
   Plus
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+} from '@/components/icons';
+import { Badge, Button, Input, Table } from 'antd';
+import type { TableColumnsType } from 'antd';
+import type { Notification } from '@/services';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Skeleton } from '@/components/ui/skeleton';
-
 
 export default function BroadcastPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,13 +29,13 @@ export default function BroadcastPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'SENT':
-        return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 uppercase tracking-widest text-xs gap-1.5 flex items-center justify-center w-fit">Sent</Badge>;
+        return <Badge count="Sent" color="green" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-emerald-500/10 [&_sup]:text-emerald-500 [&_sup]:border [&_sup]:border-emerald-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'SCHEDULED':
-        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-3 py-1 uppercase tracking-widest text-xs gap-1.5 flex items-center justify-center w-fit">Scheduled</Badge>;
+        return <Badge count="Scheduled" color="gold" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-amber-500/10 [&_sup]:text-amber-500 [&_sup]:border [&_sup]:border-amber-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'FAILED':
-        return <Badge className="bg-rose-500/10 text-rose-500 border-rose-500/20 px-3 py-1 uppercase tracking-widest text-xs gap-1.5 flex items-center justify-center w-fit">Failed</Badge>;
+        return <Badge count="Failed" color="red" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-rose-500/10 [&_sup]:text-rose-500 [&_sup]:border [&_sup]:border-rose-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">{status}</span>;
     }
   };
 
@@ -60,11 +49,68 @@ export default function BroadcastPage() {
     }
   };
 
+  const filteredBroadcasts = (notifications ?? []).filter((bc) =>
+    (bc.title ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const columns: TableColumnsType<Notification> = [
+    {
+      key: 'title',
+      title: 'Broadcast Title',
+      render: (_, bc) => (
+        <div className="space-y-1">
+          <p className="font-bold text-foreground text-sm uppercase tracking-tight">{bc.title}</p>
+          <div className="flex items-center gap-2">
+            <Users className="h-3 w-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{bc.recipient}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'channels',
+      title: 'Channels',
+      render: (_, bc) => (
+        <div className="flex items-center gap-1.5">
+          <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center border border-border" title={bc.channel}>
+            {getChannelIcon(bc.channel)}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      title: 'Status',
+      render: (_, bc) => getStatusBadge(bc.status),
+    },
+    {
+      key: 'reach',
+      title: 'Reach',
+      render: () => <span className="text-xs font-bold text-foreground">—</span>,
+    },
+    {
+      key: 'engagement',
+      title: 'Engagement',
+      render: () => <span className="text-xs font-bold text-emerald-500">—</span>,
+    },
+    {
+      key: 'date',
+      title: 'Date',
+      align: 'right',
+      render: (_, bc) => (
+        <div>
+          <p className="text-xs font-medium text-foreground">{new Date(bc.createdAt).toLocaleTimeString()}</p>
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(bc.createdAt).toLocaleDateString()}</p>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6 lg:space-y-8">
-      <StaggerContainer>
+      <>
         {/* Header Stats */}
-        <StaggerItem>
+        <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { label: 'Broadcasts Sent', value: isLoading ? '…' : String(notifications?.length ?? 0), color: 'bg-emerald-500', icon: Send },
@@ -83,113 +129,63 @@ export default function BroadcastPage() {
               </div>
             ))}
           </div>
-        </StaggerItem>
+        </>
 
         {/* Toolbar */}
-        <StaggerItem>
+        <>
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-5 sm:p-6 lg:p-8 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4 w-full lg:w-auto">
-              <div className="relative flex-1 lg:w-96">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search broadcasts..." 
-                  className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest"
+              <div className="relative flex-1 lg:w-96 flex items-center">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+                <Input
+                  placeholder="Search broadcasts..."
+                  className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4 w-full lg:w-auto">
-              <Button variant="outline" className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
+              <Button className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
                 <Users className="h-4 w-4" />
                 Targeting Rules
               </Button>
-              <Button className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
+              <Button type="primary" className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
                 <Plus className="h-4 w-4" />
                 Create Broadcast
               </Button>
             </div>
           </div>
-        </StaggerItem>
+        </>
 
         {/* Broadcast Table */}
-        <StaggerItem>
+        <>
           <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-border">
-                  <TableHead className="w-[300px] text-xs font-bold uppercase tracking-widest p-6">Broadcast Title</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Channels</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Status</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Reach</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Engagement</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6 text-right">Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="p-6 text-center"><Skeleton className="h-6 w-full" /></TableCell></TableRow>
-                ) : error ? (
-                  <TableRow><TableCell colSpan={6} className="p-6 text-center text-destructive">Failed to load broadcasts</TableCell></TableRow>
-                ) : !notifications || notifications.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="p-6 text-center text-muted-foreground">No broadcasts found</TableCell></TableRow>
-                ) : (
-                  notifications.filter((bc: { title?: string; id: string }) => (bc.title ?? '').toLowerCase().includes(searchTerm.toLowerCase())).map((bc) => (
-                  <TableRow key={bc.id} className="border-border hover:bg-muted/10 transition-colors">
-                    <TableCell className="p-6">
-                      <div className="space-y-1">
-                        <p className="font-bold text-foreground text-sm uppercase tracking-tight">{bc.title}</p>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{bc.recipient}</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6">
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center border border-border" title={bc.channel}>
-                          {getChannelIcon(bc.channel)}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6">
-                      {getStatusBadge(bc.status)}
-                    </TableCell>
-                    <TableCell className="px-6 text-xs font-bold text-foreground">
-                      —
-                    </TableCell>
-                    <TableCell className="px-6 text-xs font-bold text-emerald-500">
-                      —
-                    </TableCell>
-                    <TableCell className="text-right p-6">
-                      <p className="text-xs font-medium text-foreground">{new Date(bc.createdAt).toLocaleTimeString()}</p>
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(bc.createdAt).toLocaleDateString()}</p>
-                    </TableCell>
-                  </TableRow>
-                )))}
-              </TableBody>
-            </Table>
-            
+            <Table<Notification>
+              columns={columns}
+              dataSource={filteredBroadcasts}
+              rowKey="id"
+              pagination={false}
+              loading={isLoading}
+              locale={{ emptyText: error ? 'Failed to load broadcasts' : 'No broadcasts found' }}
+            />
+
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 Multi-channel Delivery Engine Active
               </p>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50" disabled>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
+                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
                 <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
                   1
                 </div>
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50" disabled>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
               </div>
             </div>
           </div>
-        </StaggerItem>
-      </StaggerContainer>
+        </>
+      </>
     </div>
   );
 }

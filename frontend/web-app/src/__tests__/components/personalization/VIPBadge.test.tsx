@@ -57,8 +57,7 @@ describe('VIPBadge', () => {
       { wrapper: createWrapper() }
     );
 
-    const badge = container.querySelector('.inline-flex');
-    expect(badge).toBeTruthy();
+    expect(container.textContent).toContain('VIP');
   });
 
   it('should render VIP badge in card variant', () => {

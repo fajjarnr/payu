@@ -3,11 +3,9 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button, Input } from 'antd';
+import { ArrowLeft } from '@/components/icons';
+import { notify as toast } from '@/lib/notify';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
@@ -46,7 +44,7 @@ export default function ForgotPasswordPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">{t('email')}</Label>
+            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('email')}</label>
             <Input
               id="email"
               type="email"
@@ -56,7 +54,7 @@ export default function ForgotPasswordPage() {
               className="h-12"
             />
           </div>
-          <Button type="submit" className="w-full h-12 font-bold">
+          <Button type="primary" htmlType="submit" size="large" className="w-full h-12 font-bold">
             Kirim Instruksi
           </Button>
         </form>

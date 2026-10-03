@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Crown, Shield, Sparkles, LucideIcon } from 'lucide-react';
+import { Badge } from 'antd';
+import { Crown, Shield, Sparkles, type IconType } from '@/components/icons';
 import { useVIPStatus } from '@/hooks/useVIPStatus';
 import clsx from 'clsx';
 
@@ -15,13 +15,11 @@ interface VIPBadgeProps {
 }
 
 // Move icon mapping outside component to avoid creating components during render
-const TIER_ICONS: Record<string, LucideIcon> = {
+const TIER_ICONS: Record<string, IconType> = {
   VIP: Crown,
   DIAMOND: Sparkles,
   PLATINUM: Shield,
 };
-
-import { Badge } from '@/components/ui/badge';
 
 export default function VIPBadge({
   size = 'md',
@@ -40,9 +38,7 @@ export default function VIPBadge({
 
   if (variant === 'card') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+      <div
         className={clsx(
           'bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 rounded-xl p-4',
           className
@@ -65,15 +61,13 @@ export default function VIPBadge({
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   if (variant === 'inline') {
     return (
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+      <span
         className={clsx(
           'inline-flex items-center gap-1.5 font-bold',
           className
@@ -88,28 +82,23 @@ export default function VIPBadge({
             {tierLabel}
           </span>
         )}
-      </motion.span>
+      </span>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
+    <Badge
+      className={clsx(
+        'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-lg shadow-amber-500/20 font-bold tracking-widest uppercase py-1',
+        size === 'sm' ? 'px-2 h-6 text-xs' : size === 'md' ? 'px-3 h-8 text-xs' : 'px-4 h-10 text-xs',
+        className
+      )}
     >
-      <Badge
-        className={clsx(
-          'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-lg shadow-amber-500/20 font-bold tracking-widest uppercase py-1',
-          size === 'sm' ? 'px-2 h-6 text-xs' : size === 'md' ? 'px-3 h-8 text-xs' : 'px-4 h-10 text-xs',
-          className
-        )}
-      >
-        <div className="flex items-center gap-2">
-          {showIcon && <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} />}
-          {showLabel && <span>{tierLabel}</span>}
-        </div>
-      </Badge>
-    </motion.div>
+      <div className="flex items-center gap-2">
+        {showIcon && <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} />}
+        {showLabel && <span>{tierLabel}</span>}
+      </div>
+    </Badge>
   );
 }
 

@@ -1,4 +1,10 @@
+/* antd's CSS-in-JS is injected into this layer (see AntdProvider's StyleProvider),
+   ordered before `utilities` so Tailwind utilities keep overriding antd defaults. */
+@layer theme, base, antd, components, utilities;
+
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   /* Colors */

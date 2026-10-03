@@ -4,9 +4,9 @@ import { useEffect } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
 import KYCService from '@/services/KYCService';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { registerUserSchema, RegisterUserRequest } from '@/types';
+import { Button, Form, Input, Steps } from 'antd';
+import { registerUserSchema, type RegisterUserRequest } from '@/types';
+import { zodFieldRule } from '@/lib/zodForm';
 import api from '@/lib/api';
 import { useRouter } from '@/lib/navigation';
 import { 
@@ -21,16 +21,12 @@ import {
   Eye,
   EyeOff,
   AlertCircle
-} from 'lucide-react';
+} from '@/components/icons';
 import { useState, useRef } from 'react';
 import { Link } from '@/lib/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Stepper } from '@/components/ui/stepper';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 
 export default function OnboardingPage() {
   const t = useTranslations('auth.onboarding');
@@ -60,9 +56,11 @@ export default function OnboardingPage() {
       reader.readAsDataURL(file);
     });
 
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterUserRequest>({
-    resolver: zodResolver(registerUserSchema)
-  });
+  const [form] = Form.useForm<RegisterUserRequest>();
+  const rule = (field: string) => zodFieldRule(form, registerUserSchema, field);
+  const onValid = (values: RegisterUserRequest) => {
+    mutation.mutate(registerUserSchema.parse({ ...values, externalId: values.externalId || stableExternalId }));
+  };
 
   const mutation = useMutation({
     mutationFn: async (data: RegisterUserRequest) => {
@@ -167,19 +165,15 @@ export default function OnboardingPage() {
 
             {/* Progress Steps */}
             <nav className="mb-12" aria-label="Registration Progress">
-              <Stepper 
-                steps={[t('steps.identity'), t('steps.profile'), t('steps.complete')]} 
-                currentStep={step - 1} 
+              <Steps
+                current={step - 1}
+                items={[t('steps.identity'), t('steps.profile'), t('steps.complete')].map((title) => ({ title }))}
               />
             </nav>
             
-            <AnimatePresence mode="wait">
                 {step === 1 && (
-                    <motion.div 
+                    <div
                         key="step1"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
                         className="space-y-8"
                     >
                         <div className="text-center space-y-2">
@@ -228,7 +222,8 @@ export default function OnboardingPage() {
                             </div>
                         </div>
 
-                        <Button 
+                        <Button
+                            type="primary"
                             onClick={() => setStep(2)} 
                             className="w-full h-14 text-base font-bold shadow-xl shadow-primary/20"
                             disabled={!ktpFile}
@@ -236,136 +231,73 @@ export default function OnboardingPage() {
                             {t('step1.button')} <ChevronRight className="ml-2 w-4 h-4" />
                         </Button>
                         {!ktpFile && (
-                            <motion.p
-                                initial={{ opacity: 0, y: -4 }}
-                                animate={{ opacity: 1, y: 0 }}
+                            <p
                                 className="flex items-center gap-2 text-sm text-red-500 dark:text-red-400 font-medium"
                                 role="alert"
                             >
                                 <AlertCircle className="w-4 h-4 shrink-0" />
                                 <span>{t('step1.uploadRequiredHint')}</span>
-                            </motion.p>
+                            </p>
                         )}
-                    </motion.div>
+                    </div>
                 )}
 
                 {step === 2 && (
-                    <motion.div
+                    <div
                         key="step2"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
                     >
                          <div className="text-center space-y-2 mb-8">
                             <h2 id="onboarding-title" className="text-2xl font-bold">{t('step2.title')}</h2>
                             <p className="text-muted-foreground">{t('step2.subtitle')}</p>
                         </div>
 
-                        <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-5">
+                        <Form form={form} onFinish={onValid} layout="vertical" className="space-y-5" initialValues={{ externalId: stableExternalId }}>
                             <div className="grid grid-cols-2 gap-5">
-                                <div className="space-y-2 col-span-2">
-                                    <Label htmlFor="onboarding-nik" className="font-bold">{t('step2.nik')}</Label>
-                                    <Input 
-                                        id="onboarding-nik" 
-                                        {...register('nik')} 
-                                        placeholder={t('step2.nikPlaceholder')} 
-                                        className="h-12" 
-                                        aria-invalid={!!errors.nik} 
-                                        maxLength={16}
-                                        inputMode="numeric"
-                                        onKeyPress={(e) => {
-                                            if (!/[0-9]/.test(e.key)) {
-                                                e.preventDefault();
-                                            }
-                                        }}
-                                    />
-                                    {errors.nik && <p className="text-red-500 text-xs font-bold" role="alert">{errors.nik.message}</p>}
-                                </div>
-                                <div className="space-y-2 col-span-2">
-                                    <Label htmlFor="onboarding-fullname" className="font-bold">{t('step2.fullName')}</Label>
-                                    <Input id="onboarding-fullname" {...register('fullName')} placeholder={t('step2.fullNamePlaceholder')} className="h-12" aria-invalid={!!errors.fullName} />
-                                    {errors.fullName && <p className="text-red-500 text-xs font-bold" role="alert">{errors.fullName.message}</p>}
-                                </div>
-                                <div className="space-y-2 col-span-2 md:col-span-1">
-                                    <Label htmlFor="onboarding-email" className="font-bold">{t('step2.email')}</Label>
-                                    <Input id="onboarding-email" {...register('email')} type="email" placeholder={t('step2.emailPlaceholder')} className="h-12" aria-invalid={!!errors.email} />
-                                    {errors.email && <p className="text-red-500 text-xs font-bold" role="alert">{errors.email.message}</p>}
-                                </div>
-                                <div className="space-y-2 col-span-2 md:col-span-1">
-                                    <Label htmlFor="onboarding-username" className="font-bold">{t('step2.username')}</Label>
-                                    <Input id="onboarding-username" {...register('username')} placeholder={t('step2.usernamePlaceholder')} className="h-12" aria-invalid={!!errors.username} />
-                                    {errors.username && <p className="text-red-500 text-xs font-bold" role="alert">{errors.username.message}</p>}
-                                </div>
+                                <Form.Item name="nik" rules={[rule('nik')]} className="col-span-2 mb-0" label={<label htmlFor="onboarding-nik" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.nik')}</label>}>
+                                    <Input id="onboarding-nik" placeholder={t('step2.nikPlaceholder')} className="h-12" maxLength={16} inputMode="numeric" onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) { e.preventDefault(); } }} />
+                                </Form.Item>
+                                <Form.Item name="fullName" rules={[rule('fullName')]} className="col-span-2 mb-0" label={<label htmlFor="onboarding-fullname" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.fullName')}</label>}>
+                                    <Input id="onboarding-fullname" placeholder={t('step2.fullNamePlaceholder')} className="h-12" />
+                                </Form.Item>
+                                <Form.Item name="email" rules={[rule('email')]} className="col-span-2 md:col-span-1 mb-0" label={<label htmlFor="onboarding-email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.email')}</label>}>
+                                    <Input id="onboarding-email" type="email" placeholder={t('step2.emailPlaceholder')} className="h-12" />
+                                </Form.Item>
+                                <Form.Item name="username" rules={[rule('username')]} className="col-span-2 md:col-span-1 mb-0" label={<label htmlFor="onboarding-username" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.username')}</label>}>
+                                    <Input id="onboarding-username" placeholder={t('step2.usernamePlaceholder')} className="h-12" />
+                                </Form.Item>
                             </div>
-
                             <div className="grid grid-cols-2 gap-5">
-                                <div className="space-y-2 col-span-2 md:col-span-1">
-                                    <Label htmlFor="onboarding-password" className="font-bold">{t('step2.password')}</Label>
+                                <Form.Item name="password" rules={[rule('password')]} className="col-span-2 md:col-span-1 mb-0" label={<label htmlFor="onboarding-password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.password')}</label>}>
                                     <div className="relative">
-                                        <Input 
-                                            id="onboarding-password" 
-                                            {...register('password')} 
-                                            type={showPassword ? 'text' : 'password'} 
-                                            placeholder={t('step2.passwordPlaceholder')} 
-                                            className="h-12 pr-12" 
-                                            aria-invalid={!!errors.password} 
-                                            autoComplete="new-password"
-                                        />
-                                        <button 
-                                            type="button" 
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md" 
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                        >
-                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                        </button>
+                                        <Input id="onboarding-password" type={showPassword ? 'text' : 'password'} placeholder={t('step2.passwordPlaceholder')} className="h-12 pr-12" autoComplete="new-password" />
+                                        <Button type="text" shape="circle" icon={showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />} onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2" />
                                     </div>
-                                    {errors.password && <p className="text-red-500 text-xs font-bold" role="alert">{errors.password.message}</p>}
-                                </div>
-                                <div className="space-y-2 col-span-2 md:col-span-1">
-                                    <Label htmlFor="onboarding-confirm-password" className="font-bold">{t('step2.confirmPassword')}</Label>
+                                </Form.Item>
+                                <Form.Item name="confirmPassword" rules={[rule('confirmPassword')]} dependencies={['password']} className="col-span-2 md:col-span-1 mb-0" label={<label htmlFor="onboarding-confirm-password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.confirmPassword')}</label>}>
                                     <div className="relative">
-                                        <Input 
-                                            id="onboarding-confirm-password" 
-                                            {...register('confirmPassword')} 
-                                            type={showConfirmPassword ? 'text' : 'password'} 
-                                            placeholder={t('step2.confirmPasswordPlaceholder')} 
-                                            className="h-12 pr-12" 
-                                            aria-invalid={!!errors.confirmPassword} 
-                                            autoComplete="new-password"
-                                        />
-                                        <button 
-                                            type="button" 
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md" 
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                                        >
-                                            {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                        </button>
+                                        <Input id="onboarding-confirm-password" type={showConfirmPassword ? 'text' : 'password'} placeholder={t('step2.confirmPasswordPlaceholder')} className="h-12 pr-12" autoComplete="new-password" />
+                                        <Button type="text" shape="circle" icon={showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />} onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2" />
                                     </div>
-                                    {errors.confirmPassword && <p className="text-red-500 text-xs font-bold" role="alert">{errors.confirmPassword.message}</p>}
-                                </div>
+                                </Form.Item>
                             </div>
-                            
-                            <input type="hidden" value={stableExternalId} {...register('externalId')} />
-
+                            <Form.Item name="externalId" initialValue={stableExternalId} hidden>
+                                <Input type="hidden" />
+                            </Form.Item>
                              <div className="pt-6 flex gap-4">
-                                <Button type="button" variant="outline" onClick={() => setStep(1)} className="h-14 px-8">
+                                <Button type="default" htmlType="button" onClick={() => setStep(1)} className="h-14 px-8">
                                     {t('step2.backButton')}
                                 </Button>
-                                <Button type="submit" className="flex-1 h-14 font-bold shadow-xl shadow-primary/20" disabled={mutation.isPending}>
+                                <Button type="primary" htmlType="submit" className="flex-1 h-14 font-bold shadow-xl shadow-primary/20" disabled={mutation.isPending}>
                                     {mutation.isPending ? <Loader2 className="animate-spin" /> : t('step2.submitButton')}
                                 </Button>
                             </div>
-                        </form>
-                    </motion.div>
+                        </Form>
+                    </div>
                 )}
 
                 {step === 3 && (
-                    <motion.div
+                    <div
                         key="step3"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
                         className="text-center py-10 space-y-6"
                     >
                         <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -380,9 +312,8 @@ export default function OnboardingPage() {
                         <div className="pt-4">
                             <Loader2 className="w-6 h-6 text-primary animate-spin mx-auto" aria-label="Processing..." />
                         </div>
-                    </motion.div>
+                    </div>
                 )}
-            </AnimatePresence>
         </div>
       </main>
     </div>

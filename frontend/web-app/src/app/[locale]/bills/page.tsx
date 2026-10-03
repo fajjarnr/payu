@@ -1,18 +1,16 @@
 'use client';
 
-import { Smartphone, Zap, Droplets, Wifi, CreditCard, Heart, Tv, Gamepad2, Plus, ChevronRight, LifeBuoy } from "lucide-react";
+import { Smartphone, Zap, Droplets, Wifi, CreditCard, Heart, Tv, Gamepad2, Plus, ChevronRight, LifeBuoy } from '@/components/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CreatePaymentRequest, PaymentResponse } from '@/types';
 import api from '@/lib/api';
 import { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button, Input } from 'antd';
 import { useUIStore } from '@/stores';
-import { ButtonMotion } from '@/components/ui/Motion';
 import { useAuthStore } from '@/stores/authStore';
 import { cn, idempotencyKeyFor } from '@/lib/utils';
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 import { formatCurrency, parseCurrencyExact } from '@/lib/currency';
 
 export default function BillsPage() {
@@ -87,9 +85,7 @@ export default function BillsPage() {
    <DashboardLayout>
     <div className="space-y-6 lg:space-y-8">
      <div className="flex items-center gap-4">
-      <Button
-       variant="outline"
-       size="icon"
+      <Button type="default"
        onClick={() => setSelectedBiller(null)}
        className="h-12 w-12 rounded-xl"
       >
@@ -141,15 +137,13 @@ export default function BillsPage() {
      </div>
 
      <div className="flex flex-col gap-6">
-      <ButtonMotion className="w-full">
-       <Button
-        onClick={handlePay}
-        disabled={paymentMutation.isPending}
-        className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20"
-       >
-        {paymentMutation.isPending ? 'Sedang Memproses...' : 'Konfirmasi & Bayar Sekarang'}
-       </Button>
-      </ButtonMotion>
+      <Button type="primary"
+       onClick={handlePay}
+       disabled={paymentMutation.isPending}
+       className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20"
+      >
+       {paymentMutation.isPending ? 'Sedang Memproses...' : 'Konfirmasi & Bayar Sekarang'}
+      </Button>
       <p className="text-center text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU</p>
      </div>
     </div>
@@ -175,23 +169,23 @@ export default function BillsPage() {
      <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase mb-6 text-center opacity-60">Kategori Layanan</h3>
      <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-12 relative z-10">
       {billers.map((item) => (
-       <button
-        key={item.name}
-        onClick={() => setSelectedBiller(item)}
-        className="flex flex-col items-center gap-4 transition-all group active:scale-95"
-       >
-        <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${item.color} flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
-         <item.icon className="h-7 w-7 sm:h-9 sm:w-9" />
-        </div>
-        <span className="text-xs font-bold text-foreground tracking-widest uppercase">{item.name}</span>
-       </button>
+      <Button type="text"
+       key={item.name}
+       onClick={() => setSelectedBiller(item)}
+       className="flex flex-col items-center gap-4 transition-all group active:scale-95"
+      >
+       <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${item.color} flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
+        <item.icon className="h-7 w-7 sm:h-9 sm:w-9" />
+       </div>
+       <span className="text-xs font-bold text-foreground tracking-widest uppercase">{item.name}</span>
+      </Button>
       ))}
-      <button className="flex flex-col items-center gap-4 transition-all group active:scale-95">
+      <Button type="text" className="flex flex-col items-center gap-4 transition-all group active:scale-95">
        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
         <Plus className="h-7 w-7 sm:h-9 sm:w-9" />
        </div>
        <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Lainnya</span>
-      </button>
+      </Button>
      </div>
     </div>
 

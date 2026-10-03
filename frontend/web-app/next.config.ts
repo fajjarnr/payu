@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   // Fix Next 16 + isomorphic-dompurify@3.3.0 ESM/CommonJS interop bug:
   // html-encoding-sniffer uses require() on @exodus/bytes/encoding-lite.js
   // which is now a pure ESM module. Transpile the chain so webpack handles it.
-  transpilePackages: ['isomorphic-dompurify', 'html-encoding-sniffer', '@exodus/bytes'],
+  transpilePackages: ['isomorphic-dompurify', 'html-encoding-sniffer', '@exodus/bytes', 'antd', '@ant-design/icons'],
   // Gateway rewrite REMOVED — BFF proxy at /api/v1/[...path] handles forwarding
   // with httpOnly cookie → Bearer token conversion (P0-SEC-001)
   experimental: {

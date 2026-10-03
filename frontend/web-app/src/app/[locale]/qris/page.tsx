@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { QrCode, Camera, History, Image as ImageIcon, ShieldCheck, Info } from 'lucide-react';
-import { toast } from 'sonner';
+import { QrCode, Camera, History, Image as ImageIcon, ShieldCheck, Info } from '@/components/icons';
+import { notify as toast } from '@/lib/notify';
+import { Button } from 'antd';
 
 // ponytail: minimal EMVCo CRC16 X25 (tag 63) — full TLV 26/30/54/59 + query GET /accounts/{id}/qris when backend live per ADR-0025
 function _crc16X25(data: string): string {
@@ -95,18 +96,20 @@ export default function QRISPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-5 max-w-sm mx-auto">
-                  <button 
+                  <Button
+                    type="primary"
                     onClick={handleToggleCamera}
                     data-testid="qris-camera-button"
                     className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-5 rounded-xl font-bold text-xs tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase">
                     <Camera className="h-4 w-4" /> {isScanning ? 'Tutup Kamera' : 'Buka Kamera'}
-                  </button>
-                  <button 
+                  </Button>
+                  <Button
+                    type="default"
                     onClick={handleUploadClick}
                     data-testid="qris-upload-button"
                     className="flex-1 bg-muted/40 text-foreground py-5 rounded-xl font-bold text-xs tracking-[0.2em] border border-border hover:bg-muted/60 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase">
                     <ImageIcon className="h-4 w-4 text-emerald-500" /> Unggah Foto
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -118,11 +121,12 @@ export default function QRISPage() {
                     <History className="h-5 w-5 text-emerald-500" />
                     <h3 className="text-lg xl:text-xl font-bold text-foreground">Aktivitas Terakhir</h3>
                 </div>
-                <button 
+                <Button
+                  type="link"
                   onClick={() => toast.info('Menampilkan semua transaksi QRIS')}
                   className="text-xs font-bold text-emerald-600 tracking-[0.2em] hover:text-emerald-500 transition-colors uppercase border-b border-emerald-500/20">
                   Lihat Semua
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-4">
@@ -183,12 +187,13 @@ export default function QRISPage() {
                    )}
                 </div>
                 
-                <button 
+                <Button
+                    type="primary"
                     onClick={() => setShowMyQr(!showMyQr)}
                     data-testid="qris-show-personal-button"
                     className="w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 rounded-xl font-bold text-xs tracking-[0.2em] transition-all border border-emerald-600/30 uppercase">
                     {showMyQr ? 'Sembunyikan Kode' : 'Tampilkan Kode Saya'}
-                </button>
+                </Button>
               </div>
               <div className="absolute top-[-30px] left-[-30px] w-40 h-40 bg-emerald-500/10 rounded-full blur-[80px]" />
             </div>

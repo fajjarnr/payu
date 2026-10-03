@@ -1,11 +1,11 @@
 'use client';
 
-import { usePathname } from '@/lib/navigation';
+import { usePathname, Link } from '@/lib/navigation';
 import { useTranslations } from 'next-intl';
-import { Home, Wallet, Repeat, Receipt } from 'lucide-react';
-import clsx from 'clsx';
+import { Home, Wallet, Repeat, Receipt } from '@/components/icons';
+import { Menu } from 'antd';
+import type { MenuProps } from 'antd';
 import { useIsAuthenticated } from '@/stores';
-import { Link } from '@/lib/navigation';
 
 /** Uses the auth store to check authentication status; never accesses tokens from localStorage. */
 export default function MobileNav() {
@@ -26,43 +26,61 @@ export default function MobileNav() {
   // Don't show if not authenticated
   if (!isAuthenticated) return null;
 
+  const selectedKeys = navItems
+    .filter(
+      (item) =>
+        pathname === item.href ||
+        (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard')),
+    )
+    .map((item) => item.href);
+
+  const items: MenuProps['items'] = navItems.map(({ href, icon: Icon, label }) => {
+    const isActive = selectedKeys.includes(href);
+    return {
+      key: href,
+      label: (
+        <Link
+          href={href}
+          data-testid={`mobile-nav-${label.toLowerCase()}`}
+          aria-current={isActive ? 'page' : undefined}
+          className="flex w-full flex-col items-center justify-center gap-1 py-1"
+        >
+          <Icon
+            className={isActive ? 'h-5 w-5 shrink-0 stroke-[2.5px] sm:h-6 sm:w-6' : 'h-5 w-5 shrink-0 stroke-[2px] sm:h-6 sm:w-6'}
+            aria-hidden="true"
+          />
+          <span className="w-full truncate px-0.5 text-center text-xs font-bold uppercase leading-none tracking-[0.08em] sm:tracking-[0.12em]">
+            {label}
+          </span>
+        </Link>
+      ),
+    };
+  });
+
   return (
     <div
       data-testid="mobile-nav"
-      className={clsx(
-        "fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-2xl border-t border-border pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] px-2 sm:px-4 z-50",
-        "lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.12)] rounded-t-2xl sm:rounded-t-3xl"
-      )} role="navigation" aria-label={t('mobileNavigation')}>
-      <div className="flex justify-around sm:justify-between items-center max-w-lg mx-auto h-14 sm:h-16 gap-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href.endsWith('/dashboard') && pathname.endsWith('/dashboard'));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              data-testid={`mobile-nav-${item.label.toLowerCase()}`}
-              className={clsx(
-                "flex flex-col items-center justify-center gap-1 min-w-0 flex-1 py-1 px-1 sm:px-2 rounded-xl transition-all cursor-pointer",
-                isActive ? "text-primary" : "text-foreground/40 hover:text-foreground active:scale-95"
-              )}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              <div className={clsx(
-                "p-2 sm:p-2.5 rounded-xl sm:rounded-2xl transition-all duration-200 flex items-center justify-center",
-                isActive ? "bg-primary/10 border border-primary/20" : "group-hover:bg-foreground/5"
-              )}>
-                <item.icon className={clsx("h-5 w-5 sm:h-6 sm:w-6 transition-all shrink-0", isActive ? "stroke-[2.5px]" : "stroke-[2px]")} aria-hidden="true" />
-              </div>
-              <span className={clsx(
-                "text-xs font-bold uppercase tracking-[0.08em] sm:tracking-[0.12em] leading-none text-center truncate w-full px-0.5",
-                isActive ? "opacity-100" : "opacity-70"
-              )}>
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+      role="navigation"
+      aria-label={t('mobileNavigation')}
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-2xl rounded-t-2xl sm:rounded-t-3xl sm:px-4 lg:hidden"
+    >
+      <Menu
+        mode="horizontal"
+        disabledOverflow
+        selectedKeys={selectedKeys}
+        items={items}
+        style={{
+          maxWidth: 512,
+          margin: '0 auto',
+          background: 'transparent',
+          borderBottom: 'none',
+          lineHeight: 'normal',
+        }}
+        styles={{
+          list: { display: 'flex', justifyContent: 'space-around', width: '100%' },
+          item: { flex: 1, display: 'flex', height: 'auto', padding: '4px 2px' },
+        }}
+      />
     </div>
   );
 }

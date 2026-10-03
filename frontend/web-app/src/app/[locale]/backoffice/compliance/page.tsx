@@ -16,19 +16,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
+} from '@/components/icons';
+import { Badge, Button, Input, Table } from 'antd';
+import type { TableColumnsType } from 'antd';
 import { useAuditReports, useFailedAccessAudits } from '@/hooks';
 import type { AuditReport } from '@/services';
 
@@ -76,13 +66,13 @@ export default function CompliancePage() {
   const getRiskBadge = (risk: string) => {
     switch (risk) {
       case 'LOW':
-        return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 uppercase tracking-widest text-xs">Low Risk</Badge>;
+        return <Badge count="Low Risk" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-emerald-500/10 [&_sup]:text-emerald-500 [&_sup]:border [&_sup]:border-emerald-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'MEDIUM':
-        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-3 py-1 uppercase tracking-widest text-xs">Medium Risk</Badge>;
+        return <Badge count="Medium Risk" color="gold" className="uppercase tracking-widest text-xs [&_sup]:bg-amber-500/10 [&_sup]:text-amber-500 [&_sup]:border [&_sup]:border-amber-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'HIGH':
-        return <Badge className="bg-rose-500/10 text-rose-500 border-rose-500/20 px-3 py-1 uppercase tracking-widest text-xs">High Risk</Badge>;
+        return <Badge count="High Risk" color="red" className="uppercase tracking-widest text-xs [&_sup]:bg-rose-500/10 [&_sup]:text-rose-500 [&_sup]:border [&_sup]:border-rose-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       default:
-        return <Badge variant="outline">{risk}</Badge>;
+        return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">{risk}</span>;
     }
   };
 
@@ -92,12 +82,61 @@ export default function CompliancePage() {
     if (event.includes('CHANGE')) return <Settings className="h-4 w-4 text-amber-500" />;
     return <FileText className="h-4 w-4 text-emerald-500" />;
   };
+  const columns: TableColumnsType<ComplianceAuditRow> = [
+    {
+      key: 'id',
+      title: 'Event ID',
+      render: (_, log) => <span className="font-mono text-xs font-bold text-foreground">{log.id}</span>,
+    },
+    {
+      key: 'event',
+      title: 'Event Type',
+      render: (_, log) => (
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center border border-border">
+            {getEventIcon(log.event)}
+          </div>
+          <div>
+            <p className="text-xs font-bold text-foreground tracking-tight">{log.event}</p>
+            <p className="text-xs text-muted-foreground font-medium">{log.resource}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'user',
+      title: 'User / Actor',
+      render: (_, log) => (
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold px-2 py-0 border-emerald-500/20 text-emerald-500 font-bold uppercase tracking-widest">Admin</span>
+          <span className="text-xs font-bold text-foreground">{log.user}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'ip',
+      title: 'IP Address',
+      render: (_, log) => <span className="text-xs font-medium text-muted-foreground">{log.ip}</span>,
+    },
+    { key: 'risk', title: 'Risk Level', render: (_, log) => getRiskBadge(log.risk) },
+    {
+      key: 'timestamp',
+      title: 'Timestamp',
+      align: 'right',
+      render: (_, log) => (
+        <div>
+          <p className="text-xs font-medium text-foreground">{new Date(log.timestamp).toLocaleTimeString()}</p>
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(log.timestamp).toLocaleDateString()}</p>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      <StaggerContainer>
+      <>
         {/* Header Stats */}
-        <StaggerItem>
+        <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { label: 'Security Score', value: '—', color: 'bg-emerald-500', icon: Shield },
@@ -116,111 +155,67 @@ export default function CompliancePage() {
               </div>
             ))}
           </div>
-        </StaggerItem>
+        </>
 
         {/* Toolbar */}
-        <StaggerItem>
+        <>
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-5 sm:p-6 lg:p-8 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4 w-full lg:w-auto">
-              <div className="relative flex-1 lg:w-96">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative flex-1 lg:w-96 flex items-center">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                 <Input
                   placeholder="Filter by User, IP, or Resource..."
-                  className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest"
+                  className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button variant="outline" className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
+              <Button className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
                 <Filter className="h-4 w-4" />
                 More Filters
               </Button>
             </div>
 
             <div className="flex items-center gap-4 w-full lg:w-auto">
-              <Button variant="outline" className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
+              <Button className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
                 <Calendar className="h-4 w-4" />
                 Last 24 Hours
               </Button>
-              <Button className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
+              <Button type="primary" className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
                 <Download className="h-4 w-4" />
                 Export Audit Report
               </Button>
             </div>
           </div>
-        </StaggerItem>
+        </>
 
         {/* Audit Table */}
-        <StaggerItem>
+        <>
           <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-border">
-                  <TableHead className="text-xs font-bold uppercase tracking-widest p-6">Event ID</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Event Type</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">User / Actor</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">IP Address</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6">Risk Level</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-widest px-6 text-right">Timestamp</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {auditLogs.map((log) => (
-                  <TableRow key={log.id} className="border-border hover:bg-muted/10 transition-colors">
-                    <TableCell className="p-6">
-                      <span className="font-mono text-xs font-bold text-foreground">{log.id}</span>
-                    </TableCell>
-                    <TableCell className="px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center border border-border">
-                          {getEventIcon(log.event)}
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-foreground tracking-tight">{log.event}</p>
-                          <p className="text-xs text-muted-foreground font-medium">{log.resource}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="px-2 py-0 border-emerald-500/20 text-xs text-emerald-500 font-bold uppercase tracking-widest">Admin</Badge>
-                        <span className="text-xs font-bold text-foreground">{log.user}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 text-xs font-medium text-muted-foreground">
-                      {log.ip}
-                    </TableCell>
-                    <TableCell className="px-6">
-                      {getRiskBadge(log.risk)}
-                    </TableCell>
-                    <TableCell className="text-right p-6">
-                      <p className="text-xs font-medium text-foreground">{new Date(log.timestamp).toLocaleTimeString()}</p>
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(log.timestamp).toLocaleDateString()}</p>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Table<ComplianceAuditRow>
+              columns={columns}
+              dataSource={auditLogs}
+              rowKey="id"
+              pagination={false}
+              loading={isLoading}
+              locale={{ emptyText: 'No audit logs found' }}
+            />
 
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 Real-time Audit Stream Active
               </p>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
+                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronLeft className="h-4 w-4" />} />
                 <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
                   1
                 </div>
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-border hover:bg-muted/50">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronRight className="h-4 w-4" />} />
               </div>
             </div>
           </div>
-        </StaggerItem>
-      </StaggerContainer>
+        </>
+      </>
     </div>
   );
 }

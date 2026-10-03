@@ -3,27 +3,18 @@
 /* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { 
   Plus, 
   AlertTriangle, 
   CheckCircle2, 
   Edit, 
   Trash2,
-} from 'lucide-react';
+} from '@/components/icons';
 import { useTranslations, useLocale } from 'next-intl';
 import clsx from 'clsx';
 
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from '@/components/ui/accordion';
-import { Progress } from '@/components/ui/progress';
+import { Button, Card, Collapse, Progress } from 'antd';
 
 
 interface Budget {
@@ -110,27 +101,28 @@ export default function BudgetTracking({
       role="region"
       aria-labelledby="budget-tracking-title"
       className={cn("relative overflow-hidden h-full flex flex-col group", className)}
+      styles={{ body: { display: 'contents' } }}
     >
       {/* Decorative background */}
       <div className="absolute top-1/2 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6 shrink-0">
+      <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-start justify-between space-y-0 pb-6 shrink-0">
         <div>
-          <CardTitle id="budget-tracking-title" className="text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
+          <h3 id="budget-tracking-title" className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t('budgetTracking')}
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
+          </h3>
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
             {new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
-          </CardDescription>
+          </p>
         </div>
 
-        <Button aria-label="Tambah anggaran" size="sm" className="hidden sm:flex gap-3 px-6 h-11 text-xs font-bold uppercase tracking-widest">
+        <Button aria-label="Tambah anggaran" size="small" type="primary" className="hidden sm:flex gap-3 px-6 h-11 text-xs font-bold uppercase tracking-widest">
           <Plus className="h-4 w-4" />
           <span>Tambah</span>
         </Button>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 overflow-y-auto scrollbar-hide">
+      <div className="p-6 pt-0 flex-1 overflow-y-auto scrollbar-hide">
         {isLoading ? (
           <div className="flex items-center justify-center min-h-[120px]">
             <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Memuat...</p>
@@ -171,9 +163,7 @@ export default function BudgetTracking({
 
         {/* Alerts */}
         {(exceededCount > 0 || warningCount > 0) && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div
             className="mb-6 p-4 bg-destructive/5 border border-destructive/20 rounded-xl"
             role="alert"
             aria-live="polite"
@@ -195,98 +185,85 @@ export default function BudgetTracking({
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
-        <Accordion type="single" collapsible className="space-y-3">
-          {budgetList.map((budget, index) => {
+        <Collapse
+          accordion
+          className="space-y-3"
+          expandIcon={() => null}
+          items={budgetList.map((budget) => {
             const StatusIcon = getStatusIcon(budget.status);
-
-            return (
-              <AccordionItem 
-                key={budget.id} 
-                value={budget.id}
-                className={cn(
-                  'bg-muted/30 rounded-xl border-none overflow-hidden transition-all',
-                  budget.status === 'exceeded' && 'ring-2 ring-destructive/10'
-                )}
-              >
-                <AccordionTrigger
-                  className="hover:no-underline px-6 py-10 group/trigger"
+            const panelId = `budget-panel-${budget.id}`;
+            return {
+              key: budget.id,
+              className: cn(
+                'bg-muted/30 rounded-xl border-none overflow-hidden transition-all',
+                budget.status === 'exceeded' && 'ring-2 ring-destructive/10'
+              ),
+              label: (
+                <span
+                  role="button"
+                  aria-expanded={false}
+                  aria-controls={panelId}
                   aria-label={`${budget.category}, status ${budget.status}, ${budget.percentage}%`}
+                  className="flex flex-1 items-center justify-between py-4 text-xs font-bold uppercase tracking-[0.1em] hover:no-underline px-6 py-10 group/trigger"
                 >
                   <div className="flex items-center gap-6 w-full text-left">
-                    {/* Status Icon */}
-                    <div
-                      className={cn(
-                        'h-14 w-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg',
-                        getStatusColor(budget.status)
-                      )}
-                    >
+                    <div className={cn('h-14 w-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg', getStatusColor(budget.status))}>
                       <StatusIcon className="h-6 w-6" aria-hidden="true" />
                     </div>
-
-                    {/* Category and Progress */}
                     <div className="flex-1 min-w-0 pr-6">
                       <div className="flex items-center justify-between mb-4">
                         <p className="text-sm sm:text-base font-bold text-foreground uppercase tracking-tight">{budget.category}</p>
-                        <span className="text-xs text-muted-foreground tabular-nums font-bold opacity-60">
-                          {budget.percentage.toFixed(0)}%
-                        </span>
+                        <span className="text-xs text-muted-foreground tabular-nums font-bold opacity-60">{budget.percentage.toFixed(0)}%</span>
                       </div>
-
-                      {/* Progress bar */}
-                      <Progress 
-                        value={Math.min(budget.percentage, 100)} 
-                        className="h-3" 
-                        indicatorClassName={getProgressColor(budget.status)}
+                      <Progress
+                        percent={Math.min(budget.percentage, 100)}
+                        showInfo={false}
+                        railColor="transparent"
+                        className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50 h-3"
+                        classNames={{ track: `bg-primary transition-all duration-500 ease-in-out ${getProgressColor(budget.status)}` }}
+                        styles={{ body: { height: '100%' }, rail: { height: '100%' }, track: { height: '100%' } }}
                         aria-label={`${budget.category}: ${budget.percentage}%`}
                         aria-valuetext={`${budget.percentage}% (${budget.status})`}
                       />
                     </div>
                   </div>
-                </AccordionTrigger>
-
-                <AccordionContent className="px-5 pb-5 pt-0">
+                </span>
+              ),
+              children: (
+                <div id={panelId} className="px-5 pb-5 pt-0">
                   <div className="pt-4 border-t border-border/20 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <DetailItem label="Batas Anggaran" value={budget.limit} currency={currency} locale={locale} />
                       <DetailItem label="Terpakai" value={budget.spent} currency={currency} locale={locale} />
-                      <DetailItem 
-                        label={budget.remaining >= 0 ? t('budgetRemaining') : t('budgetOver')} 
-                        value={Math.abs(budget.remaining)} 
-                        currency={currency}
-                        locale={locale}
-                        valueColor={budget.remaining >= 0 ? 'text-primary' : 'text-destructive'}
-                      />
+                      <DetailItem label={budget.remaining >= 0 ? t('budgetRemaining') : t('budgetOver')} value={Math.abs(budget.remaining)} currency={currency} locale={locale} valueColor={budget.remaining >= 0 ? 'text-primary' : 'text-destructive'} />
                       <DetailItem label="Persentase" value={`${budget.percentage.toFixed(1)}%`} currency="" locale={locale} isPercentage />
                     </div>
-
                     <div className="flex gap-2">
-                      <Button aria-label={`Edit anggaran ${budget.category}`} variant="outline" size="sm" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest bg-muted/30">
-                        <Edit className="h-3.5 w-3.5 mr-2" />
-                        Edit
+                      <Button aria-label={`Edit anggaran ${budget.category}`} type="default" size="small" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest bg-muted/30">
+                        <Edit className="h-3.5 w-3.5 mr-2" />Edit
                       </Button>
-                      <Button aria-label={`Hapus anggaran ${budget.category}`} variant="outline" size="sm" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest text-destructive hover:text-white hover:bg-destructive">
-                        <Trash2 className="h-3.5 w-3.5 mr-2" />
-                        Hapus
+                      <Button aria-label={`Hapus anggaran ${budget.category}`} type="default" size="small" danger className="flex-1 h-10 text-xs font-bold uppercase tracking-widest text-destructive hover:text-white hover:bg-destructive">
+                        <Trash2 className="h-3.5 w-3.5 mr-2" />Hapus
                       </Button>
                     </div>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            );
+                </div>
+              ),
+            };
           })}
-        </Accordion>
+        />
 
         <div className="mt-6 pt-4 border-t border-border">
-          <Button aria-label="Kelola anggaran" variant="ghost" className="w-full text-xs font-bold uppercase tracking-widest text-primary">
+          <Button aria-label="Kelola anggaran" type="default" className="w-full text-xs font-bold uppercase tracking-widest text-primary border-transparent bg-transparent hover:bg-muted hover:text-foreground hover:border-transparent active:bg-transparent active:border-transparent">
             {t('manageBudgets')}
           </Button>
         </div>
         </>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }

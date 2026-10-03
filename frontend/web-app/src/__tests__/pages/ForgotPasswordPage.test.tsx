@@ -1,11 +1,11 @@
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 import { describe, it, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import ForgotPasswordPage from '@/app/[locale]/forgot-password/page';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
-vi.mock('sonner', () => ({
-  toast: { error: vi.fn(), info: vi.fn(), success: vi.fn() },
+vi.mock('@/lib/notify', () => ({
+  notify: { error: vi.fn(), info: vi.fn(), success: vi.fn(), warning: vi.fn() },
 }));
 
 vi.mock('@/lib/navigation', () => ({

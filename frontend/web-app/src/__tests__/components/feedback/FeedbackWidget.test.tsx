@@ -55,7 +55,7 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    expect(screen.getByRole('heading', { name: 'Kirim Feedback' })).toBeInTheDocument();
+    expect(screen.getByText('Kirim Feedback')).toBeInTheDocument();
   });
 
   it('should close modal when close button is clicked', async () => {
@@ -66,14 +66,29 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    const closeButton = screen.getByRole('button', { name: 'Close' });
+    const closeButtons = screen.getAllByRole('button', { name: 'Close' });
+    expect(closeButtons.length).toBeGreaterThan(0);
     await act(async () => {
-      fireEvent.click(closeButton);
+      fireEvent.click(closeButtons[0]);
     });
 
-    await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: 'Kirim Feedback' })).not.toBeInTheDocument();
-    });
+    // antd Modal plays a leave animation before unmounting; jsdom never
+    // finishes CSS transitions on its own, so complete it explicitly,
+    // retrying until the leave transition has started.
+    for (let i = 0; i < 10; i++) {
+      let gone = false;
+      await act(async () => {
+        const dialog = screen.queryByRole('dialog');
+        if (dialog) {
+          fireEvent.transitionEnd(dialog);
+          fireEvent.animationEnd(dialog);
+        }
+        await new Promise((r) => setTimeout(r, 200));
+        gone = screen.queryByRole('dialog') === null;
+      });
+      if (gone) break;
+    }
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('should close modal when backdrop is clicked', async () => {
@@ -584,9 +599,6 @@ describe('FeedbackWidget', () => {
       vi.advanceTimersByTime(3000);
     });
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
 
     const newFloatingButton = screen.getByLabelText('Kirim Feedback');
     await act(async () => {

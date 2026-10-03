@@ -1,5 +1,5 @@
 import axios, { isAxiosError } from 'axios';
-import { toast } from 'sonner';
+import { notify as toast } from '@/lib/notify';
 
 /**
  * PayU API Client — Secure BFF Proxy
