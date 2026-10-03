@@ -629,7 +629,7 @@ main() {
             ;;
         --infra|-i)
             echo "Starting Podman infrastructure..."
-            PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+            PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
             cd "$PROJECT_ROOT/infrastructure/local/podman"
             if command -v podman-compose > /dev/null 2>&1; then
                 podman-compose up -d

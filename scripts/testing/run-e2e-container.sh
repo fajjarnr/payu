@@ -11,8 +11,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-COMPOSE_DIR="$PROJECT_ROOT/infrastructure/local-podman"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+COMPOSE_DIR="$PROJECT_ROOT/infrastructure/local/podman"
 E2E_DIR="$PROJECT_ROOT/tests/e2e_blackbox"
 COMPOSE_FILE="$COMPOSE_DIR/podman-compose.yml"
 

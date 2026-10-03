@@ -51,7 +51,7 @@ To run infrastructure tests, you must:
 1. **Start required services** using Podman Compose:
    ```bash
    cd /home/ubuntu/payu
-   cd infrastructure/local-podman && podman compose up -d kafka postgres
+   cd infrastructure/local/podman && podman compose up -d payu-kafka-kafka-bootstrap payu-database-rw
    ```
 
 2. **Enable infrastructure tests**:
@@ -121,7 +121,7 @@ In CI/CD pipelines (GitHub Actions, GitLab CI, Jenkins):
   run: pytest -v -m "not infrastructure"
 
 - name: Start infrastructure
-  run: cd infrastructure/local-podman && podman compose up -d kafka postgres
+  run: cd infrastructure/local/podman && podman compose up -d payu-kafka-kafka-bootstrap payu-database-rw
 
 - name: Run all tests including infrastructure
   run: |

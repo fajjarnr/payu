@@ -138,13 +138,13 @@ test-health-check: ## Check test environment health
 	@./scripts/test-health-check.sh
 
 podman-test-up: ## Start Podman test environment
-	@podman compose -f infrastructure/local-podman/podman-compose.test.yml up -d
+	@podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 15
 	@./scripts/test-health-check.sh
 
 podman-test-down: ## Stop Podman test environment
-	@podman compose -f infrastructure/local-podman/podman-compose.test.yml down -v
+	@podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps down -v
 
 seed-test-data: ## Seed test databases with test data
 	@./scripts/seed-test-data.sh
@@ -192,5 +192,5 @@ clean-test: ## Clean test artifacts
 clean: ## Clean all artifacts
 	@$(MAKE) clean-test
 	@echo "Cleaning build artifacts..."
-	@podman compose -f infrastructure/local-podman/podman-compose.test.yml down -v 2>/dev/null || true
+	@podman compose -f infrastructure/local/podman/podman-compose.yml --profile apps down -v 2>/dev/null || true
 	@echo "All artifacts cleaned"

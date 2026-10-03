@@ -148,7 +148,7 @@ print_section "Step 1: Starting test environment"
 
 if [ "$SKIP_BUILD" = false ] && [ "$SKIP_INTEGRATION" = false ] || [ "$SKIP_E2E" = false ]; then
     print_info "Starting infrastructure from main compose..."
-    $COMPOSE_CMD -f "$PROJECT_ROOT/infrastructure/local-podman/podman-compose.yml" up -d postgres redis kafka > /dev/null 2>&1 || true
+    $COMPOSE_CMD -f "$PROJECT_ROOT/infrastructure/local/podman/podman-compose.yml" up -d payu-database-rw payu-cache payu-kafka-kafka-bootstrap > /dev/null 2>&1 || true
     print_info "Waiting for services to be healthy..."
     sleep 15
 

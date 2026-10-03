@@ -33,22 +33,22 @@ else
 fi
 
 if command -v podman-compose > /dev/null 2>&1; then
-    COMPOSE_CMD="podman-compose -f infrastructure/local-podman/podman-compose.yml"
+    COMPOSE_CMD="podman-compose -f infrastructure/local/podman/podman-compose.yml"
 elif podman compose version > /dev/null 2>&1; then
-    COMPOSE_CMD="podman compose -f infrastructure/local-podman/podman-compose.yml"
+    COMPOSE_CMD="podman compose -f infrastructure/local/podman/podman-compose.yml"
 else
-    COMPOSE_CMD="docker compose -f infrastructure/local-podman/podman-compose.yml"
+    COMPOSE_CMD="docker compose -f infrastructure/local/podman/podman-compose.yml"
 fi
 
 echo ""
 echo "Checking environment..."
-if ! $CONTAINER_CLI ps | grep -q "payu-postgres"; then
+if ! $CONTAINER_CLI ps | grep -q "payu-database-rw"; then
     echo "Environment not running. Starting..."
-    $COMPOSE_CMD up -d postgres redis
+    $COMPOSE_CMD up -d payu-database-rw payu-cache
     sleep 10
 fi
 
-POSTGRES_CMD="$CONTAINER_CLI exec payu-postgres psql -U payu"
+POSTGRES_CMD="$CONTAINER_CLI exec payu-database-rw psql -U payu"
 
 echo ""
 echo "Step 1: Creating test users table..."

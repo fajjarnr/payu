@@ -63,7 +63,7 @@ echo 'source /home/ubuntu/payu/scripts/podman-aliases.sh' >> ~/.bashrc
 dcp up -d
 
 # Or using individual services
-podman-compose up -d postgres redis kafka
+podman compose -f infrastructure/local/podman/podman-compose.yml up -d payu-database-rw payu-cache payu-kafka-kafka-bootstrap
 ```
 
 ## Command Mapping

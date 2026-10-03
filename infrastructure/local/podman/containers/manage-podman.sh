@@ -5,7 +5,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/../../../.." && pwd)
 COMPOSE_FILE="$REPO_ROOT/infrastructure/local/podman/podman-compose.yml"
 COMPOSE=(podman compose -f "$COMPOSE_FILE")
-CORE=(payu-database-rw payu-cache payu-kafka-kafka-bootstrap artemis payu-keycloak-service)
+CORE=(payu-database-rw payu-cache payu-kafka-kafka-bootstrap payu-broker-hdls-svc payu-keycloak-service)
 
 case "${1:-help}" in
   core)
@@ -39,7 +39,7 @@ case "${1:-help}" in
   help|--help|-h)
     printf '%s\n' \
       "usage: $0 {core|apps|api-management|all|build|status|logs SERVICE|stop|smoke}" \
-      "  core            PostgreSQL, Data Grid, Kafka, Artemis, Keycloak" \
+      "  core            PostgreSQL, Data Grid, Kafka, AMQ broker, Keycloak" \
       "  apps            core infrastructure plus all backend/web workloads" \
       "  api-management  local APIcast on http://localhost:8095" \
       "  all             apps plus APIcast"

@@ -97,10 +97,10 @@ backup_config() {
 
     mkdir -p "${BACKUP_ROOT}/config"
 
-    cp "${SCRIPT_DIR}/../infrastructure/local-podman/podman-compose.yml" "${backup_file}" 2>/dev/null || true
+    cp "${SCRIPT_DIR}/../../infrastructure/local/podman/podman-compose.yml" "${backup_file}" 2>/dev/null || true
 
-    if [[ -f "${SCRIPT_DIR}/../.env" ]]; then
-        cp "${SCRIPT_DIR}/../.env" "${BACKUP_ROOT}/config/.env_${TIMESTAMP}"
+    if [[ -f "${SCRIPT_DIR}/../../.env" ]]; then
+        cp "${SCRIPT_DIR}/../../.env" "${BACKUP_ROOT}/config/.env_${TIMESTAMP}"
     fi
 
     log "INFO" "✓ Configuration backup completed successfully"

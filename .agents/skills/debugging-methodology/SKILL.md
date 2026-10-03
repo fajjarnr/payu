@@ -514,7 +514,7 @@ If `podman-compose` acts erratically (fails to map ports/names):
 2.  **Run manually** with explicit env vars to isolate the issue:
     ```bash
     podman run -d --name payu-<service> \
-      --network local-podman_payu-network \
+      --network podman_payu-network \
       -e SPRING_PROFILES_ACTIVE=container \
       -e DB_URL='jdbc:postgresql://postgres:5432/<db_name>' \
       ... \

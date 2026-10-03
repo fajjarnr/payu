@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 BACKUP_ROOT="${BACKUP_ROOT:-/tmp/payu_backups_test}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 TEST_RESULTS_FILE="${BACKUP_ROOT}/test_results_${TIMESTAMP}.json"
@@ -81,15 +81,15 @@ check_docker() {
 
 check_compose() {
     if command -v podman-compose &> /dev/null; then
-        COMPOSE_CMD="podman-compose -f ${PROJECT_ROOT}/infrastructure/local-podman/podman-compose.yml"
+        COMPOSE_CMD="podman-compose -f ${PROJECT_ROOT}/infrastructure/local/podman/podman-compose.yml"
         test_passed "podman-compose is available"
         return 0
     elif podman compose version &> /dev/null; then
-        COMPOSE_CMD="podman compose -f ${PROJECT_ROOT}/infrastructure/local-podman/podman-compose.yml"
+        COMPOSE_CMD="podman compose -f ${PROJECT_ROOT}/infrastructure/local/podman/podman-compose.yml"
         test_passed "podman compose is available"
         return 0
     elif docker compose version &> /dev/null; then
-        COMPOSE_CMD="docker compose -f ${PROJECT_ROOT}/infrastructure/local-podman/podman-compose.yml"
+        COMPOSE_CMD="docker compose -f ${PROJECT_ROOT}/infrastructure/local/podman/podman-compose.yml"
         test_passed "docker compose is available"
         return 0
     else

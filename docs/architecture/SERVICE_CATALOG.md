@@ -14,7 +14,7 @@
 
 **Total: 28 services (23 microservices + 5 simulators)**
 
-> **Port Standard**: All services expose port **8080** inside containers. Refer to `infrastructure/local-podman/podman-compose.yml` for host mappings.
+> **Port Standard**: All services expose port **8080** inside containers. Refer to `infrastructure/local/podman/podman-compose.yml` for host mappings.
 
 ---
 

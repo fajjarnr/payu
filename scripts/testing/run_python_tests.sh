@@ -3,8 +3,8 @@
 
 set -e
 
-# Get the project root directory (one level up from scripts/)
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Get the project root directory (two levels up from scripts/testing/)
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 echo "=========================================="
 echo "PayU E2E Test Runner"
@@ -139,5 +139,5 @@ echo "  cd $PROJECT_ROOT/backend/kyc-service && python3 -m pytest"
 echo "  cd $PROJECT_ROOT/backend/analytics-service && python3 -m pytest"
 echo ""
 echo "To run podman-compose environment:"
-echo "  cd $PROJECT_ROOT && podman compose -f infrastructure/local-podman/podman-compose.yml up"
+echo "  cd $PROJECT_ROOT && podman compose -f infrastructure/local/podman/podman-compose.yml up"
 echo ""

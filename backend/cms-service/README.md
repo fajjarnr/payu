@@ -90,7 +90,7 @@ cms-service/
 
 ```bash
 # Start infrastructure services
-podman compose -f infrastructure/local-podman/podman-compose.yml up -d postgres redis kafka
+podman compose -f infrastructure/local/podman/podman-compose.yml up -d payu-database-rw payu-cache payu-kafka-kafka-bootstrap
 
 # Run the service
 cd backend/cms-service

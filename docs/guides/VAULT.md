@@ -18,7 +18,7 @@ Vault provides secure secret management, allowing applications to retrieve sensi
 ### Starting Vault
 
 ```bash
-podman compose up -d vault
+podman compose -f infrastructure/local/podman/podman-compose.yml --profile secrets up -d vault
 ```
 
 ### Initializing Vault

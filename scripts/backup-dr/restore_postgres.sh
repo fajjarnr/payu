@@ -85,7 +85,7 @@ restore_all_databases() {
 
     # Stop all application services to prevent data corruption
     log "INFO" "Stopping application services..."
-    podman compose -f infrastructure/local-podman/podman-compose.yml stop account-service auth-service transaction-service wallet-service billing-service notification-service kyc-service analytics-service 2>/dev/null || true
+    podman compose -f infrastructure/local/podman/podman-compose.yml stop account-service auth-service transaction-service wallet-service billing-service notification-service kyc-service analytics-service 2>/dev/null || true
 
     if gunzip -c "${backup_file}" | docker exec -i "${CONTAINER_NAME}" psql -U "${POSTGRES_USER}" -d postgres; then
         log "INFO" "Successfully restored all databases from: ${backup_file}"
@@ -120,28 +120,28 @@ restore_database() {
     # Stop services that depend on this database
     case "${db_name}" in
         payu_account)
-            podman compose -f infrastructure/local-podman/podman-compose.yml stop account-service transaction-service 2>/dev/null || true
+            podman compose -f infrastructure/local/podman/podman-compose.yml stop account-service transaction-service 2>/dev/null || true
             ;;
         payu_auth)
-            podman compose -f infrastructure/local-podman/podman-compose.yml stop auth-service 2>/dev/null || true
+            podman compose -f infrastructure/local/podman/podman-compose.yml stop auth-service 2>/dev/null || true
             ;;
         payu_transaction)
-            podman compose -f infrastructure/local-podman/podman-compose.yml stop transaction-service 2>/dev/null || true
+            podman compose -f infrastructure/local/podman/podman-compose.yml stop transaction-service 2>/dev/null || true
             ;;
         payu_wallet)
-            podman compose -f infrastructure/local-podman/podman-compose.yml stop wallet-service transaction-service billing-service 2>/dev/null || true
+            podman compose -f infrastructure/local/podman/podman-compose.yml stop wallet-service transaction-service billing-service 2>/dev/null || true
             ;;
         payu_notification)
-            podman compose -f infrastructure/local-podman/podman-compose.yml stop notification-service 2>/dev/null || true
+            podman compose -f infrastructure/local/podman/podman-compose.yml stop notification-service 2>/dev/null || true
             ;;
         payu_billing)
-            podman compose -f infrastructure/local-podman/podman-compose.yml stop billing-service 2>/dev/null || true
+            podman compose -f infrastructure/local/podman/podman-compose.yml stop billing-service 2>/dev/null || true
             ;;
         payu_kyc)
-            podman compose -f infrastructure/local-podman/podman-compose.yml stop kyc-service 2>/dev/null || true
+            podman compose -f infrastructure/local/podman/podman-compose.yml stop kyc-service 2>/dev/null || true
             ;;
         payu_analytics)
-            podman compose -f infrastructure/local-podman/podman-compose.yml stop analytics-service 2>/dev/null || true
+            podman compose -f infrastructure/local/podman/podman-compose.yml stop analytics-service 2>/dev/null || true
             ;;
     esac
 

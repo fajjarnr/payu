@@ -35,7 +35,7 @@ pytest -v --cov=src --cov-report=term-missing
 ```bash
 # Start Docker services
 cd /home/ubuntu/payu
-docker-compose up -d kafka postgres
+podman compose -f infrastructure/local/podman/podman-compose.yml up -d payu-kafka-kafka-bootstrap payu-database-rw
 
 # Run all tests including infrastructure
 cd /home/ubuntu/payu/backend/analytics-service
@@ -52,7 +52,7 @@ ENABLE_INFRASTRUCTURE_TESTS=true pytest -v -m "infrastructure"
   run: pytest -v -m "not infrastructure"
 
 - name: Start infrastructure
-  run: docker-compose up -d kafka postgres
+  run: podman compose -f infrastructure/local/podman/podman-compose.yml up -d payu-kafka-kafka-bootstrap payu-database-rw
 
 - name: Run all tests
   run: |
