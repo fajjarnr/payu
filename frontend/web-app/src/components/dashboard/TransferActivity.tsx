@@ -6,7 +6,7 @@ import { Link } from '@/lib/navigation';
 import { Search, ChevronDown, MoreHorizontal, RotateCcw, ArrowRight, User, Landmark, Smartphone, ReceiptText, MoreHorizontal as MoreIcon, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { Badge, Button, Card, Dropdown, Skeleton, Table } from 'antd';
-import type { MenuProps, TableColumnsType } from 'antd';
+import type { TableColumnsType } from 'antd';
 
 
 

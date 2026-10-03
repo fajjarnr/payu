@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
 import { Link, usePathname, useRouter } from '@/lib/navigation';
 import {
   LayoutDashboard,
@@ -33,6 +33,8 @@ import { useLogout } from '@/hooks';
 
 const { Sider, Header, Content } = Layout;
 
+const emptySubscribe = () => () => {};
+
 interface DashboardLayoutProps {
   children?: React.ReactNode;
   username?: string;
@@ -51,10 +53,8 @@ export default function DashboardLayout({
   const logoutMutation = useLogout();
   const mode = useUIStore((s) => s.theme);
   const { token } = theme.useToken();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  useEffect(() => setMounted(true), []);
 
   const mainMenu = [
     { href: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },

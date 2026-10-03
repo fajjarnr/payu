@@ -546,7 +546,7 @@ export default function TransferPage() {
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-6">
                     {recentContacts.map((c) => (
-                      <Button type="text" htmlType="button"
+                      <Button key={c.accountId} type="text" htmlType="button"
                         onClick={() => handleContactSelect(c)}
                         data-testid={`favorite-contact-${c.name.toLowerCase()}`}
                         className={clsx(
