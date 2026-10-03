@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # Canary Deployment Script
-# ========================
 # Deploys a new version using canary (progressive) strategy
 #
 # Usage: ./canary-deploy.sh <service-name> <version> <percentage>
@@ -15,7 +14,6 @@ SERVICE="${1:-}"
 VERSION="${2:-}"
 CANARY_PERCENTAGE="${3:-10}"
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -85,23 +83,19 @@ check_istio() {
 deploy_canary_version() {
     print_info "Deploying canary version ${VERSION} (${CANARY_PERCENTAGE}%)..."
 
-    # Check if canary deployment exists
     if ! oc get deployment "${SERVICE}-canary" -n "${NAMESPACE}" &> /dev/null; then
         print_info "Creating canary deployment from stable template..."
 
-        # Get stable deployment as template
         oc get deployment "${SERVICE}" -n "${NAMESPACE}" -o yaml | \
             sed "s/name: ${SERVICE}/name: ${SERVICE}-canary/g" | \
             sed "s/app: ${SERVICE}/app: ${SERVICE}-canary/g" | \
             oc apply -f -
     fi
 
-    # Update canary image
     oc set image "deployment/${SERVICE}-canary" \
         "${SERVICE}-canary=image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/${SERVICE}:${VERSION}" \
         -n "${NAMESPACE}"
 
-    # Set replicas based on percentage
     STABLE_REPLICAS=$(oc get deployment "${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
     CANARY_REPLICAS=$(( (STABLE_REPLICAS * CANARY_PERCENTAGE + 99) / 100 ))
 
@@ -111,7 +105,6 @@ deploy_canary_version() {
 
     oc scale "deployment/${SERVICE}-canary" -n "${NAMESPACE}" --replicas="${CANARY_REPLICAS}"
 
-    # Wait for rollout
     print_info "Waiting for canary rollout to complete..."
     if ! oc rollout status "deployment/${SERVICE}-canary" -n "${NAMESPACE}" --timeout=300s; then
         print_error "Canary rollout failed"
@@ -180,7 +173,6 @@ configure_traffic_split() {
 verify_canary_health() {
     print_info "Verifying canary health..."
 
-    # Check canary pods are ready
     READY_REPLICAS=$(oc get deployment "${SERVICE}-canary" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
     DESIRED_REPLICAS=$(oc get deployment "${SERVICE}-canary" -n "${NAMESPACE}" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
 
@@ -189,14 +181,12 @@ verify_canary_health() {
         return 1
     fi
 
-    # Check for unhealthy pods
     UNHEALTHY_PODS=$(oc get pods -n "${NAMESPACE}" -l "app=${SERVICE}-canary" --field-selector=status.phase!=Running 2>/dev/null | grep -v NAME | wc -l)
     if [ "$UNHEALTHY_PODS" -gt 0 ]; then
         print_error "Found ${UNHEALTHY_PODS} unhealthy canary pods"
         return 1
     fi
 
-    # Run custom verification if available
     if [ -f "${SCRIPT_DIR}/verify-deployment.sh" ]; then
         "${SCRIPT_DIR}/verify-deployment.sh" canary || {
             print_error "Custom health verification failed"
@@ -217,14 +207,12 @@ monitor_canary() {
     local error_threshold=5  # Max errors before alerting
 
     while [ $(date +%s) -lt $end_time ]; do
-        # Check pod health
         UNHEALTHY_PODS=$(oc get pods -n "${NAMESPACE}" -l "app=${SERVICE}-canary" --field-selector=status.phase!=Running 2>/dev/null | grep -v NAME | wc -l)
         if [ "$UNHEALTHY_PODS" -gt 0 ]; then
             error_count=$((error_count + 1))
             print_warning "Unhealthy canary pods: ${UNHEALTHY_PODS}"
         fi
 
-        # Check error rate via metrics if available
         if command -v curl &> /dev/null && [ -n "${PROMETHEUS_URL:-}" ]; then
             ERROR_RATE=$(curl -s "${PROMETHEUS_URL}/api/v1/query?query=rate(http_requests_total{service=\"${SERVICE}-canary\",status=~\"5..\"}[1m])" 2>/dev/null | grep -o '"value":\[[^]]*\]' | grep -o '[0-9.]*$' || echo "0")
 
@@ -234,7 +222,6 @@ monitor_canary() {
             fi
         fi
 
-        # Alert if too many errors
         if [ $error_count -gt $error_threshold ]; then
             print_error "Canary showing signs of instability (${error_count} errors)"
             return 1
@@ -252,12 +239,10 @@ monitor_canary() {
 rollback_canary() {
     print_warning "Rolling back canary..."
 
-    # Remove traffic from canary
     if [ "$USE_ROUTE" = true ]; then
         oc patch route "${SERVICE}" -n "${NAMESPACE}" --type='json' -p '[{"op": "remove", "path": "/spec/alternateBackends"}]' 2>/dev/null || true
         oc patch route "${SERVICE}" -n "${NAMESPACE}" -p '{"spec":{"to":{"weight": 100}}}'
     else
-        # Reset VirtualService to 100% stable
         oc patch virtualservice "${SERVICE}" -n "${NAMESPACE}" --type='json' -p "[{
             \"op\": \"replace\",
             \"path\": \"/spec/http/0/route\",
@@ -270,7 +255,6 @@ rollback_canary() {
         }]"
     fi
 
-    # Scale down canary
     oc scale "deployment/${SERVICE}-canary" -n "${NAMESPACE}" --replicas=0
 
     print_success "Canary rollback complete"
@@ -298,26 +282,21 @@ main() {
     validate_inputs
     check_istio
 
-    # Deploy canary
     if ! deploy_canary_version; then
         print_error "Canary deployment failed"
         exit 1
     fi
 
-    # Verify health
     if ! verify_canary_health; then
         print_error "Canary health check failed"
         rollback_canary
         exit 1
     fi
 
-    # Configure traffic split
     configure_traffic_split
 
-    # Save state for subsequent operations
     save_state
 
-    # Monitor
     print_info "Canary deployed at ${CANARY_PERCENTAGE}% traffic"
     print_info "Next steps:"
     print_info "  - Monitor metrics and logs for issues"

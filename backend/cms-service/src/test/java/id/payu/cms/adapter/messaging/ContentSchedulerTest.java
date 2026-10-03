@@ -88,22 +88,16 @@ class ContentSchedulerTest {
                 .build();
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // Activate Scheduled ContentEntity Tests
-    // ═════════════════════════════════════════════════════════════════════
 
     @Test
     @DisplayName("Should activate scheduled content and publish events")
     void shouldActivateScheduledContentAndPublishEvents() {
-        // Given
         when(contentService.getScheduledContentToActivate())
                 .thenReturn(List.of(scheduledContent));
         doNothing().when(contentService).activateScheduledContent(anyList());
 
-        // When
         scheduler.activateScheduledContent();
 
-        // Then
         verify(contentService).getScheduledContentToActivate();
         verify(contentService).activateScheduledContent(List.of(scheduledId));
         verify(eventPublisher).publishContentPublished(any(ContentEntity.class));
@@ -112,14 +106,11 @@ class ContentSchedulerTest {
     @Test
     @DisplayName("Should not activate when no scheduled content exists")
     void shouldNotActivateWhenNoScheduledContentExists() {
-        // Given
         when(contentService.getScheduledContentToActivate())
                 .thenReturn(Collections.emptyList());
 
-        // When
         scheduler.activateScheduledContent();
 
-        // Then
         verify(contentService).getScheduledContentToActivate();
         verify(contentService, never()).activateScheduledContent(anyList());
         verify(eventPublisher, never()).publishContentPublished(any(ContentEntity.class));
@@ -128,7 +119,6 @@ class ContentSchedulerTest {
     @Test
     @DisplayName("Should activate multiple scheduled items")
     void shouldActivateMultipleScheduledItems() {
-        // Given
         UUID secondId = UUID.randomUUID();
         ContentEntity secondScheduled = ContentEntity.builder()
                 .id(secondId)
@@ -145,30 +135,22 @@ class ContentSchedulerTest {
         when(contentService.getScheduledContentToActivate())
                 .thenReturn(List.of(scheduledContent, secondScheduled));
 
-        // When
         scheduler.activateScheduledContent();
 
-        // Then
         verify(contentService).activateScheduledContent(List.of(scheduledId, secondId));
         verify(eventPublisher, times(2)).publishContentPublished(any(ContentEntity.class));
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // Archive Expired ContentEntity Tests
-    // ═════════════════════════════════════════════════════════════════════
 
     @Test
     @DisplayName("Should archive expired content and publish events")
     void shouldArchiveExpiredContentAndPublishEvents() {
-        // Given
         when(contentService.getExpiredActiveContent())
                 .thenReturn(List.of(expiredContent));
         doNothing().when(contentService).archiveExpiredContent(anyList());
 
-        // When
         scheduler.archiveExpiredContent();
 
-        // Then
         verify(contentService).getExpiredActiveContent();
         verify(contentService).archiveExpiredContent(List.of(expiredId));
         verify(eventPublisher).publishContentArchived(any(ContentEntity.class));
@@ -177,14 +159,11 @@ class ContentSchedulerTest {
     @Test
     @DisplayName("Should not archive when no expired content exists")
     void shouldNotArchiveWhenNoExpiredContentExists() {
-        // Given
         when(contentService.getExpiredActiveContent())
                 .thenReturn(Collections.emptyList());
 
-        // When
         scheduler.archiveExpiredContent();
 
-        // Then
         verify(contentService).getExpiredActiveContent();
         verify(contentService, never()).archiveExpiredContent(anyList());
         verify(eventPublisher, never()).publishContentArchived(any(ContentEntity.class));
@@ -193,7 +172,6 @@ class ContentSchedulerTest {
     @Test
     @DisplayName("Should archive multiple expired items")
     void shouldArchiveMultipleExpiredItems() {
-        // Given
         UUID secondId = UUID.randomUUID();
         ContentEntity secondExpired = ContentEntity.builder()
                 .id(secondId)
@@ -210,10 +188,8 @@ class ContentSchedulerTest {
         when(contentService.getExpiredActiveContent())
                 .thenReturn(List.of(expiredContent, secondExpired));
 
-        // When
         scheduler.archiveExpiredContent();
 
-        // Then
         verify(contentService).archiveExpiredContent(List.of(expiredId, secondId));
         verify(eventPublisher, times(2)).publishContentArchived(any(ContentEntity.class));
     }

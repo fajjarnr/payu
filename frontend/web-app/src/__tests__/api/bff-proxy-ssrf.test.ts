@@ -7,7 +7,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock the logger module
 vi.mock('@/lib/logger', () => ({
   default: {
     info: vi.fn(),
@@ -22,7 +21,6 @@ vi.mock('@/lib/logger', () => ({
   })),
 }));
 
-// Mock next/headers
 const mockCookieStore = {
   get: vi.fn(),
 };
@@ -31,7 +29,6 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn(() => Promise.resolve(mockCookieStore)),
 }));
 
-// Mock fetch
 global.fetch = vi.fn();
 
 import { GET, POST, PUT, DELETE, PATCH } from '@/app/api/v1/[...path]/route';
@@ -56,7 +53,6 @@ describe('BFF Proxy SSRF Prevention', () => {
     vi.restoreAllMocks();
   });
 
-  // Helper to create mock request
   const createMockRequest = (
     pathname: string,
     method: string = 'GET',
@@ -71,7 +67,6 @@ describe('BFF Proxy SSRF Prevention', () => {
     } as unknown as NextRequest;
   };
 
-  // Helper to create params
   const createParams = (pathSegments: string[]) =>
     Promise.resolve({ path: pathSegments });
 
@@ -385,7 +380,6 @@ describe('BFF Proxy SSRF Prevention', () => {
 
     it('should block SSRF to localhost', async () => {
       const request = createMockRequest('/api/v1/test');
-      // Attempt to reach localhost:8080/admin via path manipulation
       const params = createParams(['..', '..', '..', 'localhost:8080', 'admin']);
 
       const response = await GET(request, { params });
@@ -401,8 +395,7 @@ describe('BFF Proxy SSRF Prevention', () => {
 
       const response = await GET(request, { params });
 
-      // Double encoding should be blocked by whitelist check
-      // since it won't match any valid prefix
+      // Double encoding won't match any valid whitelist prefix
       expect(response.status).toBe(400);
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -414,7 +407,6 @@ describe('BFF Proxy SSRF Prevention', () => {
 
       const response = await GET(request, { params });
 
-      // Unicode dots won't match whitelist
       expect(response.status).toBe(400);
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -425,7 +417,6 @@ describe('BFF Proxy SSRF Prevention', () => {
 
       const response = await GET(request, { params });
 
-      // @ symbol paths won't match whitelist
       expect(response.status).toBe(400);
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -443,9 +434,7 @@ describe('BFF Proxy SSRF Prevention', () => {
 
   describe('READY-070 Body-less POST Content-Type handling', () => {
     it('should NOT forward Content-Type when POST body is empty (E2E-2026-06-13-12)', async () => {
-      // Simulates POST /api/v1/cards/{id}/freeze from the browser:
-      // Content-Type: application/json is set, but the body is empty.
-      // The previous code forwarded both, causing gateway 415.
+      // Body-less POST forwarded Content-Type with an empty body, causing gateway 415 (E2E-2026-06-13-12)
       const request = createMockRequest('/api/v1/cards/abc-123/freeze', 'POST', { 'content-type': 'application/json' });
       (request as unknown as { text: () => Promise<string> }).text =
         vi.fn().mockResolvedValue('');

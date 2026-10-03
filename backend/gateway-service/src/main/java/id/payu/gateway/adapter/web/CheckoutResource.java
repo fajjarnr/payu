@@ -55,7 +55,6 @@ public class CheckoutResource {
     public Response getCheckoutSession(@PathParam("token") String token) {
         CheckoutService.CheckoutSession session = checkoutService.getSession(token);
 
-        // Also return available payment methods
         PaymentMethodService.PaymentContext ctx = new PaymentMethodService.PaymentContext(
                 session.amount(), session.currency(), null, null, session.partnerId()
         );

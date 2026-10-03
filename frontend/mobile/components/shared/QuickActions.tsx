@@ -18,7 +18,6 @@ const quickActions: QuickAction[] = [
   { id: '4', label: 'Pay', icon: '💳', route: '/pay', color: '#8b5cf6' },
 ];
 
-// Performance: Memoize accessibility hints to avoid recreation on every render
 const getA11yHint = (label: string): string => {
   const hints: Record<string, string> = {
     'Transfer': 'Opens transfer screen to send money',
@@ -47,7 +46,6 @@ const QuickActionItemComponent: React.FC<QuickActionItemProps> = ({
   textColor,
   onPress,
 }) => {
-  // Memoize icon container style
   const iconContainerStyle = useMemo<ViewStyle>(() => ({
     backgroundColor: `${action.color}20`,
   }), [action.color]);
@@ -95,7 +93,6 @@ export const QuickActionsComponent: React.FC<QuickActionsProps> = ({ onActionPre
   const { colors } = useTheme();
   const navigation = useNavigation();
 
-  // Performance: Memoize press handler to avoid recreating on every render
   const handleActionPress = useCallback((action: QuickAction) => {
     if (onActionPress) {
       onActionPress(action);
@@ -120,7 +117,6 @@ export const QuickActionsComponent: React.FC<QuickActionsProps> = ({ onActionPre
   );
 };
 
-// Performance: Memoize QuickActions component to prevent unnecessary re-renders
 export const QuickActions = memo(QuickActionsComponent, (prevProps, nextProps) => {
   return prevProps.onActionPress === nextProps.onActionPress;
 });

@@ -1,5 +1,3 @@
-// PayU Support Service - CRUD Baseline Performance Test
-// ========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -73,7 +71,6 @@ export default function () {
 
   group('Support Service - CRUD Operations', () => {
 
-    // ===== READ: Get Categories =====
     group('READ: Get Categories', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.support}/categories`, {}, auth.token);
@@ -82,7 +79,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get FAQs =====
     group('READ: Get FAQs', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.support}/faqs`, { category: 'GENERAL' }, auth.token);
@@ -91,7 +87,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Search Knowledge Base =====
     group('READ: Search KB', () => {
       const searchQueries = ['payment', 'account', 'transfer', 'password', 'limit'];
       const query = searchQueries[Math.floor(Math.random() * searchQueries.length)];
@@ -103,7 +98,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Create Ticket =====
     group('CREATE: Create Ticket', () => {
       const ticketData = generateTicketData(uniqueId);
 
@@ -119,7 +113,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Tickets =====
     group('READ: List Tickets', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.support}/tickets`, { page: 0, size: 10 }, auth.token);
@@ -129,7 +122,6 @@ export default function () {
     });
 
     if (ticketId) {
-      // ===== READ: Get Ticket Detail =====
       group('READ: Get Ticket Detail', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.support}/tickets/${ticketId}`, auth.token);
@@ -138,7 +130,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== CREATE: Add Comment =====
       group('CREATE: Add Comment', () => {
         const commentData = generateCommentData(uniqueId);
 
@@ -149,7 +140,6 @@ export default function () {
         sleep(0.5);
       });
 
-      // ===== UPDATE: Update Ticket =====
       group('UPDATE: Update Ticket', () => {
         const updateData = {
           priority: 'MEDIUM',
@@ -163,7 +153,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== CREATE: Rate Support =====
       group('CREATE: Rate Support', () => {
         const ratingData = generateRatingData();
 

@@ -63,9 +63,8 @@ describe('proxy authentication boundary', () => {
   });
 
   it('rehydrates an expired-access full reload via refresh instead of bouncing to login (RELAY-004)', async () => {
-    // Full reload sends cookies but the access token is expired: gateway says
-    // 401, the loopback refresh succeeds — the user must reach the page with
-    // rotated cookies, not a login redirect (SPA navigation never hits proxy).
+    // Full reload: expired access token, gateway 401, loopback refresh succeeds.
+    // User must land with rotated cookies, not a login redirect (SPA navigation never hits proxy).
     const validateRes = new Response(null, { status: 401 });
     const refreshHeaders = new Headers();
     refreshHeaders.append('Set-Cookie', 'accessToken=new-access; Path=/; HttpOnly');

@@ -2,7 +2,6 @@
 # Tasks: image-check, image-scan, deployment-check
 # Uses a 10-minute projected ServiceAccount OIDC token mapped by RHACS to the
 # Continuous Integration role, plus the public Central CA ConfigMap.
-# ============================================================
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:

@@ -1,11 +1,11 @@
 package id.payu.resilience.annotation;
 
 import java.lang.annotation.*;
-
 /**
  * Combined annotation for resilience patterns
  * Combines Circuit Breaker, Retry, and Bulkhead
  */
+
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

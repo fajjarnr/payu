@@ -7,7 +7,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFESTS_DIR="${SCRIPT_DIR}/../manifests"
 mkdir -p "$MANIFESTS_DIR"
 
-# Refresh outputs JSON
 cd "${SCRIPT_DIR}/../terraform"
 terraform output -json > $TF_OUTPUTS
 

@@ -81,34 +81,26 @@ public class EncryptionService {
                 currentKeyVersion, previousKeys.size());
     }
 
-    /**
-     * Encrypt a string value
-     */
     public String encrypt(String plainText) {
         if (plainText == null || plainText.isEmpty()) {
             return plainText;
         }
 
         try {
-            // Generate random IV
             byte[] iv = new byte[GCM_IV_LENGTH];
             new SecureRandom().nextBytes(iv);
 
-            // Initialize cipher for encryption
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
 
-            // Encrypt the plaintext
             byte[] encryptedData = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
 
-            // Combine IV and encrypted data
             byte[] combined = ByteBuffer.allocate(iv.length + encryptedData.length)
                     .put(iv)
                     .put(encryptedData)
                     .array();
 
-            // Return as Base64 encoded string
             return Base64.getEncoder().encodeToString(combined);
         } catch (Exception e) {
             log.error("Encryption failed", e);
@@ -137,7 +129,6 @@ public class EncryptionService {
                             currentKeyVersion - i - 1);
                     return result;
                 } catch (Exception ignored) {
-                    // Try next key
                 }
             }
             log.error("Decryption failed with all available keys");
@@ -174,9 +165,6 @@ public class EncryptionService {
         return encrypt(plainText);
     }
 
-    /**
-     * Encrypt specified fields in a JSON object
-     */
     public String encryptFields(String jsonString, java.util.List<String> fieldsToEncrypt) {
         if (jsonString == null || jsonString.isEmpty()) {
             return jsonString;
@@ -196,9 +184,6 @@ public class EncryptionService {
         }
     }
 
-    /**
-     * Decrypt specified fields in a JSON object
-     */
     public String decryptFields(String jsonString, java.util.List<String> fieldsToDecrypt) {
         if (jsonString == null || jsonString.isEmpty()) {
             return jsonString;
@@ -225,7 +210,6 @@ public class EncryptionService {
             String fieldName = field.getKey();
             JsonNode fieldValue = field.getValue();
 
-            // Check if field should be encrypted
             boolean shouldEncrypt = fieldsToEncrypt.stream()
                     .anyMatch(pattern -> fieldName.matches(pattern));
 
@@ -251,7 +235,6 @@ public class EncryptionService {
             String fieldName = field.getKey();
             JsonNode fieldValue = field.getValue();
 
-            // Check if field should be decrypted
             boolean shouldDecrypt = fieldsToDecrypt.stream()
                     .anyMatch(pattern -> fieldName.matches(pattern));
 
@@ -307,16 +290,10 @@ public class EncryptionService {
         }
     }
 
-    /**
-     * Encrypt a value for storage in database
-     */
     public String encryptForDatabase(String plainText) {
         return "ENC(" + encrypt(plainText) + ")";
     }
 
-    /**
-     * Decrypt a value from database
-     */
     public String decryptFromDatabase(String encryptedText) {
         if (encryptedText != null && encryptedText.startsWith("ENC(") && encryptedText.endsWith(")")) {
             String actualValue = encryptedText.substring(4, encryptedText.length() - 1);

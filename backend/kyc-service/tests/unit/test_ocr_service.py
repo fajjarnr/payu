@@ -113,9 +113,7 @@ class TestOcrService:
         ocr_service.ocr.ocr.return_value = None
 
         with patch("cv2.imdecode", return_value=valid_ktp_image):
-            # KtpOcrResult requires NIK to be 16 digits, but empty OCR will set empty string
-            # The service defaults to empty string which will fail validation
-            # In real scenario, this would be handled by returning an error
+            # Empty OCR -> empty NIK, which fails KtpOcrResult's 16-digit validation
             with pytest.raises(ValueError):  # Will fail validation for NIK
                 await ocr_service.extract_ktp_data(b"fake_image_data")
 
@@ -162,7 +160,6 @@ class TestOcrService:
         # This won't match due to the '16' requirement in the parser logic
         assert "nik" not in data or data.get("nik") is None
 
-        # Test with 16-digit raw number
         text = "3201012345678901"
         data = ocr_service._parse_ktp_data(text)
         assert data["nik"] == "3201012345678901"

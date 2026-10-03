@@ -1,10 +1,8 @@
 #!/bin/bash
-# ============================================
 # PayU Account Service E2E Test
 # Status + lookup queries through gateway -> account-service
 #
 # Mode: GATEWAY_MODE=internal (default) or apicast
-# ============================================
 
 set -e
 

@@ -17,7 +17,6 @@ echo "Region:  ${REGION}"
 echo "Account: ${ACCOUNT_ID}"
 echo "============================================"
 
-# ── Step 1: Create OIDC S3 Bucket ─────────────────────
 echo ""
 echo "[1/4] Creating OIDC S3 bucket: ${BUCKET}"
 
@@ -49,7 +48,6 @@ aws s3api put-bucket-policy --bucket "${BUCKET}" \
 rm -f "/tmp/${BUCKET}-policy.json"
 echo "  Done."
 
-# ── Step 2: Create OIDC S3 Secret ─────────────────────
 echo ""
 echo "[2/4] Creating OIDC S3 credentials secret"
 
@@ -61,7 +59,6 @@ oc create secret generic hypershift-operator-oidc-provider-s3-credentials \
 
 echo "  Done."
 
-# ── Step 3: Create IAM Roles ──────────────────────────
 echo ""
 echo "[3/4] Creating IAM roles"
 
@@ -126,7 +123,6 @@ aws iam attach-role-policy --role-name "${INFRA_ID}-cloud-network-config-control
 rm -f "${TRUST_POLICY_FILE}"
 echo "  Done."
 
-# ── Step 4: Create Secrets ────────────────────────────
 echo ""
 echo "[4/4] Creating secrets in clusters namespace"
 

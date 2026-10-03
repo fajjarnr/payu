@@ -56,7 +56,6 @@ class TestFaceService:
         ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
-        # Mock face detection to return faces for both images
         mock_faces_ktp = np.array([[100, 50, 100, 100]])
         mock_faces_selfie = np.array([[200, 100, 200, 200]])
 
@@ -247,7 +246,6 @@ class TestFaceService:
 
         encoding = face_service._encode_face(img, face_box)
 
-        # Should still return something for valid face box
         assert encoding is not None
 
     def test_calculate_similarity_identical_faces(self, face_service):
@@ -257,7 +255,6 @@ class TestFaceService:
 
         similarity = face_service._calculate_similarity(face1, face2)
 
-        # Identical faces should have similarity close to 1.0
         assert similarity > 0.99
 
     def test_calculate_similarity_different_faces(self, face_service):
@@ -267,12 +264,10 @@ class TestFaceService:
 
         similarity = face_service._calculate_similarity(face1, face2)
 
-        # Different faces should have similarity between 0 and 1
         assert 0.0 <= similarity <= 1.0
 
     def test_calculate_similarity_normalizes_faces(self, face_service):
         """Test that faces are normalized before comparison"""
-        # Create faces with different magnitudes
         face1 = np.ones(10000, dtype=np.float32) * 10
         face2 = np.ones(10000, dtype=np.float32) * 100
 
@@ -299,7 +294,6 @@ class TestFaceService:
 
                 result = await face_service.match_face(ktp_data, selfie_data)
 
-                # Same image should match
                 assert result.is_match is True
                 assert result.similarity_score >= face_service.threshold
 
@@ -309,7 +303,6 @@ class TestFaceService:
         ktp_data = b"ktp_image_bytes"
         selfie_data = b"selfie_image_bytes"
 
-        # Create different images
         ktp_img = np.random.randint(0, 100, (300, 400, 3), dtype=np.uint8)
         selfie_img = np.random.randint(100, 255, (480, 640, 3), dtype=np.uint8)
 
@@ -327,7 +320,7 @@ class TestFaceService:
                 result = await face_service.match_face(ktp_data, selfie_data)
 
                 # Different random images likely won't match
-                # But we just check the structure
+                # We just check the structure
                 assert result.ktp_face_found is True
                 assert result.selfie_face_found is True
                 assert hasattr(result, "similarity_score")
@@ -355,6 +348,5 @@ class TestFaceService:
 
                 result = await face_service.match_face(ktp_data, selfie_data)
 
-                # Should handle gracefully
                 assert result.ktp_face_found is True
                 assert result.selfie_face_found is True

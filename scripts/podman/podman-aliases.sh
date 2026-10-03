@@ -1,12 +1,7 @@
 #!/bin/bash
-# =============================================================================
-# PayU Podman Developer Aliases
-# =============================================================================
 # Collection of useful Podman aliases to improve developer productivity
 # Usage: Source this file in your shell: source /home/ubuntu/payu/scripts/podman-aliases.sh
-# =============================================================================
 
-# Color codes for better output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -138,7 +133,6 @@ alias dclean-volumes='podman volume prune -f' # Clean volumes
 alias dclean-networks='podman network prune -f' # Clean networks
 alias dclean-system='podman system df'       # Show disk usage
 
-# Helper Functions
 dshow-aliases() {
     echo -e "${BLUE}PayU Podman Aliases:${NC}"
     echo ""
@@ -193,7 +187,6 @@ dshow-aliases() {
     echo -e "${GREEN}Source this file to use aliases: source /home/ubuntu/payu/scripts/podman-aliases.sh${NC}"
 }
 
-# Function to show container resource usage
 dtop-cpu() {
     if [ $# -eq 0 ]; then
         echo -e "${YELLOW}Top CPU-consuming containers:${NC}"
@@ -203,7 +196,6 @@ dtop-cpu() {
     fi
 }
 
-# Function to show container network I/O
 dtop-net() {
     if [ $# -eq 0 ]; then
         echo -e "${YELLOW}Top Network I/O containers:${NC}"
@@ -213,7 +205,6 @@ dtop-net() {
     fi
 }
 
-# Function to export/import containers
 dexport() {
     if [ $# -eq 0 ]; then
         echo "Usage: dexport <container_name> [output_file.tar]"
@@ -238,7 +229,6 @@ dimport() {
     echo -e "${GREEN}Import completed! Image tag: ${image_name}${NC}"
 }
 
-# Function to create podman-compose.yml from existing docker-compose.yml
 convert-docker-compose() {
     if [ ! -f "docker-compose.yml" ]; then
         echo -e "${RED}Error: docker-compose.yml not found in current directory${NC}"
@@ -249,7 +239,6 @@ convert-docker-compose() {
     echo -e "${GREEN}Conversion completed!${NC}"
 }
 
-# Function to build images with specific registry prefix
 build-for-payu() {
     if [ $# -eq 0 ]; then
         echo "Usage: build-for-payu <image_name> [tag]"
@@ -263,7 +252,6 @@ build-for-payu() {
     echo -e "${GREEN}Build completed! Image: ${full_name}${NC}"
 }
 
-# Function to push images to PayU registry
 push-to-payu() {
     if [ $# -eq 0 ]; then
         echo "Usage: push-to-payu <image_name> [tag]"
@@ -277,7 +265,6 @@ push-to-payu() {
     echo -e "${GREEN}Push completed!${NC}"
 }
 
-# Function to pull images from PayU registry
 pull-from-payu() {
     if [ $# -eq 0 ]; then
         echo "Usage: pull-from-payu <image_name> [tag]"
@@ -291,7 +278,6 @@ pull-from-payu() {
     echo -e "${GREEN}Pull completed!${NC}"
 }
 
-# Show podman setup status
 podman-status() {
     echo -e "${BLUE}=== Podman Status Check ===${NC}"
     echo ""
@@ -334,7 +320,6 @@ podman-status() {
     fi
 }
 
-# Export helper functions to shell
 export -f dshow-aliases
 export -f dtop-cpu
 export -f dtop-net

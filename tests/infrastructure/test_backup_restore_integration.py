@@ -374,7 +374,6 @@ class TestDisasterRecoveryWorkflow:
         backup_file = f"{integration_test.backup_root}/postgres/workflow_backup.sql"
         os.makedirs(f"{integration_test.backup_root}/postgres", exist_ok=True)
         
-        # Step 1: Create test data
         code, stdout, stderr = integration_test.run_command([
             "docker", "exec", postgres_container,
             "psql", "-U", "payu", "-d", "payu_account",
@@ -383,7 +382,6 @@ class TestDisasterRecoveryWorkflow:
         if code != 0:
             pytest.skip(f"Could not create test table: {stderr}")
         
-        # Step 2: Create backup
         code, stdout, stderr = integration_test.run_command([
             "docker", "exec", postgres_container,
             "pg_dump", "-U", "payu", "payu_account"
@@ -393,20 +391,18 @@ class TestDisasterRecoveryWorkflow:
         with open(backup_file, 'w') as f:
             f.write(stdout)
         
-        # Step 3: Verify backup file
         assert os.path.exists(backup_file), "Backup file not created"
         with open(backup_file, 'r') as f:
             content = f.read()
             assert "dr_workflow_test" in content, "Test table not in backup"
         
-        # Step 4: Simulate restore verification (we don't actually restore to avoid breaking production)
+        # Simulate restore verification (we don't actually restore to avoid breaking production)
         code, stdout, stderr = integration_test.run_command([
             "docker", "exec", postgres_container,
             "psql", "-U", "payu", "-d", "payu_account",
             "-c", "SELECT COUNT(*) FROM dr_workflow_test;"
         ])
         
-        # Workflow complete
         assert True, "PostgreSQL backup-restore workflow verified"
 
     def test_complete_kafka_backup_restore_workflow(self, integration_test):
@@ -419,7 +415,6 @@ class TestDisasterRecoveryWorkflow:
         backup_dir = f"{integration_test.backup_root}/kafka"
         os.makedirs(backup_dir, exist_ok=True)
         
-        # Step 1: Create topic
         code, stdout, stderr = integration_test.run_command([
             "docker", "exec", kafka_container,
             "kafka-topics",
@@ -432,7 +427,6 @@ class TestDisasterRecoveryWorkflow:
         if code != 0:
             pytest.skip(f"Could not create test topic: {stderr}")
         
-        # Step 2: Produce messages
         code, stdout, stderr = integration_test.run_command([
             "docker", "exec", kafka_container,
             "bash", "-c",
@@ -440,7 +434,6 @@ class TestDisasterRecoveryWorkflow:
         ])
         assert code == 0, f"Failed to produce message: {stderr}"
         
-        # Step 3: Verify messages exist
         code, stdout, stderr = integration_test.run_command([
             "docker", "exec", kafka_container,
             "kafka-run-class", "kafka.tools.GetOffsetShell",
@@ -450,7 +443,6 @@ class TestDisasterRecoveryWorkflow:
         ])
         assert code == 0, f"Failed to verify messages: {stderr}"
         
-        # Step 4: Backup topic metadata
         backup_file = f"{backup_dir}/{topic_name}_metadata.txt"
         code, stdout, stderr = integration_test.run_command([
             "docker", "exec", kafka_container,

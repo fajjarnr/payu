@@ -6,17 +6,14 @@
 
 set -euo pipefail
 
-# Configuration
 CONTAINER_NAME="payu-postgres"
 POSTGRES_USER="payu"
 BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
 BACKUP_DIR="${BACKUP_ROOT}/postgres"
 LOG_FILE="${BACKUP_ROOT}/logs/restore_postgres_$(date +%Y%m%d_%H%M%S).log"
 
-# Create log directory if it doesn't exist
 mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
-# Logging function
 log() {
     local level="$1"
     shift
@@ -25,7 +22,6 @@ log() {
     echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}" >&2
 }
 
-# Check if container is running
 check_container() {
     log "INFO" "Checking if PostgreSQL container is running..."
     if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
@@ -36,7 +32,6 @@ check_container() {
     return 0
 }
 
-# Test database connectivity
 test_connection() {
     log "INFO" "Testing database connectivity..."
     if ! docker exec "${CONTAINER_NAME}" pg_isready -U "${POSTGRES_USER}" > /dev/null 2>&1; then
@@ -47,7 +42,6 @@ test_connection() {
     return 0
 }
 
-# List available backups
 list_backups() {
     local backup_type="${1:-all}"
 
@@ -93,7 +87,6 @@ restore_all_databases() {
     log "INFO" "Stopping application services..."
     podman compose -f infrastructure/local-podman/podman-compose.yml stop account-service auth-service transaction-service wallet-service billing-service notification-service kyc-service analytics-service 2>/dev/null || true
 
-    # Restore from backup
     if gunzip -c "${backup_file}" | docker exec -i "${CONTAINER_NAME}" psql -U "${POSTGRES_USER}" -d postgres; then
         log "INFO" "Successfully restored all databases from: ${backup_file}"
         return 0
@@ -103,7 +96,6 @@ restore_all_databases() {
     fi
 }
 
-# Restore a single database from pg_dump
 restore_database() {
     local db_name="$1"
     local backup_file="$2"
@@ -153,15 +145,12 @@ restore_database() {
             ;;
     esac
 
-    # Drop existing database
     log "INFO" "Dropping existing database '${db_name}'..."
     docker exec "${CONTAINER_NAME}" psql -U "${POSTGRES_USER}" -d postgres -c "DROP DATABASE IF EXISTS ${db_name};" || true
 
-    # Recreate database
     log "INFO" "Creating database '${db_name}'..."
     docker exec "${CONTAINER_NAME}" psql -U "${POSTGRES_USER}" -d postgres -c "CREATE DATABASE ${db_name};" || true
 
-    # Restore from backup
     local temp_file=$(mktemp)
     gunzip -c "${backup_file}" > "${temp_file}"
 
@@ -176,7 +165,6 @@ restore_database() {
     fi
 }
 
-# Restore specific tables from a backup
 restore_tables() {
     local db_name="$1"
     local backup_file="$2"
@@ -200,7 +188,6 @@ restore_tables() {
         fi
     fi
 
-    # Extract and restore each table
     for table in "${tables[@]}"; do
         log "INFO" "Restoring table '${table}'..."
         gunzip -c "${backup_file}" | docker exec -i "${CONTAINER_NAME}" pg_restore -U "${POSTGRES_USER}" -d "${db_name}" -Fc -t "${table}"
@@ -210,20 +197,17 @@ restore_tables() {
     return 0
 }
 
-# Verify restore integrity
 verify_restore() {
     local db_name="$1"
     local expected_tables="${2:-}"
 
     log "INFO" "Verifying restore for database '${db_name}'..."
 
-    # Check if database exists
     if ! docker exec "${CONTAINER_NAME}" psql -U "${POSTGRES_USER}" -d postgres -c "SELECT 1 FROM pg_database WHERE datname='${db_name}'" -t | grep -q "1"; then
         log "ERROR" "Database '${db_name}' does not exist after restore"
         return 1
     fi
 
-    # Check table count
     local table_count=$(docker exec "${CONTAINER_NAME}" psql -U "${POSTGRES_USER}" -d "${db_name}" -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public'" -t | tr -d ' ')
 
     if [[ -z "${table_count}" || "${table_count}" == "0" ]]; then
@@ -233,7 +217,6 @@ verify_restore() {
 
     log "INFO" "Database '${db_name}' restored successfully with ${table_count} tables"
 
-    # If expected tables specified, check for them
     if [[ -n "${expected_tables}" ]]; then
         for table in ${expected_tables}; do
             if ! docker exec "${CONTAINER_NAME}" psql -U "${POSTGRES_USER}" -d "${db_name}" -c "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='${table}'" -t | grep -q "1"; then
@@ -247,7 +230,6 @@ verify_restore() {
     return 0
 }
 
-# Find the latest backup for a database
 find_latest_backup() {
     local db_name="$1"
     local backup_type="${2:-daily}"
@@ -274,7 +256,6 @@ find_latest_backup() {
     return 0
 }
 
-# Main restore routine
 main() {
     local action="$1"
     shift

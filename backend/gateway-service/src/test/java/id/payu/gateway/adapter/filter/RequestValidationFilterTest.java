@@ -137,7 +137,6 @@ class RequestValidationFilterTest {
 
             var node = new ObjectMapper().createObjectNode()
                     .put("username", "testuser");
-            // Missing password
 
             var errors = schema.validate(node);
             assertFalse(errors.isEmpty(), "Missing password should fail validation");

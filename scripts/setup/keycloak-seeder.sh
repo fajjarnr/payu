@@ -1,8 +1,5 @@
 #!/bin/bash
-#
-# Keycloak User Seeder for PayU
 # Creates test users in Keycloak realm
-#
 
 set -e
 
@@ -15,7 +12,6 @@ echo "=========================================="
 echo "PayU Keycloak User Seeder"
 echo "=========================================="
 
-# Get admin access token
 echo "Getting admin access token..."
 ADMIN_TOKEN=$(curl -s -X POST "${KEYCLOAK_URL}/auth/realms/master/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -31,7 +27,6 @@ fi
 
 echo "✓ Admin token obtained"
 
-# Function to create user
 create_user() {
     local username=$1
     local email=$2
@@ -42,14 +37,12 @@ create_user() {
     echo ""
     echo "Creating user: $username"
 
-    # Check if user exists
     USER_ID=$(curl -s -X GET "${KEYCLOAK_URL}/auth/admin/realms/${REALM}/users?username=${username}" \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
       -H "Content-Type: application/json" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
 
     if [ -n "$USER_ID" ]; then
         echo "  User $username already exists (ID: $USER_ID)"
-        # Update password
         curl -s -X PUT "${KEYCLOAK_URL}/auth/admin/realms/${REALM}/users/${USER_ID}/reset-password" \
           -H "Authorization: Bearer ${ADMIN_TOKEN}" \
           -H "Content-Type: application/json" \
@@ -58,7 +51,6 @@ create_user() {
         return
     fi
 
-    # Create user
     USER_ID=$(curl -s -X POST "${KEYCLOAK_URL}/auth/admin/realms/${REALM}/users" \
       -H "Authorization: Bearer ${ADMIN_TOKEN}" \
       -H "Content-Type: application/json" \
@@ -72,7 +64,6 @@ create_user() {
     fi
 
     if [ -n "$USER_ID" ]; then
-        # Set password
         curl -s -X PUT "${KEYCLOAK_URL}/auth/admin/realms/${REALM}/users/${USER_ID}/reset-password" \
           -H "Authorization: Bearer ${ADMIN_TOKEN}" \
           -H "Content-Type: application/json" \
@@ -84,7 +75,6 @@ create_user() {
     fi
 }
 
-# Create test users
 create_user "customer1" "customer1@payu.fajjjar.my.id" "Customer" "One" "password123"
 create_user "customer2" "customer2@payu.fajjjar.my.id" "Customer" "Two" "password123"
 create_user "admin" "admin@payu.fajjjar.my.id" "System" "Administrator" "admin123"

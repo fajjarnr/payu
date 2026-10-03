@@ -23,16 +23,12 @@ const logger = pino({
 
 export default logger;
 
-/* ------------------------------------------------------------------ */
-/*  Helper: build child logger with correlation-id bound              */
-/* ------------------------------------------------------------------ */
+// Build child logger with correlation-id bound
 export function withCorrelation(correlationId: string) {
   return logger.child({ correlationId });
 }
 
-/* ------------------------------------------------------------------ */
-/*  Helper: extract or generate correlation-id from a request         */
-/* ------------------------------------------------------------------ */
+// Extract or generate correlation-id from a request
 export function getCorrelationId(request: Request): string {
   const fromHeader = request.headers.get("x-correlation-id") ?? request.headers.get("x-request-id");
   if (fromHeader) return fromHeader;
@@ -42,8 +38,5 @@ export function getCorrelationId(request: Request): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 10)}`;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Re-export edge logger for backward compat (do NOT import this in  */
-/*  Edge Runtime — use @/lib/edge-logger directly instead)            */
-/* ------------------------------------------------------------------ */
+// Re-export edge logger for backward compat (do NOT import in Edge Runtime — use @/lib/edge-logger directly)
 export { edgeLogger } from "./edge-logger";

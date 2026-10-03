@@ -75,7 +75,6 @@ public abstract class ContractVerifierBase {
 
     @BeforeEach
     void setUpContractMocks() {
-        // Stub TransactionUseCase to return a successful transfer for any request
         given(transactionUseCase.initiateTransfer(any(InitiateTransferCommand.class)))
                 .willReturn(new InitiateTransferCommandResult(
                         UUID.randomUUID(),

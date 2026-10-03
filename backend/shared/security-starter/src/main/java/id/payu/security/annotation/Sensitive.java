@@ -78,7 +78,4 @@ public @interface Sensitive {
      */
     SensitivityLevel value() default SensitivityLevel.STANDARD;
 
-    /**
-     * Sensitivity levels determining the masking strategy.
-     */
 }

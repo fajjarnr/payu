@@ -6,28 +6,22 @@ package id.payu.saga.model;
  */
 public enum SagaState {
 
-    // Initial state
     PENDING("Saga created but not yet started"),
 
-    // Active execution states
     STARTED("Saga execution started"),
     IN_PROGRESS("Saga steps executing"),
     WAITING_FOR_RESPONSE("Waiting for external service response"),
 
-    // Terminal success states
     COMPLETED("Saga completed successfully"),
 
-    // Terminal failure states
     FAILED("Saga failed, compensation may be needed"),
     COMPENSATING("Compensation in progress"),
     COMPENSATED("Compensation completed"),
     COMPENSATION_FAILED("Compensation failed - requires manual intervention"),
 
-    // Timeout and retry states
     TIMED_OUT("Saga timed out"),
     RETRYING("Retrying failed step"),
 
-    // Pause states
     PAUSED("Saga paused for manual review"),
     CANCELLED("Saga cancelled by user/system");
 
@@ -61,18 +55,12 @@ public enum SagaState {
                this == COMPENSATION_FAILED;
     }
 
-    /**
-     * Check if saga can be retried from this state.
-     */
     public boolean isRetryable() {
         return this == FAILED ||
                this == TIMED_OUT ||
                this == RETRYING;
     }
 
-    /**
-     * Get the state name as string.
-     */
     public String value() {
         return this.name();
     }

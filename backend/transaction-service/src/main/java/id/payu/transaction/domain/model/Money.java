@@ -73,9 +73,7 @@ public class Money implements Comparable<Money> {
     /**
      * Creates a Money instance with the specified amount and currency code.
      *
-     * @param amount the monetary amount
      * @param currencyCode the ISO 4217 currency code (e.g., "USD", "IDR")
-     * @return a new Money instance
      * @throws IllegalArgumentException if amount is null or currency code is invalid
      * @throws IllegalArgumentException if amount has more than 4 decimal places
      */
@@ -90,10 +88,6 @@ public class Money implements Comparable<Money> {
 
     /**
      * Creates a Money instance from a string amount and currency code.
-     *
-     * @param amount the monetary amount as a string
-     * @param currencyCode the ISO 4217 currency code
-     * @return a new Money instance
      */
     public static Money of(String amount, String currencyCode) {
         return new Money(new BigDecimal(amount), Currency.getInstance(currencyCode));
@@ -101,9 +95,6 @@ public class Money implements Comparable<Money> {
 
     /**
      * Creates a Money instance with Indonesian Rupiah (IDR) currency.
-     *
-     * @param amount the monetary amount
-     * @return a new Money instance in IDR
      */
     public static Money idr(BigDecimal amount) {
         return new Money(amount, Currency.getInstance("IDR"));
@@ -111,9 +102,6 @@ public class Money implements Comparable<Money> {
 
     /**
      * Creates a Money instance with Indonesian Rupiah (IDR) currency from string.
-     *
-     * @param amount the monetary amount as a string
-     * @return a new Money instance in IDR
      */
     public static Money idr(String amount) {
         return new Money(new BigDecimal(amount), Currency.getInstance("IDR"));
@@ -121,9 +109,6 @@ public class Money implements Comparable<Money> {
 
     /**
      * Creates a Money instance with USD currency.
-     *
-     * @param amount the monetary amount
-     * @return a new Money instance in USD
      */
     public static Money usd(BigDecimal amount) {
         return new Money(amount, Currency.getInstance("USD"));
@@ -131,9 +116,6 @@ public class Money implements Comparable<Money> {
 
     /**
      * Creates a Money instance with USD currency from string.
-     *
-     * @param amount the monetary amount as a string
-     * @return a new Money instance in USD
      */
     public static Money usd(String amount) {
         return new Money(new BigDecimal(amount), Currency.getInstance("USD"));
@@ -340,7 +322,6 @@ public class Money implements Comparable<Money> {
     /**
      * Asserts that two Money instances have the same currency.
      *
-     * @param other the other Money instance
      * @throws IllegalArgumentException if currencies don't match
      */
     private void assertSameCurrency(Money other) {
@@ -401,7 +382,6 @@ public class Money implements Comparable<Money> {
      * <p>Uses the configured rounding mode (HALF_EVEN) for the operation.</p>
      *
      * @param newScale the scale to round to (e.g., 0 for whole numbers, 2 for cents)
-     * @return a new Money instance with the rounded amount
      */
     public Money round(int newScale) {
         return new Money(this.amount.setScale(newScale, ROUNDING_MODE), this.currency);

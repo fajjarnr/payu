@@ -1,5 +1,3 @@
-// PayU Billing Service - CRUD Baseline Performance Test
-// =======================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -78,7 +76,6 @@ export default function () {
 
   group('Billing Service - CRUD Operations', () => {
 
-    // ===== READ: Get Biller Categories =====
     group('READ: Get Categories', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.billing}/categories`, {}, auth.token);
@@ -87,7 +84,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Billers by Category =====
     group('READ: Get Billers', () => {
       const category = BILLER_TYPES[Math.floor(Math.random() * BILLER_TYPES.length)];
 
@@ -98,7 +94,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Bill Inquiry =====
     let inquiryData = null;
     group('CREATE: Bill Inquiry', () => {
       inquiryData = generateInquiryData();
@@ -110,7 +105,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== CREATE: Pay Bill =====
     if (inquiryData) {
       group('CREATE: Pay Bill', () => {
         const paymentData = generatePaymentData(inquiryData);
@@ -123,7 +117,6 @@ export default function () {
       });
     }
 
-    // ===== READ: Payment History =====
     group('READ: Payment History', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.billing}/history`, { period: '30d' }, auth.token);
@@ -132,7 +125,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Scheduled Payment =====
     group('CREATE: Scheduled Payment', () => {
       const scheduledData = generateScheduledPaymentData(uniqueId);
 
@@ -148,7 +140,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Scheduled Payments =====
     group('READ: List Scheduled', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.billing}/scheduled`, { page: 0, size: 10 }, auth.token);
@@ -158,7 +149,6 @@ export default function () {
     });
 
     if (scheduledPaymentId) {
-      // ===== UPDATE: Cancel Scheduled Payment =====
       group('UPDATE: Cancel Scheduled', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.billing}/scheduled/${scheduledPaymentId}/cancel`, {}, auth.token);

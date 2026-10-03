@@ -42,7 +42,6 @@ public class WalletTransaction {
         return new WalletTransactionBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getWalletId() { return walletId; }

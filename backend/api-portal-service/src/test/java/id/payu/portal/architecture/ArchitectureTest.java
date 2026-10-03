@@ -25,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("architecture")
 class ArchitectureTest {
 
-    // ────────── Package Structure ──────────
-
     @Test
     @DisplayName("should follow Hexagonal Architecture package conventions")
     void testPackageStructure() {
@@ -51,8 +49,6 @@ class ArchitectureTest {
         assertTrue(pathExists(testBase + "/application/service"),
             "Missing test application/service package");
     }
-
-    // ────────── DTO Conventions ──────────
 
     @Test
     @DisplayName("should use Java records for DTOs")
@@ -98,15 +94,12 @@ class ArchitectureTest {
             .map(p -> p.getFileName().toString())
             .collect(java.util.stream.Collectors.toSet());
 
-        // Verify these files use BigDecimal, not float/double
         filesWithMoney.forEach(fileName -> {
             String content = readFileContent(Paths.get("src/main/java/id/payu/portal/dto/" + fileName));
             assertTrue(content.contains("BigDecimal"),
                 fileName + " should use BigDecimal for monetary fields");
         });
     }
-
-    // ────────── Controller Conventions ──────────
 
     @Test
     @DisplayName("should have SwaggerUI endpoints publicly accessible")
@@ -133,8 +126,6 @@ class ArchitectureTest {
             "SandboxResource should be @Authenticated");
     }
 
-    // ────────── Config Conventions ──────────
-
     @Test
     @DisplayName("should use SmallRye ConfigMapping for configuration")
     void testConfigMappingUsage() throws IOException {
@@ -151,8 +142,6 @@ class ArchitectureTest {
         assertTrue(violations.isEmpty(),
             "Config classes should use @ConfigMapping: " + String.join(", ", violations));
     }
-
-    // ────────── Helpers ──────────
 
     private boolean pathExists(String relativePath) {
         return Files.exists(Paths.get(relativePath));

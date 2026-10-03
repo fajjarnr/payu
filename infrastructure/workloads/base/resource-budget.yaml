@@ -5,23 +5,18 @@
 # Linked Quota: infrastructure/foundation/namespaces/base/resource-quotas.yaml
 # Reference:  https://kubernetes.io/docs/concepts/policy/resource-quotas/
 
-# ─────────────────────────────────────────────────────────
 # payu-dev Quota Budget (requests.cpu: 8, requests.memory: 20Gi, limits.cpu: 36, limits.memory: 64Gi)
-# ─────────────────────────────────────────────────────────
 # 23 microservices × typical profile:
 #   requests: 100-150m CPU / 256-384Mi memory
 #   limits:   500-1000m CPU / 512-768Mi memory
-# ─────────────────────────────────────────────────────────
 # Tier 1 (Core): gateway, account, transaction, wallet, auth — higher limits
 # Tier 2 (Standard): All other Spring Boot services
 # Tier 3 (Python): analytics, kyc — different profile
-# ─────────────────────────────────────────────────────────
 # Total budget with slack:
-#   CPU requests:  ~3.45 / 8  (43%)  ✅
-#   Mem requests:  ~8.8Gi / 20Gi (44%)  ✅
-#   CPU limits:    ~23 / 36 (64%)  ✅
-#   Mem limits:    ~17.6Gi / 48Gi (37%)  ✅
-# ─────────────────────────────────────────────────────────
+#   CPU requests:  ~3.45 / 8  (43%)
+#   Mem requests:  ~8.8Gi / 20Gi (44%)
+#   CPU limits:    ~23 / 36 (64%)
+#   Mem limits:    ~17.6Gi / 48Gi (37%)
 # Warning threshold: 80% quota utilization triggers alert
 # Action: scale down non-critical services or increase quota
 ---

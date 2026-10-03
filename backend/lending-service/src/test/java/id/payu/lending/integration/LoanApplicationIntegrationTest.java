@@ -62,7 +62,6 @@ class LoanApplicationIntegrationTest {
     @MockitoBean
     private id.payu.lending.domain.port.out.WalletPaymentPort walletPaymentPort;
 
-    // ─── POST /loans ────────────────────────────────────────────────
 
     @Test
     @DisplayName("Should create a loan application and return 201 with APPROVED status")
@@ -122,7 +121,6 @@ class LoanApplicationIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // ─── GET /loans/{loanId} ────────────────────────────────────────
 
     @Test
     @DisplayName("Should return loan by ID with 200")
@@ -165,7 +163,6 @@ class LoanApplicationIntegrationTest {
         assertThat(status).isIn(401, 403);
     }
 
-    // ─── helpers ────────────────────────────────────────────────────
 
     private String createTestLoan() throws Exception {
         UUID userId = TestContainersConfig.TEST_USER_ID;

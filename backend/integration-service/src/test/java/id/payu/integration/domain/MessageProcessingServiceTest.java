@@ -19,9 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Unit tests for MessageProcessingService.
- */
 @ExtendWith(MockitoExtension.class)
 public class MessageProcessingServiceTest {
 

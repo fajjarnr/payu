@@ -37,7 +37,6 @@ public class DeeplinkService {
                 .append(action)
                 .append("?");
 
-        // Add parameters
         if (request.token() != null) {
             urlBuilder.append("token=").append(encode(request.token())).append("&");
         }
@@ -51,13 +50,11 @@ public class DeeplinkService {
             urlBuilder.append("partnerId=").append(encode(request.partnerId())).append("&");
         }
 
-        // Add timestamp
         Instant expiresAt = Instant.now().plus(
                 request.expiryMinutes() != null ? request.expiryMinutes() : 60,
                 ChronoUnit.MINUTES);
         urlBuilder.append("exp=").append(expiresAt.getEpochSecond()).append("&");
 
-        // Sign the URL
         String dataToSign = urlBuilder.toString();
         String signature = sign(dataToSign);
         urlBuilder.append("sig=").append(encode(signature));

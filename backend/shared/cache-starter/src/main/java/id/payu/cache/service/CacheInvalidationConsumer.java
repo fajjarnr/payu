@@ -37,9 +37,6 @@ public class CacheInvalidationConsumer {
     private final io.micrometer.core.instrument.Counter processedCounter = Metrics.counter("cache.invalidation.processed");
     private final io.micrometer.core.instrument.Counter failedCounter = Metrics.counter("cache.invalidation.failed");
 
-    /**
-     * Listen for cache invalidation events.
-     */
     @KafkaListener(
         topics = "${payu.cache.invalidation.topic:cache-invalidation}",
         groupId = "${payu.cache.invalidation.consumer-group:cache-invalidation-group}",
@@ -78,18 +75,12 @@ public class CacheInvalidationConsumer {
         }
     }
 
-    /**
-     * Invalidate a single cache key.
-     */
     private void invalidateKey(CacheInvalidationEvent event) {
         String key = buildCacheKey(event.getCacheName(), event.getKey());
         cacheService.invalidate(key);
         log.debug("Invalidated cache key: {}", key);
     }
 
-    /**
-     * Invalidate cache keys matching a pattern.
-     */
     private void invalidatePattern(CacheInvalidationEvent event) {
         String pattern = buildCacheKey(event.getCacheName(), event.getKey());
 
@@ -97,9 +88,6 @@ public class CacheInvalidationConsumer {
         log.debug("Invalidated keys matching pattern: {}", pattern);
     }
 
-    /**
-     * Invalidate all keys in a cache.
-     */
     private void invalidateAll(CacheInvalidationEvent event) {
         String pattern = buildCacheKey(event.getCacheName(), "*");
 
@@ -107,9 +95,6 @@ public class CacheInvalidationConsumer {
         log.debug("Invalidated all keys in cache: {}", event.getCacheName());
     }
 
-    /**
-     * Build a full cache key with cache name prefix.
-     */
     private String buildCacheKey(String cacheName, String key) {
         return cacheName + "::" + key;
     }

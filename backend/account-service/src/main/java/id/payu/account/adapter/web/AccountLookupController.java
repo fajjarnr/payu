@@ -38,13 +38,11 @@ public class AccountLookupController {
             @RequestParam String phone) {
         log.info("Looking up account by phone: {}", phone != null && phone.length() > 6 ? phone.substring(0, 3) + "****" + phone.substring(phone.length() - 3) : "***");
 
-        // Find user by phone number
         User user = userPersistencePort.findByPhoneNumber(phone).orElse(null);
         if (user == null) {
             return ResponseEntity.ok(ApiResponse.success(PhoneLookupResponse.notFound()));
         }
 
-        // Find active account with phone lookup enabled
         Account account = accountPersistencePort.findByUserIdAndAllowPhoneLookupTrue(user.getId()).orElse(null);
         if (account == null) {
             return ResponseEntity.ok(ApiResponse.success(PhoneLookupResponse.notFound()));
@@ -54,7 +52,6 @@ public class AccountLookupController {
         String accountNumber = account.getAccountNumber();
         String maskedNumber = maskAccountNumber(accountNumber);
 
-        // Get account name from user's profile or username
         String accountName = user.getUsername();
 
         return ResponseEntity.ok(ApiResponse.success(

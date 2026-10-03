@@ -37,15 +37,12 @@ public class PromoRedemptionService {
      * Applies a promo code to a transaction.
      * Implements idempotency check and records usage atomically.
      *
-     * @param request the apply promo request
-     * @return the response with discount details or error
      */
     @Transactional
     public ApplyPromoResponse applyPromo(ApplyPromoRequest request) {
         LOG.info("Applying promo code: code={}, userId={}, transactionId={}",
                 request.promoCode(), request.userId(), request.transactionId());
 
-        // Check idempotency
         if (request.idempotencyKey() != null) {
             Optional<PromoUsage> existingUsage = promoUsageRepository.findByIdempotencyKey(request.idempotencyKey());
             if (existingUsage.isPresent()) {
@@ -60,7 +57,6 @@ public class PromoRedemptionService {
             }
         }
 
-        // Find promo code
         Optional<PromoCode> promoOpt = promoCodeRepository.findByCode(request.promoCode());
         if (promoOpt.isEmpty()) {
             LOG.warn("Promo code not found: {}", request.promoCode());
@@ -69,13 +65,11 @@ public class PromoRedemptionService {
 
         PromoCode promo = promoOpt.get();
 
-        // Check if user already used this promo (for ONCE_PER_USER)
         Optional<ApplyPromoResponse> alreadyUsedResponse = rejectIfAlreadyUsed(promo, request);
         if (alreadyUsedResponse.isPresent()) {
             return alreadyUsedResponse.get();
         }
 
-        // Apply promo
         PromoResult result;
         try {
             result = promo.apply(toContext(request));
@@ -87,7 +81,6 @@ public class PromoRedemptionService {
             return ApplyPromoResponse.failure("APPLY_FAILED", "Failed to apply promo code");
         }
 
-        // Record usage
         PromoUsage usage = new PromoUsage();
         usage.setId(UUID.randomUUID().toString());
         usage.setUserId(request.userId());

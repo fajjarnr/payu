@@ -77,7 +77,6 @@ class AuditAspectTest {
         @Test
         @DisplayName("Priority 1: Extracts userId from SecurityContext (JWT)")
         void extractsUserIdFromSecurityContext() throws Throwable {
-            // Given: JWT-authenticated user in SecurityContext
             var auth = new UsernamePasswordAuthenticationToken("user-from-jwt", null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(auth);
 
@@ -87,10 +86,8 @@ class AuditAspectTest {
             mockJoinPoint();
             when(joinPoint.proceed()).thenReturn("result");
 
-            // When
             aspect.auditOperation(joinPoint);
 
-            // Then: audit event should have userId from SecurityContext
             ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
             verify(publisher).publishSafe(captor.capture());
             assertThat(captor.getValue().getUserId()).isEqualTo("user-from-jwt");
@@ -101,7 +98,6 @@ class AuditAspectTest {
         @Test
         @DisplayName("Priority 2: Falls back to X-User-Id header when SecurityContext empty")
         void fallsBackToXUserIdHeader() throws Throwable {
-            // Given: no SecurityContext, but X-User-Id header present
             SecurityContextHolder.clearContext();
 
             when(request.getHeader("X-User-Id")).thenReturn("user-from-header");
@@ -111,10 +107,8 @@ class AuditAspectTest {
             mockJoinPoint();
             when(joinPoint.proceed()).thenReturn("result");
 
-            // When
             aspect.auditOperation(joinPoint);
 
-            // Then: audit event should have userId from header
             ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
             verify(publisher).publishSafe(captor.capture());
             assertThat(captor.getValue().getUserId()).isEqualTo("user-from-header");
@@ -125,7 +119,6 @@ class AuditAspectTest {
         @Test
         @DisplayName("Priority 3: Returns 'anonymous' when no identity source available")
         void returnsAnonymousWhenNoIdentity() throws Throwable {
-            // Given: no SecurityContext, no X-User-Id header
             SecurityContextHolder.clearContext();
 
             ServletRequestAttributes attrs = new ServletRequestAttributes(request);
@@ -134,10 +127,8 @@ class AuditAspectTest {
             mockJoinPoint();
             when(joinPoint.proceed()).thenReturn("result");
 
-            // When
             aspect.auditOperation(joinPoint);
 
-            // Then: audit event should have "anonymous"
             ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
             verify(publisher).publishSafe(captor.capture());
             assertThat(captor.getValue().getUserId()).isEqualTo("anonymous");
@@ -148,7 +139,6 @@ class AuditAspectTest {
         @Test
         @DisplayName("Ignores 'anonymousUser' from SecurityContext (Spring default)")
         void ignoresAnonymousUserPrincipal() throws Throwable {
-            // Given: SecurityContext has Spring's default "anonymousUser"
             var auth = new UsernamePasswordAuthenticationToken("anonymousUser", null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(auth);
 
@@ -159,10 +149,8 @@ class AuditAspectTest {
             mockJoinPoint();
             when(joinPoint.proceed()).thenReturn("result");
 
-            // When
             aspect.auditOperation(joinPoint);
 
-            // Then: should skip anonymousUser and use X-User-Id header
             ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
             verify(publisher).publishSafe(captor.capture());
             assertThat(captor.getValue().getUserId()).isEqualTo("gateway-user");
@@ -178,7 +166,6 @@ class AuditAspectTest {
         @Test
         @DisplayName("Works without publisher (no Kafka) — logs via SLF4J")
         void worksWithoutPublisher() throws Throwable {
-            // Given: AuditAspect created without publisher (null)
             AuditAspect aspectWithoutKafka = new AuditAspect(properties, null);
 
             ServletRequestAttributes attrs = new ServletRequestAttributes(request);
@@ -187,11 +174,9 @@ class AuditAspectTest {
             mockJoinPoint();
             when(joinPoint.proceed()).thenReturn("result");
 
-            // When/Then: should NOT throw, should log via SLF4J
             Object result = aspectWithoutKafka.auditOperation(joinPoint);
             assertThat(result).isEqualTo("result");
 
-            // Verify publisher was never called (it's null)
             verifyNoInteractions(publisher);
 
             RequestContextHolder.resetRequestAttributes();

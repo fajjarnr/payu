@@ -156,8 +156,6 @@ class LedgerInvariantTest {
         assertThat(sumCredits.subtract(sumDebits)).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
-    // --- helpers ---
-
     private static UUID ACCOUNT_C() {
         return UUID.fromString("33333333-3333-3333-3333-333333333333");
     }

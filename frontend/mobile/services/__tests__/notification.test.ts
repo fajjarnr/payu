@@ -3,7 +3,6 @@ import { apiClient } from '../api';
 import { PushNotification, ApiResponse } from '@/types';
 import * as Notifications from 'expo-notifications';
 
-// Mock the apiClient
 jest.mock('../api', () => ({
   apiClient: {
     get: jest.fn(),
@@ -11,7 +10,6 @@ jest.mock('../api', () => ({
   },
 }));
 
-// Mock expo-notifications
 jest.mock('expo-notifications', () => ({
   setNotificationHandler: jest.fn(),
   getPermissionsAsync: jest.fn(),
@@ -24,7 +22,6 @@ jest.mock('expo-notifications', () => ({
   dismissAllNotificationsAsync: jest.fn(),
 }));
 
-// Mock Platform
 jest.mock('react-native', () => ({
   Platform: {
     OS: 'ios',

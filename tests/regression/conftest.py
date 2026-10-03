@@ -7,7 +7,6 @@ import requests
 import time
 from typing import Generator
 
-# Test configuration
 BASE_URL = "http://localhost:8080"
 KEYCLOAK_URL = "http://localhost:8099"
 SERVICES = {

@@ -6,17 +6,11 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Utility class for adding common filter parameters to OpenAPI operations.
- */
 public final class FilterParameter {
 
     private FilterParameter() {
     }
 
-    /**
-     * Creates the search parameter.
-     */
     public static Parameter searchParam(String description) {
         return new Parameter()
                 .name("search")
@@ -27,9 +21,6 @@ public final class FilterParameter {
                         .example("john"));
     }
 
-    /**
-     * Creates the status parameter.
-     */
     public static Parameter statusParam(String... values) {
         String exampleValue = values.length > 0 ? values[0] : "ACTIVE";
         return new Parameter()
@@ -42,9 +33,6 @@ public final class FilterParameter {
                         .example(exampleValue));
     }
 
-    /**
-     * Creates the startDate parameter.
-     */
     public static Parameter startDateParam() {
         return new Parameter()
                 .name("startDate")
@@ -56,9 +44,6 @@ public final class FilterParameter {
                         .example("2026-01-01"));
     }
 
-    /**
-     * Creates the endDate parameter.
-     */
     public static Parameter endDateParam() {
         return new Parameter()
                 .name("endDate")
@@ -70,9 +55,6 @@ public final class FilterParameter {
                         .example("2026-01-31"));
     }
 
-    /**
-     * Creates a date range parameter group.
-     */
     public static List<Parameter> dateRangeParams() {
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(startDateParam());
@@ -80,9 +62,6 @@ public final class FilterParameter {
         return parameters;
     }
 
-    /**
-     * Creates a custom filter parameter.
-     */
     public static Parameter customParam(String name, String description, String example) {
         return new Parameter()
                 .name(name)
@@ -93,9 +72,6 @@ public final class FilterParameter {
                         .example(example));
     }
 
-    /**
-     * Adds filter parameters to an operation.
-     */
     public static Operation addTo(Operation operation, List<Parameter> parameters) {
         parameters.forEach(operation::addParametersItem);
         return operation;

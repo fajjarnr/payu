@@ -24,7 +24,6 @@ public interface IdempotencyRepository {
     /**
      * Finds an idempotency entry by its key.
      *
-     * @param key the idempotency key
      * @return Optional containing the entry if found, empty otherwise
      */
     Optional<IdempotencyEntry> findByKey(IdempotencyKey key);
@@ -65,25 +64,13 @@ public interface IdempotencyRepository {
      */
     void update(IdempotencyKey key, IdempotencyEntry entry, long ttlSeconds);
 
-    /**
-     * Deletes an idempotency entry.
-     *
-     * @param key the idempotency key
-     */
     void delete(IdempotencyKey key);
 
-    /**
-     * Checks if an entry exists for the given key.
-     *
-     * @param key the idempotency key
-     * @return true if entry exists
-     */
     boolean exists(IdempotencyKey key);
 
     /**
      * Gets the remaining TTL for an entry.
      *
-     * @param key the idempotency key
      * @return remaining TTL in seconds, or -1 if not found or no TTL
      */
     long getTtl(IdempotencyKey key);

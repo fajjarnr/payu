@@ -1,10 +1,6 @@
 /**
- * PayU E2E — full money journey (real backend, no mocks).
- *
- * register(validation) -> login OIDC -> transfer submit -> balance delta -> history.
- * Requires: dev cluster reachable at PLAYWRIGHT_BASE_URL (default local 3001),
- * Keycloak user customer1 with account_id claim mapped to a funded wallet,
- * recipient acc-bud456 with a wallet. Amounts deterministic; memo unique per run.
+ * Full money journey against the real backend: register → OIDC login → transfer →
+ * balance delta → history. Requires the dev cluster and customer1 on a funded wallet.
  */
 import { test, expect } from './fixtures';
 import type { Page } from '@playwright/test';
@@ -18,9 +14,8 @@ const RECIPIENT = '1001001002';
 const AMOUNT = 10000;
 const MEMO = `E2E journey ${Date.now()}`;
 
-/** Skip on infra outage (429/502/503/504). 422 counts only when the body proves
- * AML velocity throttling (environmental budget shared with manual probing);
- * any other 422/500 is a product failure. */
+/** Skip on infra outage (429/502/503/504), and on 422 only when the body proves
+ * AML velocity throttling; any other 422/500 is a product failure. */
 async function skipOnInfra(status: number, body: () => Promise<string>): Promise<void> {
   if ([429, 502, 503, 504].includes(status)) {
     test.skip(true, `infra ${status}`);
@@ -30,9 +25,8 @@ async function skipOnInfra(status: number, body: () => Promise<string>): Promise
   }
 }
 
-// Seeded sender for the dev journey (mirrors wallet-test-data.sql + Keycloak
-// accountId claim). The dashboard card caches 30s via React Query, so the
-// delta proof reads the API directly — always network, never stale cache.
+// Seeded sender (wallet-test-data.sql + Keycloak accountId claim). Reads the API
+// directly for the delta proof; the dashboard card caches 30s via React Query.
 const SENDER = '750e8400-e29b-41d4-a716-446655440001';
 
 async function readMainBalance(authPage: Page): Promise<number> {
@@ -49,7 +43,7 @@ test.describe('PayU E2E — full money journey (real)', () => {
   test('register blocks short NIK (REG-VAL-001)', async ({ page }) => {
     await page.goto('/onboarding');
     await page.waitForLoadState('domcontentloaded');
-    // Step 1 gates on KTP upload — attach a 1px PNG to enable continue.
+    // Gates on KTP upload — attach a 1px PNG to enable continue.
     const png = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
       'base64',

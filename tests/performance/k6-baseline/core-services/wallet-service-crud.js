@@ -1,5 +1,3 @@
-// PayU Wallet Service - CRUD Baseline Performance Test
-// =====================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -83,7 +81,6 @@ export default function () {
 
   group('Wallet Service - CRUD Operations', () => {
 
-    // ===== CREATE: Create Pocket =====
     group('CREATE: Create Pocket', () => {
       const pocketData = generatePocketData(uniqueId);
 
@@ -99,7 +96,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: Get Wallet =====
     group('READ: Get Wallet', () => {
       const startTime = Date.now();
       const result = read(SERVICE_ENDPOINTS.wallet, auth.token);
@@ -108,7 +104,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Balance =====
     group('READ: Get Balance', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.wallet}/balance`, auth.token);
@@ -117,7 +112,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: List Pockets =====
     group('READ: List Pockets', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.wallet}/pockets`, { page: 0, size: 10 }, auth.token);
@@ -127,7 +121,6 @@ export default function () {
     });
 
     if (pocketId) {
-      // ===== READ: Get Pocket by ID =====
       group('READ: Get Pocket', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.wallet}/pockets/${pocketId}`, auth.token);
@@ -136,7 +129,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== CREATE: Credit Pocket =====
       group('CREATE: Credit Pocket', () => {
         const creditData = generateCreditData();
 
@@ -147,7 +139,6 @@ export default function () {
         sleep(0.5);
       });
 
-      // ===== CREATE: Debit Pocket =====
       group('CREATE: Debit Pocket', () => {
         const debitData = generateDebitData();
 
@@ -158,7 +149,6 @@ export default function () {
         sleep(0.5);
       });
 
-      // ===== UPDATE: Update Pocket =====
       group('UPDATE: Update Pocket', () => {
         const updateData = generateUpdatePocketData();
 
@@ -169,7 +159,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Close Pocket =====
       group('UPDATE: Close Pocket', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.wallet}/pockets/${pocketId}/close`, {}, auth.token);

@@ -42,15 +42,12 @@ public class ReadinessHealthIndicator implements HealthIndicator {
     public Health health() {
         Map<String, Object> details = new HashMap<>();
 
-        // Check database - only connection, no query
         boolean dbReady = isDatabaseReady(details);
 
         boolean dataGridReady = isDataGridReady(details);
 
-        // Check Kafka - listeners running
         boolean kafkaReady = isKafkaReady(details);
 
-        // Overall status
         boolean allReady = dbReady && dataGridReady && kafkaReady;
         Status status = allReady ? Status.UP : Status.OUT_OF_SERVICE;
 
@@ -59,9 +56,6 @@ public class ReadinessHealthIndicator implements HealthIndicator {
             .build();
     }
 
-    /**
-     * Check if database is ready (can establish connection).
-     */
     private boolean isDatabaseReady(Map<String, Object> details) {
         long start = System.currentTimeMillis();
         try (Connection conn = dataSource.getConnection()) {
@@ -79,9 +73,6 @@ public class ReadinessHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Check if Data Grid is ready (can establish a native Hot Rod operation).
-     */
     private boolean isDataGridReady(Map<String, Object> details) {
         long start = System.currentTimeMillis();
         try {
@@ -100,14 +91,10 @@ public class ReadinessHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Check if Kafka is ready (listeners are running).
-     */
     private boolean isKafkaReady(Map<String, Object> details) {
         long start = System.currentTimeMillis();
         try {
             if (listenerRegistry == null || listenerRegistry.getListenerContainerIds().isEmpty()) {
-                // No Kafka listeners configured
                 details.put("kafka", "NOT_CONFIGURED");
                 return true;
             }

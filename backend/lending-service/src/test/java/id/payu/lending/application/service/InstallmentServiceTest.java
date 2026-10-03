@@ -96,9 +96,6 @@ class InstallmentServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Tenor Options Tests
-    // ═══════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("Tenor Options")
@@ -155,9 +152,6 @@ class InstallmentServiceTest {
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Checkout Tests
-    // ═══════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("Checkout")
@@ -185,11 +179,8 @@ class InstallmentServiceTest {
             assertNotNull(result.getLoanId());
             assertTrue(result.getMonthlyPayment().compareTo(BigDecimal.ZERO) > 0);
 
-            // Verify loan was created
             verify(loanPersistencePort).save(any(Loan.class));
-            // Verify repayment schedule was created (6 installments)
             verify(repaymentSchedulePersistencePort, times(6)).save(any());
-            // Verify PayLater credit was debited
             verify(payLaterPersistencePort).save(any(PayLater.class));
         }
 
@@ -262,27 +253,21 @@ class InstallmentServiceTest {
             verify(repaymentSchedulePersistencePort, times(3)).save(captor.capture());
             List<RepaymentSchedule> schedules = captor.getAllValues();
 
-            // 1. Sum of principal across installments must equal the loan principal
             BigDecimal sumPrincipal = schedules.stream()
                     .map(RepaymentSchedule::getPrincipalAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             assertEquals(0, sumPrincipal.compareTo(amount), "sum(principal) must equal loan principal, got " + sumPrincipal);
 
-            // 2. Principal must use the money scale (4), consistent with calculateOption
             for (RepaymentSchedule s : schedules) {
                 assertEquals(4, s.getPrincipalAmount().scale(), "principal must use scale 4");
                 assertEquals(4, s.getInterestAmount().scale(), "interest must use scale 4");
             }
 
-            // 3. Last installment must absorb the rounding residual (outstanding ends at 0)
             assertEquals(0, schedules.get(2).getOutstandingPrincipal().compareTo(BigDecimal.ZERO),
                     "outstanding after last installment must be zero");
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Query Tests
-    // ═══════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("Query Checkouts")

@@ -11,7 +11,6 @@ import json
 from app.websocket.connection_manager import manager  # noqa: E402
 
 
-# Import fixtures from conftest.py - client and reset_manager are now defined there
 
 
 def _websocket_url(user_id: str) -> str:
@@ -40,11 +39,9 @@ def test_websocket_connect_and_ping(reset_manager, client):
     user_id = "test_user_123"
 
     with client.websocket_connect(_websocket_url(user_id)) as websocket:
-        # First message is connection_established
         data = websocket.receive_json()
         assert data["type"] == "connection_established"
 
-        # Send ping and expect pong
         websocket.send_json({"type": "ping"})
         data = websocket.receive_json()
         assert data["type"] == "pong"
@@ -59,7 +56,6 @@ def test_websocket_multiple_clients_same_user(reset_manager, client):
         ws = client.websocket_connect(_websocket_url(user_id))
         ws.__enter__()
         connections.append(ws)
-        # Consume the connection_established message for each connection
         ws.receive_json()
 
     assert manager.get_user_connection_count(user_id) == 3
@@ -84,7 +80,6 @@ def test_websocket_disconnect(reset_manager, client):
     websocket = client.websocket_connect(_websocket_url(user_id))
     websocket.__enter__()
 
-    # Consume connection_established message
     websocket.receive_json()
 
     assert manager.get_user_connection_count(user_id) == 1
@@ -92,7 +87,6 @@ def test_websocket_disconnect(reset_manager, client):
     data = websocket.receive_json()
     assert data["type"] == "pong"
 
-    # Explicitly exit the context manager
     websocket.__exit__(None, None, None)
 
     # Manually clean up since test client doesn't trigger disconnect properly
@@ -106,12 +100,10 @@ def test_websocket_disconnect(reset_manager, client):
 
 def test_websocket_invalid_user_id(client):
     """Test WebSocket with special characters in user_id"""
-    # Test with special characters that might be used in user IDs
     user_id = "user-test_123.456"
     websocket = client.websocket_connect(_websocket_url(user_id))
     websocket.__enter__()
 
-    # Consume connection_established message
     data = websocket.receive_json()
     assert data["type"] == "connection_established"
     assert data["user_id"] == user_id

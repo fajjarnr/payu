@@ -55,7 +55,6 @@ public class ProcessQrisPaymentCommandHandler implements CommandHandler<ProcessQ
         log.info("Handling ProcessQrisPaymentCommand for account: {}, amount: {}",
                 command.accountId(), command.amount());
 
-        // Verify the authenticated user owns the account being debited
         authorizationService.verifyAccountOwnership(command.accountId(), command.userId());
 
         // CB-017: DB fallback for idempotency — replay protection survives cache

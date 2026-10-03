@@ -14,23 +14,11 @@ import java.util.Optional;
 @Repository
 public interface ProductDefinitionJpaRepository extends JpaRepository<ProductDefinitionEntity, String> {
 
-    /**
-     * Find all active products.
-     */
     List<ProductDefinitionEntity> findByActiveTrue();
 
-    /**
-     * Find products by type.
-     */
     List<ProductDefinitionEntity> findByProductType(ProductType productType);
 
-    /**
-     * Find active products by type.
-     */
     List<ProductDefinitionEntity> findByProductTypeAndActiveTrue(ProductType productType);
 
-    /**
-     * Check if product exists by code.
-     */
     boolean existsByProductCode(String productCode);
 }

@@ -90,8 +90,6 @@ public class EscrowPersistenceAdapter implements EscrowPersistencePort {
                 .collect(Collectors.toList());
     }
 
-    // --- Mappers ---
-
     private EscrowTransactionEntity toEntity(EscrowTransaction domain) {
         EscrowTransactionEntity entity = new EscrowTransactionEntity();
         entity.setId(domain.getId());

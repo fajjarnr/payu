@@ -1,7 +1,6 @@
 # Kyverno Helm Values Override
 # Fix: Use OpenShift internal CLI image for cleanup CronJobs
 # because bitnami/kubectl:1.28.5 tag no longer exists on Docker Hub
-# ============================================================
 
 # Install in kyverno namespace (must exist or use CreateNamespace)
 namespace: kyverno

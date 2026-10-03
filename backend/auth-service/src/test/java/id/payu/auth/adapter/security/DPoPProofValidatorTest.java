@@ -24,8 +24,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * ADR-0062 DPoP proof validator test — RFC 9449.
- * Tests valid proof, ath/cnf, htm/htu, iat window, jti replay.
+ * ADR-0062 DPoP proof validator tests (RFC 9449).
  */
 class DPoPProofValidatorTest {
 
@@ -78,7 +77,6 @@ class DPoPProofValidatorTest {
         String proof = createProof(htm, htu, jti, iat, ath(fakeAccess), ecJwk);
         String thumb = validator.validate(proof, htm, htu, fakeAccess);
         assertThat(thumb).isNotBlank();
-        // thumbprint should equal computed
         String expected = ecJwk.toPublicJWK().computeThumbprint("SHA-256").toString();
         assertThat(thumb).isEqualTo(expected);
     }
@@ -93,8 +91,6 @@ class DPoPProofValidatorTest {
         String tok = "tok";
         String proof = createProof(htm, htu, jti, iat, ath(tok), ecJwk);
         validator.validate(proof, htm, htu, tok);
-        // second use with same jti but need new proof (same jti) — will fail replay before signature?
-        // Recreate same proof with same jti (signature same)
         assertThatThrownBy(() -> validator.validate(proof, htm, htu, tok))
                 .isInstanceOf(DPoPProofValidator.DPoPValidationException.class)
                 .hasMessageContaining("jti replay");

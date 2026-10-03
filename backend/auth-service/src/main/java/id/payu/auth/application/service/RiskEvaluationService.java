@@ -94,12 +94,10 @@ public class RiskEvaluationService {
     public void recordSuccessfulLogin(String username, LoginContext context) {
         UserRiskProfile profile = getUserRiskProfile(username);
 
-        // Add Device if new
         if (context.deviceId() != null && isNewDevice(profile, context.deviceId())) {
             // profile.addKnownDevice(context.deviceId());
         }
 
-        // Add IP if new
         if (context.ipAddress() != null && isNewIpAddress(profile, context.ipAddress())) {
             profile.addKnownIp(context.ipAddress());
         }
@@ -176,9 +174,6 @@ public class RiskEvaluationService {
 
     /**
      * Checks if a user account is active (not locked due to too many failed attempts).
-     *
-     * @param userId the user ID to check
-     * @return true if account is active, false if locked
      */
     public boolean isAccountActive(String userId) {
         return riskProfileRepository.findByUsername(userId)

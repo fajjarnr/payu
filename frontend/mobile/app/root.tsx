@@ -7,7 +7,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function Root() {
   useEffect(() => {
-    // Hide splash screen after app is ready
     SplashScreen.hideAsync();
   }, []);
 

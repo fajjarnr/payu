@@ -115,7 +115,6 @@ class ProductControllerIntegrationTest {
 
     @Test
     void shouldReturnConflictForDuplicateProduct() throws Exception {
-        // First create
         CreateProductRequest request = CreateProductRequest.builder()
                 .productCode("DUPLICATE_TEST")
                 .productType(ProductType.SAVINGS)
@@ -127,7 +126,6 @@ class ProductControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
-        // Try to create again
         mockMvc.perform(post("/admin/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -136,7 +134,6 @@ class ProductControllerIntegrationTest {
 
     @Test
     void shouldUpdateProductAsAdmin() throws Exception {
-        // First create
         CreateProductRequest createRequest = CreateProductRequest.builder()
                 .productCode("UPDATE_TEST")
                 .productType(ProductType.LOAN)
@@ -148,7 +145,6 @@ class ProductControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated());
 
-        // Then update
         UpdateProductRequest updateRequest = UpdateProductRequest.builder()
                 .name("Updated Name")
                 .description("Updated Description")
@@ -164,7 +160,6 @@ class ProductControllerIntegrationTest {
 
     @Test
     void shouldDeactivateAndActivateProduct() throws Exception {
-        // Create
         CreateProductRequest request = CreateProductRequest.builder()
                 .productCode("TOGGLE_TEST")
                 .productType(ProductType.SAVINGS)
@@ -176,21 +171,17 @@ class ProductControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
-        // Deactivate
         mockMvc.perform(post("/admin/products/TOGGLE_TEST/deactivate"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.active").value(false));
 
-        // Verify not in public list
         mockMvc.perform(get("/products/TOGGLE_TEST"))
                 .andExpect(status().isNotFound());
 
-        // Activate
         mockMvc.perform(post("/admin/products/TOGGLE_TEST/activate"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.active").value(true));
 
-        // Verify back in public list
         mockMvc.perform(get("/products/TOGGLE_TEST"))
                 .andExpect(status().isOk());
     }

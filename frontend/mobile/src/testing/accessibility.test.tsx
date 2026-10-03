@@ -1,25 +1,12 @@
-/**
- * Accessibility Tests for PayU Mobile App
- *
- * Comprehensive test suite for accessibility compliance including:
- * - Touch target size validation (WCAG 2.1)
- * - Label associations
- * - Contrast ratios
- * - Screen reader compatibility
- *
- * @module testing/accessibility.test
- * @version 1.0.0
- */
+/** Accessibility compliance tests: touch targets, labels, contrast, and screen-reader support. */
 
 import React from 'react';
 import { render, renderHook } from '@testing-library/react-native';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 
-// Components to test
 import { AccessibleButton } from '@/src/components/ui/AccessibleButton';
 import { AccessibleInput } from '@/src/components/ui/AccessibleInput';
 
-// Utilities to test
 import {
   generateA11yProps,
   generateTestID,
@@ -34,14 +21,12 @@ import {
   CONTRAST_RATIOS,
 } from '@/src/utils/accessibility';
 
-// Hooks to test
 import {
   useScreenReader,
   useAccessibilityAnnounce,
   useAccessibleForm,
 } from '@/src/hooks/useAccessibility';
 
-// Mock setup
 
 // Use global mocks from jest.setup.js
 const mockIsScreenReaderEnabled = global.mockAccessibility?.mockIsScreenReaderEnabled || jest.fn();
@@ -52,7 +37,6 @@ jest.mock('react-native/Libraries/Utilities/Platform', () => ({
   select: jest.fn((obj: any) => obj?.ios || obj?.default),
 }));
 
-// Mock react-native findNodeHandle
 jest.mock('react-native', () => {
   const RN = jest.requireActual('react-native');
   return {
@@ -61,7 +45,6 @@ jest.mock('react-native', () => {
   };
 });
 
-// Utility function tests
 
 describe('Accessibility Utilities', () => {
   describe('generateA11yProps', () => {
@@ -312,7 +295,6 @@ describe('Accessibility Utilities', () => {
   });
 });
 
-// Component tests
 
 describe('Accessible Components', () => {
   describe('AccessibleButton', () => {
@@ -334,7 +316,6 @@ describe('Accessible Components', () => {
       );
 
       const button = getByLabelText('Pay');
-      // Touch target validation is handled in component
       expect(button).toBeTruthy();
     });
 
@@ -436,13 +417,11 @@ describe('Accessible Components', () => {
       );
 
       expect(getByLabelText(/Password/)).toBeTruthy();
-      // Should have toggle visibility button
       expect(getByRole('button')).toBeTruthy();
     });
   });
 });
 
-// Hook tests
 
 describe('Accessibility Hooks', () => {
   beforeEach(() => {
@@ -463,7 +442,6 @@ describe('Accessibility Hooks', () => {
 
       renderHook(() => useScreenReader());
 
-      // Wait for effect to run
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockIsScreenReaderEnabled).toHaveBeenCalled();
@@ -486,7 +464,6 @@ describe('Accessibility Hooks', () => {
 
       result.current.announce('Test message');
 
-      // AccessibilityInfo.announceForAccessibility is called
       expect(mockAnnounceForAccessibility).toHaveBeenCalledWith('Test message');
     });
 
@@ -558,7 +535,6 @@ describe('Accessibility Hooks', () => {
   });
 });
 
-// Integration tests
 
 describe('Accessibility Integration', () => {
   it('should validate PayU color palette contrast', () => {
@@ -574,22 +550,18 @@ describe('Accessibility Integration', () => {
       success: '#10b981', // Emerald 500
     };
 
-    // Test primary button (green on green tint)
     const primaryButton = validateContrast('#ffffff', colors.primary);
     expect(primaryButton.isValid).toBe(true);
     expect(primaryButton.level).toBe('AA');
 
-    // Test text on background
     const textOnBg = validateContrast(colors.text, colors.background);
     expect(textOnBg.isValid).toBe(true);
     expect(textOnBg.level).toBe('AAA');
 
-    // Test text on card
     const textOnCard = validateContrast(colors.text, colors.card);
     expect(textOnCard.isValid).toBe(true);
     expect(textOnCard.level).toBe('AAA');
 
-    // Test error text
     const errorText = validateContrast(colors.error, colors.background);
     expect(errorText.isValid).toBe(true);
     expect(errorText.level).toBe('AA');
@@ -642,15 +614,12 @@ describe('Accessibility Integration', () => {
   });
 });
 
-// WCAG compliance tests
 
 describe('WCAG 2.1 Compliance', () => {
   describe('Level A Requirements', () => {
     it('should have text alternatives for non-text content', () => {
-      // Test that components require labels
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
-      // Components should have labels
       const { getByLabelText } = render(
         <AccessibleButton label="Pay Button" onPress={jest.fn()} />
       );
@@ -704,7 +673,6 @@ describe('WCAG 2.1 Compliance', () => {
   });
 });
 
-// Performance tests
 
 describe('Accessibility Performance', () => {
   it('should calculate contrast ratios efficiently', () => {
@@ -730,7 +698,6 @@ describe('Accessibility Performance', () => {
   });
 });
 
-// Export test suite info
 
 export const testSuiteInfo = {
   name: 'PayU Mobile Accessibility Tests',

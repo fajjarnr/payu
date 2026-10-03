@@ -106,14 +106,12 @@ class RefundControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Clean up before each test
         refundPersistencePort.findAll().forEach(r -> refundPersistencePort.deleteById(r.getId()));
     }
 
     @Test
     @DisplayName("Should create partial refund and retrieve it")
     void shouldCreatePartialRefundAndRetrieveIt() throws Exception {
-        // Create partial refund request
         CreatePartialRefundRequest request = CreatePartialRefundRequest.builder()
                 .transactionId(TRANSACTION_ID)
                 .amount(new BigDecimal("50000.00"))
@@ -121,7 +119,6 @@ class RefundControllerIntegrationTest {
                 .reason("Partial refund for damaged item")
                 .build();
 
-        // Create refund
         String responseJson = mockMvc.perform(post("/api/v1/refunds/partial")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Idempotency-Key", "refund-create-partial")
@@ -137,7 +134,6 @@ class RefundControllerIntegrationTest {
 
         RefundResponse response = objectMapper.readValue(responseJson, RefundResponse.class);
 
-        // Retrieve refund by ID
         mockMvc.perform(get("/api/v1/refunds/{refundId}", response.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(response.getId().toString()))
@@ -147,17 +143,14 @@ class RefundControllerIntegrationTest {
     @Test
     @DisplayName("Should process and complete refund")
     void shouldProcessAndCompleteRefund() throws Exception {
-        // Create refund first
         Refund refund = Refund.create(TRANSACTION_ID, new BigDecimal("100000.00"), "IDR", "Test refund");
         refund = refundPersistencePort.save(refund);
 
-        // Process refund
         mockMvc.perform(post("/api/v1/refunds/{refundId}/process", refund.getId())
                         .header("X-Idempotency-Key", "refund-process"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PROCESSING"));
 
-        // Complete refund
         mockMvc.perform(post("/api/v1/refunds/{refundId}/complete", refund.getId())
                         .header("X-Idempotency-Key", "refund-complete"))
                 .andExpect(status().isOk())
@@ -176,7 +169,6 @@ class RefundControllerIntegrationTest {
     @Test
     @DisplayName("Should get refunds by transaction")
     void shouldGetRefundsByTransaction() throws Exception {
-        // Create refunds
         Refund refund1 = Refund.create(TRANSACTION_ID, new BigDecimal("50000.00"), "IDR", "Refund 1");
         Refund refund2 = Refund.create(TRANSACTION_ID, new BigDecimal("30000.00"), "IDR", "Refund 2");
         refundPersistencePort.save(refund1);
@@ -191,7 +183,6 @@ class RefundControllerIntegrationTest {
     @Test
     @DisplayName("Should fail refund with reason")
     void shouldFailRefundWithReason() throws Exception {
-        // Create and process refund
         Refund refund = Refund.create(TRANSACTION_ID, new BigDecimal("100000.00"), "IDR", "Test refund");
         refund.process();
         refund = refundPersistencePort.save(refund);
@@ -212,7 +203,6 @@ class RefundControllerIntegrationTest {
     @Test
     @DisplayName("Should cancel pending refund")
     void shouldCancelPendingRefund() throws Exception {
-        // Create refund
         Refund refund = Refund.create(TRANSACTION_ID, new BigDecimal("100000.00"), "IDR", "Test refund");
         refund = refundPersistencePort.save(refund);
 

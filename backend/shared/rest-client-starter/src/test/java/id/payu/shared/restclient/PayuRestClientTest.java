@@ -89,7 +89,6 @@ class PayuRestClientTest {
             try {
                 client.get("svc", "/api/v1/things/3", Map.class);
             } catch (Exception ignored) {
-                // expected failures to trip the breaker
             }
         }
 

@@ -69,10 +69,8 @@ class FxRateServiceTest {
 
     @Test
     void getCurrentRate_shouldFetchNewRate_whenCacheExpired() {
-        // The expired rate has validUntil in the past. The repository mock still returns it
-        // because findLatestRate finds the most recent rate regardless of validity.
-        // The service's internal logic checks expiredRate.getValidUntil().isBefore(now)
-        // and fetches a new rate from the provider when it detects expiry.
+        // Repository mock returns the most recent rate regardless of validity;
+        // the service detects the expired rate and refetches from the provider.
         FxRate expiredRate = FxRate.builder()
                 .id(UUID.randomUUID())
                 .fromCurrency("IDR")

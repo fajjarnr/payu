@@ -51,7 +51,6 @@ public class BalanceSheetResponse {
         return new BalanceSheetResponseBuilder();
     }
 
-    // Getters and Setters
     public LocalDate getAsOfDate() { return asOfDate; }
     public void setAsOfDate(LocalDate asOfDate) { this.asOfDate = asOfDate; }
     public List<BalanceSheetEntry> getAssets() { return assets; }

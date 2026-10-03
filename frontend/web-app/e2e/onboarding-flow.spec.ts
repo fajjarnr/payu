@@ -11,7 +11,6 @@ test.describe('Onboarding Flow - Complete Journey', () => {
     await expect(page.getByText('Unggah e-KTP')).toBeVisible();
     await expect(page.getByText('Foto KTP asli Anda untuk validasi data otomatis')).toBeVisible();
 
-    // Click start verification
     const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
     await page.locator('input[type="file"]').setInputFiles({
       name: 'ktp.png',
@@ -20,11 +19,9 @@ test.describe('Onboarding Flow - Complete Journey', () => {
     });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Profile Form
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
     await expect(page.getByPlaceholder('16 digit angka...')).toBeVisible();
 
-    // Fill in profile details
     await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
     await page.getByPlaceholder('Sesuai KTP').fill('John Doe');
     await page.getByPlaceholder('nama@email.com').fill('john.doe@example.com');
@@ -32,7 +29,6 @@ test.describe('Onboarding Flow - Complete Journey', () => {
     await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
-    // Submit form
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
     // Wait for response - will likely fail due to backend but check for any UI change
@@ -40,10 +36,8 @@ test.describe('Onboarding Flow - Complete Journey', () => {
   });
 
   test('should show progress through all steps', async ({ page }) => {
-    // Initially step 1 is active - look for active step indicator
     await expect(page.getByText('Identitas').first()).toBeVisible();
 
-    // Move to step 2
     const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
     await page.locator('input[type="file"]').setInputFiles({
       name: 'ktp.png',
@@ -52,10 +46,8 @@ test.describe('Onboarding Flow - Complete Journey', () => {
     });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Wait for step transition
     await page.waitForTimeout(500);
 
-    // Now step 2 content should be visible
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
 
     // Real backend - use unique data to avoid duplicate errors
@@ -72,10 +64,8 @@ test.describe('Onboarding Flow - Complete Journey', () => {
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait for success step
     await page.waitForTimeout(2000);
 
-    // Step 3 should be active now - check for success message
     await expect(page.getByText('Akun Siap Digunakan!')).toBeVisible();
   });
 });
@@ -241,10 +231,8 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait for validation to appear
     await page.waitForTimeout(500);
 
-    // Check that we're still on form (validation failed)
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
   });
 
@@ -256,18 +244,14 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait for validation
     await page.waitForTimeout(500);
 
-    // Check that we're still on form (validation failed)
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
   });
 
   test('should validate all required fields', async ({ page }) => {
-    // Don't fill any fields
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Should show multiple validation errors
     const errors = page.locator('.text-red-500');
     const errorCount = await errors.count();
     expect(errorCount).toBeGreaterThanOrEqual(1);
@@ -285,7 +269,6 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Check for loading state (Loader2 icon)
     const loadingIcon = page.locator('.animate-spin');
     await expect(loadingIcon).toBeVisible();
   });
@@ -295,7 +278,6 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
     const inputs = page.locator('input[placeholder]').filter({ hasNot: page.locator('[type="hidden"]') });
     await expect(inputs).toHaveCount(6);
 
-    // Check for proper styling classes
     await expect(inputs.first()).toHaveClass(/h-12/);
   });
 
@@ -303,7 +285,6 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
     const nikInput = page.getByPlaceholder('16 digit angka...');
     await nikInput.focus();
 
-    // Check for focus ring
     await expect(nikInput).toHaveClass(/h-12/);
   });
 
@@ -320,8 +301,7 @@ test.describe('Onboarding Flow - Step 2: Profile Form', () => {
   });
 
   test('should update progress indicator', async ({ page }) => {
-    // On Step 2: Step 0 is completed (bg-primary border-primary), Step 1 is active (bg-background border-primary)
-    // Use bg-background to target only the active step (not completed ones)
+    // Use bg-background to target the active step; completed steps use bg-primary.
     const activeStep = page.locator('.h-10.w-10.rounded-xl.bg-background.border-primary');
     await expect(activeStep).toBeVisible();
   });
@@ -359,7 +339,6 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
     });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Fill form with valid data - unique
     await page.getByPlaceholder('16 digit angka...').fill(uniqueNik3);
     await page.getByPlaceholder('Sesuai KTP').fill('Test User');
     await page.getByPlaceholder('nama@email.com').fill(uniqueEmail3);
@@ -369,7 +348,6 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait for success step
     await page.waitForTimeout(2000);
   });
 
@@ -396,8 +374,7 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
   });
 
   test('should have all 3 steps complete in progress tracker', async ({ page }) => {
-    // On Step 3: Steps 0,1 are completed (bg-primary), Step 2 is active (bg-background border-primary)
-    // All 3 have border-primary — use that as common selector
+    // All three steps carry border-primary — use that as the common selector.
     const stepsWithPrimary = page.locator('.h-10.w-10.rounded-xl.border-primary');
     await expect(stepsWithPrimary).toHaveCount(3);
   });
@@ -421,7 +398,6 @@ test.describe('Onboarding Flow - Step 3: Success', () => {
   });
 
   test('should have success animation', async ({ page }) => {
-    // Check for animation classes
     const successContainer = page.locator('text=Akun Siap Digunakan!');
     await expect(successContainer).toBeVisible();
   });
@@ -450,7 +426,6 @@ test.describe('Onboarding Flow - Error Handling', () => {
     await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
-    // Submit form
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
     await page.waitForTimeout(2000);
   });
@@ -464,7 +439,6 @@ test.describe('Onboarding Flow - Error Handling', () => {
     });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Fill form
     await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
     await page.getByPlaceholder('Sesuai KTP').fill('Test User');
     await page.getByPlaceholder('nama@email.com').fill('test@example.com');
@@ -475,7 +449,6 @@ test.describe('Onboarding Flow - Error Handling', () => {
     // Submit (might fail in test environment)
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Should handle error or show loading
     await page.waitForTimeout(1000);
   });
 
@@ -488,10 +461,8 @@ test.describe('Onboarding Flow - Error Handling', () => {
     });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Submit empty form
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Should show inline errors
     const errorElements = page.locator('.text-red-500');
     const errorElementsCount = await errorElements.count();
     expect(errorElementsCount).toBeGreaterThanOrEqual(1);
@@ -511,9 +482,7 @@ test.describe('Onboarding Flow - Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ page }) => {
-    // Tab through focusable elements on Step 1
-    // Tab order depends on viewport — at 1280px the left panel is visible
-    // Tab through until we find the main CTA button
+    // Tab order depends on viewport; tab until the main CTA is focused.
     for (let i = 0; i < 5; i++) {
       await page.keyboard.press('Tab');
       const focusedText = await page.locator(':focus').textContent().catch(() => '');
@@ -522,7 +491,6 @@ test.describe('Onboarding Flow - Accessibility', () => {
         return;
       }
     }
-    // If we got here, check that at least something is focused
     const anyFocused = await page.locator(':focus').count();
     expect(anyFocused).toBeGreaterThanOrEqual(1);
   });
@@ -536,7 +504,6 @@ test.describe('Onboarding Flow - Accessibility', () => {
     });
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Fill form
     await page.getByPlaceholder('16 digit angka...').fill('3201010101010001');
     await page.getByPlaceholder('Sesuai KTP').fill('Test User');
     await page.getByPlaceholder('nama@email.com').fill('test@example.com');
@@ -544,11 +511,8 @@ test.describe('Onboarding Flow - Accessibility', () => {
     await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
-    // Press Enter on last field
     await page.keyboard.press('Enter');
 
-    // Form should submit
-    // Wait a bit for potential loading state
     await page.waitForTimeout(500);
   });
 
@@ -614,7 +578,6 @@ test.describe('Onboarding Flow - Visual Regression', () => {
   test('should match screenshots on desktop - Step 3', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
 
-    // Real backend - no mock
 
     const fakePng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
     await page.locator('input[type="file"]').setInputFiles({
@@ -653,7 +616,6 @@ test.describe('Onboarding Flow - Security Features', () => {
   });
 
   test('should have security icons', async ({ page }) => {
-    // Check for ScanFace and ShieldCheck icons
     const securityIcons = page.locator('aside svg');
     await expect(securityIcons.first()).toBeVisible();
   });

@@ -59,29 +59,24 @@ public class RequestTransformationFilter implements ContainerRequestFilter {
         String path = requestContext.getUriInfo().getPath();
         String method = requestContext.getMethod();
 
-        // Skip health and metrics endpoints
         if (path.startsWith("/q/") || path.equals("/health") || path.equals("/status")) {
             return;
         }
 
-        // Convert headers to mutable map
         Map<String, List<String>> headers = new java.util.HashMap<>();
         for (String headerName : requestContext.getHeaders().keySet()) {
             List<String> values = new ArrayList<>(requestContext.getHeaders().get(headerName));
             headers.put(headerName, values);
         }
 
-        // Apply transformations
         Map<String, List<String>> transformedHeaders =
             transformationService.transformRequestHeaders(path, method, headers);
 
-        // Apply transformed headers back to request
         for (Map.Entry<String, List<String>> entry : transformedHeaders.entrySet()) {
             String headerName = entry.getKey();
             List<String> values = entry.getValue();
 
             if (!values.isEmpty()) {
-                // Remove existing header and add new values
                 requestContext.getHeaders().remove(headerName);
                 for (String value : values) {
                     requestContext.getHeaders().add(headerName, value);

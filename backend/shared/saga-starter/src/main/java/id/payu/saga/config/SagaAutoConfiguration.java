@@ -42,9 +42,6 @@ public class SagaAutoConfiguration {
         log.info("Saga pattern support auto-configured with properties: {}", properties);
     }
 
-    /**
-     * Saga monitoring service bean.
-     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "payu.saga", name = "monitoring-enabled", havingValue = "true", matchIfMissing = true)
@@ -52,9 +49,6 @@ public class SagaAutoConfiguration {
         return new SagaMonitorService(sagaRepository, properties);
     }
 
-    /**
-     * Saga recovery service bean.
-     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "payu.saga", name = "compensation-enabled", havingValue = "true", matchIfMissing = true)
@@ -73,9 +67,6 @@ public class SagaAutoConfiguration {
         return new SagaEventPublisher(outboxService, properties);
     }
 
-    /**
-     * Saga cleanup service bean.
-     */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "payu.saga", name = "cleanup-enabled", havingValue = "true", matchIfMissing = true)
@@ -83,9 +74,6 @@ public class SagaAutoConfiguration {
         return new SagaCleanupService(sagaRepository, properties);
     }
 
-    /**
-     * Saga configuration validator.
-     */
     @Bean
     public SagaConfigurationValidator sagaConfigurationValidator() {
         return new SagaConfigurationValidator(properties);
@@ -121,9 +109,6 @@ public class SagaAutoConfiguration {
         }
     }
 
-    /**
-     * Inner class for cleanup service.
-     */
     @RequiredArgsConstructor
     public static class SagaCleanupService {
         private final SagaRepository sagaRepository;
@@ -139,9 +124,6 @@ public class SagaAutoConfiguration {
         }
     }
 
-    /**
-     * Inner class for configuration validation.
-     */
     @RequiredArgsConstructor
     public static class SagaConfigurationValidator {
         private final SagaProperties properties;

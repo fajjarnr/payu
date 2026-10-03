@@ -2,10 +2,7 @@ import { test, expect } from './fixtures';
 
 test.describe('Investment Flow', () => {
   test.beforeEach(async ({ authPage: page }) => {
-    // Navigate to investments page with authentication
-    // authPage fixture automatically sets up session cookies
     await page.goto('/investments');
-    // Wait for page to fully load
     await page.waitForLoadState('domcontentloaded');
   });
 
@@ -120,11 +117,9 @@ test.describe('Investment Flow', () => {
     await page.goto('/investments');
     await page.waitForLoadState('domcontentloaded');
 
-    // Check that key elements are visible
     await expect(page.getByText('Manajemen Kekayaan')).toBeVisible();
     await expect(page.getByText('Total Portofolio Bersih')).toBeVisible();
 
-    // Take screenshot
     await page.screenshot({
       path: 'e2e/screenshots/investments-mobile.png',
       fullPage: true
@@ -140,7 +135,6 @@ test.describe('Investment Flow', () => {
   });
 
   test('should have interactive product cards', async ({ authPage: page }) => {
-    // Use data-testid selectors for accurate product card targeting
     for (let i = 0; i < 3; i++) {
       const card = page.locator(`[data-testid="investment-product-${i}"]`);
       await expect(card).toBeVisible();
@@ -185,28 +179,23 @@ test.describe('Investment Flow - Product Catalog', () => {
     const firstProduct = page.locator('[data-testid="investment-product-0"]');
     await firstProduct.click();
 
-    // Product card should be clickable (in real scenario would navigate to product details)
     await expect(firstProduct).toBeVisible();
   });
 
   test('should have product icons', async ({ authPage: page }) => {
-    // Check for product icons (Landmark, TrendingUp, Coins)
     const icons = page.locator('svg');
     const iconsCount = await icons.count();
     expect(iconsCount).toBeGreaterThanOrEqual(3);
   });
 
   test('should filter products by type', async ({ authPage: page }) => {
-    // Click on "Pasar Uang" filter
     await page.click('button:has-text("Pasar Uang")');
 
-    // Filter button should still be visible and clickable
     const filterButton = page.locator('button:has-text("Pasar Uang")');
     await expect(filterButton).toBeVisible();
   });
 
   test('should have proper color coding for product types', async ({ authPage: page }) => {
-    // Check for color-coded product icons
     const blueIcon = page.locator('.text-blue-500');
     const greenIcon = page.locator('.text-primary');
     const amberIcon = page.locator('.text-amber-500');
@@ -230,7 +219,6 @@ test.describe('Investment Flow - Buy Mutual Fund', () => {
     const addButton = page.locator('[data-testid="buy-investment-0"]');
     await addButton.click();
 
-    // Button should be clickable
     await expect(addButton).toBeVisible();
   });
 
@@ -238,10 +226,8 @@ test.describe('Investment Flow - Buy Mutual Fund', () => {
     const newInvestButton = page.locator('[data-testid="new-investment-button"]');
     await expect(newInvestButton).toBeEnabled();
 
-    // Click button
     await newInvestButton.click();
 
-    // In real scenario would open investment modal/form
     await expect(newInvestButton).toBeVisible();
   });
 
@@ -249,7 +235,6 @@ test.describe('Investment Flow - Buy Mutual Fund', () => {
     const portfolioValue = page.getByText('Rp 152.800.000');
     await expect(portfolioValue).toBeVisible();
 
-    // Check for proper currency formatting
     await expect(portfolioValue).toContainText('Rp');
   });
 
@@ -277,7 +262,6 @@ test.describe('Investment Flow - Risk Profile', () => {
   });
 
   test('should have risk slider visualization', async ({ authPage: page }) => {
-    // Use flexible selectors for the risk slider
     const sliderContainer = page.locator('.h-2.rounded-full').first();
     await expect(sliderContainer).toBeVisible();
 
@@ -290,15 +274,12 @@ test.describe('Investment Flow - Risk Profile', () => {
     await expect(optimizeButton).toBeVisible();
     await expect(optimizeButton).toBeEnabled();
 
-    // Click button
     await optimizeButton.click();
 
-    // In real scenario would open optimization modal
     await expect(optimizeButton).toBeVisible();
   });
 
   test('should display risk factors', async ({ authPage: page }) => {
-    // Verify risk-related text exists on page
     await expect(page.getByText('Konservatif')).toBeVisible();
     // "Agresif" also in "Moderat-Agresif" — use exact match
     await expect(page.getByText('Agresif', { exact: true })).toBeVisible();
@@ -314,7 +295,6 @@ test.describe('Investment Flow - Smart Advice', () => {
   test('should display smart advice banner', async ({ authPage: page }) => {
     await expect(page.getByText('Target Portofolio Hampir Tercapai.')).toBeVisible();
 
-    // Locate advice banner by its unique text content
     const adviceBanner = page.getByText('Target Portofolio Hampir Tercapai.').locator('..');
     await expect(adviceBanner).toBeVisible();
   });
@@ -328,10 +308,8 @@ test.describe('Investment Flow - Smart Advice', () => {
     const reviewButton = page.locator('[data-testid="review-strategy-button"]');
     await expect(reviewButton).toBeEnabled();
 
-    // Click button
     await reviewButton.click();
 
-    // In real scenario would open strategy review
     await expect(reviewButton).toBeVisible();
   });
 
@@ -355,12 +333,10 @@ test.describe('Investment Flow - Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ authPage: page }) => {
-    // Tab through page
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
 
-    // Should reach a focusable, visible element
     const focused = page.locator(':focus:visible');
     const count = await focused.count();
     expect(count).toBeGreaterThanOrEqual(1);
@@ -374,7 +350,6 @@ test.describe('Investment Flow - Accessibility', () => {
   });
 
   test('should have proper contrast ratios', async ({ authPage: page }) => {
-    // Check for text elements
     const headings = page.locator('h2, h3, h4');
     await expect(headings.first()).toBeVisible();
   });
@@ -425,12 +400,10 @@ test.describe('Investment Flow - Error Handling', () => {
     const addButton = page.locator('[data-testid="buy-investment-0"]');
     await addButton.click();
 
-    // In real scenario, might show error for insufficient balance
     await expect(addButton).toBeVisible();
   });
 
   test('should handle filter error gracefully', async ({ authPage: page }) => {
-    // Click filter button
     await page.click('button:has-text("Pasar Uang")');
 
     // Filter should still work even if API fails

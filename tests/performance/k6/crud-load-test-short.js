@@ -1,5 +1,3 @@
-// PayU Platform - CRUD Load Test (Short Version for Validation)
-// ================================================================
 // Verified flow:
 // - Account onboarding via /api/v1/accounts/register
 // - Session validation via /api/v1/auth/login + /api/v1/auth/validate

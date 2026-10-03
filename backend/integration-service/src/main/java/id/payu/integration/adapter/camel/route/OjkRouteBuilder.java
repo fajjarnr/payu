@@ -53,13 +53,11 @@ public class OjkRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        // Error handler
         onException(Exception.class)
             .log(LoggingLevel.ERROR, "Error processing OJK report: ${exception.message}")
             .to("direct:ojk-error-handler")
             .handled(true);
 
-        // Route: Daily CSV Report Generation (triggered by timer)
         from("timer:ojk-daily-report?period=86400000&delay=60000") // Daily, 1 min delay on startup
             .routeId("ojk-dsv-daily-report-route")
             .choice()
@@ -71,7 +69,6 @@ public class OjkRouteBuilder extends RouteBuilder {
                 .otherwise()
                     .log(LoggingLevel.DEBUG, "Daily CSV report generation is disabled");
 
-        // Route: Monthly XML Report Generation (triggered by cron - 1st of month at 1 AM)
         from("cron:ojk-monthly-report?schedule=0+0+1+1+*+?")
             .routeId("ojk-xml-monthly-report-route")
             .choice()
@@ -83,7 +80,6 @@ public class OjkRouteBuilder extends RouteBuilder {
                 .otherwise()
                     .log(LoggingLevel.DEBUG, "Monthly XML report generation is disabled");
 
-        // Route: Generate CSV Report
         from("direct:ojk-csv-report")
             .routeId("ojk-csv-report-route")
             .to("direct:ojk-generate-csv-report");
@@ -97,10 +93,9 @@ public class OjkRouteBuilder extends RouteBuilder {
                         ? LocalDate.parse(reportDateStr)
                         : LocalDate.now();
 
-                // Create report data (in production, fetch from database)
+                // In production, fetch from database
                 Map<String, Object> reportData = ojkTransformer.createReportData(null, reportType, reportDate);
 
-                // Create integration message
                 IntegrationMessage message = IntegrationMessage.builder()
                         .messageId(UUID.randomUUID().toString())
                         .type(MessageType.OJK_CSV)
@@ -130,7 +125,6 @@ public class OjkRouteBuilder extends RouteBuilder {
                 IntegrationMessage message = exchange.getIn().getBody(IntegrationMessage.class);
                 message.setTransformedPayload(csvContent);
 
-                // Validate generated CSV
                 OjkValidator.ValidationResult csvValidation = ojkValidator.validateCsv(csvContent);
                 if (!csvValidation.valid()) {
                     throw new IllegalArgumentException("CSV validation failed: " + csvValidation.getErrorMessage());
@@ -150,7 +144,6 @@ public class OjkRouteBuilder extends RouteBuilder {
             .toD(ojkUploadUrl + "?throwExceptionOnFailure=true")
             .log(LoggingLevel.INFO, "OJK CSV report uploaded successfully");
 
-        // Route: Generate XML Report
         from("direct:ojk-xml-report")
             .routeId("ojk-xml-report-route")
             .to("direct:ojk-generate-xml-report");
@@ -164,11 +157,9 @@ public class OjkRouteBuilder extends RouteBuilder {
                         ? LocalDate.parse(reportDateStr)
                         : LocalDate.now();
 
-                // Create report data
                 Map<String, Object> reportData = ojkTransformer.createReportData(null, reportType, reportDate);
                 reportData.put("period", "MONTHLY");
 
-                // Create integration message
                 IntegrationMessage message = IntegrationMessage.builder()
                         .messageId(UUID.randomUUID().toString())
                         .type(MessageType.OJK_XML)
@@ -198,7 +189,6 @@ public class OjkRouteBuilder extends RouteBuilder {
                 IntegrationMessage message = exchange.getIn().getBody(IntegrationMessage.class);
                 message.setTransformedPayload(xmlContent);
 
-                // Validate generated XML
                 OjkValidator.ValidationResult xmlValidation = ojkValidator.validateXml(xmlContent);
                 if (!xmlValidation.valid()) {
                     throw new IllegalArgumentException("XML validation failed: " + xmlValidation.getErrorMessage());
@@ -218,7 +208,6 @@ public class OjkRouteBuilder extends RouteBuilder {
             .toD(ojkUploadUrl + "?throwExceptionOnFailure=true")
             .log(LoggingLevel.INFO, "OJK XML report uploaded successfully");
 
-        // Route: Error handler
         from("direct:ojk-error-handler")
             .routeId("ojk-error-handler-route")
             .process(exchange -> {

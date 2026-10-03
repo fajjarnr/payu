@@ -5,7 +5,6 @@ import { vi } from 'vitest';
 import BalanceCard from '@/components/dashboard/BalanceCard';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
-// Mock the hooks
 vi.mock('@/hooks/useUserSegment', () => ({
   useUserSegment: () => ({
     currentTier: undefined,
@@ -17,7 +16,6 @@ vi.mock('@/hooks/useUserSegment', () => ({
   }),
 }));
 
-// Mock zustand store properly
 vi.mock('@/stores/authStore', () => ({
   useAuthStore: vi.fn((selector) => {
     const state = {

@@ -30,12 +30,10 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
 
         String path = requestContext.getUriInfo().getPath();
 
-        // Skip health and metrics endpoints
         if (path.startsWith("/q/") || path.equals("/health")) {
             return;
         }
 
-        // Check for bypass header
         for (String bypassHeader : config.ipWhitelist().bypassHeaders()) {
             String headerValue = requestContext.getHeaderString(bypassHeader);
             if (headerValue != null && headerValue.equalsIgnoreCase("true")) {
@@ -44,16 +42,13 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
             }
         }
 
-        // Check if path requires IP whitelist
         WhitelistRule rule = getWhitelistRule(path);
         if (rule == null) {
             return; // No rule for this path
         }
 
-        // Get client IP
         String clientIp = getClientIp(requestContext);
 
-        // Validate IP
         if (!rule.isAllowed(clientIp)) {
             Log.warnf("IP blocked by whitelist: %s for path %s", clientIp, path);
             requestContext.abortWith(
@@ -76,7 +71,6 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
 
         for (GatewayConfig.IpWhitelistConfig.IpWhitelistPathConfig pathConfig : config.ipWhitelist().paths()) {
             String pattern = pathConfig.pattern();
-            // Simple wildcard matching
             String regex = pattern.replace("*", ".*");
             if (path.matches(regex)) {
                 return new WhitelistRule(pathConfig.ips(), config.ipWhitelist().mode());
@@ -97,17 +91,14 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
         String forwarded = requestContext.getHeaderString("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
             String[] ips = forwarded.split(",");
-            // Rightmost entry is the one added by our trusted proxy
             return ips[ips.length - 1].trim();
         }
 
-        // Check X-Real-IP header
         String realIp = requestContext.getHeaderString("X-Real-IP");
         if (realIp != null && !realIp.isBlank()) {
             return realIp.trim();
         }
 
-        // Return unknown
         return "unknown";
     }
 
@@ -124,11 +115,9 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
         }
 
         public boolean isAllowed(String ip) {
-            // In allow mode, IP must be in the list
             if ("allow".equalsIgnoreCase(mode)) {
                 return isIpInList(ip);
             }
-            // In deny mode, IP must NOT be in the list
             else {
                 return !isIpInList(ip);
             }
@@ -144,12 +133,10 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
         }
 
         private boolean ipMatches(String ip, String pattern) {
-            // Exact match
             if (ip.equals(pattern)) {
                 return true;
             }
 
-            // CIDR notation matching (simplified)
             if (pattern.contains("/")) {
                 return matchesCidr(ip, pattern);
             }
@@ -162,7 +149,6 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
             String networkIp = parts[0];
             int prefixLength = Integer.parseInt(parts[1]);
 
-            // Simple implementation for /8, /16, /24
             String[] ipOctets = ip.split("\\.");
             String[] networkOctets = networkIp.split("\\.");
 

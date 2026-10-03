@@ -17,34 +17,22 @@ import java.time.Instant;
  */
 public abstract class BaseController {
 
-    /**
-     * Creates a successful API response with data.
-     */
     protected <T> ResponseEntity<ApiResponse<T>> ok(T data) {
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
-    /**
-     * Creates a successful API response with data and pagination.
-     */
     protected <T> ResponseEntity<ApiResponse<T>> ok(T data, Page<?> page) {
         String baseUrl = getBaseUrl();
         return ResponseEntity.ok(ApiResponse.success(data,
                 id.payu.api.common.response.PaginationInfo.from(page, baseUrl)));
     }
 
-    /**
-     * Creates a 201 Created response with location header.
-     */
     protected <T> ResponseEntity<ApiResponse<T>> created(T data, String location) {
         return ResponseEntity
                 .created(java.net.URI.create(location))
                 .body(ApiResponse.success(data));
     }
 
-    /**
-     * Creates a 204 No Content response.
-     */
     protected ResponseEntity<Void> noContent() {
         return ResponseEntity.noContent().build();
     }
@@ -58,9 +46,6 @@ public abstract class BaseController {
         return "";
     }
 
-    /**
-     * Creates a Pageable object from request parameters.
-     */
     protected Pageable createPageable(Integer page, Integer size, String sortBy, String sortDirection) {
         int pageNum = page != null ? page : id.payu.api.common.constant.ApiConstants.DEFAULT_PAGE;
         int sizeNum = size != null ? size : id.payu.api.common.constant.ApiConstants.DEFAULT_PAGE_SIZE;
@@ -82,9 +67,6 @@ public abstract class BaseController {
         return PageRequest.of(pageNum, sizeNum, Sort.by(direction, sortField));
     }
 
-    /**
-     * Creates a default Pageable object.
-     */
     protected Pageable createPageable() {
         return PageRequest.of(
                 id.payu.api.common.constant.ApiConstants.DEFAULT_PAGE,
@@ -112,9 +94,6 @@ public abstract class BaseController {
         return correlationId != null ? correlationId : java.util.UUID.randomUUID().toString();
     }
 
-    /**
-     * Creates MetaInfo with request ID from servlet request.
-     */
     protected MetaInfo createMetaInfo(HttpServletRequest request) {
         return MetaInfo.withRequestId(getRequestId(request));
     }

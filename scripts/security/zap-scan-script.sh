@@ -8,16 +8,14 @@ TARGET_URL="${1:-https://staging-api.payu.fajjjar.my.id}"
 REPORT_DIR="${2:-target/zap-reports}"
 ZAP_PORT="${ZAP_PORT:-8080}"
 ZAP_HOST="${ZAP_HOST:-localhost}"
-# DEV ONLY — set a strong, unique API key in production CI/CD secrets
+# Dev only — set a strong, unique API key in production CI/CD secrets
 ZAP_API_KEY="${ZAP_API_KEY:-payu-zap-dev-key-change-in-prod}"
 
 echo "Starting OWASP ZAP Security Scan against: ${TARGET_URL}"
 echo "Report directory: ${REPORT_DIR}"
 
-# Create report directory
 mkdir -p "${REPORT_DIR}"
 
-# Start ZAP in daemon mode (if not already running)
 echo "Checking if ZAP is running..."
 if ! curl -s "http://${ZAP_HOST}:${ZAP_PORT}" > /dev/null; then
     echo "Starting ZAP daemon..."
@@ -28,7 +26,6 @@ if ! curl -s "http://${ZAP_HOST}:${ZAP_PORT}" > /dev/null; then
         zaproxy/zap-stable:latest \
         zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.key="${ZAP_API_KEY}"
 
-    # Wait for ZAP to start
     echo "Waiting for ZAP to start..."
     for i in {1..30}; do
         if curl -s "http://${ZAP_HOST}:${ZAP_PORT}" > /dev/null; then
@@ -40,7 +37,6 @@ if ! curl -s "http://${ZAP_HOST}:${ZAP_PORT}" > /dev/null; then
     done
 fi
 
-# Run ZAP baseline scan
 echo "Running ZAP baseline scan..."
 docker exec payu-zap-scanner \
     zap-baseline.py \
@@ -52,7 +48,6 @@ docker exec payu-zap-scanner \
     -a \
     -z "-config api.key=${ZAP_API_KEY}"
 
-# Check for high risk alerts
 echo "Checking for high-risk alerts..."
 HIGH_RISK=$(docker exec payu-zap-scanner \
     grep -c "Risk (High):" "${REPORT_DIR}/zap-report.html" || true)
@@ -60,21 +55,18 @@ HIGH_RISK=$(docker exec payu-zap-scanner \
 if [ "$HIGH_RISK" -gt 0 ]; then
     echo "❌ Found ${HIGH_RISK} high-risk security issues!"
     echo "Please review the report at: ${REPORT_DIR}/zap-report.html"
-    # Exit with error code to fail the pipeline
     # Comment out the next line if you want to allow the build to proceed
     exit 1
 else
     echo "✅ No high-risk security issues found!"
 fi
 
-# Run spider scan (optional, for more comprehensive testing)
 echo "Running ZAP spider scan..."
 docker exec payu-zap-scanner \
     zap-cli spider "${TARGET_URL}"
 docker exec payu-zap-scanner \
     zap-cli active-scan "${TARGET_URL}"
 
-# Generate final report
 docker exec payu-zap-scanner \
     zap-cli report -o "${REPORT_DIR}/zap-full-report.html" -f html
 

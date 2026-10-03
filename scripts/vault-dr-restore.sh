@@ -4,7 +4,6 @@
 #
 # Simulates disaster recovery for Vault in dev mode (inmem storage).
 # After Vault pod restart, all secrets are lost. This script re-seeds them.
-# ============================================================
 
 set -euo pipefail
 

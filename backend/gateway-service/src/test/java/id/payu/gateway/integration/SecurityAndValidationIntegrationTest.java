@@ -34,8 +34,6 @@ public class SecurityAndValidationIntegrationTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    // API key validation tests
-
     @Test
     @Order(1)
     @DisplayName("Should bypass API key validation for health endpoints")
@@ -90,8 +88,6 @@ public class SecurityAndValidationIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
-
-    // Request signing tests
 
     @Test
     @Order(10)
@@ -148,8 +144,6 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(401), is(400), is(404), is(503)));
     }
 
-    // IP whitelist tests
-
     @Test
     @Order(20)
     @DisplayName("Should allow requests from whitelisted IPs")
@@ -201,8 +195,6 @@ public class SecurityAndValidationIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
-
-    // Request validation tests
 
     @Test
     @Order(30)
@@ -291,8 +283,6 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(201), is(400), is(503)));
     }
 
-    // Idempotency tests
-
     @Test
     @Order(40)
     @DisplayName("Should handle requests with idempotency key")
@@ -315,7 +305,6 @@ public class SecurityAndValidationIntegrationTest {
     void testIdempotencyKeyDuplicate() throws InterruptedException {
         String idempotencyKey = "ide-" + System.currentTimeMillis();
 
-        // First request
         given()
                 .header("X-Idempotency-Key", idempotencyKey)
                 .contentType(ContentType.JSON)
@@ -325,10 +314,8 @@ public class SecurityAndValidationIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(201), is(200), is(400), is(503)));
 
-        // Wait a bit
         Thread.sleep(100);
 
-        // Second request with same key
         given()
                 .header("X-Idempotency-Key", idempotencyKey)
                 .contentType(ContentType.JSON)
@@ -393,8 +380,6 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(204), is(404), is(503)));
     }
 
-    // Content type tests
-
     @Test
     @Order(50)
     @DisplayName("Should accept application/json content type")
@@ -433,8 +418,6 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(201), is(400), is(415), is(503)));
     }
 
-    // Security headers tests
-
     @Test
     @Order(60)
     @DisplayName("Should include security headers in response")
@@ -446,8 +429,6 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503)));
         // Note: Specific security headers depend on Quarkus configuration
     }
-
-    // Cross-site scripting tests
 
     @Test
     @Order(70)
@@ -479,8 +460,6 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(400), is(429), is(503))); // SQLi payload must NOT succeed (no 201)
     }
 
-    // Special characters tests
-
     @Test
     @Order(80)
     @DisplayName("Should handle unicode characters in request")
@@ -506,8 +485,6 @@ public class SecurityAndValidationIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(201), is(400), is(503)));
     }
-
-    // Concurrent request tests
 
     @Test
     @Order(90)
@@ -535,8 +512,6 @@ public class SecurityAndValidationIntegrationTest {
         }
     }
 
-    // Encoding tests
-
     @Test
     @Order(100)
     @DisplayName("Should handle URL-encoded parameters")
@@ -548,8 +523,6 @@ public class SecurityAndValidationIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
-
-    // Multiple security headers tests
 
     @Test
     @Order(110)
@@ -567,8 +540,6 @@ public class SecurityAndValidationIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(201), is(400), is(503)));
     }
-
-    // Authentication bypass tests
 
     @Test
     @Order(120)
@@ -595,8 +566,6 @@ public class SecurityAndValidationIntegrationTest {
         given().when().get("/q/metrics").then().statusCode(anyOf(is(200), is(404), is(406)));
     }
 
-    // Error response tests
-
     @Test
     @Order(130)
     @DisplayName("Should return proper error response for validation failures")
@@ -610,8 +579,6 @@ public class SecurityAndValidationIntegrationTest {
                 .statusCode(anyOf(is(400), is(429), is(503))) // Validation error should not be 500
                 .body(notNullValue());
     }
-
-    // Tenant context tests
 
     @Test
     @Order(140)

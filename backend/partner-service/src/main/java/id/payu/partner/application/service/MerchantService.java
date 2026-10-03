@@ -103,7 +103,6 @@ public class MerchantService {
         merchant.setPicPhone(request.getPicPhone());
         merchant.setPicEmail(request.getPicEmail());
         merchant.setSettlementAccountId(request.getSettlementAccountId());
-        // Generate static QR code for the merchant
         merchant.setStaticQrCode("QRIS:STATIC:" + merchantCode);
 
         merchant = merchantRepository.save(merchant);
@@ -244,10 +243,8 @@ public class MerchantService {
         log.info("QR payment {} confirmed by payer {}, ref={}",
                 referenceId, payerAccountId, paymentRef);
 
-        // Trigger settlement to merchant wallet
         settleToMerchantWallet(qrPayment);
 
-        // Dispatch webhook notification
         dispatchQrPaymentPaidEvent(qrPayment);
 
         return toQrResponse(qrPayment);
@@ -297,7 +294,6 @@ public class MerchantService {
             log.info("Debited payer {} for QR payment {}: amount={}",
                     payerAccountId, qrPayment.getReferenceId(), qrPayment.getAmount());
 
-            // Credit merchant wallet
             String url = WALLET_SERVICE_URL + "/" + settlementAccountId + "/credit";
             Map<String, Object> request = new HashMap<>();
             request.put("amount", qrPayment.getAmount());
@@ -313,7 +309,6 @@ public class MerchantService {
                 log.info("Settled QR payment {} to merchant {} wallet: amount={}",
                         qrPayment.getReferenceId(), merchant.getId(), qrPayment.getAmount());
 
-                // Publish settlement event
                 publishSettlementEvent(qrPayment, merchant, "SUCCESS");
             } else {
                 log.error("Failed to settle QR payment {}: HTTP {}",

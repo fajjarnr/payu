@@ -99,7 +99,6 @@ public class WebhookSubscriptionEntity {
         this.maxRetries = 5;
     }
 
-    // --- Domain Methods ---
 
     /**
      * Check if this subscription should receive the given event type.
@@ -113,7 +112,6 @@ public class WebhookSubscriptionEntity {
         return false;
     }
 
-    // --- Getters/Setters ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

@@ -1,5 +1,3 @@
-// PayU Auth Service - CRUD Baseline Performance Test
-// ===================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -46,7 +44,6 @@ export default function () {
 
   group('Auth Service - CRUD Operations', () => {
 
-    // ===== CREATE: Register new user =====
     group('CREATE: Register', () => {
       const userData = generateUserData(uniqueId);
 
@@ -61,7 +58,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Login =====
     let auth = null;
     group('CREATE: Login', () => {
       const startTime = Date.now();
@@ -80,7 +76,6 @@ export default function () {
       return;
     }
 
-    // ===== READ: Verify session/token =====
     group('READ: Verify Session', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.auth}/verify`, auth.token);
@@ -89,14 +84,12 @@ export default function () {
       sleep(0.2);
     });
 
-    // ===== READ: Get user info =====
     group('READ: Get User Info', () => {
       const result = read(`${SERVICE_ENDPOINTS.auth}/me`, auth.token);
 
       sleep(0.2);
     });
 
-    // ===== CREATE: Request password reset =====
     group('CREATE: Password Reset Request', () => {
       const resetData = {
         email: `auth_${uniqueId}@payu.test`,
@@ -110,7 +103,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== UPDATE: Refresh token =====
     if (auth.refreshToken) {
       group('UPDATE: Refresh Token', () => {
         const startTime = Date.now();
@@ -125,7 +117,6 @@ export default function () {
       });
     }
 
-    // ===== DELETE: Logout =====
     group('DELETE: Logout', () => {
       const startTime = Date.now();
       logout(auth.token);

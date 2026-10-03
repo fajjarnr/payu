@@ -256,8 +256,6 @@ export function formatTransactionAmount(
 
 /**
  * Convert number to words in Indonesian (e.g., 1000 -> "seribu rupiah")
- * @param amount - The amount to convert
- * @returns Amount in Indonesian words
  */
 export function numberToWords(amount: number): string {
   const units = [

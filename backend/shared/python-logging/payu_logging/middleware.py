@@ -34,21 +34,17 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         self.context_key = context_key
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Extract or generate correlation ID
         correlation_id = self._get_correlation_id(request)
-
-        # Bind to structlog context for this request
         # This ensures all logs during request processing include correlation_id
+
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(**{self.context_key: correlation_id})
 
         try:
             response = await call_next(request)
-            # Add correlation ID to response headers
             response.headers[self.header_name] = correlation_id
             return response
         finally:
-            # Clear context after request
             structlog.contextvars.clear_contextvars()
 
     def _get_correlation_id(self, request: Request) -> str:

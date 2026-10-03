@@ -27,7 +27,6 @@ public class LivenessHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         try {
-            // Basic JVM checks
             long heapUsed = memoryMXBean.getHeapMemoryUsage().getUsed();
             long heapMax = memoryMXBean.getHeapMemoryUsage().getMax();
             int threadCount = threadMXBean.getThreadCount();

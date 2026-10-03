@@ -85,7 +85,6 @@ def get_base_deployments() -> dict[str, tuple[str, str | None]]:
 
 
 def main() -> int:
-    # Verify oc auth
     sh(['oc', 'whoami'])
 
     live_deps = get_live_deployments()
@@ -98,7 +97,6 @@ def main() -> int:
 
     drift_count = 0
 
-    # 1. Image drift
     print('=' * 70)
     print('IMAGE TAG / REGISTRY DRIFT')
     print('=' * 70)
@@ -118,7 +116,6 @@ def main() -> int:
     if live_only:
         print(f'  ℹ  live-only: {sorted(live_only)} (operator-managed or new)')
 
-    # 2. ConfigMap drift
     print()
     print('=' * 70)
     print('CONFIGMAP DATA DRIFT (sample: service-endpoints + 4 simulator CMs)')

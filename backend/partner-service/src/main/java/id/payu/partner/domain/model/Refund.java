@@ -111,7 +111,6 @@ public class Refund {
         return status == RefundStatus.COMPLETED || status == RefundStatus.FAILED;
     }
 
-    // Getters
 
     public UUID getId() {
         return id;

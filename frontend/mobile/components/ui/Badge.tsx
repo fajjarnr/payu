@@ -14,7 +14,6 @@ export const BadgeComponent: React.FC<BadgeProps> = ({
   size = 'sm',
   style,
 }) => {
-  // Memoize badge style to avoid recalculations on every render
   const badgeStyle = useMemo<ViewStyle>(() => {
     const getBackgroundColor = () => {
       switch (variant) {
@@ -41,7 +40,6 @@ export const BadgeComponent: React.FC<BadgeProps> = ({
     };
   }, [variant, size, style]);
 
-  // Memoize text style
   const textStyle = useMemo(() => {
     const getTextColor = () => {
       switch (variant) {
@@ -72,7 +70,6 @@ export const BadgeComponent: React.FC<BadgeProps> = ({
   );
 };
 
-// Memoize Badge component for performance optimization in lists
 export const Badge = memo(BadgeComponent, (prevProps, nextProps) => {
   return (
     prevProps.text === nextProps.text &&

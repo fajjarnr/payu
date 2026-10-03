@@ -28,8 +28,6 @@ public interface LoyaltyPointsRepository extends JpaRepository<LoyaltyPointsEnti
      * Find the most recent loyalty points record for an account with pessimistic lock.
      * This prevents race conditions during concurrent balance updates.
      *
-     * @param accountId the account ID to lock
-     * @return Optional containing the most recent record, or empty if none exists
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT lp FROM LoyaltyPointsEntity lp WHERE lp.accountId = :accountId ORDER BY lp.createdAt DESC LIMIT 1")
@@ -39,8 +37,6 @@ public interface LoyaltyPointsRepository extends JpaRepository<LoyaltyPointsEnti
      * Calculate current balance using atomic database sum operation.
      * This is an alternative to locking that avoids the need for balance_after column.
      *
-     * @param accountId the account ID
-     * @return the calculated balance (null if no records)
      */
     @Query("SELECT SUM(lp.points) FROM LoyaltyPointsEntity lp WHERE lp.accountId = :accountId")
     Integer calculateBalanceByAccountId(@Param("accountId") String accountId);

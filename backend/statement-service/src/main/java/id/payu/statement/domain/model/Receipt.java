@@ -55,12 +55,10 @@ public class Receipt {
     /**
      * Factory method to generate a new receipt.
      *
-     * @param transactionId   The transaction ID
      * @param amount          The transaction amount (must be positive)
      * @param currency        The currency code (e.g., "IDR")
      * @param senderInfo      Sender information (value object)
      * @param recipientInfo   Recipient information (value object)
-     * @param referenceNumber Bank reference number
      * @return A new Receipt instance with GENERATED status
      * @throws IllegalArgumentException if any validation fails
      */

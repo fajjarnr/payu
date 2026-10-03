@@ -15,8 +15,6 @@ import id.payu.wallet.domain.model.SplitType;
  */
 public interface SplitPaymentUseCase {
 
-    // --- Rule Management ---
-
     /**
      * Create a new split payment rule.
      */
@@ -38,8 +36,6 @@ public interface SplitPaymentUseCase {
      * Deactivate a rule.
      */
     void deactivateRule(UUID ruleId);
-
-    // --- Execution ---
 
     /**
      * Execute a split payment using a predefined rule.

@@ -67,7 +67,7 @@ data "aws_iam_policy_document" "node_pool_assume_role_policy" {
   }
 }
 
-# 1. Control Plane Operator Role
+# Control Plane Operator Role
 resource "aws_iam_role" "control_plane_operator" {
   name               = "${var.infra_id}-control-plane-operator"
   assume_role_policy = data.aws_iam_policy_document.oidc_assume_role_policy.json
@@ -89,7 +89,7 @@ resource "aws_iam_role_policy_attachment" "cpo_s3" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
-# 2. Image Registry Operator Role
+# Image Registry Operator Role
 resource "aws_iam_role" "image_registry" {
   name               = "${var.infra_id}-openshift-image-registry"
   assume_role_policy = data.aws_iam_policy_document.oidc_assume_role_policy.json
@@ -101,7 +101,7 @@ resource "aws_iam_role_policy_attachment" "registry_s3" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
-# 3. Ingress Operator Role
+# Ingress Operator Role
 resource "aws_iam_role" "ingress" {
   name               = "${var.infra_id}-openshift-ingress"
   assume_role_policy = data.aws_iam_policy_document.oidc_assume_role_policy.json
@@ -118,7 +118,7 @@ resource "aws_iam_role_policy_attachment" "ingress_route53" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonRoute53FullAccess"
 }
 
-# 4. Cloud Controller Role
+# Cloud Controller Role
 resource "aws_iam_role" "cloud_controller" {
   name               = "${var.infra_id}-cloud-controller"
   assume_role_policy = data.aws_iam_policy_document.oidc_assume_role_policy.json
@@ -135,7 +135,7 @@ resource "aws_iam_role_policy_attachment" "cc_elb" {
   policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
 }
 
-# 5. Cloud Network Config Controller Role
+# Cloud Network Config Controller Role
 resource "aws_iam_role" "cloud_network_config_controller" {
   name               = "${var.infra_id}-cloud-network-config-controller"
   assume_role_policy = data.aws_iam_policy_document.oidc_assume_role_policy.json
@@ -147,7 +147,7 @@ resource "aws_iam_role_policy_attachment" "cncc_ec2" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
 }
 
-# 6. EBS CSI Driver Role
+# EBS CSI Driver Role
 resource "aws_iam_role" "aws_ebs_csi_driver_controller" {
   name               = "${var.infra_id}-aws-ebs-csi-driver-controller"
   assume_role_policy = data.aws_iam_policy_document.oidc_assume_role_policy.json
@@ -159,7 +159,7 @@ resource "aws_iam_role_policy_attachment" "ebs_csi" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 
-# 7. Node Pool (Worker) Role
+# Node Pool (Worker) Role
 resource "aws_iam_role" "node_pool" {
   name               = "${var.infra_id}-node-pool"
   assume_role_policy = data.aws_iam_policy_document.node_pool_assume_role_policy.json
@@ -203,7 +203,7 @@ resource "aws_iam_instance_profile" "worker" {
   tags = var.tags
 }
 
-# 8. HCP CLI Role (Required for HCP command execution)
+# HCP CLI Role (Required for HCP command execution)
 data "aws_iam_policy_document" "hcp_cli_trust_policy" {
   statement {
     actions = ["sts:AssumeRole"]

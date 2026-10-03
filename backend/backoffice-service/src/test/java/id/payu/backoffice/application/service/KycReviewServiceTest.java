@@ -32,8 +32,6 @@ class KycReviewServiceTest {
         testUserId = "test-user-" + System.currentTimeMillis();
     }
 
-    // Create KYC Review Tests
-
     @Test
     @Transactional
     void testCreateKycReview_Success() {
@@ -88,8 +86,6 @@ class KycReviewServiceTest {
         assertEquals("ACC-002", result.getAccountNumber());
         assertEquals("Minimal submission", result.getNotes());
     }
-
-    // Query KYC Review Tests
 
     @Test
     @Transactional
@@ -197,8 +193,6 @@ class KycReviewServiceTest {
         assertTrue(results.size() >= 1);
     }
 
-    // Review KYC Tests
-
     @Test
     @Transactional
     void testReview_AsApproved() {
@@ -300,8 +294,6 @@ class KycReviewServiceTest {
         });
     }
 
-    // Delete KYC Review Tests
-
     @Test
     @Transactional
     void testDelete_Success() {
@@ -326,14 +318,11 @@ class KycReviewServiceTest {
         assertFalse(result.isPresent());
     }
 
-    // GetByUserId Returns Latest Tests
-
     @Test
     @Transactional
     void testGetByUserId_ReturnsMostRecent() {
         String uniqueUserId = "user-latest-" + System.currentTimeMillis();
 
-        // Create first review
         kycReviewService.create(new KycReviewRequest(
                 uniqueUserId,
                 "ACC-001",
@@ -353,7 +342,6 @@ class KycReviewServiceTest {
             Thread.currentThread().interrupt();
         }
 
-        // Create second review
         KycReviewRequest secondRequest = new KycReviewRequest(
                 uniqueUserId,
                 "ACC-002",
@@ -367,7 +355,6 @@ class KycReviewServiceTest {
         );
         kycReviewService.create(secondRequest);
 
-        // Should return the most recent review
         Optional<KycReview> result = kycReviewService.getByUserId(uniqueUserId);
 
         assertTrue(result.isPresent());

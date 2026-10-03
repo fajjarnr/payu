@@ -7,17 +7,8 @@ import jakarta.validation.constraints.Size;
 import id.payu.security.annotation.SensitivityLevel;
 
 /**
- * Login request DTO with input validation.
- *
- * Validation is intentionally lenient for login: only checks presence and size.
- * The actual password complexity rules are enforced during registration (RegisterRequest),
- * not at login time. Keycloak performs the actual credential verification.
- *
- * Username validation:
- * - 3-80 characters, alphanumeric with dots, underscores, @, and hyphens (supports email)
- *
- * Password validation:
- * - Present and 1-128 characters (any format accepted — Keycloak validates)
+ * Login request DTO. Validation is intentionally lenient (presence and size only):
+ * password complexity is enforced at registration; Keycloak verifies credentials.
  */
 public record LoginRequest(
     @NotBlank(message = "Username is required")

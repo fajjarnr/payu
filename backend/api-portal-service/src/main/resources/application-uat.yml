@@ -1,4 +1,3 @@
-# Environment-specific configuration for UAT
 spring:
   cloud:
     vault:

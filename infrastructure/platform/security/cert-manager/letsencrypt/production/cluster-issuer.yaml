@@ -9,11 +9,9 @@ spec:
       name: cluster-issuer-acme-production
     server: 'https://acme-v02.api.letsencrypt.org/directory'
     solvers:
-      # -----------------------------------------------------------------------
       # Zone 1 (ACTIVE): apps.fajjjar.my.id → Z08250423T85PP5RVLQF1 (verified live 2026-09-18)
       # Covers: *.apps.fajjjar.my.id, apps.fajjjar.my.id
       # Credentials: cert-manager-aws-creds (student, via kube-system/aws-creds)
-      # -----------------------------------------------------------------------
       - dns01:
           route53:
             accessKeyIDSecretRef:
@@ -29,14 +27,12 @@ spec:
             - 'apps.fajjjar.my.id'
 
 
-      # -----------------------------------------------------------------------
       # Zone 2 (ACTIVE): payu.ocp.fajjjar.my.id → Z068631326ANWNVYRCHE7 (private,
       # installer-created; NOT resolvable publicly, NOT usable for DNS01 —
       # kept for reference only). Public *.apps.payu.ocp + api.payu.ocp A
       # records live in parent public zone Z084653138N4UYGP2EAQ1 (verified live 2026-09-18).
       # Covers: *.apps.payu.ocp.fajjjar.my.id, payu.ocp.fajjjar.my.id
       # Credentials: cert-manager-aws-creds (student, via kube-system/aws-creds)
-      # -----------------------------------------------------------------------
       - dns01:
           route53:
             accessKeyIDSecretRef:
@@ -51,10 +47,8 @@ spec:
           dnsZones:
             - 'payu.ocp.fajjjar.my.id'
             - 'apps.payu.ocp.fajjjar.my.id'
-      # -----------------------------------------------------------------------
       # Zone 3 (ACTIVE): ocp.fajjjar.my.id → Z084653138N4UYGP2EAQ1 (verified live 2026-09-18)
       # Covers: ocp.fajjjar.my.id (cluster API/api-int live here)
-      # -----------------------------------------------------------------------
       - dns01:
           route53:
             accessKeyIDSecretRef:
@@ -69,9 +63,7 @@ spec:
           dnsZones:
             - 'ocp.fajjjar.my.id'
 
-      # -----------------------------------------------------------------------
       # Zone 4 (EXAMPLE): Untuk zone domain tambahan lainnya
-      # -----------------------------------------------------------------------
       # - dns01:
       #     route53:
       #       accessKeyIDSecretRef:

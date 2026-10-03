@@ -279,7 +279,6 @@ class TestKycApi:
         ) as client:
             response = await client.get("/")
 
-            # Root should return something
             assert response.status_code in [200, 404]
 
     @pytest.mark.asyncio

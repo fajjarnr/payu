@@ -6,14 +6,12 @@
 
 set -euo pipefail
 
-# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_ROOT="/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="${LOG_FILE:-/var/log/payu/run_backup_${TIMESTAMP}.log}"
 NOTIFICATION_ENABLED=false
 
-# Create log directory if it doesn't exist (silently fail if no permission)
 mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
 # Use /tmp fallback if log directory creation failed
@@ -22,7 +20,6 @@ if [ ! -w "$(dirname ${LOG_FILE})" ]; then
     mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 fi
 
-# Logging function
 log() {
     local level="$1"
     shift
@@ -42,7 +39,6 @@ send_notification() {
     fi
 }
 
-# Backup PostgreSQL
 backup_postgres() {
     local backup_type="${1:-daily}"
     local retention_days="${2:-7}"
@@ -60,7 +56,6 @@ backup_postgres() {
     fi
 }
 
-# Backup Redis
 backup_redis() {
     local retention_days="${1:-7}"
 
@@ -77,7 +72,6 @@ backup_redis() {
     fi
 }
 
-# Backup Kafka
 backup_kafka() {
     local retention_days="${1:-7}"
 
@@ -94,7 +88,6 @@ backup_kafka() {
     fi
 }
 
-# Backup compose configuration
 backup_config() {
     local backup_file="${BACKUP_ROOT}/config/podman-compose_${TIMESTAMP}.yml"
 
@@ -104,10 +97,8 @@ backup_config() {
 
     mkdir -p "${BACKUP_ROOT}/config"
 
-    # Backup docker-compose file
     cp "${SCRIPT_DIR}/../infrastructure/local-podman/podman-compose.yml" "${backup_file}" 2>/dev/null || true
 
-    # Backup .env files if they exist
     if [[ -f "${SCRIPT_DIR}/../.env" ]]; then
         cp "${SCRIPT_DIR}/../.env" "${BACKUP_ROOT}/config/.env_${TIMESTAMP}"
     fi
@@ -116,7 +107,6 @@ backup_config() {
     return 0
 }
 
-# Verify backup integrity
 verify_backups() {
     log "INFO" "=========================================="
     log "INFO" "Verifying Backup Integrity"
@@ -124,7 +114,6 @@ verify_backups() {
 
     local verification_failed=false
 
-    # Verify PostgreSQL backups
     local pg_backups=$(ls -1 ${BACKUP_ROOT}/postgres/daily/*.gz 2>/dev/null | tail -1)
     if [[ -n "${pg_backups}" ]]; then
         log "INFO" "Verifying PostgreSQL backup: ${pg_backups}"
@@ -136,7 +125,6 @@ verify_backups() {
         fi
     fi
 
-    # Verify Redis backup
     local redis_backup=$(ls -1 ${BACKUP_ROOT}/redis/snapshots/dump_*.rdb 2>/dev/null | tail -1)
     if [[ -n "${redis_backup}" ]]; then
         log "INFO" "Verifying Redis backup: ${redis_backup}"
@@ -148,7 +136,6 @@ verify_backups() {
         fi
     fi
 
-    # Verify Kafka backup
     local kafka_backups=$(ls -1 ${BACKUP_ROOT}/kafka/topics/*.json.gz 2>/dev/null | tail -1)
     if [[ -n "${kafka_backups}" ]]; then
         log "INFO" "Verifying Kafka backup: ${kafka_backups}"
@@ -167,7 +154,6 @@ verify_backups() {
     return 0
 }
 
-# Generate backup report
 generate_report() {
     local success_count="$1"
     local total_count="$2"
@@ -185,23 +171,19 @@ generate_report() {
     log "INFO" "Duration: ${duration} seconds"
     log "INFO" "Success Rate: ${success_count}/${total_count} (${success_count}/${total_count})"
 
-    # List backup sizes
     log "INFO" ""
     log "INFO" "Backup Sizes:"
 
     local total_size=0
 
-    # PostgreSQL
     local pg_size=$(du -sh ${BACKUP_ROOT}/postgres/daily 2>/dev/null | awk '{print $1}')
     log "INFO" "  PostgreSQL: ${pg_size}"
     total_size=$((${total_size} + $(du -sk ${BACKUP_ROOT}/postgres/daily 2>/dev/null | awk '{print $1}')))
 
-    # Redis
     local redis_size=$(du -sh ${BACKUP_ROOT}/redis/snapshots 2>/dev/null | awk '{print $1}')
     log "INFO" "  Redis: ${redis_size}"
     total_size=$((${total_size} + $(du -sk ${BACKUP_ROOT}/redis/snapshots 2>/dev/null | awk '{print $1}')))
 
-    # Kafka
     local kafka_size=$(du -sh ${BACKUP_ROOT}/kafka/topics 2>/dev/null | awk '{print $1}')
     log "INFO" "  Kafka: ${kafka_size}"
     total_size=$((${total_size} + $(du -sk ${BACKUP_ROOT}/kafka/topics 2>/dev/null | awk '{print $1}')))
@@ -210,13 +192,11 @@ generate_report() {
     log "INFO" "=========================================="
 }
 
-# Main backup routine
 main() {
     local components=("$@")
     local backup_type="daily"
     local retention_days=7
 
-    # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --weekly)
@@ -257,7 +237,6 @@ main() {
         esac
     done
 
-    # Default: backup all components
     if [[ ${#components[@]} -eq 0 ]]; then
         components=("postgres" "redis" "kafka" "config")
     fi
@@ -273,7 +252,6 @@ main() {
     log "INFO" "Components: ${components[*]}"
     log "INFO" "=========================================="
 
-    # Run backups for each component
     for component in "${components[@]}"; do
         case "${component}" in
             postgres)
@@ -302,17 +280,14 @@ main() {
         esac
     done
 
-    # Verify backups
     if verify_backups; then
         log "INFO" "✓ All backups verified"
     else
         log "WARNING" "Some backups failed verification"
     fi
 
-    # Generate report
     generate_report "${success_count}" "${total_count}" "${start_time}"
 
-    # Send notification
     if [[ ${success_count} -eq ${total_count} ]]; then
         send_notification "SUCCESS" "Backup completed successfully: ${success_count}/${total_count} components"
         log "INFO" "✓ All backups completed successfully"

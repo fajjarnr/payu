@@ -45,9 +45,6 @@ public class TopUpController {
 
     private final PaymentService paymentService;
     
-    /**
-     * Extract authenticated user ID from JWT token.
-     */
     private String extractUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
@@ -165,8 +162,5 @@ public class TopUpController {
         return ApiResponse.success(providers);
     }
 
-    /**
-     * Provider info record.
-     */
     public record ProviderInfo(String code, String name) {}
 }

@@ -41,8 +41,6 @@ public class PromoRedemptionController extends BaseController {
     /**
      * Applies a promo code to a transaction.
      *
-     * @param request the apply promo request
-     * @return the response with discount details
      */
     private String extractUserId() {
         org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
@@ -83,7 +81,6 @@ public class PromoRedemptionController extends BaseController {
             callerUserId = request.userId();
         }
 
-        // Use header idempotency key if not provided in body
         ApplyPromoRequest finalRequest = new ApplyPromoRequest(
                 request.promoCode(),
                 callerUserId,
@@ -110,9 +107,6 @@ public class PromoRedemptionController extends BaseController {
     /**
      * Validates a promo code without applying it.
      *
-     * @param promoCode the promo code to validate
-     * @param amount the transaction amount
-     * @return validation result
      */
     @GetMapping("/validate/{promoCode}")
     @Operation(
@@ -133,7 +127,6 @@ public class PromoRedemptionController extends BaseController {
 
         // BUG-LOGIC-016 FIX: Perform actual validation instead of always returning {valid: true}
         try {
-            // Create a read-only request; validation must not consume the promo.
             ApplyPromoRequest dryRunRequest = new ApplyPromoRequest(
                     promoCode,
                     userId,

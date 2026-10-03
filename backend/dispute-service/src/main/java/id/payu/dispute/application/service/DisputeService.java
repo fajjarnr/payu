@@ -187,7 +187,6 @@ public class DisputeService implements DisputeUseCase {
         return disputePersistencePort.findAll();
     }
 
-    // ─── Fallback methods ──────────────────────────────────────────────────────
 
     private Dispute openDisputeFallback(UUID transactionId, UUID customerId, UUID merchantId,
                                         BigDecimal disputedAmount, String currency, String reason,

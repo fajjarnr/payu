@@ -64,7 +64,6 @@ public class CacheWarmingService implements ApplicationListener<ApplicationReady
         log.info("Scheduling cache warming with delay: {}",
             properties.getCacheWarming().getStartupDelay());
 
-        // Schedule cache warming after configured delay
         if (properties.getCacheWarming().isAsync()) {
             CompletableFuture.runAsync(this::warmCache, cacheWarmExecutor);
         } else {
@@ -72,12 +71,8 @@ public class CacheWarmingService implements ApplicationListener<ApplicationReady
         }
     }
 
-    /**
-     * Warm up cache entries based on configuration.
-     */
     private void warmCache() {
         try {
-            // Wait for configured delay
             TimeUnit.MILLISECONDS.sleep(
                 properties.getCacheWarming().getStartupDelay().toMillis()
             );
@@ -94,7 +89,6 @@ public class CacheWarmingService implements ApplicationListener<ApplicationReady
             int totalWarmed = 0;
             int totalFailed = 0;
 
-            // Warm caches configured for each cache region
             for (var entry : properties.getCaches().entrySet()) {
                 String cacheName = entry.getKey();
                 var cacheConfig = entry.getValue();
@@ -135,13 +129,9 @@ public class CacheWarmingService implements ApplicationListener<ApplicationReady
         // Actual warm-up logic should be provided by the application
         log.debug("Warming key '{}' in cache '{}'", key, cacheName);
 
-        // Trigger cache load via CacheService
         // The actual data loading should be handled by CacheWithTTLAspect fallback suppliers
     }
 
-    /**
-     * Manually trigger cache warming for a specific cache name.
-     */
     public void warmCache(String cacheName) {
         log.info("Manual cache warming triggered for '{}'", cacheName);
         var cacheConfig = properties.getCaches().get(cacheName);

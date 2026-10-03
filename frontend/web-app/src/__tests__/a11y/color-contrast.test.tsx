@@ -13,23 +13,19 @@ import { render } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { axeConfig } from './setup';
 
-// Test components with various color schemes
 const TestComponents = {
-  // Primary button with bank-green background
   PrimaryButton: () => (
     <button className="bg-emerald-500 text-white px-4 py-2 rounded">
       Primary Action
     </button>
   ),
 
-  // Secondary button with gray background
   SecondaryButton: () => (
     <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded">
       Secondary Action
     </button>
   ),
 
-  // Text on dark background (common in PayU dark mode)
   DarkModeText: () => (
     <div className="bg-gray-950 text-white p-4">
       <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -37,35 +33,32 @@ const TestComponents = {
     </div>
   ),
 
-  // Error message with red text
   ErrorMessage: () => (
     <div className="bg-red-50 text-red-700 p-3 rounded border border-red-200">
       Error: Invalid credentials
     </div>
   ),
 
-  // Success message with green text
   SuccessMessage: () => (
     <div className="bg-emerald-50 text-emerald-700 p-3 rounded border border-emerald-200">
       Success: Transaction completed
     </div>
   ),
 
-  // Link text
   LinkText: () => (
     <a href="#" className="text-emerald-600 hover:text-emerald-700 underline">
       Learn more about PayU
     </a>
   ),
 
-  // Disabled button (lower contrast is acceptable for disabled elements)
+  // Lower contrast is acceptable for disabled elements
   DisabledButton: () => (
     <button disabled className="bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed">
       Disabled Action
     </button>
   ),
 
-  // Placeholder text (lower contrast is acceptable for placeholders)
+  // Lower contrast is acceptable for placeholders
   InputWithPlaceholder: () => (
     <input
       type="text"
@@ -144,8 +137,7 @@ describe('Color Contrast - WCAG 2.1 AA Compliance', () => {
         'color-contrast': { enabled: true },
       },
     });
-    // Disabled elements may have lower contrast - this is acceptable
-    // We just check that the test runs without throwing
+    // Disabled elements may have lower contrast - acceptable per WCAG
     expect(results.violations.filter(v => v.id === 'color-contrast')).toHaveLength(0);
   });
 

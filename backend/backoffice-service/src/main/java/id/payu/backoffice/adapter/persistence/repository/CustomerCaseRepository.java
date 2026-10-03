@@ -20,7 +20,6 @@ public interface CustomerCaseRepository extends JpaRepository<CustomerCaseEntity
     Page<CustomerCaseEntity> findByPriority(id.payu.backoffice.domain.Priority priority, Pageable pageable);
     List<CustomerCaseEntity> findByAssignedTo(String assignedTo);
 
-    // Search methods
     List<CustomerCaseEntity> findByUserIdContainingIgnoreCase(String userId);
     List<CustomerCaseEntity> findByAccountNumberContainingIgnoreCase(String accountNumber);
     List<CustomerCaseEntity> findByCaseNumberContainingIgnoreCase(String caseNumber);

@@ -20,9 +20,6 @@ public class OjkTransformer {
     private static final String CSV_HEADER = "ReportDate,ReportType,InstitutionCode,TotalTransactions,TotalAmount,Currency";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    /**
-     * Transform internal data to OJK CSV format.
-     */
     public String toCsvFormat(Map<String, Object> reportData) {
         log.debug("Transforming to OJK CSV format");
 
@@ -60,9 +57,6 @@ public class OjkTransformer {
         return csv.toString();
     }
 
-    /**
-     * Transform internal data to OJK XML format.
-     */
     public String toXmlFormat(Map<String, Object> reportData) {
         log.debug("Transforming to OJK XML format");
 
@@ -110,9 +104,6 @@ public class OjkTransformer {
         return xml.toString();
     }
 
-    /**
-     * Parse OJK CSV format to internal data.
-     */
     public Map<String, Object> fromCsvFormat(String csvContent) {
         log.debug("Parsing OJK CSV format");
 
@@ -121,7 +112,6 @@ public class OjkTransformer {
             throw new IllegalArgumentException("Invalid CSV format: insufficient lines");
         }
 
-        // Skip header, parse first data row
         String[] fields = lines[1].split(",");
 
         return Map.of(
@@ -134,9 +124,6 @@ public class OjkTransformer {
         );
     }
 
-    /**
-     * Create report data structure from message.
-     */
     public Map<String, Object> createReportData(IntegrationMessage message, String reportType, LocalDate date) {
         return new java.util.HashMap<>(Map.of(
                 "reportDate", date.format(DATE_FORMATTER),

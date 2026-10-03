@@ -44,7 +44,6 @@ public class PartnerRateLimitFilter implements ContainerRequestFilter {
 
     @PostConstruct
     void init() {
-        // Enabled by default, can be disabled via config
         this.enabled = true;
         Log.infof("PartnerRateLimitFilter initialized (enabled: %s)", enabled);
     }
@@ -57,15 +56,12 @@ public class PartnerRateLimitFilter implements ContainerRequestFilter {
 
         String path = requestContext.getUriInfo().getPath();
 
-        // Skip health and metrics endpoints
         if (path.startsWith("/q/") || path.equals("/health") || path.equals("/status")) {
             return;
         }
 
         String partnerId = extractPartnerId(requestContext);
         if (partnerId == null) {
-            // No partner ID, skip partner rate limiting
-            // Fall back to global rate limiting
             return;
         }
 
@@ -73,7 +69,6 @@ public class PartnerRateLimitFilter implements ContainerRequestFilter {
             .subscribe()
             .with(
                 result -> {
-                    // Add rate limit headers
                     requestContext.getHeaders().add("X-RateLimit-Limit",
                         String.valueOf(result.limit()));
                     requestContext.getHeaders().add("X-RateLimit-Remaining",
@@ -95,7 +90,6 @@ public class PartnerRateLimitFilter implements ContainerRequestFilter {
                                 .build()
                         );
                     } else {
-                        // Record the request for analytics
                         partnerRateLimitService.recordRequest(partnerId, path);
                     }
                 },
@@ -106,17 +100,13 @@ public class PartnerRateLimitFilter implements ContainerRequestFilter {
     }
 
     private String extractPartnerId(ContainerRequestContext requestContext) {
-        // Try to get partner ID from header
         String partnerId = requestContext.getHeaderString("X-Partner-Id");
         if (partnerId != null && !partnerId.isBlank()) {
             return partnerId;
         }
 
-        // Try to get from API key
         String apiKey = requestContext.getHeaderString("X-API-Key");
         if (apiKey != null && !apiKey.isBlank()) {
-            // Map API key to partner ID
-            // This is a simplified implementation
             return derivePartnerFromApiKey(apiKey);
         }
 

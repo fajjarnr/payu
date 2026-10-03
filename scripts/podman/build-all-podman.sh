@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# PayU Platform - Build All Services with Podman
-# ============================================
 # This script builds all PayU microservices in parallel using Podman
 # Requirements: podman, buildah, jq
-#
 # Usage: ./build-all-podman.sh [OPTIONS]
 #   -t, --tag TAG          Tag for all images (default: 1.4.0)
 #   -j, --jobs JOBS        Number of parallel build jobs (default: 4)
@@ -15,21 +12,18 @@
 
 set -euo pipefail
 
-# Configuration
 DEFAULT_TAG="1.5.0"
 DEFAULT_JOBS=4
 DEFAULT_REGISTRY="localhost"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../" && pwd)"
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -74,7 +68,6 @@ Examples:
 EOF
 }
 
-# Parse arguments
 TAG="$DEFAULT_TAG"
 JOBS="$DEFAULT_JOBS"
 PUSH=false
@@ -115,7 +108,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check dependencies
 check_dependencies() {
     local missing_deps=()
 
@@ -132,7 +124,6 @@ check_dependencies() {
     fi
 }
 
-# Get service list with Containerfiles
 get_services() {
     find "$PROJECT_ROOT" -name "Containerfile" -type f | \
         grep -E "(backend/|frontend/|tests/)" | \
@@ -144,7 +135,6 @@ get_services() {
         done
 }
 
-# Build single service
 build_service() {
     local service_name="$1"
     local containerfile="$2"
@@ -154,7 +144,6 @@ build_service() {
     log_info "Building ${service_name}..."
     log_info "Containerfile: ${containerfile}"
 
-    # Buildah build command with advanced features
     local buildah_cmd=(
         buildah build-using-dockerfile
         --tag "${full_tag}"
@@ -166,12 +155,10 @@ build_service() {
         --jobs "${JOBS}"
     )
 
-    # Add platform-specific build options
     if [[ -n "${PODMAN_PLATFORM:-}" ]]; then
         buildah_cmd+=("--platform=${PODMAN_PLATFORM}")
     fi
 
-    # Add security options
     buildah_cmd+=(
         --security-opt label=disable
         --security-opt no-new-privileges
@@ -179,12 +166,10 @@ build_service() {
         --cap-add CAP_NET_BIND_SERVICE
     )
 
-    # Add network options
     if [[ -n "${PODMAN_NETWORK:-}" ]]; then
         buildah_cmd+=("--network=${PODMAN_NETWORK}")
     fi
 
-    # Execute build
     if [[ "$VERBOSE" == true ]]; then
         log_info "Build command: ${buildah_cmd[*]}"
     fi
@@ -198,7 +183,6 @@ build_service() {
     fi
 }
 
-# Main execution
 main() {
     log_info "PayU Platform - Build All Services with Podman"
     log_info "============================================="
@@ -207,10 +191,8 @@ main() {
     log_info "Registry: ${REGISTRY}"
     log_info "Push after build: ${PUSH}"
 
-    # Check dependencies
     check_dependencies
 
-    # Get services
     log_info "Discovering services..."
     local services
     services=$(get_services)
@@ -224,17 +206,14 @@ main() {
     log_info "Found ${service_count} services to build:"
     echo "$services" | sed 's/^/  - /'
 
-    # Build in parallel
     log_info "Starting parallel build with ${JOBS} jobs..."
 
-    # Create pod for builds if using Podman
     local pod_name="payu-build-$$"
     if [[ "${PODMAN_USE_POD:-false}" == "true" ]]; then
         log_info "Creating build pod: ${pod_name}"
         podman pod create --name "${pod_name}" --share net
     fi
 
-    # Build services in parallel
     local pids=()
     local build_results=()
 
@@ -242,7 +221,6 @@ main() {
         local service_name=$(echo "$service_line" | cut -d: -f1)
         local containerfile=$(echo "$service_line" | cut -d: -f2-)
 
-        # Build in subshell
         (
             local result
             result=$(build_service "$service_name" "$containerfile")
@@ -253,7 +231,6 @@ main() {
         build_results+=("${service_name}:$!")
     done <<< "$services"
 
-    # Wait for all builds
     local success_count=0
     local fail_count=0
     local built_images=()
@@ -269,14 +246,12 @@ main() {
         fi
     done
 
-    # Clean up pod
     if [[ "${PODMAN_USE_POD:-false}" == "true" ]]; then
         log_info "Cleaning up build pod..."
         podman pod stop "${pod_name}" >/dev/null 2>&1 || true
         podman pod rm "${pod_name}" >/dev/null 2>&1 || true
     fi
 
-    # Summary
     log_info "Build Summary:"
     log_info "  Total services: ${service_count}"
     log_info "  ✓ Success: ${success_count}"
@@ -287,7 +262,6 @@ main() {
         exit 1
     fi
 
-    # Push images if requested
     if [[ "$PUSH" == true ]]; then
         log_info "Pushing images to ${REGISTRY}..."
 
@@ -304,5 +278,4 @@ main() {
     log_success "All services built successfully!"
 }
 
-# Execute main function
 main "$@"

@@ -45,12 +45,10 @@ public class MdcKafkaProducerInterceptor implements ProducerInterceptor<Object, 
 
     @Override
     public void onAcknowledgement(RecordMetadata metadata, Exception exception) {
-        // no-op
     }
 
     @Override
     public void close() {
-        // no-op
     }
 
     @Override

@@ -9,7 +9,6 @@ public interface IdentityProviderPort {
     /**
      * Provision a new user in the identity provider with login credentials.
      *
-     * @param username the username
      * @param email    the user email
      * @param password the password (will be set in Keycloak)
      * @param fullName the user's full name

@@ -1,6 +1,5 @@
 # Falco ServiceAccount + SCC for OpenShift
 # Falco requires privileged access for syscall monitoring
-# ============================================================
 
 apiVersion: v1
 kind: ServiceAccount

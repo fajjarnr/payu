@@ -23,7 +23,6 @@ export default function SettingsPage() {
   const updateUser = useUpdateUser();
   const logoutMutation = useLogout();
 
-  // Form state
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',

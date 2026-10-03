@@ -28,9 +28,6 @@ public class SwiftTransformer {
     private static final Pattern FIELD_59_PATTERN = Pattern.compile(":59:([^:]+)(?::|$)");
     private static final Pattern FIELD_71A_PATTERN = Pattern.compile(":71A:(SHA|BEN|OUR)");
 
-    /**
-     * Transform SWIFT message to internal JSON format.
-     */
     public String toInternalFormat(IntegrationMessage message) {
         log.debug("Transforming SWIFT message to internal format: {}", message.getMessageId());
 
@@ -43,7 +40,6 @@ public class SwiftTransformer {
         internalFormat.put("sourceSystem", message.getSourceSystem());
         internalFormat.put("targetSystem", message.getTargetSystem());
 
-        // Parse SWIFT fields
         internalFormat.put("transactionReference", extractField(swiftPayload, FIELD_20_PATTERN));
 
         Map<String, Object> amountInfo = parseAmountField(swiftPayload);
@@ -57,13 +53,9 @@ public class SwiftTransformer {
         internalFormat.put("beneficiaryCustomer", extractField(swiftPayload, FIELD_59_PATTERN));
         internalFormat.put("charges", extractField(swiftPayload, FIELD_71A_PATTERN));
 
-        // Convert to JSON
         return toJson(internalFormat);
     }
 
-    /**
-     * Transform internal format to SWIFT message.
-     */
     public String fromInternalFormat(Map<String, Object> internalData) {
         log.debug("Transforming internal format to SWIFT message");
 
@@ -132,7 +124,6 @@ public class SwiftTransformer {
             LocalDate valueDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyMMdd"));
             result.put("valueDate", valueDate.toString());
 
-            // Currency
             result.put("currency", matcher.group(2));
 
             // Amount (replace comma with dot for decimal)

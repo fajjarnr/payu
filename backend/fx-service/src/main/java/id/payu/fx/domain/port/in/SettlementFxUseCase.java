@@ -19,44 +19,20 @@ public interface SettlementFxUseCase {
                                             String toCurrency, BigDecimal rate,
                                             String settlementBatchId);
 
-    /**
-     * Get locked rate by ID.
-     */
     SettlementFxRate getLockedRate(UUID rateId);
 
-    /**
-     * Get locked rate for settlement batch.
-     */
     Optional<SettlementFxRate> getLockedRateForSettlement(String settlementBatchId);
 
-    /**
-     * Validate if locked rate is still valid.
-     */
     boolean isRateValid(UUID rateId);
 
-    /**
-     * Convert amount using locked rate.
-     */
     BigDecimal convertWithLockedRate(UUID rateId, BigDecimal amount);
 
-    /**
-     * Invalidate/expired rate lock.
-     */
     void invalidateRate(UUID rateId);
 
-    /**
-     * Get partner's preferred settlement currency.
-     */
     String getPartnerSettlementCurrency(String partnerId);
 
-    /**
-     * Set partner's preferred settlement currency.
-     */
     void setPartnerSettlementCurrency(String partnerId, String currency);
 
-    /**
-     * Auto-convert settlement amount to partner's preferred currency.
-     */
     BigDecimal autoConvertForSettlement(String partnerId, BigDecimal amount,
                                          String sourceCurrency, String settlementBatchId);
 }

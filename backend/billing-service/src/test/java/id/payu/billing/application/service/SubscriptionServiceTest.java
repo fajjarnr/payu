@@ -109,10 +109,6 @@ class SubscriptionServiceTest {
         lenient().doNothing().when(walletPort).releaseReservation(anyString());
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Plan Management Tests
-    // ═══════════════════════════════════════════════════════
-
     @Nested
     @DisplayName("Plan Management")
     class PlanManagementTests {
@@ -197,10 +193,6 @@ class SubscriptionServiceTest {
             verify(persistencePort).savePlan(samplePlan);
         }
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  Subscription Lifecycle Tests
-    // ═══════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("Subscription Lifecycle")
@@ -312,10 +304,6 @@ class SubscriptionServiceTest {
             assertEquals("SubscriptionEntity is already cancelled", error.getMessage());
         }
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  Scheduled Billing & Dunning Tests
-    // ═══════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("Scheduled Billing & Dunning")
@@ -489,7 +477,6 @@ class SubscriptionServiceTest {
         void shouldHandleSubNotFoundForScheduledCharge() {
             when(persistencePort.findSubscriptionById(subscriptionId)).thenReturn(Optional.empty());
 
-            // should not throw
             assertDoesNotThrow(() -> subscriptionService.processScheduledCharge(subscriptionId));
             verify(persistencePort, never()).saveCharge(any(SubscriptionCharge.class));
         }
@@ -534,7 +521,6 @@ class SubscriptionServiceTest {
 
             assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
 
-            // Dunning retry should be scheduled with 5 min delay
             verify(eventPort).publishSubscriptionDue(any(Subscription.class));
         }
 
@@ -627,10 +613,6 @@ class SubscriptionServiceTest {
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Webhook Event Tests
-    // ═══════════════════════════════════════════════════════
-
     @Nested
     @DisplayName("Webhook Events")
     class WebhookEventTests {
@@ -674,8 +656,7 @@ class SubscriptionServiceTest {
             when(persistencePort.findPlanById(planId)).thenReturn(Optional.of(samplePlan));
             when(persistencePort.findChargeByIdempotencyKey(any())).thenReturn(Optional.empty());
 
-            // Simulate charge failure by making saveSubscription throw on success case
-            // but we need to verify the failure event is published
+            // Simulate charge failure: first saveSubscription throws
             java.util.concurrent.atomic.AtomicInteger callCount = new java.util.concurrent.atomic.AtomicInteger(0);
             doAnswer(inv -> {
                 if (callCount.incrementAndGet() == 1) {
@@ -686,7 +667,6 @@ class SubscriptionServiceTest {
                 return s;
             }).when(persistencePort).saveSubscription(any(Subscription.class));
 
-            // Should not throw, but log error
             assertDoesNotThrow(() -> subscriptionService.processDueSubscriptions());
 
             // The charge.failed event should be published before the exception
@@ -707,10 +687,6 @@ class SubscriptionServiceTest {
             verify(persistencePort).saveSubscription(any(Subscription.class));
         }
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  Charge History Tests
-    // ═══════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("Charge History")
@@ -751,10 +727,6 @@ class SubscriptionServiceTest {
             assertTrue(result.isEmpty());
         }
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  Helpers
-    // ═══════════════════════════════════════════════════════
 
     private Subscription createActiveSub() {
         Subscription sub = new Subscription();

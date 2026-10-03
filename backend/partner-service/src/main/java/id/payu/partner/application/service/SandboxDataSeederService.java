@@ -84,7 +84,6 @@ public class SandboxDataSeederService {
      * Seed test merchants for sandbox testing.
      */
     private void seedTestMerchants(List<String> created, List<String> skipped) {
-        // Get or create test partner
         PartnerEntity testPartner = partnerRepository.findByPartnerCode("TEST-PARTNER")
                 .orElseGet(() -> {
                     PartnerEntity partner = new PartnerEntity();
@@ -224,7 +223,6 @@ public class SandboxDataSeederService {
         }
     }
 
-    // Record classes for results
     public record SandboxSeedResult(List<String> created, List<String> skipped) {}
     public record TestBankAccount(String bankCode, String accountNumber, String accountName, String branch) {}
     public record TestVaNumber(String bankCode, String vaNumber, String description) {}

@@ -1,9 +1,8 @@
 # PayU Platform - Operator Subscriptions
 # All operators required for the platform infrastructure
 # Apply BEFORE deploying infra CRs
-# ============================================================
 
-# 1. CloudNativePG (PostgreSQL HA)
+# CloudNativePG (PostgreSQL HA)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -29,7 +28,7 @@ data:
   .dockerconfigjson: e30=
 
 ---
-# 2. Infinispan Operator (application distributed cache)
+# Infinispan Operator (application distributed cache)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -43,7 +42,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 3. AMQ Streams (Apache Kafka)
+# AMQ Streams (Apache Kafka)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -57,7 +56,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 4. AMQ Streams Console (Kafka UI)
+# AMQ Streams Console (Kafka UI)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -71,7 +70,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 5. Red Hat Build of Keycloak (RHBK) - namespace-scoped
+# Red Hat Build of Keycloak (RHBK) - namespace-scoped
 # Migrated from RHSSO (rhsso-operator) → RHBK (rhbk-operator)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -86,7 +85,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 6. External Secrets Operator for Red Hat OpenShift
+# External Secrets Operator for Red Hat OpenShift
 #    (owns externalsecretsconfigs.operator.openshift.io used by external-secrets-config.yaml)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -101,7 +100,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 7. cert-manager Operator for Red Hat OpenShift
+# cert-manager Operator for Red Hat OpenShift
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -115,7 +114,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 8. Kube Descheduler Operator (Pod rebalancing)
+# Kube Descheduler Operator (Pod rebalancing)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -129,7 +128,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 9. 3scale Operator
+# 3scale Operator
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -143,7 +142,6 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# ---
 # # 10. Cluster Logging Operator
 # apiVersion: operators.coreos.com/v1alpha1
 # kind: Subscription
@@ -157,7 +155,6 @@ spec:
 #   sourceNamespace: openshift-marketplace
 #   installPlanApproval: Automatic
 
-# ---
 # # 11. Cluster Observability Operator
 # apiVersion: operators.coreos.com/v1alpha1
 # kind: Subscription
@@ -172,7 +169,7 @@ spec:
 #   installPlanApproval: Automatic
 
 ---
-# 12. Kiali Operator (Service Mesh)
+# Kiali Operator (Service Mesh)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -186,7 +183,6 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# ---
 # # 13. Loki Operator
 # apiVersion: operators.coreos.com/v1alpha1
 # kind: Subscription
@@ -200,7 +196,6 @@ spec:
 #   sourceNamespace: openshift-marketplace
 #   installPlanApproval: Automatic
 
-# ---
 # # 14. NetObserv Operator
 # apiVersion: operators.coreos.com/v1alpha1
 # kind: Subscription
@@ -215,7 +210,7 @@ spec:
 #   installPlanApproval: Automatic
 
 ---
-# 15. OpenShift GitOps Operator
+# OpenShift GitOps Operator
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -229,7 +224,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 16. OpenShift Pipelines Operator (Tekton)
+# OpenShift Pipelines Operator (Tekton)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -243,7 +238,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 17. Advanced Cluster Security Operator (RHACS)
+# Advanced Cluster Security Operator (RHACS)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -257,7 +252,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 18. Red Hat Developer Hub Operator (RHDH)
+# Red Hat Developer Hub Operator (RHDH)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -271,7 +266,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 19. Red Hat OpenShift Service Mesh
+# Red Hat OpenShift Service Mesh
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -285,7 +280,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 20. Compliance Operator (CIS Benchmark, NIST)
+# Compliance Operator (CIS Benchmark, NIST)
 # Namespace: openshift-compliance (created separately)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -300,7 +295,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 21. Red Hat AMQ Broker Operator (ActiveMQ Artemis)
+# Red Hat AMQ Broker Operator (ActiveMQ Artemis)
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -314,7 +309,7 @@ spec:
   installPlanApproval: Automatic
 
 ---
-# 22. Red Hat Trusted Artifact Signer 1.4
+# Red Hat Trusted Artifact Signer 1.4
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:

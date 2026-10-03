@@ -29,7 +29,6 @@ public class RulesEngineService {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 
         try {
-            // Scan for all DRL files under classpath*:rules/
             Resource[] resources = resolver.getResources("classpath*:rules/**/*.drl");
             log.info("Found {} rule file(s) in classpath*:rules/", resources.length);
             for (Resource resource : resources) {
@@ -56,11 +55,6 @@ public class RulesEngineService {
         log.info("RulesEngineService initialized successfully.");
     }
 
-    /**
-     * Executes rules against the provided facts.
-     *
-     * @param facts the facts to insert into the session
-     */
     public void fireRules(Object... facts) {
         KieSession kieSession = kieContainer.newKieSession();
         try {

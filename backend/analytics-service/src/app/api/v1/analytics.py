@@ -34,7 +34,6 @@ async def get_user_metrics(
     auth: dict = Depends(require_auth)
 ):
     """BUG-SECURITY-016/017 FIX: Get user analytics metrics with Auth & IDOR check."""
-    # Validate ownership
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only access your own metrics")
     log = logger.bind(
@@ -84,7 +83,6 @@ async def get_spending_trends(
     auth: dict = Depends(require_auth)
 ):
     """BUG-SECURITY-016/017 FIX: Get user spending trends with Auth & IDOR check."""
-    # Validate ownership
     user_id = request_data.user_id
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only access your own trends")
@@ -122,7 +120,6 @@ async def get_cash_flow_analysis(
     auth: dict = Depends(require_auth)
 ):
     """BUG-SECURITY-016/017 FIX: Get user cash flow with Auth & IDOR check."""
-    # Validate ownership
     user_id = request_data.user_id
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only access your own cashflow")
@@ -157,7 +154,6 @@ async def get_recommendations(
     auth: dict = Depends(require_auth)
 ):
     """BUG-SECURITY-016/017 FIX: Get personalized recommendations with Auth & IDOR check."""
-    # Validate ownership
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only access your own recommendations")
     log = logger.bind(
@@ -198,7 +194,6 @@ async def get_robo_advisory(
     BUG-SECURITY-016/017 FIX: Generate robo-advisory with Auth & IDOR check.
     Supports idempotency for safe retries.
     """
-    # Validate ownership
     user_id = request_data.user_id
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only access your own robo-advisory")
@@ -210,7 +205,6 @@ async def get_robo_advisory(
     )
     log.info("Generating robo-advisory recommendations")
 
-    # Check idempotency cache
     if idempotency_key:
         cached = await get_cached_result(
             idempotency_key=idempotency_key,
@@ -233,7 +227,6 @@ async def get_robo_advisory(
 
         response_data = advisory
 
-        # Store result for idempotency
         if idempotency_key:
             await cache_result(
                 idempotency_key=idempotency_key,
@@ -267,7 +260,6 @@ async def calculate_fraud_score(
     Supports idempotency for safe retries.
     Rate limit: 100 requests per minute per IP (ANA-RATE-001: @limiter.limit).
     """
-    # Validate ownership
     user_id = request_data.user_id
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only calculate fraud score for your own transactions")
@@ -280,7 +272,6 @@ async def calculate_fraud_score(
     )
     log.info("Calculating fraud score")
 
-    # Check idempotency cache
     if idempotency_key:
         cached = await get_cached_result(
             idempotency_key=idempotency_key,
@@ -307,7 +298,6 @@ async def calculate_fraud_score(
         result = await fraud_engine.calculate_fraud_score(transaction_data)
         response_data = result
 
-        # Store result for idempotency
         if idempotency_key:
             await cache_result(
                 idempotency_key=idempotency_key,
@@ -357,7 +347,6 @@ async def get_transaction_fraud_score(
                 request_id=getattr(request.state, "request_id", None),
             ).model_dump()
 
-        # Validate ownership
         if fraud_entity.user_id != auth.get("sub") and fraud_entity.user_id != auth.get("account_id"):
             raise HTTPException(status_code=403, detail="Forbidden: You can only access your own fraud scores")
 
@@ -397,7 +386,6 @@ async def get_user_high_risk_transactions(
     auth: dict = Depends(require_auth)
 ):
     """BUG-SECURITY-016/017 FIX: Get high-risk transactions with Auth & IDOR check."""
-    # Validate ownership
     if user_id != auth.get("sub") and user_id != auth.get("account_id"):
         raise HTTPException(status_code=403, detail="Forbidden: You can only access your own high-risk transactions")
     log = logger.bind(

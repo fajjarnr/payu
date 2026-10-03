@@ -12,7 +12,6 @@ import {
 import { walletService } from '@/services/wallet.service';
 import { Wallet } from '@/types';
 
-// Mock dependencies
 jest.mock('@/services/wallet.service');
 
 describe('useWalletQuery', () => {
@@ -253,7 +252,6 @@ describe('useWalletQuery', () => {
         await result.current.mutate(newPocketData);
       });
 
-      // Verify the mutation was called
       expect(walletService.createPocket).toHaveBeenCalledWith(newPocketData);
     });
 
@@ -263,7 +261,6 @@ describe('useWalletQuery', () => {
         new Error(errorMessage)
       );
 
-      // Populate cache
       (walletService.getWallets as jest.Mock).mockResolvedValue(mockWallets);
       const { result: fetchResult } = renderHook(() => useWallets(), {
         wrapper,
@@ -276,7 +273,6 @@ describe('useWalletQuery', () => {
         try {
           await result.current.mutate(newPocketData);
         } catch {
-          // Expected
         }
       });
 
@@ -346,7 +342,6 @@ describe('useWalletQuery', () => {
         try {
           await result.current.mutate(transferData);
         } catch {
-          // Expected
         }
       });
 

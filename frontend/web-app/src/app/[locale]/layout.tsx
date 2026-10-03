@@ -61,7 +61,6 @@ export default async function RootLayout({
     notFound();
   }
 
-  // Enable static rendering
   setRequestLocale(locale);
 
   const messages = await getMessages({ locale });
@@ -77,7 +76,6 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <ErrorBoundary>
             <Providers>
-              {/* Emergency Alert Banner */}
               <EmergencyAlert />
               {children}
             </Providers>

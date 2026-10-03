@@ -1,5 +1,3 @@
-// Card CRUD Operations for K6 Tests
-// ==================================
 
 import http from 'k6/http';
 import { check } from 'k6';

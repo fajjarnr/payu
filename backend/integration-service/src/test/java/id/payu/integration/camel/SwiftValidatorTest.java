@@ -9,9 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for SwiftValidator.
- */
 public class SwiftValidatorTest {
 
     private SwiftValidator validator;

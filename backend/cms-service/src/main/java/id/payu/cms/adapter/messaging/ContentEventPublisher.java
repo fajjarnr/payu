@@ -32,9 +32,6 @@ public class ContentEventPublisher {
     private static final String TOPIC_UPDATED = "payu.cms.content-updated.v1";
     private static final String TOPIC_ARCHIVED = "payu.cms.content-archived.v1";
 
-    /**
-     * Publish content published event
-     */
     public void publishContentPublished(ContentEntity content) {
         Map<String, Object> event = new HashMap<>();
         event.put("eventType", "CONTENT_PUBLISHED");
@@ -61,9 +58,6 @@ public class ContentEventPublisher {
         log.info("Created outbox event for content published: {}", content.getId());
     }
 
-    /**
-     * Publish content updated event
-     */
     public void publishContentUpdated(ContentEntity content) {
         Map<String, Object> event = new HashMap<>();
         event.put("eventType", "CONTENT_UPDATED");
@@ -87,9 +81,6 @@ public class ContentEventPublisher {
         log.info("Created outbox event for content updated: {}", content.getId());
     }
 
-    /**
-     * Publish content archived event
-     */
     public void publishContentArchived(ContentEntity content) {
         Map<String, Object> event = new HashMap<>();
         event.put("eventType", "CONTENT_ARCHIVED");

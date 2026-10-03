@@ -41,7 +41,6 @@ public class LocalCacheService {
     private volatile long lastRedisFailureTime = 0;
     private static final long REDIS_FAILURE_COOLDOWN_MS = 30000; // 30 seconds
 
-    // Metrics
     private final io.micrometer.core.instrument.Counter hitCounter;
     private final io.micrometer.core.instrument.Counter missCounter;
     private final io.micrometer.core.instrument.Counter evictionCounter;
@@ -81,7 +80,6 @@ public class LocalCacheService {
 
             this.cache = builder.build();
 
-            // Initialize metrics
             String prefix = properties.getMetrics().getPrefix() + ".local";
             this.hitCounter = Metrics.counter(prefix + ".hits");
             this.missCounter = Metrics.counter(prefix + ".misses");
@@ -102,9 +100,6 @@ public class LocalCacheService {
         }
     }
 
-    /**
-     * Get value from local cache.
-     */
     public <T> T get(String key, Class<T> type) {
         if (!enabled) {
             return null;
@@ -129,9 +124,6 @@ public class LocalCacheService {
         return null;
     }
 
-    /**
-     * Put value in local cache.
-     */
     public void put(String key, Object value) {
         if (!enabled) {
             return;
@@ -145,9 +137,6 @@ public class LocalCacheService {
         }
     }
 
-    /**
-     * Put value with custom TTL.
-     */
     public void put(String key, Object value, Duration ttl) {
         if (!enabled) {
             return;
@@ -164,9 +153,6 @@ public class LocalCacheService {
         }
     }
 
-    /**
-     * Evict entry from local cache.
-     */
     public void evict(String key) {
         if (!enabled) {
             return;
@@ -180,9 +166,6 @@ public class LocalCacheService {
         }
     }
 
-    /**
-     * Clear all entries from local cache.
-     */
     public void clear() {
         if (!enabled) {
             return;
@@ -196,9 +179,6 @@ public class LocalCacheService {
         }
     }
 
-    /**
-     * Get cache statistics.
-     */
     public CacheStats getStats() {
         if (!enabled || !recordStats) {
             return null;
@@ -206,9 +186,6 @@ public class LocalCacheService {
         return cache.stats();
     }
 
-    /**
-     * Get estimated cache size.
-     */
     public long size() {
         if (!enabled) {
             return 0;
@@ -223,9 +200,6 @@ public class LocalCacheService {
         return enabled ? cache.estimatedSize() : 0;
     }
 
-    /**
-     * Check if local cache is enabled.
-     */
     public boolean isEnabled() {
         return enabled;
     }
@@ -254,7 +228,6 @@ public class LocalCacheService {
         if (!redisAvailable) {
             long timeSinceFailure = System.currentTimeMillis() - lastRedisFailureTime;
             if (timeSinceFailure > REDIS_FAILURE_COOLDOWN_MS) {
-                // Attempt recovery
                 log.info("Attempting Redis recovery after cooldown");
                 markRedisAvailable();
                 return true;
@@ -264,9 +237,6 @@ public class LocalCacheService {
         return true;
     }
 
-    /**
-     * Get cache health status.
-     */
     public CacheHealth getHealth() {
         if (!enabled) {
             return new CacheHealth(false, 0, 0.0, 0L);
@@ -281,9 +251,6 @@ public class LocalCacheService {
         );
     }
 
-    /**
-     * Cache health status.
-     */
     public record CacheHealth(
         boolean enabled,
         long size,

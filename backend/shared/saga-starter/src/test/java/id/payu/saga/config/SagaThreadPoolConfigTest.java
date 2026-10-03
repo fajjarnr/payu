@@ -30,10 +30,8 @@ class SagaThreadPoolConfigTest {
 
     @Test
     void sagaTaskExecutor_shouldCreateBoundedThreadPool() {
-        // When
         ThreadPoolTaskExecutor executor = config.sagaTaskExecutor(meterRegistry);
 
-        // Then
         assertThat(executor).isNotNull();
         assertThat(executor.getCorePoolSize()).isEqualTo(4);
         assertThat(executor.getMaxPoolSize()).isEqualTo(16);
@@ -43,10 +41,8 @@ class SagaThreadPoolConfigTest {
 
     @Test
     void sagaTaskExecutor_shouldConfigureGracefulShutdown() {
-        // When
         ThreadPoolTaskExecutor executor = config.sagaTaskExecutor(meterRegistry);
 
-        // Then
         // Verify the executor was created successfully (graceful shutdown is configured
         // via setWaitForTasksToCompleteOnShutdown/setAwaitTerminationSeconds but
         // ThreadPoolTaskExecutor does not expose public getters for these in Spring 6.x)
@@ -56,29 +52,23 @@ class SagaThreadPoolConfigTest {
 
     @Test
     void sagaTaskExecutor_shouldRegisterMicrometerMetrics() {
-        // When
         config.sagaTaskExecutor(meterRegistry);
 
-        // Then
         assertThat(meterRegistry.find("executor.active").tag("name", "saga.executor").gauges()).isNotEmpty();
     }
 
     @Test
     void sagaRetryScheduler_shouldCreateScheduledExecutor() {
-        // When
         ScheduledExecutorService scheduler = config.sagaRetryScheduler(meterRegistry);
 
-        // Then
         assertThat(scheduler).isNotNull();
         assertThat(scheduler.isShutdown()).isFalse();
     }
 
     @Test
     void sagaRetryScheduler_shouldRegisterMicrometerMetrics() {
-        // When
         config.sagaRetryScheduler(meterRegistry);
 
-        // Then
         assertThat(meterRegistry.find("executor.active").tag("name", "saga.retry.scheduler").gauges()).isNotEmpty();
     }
 }

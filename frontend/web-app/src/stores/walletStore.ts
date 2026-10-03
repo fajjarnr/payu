@@ -32,7 +32,7 @@ interface WalletState {
 /**
  * Wallet Store — Client-side cache for wallet state.
  *
- * NOTE: This store provides optimistic UI updates and local state caching.
+ * Note: This store provides optimistic UI updates and local state caching.
  * The source of truth for wallet data is the server, managed via TanStack Query
  * in useWallet.ts hook. This store is for:
  * - Instant balance display without waiting for refetch

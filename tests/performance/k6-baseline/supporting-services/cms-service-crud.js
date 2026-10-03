@@ -1,5 +1,3 @@
-// PayU CMS Service - CRUD Baseline Performance Test
-// ====================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -82,7 +80,6 @@ export default function () {
 
   group('CMS Service - CRUD Operations', () => {
 
-    // ===== CREATE: Create Content =====
     group('CREATE: Create Content', () => {
       const contentData = generateContentData(uniqueId);
 
@@ -98,7 +95,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Contents =====
     group('READ: List Contents', () => {
       const params = {
         page: 0,
@@ -114,7 +110,6 @@ export default function () {
     });
 
     if (contentId) {
-      // ===== READ: Get Content Detail =====
       group('READ: Get Content Detail', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.cms}/${contentId}`, auth.token);
@@ -123,7 +118,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Update Content =====
       group('UPDATE: Update Content', () => {
         const updateData = {
           title: `Updated Content ${Date.now()}`,
@@ -138,7 +132,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Publish Content =====
       group('UPDATE: Publish Content', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.cms}/${contentId}/publish`, {}, auth.token);
@@ -147,7 +140,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Unpublish Content =====
       group('UPDATE: Unpublish Content', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.cms}/${contentId}/unpublish`, {}, auth.token);
@@ -157,7 +149,6 @@ export default function () {
       });
     }
 
-    // ===== READ: Get Banners =====
     group('READ: Get Banners', () => {
       const params = {
         position: 'HOME_TOP',
@@ -171,7 +162,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Create Banner =====
     group('CREATE: Create Banner', () => {
       const bannerData = generateBannerData(uniqueId);
 
@@ -183,7 +173,6 @@ export default function () {
     });
 
     if (contentId) {
-      // ===== DELETE: Delete Content =====
       group('DELETE: Delete Content', () => {
         const startTime = Date.now();
         const result = del(`${SERVICE_ENDPOINTS.cms}/${contentId}`, auth.token);

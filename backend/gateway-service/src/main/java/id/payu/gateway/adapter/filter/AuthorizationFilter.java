@@ -145,32 +145,26 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         try {
             this.jwtProcessor = new DefaultJWTProcessor<>();
 
-            // Build JWKS URI from auth-server-url
             String jwksUri = buildJwksUri();
             Log.infof("Initializing JWT processor with JWKS URI: %s", jwksUri);
 
-            // Load JWKSet from JWKS endpoint (with trust-all for dev HTTPS)
             this.jwksUri = jwksUri;
             JWKSet jwkSet = loadJwkSet(new URL(jwksUri));
             this.jwkSetRef.set(jwkSet);
             this.jwkSource = new ImmutableJWKSet<>(jwkSet);
 
-            // Configure key selector for RS256 algorithm
             JWSAlgorithm expectedJWSAlg = JWSAlgorithm.RS256;
             JWSKeySelector<SecurityContext> keySelector =
                 new JWSVerificationKeySelector<>(expectedJWSAlg, jwkSource);
             jwtProcessor.setJWSKeySelector(keySelector);
 
-            // Configure claims verifier for issuer and audience validation
             Set<String> requiredClaims = new HashSet<>(
                 Arrays.asList("sub", "exp", "iat")
             );
 
-            // Build expected claims with issuer and audience
             JWTClaimsSet.Builder expectedClaimsBuilder = new JWTClaimsSet.Builder()
                 .issuer(resolveJwtIssuer());
 
-            // Add audience validation if configured
             String jwtAudience = gatewayConfig.authorization().audience().orElse("");
             if (jwtAudience != null && !jwtAudience.isBlank()) {
                 expectedClaimsBuilder.audience(jwtAudience);
@@ -206,14 +200,12 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             ImmutableJWKSet<SecurityContext> newSource = new ImmutableJWKSet<>(newJwkSet);
             this.jwkSource = newSource;
 
-            // Re-initialize the processor with the new key source
             if (this.jwtProcessor != null) {
                 JWSAlgorithm expectedJWSAlg = JWSAlgorithm.RS256;
                 JWSKeySelector<SecurityContext> keySelector =
                     new JWSVerificationKeySelector<>(expectedJWSAlg, newSource);
                 this.jwtProcessor.setJWSKeySelector(keySelector);
             } else {
-                // Processor was null (initial load failed), try full init
                 initJwtProcessor();
             }
             Log.debug("JWKS refreshed successfully");
@@ -263,13 +255,11 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
         String path = requestContext.getUriInfo().getPath();
         
-        // Skip public endpoints
         if (isPublicEndpoint(path)) {
             Log.debugf("Skipping authorization for public endpoint: %s", path);
             return;
         }
 
-        // Get Authorization header
         String authHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
         Log.debugf("GW Auth Filter: path=%s, hasAuth=%s", path, authHeader != null);
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
@@ -280,7 +270,6 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
         String token = authHeader.substring(BEARER_PREFIX.length());
 
-        // Validate token and extract user context
         try {
             UserContext userContext = validateToken(token);
 
@@ -307,7 +296,6 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     private boolean isPublicEndpoint(String path) {
         if (path == null) return false;
         
-        // Normalize path: ensure leading slash and remove trailing slash for comparison
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
         if (normalizedPath.length() > 1 && normalizedPath.endsWith("/")) {
             normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
@@ -318,14 +306,12 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             return true;
         }
 
-        // Check exact matches
         for (String endpoint : EXACT_PUBLIC_ENDPOINTS) {
             if (normalizedPath.equals(endpoint)) {
                 return true;
             }
         }
 
-        // Check prefix/pattern matches
         for (String endpoint : PUBLIC_ENDPOINTS) {
             if (normalizedPath.startsWith(endpoint)) {
                 return true;
@@ -349,19 +335,16 @@ public class AuthorizationFilter implements ContainerRequestFilter {
      */
     private UserContext validateToken(String token) {
         try {
-            // Check if token is blacklisted (for logout scenarios)
             if (isTokenBlacklisted(token)) {
                 Log.warn("Token is blacklisted");
                 return null;
             }
 
-            // Check if JWT processor is initialized
             if (jwtProcessor == null) {
                 Log.error("JWT processor not initialized - cannot validate token");
                 return null;
             }
 
-            // Parse the JWT token
             SignedJWT signedJWT;
             try {
                 signedJWT = SignedJWT.parse(token);
@@ -370,7 +353,6 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 return null;
             }
 
-            // Validate token signature and claims
             JWTClaimsSet claimsSet;
             try {
                 claimsSet = jwtProcessor.process(signedJWT, null);
@@ -382,17 +364,14 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 return null;
             }
 
-            // Extract user context from claims
             String userId = claimsSet.getSubject();
             if (userId == null || userId.isBlank()) {
                 Log.warn("JWT missing subject claim");
                 return null;
             }
 
-            // Extract account_id from custom claim (Keycloak realm-specific)
             String accountId = extractAccountId(claimsSet);
 
-            // Extract roles from realm_access claim (Keycloak format)
             List<String> roles = extractRoles(claimsSet);
 
             Log.debugf("JWT validation successful for user: %s", userId);
@@ -445,7 +424,6 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         List<String> roles = new ArrayList<>();
 
         try {
-            // Keycloak format: realm_access.roles
             Object realmAccess = claimsSet.getClaim("realm_access");
             if (realmAccess instanceof Map) {
                 Map<String, Object> realmAccessMap = (Map<String, Object>) realmAccess;
@@ -459,7 +437,6 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 }
             }
 
-            // Alternative: resource_access claim for client-specific roles
             Object resourceAccess = claimsSet.getClaim("resource_access");
             if (resourceAccess instanceof Map) {
                 Map<String, Object> resourceAccessMap = (Map<String, Object>) resourceAccess;
@@ -478,7 +455,6 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 }
             }
 
-            // Fallback: custom roles claim
             if (roles.isEmpty()) {
                 Object rolesClaim = claimsSet.getClaim("roles");
                 if (rolesClaim instanceof List) {
@@ -494,7 +470,6 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             Log.warnf(e, "Error extracting roles from JWT: %s", e.getMessage());
         }
 
-        // Default role if none found
         if (roles.isEmpty()) {
             roles.add("ROLE_USER");
         }

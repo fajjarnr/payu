@@ -30,9 +30,6 @@ public class CacheInvalidationPublisher {
     private final OutboxService outboxService;
     private final CacheProperties properties;
 
-    /**
-     * Publish a cache invalidation event.
-     */
     public void invalidate(CacheInvalidationEvent event) {
         log.debug("Publishing cache invalidation event: cache={}, key={}, type={}",
             event.getCacheName(), event.getKey(), event.getType());
@@ -58,9 +55,6 @@ public class CacheInvalidationPublisher {
         );
     }
 
-    /**
-     * Invalidate a single cache key.
-     */
     public void invalidateKey(
             String cacheName,
             String key,
@@ -69,9 +63,6 @@ public class CacheInvalidationPublisher {
         invalidate(event);
     }
 
-    /**
-     * Invalidate cache keys matching a pattern.
-     */
     public void invalidatePattern(
             String cacheName,
             String pattern,
@@ -80,9 +71,6 @@ public class CacheInvalidationPublisher {
         invalidate(event);
     }
 
-    /**
-     * Invalidate all keys in a cache.
-     */
     public void invalidateAll(
             String cacheName,
             String service) {

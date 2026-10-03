@@ -44,8 +44,6 @@ public class SplitPaymentController extends BaseController {
         this.splitPaymentUseCase = splitPaymentUseCase;
     }
 
-    // ─── Rule Management ───────────────────────────────────────────
-
     @PostMapping("/rules")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER', 'SYSTEM')")
     @Idempotent(required = true)
@@ -111,8 +109,6 @@ public class SplitPaymentController extends BaseController {
         splitPaymentUseCase.deactivateRule(ruleId);
         return noContent();
     }
-
-    // ─── Execution ─────────────────────────────────────────────────
 
     @PostMapping("/execute")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER', 'SYSTEM')")

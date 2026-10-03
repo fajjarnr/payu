@@ -29,7 +29,6 @@ function Calendar({
   // compute min from disabled past-dates predicate (transfer page disables < today)
   const min = React.useMemo(() => {
     if (!disabled) return undefined
-    // probe: if today disabled? then no min; if yesterday disabled but today not, min = today
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const yesterday = new Date(today)

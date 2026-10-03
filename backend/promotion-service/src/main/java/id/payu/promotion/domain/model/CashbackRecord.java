@@ -22,7 +22,6 @@ public class CashbackRecord {
         this.status = CashbackStatus.PENDING;
     }
 
-    // Getters and setters
     public String getId() {
         return id;
     }

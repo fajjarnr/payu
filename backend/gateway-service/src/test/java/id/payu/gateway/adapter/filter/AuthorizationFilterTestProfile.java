@@ -20,7 +20,6 @@ public class AuthorizationFilterTestProfile implements QuarkusTestProfile {
     @Override
     public Map<String, String> getConfigOverrides() {
         return Map.of(
-            // Authorization configuration
             "gateway.authorization.enabled", "true",
             "gateway.authorization.jwt-secret", "test-jwt-secret-for-testing-only",
 

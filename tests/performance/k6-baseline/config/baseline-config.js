@@ -1,5 +1,3 @@
-// PayU Platform - K6 Baseline Performance Test Configuration
-// ============================================================
 // Configuration for establishing performance baselines per service
 
 export const BASE_URLS = {

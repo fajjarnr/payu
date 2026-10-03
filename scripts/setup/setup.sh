@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # PayU Development Environment Setup Script
-# ==========================================
 # Script ini menginstall semua dependencies yang dibutuhkan untuk development PayU.
 # Supports: Ubuntu/Debian, macOS, dan RHEL/Fedora
 #
@@ -24,21 +23,18 @@
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Versions
 JAVA_VERSION="21"
 NODE_VERSION="22"
 PYTHON_VERSION="3.12"
 MAVEN_VERSION="3.9.9"
 OC_VERSION="stable"
 
-# Detect OS
 detect_os() {
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         if [ -f /etc/os-release ]; then
@@ -54,7 +50,6 @@ detect_os() {
     echo -e "${BLUE}Detected OS: $OS${NC}"
 }
 
-# Print section header
 print_section() {
     echo ""
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
@@ -62,29 +57,21 @@ print_section() {
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 }
 
-# Print success message
 print_success() {
     echo -e "${GREEN}✓ $1${NC}"
 }
 
-# Print warning message
 print_warning() {
     echo -e "${YELLOW}⚠ $1${NC}"
 }
 
-# Print error message
 print_error() {
     echo -e "${RED}✗ $1${NC}"
 }
 
-# Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
-
-# ============================================================================
-# INSTALL FUNCTIONS
-# ============================================================================
 
 install_base_packages() {
     print_section "Installing Base Packages"
@@ -171,7 +158,6 @@ install_java() {
 
     case $OS in
         ubuntu|debian|pop)
-            # Add Adoptium repository
             wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo apt-key add -
             echo "deb https://packages.adoptium.net/artifactory/deb $(. /etc/os-release && echo $VERSION_CODENAME) main" | \
                 sudo tee /etc/apt/sources.list.d/adoptium.list
@@ -186,7 +172,6 @@ install_java() {
             ;;
     esac
 
-    # Set JAVA_HOME
     if [[ "$OS" != "macos" ]]; then
         JAVA_HOME_PATH=$(dirname $(dirname $(readlink -f $(which java))))
         if ! grep -q "JAVA_HOME" ~/.bashrc; then
@@ -247,7 +232,6 @@ install_python() {
             ;;
     esac
 
-    # Install pipx for global tools
     python3 -m pip install --user pipx
     python3 -m pipx ensurepath
 
@@ -267,7 +251,6 @@ install_nodejs() {
 
     case $OS in
         ubuntu|debian|pop)
-            # Install via NodeSource
             curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -
             sudo apt install -y nodejs
             ;;
@@ -280,7 +263,6 @@ install_nodejs() {
             ;;
     esac
 
-    # Install global npm packages
     sudo npm install -g pnpm yarn @pact-foundation/pact-cli @slidev/cli
 
     print_success "Node.js $NODE_VERSION installed"
@@ -333,7 +315,6 @@ install_db_clients() {
 install_additional_tools() {
     print_section "Installing Additional Development & Quality Tools"
 
-    # Install jq, httpie, pre-commit
     case $OS in
         ubuntu|debian|pop)
             sudo apt install -y jq httpie pre-commit
@@ -346,13 +327,11 @@ install_additional_tools() {
             ;;
     esac
 
-    # Install Maestro (Mobile Testing)
     if ! command_exists maestro; then
         echo "Installing Maestro..."
         curl -Ls "https://get.maestro.mobile.dev" | bash
     fi
 
-    # Install k6 (Performance Testing)
     if ! command_exists k6; then
         echo "Installing k6..."
         case $OS in
@@ -372,7 +351,6 @@ install_additional_tools() {
         esac
     fi
 
-    # Install Trivy (Security Scanning)
     if ! command_exists trivy; then
         echo "Installing Trivy..."
         case $OS in
@@ -391,7 +369,6 @@ install_additional_tools() {
         esac
     fi
 
-    # Install k9s (Kubernetes TUI) - optional
     if ! command_exists k9s; then
         echo "Installing k9s..."
         case $OS in
@@ -407,24 +384,17 @@ install_additional_tools() {
     print_success "Additional tools installed (Maestro, k6, Trivy, k9s)"
 }
 
-# ============================================================================
-# PROJECT SETUP
-# ============================================================================
-
 setup_project() {
     print_section "Setting Up PayU Project"
 
-    # Get project root directory
     PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     cd "$PROJECT_ROOT"
 
-    # Copy environment file if not exists
     if [ ! -f .env ] && [ -f .env.example ]; then
         cp .env.example .env
         print_success "Created .env from .env.example"
     fi
 
-    # Build Shared Starters (Mandatory for backend)
     print_section "Building Shared Backend Starters"
     if [ -d "backend/shared" ]; then
         make build-test-deps || {
@@ -441,7 +411,6 @@ setup_project() {
         }
     fi
 
-    # Build All Backend Microservices
     print_section "Building All Backend Microservices"
     find backend -maxdepth 2 -name "pom.xml" -not -path "*/shared/*" -not -path "*/simulators/*" | while read -r pom; do
         service_dir=$(dirname "$pom")
@@ -454,7 +423,6 @@ setup_project() {
         fi
     done
 
-    # Build Simulators
     print_section "Building Simulator Services"
     find backend/simulators -maxdepth 2 -name "pom.xml" | while read -r pom; do
         service_dir=$(dirname "$pom")
@@ -463,7 +431,6 @@ setup_project() {
         (cd "$service_dir" && mvn clean package -DskipTests -T 1C -q)
     done
 
-    # Install frontend dependencies
     if [ -d "frontend/web-app" ]; then
         echo "Installing web-app dependencies..."
         cd frontend/web-app
@@ -488,7 +455,6 @@ setup_project() {
         print_success "mobile dependencies installed"
     fi
 
-    # Install Python service dependencies
     for service in kyc-service analytics-service; do
         if [ -d "backend/$service" ]; then
             echo "Installing $service Python dependencies..."
@@ -506,14 +472,12 @@ setup_project() {
         fi
     done
 
-    # Setup Pre-commit hooks
     if command_exists pre-commit; then
         echo "Setting up pre-commit hooks..."
         pre-commit install
         print_success "Pre-commit hooks installed"
     fi
 
-    # Create symlink .claude -> .agents
     if [ -d ".agents" ]; then
         echo "Setting up AI agent configuration..."
         rm -f .claude
@@ -524,10 +488,6 @@ setup_project() {
     print_success "Project setup complete"
 }
 
-# ============================================================================
-# CHECK VERSIONS
-# ============================================================================
-
 check_versions() {
     print_section "Checking Installed Versions"
 
@@ -535,14 +495,12 @@ check_versions() {
     echo "Required Tools:"
     echo "---------------"
 
-    # Git
     if command_exists git; then
         print_success "Git: $(git --version)"
     else
         print_error "Git: Not installed"
     fi
 
-    # Podman
     if command_exists podman; then
         print_success "Podman: $(podman --version)"
         if command_exists podman-compose; then
@@ -552,7 +510,6 @@ check_versions() {
         print_error "Podman: Not installed"
     fi
 
-    # Java
     if command_exists java; then
         JAVA_VER=$(java -version 2>&1 | head -n 1)
         if echo "$JAVA_VER" | grep -q "21"; then
@@ -564,14 +521,12 @@ check_versions() {
         print_error "Java: Not installed"
     fi
 
-    # Maven
     if command_exists mvn; then
         print_success "Maven: $(mvn -version 2>&1 | head -n 1)"
     else
         print_error "Maven: Not installed"
     fi
 
-    # Python
     if command_exists python3; then
         PY_VER=$(python3 --version)
         if echo "$PY_VER" | grep -q "3.12\|3.13"; then
@@ -583,7 +538,6 @@ check_versions() {
         print_error "Python: Not installed"
     fi
 
-    # Node.js
     if command_exists node; then
         NODE_VER=$(node --version)
         if echo "$NODE_VER" | grep -q "v2[0-9]"; then
@@ -596,7 +550,6 @@ check_versions() {
         print_error "Node.js: Not installed"
     fi
 
-    # Optional tools
     echo ""
     echo "Optional Tools:"
     echo "---------------"
@@ -639,10 +592,6 @@ check_versions() {
 
     echo ""
 }
-
-# ============================================================================
-# MAIN
-# ============================================================================
 
 main() {
     echo ""
@@ -709,7 +658,6 @@ main() {
             echo ""
             ;;
         *)
-            # Full installation
             install_base_packages
             install_podman
             install_java

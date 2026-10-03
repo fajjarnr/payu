@@ -1,4 +1,3 @@
-# Environment-specific configuration for Production
 spring:
   cloud:
     vault:

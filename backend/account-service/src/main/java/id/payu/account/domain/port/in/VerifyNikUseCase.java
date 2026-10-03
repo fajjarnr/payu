@@ -13,9 +13,6 @@ public interface VerifyNikUseCase {
     /**
      * Verify NIK with Dukcapil simulator.
      * Returns verification status with minimal data for security.
-     *
-     * @param request the verification request containing NIK and personal data
-     * @return CompletableFuture with verification result
      */
     CompletableFuture<VerifyNikResponse> verifyNik(id.payu.account.interfaces.dto.VerifyNikRequest request);
 }

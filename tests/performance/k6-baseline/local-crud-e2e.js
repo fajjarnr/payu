@@ -1,5 +1,3 @@
-// PayU Local CRUD E2E Performance Test
-// ======================================
 // Verified against running local environment (podman compose)
 // All 15 services responding 200 through gateway
 import http from 'k6/http';
@@ -34,7 +32,6 @@ export const options = {
   }
 };
 
-// ===== AUTH =====
 function getToken() {
   const payload = JSON.stringify({
     username: TEST_USER.username,
@@ -52,7 +49,6 @@ function getToken() {
   } catch { return ''; }
 }
 
-// ===== READ ENDPOINTS =====
 function testRead(token, path) {
   const resp = http.get(`${GATEWAY}${path}`, {
     headers: { 'Authorization': `Bearer ${token}` },
@@ -62,7 +58,6 @@ function testRead(token, path) {
   return resp;
 }
 
-// ===== CREATE =====
 function testCreate(token, path, body) {
   const ik = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   const resp = http.post(`${GATEWAY}${path}`, JSON.stringify(body), {
@@ -77,12 +72,10 @@ function testCreate(token, path, body) {
   return resp;
 }
 
-// ===== MAIN TEST =====
 export default function () {
   const token = getToken();
   if (!token) { console.error('No token, skipping iteration'); return; }
 
-  // ===== READ: All 15 working services =====
   group('READ - All Services', () => {
     const reads = [
       '/api/v1/accounts',
@@ -109,7 +102,6 @@ export default function () {
     }
   });
 
-  // ===== CREATE: Transfer =====
   group('CREATE - Transfer', () => {
     const r = testCreate(token, '/api/v1/transactions/transfer', {
       senderAccountId: ACCT_ID,
@@ -121,7 +113,6 @@ export default function () {
     check(r, { 'CREATE transfer': (res) => res.status < 500 });
   });
 
-  // ===== CREATE: Dispute =====
   group('CREATE - Dispute', () => {
     const r = testCreate(token, '/api/v1/disputes', {
       transactionId: '932db19b-704e-4649-a82c-d69ecf0956ff',
@@ -134,7 +125,6 @@ export default function () {
   sleep(1);
 }
 
-// ===== SETUP: Verify connectivity =====
 export function setup() {
   console.log('=== PayU Local CRUD E2E ===');
   console.log(`Gateway: ${GATEWAY}`);
@@ -145,7 +135,6 @@ export function setup() {
   return { healthy: health.status === 200 };
 }
 
-// ===== TEARDOWN =====
 export function teardown(data) {
   console.log(`Test complete. Gateway healthy: ${data.healthy}`);
 }

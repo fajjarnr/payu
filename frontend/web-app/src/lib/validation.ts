@@ -16,7 +16,6 @@ export function validatePhoneNumber(phone: string | null | undefined): {
     return { isValid: false, error: 'Nomor telepon wajib diisi' };
   }
 
-  // Remove all non-numeric characters
   const cleaned = phone.replace(/\D/g, '');
 
   // Check length: Indonesian mobile numbers are 10-13 digits total
@@ -24,7 +23,6 @@ export function validatePhoneNumber(phone: string | null | undefined): {
     return { isValid: false, error: 'Nomor telepon harus 10-13 digit' };
   }
 
-  // Check if it starts with valid Indonesian prefix
   const hasValidPrefix =
     cleaned.startsWith('08') ||
     cleaned.startsWith('628') ||
@@ -48,9 +46,6 @@ export function validatePhoneNumber(phone: string | null | undefined): {
   return { isValid: true, normalized };
 }
 
-/**
- * Email validation with comprehensive checks
- */
 export function validateEmail(email: string | null | undefined): {
   isValid: boolean;
   error?: string;
@@ -63,24 +58,20 @@ export function validateEmail(email: string | null | undefined): {
 
   const trimmed = email.trim();
 
-  // Basic format check
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(trimmed)) {
     return { isValid: false, error: 'Format email tidak valid' };
   }
 
-  // Check for consecutive dots
   if (/\.\./.test(trimmed)) {
     return { isValid: false, error: 'Email tidak boleh mengandung titik beruntun' };
   }
 
-  // Check local part length (before @)
   const localPart = trimmed.split('@')[0];
   if (localPart.length > 64) {
     return { isValid: false, error: 'Bagian sebelum @ terlalu panjang (maksimal 64 karakter)' };
   }
 
-  // Check total length
   if (trimmed.length > 254) {
     return { isValid: false, error: 'Email terlalu panjang (maksimal 254 karakter)' };
   }
@@ -122,22 +113,18 @@ export function validateNIK(nik: string | null | undefined): {
     return { isValid: false, error: 'NIK wajib diisi' };
   }
 
-  // Remove non-numeric characters
   const cleaned = nik.replace(/\D/g, '');
 
-  // Check length
   if (cleaned.length !== 16) {
     return { isValid: false, error: 'NIK harus 16 digit' };
   }
 
-  // Check province code (first 2 digits)
   const provinceCode = parseInt(cleaned.substring(0, 2));
   if (provinceCode < 1 || provinceCode > 94) {
     // Special codes like 91-94 for foreign citizens
     return { isValid: false, error: 'Kode provinsi tidak valid' };
   }
 
-  // Check if not all same digits (basic validation)
   if (/^(\d)\1{15}$/.test(cleaned)) {
     return { isValid: false, error: 'NIK tidak valid' };
   }
@@ -148,9 +135,6 @@ export function validateNIK(nik: string | null | undefined): {
   return { isValid: true, masked };
 }
 
-/**
- * Bank account number validation (Indonesian format)
- */
 export function validateAccountNumber(account: string | null | undefined): {
   isValid: boolean;
   error?: string;
@@ -160,7 +144,6 @@ export function validateAccountNumber(account: string | null | undefined): {
     return { isValid: false, error: 'Nomor rekening wajib diisi' };
   }
 
-  // Remove spaces and dashes (common formatting)
   const cleaned = account.replace(/[\s-]/g, '');
 
   // Check length (Indonesian accounts are typically 10-16 digits)
@@ -168,12 +151,10 @@ export function validateAccountNumber(account: string | null | undefined): {
     return { isValid: false, error: 'Nomor rekening harus 10-16 digit' };
   }
 
-  // Check if all digits
   if (!/^\d+$/.test(cleaned)) {
     return { isValid: false, error: 'Nomor rekening hanya boleh berisi angka' };
   }
 
-  // Check if not all same digits
   if (/^(\d)\1{9,}$/.test(cleaned)) {
     return { isValid: false, error: 'Nomor rekening tidak valid' };
   }
@@ -184,9 +165,6 @@ export function validateAccountNumber(account: string | null | undefined): {
   return { isValid: true, masked };
 }
 
-/**
- * Indonesian postal code validation
- */
 export function validatePostalCode(code: string | null | undefined): {
   isValid: boolean;
   error?: string;
@@ -202,7 +180,6 @@ export function validatePostalCode(code: string | null | undefined): {
     return { isValid: false, error: 'Kode pos harus 5 digit' };
   }
 
-  // Valid range (roughly)
   const codeNum = parseInt(cleaned);
   if (codeNum < 10000 || codeNum > 99999) {
     return { isValid: false, error: 'Kode pos tidak valid' };
@@ -224,7 +201,6 @@ export function validateNPWP(npwp: string | null | undefined): {
     return { isValid: false, error: 'NPWP wajib diisi' };
   }
 
-  // Remove formatting
   const cleaned = npwp.replace(/[\.\-]/g, '');
 
   // NPWP is 15 digits
@@ -232,7 +208,6 @@ export function validateNPWP(npwp: string | null | undefined): {
     return { isValid: false, error: 'NPWP harus 15 digit' };
   }
 
-  // Check if all digits
   if (!/^\d+$/.test(cleaned)) {
     return { isValid: false, error: 'NPWP hanya boleh berisi angka' };
   }
@@ -280,7 +255,6 @@ export function validateCreditCard(cardNumber: string | null | undefined): {
     return { isValid: false, error: 'Nomor kartu tidak valid' };
   }
 
-  // Check if all digits
   if (!/^\d+$/.test(cleaned)) {
     return { isValid: false, error: 'Nomor kartu hanya boleh berisi angka' };
   }
@@ -307,7 +281,6 @@ export function validateCreditCard(cardNumber: string | null | undefined): {
     return { isValid: false, error: 'Nomor kartu tidak valid' };
   }
 
-  // Detect card type
   let type = 'Unknown';
   if (/^4/.test(cleaned)) {
     type = 'Visa';
@@ -326,9 +299,6 @@ export function validateCreditCard(cardNumber: string | null | undefined): {
   return { isValid: true, type, masked };
 }
 
-/**
- * CVV/CVC validation
- */
 export function validateCVV(cvv: string | null | undefined, cardType?: string): {
   isValid: boolean;
   error?: string;
@@ -349,9 +319,6 @@ export function validateCVV(cvv: string | null | undefined, cardType?: string): 
   return { isValid: true };
 }
 
-/**
- * Password strength validation
- */
 export function validatePassword(password: string | null | undefined): {
   isValid: boolean;
   strength: 'weak' | 'medium' | 'strong';
@@ -413,9 +380,6 @@ export function validatePassword(password: string | null | undefined): {
 }
 
 
-/**
- * Name validation (Indonesian context)
- */
 export function validateName(name: string | null | undefined): {
   isValid: boolean;
   error?: string;
@@ -435,12 +399,10 @@ export function validateName(name: string | null | undefined): {
     return { isValid: false, error: 'Nama terlalu panjang (maksimal 100 karakter)' };
   }
 
-  // Check for valid characters (letters, spaces, dots, commas, hyphens, Unicode letters)
   if (!/^[\p{L}\s.,\-']+$/u.test(trimmed)) {
     return { isValid: false, error: 'Nama hanya boleh mengandung huruf dan karakter spesial tertentu' };
   }
 
-  // Check for multiple consecutive spaces
   if (/\s{2,}/.test(trimmed)) {
     return { isValid: false, error: 'Nama tidak boleh mengandung spasi beruntun' };
   }
@@ -454,9 +416,6 @@ export function validateName(name: string | null | undefined): {
   return { isValid: true, normalized };
 }
 
-/**
- * OTP validation
- */
 export function validateOTP(otp: string | null | undefined, length: number = 6): {
   isValid: boolean;
   error?: string;

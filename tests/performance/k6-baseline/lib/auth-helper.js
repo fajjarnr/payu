@@ -1,14 +1,7 @@
-// Authentication Helper for K6 Baseline Tests
-// ===========================================
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { BASE_URLS, TEST_USERS, CHECKS } from '../config/baseline-config.js';
 
-/**
- * Login and get access token
- * @param {number} userIndex - Index of test user
- * @returns {Object} - { token, refreshToken, userId }
- */
 export function login(userIndex = 0) {
   const user = TEST_USERS[userIndex % TEST_USERS.length];
 
@@ -59,9 +52,6 @@ export function login(userIndex = 0) {
 
 /**
  * Verify MFA (simplified - returns mock token for testing)
- * @param {string} tempToken - Temporary token from login
- * @param {number} userIndex - User index
- * @returns {Object} - Auth tokens
  */
 export function verifyMFA(tempToken, userIndex = 0) {
   // For baseline testing, we use a mock approach
@@ -96,11 +86,6 @@ export function verifyMFA(tempToken, userIndex = 0) {
   };
 }
 
-/**
- * Register a new test user
- * @param {string} uniqueId - Unique identifier for the user
- * @returns {Object} - Registration result with userId
- */
 export function registerUser(uniqueId) {
   const payload = {
     username: `testuser_${uniqueId}`,
@@ -142,11 +127,6 @@ export function registerUser(uniqueId) {
   }
 }
 
-/**
- * Get auth headers with Bearer token
- * @param {string} token - Access token
- * @returns {Object} - Headers object
- */
 export function getAuthHeaders(token) {
   const randomIp = `13.104.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   return {
@@ -156,11 +136,6 @@ export function getAuthHeaders(token) {
   };
 }
 
-/**
- * Get profile information
- * @param {string} token - Access token
- * @returns {Object} - Profile data
- */
 export function getProfile(token) {
   const response = http.get(
     `${BASE_URLS.gateway}/api/v1/accounts/profile`,
@@ -178,11 +153,6 @@ export function getProfile(token) {
   }
 }
 
-/**
- * Refresh access token
- * @param {string} refreshToken - Refresh token
- * @returns {Object} - New tokens
- */
 export function refreshToken(refreshToken) {
   const randomIp = `13.104.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   const response = http.post(
@@ -206,10 +176,6 @@ export function refreshToken(refreshToken) {
   }
 }
 
-/**
- * Logout user
- * @param {string} token - Access token
- */
 export function logout(token) {
   const response = http.post(
     `${BASE_URLS.gateway}/api/v1/auth/logout`,

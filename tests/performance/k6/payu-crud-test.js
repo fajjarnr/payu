@@ -100,7 +100,6 @@ export default function (data) {
     'Content-Type': 'application/json',
   };
 
-  // === BACKEND: Health with auth context ===
   const healthRes = http.get(`${GATEWAY_URL}/q/health`, {
     headers: authHeaders,
     tags: { endpoint: 'gateway-health' },
@@ -113,7 +112,6 @@ export default function (data) {
 
   sleep(0.3);
 
-  // === BACKEND: GET profile (READ) ===
   const profileRes = http.get(`${GATEWAY_URL}/api/v1/auth/validate`, {
     headers: authHeaders,
     tags: { endpoint: 'auth-profile' },
@@ -126,7 +124,6 @@ export default function (data) {
 
   sleep(0.3);
 
-  // === BACKEND: GET wallet balance (READ) ===
   const walletRes = http.get(`${GATEWAY_URL}/api/v1/wallets`, {
     headers: authHeaders,
     tags: { endpoint: 'wallet-balance' },
@@ -139,7 +136,6 @@ export default function (data) {
 
   sleep(0.3);
 
-  // === BACKEND: GET pockets (READ) ===
   const pocketsRes = http.get(`${GATEWAY_URL}/api/v1/wallets/pockets`, {
     headers: authHeaders,
     tags: { endpoint: 'pockets-list' },
@@ -152,7 +148,6 @@ export default function (data) {
 
   sleep(0.3);
 
-  // === BACKEND: Simulate CREATE (POST to accounts) ===
   const createPayload = JSON.stringify({
     email: `user-${randomString(8)}@payu.test`,
     phoneNumber: `+628${randomIntBetween(100000000, 999999999)}`,
@@ -173,7 +168,6 @@ export default function (data) {
 
   sleep(0.5);
 
-  // === FRONTEND: Web-app home page ===
   const webappRes = http.get(WEBAPP_URL);
 
   check(webappRes, {

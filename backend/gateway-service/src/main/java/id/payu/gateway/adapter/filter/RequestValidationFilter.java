@@ -52,27 +52,22 @@ public class RequestValidationFilter implements ContainerRequestFilter {
 
     static {
         Map<String, String> map = new java.util.LinkedHashMap<>();
-        // Auth endpoints
         map.put("/api/v1/auth/login", "auth-login.json");
         map.put("/api/v1/auth/register", "auth-register.json");
         map.put("/api/v1/auth/refresh", "auth-refresh.json");
 
-        // Account endpoints
         map.put("/api/v1/accounts/register", "accounts-register.json");
         map.put("/api/v1/accounts", "accounts-create.json");
 
-        // Transaction endpoints
         map.put("/api/v1/transactions/transfer", "transactions-transfer.json");
         map.put("/api/v1/transactions", "transactions-create.json");
 
-        // Payment endpoints
         map.put("/api/v1/payments", "payments-create.json");
         // Virtual Account endpoints (must be more specific than /api/v1/payments
         // to win longest-prefix match in the filter's path resolution)
         map.put("/api/v1/payments/va", "payments-va-create.json");
         map.put("/api/v1/payments/va/{vaId}", "payments-va-create.json");
 
-        // Partner endpoints
         map.put("/api/v1/partners", "partners-create.json");
 
         PATH_SCHEMA_MAP = Map.copyOf(map);
@@ -117,7 +112,6 @@ public class RequestValidationFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Check request size
         long contentLength = requestContext.getLength();
         if (contentLength > config.validation().maxRequestSize()) {
             Log.warnf("Request size exceeded: %d bytes (max: %d)", contentLength, config.validation().maxRequestSize());
@@ -133,7 +127,6 @@ public class RequestValidationFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Perform schema validation if enabled
         if (config.validation().schemaValidation()) {
             validateSchema(requestContext, path);
         }
@@ -141,7 +134,6 @@ public class RequestValidationFilter implements ContainerRequestFilter {
 
     private void validateSchema(ContainerRequestContext requestContext, String path) {
         try {
-            // Read request body
             byte[] bodyBytes = requestContext.getEntityStream().readAllBytes();
             String requestBody = new String(bodyBytes);
 
@@ -152,7 +144,6 @@ public class RequestValidationFilter implements ContainerRequestFilter {
                 return;
             }
 
-            // Parse JSON first
             JsonNode jsonNode;
             try {
                 jsonNode = objectMapper.readTree(requestBody);
@@ -172,7 +163,6 @@ public class RequestValidationFilter implements ContainerRequestFilter {
                 return;
             }
 
-            // Look up and validate against schema
             JsonSchema schema = getSchemaForPath(path);
             if (schema != null) {
                 Set<ValidationMessage> validationResult = schema.validate(jsonNode);
@@ -228,7 +218,6 @@ public class RequestValidationFilter implements ContainerRequestFilter {
      * Uses longest prefix match from PATH_SCHEMA_MAP, then loads from classpath cache.
      */
     JsonSchema getSchemaForPath(String path) {
-        // Find best matching schema path (longest prefix match)
         String bestMatch = null;
         String bestSchemaFile = null;
 

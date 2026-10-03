@@ -57,7 +57,6 @@ export default function SpendingInsights({
       aria-labelledby="spending-insights-title"
       className={cn("relative overflow-hidden h-full flex flex-col group", className)}
     >
-      {/* Decorative background */}
       <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-6 shrink-0 z-10">
@@ -163,7 +162,6 @@ export default function SpendingInsights({
               >
                 <AccordionTrigger className="hover:no-underline px-4 py-4 group/trigger">
                   <div className="flex items-center gap-3 w-full text-left">
-                    {/* Icon */}
                     <div
                       className={cn(
                         'h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover/trigger:scale-110',
@@ -173,7 +171,6 @@ export default function SpendingInsights({
                       <Icon className="h-5 w-5 text-white" aria-hidden="true" />
                     </div>
 
-                    {/* Name and Progress */}
                     <div className="flex-1 min-w-0 pr-4">
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-xs font-bold text-foreground uppercase tracking-tight">{category.name}</p>
@@ -181,7 +178,6 @@ export default function SpendingInsights({
                           {currency} {category.amount.toLocaleString('id-ID')}
                         </p>
                       </div>
-                      {/* Progress bar */}
                       <Progress 
                         value={category.percentage} 
                         className="h-1.5" 
@@ -190,7 +186,6 @@ export default function SpendingInsights({
                       />
                     </div>
 
-                    {/* Trend */}
                     <div
                       className={cn(
                         'flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold flex-shrink-0 mr-4',

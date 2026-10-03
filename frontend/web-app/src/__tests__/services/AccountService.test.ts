@@ -18,8 +18,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 /**
- * SECURITY NOTICE: Test Updates
- * ================================
+ * Security notice: test updates
  * These tests have been updated to reflect the security fix:
  * - User data is NO LONGER stored in localStorage
  * - User data should be stored via auth store (Zustand)
@@ -69,7 +68,7 @@ describe('AccountService', () => {
 
       expect(api.post).toHaveBeenCalledWith('/accounts/register', mockRequest);
       expect(result).toEqual(mockUser);
-      // SECURITY: User data is NOT stored in localStorage
+      // Security: User data is NOT stored in localStorage
       // It should be stored via auth store by the calling component
     });
 
@@ -100,7 +99,7 @@ describe('AccountService', () => {
 
       expect(api.post).toHaveBeenCalledWith('/accounts/register', mockRequest);
       expect(result).toEqual(mockUser);
-      // SECURITY: User data is NOT stored in localStorage
+      // Security: User data is NOT stored in localStorage
     });
 
     it('should handle API errors during registration', async () => {
@@ -134,7 +133,7 @@ describe('AccountService', () => {
       const result = await service.registerUser(mockRequest);
 
       expect(result).toEqual(invalidUser);
-      // SECURITY: Service does not store data in localStorage
+      // Security: Service does not store data in localStorage
     });
   });
 
@@ -217,8 +216,7 @@ describe('AccountService', () => {
   });
 
   // BUG-FE-025: getUserFromStorage() and getCurrentUser() tests removed —
-  // methods were deprecated and removed from AccountService.
-  // Use useAuthStore hook instead.
+  // methods were deprecated; use useAuthStore hook instead.
 
   describe('KYC Status handling', () => {
     it('should handle all KYC status types', async () => {

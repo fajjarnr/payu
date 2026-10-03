@@ -31,7 +31,6 @@ describe('ADR-0047 strict branded types', () => {
     expect(id).toBe('550e8400-e29b-41d4-a716-446655440000');
     // @ts-expect-error — plain string not assignable to branded AccountId
     const _plain: import('@/types').AccountId = 'plain';
-    // bypass via helper
     const ok: import('@/types').AccountId = asAccountId('plain');
     expect(ok).toBe('plain');
   });

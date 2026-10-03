@@ -1,8 +1,3 @@
-/**
- * E2E Test Utilities
- *
- * Common helper functions for Playwright E2E tests
- */
 
 import { Page, Locator } from '@playwright/test';
 
@@ -19,35 +14,23 @@ export async function waitForPageStable(page: Page, timeout = 10000): Promise<vo
   await page.waitForTimeout(500);
 }
 
-/**
- * Wait for animations to complete
- */
 export async function waitForAnimations(page: Page): Promise<void> {
   await page.waitForTimeout(300);
 }
 
-/**
- * Safe tab switching with proper wait
- */
 export async function switchTab(page: Page, tabSelector: string): Promise<void> {
   await page.click(tabSelector);
   await waitForAnimations(page);
   await page.waitForTimeout(200);
 }
 
-/**
- * Format currency for comparison (handles various formats)
- */
 export function normalizeCurrency(text: string): string {
   return text
-    .replace(/\s+/g, '') // Remove all spaces
-    .replace(/[Rp\$]/g, '') // Remove currency symbols
-    .replace(/[,.]/g, match => match === '.' ? '' : '.'); // Normalize separators
+    .replace(/\s+/g, '')
+    .replace(/[Rp\$]/g, '')
+    .replace(/[,.]/g, match => match === '.' ? '' : '.');
 }
 
-/**
- * Check if element is visible and has text
- */
 export async function isTextVisible(page: Page, text: string): Promise<boolean> {
   try {
     const element = page.getByText(text);
@@ -58,26 +41,17 @@ export async function isTextVisible(page: Page, text: string): Promise<boolean> 
   }
 }
 
-/**
- * Get currency amount from text
- */
 export function extractCurrencyAmount(text: string): number {
   const cleaned = text.replace(/[Rp\s]/g, '').replace(/\./g, '').replace(/,/g, '.');
   return parseFloat(cleaned) || 0;
 }
 
-/**
- * Wait for modal/dialog to be visible
- */
 export async function waitForModal(page: Page, selector = '[role="dialog"]'): Promise<Locator> {
   const modal = page.locator(selector);
   await modal.waitFor({ state: 'visible', timeout: 5000 });
   return modal;
 }
 
-/**
- * Fill form with data
- */
 export async function fillForm(page: Page, data: Record<string, string>): Promise<void> {
   for (const [field, value] of Object.entries(data)) {
     const input = page.getByPlaceholder(field).or(page.getByLabel(field)).or(page.locator(`[name="${field}"]`));
@@ -86,9 +60,6 @@ export async function fillForm(page: Page, data: Record<string, string>): Promis
   }
 }
 
-/**
- * Safe click with retry
- */
 export async function safeClick(page: Page, selector: string, maxRetries = 3): Promise<void> {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -103,9 +74,6 @@ export async function safeClick(page: Page, selector: string, maxRetries = 3): P
   }
 }
 
-/**
- * Login helper - performs login with given credentials
- */
 export async function login(page: Page, username: string, password: string): Promise<void> {
   await page.goto('/login');
   await waitForPageStable(page);
@@ -114,49 +82,29 @@ export async function login(page: Page, username: string, password: string): Pro
   await page.fill('input[placeholder="••••••••"]', password);
   await page.click('button[type="submit"]');
 
-  // Wait for navigation or error
   await page.waitForTimeout(1000);
 }
 
-/**
- * Navigate to page with authentication
- * (Note: This would need actual auth implementation)
- */
 export async function navigateAsAuth(page: Page, path: string): Promise<void> {
-  // For now, just navigate - auth would be handled via API or session storage
   await page.goto(path);
   await waitForPageStable(page);
 }
 
-/**
- * Check for accessibility violations (for non-critical issues)
- */
 export interface AccessibilityViolation {
   id: string;
   impact: string;
   description: string;
 }
 
-/**
- * Raw accessibility violation from axe-core
- */
 interface RawAccessibilityViolation {
   id: string;
   impact?: string | null;
   description?: string;
 }
 
-/**
- * Filter out minor accessibility issues that are acceptable in test environment
- */
 export function filterMinorA11yIssues(violations: RawAccessibilityViolation[]): AccessibilityViolation[] {
-  // Filter out known design-debt a11y issues that are not functional blockers:
-  // - color-contrast: design-related, tracked as design debt
-  // - region: landmark issues from BFF fallback empty states
-  // - button-name: icon-only buttons (e.g. mobile menu, close) without aria-label — design debt
-  // - svg-img-alt: decorative SVGs without alt text — design debt
-  // - nested-interactive: card components with nested focusable elements — design debt
-  // - scrollable-region-focusable: scrollable dashboard containers without tabindex — design debt
+  // Excluded design-debt rules (not functional blockers): color-contrast, region,
+  // button-name, svg-img-alt, nested-interactive, scrollable-region-focusable.
   const designDebtRules = ['color-contrast', 'region', 'button-name', 'svg-img-alt', 'nested-interactive', 'scrollable-region-focusable'];
   return violations
     .filter(v => !designDebtRules.includes(v.id))
@@ -167,23 +115,14 @@ export function filterMinorA11yIssues(violations: RawAccessibilityViolation[]): 
     }));
 }
 
-/**
- * Mobile viewport helper
- */
 export async function setMobileViewport(page: Page): Promise<void> {
   await page.setViewportSize({ width: 375, height: 667 });
 }
 
-/**
- * Tablet viewport helper
- */
 export async function setTabletViewport(page: Page): Promise<void> {
   await page.setViewportSize({ width: 768, height: 1024 });
 }
 
-/**
- * Desktop viewport helper
- */
 export async function setDesktopViewport(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1920, height: 1080 });
 }

@@ -36,13 +36,11 @@ export default function LoginScreen() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
-  // Check biometric availability on mount
   React.useEffect(() => {
     checkBiometricAvailability();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // OTP countdown timer with cleanup
   React.useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (countdown > 0) {
@@ -103,7 +101,6 @@ export default function LoginScreen() {
     if (!validatePhoneForm()) return;
 
     try {
-      // Request OTP from API
       // await authService.requestOTP(phoneNumber);
 
       setCountdown(60); // 60 second countdown
@@ -117,7 +114,6 @@ export default function LoginScreen() {
     if (!validateOtpForm()) return;
 
     try {
-      // Verify OTP and check if user has password
       // const response = await authService.verifyOTP(phoneNumber, otp);
 
       // For demo, proceed to password or biometric
@@ -149,7 +145,6 @@ export default function LoginScreen() {
   const handleBiometricLogin = async () => {
     const success = await authenticate('Authenticate to continue');
     if (success) {
-      // Proceed with biometric login
       // await authService.biometricLogin(phoneNumber);
       router.replace('/(tabs)');
     }

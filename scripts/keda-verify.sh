@@ -25,7 +25,6 @@ if command -v kcat >/dev/null 2>&1; then
 else
   echo "kcat not installed, skipping produce test (manual: kcat -L -b payu-kafka:9092; produce 1000)"
 fi
-# Check HPA scaling after 30s
 sleep 5
 oc get hpa -n "$NS" --no-headers 2>&1 | tee -a "$REPORT_DIR/hpa-after.log"
 echo "[keda-verify] 5) logs check 0 WARN/ERROR"

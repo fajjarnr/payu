@@ -20,7 +20,6 @@ class TestOCRService:
         """Test successful KTP data extraction"""
         sample_image = b"fake_image_data"
 
-        # Mock cv2.imdecode to return a valid image array
         mock_img = np.zeros((100, 100, 3), dtype=np.uint8)
 
         # Mock PaddleOCR result with proper structure - including all required fields
@@ -68,7 +67,6 @@ class TestLivenessService:
     @pytest.mark.asyncio
     async def test_check_liveness_success(self, liveness_service):
         """Test successful liveness check"""
-        # Mock cv2.imdecode to return a valid image array
         mock_img = np.zeros((100, 100, 3), dtype=np.uint8)
 
         with patch("cv2.imdecode", return_value=mock_img):
@@ -96,13 +94,11 @@ class TestFaceService:
         ktp_data = b"fake_ktp"
         selfie_data = b"fake_selfie"
 
-        # Mock cv2.imdecode to return valid image arrays
         mock_img = np.zeros((100, 100, 3), dtype=np.uint8)
 
         with patch("cv2.imdecode", side_effect=[mock_img, mock_img]):
             result = await face_service.match_face(ktp_data, selfie_data)
 
-            # Test that the service returns a result
             assert result is not None
             assert hasattr(result, "ktp_face_found")
             assert hasattr(result, "selfie_face_found")

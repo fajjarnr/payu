@@ -6,7 +6,6 @@
 
 set -euo pipefail
 
-# Configuration
 CONTAINER_NAME="payu-kafka"
 BOOTSTRAP_SERVER="localhost:9092"
 BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
@@ -17,12 +16,10 @@ LOG_FILE="${BACKUP_ROOT}/logs/kafka_backup_restore_${TIMESTAMP}.log"
 # Default topics to backup (empty = backup all topics)
 DEFAULT_TOPICS=""
 
-# Create backup directories if they don't exist
 mkdir -p "${BACKUP_DIR}/topics"
 mkdir -p "${BACKUP_DIR}/config"
 mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
-# Logging function
 log() {
     local level="$1"
     shift
@@ -31,7 +28,6 @@ log() {
     echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}" >&2
 }
 
-# Check if container is running
 check_container() {
     log "INFO" "Checking if Kafka container is running..."
     if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
@@ -42,7 +38,6 @@ check_container() {
     return 0
 }
 
-# Test Kafka connectivity
 test_connection() {
     log "INFO" "Testing Kafka connectivity..."
 
@@ -55,7 +50,6 @@ test_connection() {
     return 0
 }
 
-# List all topics
 list_topics() {
     log "INFO" "Listing all topics..."
 
@@ -71,7 +65,6 @@ list_topics() {
     echo "${topics}"
 }
 
-# Get topic metadata
 get_topic_metadata() {
     local topic="$1"
 
@@ -81,7 +74,6 @@ get_topic_metadata() {
         --topic "${topic}" 2>/dev/null
 }
 
-# Backup topic data to file
 backup_topic_data() {
     local topic="$1"
     local backup_file="${BACKUP_DIR}/topics/${topic}_${TIMESTAMP}.json"
@@ -89,10 +81,8 @@ backup_topic_data() {
 
     log "INFO" "Backing up topic '${topic}' to: ${backup_file}"
 
-    # Create temp file for output
     local temp_file=$(mktemp)
 
-    # Export messages from topic
     docker exec "${CONTAINER_NAME}" kafka-console-consumer \
         --bootstrap-server "${BOOTSTRAP_SERVER}" \
         --topic "${topic}" \
@@ -102,12 +92,10 @@ backup_topic_data() {
         --property print.value=true \
         > "${temp_file}" 2>/dev/null
 
-    # Check if any messages were exported
     if [[ ! -s "${temp_file}" ]]; then
         log "INFO" "Topic '${topic}' is empty, creating empty backup"
         echo "[]" > "${backup_file}"
     else
-        # Convert to JSON format
         local message_count=0
         echo "[" > "${backup_file}"
 
@@ -129,10 +117,8 @@ backup_topic_data() {
         log "INFO" "Backed up ${message_count} messages from topic '${topic}'"
     fi
 
-    # Clean up
     rm -f "${temp_file}"
 
-    # Compress backup
     gzip "${backup_file}"
     local file_size=$(du -h "${backup_file}.gz" | cut -f1)
     log "INFO" "Successfully backed up topic '${topic}' to ${backup_file}.gz (${file_size})"
@@ -140,7 +126,6 @@ backup_topic_data() {
     return 0
 }
 
-# Backup topic configuration
 backup_topic_config() {
     local topic="$1"
     local config_file="${BACKUP_DIR}/config/${topic}_${TIMESTAMP}.conf"
@@ -155,12 +140,10 @@ backup_topic_config() {
     return 0
 }
 
-# Backup all topics
 backup_all_topics() {
     local topics=("$@")
 
     if [[ ${#topics[@]} -eq 0 ]]; then
-        # Get all topics except internal ones
         topics=($(list_topics))
     fi
 
@@ -191,7 +174,6 @@ backup_all_topics() {
     fi
 }
 
-# Restore topic data from file
 restore_topic_data() {
     local topic="$1"
     local backup_file="$2"
@@ -218,7 +200,6 @@ restore_topic_data() {
         fi
     fi
 
-    # Extract data from backup file
     local temp_file=$(mktemp)
 
     if [[ "${backup_file}" == *.gz ]]; then
@@ -227,10 +208,8 @@ restore_topic_data() {
         cp "${backup_file}" "${temp_file}"
     fi
 
-    # Parse JSON and produce messages to topic
     local message_count=0
 
-    # Check if backup is empty
     local data=$(cat "${temp_file}" | jq -r '.[]' 2>/dev/null)
 
     if [[ -z "${data}" || "${data}" == "[]" ]]; then
@@ -239,7 +218,6 @@ restore_topic_data() {
         return 0
     fi
 
-    # Restore messages
     docker exec -i "${CONTAINER_NAME}" kafka-console-producer \
         --bootstrap-server "${BOOTSTRAP_SERVER}" \
         --topic "${topic}" \
@@ -256,7 +234,6 @@ restore_topic_data() {
     return 0
 }
 
-# Restore topic configuration
 restore_topic_config() {
     local config_file="$1"
 
@@ -267,7 +244,6 @@ restore_topic_config() {
         return 1
     fi
 
-    # Extract topic name and recreate with config
     local topic=$(grep "^Topic:" "${config_file}" | awk '{print $2}')
     local partitions=$(grep "PartitionCount:" "${config_file}" | awk '{print $2}')
     local replication=$(grep "ReplicationFactor:" "${config_file}" | awk '{print $2}')
@@ -277,7 +253,6 @@ restore_topic_config() {
         return 1
     fi
 
-    # Delete existing topic if it exists
     docker exec "${CONTAINER_NAME}" kafka-topics \
         --bootstrap-server "${BOOTSTRAP_SERVER}" \
         --delete \
@@ -285,7 +260,6 @@ restore_topic_config() {
 
     sleep 2
 
-    # Recreate topic with original configuration
     docker exec "${CONTAINER_NAME}" kafka-topics \
         --bootstrap-server "${BOOTSTRAP_SERVER}" \
         --create \
@@ -297,22 +271,18 @@ restore_topic_config() {
     return 0
 }
 
-# Restore all topics
 restore_all_topics() {
     local backup_date="${1:-}"
 
     log "INFO" "Restoring all topics..."
 
-    # Find backup files for the specified date or latest
     local backup_files=()
 
     if [[ -n "${backup_date}" ]]; then
         backup_files=($(find "${BACKUP_DIR}/topics" -name "*_${backup_date}*.json.gz"))
     else
-        # Use latest backup
         local latest=$(ls -t ${BACKUP_DIR}/topics/*.json.gz 2>/dev/null | head -1)
         if [[ -n "${latest}" ]]; then
-            # Extract date pattern from latest file
             backup_date=$(echo "${latest}" | grep -oP '_\d{8}_\d{6}' | head -1 | tr -d '_')
             backup_files=($(find "${BACKUP_DIR}/topics" -name "*_${backup_date}*.json.gz"))
         fi
@@ -325,7 +295,6 @@ restore_all_topics() {
 
     log "INFO" "Found ${#backup_files[@]} backup file(s)"
 
-    # First restore configurations
     for backup_file in "${backup_files[@]}"; do
         local topic=$(basename "${backup_file}" | sed 's/_[0-9]*_[0-9]*\.json\.gz//')
         local config_file="${BACKUP_DIR}/config/${topic}_${backup_date}.conf"
@@ -337,7 +306,6 @@ restore_all_topics() {
 
     sleep 5
 
-    # Then restore data
     local success_count=0
     local total_count=${#backup_files[@]}
 
@@ -360,7 +328,6 @@ restore_all_topics() {
     fi
 }
 
-# List available backups
 list_backups() {
     log "INFO" "Available Kafka backups:"
 
@@ -379,7 +346,6 @@ list_backups() {
     ls -lht ${BACKUP_DIR}/config/*.conf 2>/dev/null | awk 'NR>1 {print "  " $9 " (" $5 ", " $6 " " $7 " " $8 ")"}' | sed 's|.*/config/||'
 }
 
-# Get Kafka cluster statistics
 get_stats() {
     log "INFO" "Kafka Cluster Statistics:"
 
@@ -399,7 +365,6 @@ get_stats() {
         --describe 2>/dev/null | grep -v "^__" || true
 }
 
-# Clean up old backups
 cleanup_old_backups() {
     local retention_days="${1:-7}"
 
@@ -413,7 +378,6 @@ cleanup_old_backups() {
     log "INFO" "Deleted ${deleted} old backup file(s). ${remaining_data} data backups, ${remaining_config} config backups remaining"
 }
 
-# Main routine
 main() {
     local action="$1"
     shift || true

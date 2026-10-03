@@ -27,7 +27,6 @@ public class CreateBatchRequest {
     public CreateBatchRequest() {
     }
 
-    // Getters and Setters
     public UUID getSourceAccountId() {
         return sourceAccountId;
     }

@@ -53,7 +53,6 @@ def test_settings():
     with patch("app.config.get_settings", return_value=test_settings):
         yield test_settings
 
-    # Restore original settings
     Settings._settings = original_settings
 
 
@@ -68,13 +67,11 @@ async def test_db_engine():
         connect_args={"check_same_thread": False},
     )
 
-    # Create tables
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     yield test_engine
 
-    # Cleanup
     await test_engine.dispose()
 
 
@@ -85,7 +82,6 @@ async def test_session_maker(test_db_engine):
         test_db_engine, class_=AsyncSession, expire_on_commit=False
     )
 
-    # Patch the module-level variables
     import app.database
 
     original_engine = app.database.engine
@@ -96,7 +92,6 @@ async def test_session_maker(test_db_engine):
 
     yield async_session_maker
 
-    # Restore original values
     app.database.engine = original_engine
     app.database.async_session_maker = original_session_maker
 
@@ -105,20 +100,17 @@ async def test_session_maker(test_db_engine):
 async def async_test_client(test_session_maker):
     """Async test client with database session override"""
 
-    # Override get_db_session dependency
     async def override_get_db():
         async with test_session_maker() as session:
             yield session
 
     app.dependency_overrides[get_db_session] = override_get_db
 
-    # Create AsyncClient with ASGI transport
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
         yield client
 
-    # Clean up dependency override
     app.dependency_overrides.clear()
 
 

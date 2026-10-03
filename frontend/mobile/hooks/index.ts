@@ -1,25 +1,11 @@
 /**
- * Custom Hooks Index
- *
- * This file exports unified hooks that compose TanStack Query hooks
- * with Zustand UI state for a clean API.
- *
- * ARCHITECTURE:
- * - TanStack Query hooks (src/hooks/): Server state management
- * - Zustand stores (store/): UI state management
- * - These hooks: Composition layer combining both
- *
- * @see @/src/hooks/index.ts for TanStack Query hooks
- * @see @/store/index.ts for Zustand stores
+ * Composition layer combining TanStack Query hooks with Zustand UI state.
  */
 
-// Auth hook (unified)
 export { useAuth } from './useAuth';
 
-// Card hook (unified)
 export { useCards } from './useCards';
 
-// Other custom hooks
 export { useAnalytics } from './useAnalytics';
 export { useAppLock } from './useAppLock';
 export { useBiometrics } from './useBiometrics';
@@ -31,7 +17,6 @@ export { useOfflineMode } from './useOfflineMode';
 
 // Re-export TanStack Query hooks for convenience
 export {
-  // Auth
   useLogin,
   useRegister,
   useLogout,
@@ -44,7 +29,6 @@ export {
   useInitializeAuth,
   authKeys,
 
-  // Wallet
   useWallets,
   usePrimaryWallet,
   useWallet,
@@ -54,7 +38,6 @@ export {
   useRefreshWallets,
   walletKeys,
 
-  // Transactions
   useTransactions,
   useInfiniteTransactions,
   useTransaction,

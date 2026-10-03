@@ -115,18 +115,12 @@ public class SagaInstance {
                 .build();
     }
 
-    /**
-     * Transitions the saga to a new state.
-     */
     public void transitionTo(String newState) {
         this.previousState = this.currentState;
         this.currentState = newState;
         this.lastUpdatedAt = Instant.now();
     }
 
-    /**
-     * Records a completed step.
-     */
     public void recordStepCompletion(String stepName, Object result) {
         if (this.completedSteps == null) {
             this.completedSteps = new java.util.ArrayList<>();
@@ -139,33 +133,21 @@ public class SagaInstance {
         this.lastUpdatedAt = Instant.now();
     }
 
-    /**
-     * Marks the saga as completed successfully.
-     */
     public void complete() {
         this.completedAt = Instant.now();
         this.lastUpdatedAt = Instant.now();
     }
 
-    /**
-     * Records an error in the saga execution.
-     */
     public void recordError(String step, String message) {
         this.errorStep = step;
         this.errorMessage = message;
         this.lastUpdatedAt = Instant.now();
     }
 
-    /**
-     * Increments retry count.
-     */
     public void incrementRetry() {
         this.retryCount = (this.retryCount == null ? 0 : this.retryCount) + 1;
     }
 
-    /**
-     * Checks if max retries have been exceeded.
-     */
     public boolean isMaxRetriesExceeded() {
         return this.retryCount != null && this.maxRetries != null && this.retryCount >= this.maxRetries;
     }

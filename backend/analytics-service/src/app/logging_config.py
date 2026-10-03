@@ -99,10 +99,7 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
 
     is_production = environment in ("container", "prod", "staging", "production")
 
-    # ------------------------------------------------------------------
-    # Bind service metadata globally via contextvars so every structlog
-    # logger automatically includes these fields.
-    # ------------------------------------------------------------------
+    # Bind service metadata globally via contextvars so every structlog logger includes these fields.
     structlog.contextvars.bind_contextvars(
         **{
             "service.name": service_name,
@@ -111,9 +108,7 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
         }
     )
 
-    # ------------------------------------------------------------------
     # Processors shared across dev and prod (field normalisation + OTel)
-    # ------------------------------------------------------------------
     shared_processors = [
         structlog.contextvars.merge_contextvars,
         _mask_pii,
@@ -132,9 +127,6 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
     else:
         renderer = structlog.dev.ConsoleRenderer()
 
-    # ------------------------------------------------------------------
-    # Application loggers (structlog)
-    # ------------------------------------------------------------------
     # Use wrap_for_formatter so stdlib ProcessorFormatter owns the final render;
     # otherwise we get double-JSON (JSON string inside `message`).
     structlog.configure(
@@ -145,11 +137,7 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
         cache_logger_on_first_use=True,
     )
 
-    # ------------------------------------------------------------------
-    # Standard-library logging bridge
-    # Routes all stdlib logs (including uvicorn and third-party
-    # libraries) through structlog processors for consistent JSON output.
-    # ------------------------------------------------------------------
+    # Route stdlib logs (uvicorn, third-party) through structlog for consistent JSON output.
     root_logger = logging.getLogger()
     root_logger.handlers.clear()
     # Silence noisy deprecation warnings that would surface as warning logs
@@ -192,10 +180,7 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
     for _name in ("aiokafka", "aiokafka.consumer", "aiokafka.coordinator", "aiokafka.cluster", "uvicorn.error"):
         logging.getLogger(_name).addFilter(_quiet_filter)
 
-    # ------------------------------------------------------------------
-    # Override uvicorn's built-in loggers so access/error logs are
-    # formatted identically to application logs.
-    # ------------------------------------------------------------------
+    # Override uvicorn's built-in loggers so access/error logs match application logs.
     for logger_name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
         uvicorn_logger = logging.getLogger(logger_name)
         uvicorn_logger.handlers = [handler]

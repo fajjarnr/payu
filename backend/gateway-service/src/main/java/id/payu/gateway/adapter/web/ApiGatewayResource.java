@@ -46,8 +46,6 @@ public class ApiGatewayResource {
     @Context
     UriInfo uriInfo;
 
-    // Single catch-all dispatcher
-
     @GET
     @Path("/{path: .*}")
     public Uni<Response> get(@PathParam("path") String path,

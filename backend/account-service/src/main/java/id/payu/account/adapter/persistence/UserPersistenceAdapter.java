@@ -32,7 +32,6 @@ public class UserPersistenceAdapter implements UserPersistencePort {
         userEntity.setPhoneNumberHash(indexPhone(user.getPhoneNumber()));
         id.payu.account.adapter.persistence.entity.UserEntity savedEntity = userRepository.save(userEntity);
         
-        // Save ProfileEntity if needed
         if (user.getFullName() != null || user.getNik() != null) {
             ProfileEntity profile = profileRepository.findById(savedEntity.getId())
                     .orElse(ProfileEntity.builder().user(savedEntity).build());

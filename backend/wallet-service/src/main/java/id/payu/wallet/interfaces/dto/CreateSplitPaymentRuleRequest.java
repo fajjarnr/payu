@@ -28,7 +28,6 @@ public class CreateSplitPaymentRuleRequest {
 
     public CreateSplitPaymentRuleRequest() {}
 
-    // Getters and Setters
     public String getPartnerId() { return partnerId; }
     public void setPartnerId(String partnerId) { this.partnerId = partnerId; }
     public String getRuleName() { return ruleName; }

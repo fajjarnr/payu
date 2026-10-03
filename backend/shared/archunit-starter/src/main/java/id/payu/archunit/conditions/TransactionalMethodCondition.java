@@ -25,9 +25,6 @@ public class TransactionalMethodCondition extends ArchCondition<JavaMethod> {
 
     private final boolean allowReadOnly;
 
-    /**
-     * Creates a condition that checks for @Transactional annotation.
-     */
     public TransactionalMethodCondition() {
         this(false);
     }
@@ -54,7 +51,6 @@ public class TransactionalMethodCondition extends ArchCondition<JavaMethod> {
             return;
         }
 
-        // Check readOnly attribute if required
         if (!allowReadOnly) {
             // Note: Full attribute checking would require more complex annotation processing
             // This is a simplified check

@@ -42,7 +42,6 @@ public class TrialBalanceResponse {
         return new TrialBalanceResponseBuilder();
     }
 
-    // Getters and Setters
     public LocalDate getReportDate() { return reportDate; }
     public void setReportDate(LocalDate reportDate) { this.reportDate = reportDate; }
     public LocalDate getPeriodFrom() { return periodFrom; }

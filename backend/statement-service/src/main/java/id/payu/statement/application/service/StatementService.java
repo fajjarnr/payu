@@ -93,7 +93,6 @@ public class StatementService {
     public void generateStatement(StatementGenerationRequest request) {
         LocalDate statementPeriod = YearMonth.of(request.getYear(), request.getMonth()).atDay(1);
 
-        // Check if statement already exists
         if (statementRepository.existsByCustomerIdAndStatementPeriod(request.getCustomerId(), statementPeriod)) {
             log.info("Statement already exists for customer {} and period {}", request.getCustomerId(), statementPeriod);
             return;
@@ -260,10 +259,6 @@ public class StatementService {
 
         generateStatement(request);
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
 
     private StatementResponse getStatementFallback(UUID statementId, String customerId, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
@@ -656,9 +651,7 @@ public class StatementService {
             .replaceAll("\\B(?=(\\d{3})+(?!\\d))", ".");
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  CSV Export — ADR-0019 dual format (JSON/CSV, RFC4180)
-    // ═══════════════════════════════════════════════════════
+    // CSV Export — ADR-0019 dual format (JSON/CSV, RFC4180)
 
     private static final String CSV_HEADER = "id,customerId,accountNumber,statementPeriod,openingBalance,closingBalance,totalCredits,totalDebits,transactionCount,status,generatedAt";
 

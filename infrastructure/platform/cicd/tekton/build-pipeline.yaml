@@ -60,7 +60,7 @@ spec:
     - name: dockerconfig
       description: Optional container registry credentials workspace
   tasks:
-    # ── Step 1: Clone git repo ──
+    # Clone git repo
     - name: fetch-repository
       taskRef:
         resolver: cluster
@@ -82,7 +82,7 @@ spec:
         - name: DELETE_EXISTING
           value: "true"
 
-    # ── Step 1b: Generate Semantic Version ──
+    # Generate Semantic Version
     - name: generate-semver
       runAfter:
         - fetch-repository
@@ -99,7 +99,7 @@ spec:
         - name: override-version
           value: $(params.build-image-tag)
 
-    # ── Step 2-1: Secret Scan (Gitleaks) ──
+    # Secret Scan (Gitleaks)
     - name: secret-scan
       runAfter:
         - fetch-repository
@@ -109,7 +109,7 @@ spec:
         - name: source
           workspace: source
 
-    # ── Step 2-2: Deep Secret Scan (TruffleHog) ──
+    # Deep Secret Scan (TruffleHog)
     - name: deep-secret-scan
       runAfter:
         - fetch-repository
@@ -119,7 +119,7 @@ spec:
         - name: source
           workspace: source
 
-    # ── Step 2-3: Primary SAST (Semgrep OSS) ──
+    # Primary SAST (Semgrep OSS)
     - name: semgrep-scan
       runAfter:
         - fetch-repository
@@ -132,7 +132,7 @@ spec:
         - name: CONTEXT_DIR
           value: $(params.service-base-dir)/$(params.service-path)
 
-    # ── Step 2-4: Java SAST + tests; image SCA runs later via Trivy and Grype ──
+    # Java SAST + tests; image SCA runs later via Trivy and Grype
     - name: sast-sca-scan
       runAfter:
         - semgrep-scan
@@ -189,7 +189,7 @@ spec:
         - name: CONTEXT_DIR
           value: $(params.service-base-dir)/$(params.service-path)
 
-    # ── Step 2a: Maven build (Spring Boot / Quarkus) — JDK 21 ──
+    # Maven build (Spring Boot / Quarkus) — JDK 21
     - name: build-java
       runAfter:
         - sast-sca-scan
@@ -220,7 +220,7 @@ spec:
             - -DskipTests
             - -T1C
 
-    # ── Step 3a: Buildah image (Java services) ──
+    # Buildah image (Java services)
     - name: build-push-image
       runAfter:
         - build-java
@@ -247,7 +247,7 @@ spec:
         - name: GIT_SHA
           value: $(tasks.fetch-repository.results.COMMIT)
 
-    # ── Step 2b/3b: Buildah image (Services with direct Containerfile like Python/Node.js) ──
+    # Buildah image (Services with direct Containerfile like Python/Node.js)
     - name: build-push-direct
       runAfter:
         - secret-scan
@@ -278,7 +278,7 @@ spec:
         - name: GIT_SHA
           value: $(tasks.fetch-repository.results.COMMIT)
 
-    # ── Step 4: Resolve immutable image reference from the successful build branch ──
+    # Resolve immutable image reference from the successful build branch
     - name: resolve-image-digest
       runAfter:
         - build-push-image
@@ -289,7 +289,7 @@ spec:
         - name: source
           workspace: source
 
-    # ── Step 5: Image Scan (Trivy) ──
+    # Image Scan (Trivy)
     - name: trivy-image-scan
       runAfter:
         - resolve-image-digest
@@ -310,7 +310,7 @@ spec:
         - name: IGNORE_FILE
           value: "$(params.service-base-dir)/$(params.service-path)/.trivyignore.yaml"
 
-    # ── Step 5: RHACS Image Scan (CVE vulnerability report) ──
+    # RHACS Image Scan (CVE vulnerability report)
     - name: rhacs-image-scan
       runAfter:
         - trivy-image-scan
@@ -322,7 +322,7 @@ spec:
         - name: OUTPUT_FORMAT
           value: table
 
-    # ── Step 6: RHACS Image Policy Check (gate — blocks on violations) ──
+    # RHACS Image Policy Check (gate — blocks on violations)
     - name: rhacs-image-check
       runAfter:
         - rhacs-image-scan
@@ -332,7 +332,7 @@ spec:
         - name: IMAGE
           value: $(tasks.resolve-image-digest.results.IMAGE_URL)
 
-    # ── Step 7: SBOM Generation (Syft) ──
+    # SBOM Generation (Syft)
     - name: generate-sbom
       runAfter:
         - rhacs-image-check
@@ -349,7 +349,7 @@ spec:
         - name: OUTPUT_FILE
           value: $(workspaces.source.path)/reports/$(params.service-name)-sbom.cdx.json
 
-    # ── Step 8: License Compliance Gate (Syft SBOM) ──
+    # License Compliance Gate (Syft SBOM)
     - name: license-compliance-check
       runAfter:
         - generate-sbom
@@ -364,7 +364,7 @@ spec:
         - name: FAIL_ON_VIOLATION
           value: "true"
 
-    # ── Step 9: SBOM Vulnerability Gate (Grype) ──
+    # SBOM Vulnerability Gate (Grype)
     - name: grype-sbom-check
       runAfter:
         - license-compliance-check

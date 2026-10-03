@@ -30,11 +30,6 @@ public interface DisbursementUseCase {
      * Creates a new disbursement (payout) request.
      * The disbursement is created in PENDING status and funds are reserved.
      *
-     * @param sourceAccountId the source wallet/account ID
-     * @param amount the amount to disburse
-     * @param bankCode the destination bank code
-     * @param accountNumber the destination account number
-     * @param accountName the destination account name
      * @param description optional description
      * @param idempotencyKey optional idempotency key for duplicate protection
      * @return the created disbursement
@@ -54,7 +49,6 @@ public interface DisbursementUseCase {
     /**
      * Gets a disbursement by ID.
      *
-     * @param id the disbursement ID
      * @return optional containing the disbursement if found
      */
     Optional<DisbursementEntity> getDisbursement(UUID id);
@@ -81,7 +75,6 @@ public interface DisbursementUseCase {
      * Processes a pending disbursement.
      * Transitions status to PROCESSING and initiates BI-FAST transfer.
      *
-     * @param id the disbursement ID
      * @return the updated disbursement
      * @throws IllegalStateException if disbursement is not in PENDING status
      */
@@ -91,8 +84,6 @@ public interface DisbursementUseCase {
      * Handles successful BI-FAST callback.
      * Transitions status to COMPLETED.
      *
-     * @param id the disbursement ID
-     * @param bankReference the bank reference number
      * @return the updated disbursement
      */
     DisbursementEntity completeDisbursement(UUID id, String bankReference);
@@ -101,8 +92,6 @@ public interface DisbursementUseCase {
      * Handles failed BI-FAST callback.
      * Transitions status to FAILED and releases reserved funds.
      *
-     * @param id the disbursement ID
-     * @param reason the failure reason
      * @return the updated disbursement
      */
     DisbursementEntity failDisbursement(UUID id, String reason);
@@ -110,7 +99,6 @@ public interface DisbursementUseCase {
     /**
      * Lists disbursements by status.
      *
-     * @param status the status to filter by
      * @param limit maximum number of results
      * @return list of disbursements
      */

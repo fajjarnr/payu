@@ -1,7 +1,6 @@
 # OpenShift GitOps — ArgoCD Instance Configuration
 # Applied declaratively (no oc patch) so the repo stays the source of truth.
 # This is required for Kyverno, Falco, Wazuh kustomize+HelmChartInflationGenerator.
-# ===========================================================
 apiVersion: argoproj.io/v1beta1
 kind: ArgoCD
 metadata:

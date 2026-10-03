@@ -40,9 +40,6 @@ public class SagaMonitorService {
         return stats;
     }
 
-    /**
-     * Get saga statistics for a specific saga type.
-     */
     public Map<String, Long> getSagaStatisticsByType(String sagaType) {
         Map<String, Long> stats = new HashMap<>();
 
@@ -62,24 +59,15 @@ public class SagaMonitorService {
         return sagaRepository.findStalledSagas(cutoff);
     }
 
-    /**
-     * Get sagas that can be retried.
-     */
     public List<SagaInstance> getRetryableSagas(Duration retryInterval) {
         Instant cutoff = Instant.now().minus(retryInterval);
         return sagaRepository.findRetryableSagas(cutoff);
     }
 
-    /**
-     * Get incomplete sagas.
-     */
     public List<SagaInstance> getIncompleteSagas() {
         return sagaRepository.findIncompleteSagas();
     }
 
-    /**
-     * Health check for saga system.
-     */
     public SagaHealth health() {
         long incompleteCount = sagaRepository.findIncompleteSagas().size();
         long stalledCount = getStalledSagas(Duration.ofHours(1)).size();
@@ -100,9 +88,6 @@ public class SagaMonitorService {
                 .build();
     }
 
-    /**
-     * Scheduled check for stalled sagas.
-     */
     @SchedulerLock(name = "SagaMonitorService_checkStalledSagas", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1M")
     @Scheduled(fixedDelay = 60000) // Every minute
     public void checkStalledSagas() {
@@ -122,9 +107,6 @@ public class SagaMonitorService {
         }
     }
 
-    /**
-     * Saga health information.
-     */
     @lombok.Builder
     @lombok.Data
     public static class SagaHealth {

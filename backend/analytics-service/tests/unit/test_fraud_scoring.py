@@ -202,7 +202,6 @@ class TestFraudScoringEdgeCases:
             "amount": 500000.0,
             "currency": "IDR",
             "type": "TRANSFER",
-            # No metadata field
         }
 
         result = await fraud_engine.calculate_fraud_score(transaction)
@@ -319,7 +318,6 @@ class TestFraudScoringEdgeCases:
             },
         }
 
-        # Mock user history showing previous device
         user_history = {
             "total_transactions": 50,
             "total_amount": 10000000.0,
@@ -344,7 +342,6 @@ class TestFraudScoringEdgeCases:
     @pytest.mark.asyncio
     async def test_rapid_successive_transactions(self, fraud_engine):
         """Test fraud scoring for rapid successive transactions."""
-        # Simulate multiple transactions in quick succession
         transactions = [
             {
                 "transaction_id": f"txn_rapid_{i}",
@@ -420,7 +417,6 @@ class TestFraudScoringEdgeCases:
     @pytest.mark.asyncio
     async def test_business_hours_vs_night(self, fraud_engine):
         """Test fraud scoring for transactions at unusual hours."""
-        # Night transaction (2 AM)
         transaction = {
             "transaction_id": "txn_night",
             "user_id": "user_night",
@@ -482,7 +478,6 @@ class TestFraudScoringEdgeCases:
     @pytest.mark.asyncio
     async def test_fraud_score_upper_bound(self, fraud_engine):
         """Test that fraud score never exceeds 100."""
-        # Create scenario that should maximize risk
         transaction = {
             "transaction_id": "txn_max_risk",
             "user_id": "user_max",
@@ -507,7 +502,6 @@ class TestFraudScoringEdgeCases:
     @pytest.mark.asyncio
     async def test_fraud_score_lower_bound(self, fraud_engine):
         """Test that fraud score is never negative."""
-        # Create scenario that should minimize risk
         transaction = {
             "transaction_id": "txn_min_risk",
             "user_id": "user_min",

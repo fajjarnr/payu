@@ -80,7 +80,6 @@ public class WalletTransactionEntity implements Persistable<UUID> {
         return new WalletTransactionEntityBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getWalletId() { return walletId; }

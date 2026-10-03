@@ -38,7 +38,6 @@ payu:
     cleanup-enabled: false  # Disable cleanup for tests
     optimistic-locking: true
 
-# Logging
 logging:
   level:
     id.payu.saga: DEBUG

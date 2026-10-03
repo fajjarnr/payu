@@ -29,7 +29,7 @@ class TestKycWorkflowE2E:
     ):
         """Test complete KYC workflow from start to verified"""
 
-        # Mock OCR response - include all required fields for KtpOcrResult
+        # Include all required KtpOcrResult fields
         mock_ocr_result = MagicMock()
         mock_ocr_result.nik = "3201234567890001"
         mock_ocr_result.name = "JOHN DOE"
@@ -63,7 +63,6 @@ class TestKycWorkflowE2E:
             "district": "TEBET",
         }
 
-        # Mock liveness check
         mock_liveness_result = MagicMock()
         mock_liveness_result.is_live = True
         mock_liveness_result.confidence = 0.85
@@ -76,7 +75,6 @@ class TestKycWorkflowE2E:
             "face_quality_score": 0.9,
         }
 
-        # Mock face matching
         mock_face_result = MagicMock()
         mock_face_result.is_match = True
         mock_face_result.similarity_score = 0.85
@@ -91,7 +89,6 @@ class TestKycWorkflowE2E:
             "selfie_face_found": True,
         }
 
-        # Mock Dukcapil client
         mock_dukcapil_result = MagicMock()
         mock_dukcapil_result.nik = "3201234567890001"
         mock_dukcapil_result.is_valid = True
@@ -129,7 +126,6 @@ class TestKycWorkflowE2E:
             "app.services.kyc_service.DukcapilClient"
         ) as MockDukcapil:
 
-            # Setup mock instances
             mock_ocr_instance = AsyncMock()
             mock_ocr_instance.extract_ktp_data = AsyncMock(return_value=mock_ocr_result)
             MockOCR.return_value = mock_ocr_instance
@@ -150,7 +146,6 @@ class TestKycWorkflowE2E:
             )
             MockDukcapil.return_value = mock_dukcapil_instance
 
-            # Step 1: Start KYC verification
             start_response = await async_test_client.post(
                 "/api/v1/kyc/verify/start",
                 json={"user_id": sample_user_id, "verification_type": "FULL_KYC"},
@@ -164,7 +159,6 @@ class TestKycWorkflowE2E:
 
             verification_id = start_data["verification_id"]
 
-            # Step 2: Upload KTP image
             ktp_response = await async_test_client.post(
                 "/api/v1/kyc/verify/ktp",
                 json={
@@ -179,7 +173,6 @@ class TestKycWorkflowE2E:
             assert "ocr_result" in ktp_data
             assert ktp_data["ocr_result"]["nik"] == "320101010101****"
 
-            # Step 3: Upload selfie image
             selfie_response = await async_test_client.post(
                 "/api/v1/kyc/verify/selfie",
                 json={
@@ -272,7 +265,6 @@ class TestKycWorkflowE2E:
             mock_face_instance.match_face = AsyncMock()
             MockFace.return_value = mock_face_instance
 
-            # Start verification
             start_response = await async_test_client.post(
                 "/api/v1/kyc/verify/start",
                 json={"user_id": sample_user_id, "verification_type": "FULL_KYC"},
@@ -280,7 +272,6 @@ class TestKycWorkflowE2E:
             assert start_response.status_code == 200
             verification_id = start_response.json()["data"]["verification_id"]
 
-            # Upload KTP first
             ktp_response = await async_test_client.post(
                 "/api/v1/kyc/verify/ktp",
                 json={
@@ -290,7 +281,6 @@ class TestKycWorkflowE2E:
             )
             assert ktp_response.status_code == 200
 
-            # Upload selfie with liveness failure
             selfie_response = await async_test_client.post(
                 "/api/v1/kyc/verify/selfie",
                 json={
@@ -385,7 +375,6 @@ class TestKycWorkflowE2E:
             mock_face_instance.match_face = AsyncMock(return_value=mock_face_result)
             MockFace.return_value = mock_face_instance
 
-            # Start verification
             start_response = await async_test_client.post(
                 "/api/v1/kyc/verify/start",
                 json={"user_id": sample_user_id, "verification_type": "FULL_KYC"},
@@ -393,7 +382,6 @@ class TestKycWorkflowE2E:
             assert start_response.status_code == 200
             verification_id = start_response.json()["data"]["verification_id"]
 
-            # Upload KTP first
             ktp_response = await async_test_client.post(
                 "/api/v1/kyc/verify/ktp",
                 json={
@@ -403,7 +391,6 @@ class TestKycWorkflowE2E:
             )
             assert ktp_response.status_code == 200
 
-            # Upload selfie with face match failure
             selfie_response = await async_test_client.post(
                 "/api/v1/kyc/verify/selfie",
                 json={

@@ -64,10 +64,6 @@ public class AuthController extends BaseController {
     private final SessionValidationService sessionValidationService;
     private final BusinessMetrics businessMetrics;
 
-    /**
-     * Authenticate user with username and password.
-     * Returns JWT tokens or prompts for MFA if required by risk evaluation.
-     */
     private String maskUsername(String username) {
         if (username == null || username.length() < 4) return "***";
         return username.substring(0, 3) + "****" + (username.contains("@") ? username.substring(username.indexOf("@")) : "");
@@ -172,7 +168,7 @@ public class AuthController extends BaseController {
                             ErrorCode.SERVICE_UNAVAILABLE.getMessage()
                     ));
         } catch (Exception e) {
-            // SECURITY: Don't log full stack trace to prevent information disclosure
+            // Security: Don't log full stack trace to prevent information disclosure
             log.error("OIDC code exchange failed: {}", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(
@@ -205,9 +201,6 @@ public class AuthController extends BaseController {
 
 
 
-    /**
-     * Builds login context from HTTP request.
-     */
     private LoginContext buildLoginContext(String username, HttpServletRequest request) {
         return new LoginContext(
                 username,
@@ -218,9 +211,6 @@ public class AuthController extends BaseController {
         );
     }
 
-    /**
-     * Gets the client IP address from request headers.
-     */
     private String getClientIpAddress(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
@@ -236,29 +226,7 @@ public class AuthController extends BaseController {
     }
 
     /**
-     * Refresh access token using refresh token with token rotation.
-     *
-     * <p>This endpoint implements refresh token rotation for enhanced security:
-     * <ul>
-     *   <li>Validates the old refresh token</li>
-     *   <li>Invalidates the old token after successful refresh</li>
-     *   <li>Issues a new refresh token (rotation)</li>
-     *   <li>Returns both new access token and new refresh token</li>
-     * </ul>
-     *
-     * <p><b>Security Features:</b>
-     * <ul>
-     *   <li>Token rotation prevents replay attacks</li>
-     *   <li>Refresh tokens stored as hashed values in Redis</li>
-     *   <li>7-day expiration on refresh tokens</li>
-     *   <li>Detection of token reuse attempts</li>
-     * </ul>
-     *
-     * <p><b>Rate Limiting:</b> 20 requests per minute per IP
-     *
-     * @param request The refresh token request containing the refresh_token
-     * @param httpRequest The HTTP servlet request for rate limiting key
-     * @return ApiResponse containing the new tokens
+     * Refresh access token with rotation: the old token is invalidated and a new one issued.
      */
     @PostMapping("/refresh")
     @Audited(
@@ -362,7 +330,6 @@ public class AuthController extends BaseController {
             String dpopProof = httpRequest.getHeader("DPoP");
             java.util.Map<String, Object> result = keycloakService.initiateDeviceAuthorization(dpopProof);
             businessMetrics.recordDeviceCodeIssued();
-            // propagate device fingerprint for risk telemetry if present
             String deviceId = httpRequest.getHeader("X-Device-ID");
             if (deviceId != null) log.debug("Device auth initiated deviceId={}", deviceId);
             return ResponseEntity.ok(ApiResponse.success(result));
@@ -474,8 +441,6 @@ public class AuthController extends BaseController {
      * ACCOUNT-005: delete a provisioned IAM user (saga compensation from
      * account-service when local persistence fails after provisioning).
      * Internal-only like {@link #register(RegisterRequest)}.
-     *
-     * @param userId the IAM user id to delete
      */
     @DeleteMapping("/users/{userId}")
     @Audited(
@@ -517,39 +482,7 @@ public class AuthController extends BaseController {
     }
 
     /**
-     * Validates the current user session without requiring token refresh.
-     *
-     * <p>This endpoint provides a lightweight way to validate that the user's session
-     * is still active and retrieve minimal session information. It does not generate
-     * new tokens, making it more efficient than the refresh endpoint for session checks.
-     *
-     * <p><b>Use Cases:</b>
-     * <ul>
-     *   <li>Check if session is still valid on app initialization</li>
-     *   <li>Verify session before sensitive operations</li>
-     *   <li>Get user profile data without full token refresh</li>
-     * </ul>
-     *
-     * <p><b>Response Data:</b>
-     * <ul>
-     *   <li>valid: true if session is active</li>
-     *   <li>user_id: the user's unique identifier</li>
-     *   <li>username: the user's username</li>
-     *   <li>expires_in: seconds until token expiration</li>
-     *   <li>roles: user's assigned roles</li>
-     *   <li>session_active: true if session is active</li>
-     * </ul>
-     *
-     * <p><b>Security:</b>
-     * <ul>
-     *   <li>Requires valid JWT token in Authorization header</li>
-     *   <li>Does NOT expose sensitive data (NIK, phone, email)</li>
-     *   <li>Checks token expiration and account status</li>
-     *   <li>Rate limited to 100 requests per minute</li>
-     * </ul>
-     *
-     * @param authentication The Spring Security authentication object (injected)
-     * @return ApiResponse containing session validation result
+     * Validates the current session without refreshing the token; never exposes sensitive data (NIK, phone, email).
      */
     @GetMapping("/validate")
     @Operation(

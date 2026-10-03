@@ -9,7 +9,6 @@ interface CardPreviewProps {
   showDetails?: boolean;
 }
 
-// Performance: Memoize card color calculation to avoid recalculation on every render
 const getCardColor = useCallback((status: string): string[] => {
   switch (status) {
     case 'active':
@@ -28,20 +27,16 @@ export const CardPreviewComponent: React.FC<CardPreviewProps> = ({
   style,
   showDetails = false,
 }) => {
-  // Performance: Memoize card number display
   const cardNumberDisplay = useMemo(() => {
     return showDetails ? `•••• •••• •••• ${card.lastFour}` : '•••• •••• •••• ••••';
   }, [showDetails, card.lastFour]);
 
-  // Performance: Memoize balance display
   const balanceDisplay = useMemo(() => {
     return `Rp ${card.balance.toLocaleString('id-ID')}`;
   }, [card.balance]);
 
-  // Performance: Memoize card colors (not currently used but kept for future styling)
   const cardColors = useMemo(() => getCardColor(card.status), [card.status]);
 
-  // Performance: Memoize decorative circle styles
   const circle1Style = useMemo<ViewStyle>(() => [
     styles.circle1,
     { backgroundColor: 'rgba(255,255,255,0.1)' },
@@ -103,7 +98,6 @@ export const CardPreviewComponent: React.FC<CardPreviewProps> = ({
   );
 };
 
-// Performance: Memoize CardPreview component to prevent unnecessary re-renders in lists
 export const CardPreview = memo(CardPreviewComponent, (prevProps, nextProps) => {
   return (
     prevProps.card.id === nextProps.card.id &&

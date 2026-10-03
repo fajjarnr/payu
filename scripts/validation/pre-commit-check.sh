@@ -1,5 +1,4 @@
 #!/bin/bash
-###############################################################################
 # PayU Pre-commit Hook
 # Purpose: Catch errors before they reach the repository
 #
@@ -7,18 +6,15 @@
 #   1. Install: cp scripts/pre-commit-check.sh .git/hooks/pre-commit
 #   2. chmod +x .git/hooks/pre-commit
 #   3. Git will automatically run this before each commit
-###############################################################################
 
-set -e  # Exit on error
+set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
 print_header() {
     echo -e "${BLUE}▶ $1${NC}"
 }
@@ -35,7 +31,6 @@ print_warning() {
     echo -e "${YELLOW}⚠ $1${NC}"
 }
 
-# Get the root directory of the project
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
@@ -46,7 +41,6 @@ echo "║           Catching errors before commit                        ║"
 echo "╚═══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
-# Track if we're in a backend service directory
 IN_BACKEND=false
 if [[ "$PROJECT_ROOT" =~ backend/.*-service ]]; then
     IN_BACKEND=true
@@ -54,9 +48,6 @@ if [[ "$PROJECT_ROOT" =~ backend/.*-service ]]; then
     echo -e "${BLUE}Service: ${SERVICE_NAME}${NC}\n"
 fi
 
-###############################################################################
-# 1. Check for empty dependency blocks (POM files)
-###############################################################################
 print_header "Checking POM files for empty dependencies..."
 
 if find . -name "pom.xml" -type f -exec grep -l "<dependency>\s*<groupId>" {} \; | \
@@ -69,9 +60,6 @@ if find . -name "pom.xml" -type f -exec grep -l "<dependency>\s*<groupId>" {} \;
 fi
 print_success "POM files validated"
 
-###############################################################################
-# 1.5 Validate AI skills registry
-###############################################################################
 print_header "Validating AI skills registry..."
 
 if [ -f "$PROJECT_ROOT/scripts/validate-skills.sh" ]; then
@@ -81,22 +69,16 @@ else
     print_warning "Skill validator not found (scripts/validate-skills.sh)"
 fi
 
-###############################################################################
-# 2. Compilation check
-###############################################################################
 print_header "Checking compilation..."
 
 if [ "$IN_BACKEND" = true ]; then
-    # Check if this is a Quarkus or Spring Boot service
     if [ -f "./mvnw" ]; then
-        # Quarkus service
         ./mvnw clean compile -q -DskipTests 2>&1 | grep -i "error\|failure" && {
             print_error "Compilation failed!"
             echo "  Fix compilation errors before committing."
             exit 1
         }
     else
-        # Spring Boot service
         mvn clean compile -q -DskipTests 2>&1 | grep -i "error\|failure" && {
             print_error "Compilation failed!"
             echo "  Fix compilation errors before committing."
@@ -104,7 +86,6 @@ if [ "$IN_BACKEND" = true ]; then
         }
     fi
 else
-    # Root project - check each backend service
     for pom in backend/*/pom.xml; do
         if [ -f "$pom" ]; then
             service_dir=$(dirname "$pom")
@@ -119,9 +100,6 @@ fi
 
 print_success "Compilation check passed"
 
-###############################################################################
-# 3. Unit tests (fast, no Docker)
-###############################################################################
 print_header "Running unit tests..."
 
 if [ "$IN_BACKEND" = true ]; then
@@ -136,13 +114,9 @@ fi
 
 print_success "Unit tests passed"
 
-###############################################################################
-# 4. Architecture tests
-###############################################################################
 print_header "Validating architecture..."
 
 if [ "$IN_BACKEND" = true ] && [ -d "src/test/java" ]; then
-    # Run architecture tests if they exist
     if find src/test/java -name "*ArchitectureTest.java" -o -name "*ArchTest.java" | grep -q .; then
         if [ -f "./mvnw" ]; then
             ./mvnw test -q -Dtest="*Architecture*,*ArchTest*" 2>&1 | tail -5
@@ -158,12 +132,8 @@ else
     print_warning "No architecture tests to run"
 fi
 
-###############################################################################
-# 5. Check for TODO/FIXME in new code
-###############################################################################
 print_header "Checking for TODO/FIXME..."
 
-# Get list of staged files
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(java|kt|py)$' || true)
 
 if [ -n "$STAGED_FILES" ]; then
@@ -190,9 +160,6 @@ if [ -n "$STAGED_FILES" ]; then
     fi
 fi
 
-###############################################################################
-# 6. Check file sizes (prevent large files)
-###############################################################################
 print_header "Checking file sizes..."
 
 LARGE_FILES=$(git diff --cached --name-only | while read file; do
@@ -215,9 +182,6 @@ if [ -n "$LARGE_FILES" ]; then
     fi
 fi
 
-###############################################################################
-# Success!
-###############################################################################
 echo ""
 echo -e "${GREEN}╔═══════════════════════════════════════════════════════════════╗"
 echo "║  ✓ All pre-commit checks passed!                                    ║"

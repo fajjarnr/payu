@@ -1,10 +1,8 @@
 #!/bin/bash
-# ============================================
 # PayU Wallet Balance & Ledger E2E Test
 # Read-only wallet queries through gateway -> wallet-service
 #
 # Mode: GATEWAY_MODE=internal (default) or apicast
-# ============================================
 
 set -e
 
@@ -113,7 +111,6 @@ else
     USERKEY_PARAM=""
 fi
 
-# ============================================
 echo "MODE=$GATEWAY_MODE ACCT=$ACCT"
 
 echo

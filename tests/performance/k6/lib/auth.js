@@ -1,5 +1,3 @@
-// Authentication Utilities for K6 Tests
-// ======================================
 
 import { sleep } from 'k6';
 import http from 'k6/http';

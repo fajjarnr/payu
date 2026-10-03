@@ -35,7 +35,6 @@ public class FeeTier {
         return new FeeTierBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getRateCardId() { return rateCardId; }

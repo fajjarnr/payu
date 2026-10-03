@@ -60,7 +60,6 @@ public class ApiAnalyticsService {
 
         long currentSize = bufferSize.incrementAndGet();
 
-        // Flush if buffer size exceeds threshold
         if (currentSize >= config.analytics().batchSize()) {
             flushMetrics();
         }
@@ -77,7 +76,6 @@ public class ApiAnalyticsService {
             return Uni.createFrom().item(metrics.toMap());
         }
 
-        // Try to fetch from Data Grid
         String today = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
         String cacheKey = "analytics:" + today + ":" + key;
 
@@ -112,7 +110,6 @@ public class ApiAnalyticsService {
                 String cacheKey = "analytics:" + today + ":" + key;
                 String metricsJson = toJson(metrics);
 
-                // Store in Data Grid with TTL
                 cache.put(cacheKey, metricsJson, java.time.Duration.ofDays(config.analytics().retentionDays()))
                     .subscribe()
                     .with(unused -> {}, failure -> Log.warnf(failure, "Failed to store metrics for %s", key));

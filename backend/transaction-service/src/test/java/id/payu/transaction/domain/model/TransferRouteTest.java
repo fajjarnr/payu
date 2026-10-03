@@ -292,8 +292,6 @@ class TransferRouteTest {
         }
     }
 
-    // Helper methods
-
     private TransferRoute createSampleRoute() {
         return TransferRoute.biFast();
     }

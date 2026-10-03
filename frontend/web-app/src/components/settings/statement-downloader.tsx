@@ -11,16 +11,6 @@ import { StaggerContainer, StaggerItem } from '@/components/ui/Motion';
 import { getA11yProps } from '@/lib/a11y';
 import { useAuthStore } from '@/stores/authStore';
 
-/**
- * Statement Downloader Component
- *
- * Features:
- * - Period selector (Monthly/Quarterly/Annually)
- * - Date range picker for statement generation
- * - Statement history with download capability
- * - Loading states and error handling
- * - WCAG AA compliant accessibility
- */
 export default function StatementDownloader() {
   const t = useTranslations('settings.statements');
   const accountId = useAuthStore((state) => state.accountId);
@@ -31,18 +21,15 @@ export default function StatementDownloader() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Form state
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('monthly');
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [page, setPage] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(false);
 
-  // Available years for statement generation
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i);
 
-  // Load statements from API
   const loadStatements = useCallback(async (pageNum: number = 0) => {
     if (!accountId) {
       setIsLoading(false);

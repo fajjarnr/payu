@@ -51,11 +51,9 @@ test.describe('KYC Onboarding Flow', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait for validation
     await waitForAnimations(page);
     await page.waitForTimeout(300);
 
-    // Check that we're still on form (validation failed)
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
   });
 
@@ -141,8 +139,7 @@ test.describe('KYC Flow - Step Navigation', () => {
 
     await expect(page.getByText('Lengkapi Profil')).toBeVisible({ timeout: 10000 });
 
-    // After moving to step 2, step 1 should be completed (bg-primary) and step 2 active (border-primary)
-    // The stepper shows completed steps with bg-primary and active step with border-primary
+    // Completed steps use bg-primary; the active step uses border-primary.
     const completedSteps = page.locator('nav[aria-label="Registration Progress"] .bg-primary');
     await expect(completedSteps.first()).toBeVisible();
   });
@@ -183,23 +180,18 @@ test.describe('KYC Flow - Form Validation', () => {
   test('should require NIK field', async ({ page }) => {
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait for validation
     await waitForAnimations(page);
     await page.waitForTimeout(300);
 
-    // Should still be on the form
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
   });
 
   test('should require all fields', async ({ page }) => {
-    // Don't fill any fields
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait for validation
     await waitForAnimations(page);
     await page.waitForTimeout(300);
 
-    // Should still be on the form
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
   });
 
@@ -211,11 +203,8 @@ test.describe('KYC Flow - Form Validation', () => {
     await page.getByPlaceholder('Min. 8 karakter').fill('Password123!');
     await page.getByPlaceholder('Masukkan ulang kata sandi').fill('Password123!');
 
-    // Mock the API to delay so loading spinner is visible
-    // Real backend
 await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Check for loading icon
     const loadingIcon = page.locator('.animate-spin');
     await expect(loadingIcon).toBeVisible();
   });
@@ -243,7 +232,6 @@ test.describe('KYC Flow - Success State', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait for submit to process
     await page.waitForTimeout(1000);
   });
 
@@ -251,8 +239,7 @@ test.describe('KYC Flow - Success State', () => {
     try {
       await expect(page.getByText('Akun Siap Digunakan!')).toBeVisible({ timeout: 5000 });
     } catch {
-      // Success state may not be reached without backend - verify we're still on step 2 (form) or redirected
-      // Either scenario is valid when backend is unavailable
+      // Without a backend, staying on the form or redirecting to login are both valid.
       const isOnForm = await page.getByText('Lengkapi Profil').isVisible().catch(() => false);
       const isOnLogin = await page.getByText('Selamat Datang Kembali').isVisible().catch(() => false);
       expect(isOnForm || isOnLogin).toBeTruthy();
@@ -265,7 +252,6 @@ test.describe('KYC Flow - Success State', () => {
     const stepperNav = page.locator('nav[aria-label="Registration Progress"]');
     const isStepperVisible = await stepperNav.isVisible().catch(() => false);
     if (isStepperVisible) {
-      // We're on the onboarding page - check that at least step 1 is complete
       const completedOrActiveSteps = stepperNav.locator('.bg-primary, .border-primary');
       const count = await completedOrActiveSteps.count();
       expect(count).toBeGreaterThanOrEqual(1);
@@ -276,9 +262,7 @@ test.describe('KYC Flow - Success State', () => {
   });
 
   test('should have loading spinner', async ({ page }) => {
-    // Loading spinner is visible briefly during form submission.
-    // Without backend, the mutation may have already completed (errored) by now.
-    // Check if spinner is visible OR if we've moved past the loading state.
+    // Spinner shows briefly on submit; without a backend the mutation may already have errored.
     const spinner = page.locator('.animate-spin');
     const isSpinnerVisible = await spinner.isVisible().catch(() => false);
     if (!isSpinnerVisible) {

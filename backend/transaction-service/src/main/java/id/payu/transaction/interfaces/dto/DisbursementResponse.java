@@ -58,9 +58,6 @@ public class DisbursementResponse {
 
     /**
      * Creates a response DTO from a domain entity.
-     *
-     * @param disbursement the domain entity
-     * @return the response DTO
      */
     public static DisbursementResponse fromEntity(DisbursementEntity disbursement) {
         return DisbursementResponse.builder()

@@ -58,7 +58,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @DisplayName("Gateway Service Integration Tests")
 public class GatewayIntegrationTest {
 
-    // Register WireMock extensions for backend services
     // Use dynamic ports to avoid conflicts with Quarkus test server (port 8081)
     @RegisterExtension
     static WireMockExtension accountServiceMock = WireMockExtension.newInstance()
@@ -106,8 +105,6 @@ public class GatewayIntegrationTest {
         if (walletServiceMock != null) walletServiceMock.resetAll();
     }
 
-    // Health check tests
-
     @Test
     @Order(1)
     @DisplayName("Health check should return UP status")
@@ -140,8 +137,6 @@ public class GatewayIntegrationTest {
                 .statusCode(200)
                 .body("status", equalTo("UP"));
     }
-
-    // CORS filter tests
 
     @Test
     @Order(10)
@@ -181,8 +176,6 @@ public class GatewayIntegrationTest {
                 .header("Access-Control-Allow-Origin", notNullValue());
     }
 
-    // Tenant filter tests
-
     @Test
     @Order(20)
     @DisplayName("Request should use default tenant when header not provided")
@@ -217,8 +210,6 @@ public class GatewayIntegrationTest {
                 .then()
                 .statusCode(200);
     }
-
-    // API version filter tests
 
     @Test
     @Order(30)
@@ -264,8 +255,6 @@ public class GatewayIntegrationTest {
                 .statusCode(400); // Unsupported version should be a client error (Bad Request)
     }
 
-    // API key validation tests
-
     @Test
     @Order(40)
     @DisplayName("Request should bypass API key validation for health endpoints")
@@ -294,8 +283,6 @@ public class GatewayIntegrationTest {
                 .statusCode(200);
     }
 
-    // Request routing tests
-
     @Test
     @Order(50)
     @DisplayName("Gateway should route GET requests to account service")
@@ -313,7 +300,6 @@ public class GatewayIntegrationTest {
                 .body("accounts", hasSize(greaterThan(0)))
                 .body("accounts[0].id", equalTo("ACC-001"));
 
-        // Verify the request was forwarded to the mock service
         accountServiceMock.verify(1, getRequestedFor(urlPathEqualTo("/api/v1/accounts")));
     }
 
@@ -399,13 +385,10 @@ public class GatewayIntegrationTest {
         accountServiceMock.verify(1, getRequestedFor(urlPathMatching("/api/v1/accounts/.*")));
     }
 
-    // Error handling tests
-
     @Test
     @Order(60)
     @DisplayName("Gateway should return 502 when backend service is not configured")
     void testErrorServiceNotConfigured() {
-        // Try to access a service route that is not configured in the gateway
         given()
                 .when().get("/api/v1/unknown-service/resource")
                 .then()
@@ -416,7 +399,6 @@ public class GatewayIntegrationTest {
     @Order(61)
     @DisplayName("Gateway should return 503 when backend service is unavailable")
     void testErrorServiceUnavailable() {
-        // Stub the account service to return 503 (simulating unavailability)
         accountServiceMock.stubFor(get(urlPathEqualTo("/api/v1/accounts"))
                 .willReturn(aResponse()
                         .withStatus(503)
@@ -470,8 +452,6 @@ public class GatewayIntegrationTest {
                 .then()
                 .statusCode(400); // Malformed JSON must be a 400 Bad Request
     }
-
-    // Request header forwarding tests
 
     @Test
     @Order(70)
@@ -534,8 +514,6 @@ public class GatewayIntegrationTest {
         accountServiceMock.verify(1, getRequestedFor(urlPathEqualTo("/api/v1/accounts")));
     }
 
-    // Response headers tests
-
     @Test
     @Order(80)
     @DisplayName("Gateway should forward response headers from backend")
@@ -570,8 +548,6 @@ public class GatewayIntegrationTest {
                 .then()
                 .statusCode(200);
     }
-
-    // Different HTTP methods tests
 
     @Test
     @Order(90)
@@ -633,8 +609,6 @@ public class GatewayIntegrationTest {
         accountServiceMock.verify(1, patchRequestedFor(urlPathMatching("/api/v1/accounts/.*")));
     }
 
-    // Metrics and openapi tests
-
     @Test
     @Order(100)
     @DisplayName("Gateway should expose Prometheus metrics")
@@ -656,8 +630,6 @@ public class GatewayIntegrationTest {
                 .body("openapi", notNullValue());
     }
 
-    // Timeout and retry tests
-
     @Test
     @Order(110)
     @DisplayName("Gateway should handle backend service timeouts")
@@ -675,8 +647,6 @@ public class GatewayIntegrationTest {
                 .then()
                 .statusCode(200); // With 5s delay and 30s timeout, this should succeed
     }
-
-    // Request body tests
 
     @Test
     @Order(120)
@@ -743,8 +713,6 @@ public class GatewayIntegrationTest {
                 .statusCode(400); // Empty body on POST should be Bad Request
     }
 
-    // Query parameters tests
-
     @Test
     @Order(130)
     @DisplayName("Gateway should forward query parameters to backend")
@@ -770,8 +738,6 @@ public class GatewayIntegrationTest {
                 .withQueryParam("size", WireMock.equalTo("10")));
     }
 
-    // Complex scenarios tests
-
     @Test
     @Order(140)
     @DisplayName("Gateway should handle concurrent requests")
@@ -782,7 +748,6 @@ public class GatewayIntegrationTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"accounts\":[]}")));
 
-        // Make multiple concurrent requests
         Thread[] threads = new Thread[5];
         for (int i = 0; i < 5; i++) {
             final int index = i;
@@ -795,12 +760,10 @@ public class GatewayIntegrationTest {
             threads[i].start();
         }
 
-        // Wait for all threads to complete
         for (Thread thread : threads) {
             thread.join();
         }
 
-        // Verify all requests were forwarded
         accountServiceMock.verify(5, getRequestedFor(urlPathEqualTo("/api/v1/accounts")));
     }
 
@@ -823,7 +786,6 @@ public class GatewayIntegrationTest {
                         .withStatus(200)
                         .withBody("{\"transactions\":[]}")));
 
-        // Sequential requests
         given().when().get("/api/v1/accounts").then().statusCode(200);
         given().when().get("/api/v1/wallets").then().statusCode(200);
         given().when().get("/api/v1/transactions").then().statusCode(200);

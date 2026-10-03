@@ -41,16 +41,13 @@ class SubscriptionEventConsumerTest {
     @Test
     @DisplayName("should consume subscription.created event and dispatch webhook")
     void shouldConsumeSubscriptionCreatedEvent() {
-        // Given
         String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
         ConsumerRecord<String, String> record = createRecord(payload,
                 "X-Event-Type", "subscription.created",
                 "X-PartnerEntity-Id", "partner-nobar");
 
-        // When
         consumer.consumeSubscriptionEvent(record);
 
-        // Then
         ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map> payloadCaptor = ArgumentCaptor.forClass(Map.class);
         verify(webhookDispatcher).dispatch(typeCaptor.capture(), payloadCaptor.capture());
@@ -63,7 +60,6 @@ class SubscriptionEventConsumerTest {
     @Test
     @DisplayName("should consume charge.succeeded event and dispatch webhook")
     void shouldConsumeChargeSucceededEvent() {
-        // Given
         String payload = "{\"specversion\":\"1.0\",\"id\":\"" + UUID.randomUUID() + "\"," +
                 "\"source\":\"/billing-service\",\"type\":\"charge.succeeded\"," +
                 "\"time\":\"2026-03-16T00:00:00Z\"," +
@@ -72,10 +68,8 @@ class SubscriptionEventConsumerTest {
                 "X-Event-Type", "charge.succeeded",
                 "X-PartnerEntity-Id", "partner-nobar");
 
-        // When
         consumer.consumeSubscriptionEvent(record);
 
-        // Then
         ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map> payloadCaptor = ArgumentCaptor.forClass(Map.class);
         verify(webhookDispatcher).dispatch(typeCaptor.capture(), payloadCaptor.capture());
@@ -89,7 +83,6 @@ class SubscriptionEventConsumerTest {
     @Test
     @DisplayName("should consume charge.failed event and dispatch webhook")
     void shouldConsumeChargeFailedEvent() {
-        // Given
         String payload = "{\"specversion\":\"1.0\",\"id\":\"" + UUID.randomUUID() + "\"," +
                 "\"source\":\"/billing-service\",\"type\":\"charge.failed\"," +
                 "\"time\":\"2026-03-16T00:00:00Z\"," +
@@ -98,10 +91,8 @@ class SubscriptionEventConsumerTest {
                 "X-Event-Type", "charge.failed",
                 "X-PartnerEntity-Id", "partner-nobar");
 
-        // When
         consumer.consumeSubscriptionEvent(record);
 
-        // Then
         ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map> payloadCaptor = ArgumentCaptor.forClass(Map.class);
         verify(webhookDispatcher).dispatch(typeCaptor.capture(), payloadCaptor.capture());
@@ -114,28 +105,22 @@ class SubscriptionEventConsumerTest {
     @Test
     @DisplayName("should extract event type from event when header is null")
     void shouldExtractEventTypeFromEvent() {
-        // Given - no headers
         String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
         ConsumerRecord<String, String> record = createRecord(payload);
 
-        // When
         consumer.consumeSubscriptionEvent(record);
 
-        // Then
         verify(webhookDispatcher).dispatch(eq("subscription.created"), any());
     }
 
     @Test
     @DisplayName("should extract partnerId from event data when header is null")
     void shouldExtractPartnerIdFromEventData() {
-        // Given
         String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
         ConsumerRecord<String, String> record = createRecord(payload);
 
-        // When
         consumer.consumeSubscriptionEvent(record);
 
-        // Then
         ArgumentCaptor<Map> payloadCaptor = ArgumentCaptor.forClass(Map.class);
         verify(webhookDispatcher).dispatch(any(), payloadCaptor.capture());
         assertEquals("partner-nobar", payloadCaptor.getValue().get("partnerId"));
@@ -144,60 +129,52 @@ class SubscriptionEventConsumerTest {
     @Test
     @DisplayName("should handle null/empty value gracefully")
     void shouldHandleNullEvent() {
-        // Given
         ConsumerRecord<String, String> record = new ConsumerRecord<>(
                 "payu.billing.subscription-event.v1", 0, 0, null, null);
 
-        // When
         consumer.consumeSubscriptionEvent(record);
 
-        // Then - should not throw and not call dispatcher
+        // Should not throw and not call dispatcher
         verify(webhookDispatcher, never()).dispatch(any(), any());
     }
 
     @Test
     @DisplayName("should handle empty value gracefully")
     void shouldHandleEmptyEvent() {
-        // Given
         ConsumerRecord<String, String> record = new ConsumerRecord<>(
                 "payu.billing.subscription-event.v1", 0, 0, null, "");
 
-        // When
         consumer.consumeSubscriptionEvent(record);
 
-        // Then - should not throw and not call dispatcher
+        // Should not throw and not call dispatcher
         verify(webhookDispatcher, never()).dispatch(any(), any());
     }
 
     @Test
     @DisplayName("should rethrow dispatcher exceptions so the record reaches the DLQ (PARTNER-PROD-004)")
     void shouldHandleDispatcherException() {
-        // Given
         String payload = cloudEventJson("subscription.created", "sub-123", "partner-nobar");
         ConsumerRecord<String, String> record = createRecord(payload,
                 "X-Event-Type", "subscription.created");
         doThrow(new RuntimeException("Dispatch failed"))
                 .when(webhookDispatcher).dispatch(any(), any());
 
-        // When - must propagate so the Kafka error handler retries and DLQs it
+        // Must propagate so the Kafka error handler retries and DLQs it
         assertThrows(RuntimeException.class, () -> consumer.consumeSubscriptionEvent(record));
 
-        // Then - dispatcher was called
+        // Dispatcher was called
         verify(webhookDispatcher).dispatch(any(), any());
     }
 
     @Test
     @DisplayName("should handle plain JSON payload (non-CloudEvent)")
     void shouldHandlePlainJsonPayload() {
-        // Given
         String payload = "{\"subscriptionId\":\"sub-123\",\"partnerId\":\"partner-nobar\"," +
                 "\"amount\":99000,\"type\":\"subscription.renewed\"}";
         ConsumerRecord<String, String> record = createRecord(payload);
 
-        // When
         consumer.consumeSubscriptionEvent(record);
 
-        // Then
         ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map> payloadCaptor = ArgumentCaptor.forClass(Map.class);
         verify(webhookDispatcher).dispatch(typeCaptor.capture(), payloadCaptor.capture());
@@ -208,7 +185,6 @@ class SubscriptionEventConsumerTest {
         assertEquals(99000, result.get("amount"));
     }
 
-    // --- Helper methods ---
 
     private String cloudEventJson(String type, String subject, String partnerId) {
         return "{\"specversion\":\"1.0\",\"id\":\"" + UUID.randomUUID() + "\"," +

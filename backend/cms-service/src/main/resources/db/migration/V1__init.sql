@@ -1,7 +1,5 @@
--- ==================================================
 -- PayU CMS Service - Initial Schema
 -- Version: 1.0.0
--- ==================================================
 
 -- Create enum type for content status
 CREATE TYPE content_status AS ENUM (

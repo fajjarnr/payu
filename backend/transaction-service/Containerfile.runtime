@@ -1,6 +1,4 @@
-####
 # Runtime-only Containerfile - Using pre-built JAR
-####
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:1.24-2
 
 # Metadata labels

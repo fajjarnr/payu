@@ -83,7 +83,6 @@ public class BillPaymentEntity {
     private Long version;
 
 
-    // Constructors
     public BillPaymentEntity() {
     }
 
@@ -109,7 +108,6 @@ public class BillPaymentEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -250,8 +248,4 @@ public class BillPaymentEntity {
     public void setTenantId(String tenantId) { this.tenantId = tenantId; }
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
-
-    /**
-     * Payment status enum.
-     */
 }

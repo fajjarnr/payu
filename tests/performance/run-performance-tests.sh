@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# PayU Performance Load Testing Runner
 # This script provides an easy interface to run Gatling performance tests
 
 set -e

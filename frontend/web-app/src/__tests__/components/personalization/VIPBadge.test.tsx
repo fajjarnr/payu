@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import VIPBadge from '@/components/personalization/VIPBadge';
 import { VIPStatusIndicator } from '@/components/personalization/VIPBadge';
 
-// Mock the hooks
 vi.mock('@/hooks/useVIPStatus', () => ({
   useVIPStatus: () => ({
     isVIP: true,

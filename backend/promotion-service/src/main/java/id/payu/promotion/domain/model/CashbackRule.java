@@ -41,16 +41,12 @@ public class CashbackRule {
     /**
      * Checks if this rule matches the given transaction.
      *
-     * @param transaction the transaction to check
-     * @return true if the rule applies to this transaction
      */
     public boolean matches(Transaction transaction) {
-        // Check if rule is active
         if (!active) {
             return false;
         }
 
-        // Check validity period
         Instant now = Instant.now();
         if (validFrom != null && now.isBefore(validFrom)) {
             return false;
@@ -59,23 +55,19 @@ public class CashbackRule {
             return false;
         }
 
-        // Check exact amount if specified
         if (exactAmount != null) {
             return transaction.getAmount().compareTo(exactAmount) == 0;
         }
 
-        // Check minimum amount
         if (minAmount != null && transaction.getAmount().compareTo(minAmount) < 0) {
             return false;
         }
 
-        // Check merchant code restrictions
         if (!applicableMerchantCodes.isEmpty() &&
                 !applicableMerchantCodes.contains(transaction.getMerchantCode())) {
             return false;
         }
 
-        // Check category restrictions
         if (!applicableCategories.isEmpty() &&
                 !applicableCategories.contains(transaction.getCategoryCode())) {
             return false;
@@ -87,8 +79,6 @@ public class CashbackRule {
     /**
      * Calculates the cashback amount for a matching transaction.
      *
-     * @param transaction the transaction
-     * @return the cashback amount (zero if not matching)
      */
     public BigDecimal calculateCashback(Transaction transaction) {
         if (!matches(transaction)) {
@@ -120,7 +110,6 @@ public class CashbackRule {
                 calculatedCashback = BigDecimal.ZERO;
         }
 
-        // Apply max cashback cap if set
         if (maxCashback != null && calculatedCashback.compareTo(maxCashback) > 0) {
             calculatedCashback = maxCashback;
         }
@@ -139,7 +128,6 @@ public class CashbackRule {
         BigDecimal applicableCashback = BigDecimal.ZERO;
         BigDecimal highestThreshold = BigDecimal.ZERO;
 
-        // Find the highest tier that applies
         for (Map.Entry<BigDecimal, BigDecimal> tier : tieredCashback.entrySet()) {
             BigDecimal tierThreshold = tier.getKey();
             if (amount.compareTo(tierThreshold) >= 0 && tierThreshold.compareTo(highestThreshold) >= 0) {
@@ -151,7 +139,6 @@ public class CashbackRule {
         return applicableCashback;
     }
 
-    // Getters and setters
     public String getRuleId() {
         return ruleId;
     }

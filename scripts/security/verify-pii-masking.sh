@@ -1,24 +1,18 @@
 #!/bin/bash
-#
-# PayU Security Audit Script - PII Masking Verification
 # Verifies that PII fields are properly masked in logs and API responses
-#
 # Usage: ./verify-pii-masking.sh [service-name]
 # Example: ./verify-pii-masking.sh account-service
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Configuration
 BACKEND_DIR="/home/ubuntu/payu/backend"
 REPORT_FILE="/tmp/pii-masking-report-$(date +%Y%m%d-%H%M%S).txt"
 
-# PII field patterns to check
 PII_FIELDS=(
     "nik"
     "cardNumber"
@@ -47,7 +41,6 @@ echo "Generated: $(date)" | tee -a "$REPORT_FILE"
 echo "========================================" | tee -a "$REPORT_FILE"
 echo "" | tee -a "$REPORT_FILE"
 
-# Function to check if a service has @Sensitive annotation usage
 check_sensitive_annotation() {
     local service=$1
     local service_dir="$BACKEND_DIR/$service"
@@ -73,7 +66,6 @@ check_sensitive_annotation() {
     fi
 }
 
-# Function to check for EncryptedStringConverter usage
 check_encryption_converter() {
     local service=$1
     local service_dir="$BACKEND_DIR/$service"
@@ -98,7 +90,6 @@ check_encryption_converter() {
     fi
 }
 
-# Function to check for @Audited annotation
 check_audit_annotation() {
     local service=$1
     local service_dir="$BACKEND_DIR/$service"
@@ -120,7 +111,6 @@ check_audit_annotation() {
     fi
 }
 
-# Function to check for security-starter dependency
 check_security_starter() {
     local service=$1
     local pom_file="$BACKEND_DIR/$service/pom.xml"
@@ -140,7 +130,6 @@ check_security_starter() {
     fi
 }
 
-# Function to check for @PreAuthorize annotations
 check_preauthorize() {
     local service=$1
     local service_dir="$BACKEND_DIR/$service"
@@ -162,7 +151,7 @@ check_preauthorize() {
     fi
 }
 
-# Function to check for logging of sensitive data (anti-pattern)
+# Logging raw PII is an anti-pattern.
 check_sensitive_logging() {
     local service=$1
     local service_dir="$BACKEND_DIR/$service"
@@ -175,7 +164,6 @@ check_sensitive_logging() {
 
     local issues=0
 
-    # Check for direct logging of PII fields
     for field in "${PII_FIELDS[@]}"; do
         local matches=$(find "$service_dir" -name "*.java" -exec grep -n "log.*\.$field\|log.*$field" {} + 2>/dev/null | grep -v "// " | wc -l)
         if [ "$matches" -gt 0 ]; then
@@ -193,7 +181,6 @@ check_sensitive_logging() {
     fi
 }
 
-# Main execution
 main() {
     local target_service=$1
     local services=()
@@ -201,7 +188,6 @@ main() {
     if [ -n "$target_service" ]; then
         services=("$target_service")
     else
-        # Get all service directories
         for dir in "$BACKEND_DIR"/*/; do
             if [ -f "$dir/pom.xml" ]; then
                 services+=("$(basename "$dir")")

@@ -65,7 +65,7 @@ class EncryptionServiceTest {
         // Each encryption should produce different result due to random IV
         assertNotEquals(encrypted1, encrypted2);
 
-        // But both should decrypt to the same original text
+        // both should decrypt to the same original text
         assertEquals(plainText, encryptionService.decrypt(encrypted1));
         assertEquals(plainText, encryptionService.decrypt(encrypted2));
     }
@@ -86,16 +86,13 @@ class EncryptionServiceTest {
 
     @Test
     void testDecryptFields() {
-        // First encrypt a field
         String json = "{\"name\":\"John\",\"email\":\"john@example.com\",\"ssn\":\"123-45-6789\"}";
         List<String> fieldsToEncrypt = List.of("ssn");
         String encryptedJson = encryptionService.encryptFields(json, fieldsToEncrypt);
 
-        // Now decrypt it back
         List<String> fieldsToDecrypt = List.of("ssn");
         String result = encryptionService.decryptFields(encryptedJson, fieldsToDecrypt);
 
-        // Should get back the original value
         assertNotNull(result);
         assertTrue(result.contains("123-45-6789"));
     }
@@ -224,11 +221,9 @@ class EncryptionServiceTest {
         assertNotEquals(json, result);
     }
 
-    // --- Key Rotation Tests ---
 
     @Test
     void testKeyRotationDecryptWithPreviousKey() {
-        // Encrypt with old key
         EncryptionService oldService = new EncryptionService("old-key-v1");
         String encrypted = oldService.encrypt("sensitive-data");
 
@@ -244,7 +239,6 @@ class EncryptionServiceTest {
         EncryptionService rotatedService = new EncryptionService("new-key-v2", List.of("old-key-v1"));
         String encrypted = rotatedService.encrypt("new-data");
 
-        // New key can decrypt
         String decrypted = rotatedService.decrypt(encrypted);
         assertEquals("new-data", decrypted);
 

@@ -43,9 +43,6 @@ public class IdempotencyProperties {
      */
     private InterceptorProperties interceptor = new InterceptorProperties();
 
-    /**
-     * Redis-specific properties.
-     */
     @Data
     public static class RedisProperties {
         /**
@@ -59,9 +56,6 @@ public class IdempotencyProperties {
         private boolean useTransactions = true;
     }
 
-    /**
-     * Interceptor-specific properties.
-     */
     @Data
     public static class InterceptorProperties {
         /**

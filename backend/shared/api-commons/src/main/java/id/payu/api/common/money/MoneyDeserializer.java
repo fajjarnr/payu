@@ -48,9 +48,6 @@ public class MoneyDeserializer extends JsonDeserializer<Money> {
         throw new IOException("Cannot deserialize Money from token: " + p.currentToken());
     }
 
-    /**
-     * Deserializes Money from object format.
-     */
     private Money deserializeObjectFormat(JsonParser p, DeserializationContext ctxt) throws IOException {
         BigDecimal amount = null;
         String currencyCode = Money.DEFAULT_CURRENCY_CODE;
@@ -105,9 +102,6 @@ public class MoneyDeserializer extends JsonDeserializer<Money> {
         throw new IllegalArgumentException("Invalid Money format: " + text);
     }
 
-    /**
-     * Checks if the string looks like a currency code (3 letters).
-     */
     private boolean isCurrencyCode(String str) {
         return str != null && str.length() == 3 && str.matches("[A-Za-z]{3}");
     }

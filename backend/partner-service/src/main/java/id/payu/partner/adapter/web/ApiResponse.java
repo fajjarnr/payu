@@ -139,7 +139,6 @@ public class ApiResponse<T> {
         return error("INTERNAL_ERROR", message);
     }
 
-    // Getters and Setters
     public boolean isSuccess() {
         return success;
     }

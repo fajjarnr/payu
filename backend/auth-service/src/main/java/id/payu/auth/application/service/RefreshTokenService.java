@@ -11,8 +11,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Service for managing refresh tokens with rotation.
- *
  * Refresh token rotation is a security mechanism where:
  * 1. Each time a refresh token is used, a new one is issued
  * 2. The old refresh token is invalidated
@@ -31,22 +29,14 @@ public class RefreshTokenService {
     private final DistributedCache distributedCache;
     private final BCryptPasswordEncoder tokenEncoder = new BCryptPasswordEncoder(12);
 
-    // Refresh token lifetime: 7 days
     private static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(7);
 
-    // Cache key prefix for storing refresh tokens
     private static final String REFRESH_TOKEN_PREFIX = "auth:refresh:";
 
     public RefreshTokenService(DistributedCache distributedCache) {
         this.distributedCache = distributedCache;
     }
 
-    /**
-     * Creates a new refresh token for a user.
-     *
-     * @param userId The user ID
-     * @return The refresh token response
-     */
     public RefreshTokenResponse createRefreshToken(String userId) {
         String tokenId = UUID.randomUUID().toString();
         String rawToken = generateRawToken(tokenId);
@@ -68,23 +58,14 @@ public class RefreshTokenService {
     }
 
     /**
-     * Rotates a refresh token and returns a new one.
+     * Rotates a refresh token: the old one is invalidated and a new one issued.
      *
-     * This method implements refresh token rotation where:
-     * - The old token is invalidated
-     * - A new token is issued
-     * - Rotation count is incremented
-     *
-     * @param oldRefreshToken The old refresh token
-     * @return The new refresh token response
      * @throws IllegalArgumentException if the token is invalid or expired
      * @throws org.springframework.security.authentication.BadCredentialsException if token reuse is detected
      */
     public RefreshTokenResponse rotateRefreshToken(String oldRefreshToken) {
-        // Extract token ID from the raw token
         String tokenId = extractTokenId(oldRefreshToken);
 
-        // Find token metadata through its reverse index.
         RefreshTokenMetadata metadata = findTokenMetadata(tokenId);
 
         if (metadata == null) {
@@ -93,7 +74,6 @@ public class RefreshTokenService {
                     "Invalid refresh token");
         }
 
-        // Check if token has expired
         if (Instant.now().isAfter(metadata.expiresAt())) {
             log.warn("Attempt to use expired refresh token for user: {}",
                     maskUserId(metadata.userId()));
@@ -101,7 +81,6 @@ public class RefreshTokenService {
                     "Refresh token has expired");
         }
 
-        // Verify the token hash matches
         if (!tokenEncoder.matches(oldRefreshToken, metadata.hashedToken())) {
             log.warn("Attempt to use invalid refresh token for user: {}",
                     maskUserId(metadata.userId()));
@@ -109,10 +88,8 @@ public class RefreshTokenService {
                     "Invalid refresh token");
         }
 
-        // Invalidate the old token
         invalidateToken(metadata.userId(), tokenId);
 
-        // Create a new token (rotation)
         RefreshTokenResponse newToken = createRefreshToken(metadata.userId());
 
         log.info("Rotated refresh token for user: {}, previous rotation count: {}",
@@ -121,12 +98,6 @@ public class RefreshTokenService {
         return newToken;
     }
 
-    /**
-     * Invalidates a specific refresh token.
-     *
-     * @param userId The user ID
-     * @param tokenId The token ID
-     */
     public void invalidateToken(String userId, String tokenId) {
         String cacheKey = buildCacheKey(userId, tokenId);
         String reverseIndexKey = buildReverseIndexKey(tokenId);
@@ -136,10 +107,7 @@ public class RefreshTokenService {
     }
 
     /**
-     * Invalidates all refresh tokens for a user.
-     * Used when user logs out from all devices or changes password.
-     *
-     * @param userId The user ID
+     * Invalidates all refresh tokens for a user (logout from all devices, password change).
      */
     public void invalidateAllUserTokens(String userId) {
         String pattern = REFRESH_TOKEN_PREFIX + userId + ":*";
@@ -149,10 +117,6 @@ public class RefreshTokenService {
 
     /**
      * Validates a refresh token without rotating it.
-     * Used for checking if a token is still valid.
-     *
-     * @param refreshToken The refresh token
-     * @return true if valid, false otherwise
      */
     public boolean isRefreshTokenValid(String refreshToken) {
         try {
@@ -175,11 +139,7 @@ public class RefreshTokenService {
     }
 
     /**
-     * Finds token metadata by token ID.
-     * Uses reverse index mapping for O(1) lookup performance.
-     *
-     * @param tokenId The token ID to lookup
-     * @return RefreshTokenMetadata if found, null otherwise
+     * Finds token metadata by token ID via the reverse index (O(1) lookup).
      */
     private RefreshTokenMetadata findTokenMetadata(String tokenId) {
         String reverseIndexKey = buildReverseIndexKey(tokenId);
@@ -200,27 +160,15 @@ public class RefreshTokenService {
         return metadata;
     }
 
-    /**
-     * Generates a raw refresh token string.
-     */
     private String generateRawToken(String tokenId) {
-        // Format: version + tokenId + random
-        // In production, use a cryptographically secure random generator
         return "v1." + tokenId + "." + UUID.randomUUID().toString().replace("-", "");
     }
 
-    /**
-     * Hashes a refresh token for secure storage.
-     */
     private String hashToken(String rawToken) {
         return tokenEncoder.encode(rawToken);
     }
 
-    /**
-     * Extracts token ID from raw token.
-     */
     private String extractTokenId(String rawToken) {
-        // Token format: v1.{tokenId}.{random}
         String[] parts = rawToken.split("\\.");
         if (parts.length >= 2) {
             return parts[1];
@@ -228,24 +176,17 @@ public class RefreshTokenService {
         throw new IllegalArgumentException("Invalid token format");
     }
 
-    /**
-     * Builds Redis key for storing token metadata.
-     */
     private String buildCacheKey(String userId, String tokenId) {
         return REFRESH_TOKEN_PREFIX + userId + ":" + tokenId;
     }
 
     /**
-     * Builds reverse index key for O(1) token lookup by ID.
-     * Maps tokenId -> userId for fast metadata retrieval.
+     * Reverse index key (tokenId -> userId) for O(1) metadata lookup.
      */
     private String buildReverseIndexKey(String tokenId) {
         return REFRESH_TOKEN_PREFIX + "index:" + tokenId;
     }
 
-    /**
-     * Masks user ID for safe logging.
-     */
     private String maskUserId(String userId) {
         if (userId == null || userId.length() < 4) {
             return "***";
@@ -253,9 +194,6 @@ public class RefreshTokenService {
         return userId.substring(0, 4) + "***";
     }
 
-    /**
-     * Masks token for safe logging.
-     */
     private String maskToken(String token) {
         if (token == null || token.length() < 8) {
             return "***";

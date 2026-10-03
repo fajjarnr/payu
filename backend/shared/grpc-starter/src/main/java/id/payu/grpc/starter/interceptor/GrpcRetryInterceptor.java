@@ -159,7 +159,6 @@ public class GrpcRetryInterceptor implements ClientInterceptor {
                     delegate.request(pendingRequests);
                 }
 
-                // Resend message if it was already sent
                 if (message != null) {
                     delegate.sendMessage(message);
                     delegate.halfClose();

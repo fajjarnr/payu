@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# ============================================================================
 # LOGIN-006 release gate — browser login E2E (BFF → gateway → auth → Keycloak),
 # fail-closed: ANY failed Playwright assertion fails the gate with non-zero exit.
 #
@@ -9,7 +8,6 @@
 # Usage:
 #   ./scripts/login-gate.sh            # build + start + run gate (default)
 #   ./scripts/login-gate.sh --skip-build
-# ============================================================================
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

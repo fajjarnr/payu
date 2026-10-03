@@ -52,8 +52,6 @@ public class SplitPaymentService implements SplitPaymentUseCase {
         this.journalUseCase = journalUseCase;
     }
 
-    // --- Rule Management ---
-
     @Override
     @Transactional
     public SplitPaymentRule createRule(String partnerId, String ruleName,
@@ -108,8 +106,6 @@ public class SplitPaymentService implements SplitPaymentUseCase {
         persistencePort.saveRule(rule);
         log.info("Split rule deactivated: id={}", ruleId);
     }
-
-    // --- Execution ---
 
     @Override
     public SplitPaymentExecution executeSplit(UUID ruleId, String payerAccountId,
@@ -177,7 +173,6 @@ public class SplitPaymentService implements SplitPaymentUseCase {
         log.info("Executing split payment: payer={}, total={} {}, legs={}",
                 maskId(payerAccountId), totalAmount, currency, legAmounts.size());
 
-        // 1. Create execution
         UUID executionId = UUID.randomUUID();
         List<SplitPaymentLeg> legs = new ArrayList<>();
         for (SplitPaymentRule.SplitLegAmount la : legAmounts) {
@@ -312,8 +307,6 @@ public class SplitPaymentService implements SplitPaymentUseCase {
         log.info("Split payment reversed: id={}", executionId);
         return saved;
     }
-
-    // --- Journal Helpers ---
 
     private void createSplitJournal(SplitPaymentExecution execution) {
         if (!journalUseCase.getJournalsByReference(REFERENCE_TYPE, execution.getId().toString()).isEmpty()) {

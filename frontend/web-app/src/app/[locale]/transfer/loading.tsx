@@ -7,7 +7,6 @@ export default function TransferLoading() {
         <div className="h-8 w-40 bg-muted rounded-xl mb-2" />
         <div className="h-5 w-56 bg-muted/60 rounded-xl mb-8" />
 
-        {/* Transfer form skeleton */}
         <div className="rounded-3xl border border-border bg-card p-6 space-y-6">
           <div>
             <div className="h-4 w-24 bg-muted rounded mb-2" />
@@ -28,7 +27,6 @@ export default function TransferLoading() {
           <div className="h-12 w-full bg-muted rounded-full" />
         </div>
 
-        {/* Recent recipients skeleton */}
         <div className="mt-8">
           <div className="h-6 w-36 bg-muted rounded-xl mb-4" />
           <div className="flex gap-4">

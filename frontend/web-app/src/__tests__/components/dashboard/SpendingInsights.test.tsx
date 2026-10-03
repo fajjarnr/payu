@@ -57,7 +57,6 @@ describe('SpendingInsights', () => {
   it('should expand category details on click', async () => {
     renderWithIntl(<SpendingInsights data={mockCategories} />);
 
-    // Find the first category button by looking for button with the category text
     const categoryButtons = screen.getAllByRole('button');
     const foodCategoryButton = categoryButtons.find(btn =>
       btn.textContent?.includes('Makanan')
@@ -107,7 +106,6 @@ describe('SpendingInsights', () => {
   it('should have keyboard-navigable category items', () => {
     renderWithIntl(<SpendingInsights data={mockCategories} />);
 
-    // Get category buttons by looking for buttons with category text
     const categoryButtons = screen.getAllByRole('button').filter((btn) =>
       btn.textContent?.includes('Makanan') || btn.textContent?.includes('Belanja')
     );

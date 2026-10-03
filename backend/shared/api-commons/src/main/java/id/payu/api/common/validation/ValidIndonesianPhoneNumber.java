@@ -12,11 +12,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Validates Indonesian phone number format.
- * Accepts formats:
- * - +628123456789
- * - 628123456789
- * - 08123456789
+ * Accepts formats: +628123456789, 628123456789, 08123456789
  */
 @Target({FIELD, PARAMETER})
 @Retention(RUNTIME)

@@ -18,19 +18,14 @@ public class SecurityHeadersFilter implements ContainerResponseFilter {
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
         MultivaluedMap<String, Object> headers = responseContext.getHeaders();
 
-        // 1. Strict-Transport-Security (HSTS)
         headers.putSingle("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
 
-        // 2. Content-Security-Policy (CSP)
         headers.putSingle("Content-Security-Policy", "default-src 'none'");
 
-        // 3. X-Frame-Options
         headers.putSingle("X-Frame-Options", "DENY");
 
-        // 4. X-Content-Type-Options
         headers.putSingle("X-Content-Type-Options", "nosniff");
 
-        // 5. X-Request-ID (Propagate or generate)
         if (headers.getFirst("X-Request-ID") == null && headers.getFirst("X-Request-Id") == null) {
             String requestId = requestContext.getHeaderString("X-Request-ID");
             if (requestId == null || requestId.isBlank()) {

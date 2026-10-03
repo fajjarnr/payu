@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 /**
  * GAP-27 — Reproduces thread-local leakage in {@link CacheWithTTLAspect#handleSyncCache}.
  *
- * <p>Bug: the sync-cache stampede-protection path wraps {@code joinPoint.proceed()} in
+ * <p>Bug: the sync-cache stampede-protection path wrapped {@code joinPoint.proceed()} in
  * {@code CompletableFuture.supplyAsync(...)} on the common ForkJoinPool. This detaches
  * the invocation from the original request thread, so {@code SecurityContextHolder},
  * {@code TenantContext}, MDC, and any active Hibernate transaction lose their
@@ -121,7 +121,6 @@ class CacheWithTTLAspectThreadLocalTest {
         PRINCIPAL.set("user-42");
         Thread callerThread = Thread.currentThread();
 
-        // Act — must block until proceed finishes
         Object result = aspect.aroundCacheWithTTL(joinPoint, cacheWithTTL);
 
         assertThat(proceedDone.await(2, TimeUnit.SECONDS)).isTrue();

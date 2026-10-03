@@ -138,8 +138,6 @@ public class OutboxEvent {
     }
 
     /**
-     * Marks this event as published.
-     *
      * @return this event instance for method chaining
      */
     public OutboxEvent markAsPublished() {
@@ -159,21 +157,10 @@ public class OutboxEvent {
         return this;
     }
 
-    /**
-     * Checks if this event has been published.
-     *
-     * @return true if the event has been published, false otherwise
-     */
     public boolean isPublished() {
         return this.publishedAt != null;
     }
 
-    /**
-     * Checks if this event should be retried based on the maximum retry count.
-     *
-     * @param maxRetries the maximum number of retry attempts allowed
-     * @return true if the event should be retried, false otherwise
-     */
     public boolean shouldRetry(int maxRetries) {
         return !isPublished() && this.retryCount < maxRetries;
     }

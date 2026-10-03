@@ -1,6 +1,5 @@
 # Falco DaemonSet — Modern eBPF (no init container, no compile)
 # Image: falcosecurity/falco-no-driver:0.40.0 with modern eBPF bundled
-# ============================================================
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

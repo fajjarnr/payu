@@ -101,10 +101,6 @@ public class AgentService {
         );
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
-
     private List<AgentResponse> getAllAgentsFallback(Exception ex) {
         log.error("Fallback for getAllAgents: {}", ex.getMessage());
         throw new RuntimeException("Support service temporarily unavailable", ex);

@@ -11,15 +11,8 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Outbox-based implementation of UserEventPublisherPort.
- * <p>
- * MSG-007: Migrated from direct KafkaTemplate.send() to OutboxService.createEvent()
- * for transactional atomicity between business data and event publishing.
- * Events are persisted to outbox_events table within the caller's transaction
- * and published to Kafka asynchronously by OutboxPublisher.
- *
- * @author PayU Digital Banking Platform
- * @since 1.8.8
+ * Outbox-based UserEventPublisherPort (MSG-007): events persist to
+ * outbox_events in the caller's transaction, then publish to Kafka asynchronously.
  */
 @Component
 @RequiredArgsConstructor

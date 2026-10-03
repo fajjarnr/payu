@@ -51,7 +51,6 @@ public class CreateEscrowRequest {
         this.expiresInHours = expiresInHours;
     }
 
-    // Getters and Setters
     public String getBuyerAccountId() { return buyerAccountId; }
     public void setBuyerAccountId(String buyerAccountId) { this.buyerAccountId = buyerAccountId; }
     public String getSellerAccountId() { return sellerAccountId; }

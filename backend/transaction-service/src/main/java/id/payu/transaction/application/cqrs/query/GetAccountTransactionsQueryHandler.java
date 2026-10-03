@@ -33,7 +33,6 @@ public class GetAccountTransactionsQueryHandler implements QueryHandler<GetAccou
     public List<TransactionEntity> handle(GetAccountTransactionsQuery query) {
         log.info("Handling GetAccountTransactionsQuery for account: {}", query.accountId());
 
-        // Verify user owns the account
         authorizationService.verifyAccountOwnership(UUID.fromString(query.accountId()), query.userId());
 
         return transactionPersistencePort.findByAccountId(

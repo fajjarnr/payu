@@ -99,7 +99,6 @@ def main() -> int:
         # Skip non-payu services (e.g. operator deployments)
         if not any(svc.endswith(suf) for suf in ('-service', '-simulator')):
             continue
-        # Find base file
         dep_file = BASE / svc / 'deployment.yaml'
         if not dep_file.exists():
             sim_file = BASE / f'{svc}.yaml'
@@ -108,7 +107,6 @@ def main() -> int:
         if dep_file.exists():
             if update_base_image(svc, dep_file, image):
                 changes += 1
-        # Also update overlay
         registry, _, tag_full = image.rpartition(':')
         # rpartition on the LAST ':' may include port. Split more carefully:
         last_colon = image.rfind(':')

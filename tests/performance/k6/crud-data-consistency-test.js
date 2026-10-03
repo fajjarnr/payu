@@ -1,5 +1,3 @@
-// PayU Platform - CRUD Data Consistency Test
-// ============================================
 // Verifies read-after-write and state-transition consistency for the verified
 // onboarding, wallet, pocket, and card flows.
 

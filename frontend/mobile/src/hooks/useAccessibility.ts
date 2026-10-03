@@ -1,15 +1,4 @@
-/**
- * useAccessibility Hook
- *
- * Provides accessibility-related utilities for React Native components:
- * - Screen reader status detection
- * - Announcement management
- * - Focus management
- * - Accessibility info utilities
- *
- * @module hooks/useAccessibility
- * @version 1.0.0
- */
+/** Accessibility hooks: screen-reader status, announcements, focus, preferences, and forms. */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
@@ -21,11 +10,7 @@ import {
   AccessibilityAnnouncementFinishedEvent,
 } from 'react-native';
 
-// Types and interfaces
 
-/**
- * Screen reader state
- */
 export interface ScreenReaderState {
   /** Whether screen reader is currently enabled */
   isEnabled: boolean;
@@ -33,9 +18,6 @@ export interface ScreenReaderState {
   isActive: boolean;
 }
 
-/**
- * Announcement options
- */
 export interface AnnouncementOptions {
   /** Announcement priority */
   priority?: 'polite' | 'assertive';
@@ -43,9 +25,6 @@ export interface AnnouncementOptions {
   onFinish?: (event: AccessibilityAnnouncementFinishedEvent) => void;
 }
 
-/**
- * Focus management options
- */
 export interface FocusOptions {
   /** Delay before focusing (ms) */
   delay?: number;
@@ -53,9 +32,6 @@ export interface FocusOptions {
   announce?: boolean;
 }
 
-/**
- * Accessibility preferences
- */
 export interface AccessibilityPreferences {
   /** Whether bold text is enabled */
   boldTextEnabled: boolean;
@@ -73,20 +49,7 @@ export interface AccessibilityPreferences {
 
 // Hook: useScreenReader
 
-/**
- * Hook to detect and monitor screen reader status
- *
- * @returns Screen reader state and utilities
- *
- * @example
- * ```tsx
- * const { isEnabled, isActive } = useScreenReader();
- *
- * if (isEnabled) {
- *   // Provide enhanced accessibility features
- * }
- * ```
- */
+/** Detects screen-reader status and exposes a refresh(). */
 export function useScreenReader(): ScreenReaderState & {
   /** Refresh screen reader status */
   refresh: () => Promise<void>;
@@ -97,7 +60,6 @@ export function useScreenReader(): ScreenReaderState & {
   useEffect(() => {
     let isMounted = true;
 
-    // Get initial state
     const fetchInitialState = async () => {
       try {
         const enabled = await AccessibilityInfo.isScreenReaderEnabled();
@@ -120,7 +82,6 @@ export function useScreenReader(): ScreenReaderState & {
 
     fetchInitialState();
 
-    // Subscribe to changes
     const subscription = AccessibilityInfo.addEventListener(
       'screenReaderChanged',
       (enabled: AccessibilityChangeEvent) => {
@@ -154,24 +115,8 @@ export function useScreenReader(): ScreenReaderState & {
   return { isEnabled, isActive, refresh };
 }
 
-// Hook: useAccessibilityAnnounce
 
-/**
- * Hook for announcing messages to screen readers
- *
- * @returns Announcement functions and state
- *
- * @example
- * ```tsx
- * const { announce, announcePolite, announceAssertive } = useAccessibilityAnnounce();
- *
- * // Announce transaction success
- * announceAssertive('Transfer completed successfully');
- *
- * // Announce balance update
- * announcePolite('Your balance has been updated');
- * ```
- */
+/** Announces messages to screen readers, with polite/assertive priority. */
 export function useAccessibilityAnnounce() {
   const [lastAnnouncement, setLastAnnouncement] = useState<string>('');
   const finishCallbacks = useRef<Map<string, (event: AccessibilityAnnouncementFinishedEvent) => void>>(new Map());
@@ -275,31 +220,8 @@ export function useAccessibilityAnnounce() {
   };
 }
 
-// Hook: useAccessibilityFocus
 
-/**
- * Hook for managing focus in an accessible way
- *
- * @returns Focus management utilities
- *
- * @example
- * ```tsx
- * const { setFocus, focusRef, announceFocus } = useAccessibilityFocus();
- *
- * // Focus an element after action
- * useEffect(() => {
- *   if (transactionComplete) {
- *     setFocus(successMessageRef);
- *   }
- * }, [transactionComplete]);
- *
- * return (
- *   <View ref={successMessageRef} accessible accessibilityLabel="Success">
- *     ...
- *   </View>
- * );
- * ```
- */
+/** Manages accessibility focus, with optional announcement. */
 export function useAccessibilityFocus() {
   const { announcePolite } = useAccessibilityAnnounce();
 
@@ -315,7 +237,6 @@ export function useAccessibilityFocus() {
             AccessibilityInfo.setAccessibilityFocus(nodeHandle);
 
             if (announce) {
-              // Get accessibility label or fallback
               // Note: In real implementation, you'd get this from the component
               announcePolite('Focused');
             }
@@ -369,22 +290,8 @@ export function useAccessibilityFocus() {
   };
 }
 
-// Hook: useAccessibilityPreferences
 
-/**
- * Hook to get user's accessibility preferences
- *
- * @returns Accessibility preferences state
- *
- * @example
- * ```tsx
- * const { preferences, isLoading } = useAccessibilityPreferences();
- *
- * if (preferences.reduceMotionEnabled) {
- *   // Disable animations
- * }
- * ```
- */
+/** Reads the user's accessibility preferences. */
 export function useAccessibilityPreferences() {
   const [preferences, setPreferences] = useState<AccessibilityPreferences>({
     boldTextEnabled: false,
@@ -438,7 +345,6 @@ export function useAccessibilityPreferences() {
 
     fetchPreferences();
 
-    // Subscribe to changes
     const subscriptions: any[] = [];
 
     subscriptions.push(
@@ -476,26 +382,8 @@ export function useAccessibilityPreferences() {
   return { preferences, isLoading };
 }
 
-// Hook: useAccessibleForm
 
-/**
- * Hook for managing accessible form interactions
- *
- * @returns Form accessibility utilities
- *
- * @example
- * ```tsx
- * const { announceFieldError, announceFormSubmit, announceFormReset } = useAccessibleForm();
- *
- * const handleSubmit = () => {
- *   if (errors.length > 0) {
- *     announceFieldError('Email', 'Please enter a valid email address');
- *   } else {
- *     announceFormSubmit('Transfer form');
- *   }
- * };
- * ```
- */
+/** Announces accessible form errors, submit, and reset. */
 export function useAccessibleForm() {
   const { announceAssertive, announcePolite } = useAccessibilityAnnounce();
 
@@ -553,29 +441,8 @@ export function useAccessibleForm() {
   };
 }
 
-// Hook: useAccessibility (main hook)
 
-/**
- * Main accessibility hook combining all accessibility features
- *
- * @returns Combined accessibility utilities
- *
- * @example
- * ```tsx
- * const a11y = useAccessibility();
- *
- * // Check if screen reader is enabled
- * if (a11y.screenReader.isEnabled) {
- *   a11y.announce.announcePolite('Screen reader detected');
- * }
- *
- * // Focus an element
- * a11y.focus.setFocus(myRef);
- *
- * // Get user preferences
- * const { reduceMotionEnabled } = a11y.preferences.preferences;
- * ```
- */
+/** Combines screen-reader, announcement, focus, preferences, and form utilities. */
 export function useAccessibility() {
   const screenReader = useScreenReader();
   const announce = useAccessibilityAnnounce();
@@ -590,7 +457,6 @@ export function useAccessibility() {
       focus,
       preferences,
       form,
-      // Convenience properties
       isScreenReaderEnabled: screenReader.isEnabled,
       reduceMotionEnabled: preferences.preferences.reduceMotionEnabled,
     }),
@@ -598,6 +464,5 @@ export function useAccessibility() {
   );
 }
 
-// Export
 
 export default useAccessibility;

@@ -8,9 +8,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for SoapTransformer.
- */
 public class SoapTransformerTest {
 
     private SoapTransformer transformer;

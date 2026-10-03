@@ -10,7 +10,6 @@ BUCKET="oidc-storage-${INFRA_ID}"
 
 echo "Creating S3 OIDC bucket: ${BUCKET} in ${REGION}"
 
-# Create bucket
 if [ "${REGION}" = "us-east-1" ]; then
   aws s3api create-bucket --bucket "${BUCKET}"
 else
@@ -18,10 +17,8 @@ else
     --create-bucket-configuration "LocationConstraint=${REGION}"
 fi
 
-# Remove public access block
 aws s3api delete-public-access-block --bucket "${BUCKET}"
 
-# Set bucket policy for public read
 cat > /tmp/${BUCKET}-policy.json <<EOF
 {
   "Version": "2012-10-17",

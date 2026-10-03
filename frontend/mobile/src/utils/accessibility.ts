@@ -1,16 +1,7 @@
-/**
- * Accessibility Utilities for PayU Mobile App
- *
- * Provides helper functions for generating accessibility props,
- * checking compliance, and managing screen reader interactions.
- *
- * @module accessibility
- * @version 1.0.0
- */
+/** Accessibility helpers: prop generation, WCAG 2.1 touch-target and contrast validation, screen-reader formatting. */
 
 import { AccessibilityProps, AccessibilityRole, AccessibilityState } from 'react-native';
 
-// Types and interfaces
 
 /**
  * Extended accessibility props with additional PayU-specific attributes
@@ -39,9 +30,6 @@ export interface PayUAccessibilityProps extends AccessibilityProps {
   };
 }
 
-/**
- * Configuration for generating accessibility props
- */
 export interface A11yConfig {
   /** Primary label describing the element */
   label: string;
@@ -65,9 +53,6 @@ export interface A11yConfig {
   language?: string;
 }
 
-/**
- * Touch target validation result
- */
 export interface TouchTargetValidation {
   /** Whether the touch target meets minimum size */
   isValid: boolean;
@@ -83,9 +68,6 @@ export interface TouchTargetValidation {
   error?: string;
 }
 
-/**
- * Color contrast validation result
- */
 export interface ContrastValidation {
   /** Whether the contrast ratio meets WCAG standards */
   isValid: boolean;
@@ -101,7 +83,6 @@ export interface ContrastValidation {
   background: string;
 }
 
-// Constants
 
 /** Minimum touch target size per WCAG 2.1 guidelines */
 export const MIN_TOUCH_TARGET_SIZE = 44;
@@ -136,24 +117,8 @@ export const A11Y_ROLES = {
   NONE: 'none',
 } as const;
 
-// Helper functions
 
-/**
- * Generates comprehensive accessibility props for a component
- *
- * @param config - Accessibility configuration object
- * @returns Complete accessibility props for React Native components
- *
- * @example
- * ```tsx
- * const props = generateA11yProps({
- *   label: 'Transfer button',
- *   hint: 'Opens transfer screen',
- *   role: 'button',
- *   testID: 'transfer-btn'
- * });
- * ```
- */
+/** Builds React Native accessibility props (label, hint, role, state) from an A11yConfig. */
 export function generateA11yProps(config: A11yConfig): PayUAccessibilityProps {
   const props: PayUAccessibilityProps = {
     accessibilityLabel: config.label,
@@ -186,17 +151,6 @@ export function generateA11yProps(config: A11yConfig): PayUAccessibilityProps {
   return props;
 }
 
-/**
- * Generates a testID from a label string
- *
- * @param label - The accessibility label
- * @returns A kebab-case testID
- *
- * @example
- * ```ts
- * generateTestID('Transfer Button'); // 'transfer-button'
- * ```
- */
 export function generateTestID(label: string): string {
   return label
     .toLowerCase()
@@ -204,22 +158,7 @@ export function generateTestID(label: string): string {
     .replace(/^-|-$/g, '');
 }
 
-/**
- * Validates touch target size meets WCAG 2.1 minimum requirements
- *
- * @param width - Element width in pixels
- * @param height - Element height in pixels
- * @param options - Optional validation parameters
- * @returns Validation result with details
- *
- * @example
- * ```ts
- * const result = validateTouchTarget(48, 48);
- * if (!result.isValid) {
- *   console.warn(result.error);
- * }
- * ```
- */
+/** Validates touch target size against WCAG 2.1 minimums (default 44x44). */
 export function validateTouchTarget(
   width: number,
   height: number,
@@ -242,12 +181,7 @@ export function validateTouchTarget(
   };
 }
 
-/**
- * Calculates relative luminance of a color (WCAG 2.1 formula)
- *
- * @param color - Hex color string (e.g., '#10b981' or '#fff')
- * @returns Relative luminance value (0-1)
- */
+/** Relative luminance of a hex color per the WCAG 2.1 formula. */
 export function getLuminance(color: string): number {
   const hex = color.replace('#', '');
   const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.slice(0, 2), 16) / 255;
@@ -261,18 +195,6 @@ export function getLuminance(color: string): number {
   return 0.2126 * R + 0.7152 * G + 0.0722 * B;
 }
 
-/**
- * Calculates contrast ratio between two colors
- *
- * @param foreground - Foreground color (hex)
- * @param background - Background color (hex)
- * @returns Contrast ratio (1-21)
- *
- * @example
- * ```ts
- * const ratio = getContrastRatio('#ffffff', '#000000'); // 21
- * ```
- */
 export function getContrastRatio(foreground: string, background: string): number {
   const l1 = getLuminance(foreground);
   const l2 = getLuminance(background);
@@ -281,20 +203,7 @@ export function getContrastRatio(foreground: string, background: string): number
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-/**
- * Validates color contrast meets WCAG 2.1 standards
- *
- * @param foreground - Foreground color (hex)
- * @param background - Background color (hex)
- * @param isLargeText - Whether the text is large (18pt+ or 14pt+ bold)
- * @returns Contrast validation result
- *
- * @example
- * ```ts
- * const result = validateContrast('#10b981', '#ffffff', false);
- * console.log(result.level); // 'AA' | 'AAA' | 'fail'
- * ```
- */
+/** Validates color contrast against WCAG 2.1 AA/AAA thresholds. */
 export function validateContrast(
   foreground: string,
   background: string,
@@ -320,19 +229,7 @@ export function validateContrast(
   };
 }
 
-/**
- * Formats currency amount for screen reader announcement
- *
- * @param amount - Numeric amount
- * @param currency - Currency code (default: 'IDR')
- * @returns Formatted string for screen reader
- *
- * @example
- * ```ts
- * formatCurrencyForA11y(1500000); // '1 juta 500 ribu rupiah'
- * formatCurrencyForA11y(1500000, 'IDR', 'en'); // '1 million 500 thousand rupiah'
- * ```
- */
+/** Formats an amount as spoken Indonesian or English currency for screen readers. */
 export function formatCurrencyForA11y(
   amount: number,
   currency: string = 'IDR',
@@ -365,7 +262,6 @@ export function formatCurrencyForA11y(
     text += ' rupiah';
     if (isNegative) text = `minus ${text}`;
   } else {
-    // English
     if (absAmount >= 1000000000) {
       text += `${(absAmount / 1000000000).toFixed(2)} billion`;
     } else if (absAmount >= 1000000) {
@@ -382,13 +278,6 @@ export function formatCurrencyForA11y(
   return text;
 }
 
-/**
- * Creates accessibility props for a form input
- *
- * @param label - Input label
- * @param options - Additional options
- * @returns Accessibility props for input component
- */
 export function createInputA11yProps(
   label: string,
   options?: {
@@ -416,13 +305,6 @@ export function createInputA11yProps(
   });
 }
 
-/**
- * Creates accessibility announcement for dynamic content changes
- *
- * @param message - Message to announce
- * @param priority - Announcement priority
- * @returns Formatted announcement object
- */
 export function createAnnouncement(
   message: string,
   priority: 'polite' | 'assertive' = 'polite'
@@ -430,12 +312,6 @@ export function createAnnouncement(
   return { message, priority };
 }
 
-/**
- * Validates that all interactive elements have proper accessibility labels
- *
- * @param elements - Array of elements to validate
- * @returns Validation results
- */
 export function validateA11yLabels(
   elements: { label?: string; testID?: string; role?: string }[]
 ): { isValid: boolean; errors: string[] } {
@@ -456,7 +332,6 @@ export function validateA11yLabels(
   };
 }
 
-// Export default
 
 export default {
   generateA11yProps,

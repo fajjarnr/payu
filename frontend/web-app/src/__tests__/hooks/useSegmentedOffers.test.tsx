@@ -8,7 +8,6 @@ import {
 } from '@/hooks/useSegmentedOffers';
 import SegmentationService from '@/services/SegmentationService';
 
-// Mock SegmentationService
 vi.mock('@/services/SegmentationService');
 
 describe('useSegmentedOffers hook', () => {

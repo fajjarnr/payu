@@ -3,7 +3,6 @@ import { Logger } from '../logger';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
   setItemAsync: jest.fn(),
@@ -296,20 +295,16 @@ describe('storage integration', () => {
   it('should handle full lifecycle of data', async () => {
     const userData = { id: 1, name: 'John' };
 
-    // Set data
     (SecureStore.setItemAsync as jest.Mock).mockResolvedValue(undefined);
     await storage.set('user', userData);
 
-    // Get data
     (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(JSON.stringify(userData));
     const retrieved = await storage.get('user');
     expect(retrieved).toEqual(userData);
 
-    // Remove data
     (SecureStore.deleteItemAsync as jest.Mock).mockResolvedValue(undefined);
     await storage.remove('user');
 
-    // Verify removal
     (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
     const afterRemoval = await storage.get('user');
     expect(afterRemoval).toBeNull();

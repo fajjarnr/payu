@@ -38,7 +38,6 @@ export default function LanguageSwitcher() {
       }
     }
     
-    // Clean up double slashes
     newPath = newPath.replace(/\/+/g, '/');
     if (newPath !== '/' && newPath.endsWith('/')) {
       newPath = newPath.slice(0, -1);

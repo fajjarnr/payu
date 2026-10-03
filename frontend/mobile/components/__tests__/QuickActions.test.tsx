@@ -24,16 +24,15 @@ describe('QuickActions', () => {
     it('should render correct icons for each action', () => {
       render(<QuickActions {...defaultProps} />);
 
-      expect(screen.getByText('💸')).toBeTruthy(); // Transfer
-      expect(screen.getByText('📱')).toBeTruthy(); // QRIS
-      expect(screen.getByText('➕')).toBeTruthy(); // Top Up
-      expect(screen.getByText('💳')).toBeTruthy(); // Pay
+      expect(screen.getByText('💸')).toBeTruthy();
+      expect(screen.getByText('📱')).toBeTruthy();
+      expect(screen.getByText('➕')).toBeTruthy();
+      expect(screen.getByText('💳')).toBeTruthy();
     });
 
     it('should render all action buttons', () => {
       render(<QuickActions {...defaultProps} />);
 
-      // Find all accessible touchable elements with menuitem role
       const buttons = screen.getAllByRole('menuitem');
       expect(buttons.length).toBe(4);
     });
@@ -202,7 +201,6 @@ describe('QuickActions', () => {
     it('should render in horizontal layout', () => {
       const { UNSAFE_root } = render(<QuickActions {...defaultProps} />);
 
-      // Container should use flexDirection: 'row'
       expect(UNSAFE_root).toBeTruthy();
     });
 
@@ -210,7 +208,6 @@ describe('QuickActions', () => {
       render(<QuickActions {...defaultProps} />);
 
       const buttons = screen.getAllByRole('menuitem');
-      // All buttons should have flex: 1
       expect(buttons).toHaveLength(4);
     });
   });

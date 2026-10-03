@@ -3,7 +3,6 @@
 #
 # Usage: ./scripts/cleanup-kubernetes-mcp.sh [namespace] [sa-name]
 # Example: ./scripts/cleanup-kubernetes-mcp.sh mcp mcp-viewer
-# ==============================================================================
 
 set -euo pipefail
 

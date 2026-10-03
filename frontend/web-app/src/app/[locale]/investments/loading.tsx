@@ -7,7 +7,6 @@ export default function InvestmentsLoading() {
         <div className="h-8 w-36 bg-muted rounded-xl mb-2" />
         <div className="h-5 w-60 bg-muted/60 rounded-xl mb-8" />
 
-        {/* Portfolio summary skeleton */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="p-6 rounded-3xl border border-border bg-card">
@@ -18,7 +17,6 @@ export default function InvestmentsLoading() {
           ))}
         </div>
 
-        {/* Products list skeleton */}
         <div className="rounded-3xl border border-border bg-card p-6">
           <div className="h-6 w-40 bg-muted rounded-xl mb-6" />
           <div className="space-y-4">

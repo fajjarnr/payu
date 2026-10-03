@@ -27,7 +27,6 @@ public class SplitRecipient {
         return new SplitRecipientBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getSplitRuleId() { return splitRuleId; }

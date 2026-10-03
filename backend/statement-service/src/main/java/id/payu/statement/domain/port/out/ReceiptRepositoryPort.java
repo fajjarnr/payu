@@ -17,7 +17,6 @@ public interface ReceiptRepositoryPort {
     /**
      * Save a receipt to the database.
      *
-     * @param receipt The receipt to save
      * @return The saved receipt with generated ID
      */
     Receipt save(Receipt receipt);
@@ -25,7 +24,6 @@ public interface ReceiptRepositoryPort {
     /**
      * Find a receipt by its ID.
      *
-     * @param id The receipt ID
      * @return Optional containing the receipt if found
      */
     Optional<Receipt> findById(UUID id);
@@ -33,7 +31,6 @@ public interface ReceiptRepositoryPort {
     /**
      * Find a receipt by transaction ID.
      *
-     * @param transactionId The transaction ID
      * @return Optional containing the receipt if found
      */
     Optional<Receipt> findByTransactionId(String transactionId);
@@ -41,7 +38,6 @@ public interface ReceiptRepositoryPort {
     /**
      * Check if a receipt exists for a transaction.
      *
-     * @param transactionId The transaction ID
      * @return true if receipt exists
      */
     boolean existsByTransactionId(String transactionId);

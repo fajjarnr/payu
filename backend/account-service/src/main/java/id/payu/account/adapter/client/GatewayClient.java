@@ -23,9 +23,6 @@ public interface GatewayClient {
     /**
      * Verify NIK with Dukcapil simulator.
      * Returns detailed citizen data for comprehensive verification.
-     *
-     * @param request the verification request
-     * @return detailed verification response
      */
     @PostMapping("/api/v1/simulator/dukcapil/verify")
     VerifyNikResponse verifyNik(@RequestBody VerifyNikRequest request);
@@ -34,15 +31,12 @@ public interface GatewayClient {
      * Register a new user in the identity provider (Keycloak) via auth-service.
      *
      * @param request map containing username, email, password, fullName
-     * @return response body from auth-service
      */
     @PostMapping("/api/v1/auth/register")
     Map<String, Object> registerIdentity(@RequestBody Map<String, String> request);
 
     /**
      * ACCOUNT-005: delete a provisioned IAM user (saga compensation).
-     *
-     * @param userId the IAM user id to remove
      */
     @DeleteMapping("/api/v1/auth/users/{userId}")
     void deleteIdentity(@PathVariable("userId") String userId);

@@ -11,9 +11,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Spring Data JPA repository for BudgetEntity.
- */
 @Repository
 public interface BudgetJpaRepository extends JpaRepository<BudgetEntity, UUID> {
 

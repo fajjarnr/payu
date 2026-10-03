@@ -35,8 +35,6 @@ public class SplitPaymentRule {
         this.recipients = new ArrayList<>();
     }
 
-    // --- Domain Methods ---
-
     /**
      * Validate that the rule is internally consistent.
      * For PERCENTAGE: sum of percentages must be 100%.
@@ -90,7 +88,7 @@ public class SplitPaymentRule {
         } else if (splitType == SplitType.PERCENTAGE) {
             computePercentageSplit(totalAmount, sorted, legs);
         } else {
-            // MIXED: deduct fixed amounts first, then split remainder by %
+            // Mixed: deduct fixed amounts first, then split remainder by %
             BigDecimal fixedTotal = BigDecimal.ZERO;
             List<SplitRecipient> fixedRecipients = new ArrayList<>();
             List<SplitRecipient> percentageRecipients = new ArrayList<>();
@@ -154,7 +152,6 @@ public class SplitPaymentRule {
         return new SplitPaymentRuleBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getPartnerId() { return partnerId; }

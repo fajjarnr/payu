@@ -42,8 +42,6 @@ public class SplitPaymentExecution {
         this.legs = new ArrayList<>();
     }
 
-    // --- Domain Methods ---
-
     public void startProcessing() {
         if (this.status != SplitExecutionStatus.PENDING) {
             throw new IllegalStateException("Can only start processing from PENDING, current: " + status);
@@ -93,7 +91,6 @@ public class SplitPaymentExecution {
         return new SplitPaymentExecutionBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getSplitRuleId() { return splitRuleId; }

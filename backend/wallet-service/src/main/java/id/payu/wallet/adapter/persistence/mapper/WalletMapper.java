@@ -40,9 +40,6 @@ public interface WalletMapper extends BaseMapper<WalletEntity, Wallet> {
      *
      * <p>TenantId is not mapped as it's an infrastructure concern.
      * The tenant context is handled separately by the multi-tenancy layer.</p>
-     *
-     * @param domain the domain Wallet
-     * @return the WalletEntity
      */
     @Override
     @BeanMapping(ignoreUnmappedSourceProperties = "availableBalance")
@@ -51,9 +48,6 @@ public interface WalletMapper extends BaseMapper<WalletEntity, Wallet> {
 
     /**
      * Convert WalletEntity to domain Wallet.
-     *
-     * @param entity the WalletEntity
-     * @return the domain Wallet
      */
     @Override
     @BeanMapping(ignoreUnmappedSourceProperties = "tenantId")
@@ -70,9 +64,6 @@ public interface WalletMapper extends BaseMapper<WalletEntity, Wallet> {
 
     /**
      * Map WalletStatus to WalletStatus.
-     *
-     * @param status the entity status
-     * @return the domain status
      */
     @Named("mapStatusToDomain")
     default WalletStatus mapStatusToDomain(WalletStatus status) {
@@ -84,9 +75,6 @@ public interface WalletMapper extends BaseMapper<WalletEntity, Wallet> {
 
     /**
      * Map WalletStatus to WalletStatus.
-     *
-     * @param status the domain status
-     * @return the entity status
      */
     @Named("mapStatusToEntity")
     default WalletStatus mapStatusToEntity(WalletStatus status) {

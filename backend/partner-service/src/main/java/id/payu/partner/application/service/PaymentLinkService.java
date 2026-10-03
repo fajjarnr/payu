@@ -61,7 +61,6 @@ public class PaymentLinkService {
             throw new IllegalStateException("Cannot create payment link for inactive partner");
         }
 
-        // Check duplicate external ID
         if (request.getExternalId() != null &&
                 paymentLinkRepository.existsByPartnerIdAndExternalId(partnerId, request.getExternalId())) {
             throw new IllegalStateException("Payment link with external ID already exists: " + request.getExternalId());
@@ -165,7 +164,6 @@ public class PaymentLinkService {
         log.info("Payment link {} (slug={}) paid via {} ref={}",
                 paymentLink.getId(), slug, paymentMethod, paymentReference);
 
-        // Dispatch webhook notification
         dispatchPaymentLinkPaidEvent(paymentLink);
 
         return toResponse(paymentLink);

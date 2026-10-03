@@ -8,7 +8,6 @@ import {
 } from '@/hooks/useUserSegment';
 import SegmentationService from '@/services/SegmentationService';
 
-// Mock SegmentationService
 vi.mock('@/services/SegmentationService', () => ({
   default: {
     getUserSegments: vi.fn(),
@@ -569,7 +568,6 @@ describe('User segment hooks integration', () => {
 
     const initialCallCount = vi.mocked(SegmentationService.getUserSegments).mock.calls.length;
 
-    // Invalidate and refetch
     await act(async () => {
       result.current.invalidateSegments();
     });

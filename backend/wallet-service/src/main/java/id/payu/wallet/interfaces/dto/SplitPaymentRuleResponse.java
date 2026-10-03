@@ -35,7 +35,6 @@ public class SplitPaymentRuleResponse {
         return r;
     }
 
-    // Getters
     public UUID getId() { return id; }
     public String getPartnerId() { return partnerId; }
     public String getRuleName() { return ruleName; }

@@ -73,7 +73,6 @@ public class EscrowService implements EscrowUseCase {
             expiresInHours = DEFAULT_EXPIRY_HOURS;
         }
 
-        // 1. Create escrow domain object
         EscrowTransaction escrow = EscrowTransaction.builder()
                 .id(UUID.randomUUID())
                 .buyerAccountId(buyerAccountId)
@@ -90,20 +89,18 @@ public class EscrowService implements EscrowUseCase {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        // 2. Reserve buyer funds (throws InsufficientBalanceException if insufficient)
+        // Reserve buyer funds; throws InsufficientBalanceException if insufficient
         String reservationId = walletUseCase.reserveBalance(
                 buyerAccountId, amount, escrow.getId().toString());
 
-        // 3. Transition to HELD
         escrow.hold(reservationId);
 
-        // 4. Create double-entry journal: DR Buyer Wallet (1100) / CR Escrow Holdings (2100)
+        // Double-entry journal: DR Buyer Wallet (1100) / CR Escrow Holdings (2100)
         createHoldJournal(escrow);
 
-        // 5. Persist escrow
         EscrowTransaction saved = escrowPersistencePort.save(escrow);
 
-        // 6. Publish escrow held event (within same transaction via outbox)
+        // Escrow held event published within the same transaction via outbox
         eventPublisher.publishEscrowHeld(saved.getId(), saved.getBuyerAccountId(),
                 saved.getSellerAccountId(), saved.getPartnerId(), saved.getAmount(),
                 saved.getCurrency(), saved.getExternalReferenceId());
@@ -249,8 +246,6 @@ public class EscrowService implements EscrowUseCase {
             }
         }
     }
-
-    // --- Private helpers ---
 
     private EscrowTransaction findEscrowOrThrow(UUID escrowId) {
         return escrowPersistencePort.findById(escrowId)

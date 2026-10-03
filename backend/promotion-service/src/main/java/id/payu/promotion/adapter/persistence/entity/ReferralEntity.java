@@ -71,7 +71,6 @@ public class ReferralEntity {
         }
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 

@@ -82,7 +82,6 @@ public class ResilienceAutoConfiguration {
 
         configs.put("default", defaultConfig);
 
-        // Service-specific configurations
         if (properties.getServices() != null) {
             properties.getServices().forEach((serviceName, serviceConfig) -> {
                 if (serviceConfig.getCircuitBreaker() != null) {
@@ -106,10 +105,7 @@ public class ResilienceAutoConfiguration {
 
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(configs);
 
-        // Register Micrometer metrics
-        // Note: In Spring Boot 3 with resilience4j-spring-boot3, metrics are auto-registered
-        // Manual metrics binding can be added later if needed
-        // For now, skip manual metrics registration to allow compilation
+        // Metrics auto-registered by resilience4j-spring-boot3; manual binding skipped
 
         return registry;
     }
@@ -170,7 +166,6 @@ public class ResilienceAutoConfiguration {
 
         configs.put("default", builder.build());
 
-        // Service-specific configurations
         if (properties.getServices() != null) {
             properties.getServices().forEach((serviceName, serviceConfig) -> {
                 if (serviceConfig.getRetry() != null) {
@@ -196,9 +191,7 @@ public class ResilienceAutoConfiguration {
 
         RetryRegistry registry = RetryRegistry.of(configs);
 
-        // Register Micrometer metrics
-        // Note: In Spring Boot 3 with resilience4j-spring-boot3, metrics are auto-registered
-        // Manual metrics binding can be added later if needed
+        // Metrics auto-registered by resilience4j-spring-boot3; manual binding skipped
 
         return registry;
     }
@@ -210,7 +203,6 @@ public class ResilienceAutoConfiguration {
 
         Map<String, BulkheadConfig> configs = new HashMap<>();
 
-        // Default bulkhead config
         BulkheadConfig defaultConfig = BulkheadConfig.custom()
                 .maxConcurrentCalls(properties.getBulkhead().getMaxConcurrentCalls())
                 .maxWaitDuration(properties.getBulkhead().getMaxWaitDuration())
@@ -218,7 +210,6 @@ public class ResilienceAutoConfiguration {
 
         configs.put("default", defaultConfig);
 
-        // Service-specific configurations
         if (properties.getServices() != null) {
             properties.getServices().forEach((serviceName, serviceConfig) -> {
                 if (serviceConfig.getBulkhead() != null) {
@@ -236,9 +227,7 @@ public class ResilienceAutoConfiguration {
 
         BulkheadRegistry registry = BulkheadRegistry.of(configs);
 
-        // Register Micrometer metrics
-        // Note: In Spring Boot 3 with resilience4j-spring-boot3, metrics are auto-registered
-        // Manual metrics binding can be added later if needed
+        // Metrics auto-registered by resilience4j-spring-boot3; manual binding skipped
 
         return registry;
     }
@@ -250,7 +239,6 @@ public class ResilienceAutoConfiguration {
 
         Map<String, TimeLimiterConfig> configs = new HashMap<>();
 
-        // Default time limiter config
         TimeLimiterConfig defaultConfig = TimeLimiterConfig.custom()
                 .timeoutDuration(properties.getTimeLimiter().getTimeoutDuration())
                 .cancelRunningFuture(properties.getTimeLimiter().isCancelRunningFuture())
@@ -258,7 +246,6 @@ public class ResilienceAutoConfiguration {
 
         configs.put("default", defaultConfig);
 
-        // Service-specific configurations
         if (properties.getServices() != null) {
             properties.getServices().forEach((serviceName, serviceConfig) -> {
                 if (serviceConfig.getTimeLimiter() != null) {
@@ -276,11 +263,7 @@ public class ResilienceAutoConfiguration {
 
         TimeLimiterRegistry registry = TimeLimiterRegistry.of(configs);
 
-        // Register Micrometer metrics
-        // Note: In Resilience4j 2.x, TimeLimiter metrics may use different API
-        // io.github.resilience4j.micrometer.tagged.TaggedTimeLimiterMetricsPublisher
-        //         .ofTimeLimiterRegistry(meterRegistry)
-        //         .register(registry);
+        // TimeLimiter metrics may use TaggedTimeLimiterMetricsPublisher in Resilience4j 2.x
 
         return registry;
     }
@@ -292,7 +275,6 @@ public class ResilienceAutoConfiguration {
 
         Map<String, RateLimiterConfig> configs = new HashMap<>();
 
-        // Default rate limiter config
         RateLimiterConfig defaultConfig = RateLimiterConfig.custom()
                 .limitForPeriod(properties.getRateLimiter().getLimitForPeriod())
                 .limitRefreshPeriod(properties.getRateLimiter().getLimitRefreshPeriod())
@@ -301,7 +283,6 @@ public class ResilienceAutoConfiguration {
 
         configs.put("default", defaultConfig);
 
-        // Service-specific configurations
         if (properties.getServices() != null) {
             properties.getServices().forEach((serviceName, serviceConfig) -> {
                 if (serviceConfig.getRateLimiter() != null) {
@@ -320,8 +301,7 @@ public class ResilienceAutoConfiguration {
 
         RateLimiterRegistry registry = RateLimiterRegistry.of(configs);
 
-        // Register Micrometer metrics
-        // Note: In Spring Boot 3 with resilience4j-spring-boot3, metrics are auto-registered
+        // Metrics auto-registered by resilience4j-spring-boot3; manual binding skipped
 
         return registry;
     }

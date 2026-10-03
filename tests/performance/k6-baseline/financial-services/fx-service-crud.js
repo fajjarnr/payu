@@ -1,5 +1,3 @@
-// PayU FX Service - CRUD Baseline Performance Test
-// ==================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -74,7 +72,6 @@ export default function () {
 
   group('FX Service - CRUD Operations', () => {
 
-    // ===== READ: Get All Exchange Rates =====
     group('READ: Get All Rates', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.fx}/rates`, { base: 'IDR' }, auth.token);
@@ -83,7 +80,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Rate by Currency Pair =====
     group('READ: Get Rate by Pair', () => {
       const pair = CURRENCY_PAIRS[Math.floor(Math.random() * CURRENCY_PAIRS.length)];
 
@@ -94,7 +90,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Convert Currency =====
     group('CREATE: Convert Currency', () => {
       const convertData = generateConvertData();
 
@@ -105,7 +100,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Historical Rates =====
     group('READ: Historical Rates', () => {
       const pair = CURRENCY_PAIRS[Math.floor(Math.random() * CURRENCY_PAIRS.length)];
 
@@ -120,7 +114,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Create Rate Alert =====
     group('CREATE: Create Rate Alert', () => {
       const alertData = generateRateAlertData(uniqueId);
 
@@ -136,7 +129,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Rate Alerts =====
     group('READ: List Alerts', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.fx}/alerts`, { page: 0, size: 10 }, auth.token);
@@ -146,7 +138,6 @@ export default function () {
     });
 
     if (alertId) {
-      // ===== UPDATE: Update Alert =====
       group('UPDATE: Update Alert', () => {
         const updateData = {
           targetRate: (15000 + Math.random() * 2000).toFixed(2),
@@ -160,7 +151,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== DELETE: Delete Alert =====
       group('DELETE: Delete Alert', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.fx}/alerts/${alertId}/deactivate`, {}, auth.token);

@@ -83,7 +83,6 @@ const BILLER_CATEGORIES: BillerCategory[] = [
   },
 ];
 
-// Flatten biller categories for FlashList
 const FLATTENED_BILLERS = BILLER_CATEGORIES.flatMap(category =>
   category.billers.map(biller => ({
     ...biller,
@@ -140,7 +139,6 @@ export default function BillsScreen() {
         {
           text: 'Pay',
           onPress: () => {
-            // Process payment
             Alert.alert('Success', 'Bill payment successful!');
             setShowInquiry(false);
             setSelectedBiller(null);
@@ -152,7 +150,6 @@ export default function BillsScreen() {
     );
   };
 
-  // Memoized billers for selected category
   const billersToShow = useMemo(() => {
     if (!selectedCategory) return [];
     return selectedCategory.billers.map(biller => ({
@@ -162,7 +159,6 @@ export default function BillsScreen() {
     }));
   }, [selectedCategory]);
 
-  // Render category item
   const renderCategoryItem = useCallback(({ item }: { item: BillerCategory }) => (
     <TouchableOpacity
       style={[styles.categoryCard, { backgroundColor: colors.card }]}
@@ -176,7 +172,6 @@ export default function BillsScreen() {
     </TouchableOpacity>
   ), [colors.card, colors.text]);
 
-  // Render biller item
   const renderBillerItem = useCallback(({ item }: { item: typeof billersToShow[0] }) => (
     <TouchableOpacity
       style={[styles.billerCard, { backgroundColor: colors.card }]}
@@ -204,7 +199,6 @@ export default function BillsScreen() {
     <Text style={[styles.title, { color: colors.text }]}>Bill Payments</Text>
   ), [colors.text]);
 
-  // Show biller selection form
   if (selectedBiller && !showInquiry) {
     return (
       <View style={styles.container}>
@@ -246,7 +240,6 @@ export default function BillsScreen() {
     );
   }
 
-  // Show inquiry result
   if (showInquiry && inquiryResult) {
     return (
       <View style={styles.container}>
@@ -352,7 +345,6 @@ export default function BillsScreen() {
     );
   }
 
-  // Category selection view with FlashList
   return (
     <FlashList
       data={BILLER_CATEGORIES}

@@ -1,15 +1,13 @@
-###############################################################################
 # Red Hat Build of Keycloak (RHBK) - Keycloak CR
 # Migrated from RHSSO (keycloak.org/v1alpha1) → RHBK (k8s.keycloak.org/v2beta1)
 # API Reference: https://www.keycloak.org/operator/basic-deployment
 #
-# IMPORTANT:
+# important:
 # 1. Install the rhbk-operator in payu-sso namespace.
 # 2. Apply this Keycloak CR to payu-sso namespace.
 # 3. payu-keycloak-db secret MUST exist in payu-sso namespace.
 # 4. The 'keycloak' database must exist in the PostgresCluster.
 # 5. Hostname is set via environment overlay (see overlays/).
-###############################################################################
 apiVersion: k8s.keycloak.org/v2beta1
 kind: Keycloak
 metadata:
@@ -23,12 +21,12 @@ metadata:
 spec:
   instances: 1
 
-  # --- Bootstrap Admin (initial admin user) ---
+  # Bootstrap admin (initial admin user)
   bootstrapAdmin:
     user:
       secret: payu-keycloak-admin
 
-  # --- Database Configuration (CloudNativePG) ---
+  # Database configuration (CloudNativePG)
   db:
     vendor: postgres
     host: payu-database-rw.payu-dev.svc.cluster.local
@@ -41,34 +39,30 @@ spec:
       name: payu-keycloak-db
       key: password
 
-  # --- HTTP Configuration ---
   http:
     httpEnabled: true
     httpPort: 8080
     httpsPort: 8443
 
-  # --- Hostname Configuration ---
   hostname:
     hostname: https://sso-dev.apps.fajjjar.my.id
     strict: true
     backchannelDynamic: false
 
-  # --- Ingress (OpenShift Route) ---
+  # Ingress (OpenShift Route)
   ingress:
     enabled: true
     className: openshift-default
 
-  # --- Proxy Headers ---
   proxy:
     headers: xforwarded
 
-  # --- Features ---
   features:
     enabled:
       - token-exchange-standard
       - admin-fine-grained-authz
 
-  # --- Additional Keycloak server options ---
+  # Additional Keycloak server options
   additionalOptions:
     # Health endpoint
     - name: health-enabled
@@ -77,7 +71,6 @@ spec:
     - name: metrics-enabled
       value: "true"
 
-  # --- Probe Configuration ---
   readinessProbe:
     periodSeconds: 10
     failureThreshold: 3

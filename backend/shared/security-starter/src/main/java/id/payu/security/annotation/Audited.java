@@ -30,11 +30,5 @@ public @interface Audited {
      */
     AuditLevel level() default AuditLevel.INFO;
 
-    /**
-     * Operation types
-     */
 
-    /**
-     * Audit levels
-     */
 }

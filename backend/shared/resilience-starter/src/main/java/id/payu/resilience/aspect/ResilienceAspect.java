@@ -22,9 +22,6 @@ public class ResilienceAspect {
     private final BulkheadRegistry bulkheadRegistry;
     private final TimeLimiterRegistry timeLimiterRegistry;
 
-    /**
-     * Monitor all circuit breaker events
-     */
     public void registerCircuitBreakerEventPublisher() {
         circuitBreakerRegistry.getAllCircuitBreakers().forEach(circuitBreaker -> {
             var eventPublisher = circuitBreaker.getEventPublisher();
@@ -66,9 +63,6 @@ public class ResilienceAspect {
         });
     }
 
-    /**
-     * Monitor all retry events
-     */
     public void registerRetryEventPublisher() {
         retryRegistry.getAllRetries().forEach(retry -> {
             var eventPublisher = retry.getEventPublisher();
@@ -95,9 +89,6 @@ public class ResilienceAspect {
         });
     }
 
-    /**
-     * Monitor all bulkhead events
-     */
     public void registerBulkheadEventPublisher() {
         bulkheadRegistry.getAllBulkheads().forEach(bulkhead -> {
             var eventPublisher = bulkhead.getEventPublisher();
@@ -121,9 +112,6 @@ public class ResilienceAspect {
         });
     }
 
-    /**
-     * Monitor all time limiter events
-     */
     public void registerTimeLimiterEventPublisher() {
         timeLimiterRegistry.getAllTimeLimiters().forEach(timeLimiter -> {
             var eventPublisher = timeLimiter.getEventPublisher();
@@ -149,15 +137,11 @@ public class ResilienceAspect {
     }
 
     /**
-     * Publish alert for monitoring system
      * In production, this would integrate with your alerting system (Prometheus, Grafana, PagerDuty, etc.)
      */
     private void publishAlert(String alertType, String componentName) {
-        // TODO: Integrate with alerting system
         log.warn("ALERT [{}]: Component {} requires attention", alertType, componentName);
 
-        // Example: Send to Prometheus metrics, or call alerting API
-        // meterRegistry.counter("resilience.alerts", "type", alertType, "component", componentName).increment();
     }
 
     /**

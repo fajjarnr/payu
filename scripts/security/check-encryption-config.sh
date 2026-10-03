@@ -1,19 +1,14 @@
 #!/bin/bash
-#
-# PayU Security Audit Script - Encryption Configuration Verification
 # Verifies that encryption is properly configured across all services
-#
 # Usage: ./check-encryption-config.sh
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Configuration
 BACKEND_DIR="/home/ubuntu/payu/backend"
 INFRA_DIR="/home/ubuntu/payu/infrastructure"
 REPORT_FILE="/tmp/encryption-config-report-$(date +%Y%m%d-%H%M%S).txt"
@@ -24,7 +19,6 @@ echo "Generated: $(date)" | tee -a "$REPORT_FILE"
 echo "========================================" | tee -a "$REPORT_FILE"
 echo "" | tee -a "$REPORT_FILE"
 
-# Function to check encryption configuration in application.yml
 check_app_encryption_config() {
     local service=$1
     local app_yml="$BACKEND_DIR/$service/src/main/resources/application.yml"
@@ -38,11 +32,9 @@ check_app_encryption_config() {
 
     local issues=0
 
-    # Check for encryption key configuration
     if grep -q "encryption" "$app_yml" 2>/dev/null; then
         echo -e "${GREEN}PASS: Encryption configuration found${NC}" | tee -a "$REPORT_FILE"
 
-        # Check if using environment variables (good)
         if grep -q "ENCRYPTION_KEY\|encryption.*password.*:\s*\${" "$app_yml" 2>/dev/null; then
             echo -e "${GREEN}PASS: Encryption key uses environment variable${NC}" | tee -a "$REPORT_FILE"
         elif grep -q "encryption.*password.*:\s*[a-zA-Z0-9]" "$app_yml" 2>/dev/null; then
@@ -53,7 +45,6 @@ check_app_encryption_config() {
         echo -e "${YELLOW}INFO: No explicit encryption configuration (may use defaults)${NC}" | tee -a "$REPORT_FILE"
     fi
 
-    # Check for TLS/SSL configuration
     if grep -q "ssl:\|tls:\|server.ssl" "$app_yml" 2>/dev/null; then
         echo -e "${GREEN}PASS: TLS/SSL configuration found${NC}" | tee -a "$REPORT_FILE"
     else
@@ -63,7 +54,6 @@ check_app_encryption_config() {
     return $issues
 }
 
-# Function to check Vault configuration
 check_vault_config() {
     local service=$1
     local app_yml="$BACKEND_DIR/$service/src/main/resources/application.yml"
@@ -83,7 +73,6 @@ check_vault_config() {
     fi
 }
 
-# Function to check database encryption settings
 check_database_encryption() {
     local service=$1
     local app_yml="$BACKEND_DIR/$service/src/main/resources/application.yml"
@@ -94,25 +83,21 @@ check_database_encryption() {
 
     echo "Checking database configuration in $service..." | tee -a "$REPORT_FILE"
 
-    # Check for SSL mode in database connection
     if grep -q "sslmode\|sslMode\|ssl=true" "$app_yml" 2>/dev/null; then
         echo -e "${GREEN}PASS: Database SSL enabled${NC}" | tee -a "$REPORT_FILE"
     else
         echo -e "${YELLOW}WARNING: Database SSL not explicitly enabled${NC}" | tee -a "$REPORT_FILE"
     fi
 
-    # Check for password configuration
     if grep -q "password.*:\s*\${" "$app_yml" 2>/dev/null; then
         echo -e "${GREEN}PASS: Database password uses environment variable${NC}" | tee -a "$REPORT_FILE"
     elif grep -q "password.*:\s*[^${}" "$app_yml" 2>/dev/null; then
-        # Check if it's a default/placeholder
         if grep -q "password.*:\s*postgres\|password.*:\s*password\|password.*:\s*admin" "$app_yml" 2>/dev/null; then
             echo -e "${RED}FAIL: Default database password detected!${NC}" | tee -a "$REPORT_FILE"
         fi
     fi
 }
 
-# Function to check for hardcoded secrets
 check_hardcoded_secrets() {
     local service=$1
     local service_dir="$BACKEND_DIR/$service"
@@ -125,7 +110,6 @@ check_hardcoded_secrets() {
 
     local secrets_found=0
 
-    # Patterns to check for hardcoded secrets
     local patterns=(
         "password:\s*[a-zA-Z0-9]{8,}"
         "secret:\s*[a-zA-Z0-9]{8,}"
@@ -155,7 +139,6 @@ check_hardcoded_secrets() {
     return $secrets_found
 }
 
-# Function to check OpenShift/TLS configuration
 check_infrastructure_tls() {
     echo "Checking infrastructure TLS configuration..." | tee -a "$REPORT_FILE"
 
@@ -171,7 +154,6 @@ check_infrastructure_tls() {
         fi
     fi
 
-    # Check for cert-manager
     if [ -d "$INFRA_DIR/openshift/infra/base/cert-manager" ]; then
         echo -e "${GREEN}PASS: cert-manager configuration found${NC}" | tee -a "$REPORT_FILE"
     else
@@ -179,7 +161,6 @@ check_infrastructure_tls() {
     fi
 }
 
-# Function to verify encryption service implementation
 check_encryption_service() {
     echo "Checking EncryptionService implementation..." | tee -a "$REPORT_FILE"
 
@@ -190,34 +171,28 @@ check_encryption_service() {
         return 1
     fi
 
-    # Check for AES-GCM
     if grep -q "AES/GCM" "$encryption_service"; then
         echo -e "${GREEN}PASS: AES-GCM algorithm detected${NC}" | tee -a "$REPORT_FILE"
     else
         echo -e "${RED}FAIL: AES-GCM not detected${NC}" | tee -a "$REPORT_FILE"
     fi
 
-    # Check for 256-bit key
     if grep -q "256\|KEY_LENGTH.*256" "$encryption_service"; then
         echo -e "${GREEN}PASS: 256-bit key length detected${NC}" | tee -a "$REPORT_FILE"
     fi
 
-    # Check for PBKDF2
     if grep -q "PBKDF2" "$encryption_service"; then
         echo -e "${GREEN}PASS: PBKDF2 key derivation detected${NC}" | tee -a "$REPORT_FILE"
     fi
 
-    # Check for SecureRandom
     if grep -q "SecureRandom" "$encryption_service"; then
         echo -e "${GREEN}PASS: SecureRandom for IV generation detected${NC}" | tee -a "$REPORT_FILE"
     fi
 }
 
-# Main execution
 main() {
     local services=()
 
-    # Get all service directories
     for dir in "$BACKEND_DIR"/*/; do
         if [ -f "$dir/pom.xml" ]; then
             services+=("$(basename "$dir")")
@@ -230,21 +205,18 @@ main() {
     local pass_count=0
     local fail_count=0
 
-    # Check shared security starter first
     echo "========================================" | tee -a "$REPORT_FILE"
     echo "Shared Security Components" | tee -a "$REPORT_FILE"
     echo "========================================" | tee -a "$REPORT_FILE"
     check_encryption_service
     echo "" | tee -a "$REPORT_FILE"
 
-    # Check infrastructure
     echo "========================================" | tee -a "$REPORT_FILE"
     echo "Infrastructure Configuration" | tee -a "$REPORT_FILE"
     echo "========================================" | tee -a "$REPORT_FILE"
     check_infrastructure_tls
     echo "" | tee -a "$REPORT_FILE"
 
-    # Check each service
     echo "========================================" | tee -a "$REPORT_FILE"
     echo "Service Configuration" | tee -a "$REPORT_FILE"
     echo "========================================" | tee -a "$REPORT_FILE"

@@ -1,16 +1,12 @@
 /**
- * Card UI Store Tests
- *
- * These tests verify the UI-only state management for cards.
- * Server state (card data) is managed by TanStack Query.
- * @see @/hooks/__tests__/useCardQuery.test.ts for server state tests
+ * UI-only card state tests. Server state (card data) lives in TanStack Query.
+ * @see @/hooks/__tests__/useCardQuery.test.ts
  */
 import { act, renderHook } from '@testing-library/react-native';
 import { useCardUIStore } from '../cardUIStore';
 
 describe('cardUIStore', () => {
   beforeEach(() => {
-    // Reset store state before each test
     useCardUIStore.setState({
       selectedCardId: null,
       cardViewMode: 'grid',

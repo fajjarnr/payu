@@ -52,7 +52,6 @@ public class CashbackSagaContext implements Serializable {
             .setScale(2, java.math.RoundingMode.HALF_EVEN);
     }
 
-    // Getters and Setters
     public CreateCashbackRequest getRequest() {
         return request;
     }

@@ -34,12 +34,10 @@ public class RequestSigningFilter implements ContainerRequestFilter {
 
         String path = requestContext.getUriInfo().getPath();
 
-        // Check if this path requires signature validation
         if (!requiresSignature(path)) {
             return;
         }
 
-        // Get signature and timestamp from headers
         String providedSignature = requestContext.getHeaderString(config.requestSigning().headerName());
         String timestampStr = requestContext.getHeaderString(config.requestSigning().timestampHeader());
 
@@ -69,7 +67,6 @@ public class RequestSigningFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Validate timestamp
         try {
             long timestamp = Long.parseLong(timestampStr);
             long now = Instant.now().getEpochSecond();
@@ -101,7 +98,6 @@ public class RequestSigningFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Get partner ID from request (could be from header or JWT)
         String partnerId = requestContext.getHeaderString("X-Partner-Id");
         if (partnerId == null || partnerId.isBlank()) {
             Log.warnf("Missing partner ID header for signed request");
@@ -116,7 +112,6 @@ public class RequestSigningFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Get secret key for this partner
         String secretKey = config.requestSigning().partnerKeys().get(partnerId);
         if (secretKey == null) {
             Log.warnf("Unknown partner ID: %s", partnerId);
@@ -131,7 +126,6 @@ public class RequestSigningFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Calculate expected signature
         String expectedSignature;
         try {
             expectedSignature = calculateSignature(requestContext, timestampStr, secretKey);
@@ -171,7 +165,6 @@ public class RequestSigningFilter implements ContainerRequestFilter {
     private boolean requiresSignature(String path) {
         List<String> requiredPaths = config.requestSigning().requiredPaths();
         for (String pattern : requiredPaths) {
-            // Simple wildcard matching
             String regex = pattern.replace("*", ".*");
             if (path.matches(regex)) {
                 return true;
@@ -207,10 +200,8 @@ public class RequestSigningFilter implements ContainerRequestFilter {
             // Continue without body hash for backward compatibility
         }
 
-        // Decode secret key
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
 
-        // Calculate HMAC
         try {
             javax.crypto.Mac mac = javax.crypto.Mac.getInstance(config.requestSigning().algorithm());
             javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(keyBytes, config.requestSigning().algorithm());

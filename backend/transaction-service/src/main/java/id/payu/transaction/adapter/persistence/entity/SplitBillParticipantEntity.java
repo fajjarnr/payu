@@ -166,7 +166,6 @@ public class SplitBillParticipantEntity {
         }
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }

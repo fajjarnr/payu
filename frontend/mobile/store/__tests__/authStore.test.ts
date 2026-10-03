@@ -1,16 +1,12 @@
 /**
- * Auth UI Store Tests
- *
- * These tests verify the UI-only state management for authentication.
- * Server state (user, session) is managed by TanStack Query.
- * @see @/src/hooks/__tests__/useAuthQuery.test.ts for server state tests
+ * UI-only auth state tests. Server state (user, session) lives in TanStack Query.
+ * @see @/src/hooks/__tests__/useAuthQuery.test.ts
  */
 import { act, renderHook } from '@testing-library/react-native';
 import { useAuthStore } from '../authStore';
 
 describe('authStore', () => {
   beforeEach(() => {
-    // Reset store state before each test
     useAuthStore.setState({
       lastLoginAttempt: null,
       biometricPromptEnabled: true,
@@ -28,7 +24,7 @@ describe('authStore', () => {
     it('should not have sensitive auth state (SECURITY: auth state in React Query)', () => {
       const state = useAuthStore.getState();
 
-      // SECURITY: Auth state (user, isAuthenticated) should be in React Query
+      // Security: auth state (user, isAuthenticated) belongs in React Query
       expect('user' in state).toBe(false);
       expect('isAuthenticated' in state).toBe(false);
       expect('tokens' in state).toBe(false);

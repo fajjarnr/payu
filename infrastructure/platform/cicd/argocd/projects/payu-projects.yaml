@@ -2,10 +2,8 @@
 # Ref: DEVSECOPS_ARCHITECTURE.md §3.1 Namespace Matrix
 # Each project maps to a namespace with appropriate RBAC and source restrictions
 
-# ============================================================
 # Development Project — payu-dev
 # RBAC: Dev + SRE
-# ============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -35,10 +33,8 @@ spec:
         - payu-developers
         - payu-sre
 ---
-# ============================================================
 # SIT Project — payu-sit
 # RBAC: QA + Dev + SRE
-# ============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -70,10 +66,8 @@ spec:
         - payu-developers
         - payu-sre
 ---
-# ============================================================
 # UAT Project — payu-uat
 # RBAC: QA + PM + SRE
-# ============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -105,10 +99,8 @@ spec:
         - payu-pm
         - payu-sre
 ---
-# ============================================================
 # Pre-Production Project — payu-preprod
 # RBAC: SRE + Security
-# ============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -138,10 +130,8 @@ spec:
         - payu-sre
         - payu-security
 ---
-# ============================================================
 # Production Project — payu
 # RBAC: SRE only (break-glass)
-# ============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -234,10 +224,8 @@ spec:
       groups:
         - payu-sre
 ---
-# ============================================================
 # Preview Project — payu-dev-*
 # RBAC: Dev + QA
-# ============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -268,10 +256,8 @@ spec:
         - payu-developers
         - payu-qa
 ---
-# ============================================================
 # Platform Project — shared DevSecOps tooling
 # RBAC: SRE + Security
-# ============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -326,10 +312,8 @@ spec:
         - payu-sre
         - payu-security
 ---
-# ============================================================
 # Monitoring Project — observability stack
 # RBAC: SRE + Platform
-# ============================================================
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:

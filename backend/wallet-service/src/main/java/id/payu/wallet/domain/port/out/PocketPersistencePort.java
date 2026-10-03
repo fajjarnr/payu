@@ -14,16 +14,12 @@ public interface PocketPersistencePort {
 
     /**
      * Save a pocket (create or update).
-     *
-     * @param pocket the pocket to save
-     * @return the saved pocket
      */
     Pocket save(Pocket pocket);
 
     /**
      * Find a pocket by its ID.
      *
-     * @param pocketId the pocket ID
      * @return Optional containing the pocket if found
      */
     Optional<Pocket> findById(UUID pocketId);
@@ -31,7 +27,6 @@ public interface PocketPersistencePort {
     /**
      * Find all pockets for a given account ID.
      *
-     * @param accountId the account ID
      * @return list of pockets for the account
      */
     List<Pocket> findByAccountId(String accountId);
@@ -39,7 +34,6 @@ public interface PocketPersistencePort {
     /**
      * Find pockets for a given account ID and currency.
      *
-     * @param accountId the account ID
      * @param currency the currency code (e.g., "USD", "IDR")
      * @return list of matching pockets
      */

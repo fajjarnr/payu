@@ -19,9 +19,7 @@
 #   - Dashboard needs generous probe timing (120s+ initial delay)
 #     because it takes 60-90s to connect to indexer on startup.
 
-# =============================================================
 # Indexer (top-level key, NOT under wazuh:)
-# =============================================================
 indexer:
   enabled: true
   replicas: 1  # Lab: single node (chart default: 3)
@@ -58,9 +56,7 @@ indexer:
   networkPolicy:
     enabled: false  # Managed separately in networkpolicy.yaml
 
-# =============================================================
 # Dashboard (top-level key)
-# =============================================================
 dashboard:
   enabled: true
   replicas: 1
@@ -106,9 +102,7 @@ dashboard:
   networkPolicy:
     enabled: false  # Managed separately in networkpolicy.yaml
 
-# =============================================================
 # Wazuh Manager (top-level key "wazuh:")
-# =============================================================
 wazuh:
   enabled: true
   syslog_enable: false  # Lab: disable syslog
@@ -198,14 +192,10 @@ wazuh:
         cpu: 100m
         memory: 128Mi
 
-# =============================================================
 # Cert-manager (TLS certificates)
-# =============================================================
 certManager:
   enabled: true
 
-# =============================================================
 # External Indexer — not used (we deploy our own)
-# =============================================================
 externalIndexer:
   enabled: false

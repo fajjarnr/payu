@@ -1,24 +1,17 @@
-# Git
 .git
 .gitignore
 
-# Documentation
 *.md
 README.md
 Containerfile
 .dockerignore
 
-# Build artifacts
-
-# Dependencies
 node_modules/
 
-# Environment & Secrets
 .env
 .env.*
 *.log
 
-# IDEs
 .idea/
 .vscode/
 .settings/
@@ -27,5 +20,4 @@ node_modules/
 .factorypath
 *.iml
 
-# Tests
 src/test/

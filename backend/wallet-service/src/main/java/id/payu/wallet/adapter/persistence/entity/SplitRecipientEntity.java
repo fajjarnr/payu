@@ -45,7 +45,6 @@ public class SplitRecipientEntity {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public SplitPaymentRuleEntity getSplitRule() { return splitRule; }

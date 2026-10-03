@@ -1,15 +1,12 @@
 export default function DashboardLoading() {
   return (
     <div className="min-h-screen bg-background animate-pulse">
-      {/* Header skeleton */}
       <div className="h-16 border-b border-border bg-card" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Greeting skeleton */}
         <div className="h-8 w-48 bg-muted rounded-xl mb-2" />
         <div className="h-5 w-64 bg-muted/60 rounded-xl mb-8" />
 
-        {/* Balance card skeleton */}
         <div className="p-6 rounded-3xl border border-border bg-card mb-8">
           <div className="h-4 w-24 bg-muted rounded mb-3" />
           <div className="h-10 w-56 bg-muted rounded-xl mb-4" />
@@ -20,7 +17,6 @@ export default function DashboardLoading() {
           </div>
         </div>
 
-        {/* Quick actions skeleton */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="p-4 rounded-2xl border border-border bg-card flex flex-col items-center gap-2">
@@ -30,7 +26,6 @@ export default function DashboardLoading() {
           ))}
         </div>
 
-        {/* Recent transactions skeleton */}
         <div className="rounded-3xl border border-border bg-card p-6">
           <div className="h-6 w-40 bg-muted rounded-xl mb-6" />
           <div className="space-y-4">

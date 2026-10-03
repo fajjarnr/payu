@@ -34,16 +34,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Integration tests for ContentJpaRepository using Testcontainers PostgreSQL.
  *
- * Migration note: @DataJpaTest and @AutoConfigureTestDatabase were
- * REMOVED in Spring Boot 4.0+. Replaced with @SpringBootTest +
- * @AutoConfigureTestEntityManager (the closest equivalent providing
- * a TestEntityManager in a full Spring context). Testcontainers is
- * still used to provide the real PostgreSQL database.
- *
- * Status: @Disabled in iter 42. Requires Docker for Testcontainers.
- * Tried podman socket (per L-062): Testcontainers 2.0.5 Docker client
- * rejects podman socket in this env (HikariCP "Could not find a valid
- * Docker environment"). Re-enable when Docker available locally.
+ * @DataJpaTest and @AutoConfigureTestDatabase were removed in Spring Boot 4.0+;
+ * replaced with @SpringBootTest + @AutoConfigureTestEntityManager.
  */
 @Disabled("Requires Docker. Podman socket substitute doesn't work with Testcontainers 2.0.5. Re-enable when Docker available.")
 @SpringBootTest

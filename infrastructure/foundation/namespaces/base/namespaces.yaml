@@ -1,7 +1,5 @@
-# ------------------------------------------------------------
 # PayU DevSecOps — Namespace Strategy (Phase 1 Foundation)
 # Base manifests — core application namespaces
-# ------------------------------------------------------------
 apiVersion: v1
 kind: Namespace
 metadata:

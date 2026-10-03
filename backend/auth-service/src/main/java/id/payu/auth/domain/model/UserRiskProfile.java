@@ -10,9 +10,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Domain model representing a User Risk Profile.
- */
 @Getter
 @Setter
 @Builder

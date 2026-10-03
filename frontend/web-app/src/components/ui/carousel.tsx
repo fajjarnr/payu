@@ -67,7 +67,6 @@ const Carousel = React.forwardRef<
     }
     // manually notify select listeners (jsdom scroll event not fired)
     listeners.current.get("select")?.forEach((cb) => { try { cb() } catch {} })
-    // update canScroll after scroll
     setTimeout(() => {
       if (!el) return
       setCanScrollPrev(el.scrollLeft > 5)

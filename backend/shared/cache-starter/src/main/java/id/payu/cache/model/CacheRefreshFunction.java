@@ -18,8 +18,6 @@ public interface CacheRefreshFunction<T> {
     /**
      * Refresh the cached value for the given key.
      *
-     * @param key the cache key to refresh
-     * @return the refreshed value
      * @throws Exception if refresh fails
      */
     T refresh(Object key) throws Exception;

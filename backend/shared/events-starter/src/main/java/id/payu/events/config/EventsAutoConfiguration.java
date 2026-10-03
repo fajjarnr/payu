@@ -98,9 +98,9 @@ public class EventsAutoConfiguration {
         @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(org.springframework.kafka.core.KafkaTemplate.class)
         public org.springframework.kafka.listener.CommonErrorHandler kafkaErrorHandler(
                 org.springframework.kafka.core.KafkaTemplate<?, ?> kafkaTemplate) {
-            
+
             log.info("Configuring DefaultErrorHandler with DeadLetterPublishingRecoverer (DLQ)");
-            
+
             // Send failed records to <topic>.dlq
             org.springframework.kafka.listener.DeadLetterPublishingRecoverer recoverer =
                     new org.springframework.kafka.listener.DeadLetterPublishingRecoverer(kafkaTemplate,
@@ -110,22 +110,19 @@ public class EventsAutoConfiguration {
                                         dlqTopic, dbRecord.partition(), dbRecord.offset(), ex.getMessage());
                                 return new org.apache.kafka.common.TopicPartition(dlqTopic, -1);
                             });
-            
+
             // 3 retries (4 total attempts), 1s fixed delay
             org.springframework.util.backoff.FixedBackOff backOff =
                     new org.springframework.util.backoff.FixedBackOff(1000L, 3L);
-            
+
             org.springframework.kafka.listener.DefaultErrorHandler errorHandler =
                     new org.springframework.kafka.listener.DefaultErrorHandler(recoverer, backOff);
-            
+
             errorHandler.setCommitRecovered(true);
             return errorHandler;
         }
     }
 
-    /**
-     * Initializes the CloudEvents starter.
-     */
     @Bean
     public CloudEventsInitializer cloudEventsInitializer() {
         return new CloudEventsInitializer();

@@ -9,9 +9,6 @@ metadata:
   namespace: payu-observability
 data:
   vector.yaml: |
-    # ============================================================
-    # Sources
-    # ============================================================
     sources:
       k8s_audit_logs:
         type: file
@@ -34,9 +31,7 @@ data:
           - /var/log/syslog
         read_from: end
 
-    # ============================================================
-    # Transforms: PCI-DSS Relevant Event Filtering
-    # ============================================================
+    # Transforms: PCI-DSS relevant event filtering
     transforms:
       pci_dss_filter:
         type: filter
@@ -67,9 +62,6 @@ data:
             "apiVersion": "0.0.1"
           }
 
-    # ============================================================
-    # Sinks
-    # ============================================================
     sinks:
       # Short-term: LokiStack (OCP native logging)
       loki_audit:

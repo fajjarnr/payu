@@ -155,7 +155,6 @@ public class SnapBiController {
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 
-        // Parse raw body to extract grant_type if needed
         TokenRequest request;
         try {
             request = objectMapper.readValue(rawBody, TokenRequest.class);
@@ -238,7 +237,6 @@ public class SnapBiController {
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 
-        // Parse raw body to PaymentRequest
         PaymentRequest request;
         try {
             request = objectMapper.readValue(rawBody, PaymentRequest.class);
@@ -359,7 +357,6 @@ public class SnapBiController {
             return errorResponse(HttpStatus.BAD_REQUEST, "4002501", "Invalid Request Body");
         }
 
-        // Parse raw body to RefundRequest
         RefundRequest request;
         try {
             request = objectMapper.readValue(rawBody, RefundRequest.class);

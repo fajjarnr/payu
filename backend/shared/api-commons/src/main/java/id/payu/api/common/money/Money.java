@@ -220,7 +220,6 @@ public final class Money implements Serializable, Comparable<Money> {
     /**
      * Multiplies this Money by the specified multiplier.
      *
-     * @param multiplier the multiplier
      * @return a new Money instance with the product
      */
     public Money multiply(long multiplier) {

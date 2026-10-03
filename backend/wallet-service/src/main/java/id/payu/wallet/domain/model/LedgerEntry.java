@@ -48,7 +48,6 @@ public class LedgerEntry {
         return new LedgerEntryBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getTransactionId() { return transactionId; }

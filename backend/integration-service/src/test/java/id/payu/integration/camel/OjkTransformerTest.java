@@ -10,9 +10,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for OjkTransformer.
- */
 public class OjkTransformerTest {
 
     private OjkTransformer transformer;

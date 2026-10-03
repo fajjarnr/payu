@@ -30,18 +30,14 @@ public interface SmartRoutingUseCase {
      * Finds the best transfer routes for a given amount.
      * Routes are sorted by fee (cheapest first) and filtered by eligibility.
      *
-     * @param amount the transfer amount
      * @param bankCode optional bank code for bank-specific routing rules
-     * @return list of eligible routes sorted by fee
      */
     List<TransferRoute> findBestRoutes(Money amount, String bankCode);
 
     /**
      * Finds routes sorted by speed (fastest first).
      *
-     * @param amount the transfer amount
      * @param bankCode optional bank code for bank-specific routing rules
-     * @return list of eligible routes sorted by speed
      */
     List<TransferRoute> findFastestRoutes(Money amount, String bankCode);
 
@@ -49,7 +45,6 @@ public interface SmartRoutingUseCase {
      * Gets the recommended route with explanation.
      * Considers amount, fees, and speed to provide the best option.
      *
-     * @param amount the transfer amount
      * @param bankCode optional bank code
      * @return route recommendation with reasoning
      */
@@ -58,8 +53,6 @@ public interface SmartRoutingUseCase {
     /**
      * Checks if a specific transfer method is available for the amount.
      *
-     * @param method the transfer method to check
-     * @param amount the transfer amount
      * @return true if the method is available for this amount
      */
     boolean isMethodAvailable(TransferMethod method, Money amount);
@@ -67,8 +60,6 @@ public interface SmartRoutingUseCase {
     /**
      * Calculates the total cost including fees for a route.
      *
-     * @param amount the transfer amount
-     * @param method the transfer method
      * @return the total cost (amount + fee)
      */
     Money calculateTotalCost(Money amount, TransferMethod method);

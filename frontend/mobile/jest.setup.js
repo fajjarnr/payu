@@ -1,6 +1,5 @@
 const React = require('react');
 
-// Create mock components
 const createMockComponent = (name) => {
   return function MockComponent(props) {
     return React.createElement(name, props, props.children);
@@ -80,7 +79,6 @@ const mockAsyncStorage = {
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
-// Clear mock storage before each test
 beforeEach(() => {
   mockStorageData.clear();
 });
@@ -124,12 +122,10 @@ jest.mock('lucide-react-native', () => ({
   Unlock: () => null,
 }));
 
-// Accessibility testing setup
 
 // Mock react-native AccessibilityInfo for a11y tests
 const mockAccessibilityEventListeners = new Map();
 
-// Create mock functions that can be imported and controlled in tests
 const mockIsScreenReaderEnabled = jest.fn(() => Promise.resolve(false));
 const mockIsVoiceOverRunning = jest.fn(() => Promise.resolve(false));
 const mockIsBoldTextEnabled = jest.fn(() => Promise.resolve(false));
@@ -163,7 +159,6 @@ jest.mock('react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo
   removeEventListener: mockRemoveEventListener,
 }));
 
-// Export mocks for use in tests
 global.mockAccessibility = {
   mockIsScreenReaderEnabled,
   mockIsVoiceOverRunning,
@@ -179,7 +174,6 @@ global.mockAccessibility = {
   mockAccessibilityEventListeners,
 };
 
-// Helper to trigger accessibility events in tests
 global.triggerAccessibilityEvent = (event, data) => {
   const handler = mockAccessibilityEventListeners.get(event);
   if (handler) {
@@ -187,7 +181,6 @@ global.triggerAccessibilityEvent = (event, data) => {
   }
 };
 
-// Helper to reset accessibility mocks
 beforeEach(() => {
   mockAccessibilityEventListeners.clear();
   mockIsScreenReaderEnabled.mockClear();
@@ -211,7 +204,6 @@ beforeEach(() => {
   mockIsReduceTransparencyEnabled.mockResolvedValue(false);
 });
 
-// Extend expect with accessibility matchers (if needed)
 expect.extend({
   toHaveValidA11yProps(received) {
     const hasLabel = received.accessibilityLabel || received.accessibilityLabel === '';
@@ -241,7 +233,6 @@ expect.extend({
   },
 });
 
-// Cleanup after each test
 afterEach(() => {
   mockAccessibilityEventListeners.clear();
 });

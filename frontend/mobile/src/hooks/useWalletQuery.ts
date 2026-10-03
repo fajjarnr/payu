@@ -7,7 +7,6 @@ import {
 import { walletService } from '@/services/wallet.service';
 import { Wallet } from '@/types';
 
-// Query keys
 export const walletKeys = {
   all: ['wallet'] as const,
   lists: () => [...walletKeys.all, 'list'] as const,
@@ -19,7 +18,6 @@ export const walletKeys = {
   pockets: () => [...walletKeys.all, 'pockets'] as const,
 };
 
-// Types for mutations
 interface TransferToPocketData {
   fromPocketId: string;
   toPocketId: string;
@@ -33,9 +31,6 @@ interface CreatePocketData {
   initialBalance?: number;
 }
 
-/**
- * Hook to fetch all wallets
- */
 export function useWallets(options?: UseQueryOptions<Wallet[], Error>) {
   return useQuery({
     queryKey: walletKeys.lists(),
@@ -44,9 +39,6 @@ export function useWallets(options?: UseQueryOptions<Wallet[], Error>) {
   });
 }
 
-/**
- * Hook to fetch primary wallet
- */
 export function usePrimaryWallet(options?: UseQueryOptions<Wallet, Error>) {
   return useQuery({
     queryKey: walletKeys.primary(),
@@ -56,9 +48,6 @@ export function usePrimaryWallet(options?: UseQueryOptions<Wallet, Error>) {
   });
 }
 
-/**
- * Hook to fetch a specific wallet by ID
- */
 export function useWallet(
   walletId: string,
   options?: UseQueryOptions<Wallet, Error>
@@ -211,9 +200,6 @@ export function usePrefetchWallet() {
   };
 }
 
-/**
- * Hook to refresh all wallet data
- */
 export function useRefreshWallets() {
   const queryClient = useQueryClient();
 

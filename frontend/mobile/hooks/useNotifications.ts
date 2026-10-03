@@ -13,13 +13,11 @@ export const useNotifications = () => {
 
     const notificationListener =
       notificationService.addNotificationListener((notification) => {
-        // Handle incoming notification
         console.log('Notification received:', notification);
       });
 
     const responseListener =
       notificationService.addNotificationResponseListener((response) => {
-        // Handle notification tap
         console.log('Notification tapped:', response);
       });
 

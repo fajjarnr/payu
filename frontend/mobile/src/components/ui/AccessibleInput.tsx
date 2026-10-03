@@ -1,16 +1,4 @@
-/**
- * AccessibleInput Component
- *
- * A text input component with comprehensive accessibility support including:
- * - Proper label association
- * - Error message accessibility
- * - Focus management
- * - Screen reader announcements for validation
- * - WCAG 2.1 AA compliance
- *
- * @module components/ui/AccessibleInput
- * @version 1.0.0
- */
+/** Accessible input: label association, error announcements, focus, and WCAG 2.1 AA support. */
 
 import React, { useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import {
@@ -28,11 +16,7 @@ import { useTheme } from '@react-navigation/native';
 import { Eye, EyeOff, X } from 'lucide-react-native';
 import { createInputA11yProps, PayUAccessibilityProps } from '@/src/utils/accessibility';
 
-// Types and interfaces
 
-/**
- * Props for the AccessibleInput component
- */
 export interface AccessibleInputProps extends Omit<TextInputProps, 'style'> {
   /** Input label (visible and for screen reader) */
   label: string;
@@ -74,9 +58,6 @@ export interface AccessibleInputProps extends Omit<TextInputProps, 'style'> {
   onChangeText?: (text: string) => void;
 }
 
-/**
- * Ref methods exposed by AccessibleInput
- */
 export interface AccessibleInputRef {
   /** Focus the input */
   focus: () => void;
@@ -92,7 +73,6 @@ export interface AccessibleInputRef {
   announceError: (message: string) => void;
 }
 
-// Constants
 
 const INPUT_SIZES = {
   sm: {
@@ -115,22 +95,7 @@ const INPUT_SIZES = {
   },
 };
 
-// Component
 
-/**
- * AccessibleInput - A fully accessible text input component
- *
- * @example
- * ```tsx
- * <AccessibleInput
- *   label="Account Number"
- *   placeholder="Enter your account number"
- *   required
- *   error={errors.accountNumber}
- *   onChangeText={setAccountNumber}
- * />
- * ```
- */
 export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputProps>(
   (
     {
@@ -166,21 +131,18 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
     const [isSecureVisible, setIsSecureVisible] = useState(false);
     const [currentValue, setCurrentValue] = useState(value || defaultValue || '');
 
-    // Sync with controlled value
     React.useEffect(() => {
       if (value !== undefined) {
         setCurrentValue(value);
       }
     }, [value]);
 
-    // Announce error when it changes
     React.useEffect(() => {
       if (error && onErrorAnnounce) {
         onErrorAnnounce(error);
       }
     }, [error, onErrorAnnounce]);
 
-    // Expose imperative methods
     useImperativeHandle(ref, () => ({
       focus: () => inputRef.current?.focus(),
       blur: () => inputRef.current?.blur(),
@@ -202,7 +164,6 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       },
     }));
 
-    // Handle focus
     const handleFocus = useCallback(
       (e: any) => {
         setIsFocused(true);
@@ -211,7 +172,6 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       [onFocus]
     );
 
-    // Handle blur
     const handleBlur = useCallback(
       (e: any) => {
         setIsFocused(false);
@@ -220,7 +180,6 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       [onBlur]
     );
 
-    // Handle text change
     const handleChangeText = useCallback(
       (text: string) => {
         setCurrentValue(text);
@@ -229,7 +188,6 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       [onChangeText]
     );
 
-    // Handle clear
     const handleClear = useCallback(() => {
       inputRef.current?.clear();
       setCurrentValue('');
@@ -237,12 +195,10 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       inputRef.current?.focus();
     }, [onChangeText]);
 
-    // Toggle secure visibility
     const toggleSecureVisibility = useCallback(() => {
       setIsSecureVisible((prev) => !prev);
     }, []);
 
-    // Generate accessibility props
     const getAccessibilityProps = (): PayUAccessibilityProps => {
       const baseProps = createInputA11yProps(label, {
         required,
@@ -260,7 +216,6 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       };
     };
 
-    // Get variant styles
     const getVariantStyles = () => {
       const baseStyles = {
         backgroundColor: variant === 'filled' ? colors.card : 'transparent',
@@ -275,13 +230,11 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
     const sizeStyles = INPUT_SIZES[size];
     const variantStyles = getVariantStyles();
 
-    // Container styles
     const containerStyles: ViewStyle = {
       marginBottom: error || helperText ? 8 : 16,
       ...containerStyle,
     };
 
-    // Input container styles
     const inputContainerStyles: ViewStyle = {
       flexDirection: 'row',
       alignItems: 'center',
@@ -294,7 +247,6 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       opacity: editable ? 1 : 0.6,
     };
 
-    // Input styles
     const baseInputStyles: TextStyle = {
       flex: 1,
       paddingVertical: sizeStyles.paddingVertical,
@@ -304,7 +256,6 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       ...inputStyle,
     };
 
-    // Label styles
     const labelStyles: TextStyle = {
       fontSize: size === 'sm' ? 12 : size === 'md' ? 14 : 16,
       fontWeight: '500',
@@ -313,17 +264,14 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
       ...labelStyle,
     };
 
-    // Helper/error text styles
     const helperStyles: TextStyle = {
       fontSize: 12,
       color: error ? '#ef4444' : (colors as any).textSecondary || '#6b7280',
       marginTop: 4,
     };
 
-    // Determine secure text entry
     const isSecureTextEntry = secure && !isSecureVisible;
 
-    // Render right icon area
     const renderRightArea = () => {
       if (secure) {
         return (
@@ -428,7 +376,6 @@ export const AccessibleInput = forwardRef<AccessibleInputRef, AccessibleInputPro
   }
 );
 
-// Helper functions
 
 function generateTestID(label: string): string {
   return label
@@ -437,7 +384,6 @@ function generateTestID(label: string): string {
     .replace(/^-|-$/g, '');
 }
 
-// Styles
 
 const styles = StyleSheet.create({
   requiredIndicator: {
@@ -455,7 +401,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Export
 
 AccessibleInput.displayName = 'AccessibleInput';
 

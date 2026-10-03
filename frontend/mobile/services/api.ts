@@ -4,9 +4,6 @@ import { storage } from '@/utils/storage';
 import { Logger } from '@/utils/logger';
 import { AuthTokens } from '@/types';
 
-/**
- * Maximum number of retry attempts for failed requests
- */
 const MAX_RETRY_ATTEMPTS = 3;
 
 /**
@@ -25,12 +22,6 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retryable?: boolean;
 }
 
-/**
- * Check if an error should trigger a retry
- *
- * @param error - The axios error
- * @returns True if the error is retryable
- */
 function isRetryableError(error: AxiosError): boolean {
   // Network errors
   if (!error.response) {
@@ -42,22 +33,10 @@ function isRetryableError(error: AxiosError): boolean {
   return retryableStatusCodes.includes(error.response.status);
 }
 
-/**
- * Calculate delay for retry with exponential backoff
- *
- * @param attempt - Current attempt number (1-based)
- * @returns Delay in milliseconds
- */
 function calculateRetryDelay(attempt: number): number {
   return RETRY_BASE_DELAY * Math.pow(2, attempt - 1);
 }
 
-/**
- * Delay execution for specified milliseconds
- *
- * @param ms - Milliseconds to delay
- * @returns Promise that resolves after delay
- */
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -80,7 +59,6 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor
     this.client.interceptors.request.use(
       async (config: ExtendedAxiosRequestConfig) => {
         const tokens = await storage.get<AuthTokens>(AUTH_CONFIG.TOKEN_KEY);
@@ -125,7 +103,6 @@ class ApiClient {
           this.pendingRequests.set(requestKey, controller);
         }
 
-        // Log request
         Logger.apiRequest(
           config.method?.toUpperCase() || 'GET',
           config.url || '',
@@ -143,7 +120,6 @@ class ApiClient {
       }
     );
 
-    // Response interceptor
     this.client.interceptors.response.use(
       (response) => {
         const config = response.config as ExtendedAxiosRequestConfig;
@@ -158,7 +134,6 @@ class ApiClient {
           this.pendingRequests.delete(config._requestKey);
         }
 
-        // Log response
         const duration = response.config.headers?.['request-duration']
           ? parseInt(response.config.headers['request-duration'] as string)
           : 0;
@@ -256,10 +231,8 @@ class ApiClient {
             retryDelay
           );
 
-          // Wait before retry
           await delay(retryDelay);
 
-          // Retry the request
           return this.client(originalRequest);
         }
 
@@ -268,9 +241,6 @@ class ApiClient {
     );
   }
 
-  /**
-   * Generate a unique key for a request based on method, url, and params
-   */
   private getRequestKey(config: AxiosRequestConfig): string | undefined {
     const method = (config.method || 'GET').toUpperCase();
     if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
@@ -303,14 +273,8 @@ class ApiClient {
   }
 
   /**
-   * Make a request with idempotency key and retry support
-   * This is the preferred method for financial operations
-   *
-   * @param url - The API endpoint URL
-   * @param data - Request payload
-   * @param idempotencyKey - Unique idempotency key for the operation
-   * @param config - Optional axios config
-   * @returns Promise resolving to the response data
+   * Make a request with idempotency key and retry support.
+   * Preferred method for financial operations.
    */
   public async postWithIdempotency<T>(
     url: string,
@@ -333,7 +297,6 @@ class ApiClient {
 
       return response.data;
     } catch (error) {
-      // Calculate duration for error logging
       const duration = Date.now() - startTime;
       Logger.apiError(
         'POST',
@@ -348,13 +311,6 @@ class ApiClient {
     }
   }
 
-  /**
-   * Make a GET request with retry support
-   *
-   * @param url - The API endpoint URL
-   * @param config - Optional axios config
-   * @returns Promise resolving to the response data
-   */
   public async getWithRetry<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.get<T>(url, {
       ...config,
@@ -364,14 +320,6 @@ class ApiClient {
     return response.data;
   }
 
-  /**
-   * Make a POST request with retry support
-   *
-   * @param url - The API endpoint URL
-   * @param data - Request payload
-   * @param config - Optional axios config
-   * @returns Promise resolving to the response data
-   */
   public async postWithRetry<T>(url: string, data: any, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.post<T>(url, data, {
       ...config,
@@ -381,18 +329,12 @@ class ApiClient {
     return response.data;
   }
 
-  /**
-   * Clear the pending idempotency keys set
-   * Useful for testing or recovery scenarios
-   */
+  /** Clears the pending idempotency keys set (for testing or recovery). */
   public clearPendingIdempotencyKeys(): void {
     this.pendingIdempotencyKeys.clear();
     Logger.debug('API', 'Pending idempotency keys cleared');
   }
 
-  /**
-   * Get the count of pending idempotency keys
-   */
   public getPendingIdempotencyKeyCount(): number {
     return this.pendingIdempotencyKeys.size;
   }
@@ -406,5 +348,4 @@ export const apiClientInstance = new ApiClient();
 // Re-export the axios instance with idempotency support
 export const apiClientWithIdempotency = apiClientInstance.getInstance();
 
-// Type export for the extended config
 export type { ExtendedAxiosRequestConfig };

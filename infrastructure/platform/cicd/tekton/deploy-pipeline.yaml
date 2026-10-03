@@ -69,7 +69,7 @@ spec:
     - name: source
       description: Workspace to hold the cloned infrastructure git repository
   tasks:
-    # ── Step 1: Clone Infrastructure (GitOps) Repository ──
+    # Clone Infrastructure (GitOps) Repository
     - name: fetch-infra-repo
       taskRef:
         resolver: cluster
@@ -91,7 +91,7 @@ spec:
         - name: DELETE_EXISTING
           value: "true"
 
-    # ── Step 2: OpenShift GitOps / Kustomize Write-Back ──
+    # OpenShift GitOps / Kustomize Write-Back
     - name: gitops-writeback
       runAfter:
         - promote-image
@@ -139,7 +139,7 @@ spec:
         - name: push-changes
           value: $(params.push-changes)
 
-    # ── Step 3: ArgoCD Sync Wait ──
+    # ArgoCD Sync Wait
     - name: argocd-sync-wait
       runAfter:
         - gitops-writeback
@@ -151,7 +151,7 @@ spec:
         - name: NAMESPACE
           value: openshift-gitops
 
-    # ── Step 3b: Contract Test Gate (All envs) ──
+    # Contract Test Gate (All envs)
     - name: contract-test-gate
       runAfter:
         - argocd-sync-wait
@@ -170,7 +170,7 @@ spec:
         - name: FAIL_ON_NO_PACTS
           value: "true"
 
-    # ── Step 4A: Security Gate (DEV) - DAST ──
+    # Security Gate (DEV) - DAST
     - name: dev-zap-baseline
       runAfter:
         - contract-test-gate
@@ -187,7 +187,7 @@ spec:
         - name: TARGET_URL
           value: $(params.environment-base-url)
 
-    # ── Step 4B: Security Gate (SIT) - DAST & App Chaos & API Fuzzing ──
+    # Security Gate (SIT) - DAST & App Chaos & API Fuzzing
     - name: sit-zap-baseline
       runAfter:
         - argocd-sync-wait
@@ -238,7 +238,7 @@ spec:
         - name: source
           workspace: source
 
-    # ── Step 4C: Security Gate (UAT) - API Fuzzing & Load Test ──
+    # Security Gate (UAT) - API Fuzzing & Load Test
     - name: uat-schemathesis
       runAfter:
         - argocd-sync-wait
@@ -279,7 +279,7 @@ spec:
         - name: BASE_URL
           value: $(params.environment-base-url)
 
-    # ── Step 4D: Security Gate (PREPROD) - Infra Chaos ──
+    # Security Gate (PREPROD) - Infra Chaos
     - name: preprod-kraken-gate
       runAfter:
         - argocd-sync-wait
@@ -293,7 +293,7 @@ spec:
         - name: source
           workspace: source
 
-    # ── Step 5: k6 Smoke Test Gate (SIT/UAT) ──
+    # k6 Smoke Test Gate (SIT/UAT)
     - name: k6-smoke-test-gate
       runAfter:
         - argocd-sync-wait
@@ -316,7 +316,7 @@ spec:
         - name: BASE_URL
           value: $(params.environment-base-url)
 
-    # ── Step 6: Notify Success ──
+    # Notify Success
     - name: notify-success
       runAfter:
         - contract-test-gate

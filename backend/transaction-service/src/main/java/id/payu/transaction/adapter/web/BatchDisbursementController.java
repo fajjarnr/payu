@@ -65,7 +65,6 @@ public class BatchDisbursementController {
             @Valid @RequestBody CreateBatchRequest request,
             @RequestHeader(value = "X-Idempotency-Key", required = true) String idempotencyKey) {
 
-        // Verify the authenticated user owns the source account
         String userId = extractUserId();
         authorizationService.verifyAccountOwnership(request.getSourceAccountId(), userId);
 
@@ -186,7 +185,6 @@ public class BatchDisbursementController {
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset) {
 
-        // Verify the authenticated user owns the source account
         String userId = extractUserId();
         authorizationService.verifyAccountOwnership(sourceAccountId, userId);
 

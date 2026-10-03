@@ -66,8 +66,6 @@ public class SimulatorGatewayIntegrationTest {
         if (qrisSimulatorMock != null) qrisSimulatorMock.resetAll();
     }
 
-    // BI-FAST simulator tests
-
     @Test
     @Order(1)
     @DisplayName("BI-FAST: Should handle inquiry request")
@@ -203,8 +201,6 @@ public class SimulatorGatewayIntegrationTest {
                 .body("responseCode", containsString("01"));
     }
 
-    // Dukcapil simulator tests
-
     @Test
     @Order(10)
     @DisplayName("Dukcapil: Should handle identity verification")
@@ -337,8 +333,6 @@ public class SimulatorGatewayIntegrationTest {
                 .statusCode(anyOf(is(404), is(502), is(503)))
                 .body("responseCode", containsString("01"));
     }
-
-    // QRIS simulator tests
 
     @Test
     @Order(20)
@@ -479,8 +473,6 @@ public class SimulatorGatewayIntegrationTest {
                 .body("responseCode", containsString("01"));
     }
 
-    // Timeout and retry tests
-
     @Test
     @Order(30)
     @DisplayName("Should handle simulator timeout")
@@ -503,7 +495,6 @@ public class SimulatorGatewayIntegrationTest {
     @Order(31)
     @DisplayName("Should retry failed simulator requests")
     void testSimulatorRetry() {
-        // First two attempts fail, third succeeds
         dukcapilSimulatorMock.stubFor(post(urlPathEqualTo("/api/v1/verify"))
                 .inScenario("Retry Scenario")
                 .whenScenarioStateIs("Started")
@@ -532,8 +523,6 @@ public class SimulatorGatewayIntegrationTest {
                 .statusCode(200);
     }
 
-    // Correlation ID tests
-
     @Test
     @Order(40)
     @DisplayName("Should forward correlation ID to simulators")
@@ -559,8 +548,6 @@ public class SimulatorGatewayIntegrationTest {
                 .withHeader("X-Correlation-Id", WireMock.equalTo(correlationId)));
     }
 
-    // Simulator not configured tests
-
     @Test
     @Order(50)
     @DisplayName("Should return 503 when simulator not configured")
@@ -569,8 +556,6 @@ public class SimulatorGatewayIntegrationTest {
         // In a real scenario, we'd test with an unconfigured simulator
         // For now, we just verify the error handling structure
     }
-
-    // Multiple simulator requests tests
 
     @Test
     @Order(60)
@@ -611,20 +596,16 @@ public class SimulatorGatewayIntegrationTest {
         qrisSimulatorMock.verify(1, postRequestedFor(urlPathEqualTo("/api/v1/generate")));
     }
 
-    // Fault tolerance tests
-
     @Test
     @Order(70)
     @DisplayName("Should recover from transient simulator failures")
     void testSimulatorRecovery() {
-        // First request fails
         qrisSimulatorMock.stubFor(post(urlPathEqualTo("/api/v1/generate"))
                 .inScenario("Recovery Scenario")
                 .whenScenarioStateIs("Started")
                 .willReturn(aResponse().withStatus(503))
                 .willSetStateTo("Recovered"));
 
-        // Second request succeeds
         qrisSimulatorMock.stubFor(post(urlPathEqualTo("/api/v1/generate"))
                 .inScenario("Recovery Scenario")
                 .whenScenarioStateIs("Recovered")
@@ -632,7 +613,6 @@ public class SimulatorGatewayIntegrationTest {
                         .withStatus(200)
                         .withBody("{\"responseCode\":\"00\",\"qrId\":\"QRIS-001\"}")));
 
-        // First call might fail
         given()
                 .contentType(ContentType.JSON)
                 .body("{\"amount\":50000}")
@@ -641,7 +621,6 @@ public class SimulatorGatewayIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(503)));
 
-        // Second call should succeed (after retry or recovery)
         given()
                 .contentType(ContentType.JSON)
                 .body("{\"amount\":50000}")

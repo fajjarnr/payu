@@ -46,24 +46,20 @@ public class ResponseCompressionFilter implements ContainerResponseFilter {
             return;
         }
 
-        // Skip if response already has encoding
         if (responseContext.getHeaders().containsKey(HttpHeaders.CONTENT_ENCODING)) {
             return;
         }
 
-        // Check if client accepts gzip
         String acceptEncoding = requestContext.getHeaderString(HttpHeaders.ACCEPT_ENCODING);
         if (acceptEncoding == null || !acceptEncoding.contains(GZIP)) {
             return;
         }
 
-        // Check content type
         String contentType = responseContext.getMediaType() != null ? responseContext.getMediaType().toString() : "";
         if (!isCompressibleType(contentType)) {
             return;
         }
 
-        // Check response size
         Object entity = responseContext.getEntity();
         if (entity == null) {
             return;
@@ -75,16 +71,13 @@ public class ResponseCompressionFilter implements ContainerResponseFilter {
         } else if (entity instanceof byte[]) {
             responseBytes = (byte[]) entity;
         } else {
-            // For other types, skip compression
             return;
         }
 
-        // Only compress if size exceeds minimum threshold
         if (responseBytes.length < config.compression().minSize()) {
             return;
         }
 
-        // Compress response
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
              GZIPOutputStream gzipStream = new GZIPOutputStream(byteStream)) {
 
@@ -93,7 +86,6 @@ public class ResponseCompressionFilter implements ContainerResponseFilter {
 
             byte[] compressedBytes = byteStream.toByteArray();
 
-            // Only use compressed version if it's actually smaller
             if (compressedBytes.length < responseBytes.length) {
                 responseContext.setEntity(compressedBytes);
                 responseContext.getHeaders().putSingle(HttpHeaders.CONTENT_ENCODING, GZIP);

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 /**
  * Spring Auto-Configuration for Rules Engine starter.
  */
+
 @AutoConfiguration
 public class RulesAutoConfiguration {
 

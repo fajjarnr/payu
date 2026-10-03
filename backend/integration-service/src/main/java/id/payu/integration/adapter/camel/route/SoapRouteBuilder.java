@@ -31,13 +31,11 @@ public class SoapRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        // Error handler
         onException(Exception.class)
             .log(LoggingLevel.ERROR, "Error processing SOAP request: ${exception.message}")
             .to("direct:soap-error-handler")
             .handled(true);
 
-        // Route: SOAP request handler
         from("direct:soap-request")
             .routeId("soap-request-route")
             .log(LoggingLevel.INFO, "Processing SOAP request to: ${header.SoapEndpoint}")
@@ -47,7 +45,6 @@ public class SoapRouteBuilder extends RouteBuilder {
                 String payload = exchange.getIn().getBody(String.class);
                 String messageId = exchange.getIn().getHeader("MessageId", String.class);
 
-                // Create message record if not exists
                 if (messageId == null) {
                     // Use the persisted entity's messageId from createMessage (it generates
                     // its own UUID — the local builder above is not persisted and would
@@ -65,7 +62,6 @@ public class SoapRouteBuilder extends RouteBuilder {
                     exchange.getIn().setHeader("MessageId", created.getMessageId());
                 }
 
-                // Wrap payload in SOAP envelope if needed
                 if (!payload.trim().startsWith("<soap")) {
                     String soapMessage = soapTransformer.wrapSoap11(payload, operation);
                     exchange.getIn().setBody(soapMessage);
@@ -83,7 +79,6 @@ public class SoapRouteBuilder extends RouteBuilder {
                 String response = exchange.getIn().getBody(String.class);
                 String messageId = exchange.getIn().getHeader("MessageId", String.class);
 
-                // Check for SOAP Fault
                 if (soapTransformer.hasFault(response)) {
                     Map<String, String> fault = soapTransformer.extractFault(response);
                     log.error("SOAP Fault received: {}", fault);
@@ -96,17 +91,14 @@ public class SoapRouteBuilder extends RouteBuilder {
                     throw new SoapIntegrationException("SOAP Fault: " + fault.getOrDefault("message", "Unknown error"));
                 }
 
-                // Unwrap SOAP envelope
                 String unwrappedResponse = soapTransformer.unwrapSoap(response);
                 exchange.getIn().setBody(unwrappedResponse);
 
-                // Mark message as sent
                 if (messageId != null) {
                     messageProcessingService.markSent(messageId);
                 }
             });
 
-        // Route: SOAP response handler for async callbacks
         from("direct:soap-response")
             .routeId("soap-response-route")
             .log(LoggingLevel.DEBUG, "Processing SOAP response")
@@ -126,7 +118,6 @@ public class SoapRouteBuilder extends RouteBuilder {
                 }
             });
 
-        // Route: Error handler
         from("direct:soap-error-handler")
             .routeId("soap-error-handler-route")
             .process(exchange -> {
@@ -139,7 +130,6 @@ public class SoapRouteBuilder extends RouteBuilder {
                     messageProcessingService.markFailed(messageId, exception.getMessage());
                 }
 
-                // Prepare error response
                 exchange.getIn().setBody(Map.of(
                         "error", "SOAP_REQUEST_FAILED",
                         "message", exception.getMessage(),
@@ -148,7 +138,6 @@ public class SoapRouteBuilder extends RouteBuilder {
             })
             .marshal().json();
 
-        // Route: HTTP request handler (generic)
         from("direct:http-request")
             .routeId("http-request-route")
             .log(LoggingLevel.INFO, "Processing HTTP ${header.HttpMethod} request to: ${header.HttpUrl}")
@@ -179,9 +168,6 @@ public class SoapRouteBuilder extends RouteBuilder {
         }
     }
 
-    /**
-     * Exception for SOAP integration errors.
-     */
     public static class SoapIntegrationException extends RuntimeException {
         public SoapIntegrationException(String message) {
             super(message);

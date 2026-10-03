@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Output port for Budget persistence operations.
- */
 public interface BudgetRepositoryPort {
     Budget save(Budget budget);
     Optional<Budget> findById(UUID id);

@@ -3,44 +3,26 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appearance } from 'react-native';
 
-/**
- * Color Scheme Type
- */
 export type ColorScheme = 'light' | 'dark' | 'system';
 
-/**
- * Language Type
- */
 export type Language = 'en' | 'id';
 
 /**
- * UI State Interface
- *
- * This store manages CLIENT-SIDE ONLY state:
- * - Theme preferences (light/dark/system)
- * - Language preferences
- * - UI settings (show balance, notifications, etc.)
- *
- * SERVER DATA (wallet, transactions) should be fetched via React Query hooks:
- * - usePrimaryWallet() from @/src/hooks/useWalletQuery
- * - useInfiniteTransactions() from @/src/hooks/useTransactionQuery
+ * Client-side UI state (theme, language, UI settings). Server data (wallet,
+ * transactions) comes from React Query hooks.
  */
 interface UIState {
-  // Theme settings
   colorScheme: ColorScheme;
   isDark: boolean;
 
-  // Language settings
   language: Language;
 
-  // UI preferences
   showBalance: boolean;
   notificationsEnabled: boolean;
   biometricsEnabled: boolean;
   autoLockEnabled: boolean;
   autoLockTimeout: number; // in minutes
 
-  // Actions
   setColorScheme: (scheme: ColorScheme) => void;
   setIsDark: (isDark: boolean) => void;
   toggleTheme: () => void;
@@ -53,9 +35,6 @@ interface UIState {
   resetUI: () => void;
 }
 
-/**
- * Default values
- */
 const defaults: Omit<UIState, 'actions'> = {
   colorScheme: 'system',
   isDark: Appearance.getColorScheme() === 'dark',
@@ -67,16 +46,10 @@ const defaults: Omit<UIState, 'actions'> = {
   autoLockTimeout: 5,
 };
 
-/**
- * UI Store
- *
- * Uses Zustand with persist middleware for client-side state.
- * This state is persisted to AsyncStorage but contains NO sensitive data.
- */
+/** Persists client-side UI state to AsyncStorage; contains no sensitive data. */
 export const useUIStore = create<UIState>()(
   persist(
     (set, get) => ({
-      // Initial state
       colorScheme: defaults.colorScheme,
       isDark: defaults.isDark,
       language: defaults.language,
@@ -86,10 +59,8 @@ export const useUIStore = create<UIState>()(
       autoLockEnabled: defaults.autoLockEnabled,
       autoLockTimeout: defaults.autoLockTimeout,
 
-      // Theme actions
       setColorScheme: (scheme: ColorScheme) => {
         set({ colorScheme: scheme });
-        // Update isDark based on scheme
         if (scheme !== 'system') {
           set({ isDark: scheme === 'dark' });
         } else {
@@ -106,12 +77,10 @@ export const useUIStore = create<UIState>()(
         set({ isDark: !isDark, colorScheme: !isDark ? 'dark' : 'light' });
       },
 
-      // Language actions
       setLanguage: (language: Language) => {
         set({ language });
       },
 
-      // UI preference actions
       setShowBalance: (show: boolean) => {
         set({ showBalance: show });
       },
@@ -132,7 +101,6 @@ export const useUIStore = create<UIState>()(
         set({ autoLockTimeout: timeout });
       },
 
-      // Reset to defaults
       resetUI: () => {
         set({
           colorScheme: defaults.colorScheme,

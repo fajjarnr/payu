@@ -12,7 +12,6 @@ import { useDeeplinkHandler } from '@/hooks/useDeeplinkHandler';
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
-// Deeplink handler wrapper component
 function DeeplinkHandler({ children }: { children: React.ReactNode }) {
   useDeeplinkHandler();
   return children;

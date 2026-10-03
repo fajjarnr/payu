@@ -7,14 +7,12 @@ export default function BillsLoading() {
         <div className="h-8 w-40 bg-muted rounded-xl mb-2" />
         <div className="h-5 w-48 bg-muted/60 rounded-xl mb-8" />
 
-        {/* Category tabs skeleton */}
         <div className="flex gap-3 mb-8 overflow-x-auto">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-10 w-24 bg-muted rounded-full shrink-0" />
           ))}
         </div>
 
-        {/* Bill items skeleton */}
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card">

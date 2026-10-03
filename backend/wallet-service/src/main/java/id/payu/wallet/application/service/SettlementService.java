@@ -78,7 +78,6 @@ public class SettlementService implements SettlementUseCase {
     public SettlementBatch processDailySettlement(String partnerId, LocalDate settlementDate) {
         log.info("Processing daily settlement for partner {} on date {}", partnerId, settlementDate);
 
-        // Check if batch already exists
         List<SettlementBatch> existing = settlementPersistencePort.findSettlementBatchesByPartner(
                 partnerId, settlementDate, settlementDate);
 
@@ -199,7 +198,6 @@ public class SettlementService implements SettlementUseCase {
     public SettlementBatch detectDiscrepancies(UUID batchId) {
         SettlementBatch batch = getSettlementBatch(batchId);
 
-        // Check for amount mismatches
         BigDecimal calculatedTotal = batch.getEntries().stream()
                 .map(SettlementEntry::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -213,7 +211,6 @@ public class SettlementService implements SettlementUseCase {
             batch.addDiscrepancy(discrepancy);
         }
 
-        // Check for failed entries
         long failedCount = batch.getEntries().stream()
                 .filter(e -> e.getStatus() == EntryStatus.FAILED)
                 .count();

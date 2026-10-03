@@ -3,7 +3,6 @@ import { waitForPageStable, waitForAnimations } from './utils';
 
 test.describe('Settings Flow', () => {
   test.beforeEach(async ({ authPage: page }) => {
-    // Navigate to settings page (assumes user is logged in)
     await page.goto('/settings');
     await waitForPageStable(page);
   });
@@ -106,11 +105,9 @@ test.describe('Settings Flow', () => {
     await page.goto('/settings');
     await waitForPageStable(page);
 
-    // Check that key elements are visible
     await expect(page.getByText('Ekosistem Akun')).toBeVisible();
     await expect(page.getByText('E2E Test User')).toBeVisible();
 
-    // Take screenshot
     await page.screenshot({
       path: 'e2e/screenshots/settings-mobile.png',
       fullPage: true
@@ -183,7 +180,6 @@ test.describe('Settings Flow - Profile Update', () => {
     await emailInput.clear();
     await emailInput.fill('invalid-email');
 
-    // Check for validation (if any)
     await expect(emailInput).toBeVisible();
   });
 
@@ -191,7 +187,6 @@ test.describe('Settings Flow - Profile Update', () => {
     const nameInput = page.getByPlaceholder('Nama lengkap');
     await nameInput.focus();
 
-    // Check for focus ring
     const focusedInput = page.locator(':focus');
     await expect(focusedInput).toBeVisible();
     // Focus ring class may vary, just check that element is focused
@@ -202,7 +197,6 @@ test.describe('Settings Flow - Profile Update', () => {
     const inputCount = await inputs.count();
     expect(inputCount).toBeGreaterThanOrEqual(3);
 
-    // Check for proper styling on first input
     await expect(inputs.first()).toHaveClass(/border/);
   });
 });
@@ -216,56 +210,45 @@ test.describe('Settings Flow - Preferences', () => {
   test('should toggle push notification preference', async ({ authPage: page }) => {
     const toggle = page.locator('main button[role="switch"]').first();
 
-    // Should be clickable
     await expect(toggle).toBeVisible();
 
-    // Click to toggle
     await toggle.click();
     await waitForAnimations(page);
 
-    // Should still be clickable
     await expect(toggle).toBeVisible();
   });
 
   test('should toggle dark mode preference', async ({ authPage: page }) => {
     const toggle = page.locator('main button[role="switch"]').nth(1);
 
-    // Should be clickable
     await expect(toggle).toBeVisible();
 
-    // Click to toggle
     await toggle.click();
     await waitForAnimations(page);
 
-    // Should still be clickable
     await expect(toggle).toBeVisible();
   });
 
   test('should toggle marketing insights preference', async ({ authPage: page }) => {
     const toggle = page.locator('main button[role="switch"]').nth(2);
 
-    // Should be clickable
     await expect(toggle).toBeVisible();
 
-    // Click to toggle
     await toggle.click();
     await waitForAnimations(page);
 
-    // Should still be clickable
     await expect(toggle).toBeVisible();
   });
 
   test('should have smooth toggle animations', async ({ authPage: page }) => {
     const toggle = page.locator('main button[role="switch"]').first();
 
-    // Check for transition class
     await expect(toggle).toBeVisible();
   });
 
   test('should have toggle handle with animation', async ({ authPage: page }) => {
     const toggle = page.locator('main button[role="switch"]').first();
 
-    // Check that toggle is visible and interactive
     await expect(toggle).toBeVisible();
   });
 
@@ -291,7 +274,6 @@ test.describe('Settings Flow - Menu Navigation', () => {
     await page.click('button:has-text("Tagihan & Paket")');
     await waitForAnimations(page);
 
-    // Menu item should be clickable
     const menuButton = page.locator('button').filter({ hasText: 'Tagihan & Paket' });
     await expect(menuButton).toBeVisible();
   });
@@ -300,7 +282,6 @@ test.describe('Settings Flow - Menu Navigation', () => {
     await page.click('button:has-text("Privasi & Keamanan")');
     await waitForAnimations(page);
 
-    // Menu item should be clickable
     const menuButton = page.locator('button').filter({ hasText: 'Privasi & Keamanan' });
     await expect(menuButton).toBeVisible();
   });
@@ -309,13 +290,11 @@ test.describe('Settings Flow - Menu Navigation', () => {
     await page.click('button:has-text("Pengaturan Lanjut")');
     await waitForAnimations(page);
 
-    // Menu item should be clickable
     const menuButton = page.locator('button').filter({ hasText: 'Pengaturan Lanjut' });
     await expect(menuButton).toBeVisible();
   });
 
   test('should have menu icons', async ({ authPage: page }) => {
-    // Check for menu icons (User, CreditCard, Shield, Globe)
     const icons = page.locator('svg');
     await expect(icons.first()).toBeVisible();
   });
@@ -375,13 +354,11 @@ test.describe('Settings Flow - Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ authPage: page }) => {
-    // Tab through page
     await page.keyboard.press('Tab');
     await page.waitForTimeout(100);
     await page.keyboard.press('Tab');
     await page.waitForTimeout(100);
 
-    // Should reach a focusable element
     const focused = page.locator(':focus');
     await expect(focused).toBeVisible();
   });
@@ -461,7 +438,6 @@ test.describe('Settings Flow - Error Handling', () => {
     await emailInput.clear();
     await emailInput.fill('not-an-email');
 
-    // Input should still accept the value
     await expect(emailInput).toHaveValue('not-an-email');
   });
 
@@ -470,7 +446,6 @@ test.describe('Settings Flow - Error Handling', () => {
     await phoneInput.clear();
     await phoneInput.fill('abc');
 
-    // Input should still accept the value
     await expect(phoneInput).toHaveValue('abc');
   });
 });
@@ -484,28 +459,24 @@ test.describe('Settings Flow - Interactive Elements', () => {
   test('should have hover effects on menu items', async ({ authPage: page }) => {
     const menuItem = page.locator('button').filter({ hasText: 'Tagihan & Paket' });
 
-    // Check that menu item exists and is visible
     await expect(menuItem).toBeVisible();
   });
 
   test('should have hover effects on toggles', async ({ authPage: page }) => {
     const toggle = page.locator('main button[role="switch"]').first();
 
-    // Check that toggle is visible
     await expect(toggle).toBeVisible();
   });
 
   test('should have smooth transitions on inputs', async ({ authPage: page }) => {
     const input = page.getByPlaceholder('Nama lengkap');
 
-    // Check for transition class
     await expect(input).toBeVisible();
   });
 
   test('should have active scale effect on buttons', async ({ authPage: page }) => {
     const syncButton = page.locator('button:has-text("Sinkronisasi Profil")');
 
-    // Check for active scale class (if present)
     await expect(syncButton).toBeVisible();
   });
 });

@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # PayU Digital Banking Platform - Run All Tests Script
-# =====================================================
 # Executes full test suite across all services:
 #   - Backend Java services (Maven)
 #   - Backend Python services (pytest)
@@ -31,7 +30,6 @@ echo "=========================================="
 echo "PayU - Running All Tests"
 echo "=========================================="
 
-# Color codes
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -63,7 +61,6 @@ print_section() {
     echo "=========================================="
 }
 
-# Parse arguments
 SKIP_BUILD=false
 SKIP_UNIT=false
 SKIP_INTEGRATION=false
@@ -107,10 +104,8 @@ FAILED=()
 TOTAL_TESTS=0
 PASSED_TESTS=0
 
-# Track overall success
 OVERALL_SUCCESS=true
 
-# Determine which compose command to use
 if command -v podman-compose > /dev/null 2>&1; then
     COMPOSE_CMD="podman-compose"
 elif podman compose version > /dev/null 2>&1; then
@@ -119,20 +114,14 @@ else
     COMPOSE_CMD="docker compose"
 fi
 
-# Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-
-# ============================================
-# Step 0: Install shared dependencies
-# ============================================
 
 print_section "Step 0: Installing shared dependencies"
 
 if [ "$SKIP_BUILD" = false ] && [ "$SKIP_BACKEND" = false ]; then
     print_info "Building and installing shared libraries..."
 
-    # Build shared starters
     SHARED_STARTERS=("cache-starter" "resilience-starter" "security-starter" "outbox-starter" "saga-starter" "events-starter" "archunit-starter")
 
     for starter in "${SHARED_STARTERS[@]}"; do
@@ -155,10 +144,6 @@ else
     fi
 fi
 
-# ============================================
-# Step 1: Start test environment
-# ============================================
-
 print_section "Step 1: Starting test environment"
 
 if [ "$SKIP_BUILD" = false ] && [ "$SKIP_INTEGRATION" = false ] || [ "$SKIP_E2E" = false ]; then
@@ -167,7 +152,6 @@ if [ "$SKIP_BUILD" = false ] && [ "$SKIP_INTEGRATION" = false ] || [ "$SKIP_E2E"
     print_info "Waiting for services to be healthy..."
     sleep 15
 
-    # Run health check
     if [ -f "$SCRIPT_DIR/test-health-check.sh" ]; then
         if "$SCRIPT_DIR/test-health-check.sh" > /dev/null 2>&1; then
             print_status 0 "Test environment is healthy"
@@ -182,14 +166,9 @@ else
     print_info "Skipping environment start"
 fi
 
-# ============================================
-# Step 2: Backend Unit Tests
-# ============================================
-
 if [ "$SKIP_UNIT" = false ] && [ "$COVERAGE_ONLY" = false ] && [ "$SKIP_BACKEND" = false ]; then
     print_section "Step 2: Running Backend Unit Tests"
 
-    # Java Spring Boot services
     JAVA_SERVICES=(
         "account-service"
         "auth-service"
@@ -244,7 +223,6 @@ if [ "$SKIP_UNIT" = false ] && [ "$COVERAGE_ONLY" = false ] && [ "$SKIP_BACKEND"
         fi
     done
 
-    # Python services
     PYTHON_SERVICES=(
         "kyc-service"
         "analytics-service"
@@ -283,10 +261,6 @@ else
     fi
 fi
 
-# ============================================
-# Step 3: Generate Coverage Reports
-# ============================================
-
 if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
     print_section "Step 3: Generating Coverage Reports"
 
@@ -324,7 +298,6 @@ if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
             fi
         done
 
-        # Python coverage
         PYTHON_SERVICES=(
             "kyc-service"
             "analytics-service"
@@ -347,7 +320,6 @@ if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
         done
     fi
 
-    # Frontend coverage
     if [ "$SKIP_FRONTEND" = false ] && [ -d "$PROJECT_ROOT/frontend/web-app" ]; then
         print_info "Generating frontend coverage report..."
         cd "$PROJECT_ROOT/frontend/web-app"
@@ -361,7 +333,6 @@ if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
         cd "$PROJECT_ROOT"
     fi
 
-    # Mobile coverage
     if [ "$SKIP_MOBILE" = false ] && [ -d "$PROJECT_ROOT/frontend/mobile" ]; then
         print_info "Generating mobile coverage report..."
         cd "$PROJECT_ROOT/frontend/mobile"
@@ -378,16 +349,11 @@ else
     print_info "Skipping coverage reports (--skip-unit)"
 fi
 
-# ============================================
-# Step 4: Backend Integration Tests
-# ============================================
-
 if [ "$SKIP_INTEGRATION" = false ] && [ "$SKIP_BACKEND" = false ]; then
     print_section "Step 4: Running Backend Integration Tests"
 
     print_info "Integration tests require full Docker environment..."
 
-    # Run integration tests from tests/ directory if they exist
     if [ -d "$PROJECT_ROOT/tests/integration" ]; then
         print_info "Running integration tests from tests/integration..."
         cd "$PROJECT_ROOT/tests/integration"
@@ -436,10 +402,6 @@ else
     fi
 fi
 
-# ============================================
-# Step 5: Frontend Tests
-# ============================================
-
 if [ "$SKIP_UNIT" = false ] && [ "$COVERAGE_ONLY" = false ] && [ "$SKIP_FRONTEND" = false ]; then
     print_section "Step 5: Running Frontend Tests"
 
@@ -468,10 +430,6 @@ else
         print_info "Skipping frontend tests (--skip-unit or --coverage)"
     fi
 fi
-
-# ============================================
-# Step 6: Mobile Tests
-# ============================================
 
 if [ "$SKIP_UNIT" = false ] && [ "$COVERAGE_ONLY" = false ] && [ "$SKIP_MOBILE" = false ]; then
     print_section "Step 6: Running Mobile Tests"
@@ -502,16 +460,11 @@ else
     fi
 fi
 
-# ============================================
-# Step 7: E2E Tests
-# ============================================
-
 if [ "$SKIP_E2E" = false ]; then
     print_section "Step 7: Running E2E Tests"
 
     print_info "E2E tests require full application stack..."
 
-    # Check for Playwright E2E tests in web-app
     if [ -d "$PROJECT_ROOT/frontend/web-app" ] && [ -d "$PROJECT_ROOT/frontend/web-app/e2e" -o -d "$PROJECT_ROOT/frontend/web-app/tests/e2e" ]; then
         print_info "Running Playwright E2E tests..."
         cd "$PROJECT_ROOT/frontend/web-app"
@@ -534,17 +487,12 @@ else
     print_info "Skipping E2E tests (--skip-e2e)"
 fi
 
-# ============================================
-# Step 8: Generate Combined Coverage Report
-# ============================================
-
 if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
     print_section "Step 8: Generating Combined Coverage Report"
 
     COVERAGE_DIR="$PROJECT_ROOT/coverage"
     mkdir -p "$COVERAGE_DIR"
 
-    # Collect Java coverage reports
     if [ "$SKIP_BACKEND" = false ]; then
         print_info "Collecting Java coverage reports..."
         mkdir -p "$COVERAGE_DIR/java"
@@ -557,7 +505,6 @@ if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
         print_status 0 "Java coverage reports collected in coverage/java/"
     fi
 
-    # Collect Python coverage reports
     if [ "$SKIP_BACKEND" = false ]; then
         print_info "Collecting Python coverage reports..."
         mkdir -p "$COVERAGE_DIR/python"
@@ -570,7 +517,6 @@ if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
         print_status 0 "Python coverage reports collected in coverage/python/"
     fi
 
-    # Collect Frontend coverage reports
     if [ "$SKIP_FRONTEND" = false ]; then
         print_info "Collecting frontend coverage reports..."
         mkdir -p "$COVERAGE_DIR/frontend"
@@ -581,7 +527,6 @@ if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
         print_status 0 "Frontend coverage reports collected in coverage/frontend/"
     fi
 
-    # Collect Mobile coverage reports
     if [ "$SKIP_MOBILE" = false ]; then
         print_info "Collecting mobile coverage reports..."
         mkdir -p "$COVERAGE_DIR/mobile"
@@ -592,7 +537,6 @@ if [ "$SKIP_UNIT" = false ] || [ "$COVERAGE_ONLY" = true ]; then
         print_status 0 "Mobile coverage reports collected in coverage/mobile/"
     fi
 
-    # Generate combined report index
     cat > "$COVERAGE_DIR/index.html" << 'EOF'
 <!DOCTYPE html>
 <html>
@@ -644,10 +588,6 @@ EOF
 else
     print_info "Skipping combined coverage report (--skip-unit)"
 fi
-
-# ============================================
-# Final Summary
-# ============================================
 
 print_section "Test Execution Summary"
 

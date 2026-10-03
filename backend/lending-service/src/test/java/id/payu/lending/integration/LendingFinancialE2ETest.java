@@ -70,7 +70,6 @@ class LendingFinancialE2ETest {
     @MockitoBean
     private id.payu.lending.domain.port.out.WalletPaymentPort walletPaymentPort;
 
-    // ─── full lifecycle ─────────────────────────────────────────────
 
     @Test
     @DisplayName("Full lifecycle: apply → schedule → pay installment → idempotent re-play")
@@ -79,10 +78,8 @@ class LendingFinancialE2ETest {
         BigDecimal principal = new BigDecimal("12000000.00");
         int tenure = 12;
 
-        // 1. Seed an eligible credit score (KYC APPROVED + healthy transaction history)
         seedEligibleCreditScore(userId);
 
-        // 2. Apply for a loan (async handler → await the dispatched response)
         LoanApplicationRequest request = new LoanApplicationRequest(
                 userId, "EXT-FIN-" + UUID.randomUUID(), LoanType.PERSONAL_LOAN,
                 principal, tenure, "Financial E2E");
@@ -107,7 +104,6 @@ class LendingFinancialE2ETest {
         assertThat(monthlyInstallment).isGreaterThan(BigDecimal.ZERO);
         assertThat(interestRate).isGreaterThan(BigDecimal.ZERO);
 
-        // 2. Generate the repayment schedule
         JsonNode schedules = extractData(mockMvc.perform(post(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")
                         .header("Authorization", TestContainersConfig.bearerToken())
                         .header("X-Tenant-Id", TENANT))
@@ -117,7 +113,6 @@ class LendingFinancialE2ETest {
         assertThat(schedules).isNotNull();
         assertThat(schedules.size()).isEqualTo(tenure);
 
-        // 3. Financial invariants — amortization must reconcile to the principal
         BigDecimal sumPrincipal = BigDecimal.ZERO;
         BigDecimal previousOutstanding = principal;
         for (JsonNode s : schedules) {
@@ -143,7 +138,6 @@ class LendingFinancialE2ETest {
         assertThat(new BigDecimal(last.path("outstandingPrincipal").asText()).setScale(4, RoundingMode.HALF_EVEN))
                 .isEqualByComparingTo(new BigDecimal(last.path("principalAmount").asText()).setScale(4, RoundingMode.HALF_EVEN));
 
-        // 4. Pay the first installment (full amount) — idempotency key required
         String firstScheduleId = schedules.get(0).path("id").asText();
         String idemKey = "idem-" + UUID.randomUUID();
         String firstInstallment = schedules.get(0).path("installmentAmount").asText();
@@ -172,7 +166,6 @@ class LendingFinancialE2ETest {
         assertThat(outstandingAfter.setScale(4, RoundingMode.HALF_EVEN))
                 .isEqualByComparingTo(principal.subtract(firstPrincipal).setScale(4, RoundingMode.HALF_EVEN));
 
-        // 5. Re-play with the same idempotency key — must not double-pay
         String replayBody = mockMvc.perform(post(BASE_PATH + "/repayment-schedules/" + firstScheduleId + "/pay")
                         .header("Authorization", TestContainersConfig.bearerToken())
                         .header("X-Tenant-Id", TENANT)
@@ -187,7 +180,6 @@ class LendingFinancialE2ETest {
                 .isEqualTo(paid.path("paidAmount").asText());
     }
 
-    // ─── helpers ────────────────────────────────────────────────────
 
     private void seedEligibleCreditScore(UUID userId) throws Exception {
         id.payu.lending.interfaces.dto.UserResponse user = new id.payu.lending.interfaces.dto.UserResponse(

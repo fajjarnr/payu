@@ -72,7 +72,6 @@ management:
     db:
       enabled: true
 
-# Application-specific overrides
 payu:
   security:
     encryption-enabled: true

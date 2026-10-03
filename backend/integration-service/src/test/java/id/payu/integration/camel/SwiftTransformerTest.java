@@ -11,9 +11,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for SwiftTransformer.
- */
 public class SwiftTransformerTest {
 
     private SwiftTransformer transformer;

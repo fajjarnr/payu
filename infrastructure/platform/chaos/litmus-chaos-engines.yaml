@@ -1,14 +1,14 @@
 # PayU Platform - Litmus Chaos Experiments
-# =========================================
+
 # NOTE: These experiments target the account-service deployment in payu-dev.
 #
-# OPENSHIFT/CRI-O COMPATIBILITY STATUS (Litmus 3.28.0)
-# =====================================================
+# OpenShift/CRI-O compatibility status (Litmus 3.28.0)
+
 #
-# WORKING experiments (no helper pods):
+# Working experiments (no helper pods):
 #   - pod-delete: PASS - Directly uses K8s API, no helper pods needed.
 #
-# FAILING experiments (ALL use helper pods which deadlock):
+# Failing experiments (all use helper pods which deadlock):
 #   - container-kill: FAIL - Helper pod hangs indefinitely
 #   - disk-fill: FAIL - Helper pod hangs indefinitely
 #   - pod-cpu-hog: FAIL - Helper pod hangs indefinitely
@@ -17,8 +17,8 @@
 #   - pod-network-loss: FAIL - Helper pod hangs indefinitely
 #   - (and any other experiment that spawns a helper pod)
 #
-# ROOT CAUSE ANALYSIS
-# -------------------
+# Root cause analysis
+
 # All Litmus helper pods (image: go-runner:3.28.0) deadlocked during
 # initialization on OpenShift 4.20 + CRI-O 1.33.10.
 #
@@ -42,8 +42,8 @@
 # Conclusion: This is a bug in Litmus 3.28.0 helper binary on OpenShift/CRI-O.
 # All helper-based experiments are affected. Only pod-delete (non-helper) works.
 #
-# REQUIRED RBAC/SCC SETUP
-# -----------------------
+# Required RBAC/SCC setup
+
 # The following was applied to get helper pods running (before discovering
 # the deadlock):
 #   oc adm policy add-scc-to-user litmus-chaos -z litmus -n payu-dev
@@ -51,8 +51,8 @@
 #   oc patch scc litmus-chaos --type='merge' -p '{"seccompProfiles":["runtime/default","unconfined"]}'
 #   oc patch scc litmus-chaos --type='json' -p='[{"op": "add", "path": "/users/-", "value": "system:serviceaccount:payu-dev:litmus"}]'
 #
-# RECOMMENDED WORKAROUNDS
-# -----------------------
+# Recommended workarounds
+
 # 1. Use ONLY pod-delete for now (working reliably).
 # 2. For CPU/network/disk/memory chaos, consider Chaos Mesh instead of Litmus.
 # 3. Wait for Litmus upstream fix (likely in go-runner helper binary).
@@ -60,14 +60,14 @@
 # 5. Use node-level experiments (node-cpu-hog, node-memory-hog) which run
 #    directly on nodes without helper pods.
 #
-# REFERENCES
-# ----------
+# References
+
 # - Litmus OpenShift docs: https://docs.litmuschaos.io/docs/platform/openshift
 # - Litmus experiment hub: https://hub.litmuschaos.io/
 # - Litmus GitHub issues: https://github.com/litmuschaos/litmus/issues
 
 ---
-# WORKING: Pod Delete Chaos
+# Working: Pod Delete Chaos
 # This experiment kills pods and verifies they are recreated.
 # No helper pods required - directly uses Kubernetes API.
 apiVersion: litmuschaos.io/v1alpha1
@@ -114,7 +114,7 @@ spec:
                     responseCode: '200'
 
 ---
-# KNOWN ISSUE: Container Kill
+# Known issue: Container Kill
 # Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
 # Status: FAIL - Retained for future use once upstream fix is available.
 # To enable, change engineState from 'stop' to 'active'.
@@ -167,7 +167,7 @@ spec:
                     responseCode: '200'
 
 ---
-# KNOWN ISSUE: Disk Fill
+# Known issue: Disk Fill
 # Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
 # Status: FAIL - Retained for future use once upstream fix is available.
 # To enable, change engineState from 'stop' to 'active'.
@@ -217,7 +217,7 @@ spec:
                     responseCode: '200'
 
 ---
-# KNOWN ISSUE: Pod Memory Hog
+# Known issue: Pod Memory Hog
 # Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
 # Status: FAIL - Retained for future use once upstream fix is available.
 # To enable, change engineState from 'stop' to 'active'.
@@ -273,7 +273,7 @@ spec:
                     responseCode: '200'
 
 ---
-# KNOWN ISSUE: Pod CPU Hog
+# Known issue: Pod CPU Hog
 # Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
 # Status: FAIL - Retained for future use once upstream fix is available.
 # To enable, change engineState from 'stop' to 'active'.
@@ -326,7 +326,7 @@ spec:
                     responseCode: '200'
 
 ---
-# KNOWN ISSUE: Pod Network Latency
+# Known issue: Pod Network Latency
 # Helper pods deadlock on OpenShift/CRI-O with Litmus 3.28.0.
 # Status: FAIL - Retained for future use once upstream fix is available.
 # To enable, change engineState from 'stop' to 'active'.

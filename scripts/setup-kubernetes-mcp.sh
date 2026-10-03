@@ -4,7 +4,6 @@
 #
 # Usage: ./scripts/setup-kubernetes-mcp.sh [namespace] [sa-name] [duration]
 # Example: ./scripts/setup-kubernetes-mcp.sh mcp mcp-viewer 24h
-# ==============================================================================
 
 set -euo pipefail
 
@@ -20,7 +19,6 @@ echo "Token Duration:   ${DURATION}"
 echo "Kubeconfig Path:  ${KUBECONFIG_PATH}"
 echo ""
 
-# 1. Check CLI availability
 if command -v oc &>/dev/null; then
   KUBE_CLI="oc"
 elif command -v kubectl &>/dev/null; then
@@ -32,13 +30,11 @@ fi
 
 echo "Using CLI: ${KUBE_CLI}"
 
-# Verify cluster connection
 if ! ${KUBE_CLI} whoami &>/dev/null && ! ${KUBE_CLI} cluster-info &>/dev/null; then
   echo "Error: Not logged into an OpenShift/Kubernetes cluster. Please run '${KUBE_CLI} login' first." >&2
   exit 1
 fi
 
-# 2. Create namespace if not exists
 echo "[1/5] Ensuring namespace '${NAMESPACE}' exists..."
 if [ "${KUBE_CLI}" = "oc" ]; then
   oc get project "${NAMESPACE}" &>/dev/null || oc new-project "${NAMESPACE}" --skip-config-write=true &>/dev/null || oc create namespace "${NAMESPACE}"
@@ -46,11 +42,9 @@ else
   kubectl get namespace "${NAMESPACE}" &>/dev/null || kubectl create namespace "${NAMESPACE}"
 fi
 
-# 3. Create ServiceAccount
 echo "[2/5] Creating ServiceAccount '${SA_NAME}' in namespace '${NAMESPACE}'..."
 ${KUBE_CLI} create sa "${SA_NAME}" -n "${NAMESPACE}" --dry-run=client -o yaml | ${KUBE_CLI} apply -f -
 
-# 4. Grant Cluster-wide read-only RBAC
 echo "[3/5] Granting 'cluster-reader' ClusterRole to ServiceAccount..."
 if [ "${KUBE_CLI}" = "oc" ]; then
   oc adm policy add-cluster-role-to-user cluster-reader "system:serviceaccount:${NAMESPACE}:${SA_NAME}"
@@ -61,7 +55,6 @@ else
     --dry-run=client -o yaml | kubectl apply -f -
 fi
 
-# 5. Mint token
 echo "[4/5] Minting time-bound ServiceAccount token (duration: ${DURATION})..."
 TOKEN=""
 if [ "${KUBE_CLI}" = "oc" ]; then
@@ -78,7 +71,6 @@ if [ -z "${TOKEN}" ]; then
   exit 1
 fi
 
-# 6. Generate isolated kubeconfig
 echo "[5/5] Building isolated Kubeconfig file at ${KUBECONFIG_PATH}..."
 mkdir -p "${HOME}/.kube"
 

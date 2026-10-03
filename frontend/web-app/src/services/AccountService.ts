@@ -51,8 +51,7 @@ export interface DukcapilResponse {
 /**
  * Account Service for PayU Digital Banking Platform
  *
- * SECURITY NOTICE: User Data Storage
- * ================================
+ * Security notice: User data storage
  * This service does NOT store sensitive data in localStorage.
  * User profile data is managed through the auth store (Zustand) with persistence.
  * Tokens are managed exclusively via httpOnly cookies from the backend.

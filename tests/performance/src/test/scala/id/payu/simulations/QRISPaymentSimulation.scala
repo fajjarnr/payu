@@ -20,19 +20,16 @@ import scala.concurrent.duration._
  */
 class QRISPaymentSimulation extends Simulation {
 
-  // Base URLs for different environments
   val baseUrl = System.getProperty("baseUrl", "http://localhost:8080")
   val authUrl = System.getProperty("authUrl", s"$baseUrl/auth")
   val transactionUrl = System.getProperty("transactionUrl", s"$baseUrl/transaction")
 
-  // HTTP Protocol Configuration
   val httpProtocol = http
     .baseUrl(baseUrl)
     .acceptHeader("application/json")
     .contentTypeHeader("application/json")
     .userAgentHeader("PayU-PerformanceTest/1.0")
 
-  // Feeders for test data
   val userFeeder = csv("data/users.csv").circular
   val accountFeeder = csv("data/accounts.csv").circular
 
@@ -43,12 +40,10 @@ class QRISPaymentSimulation extends Simulation {
     "tip_amount" -> (Math.random() * 50000).toInt.toString
   ))
 
-  // Scenario Definition
   val qrisScenario = scenario("QRIS Payment Scenario")
     .feed(userFeeder)
     .feed(accountFeeder)
     .feed(qrisData)
-    // Login first to get token
     .exec(
       http("Login Request")
         .post(s"$authUrl/api/v1/auth/login")
@@ -98,23 +93,18 @@ class QRISPaymentSimulation extends Simulation {
     )
     .pause(3, 6) // Think time between payments
 
-  // Load Simulation Setup
   setUp(
     qrisScenario.inject(
-      // Ramp-up from 10 to 1000 users over 5 minutes
       rampUsersPerSec(10) to 1000 during (5 minutes),
-      // Sustained load for 10 minutes
       constantUsersPerSec(1000) during (10 minutes)
     )
   ).protocols(httpProtocol)
     .assertions(
-      // Global assertions
       global.responseTime.percentile3.lte(1000), // p95 < 1s
       global.responseTime.percentile4.lte(2000), // p99 < 2s
       global.responseTime.max.lte(5000),        // max < 5s
       global.successfulRequests.percent.gte(99), // success rate > 99%
 
-      // Specific to QRIS payment requests
       details("QRIS Payment Scenario" / "Create QRIS Payment").responseTime.percentile3.lte(1000),
       details("QRIS Payment Scenario" / "Create QRIS Payment").responseTime.percentile4.lte(2000),
       details("QRIS Payment Scenario" / "Create QRIS Payment").responseTime.max.lte(5000),

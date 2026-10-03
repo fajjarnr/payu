@@ -122,7 +122,6 @@ class MdcKafkaConsumerInterceptorTest {
         }
     }
 
-    // --- Helper methods ---
 
     private ConsumerRecords<Object, Object> createRecords(String... correlationIds) {
         TopicPartition tp = new TopicPartition("test-topic", 0);

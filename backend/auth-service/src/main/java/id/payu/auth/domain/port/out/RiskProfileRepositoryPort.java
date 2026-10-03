@@ -4,9 +4,6 @@ import id.payu.auth.domain.model.UserRiskProfile;
 
 import java.util.Optional;
 
-/**
- * Outbound port for UserRiskProfile persistence.
- */
 public interface RiskProfileRepositoryPort {
 
     Optional<UserRiskProfile> findByUsername(String username);

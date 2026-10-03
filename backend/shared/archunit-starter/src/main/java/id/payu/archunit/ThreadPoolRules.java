@@ -31,7 +31,6 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 public final class ThreadPoolRules {
 
     private ThreadPoolRules() {
-        // Utility class
     }
 
     /**

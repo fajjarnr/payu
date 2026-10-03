@@ -1,5 +1,3 @@
-// PayU Analytics Service - CRUD Baseline Performance Test
-// ==========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -97,7 +95,6 @@ export default function () {
 
   group('Analytics Service - CRUD Operations', () => {
 
-    // ===== READ: Get User Insights =====
     group('READ: Get User Insights', () => {
       const params = {
         userId: `USR${Math.floor(100000 + Math.random() * 900000)}`,
@@ -111,7 +108,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Transaction Analytics =====
     group('READ: Transaction Analytics', () => {
       const params = {
         period: TIME_RANGES[Math.floor(Math.random() * TIME_RANGES.length)],
@@ -125,7 +121,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Get Fraud Score =====
     group('CREATE: Get Fraud Score', () => {
       const fraudData = generateFraudCheckData(uniqueId);
 
@@ -136,7 +131,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: Get Dashboard Data =====
     group('READ: Dashboard Data', () => {
       const params = {
         dashboard: 'executive',
@@ -150,7 +144,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Create Report =====
     group('CREATE: Create Report', () => {
       const reportData = generateReportData(uniqueId);
 
@@ -166,7 +159,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Reports =====
     group('READ: List Reports', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.analytics}/reports`, {}, auth.token);
@@ -175,7 +167,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Query Events =====
     group('CREATE: Query Events', () => {
       const queryData = generateEventQueryData();
 
@@ -186,7 +177,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== CREATE: Predict Trend =====
     group('CREATE: Predict Trend', () => {
       const predictData = {
         metric: 'transaction_volume',
@@ -202,7 +192,6 @@ export default function () {
     });
 
     if (reportId) {
-      // ===== READ: Export Data =====
       group('READ: Export Report', () => {
         const params = {
           format: 'CSV'

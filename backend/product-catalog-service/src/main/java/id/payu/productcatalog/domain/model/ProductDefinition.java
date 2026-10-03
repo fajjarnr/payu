@@ -36,33 +36,21 @@ public class ProductDefinition {
         this.version = version;
     }
 
-    /**
-     * Activate this product definition.
-     */
     public void activate() {
         this.active = true;
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Deactivate this product definition (soft delete).
-     */
     public void deactivate() {
         this.active = false;
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Update parameters for this product.
-     */
     public void updateParameters(Map<String, Object> newParameters) {
         this.parameters = newParameters;
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Get a parameter value by key.
-     */
     @SuppressWarnings("unchecked")
     public <T> T getParameter(String key) {
         if (parameters == null) {
@@ -71,16 +59,10 @@ public class ProductDefinition {
         return (T) parameters.get(key);
     }
 
-    /**
-     * Check if this product has a specific parameter.
-     */
     public boolean hasParameter(String key) {
         return parameters != null && parameters.containsKey(key);
     }
 
-    /**
-     * Validate that required parameters are present.
-     */
     public boolean hasRequiredParameters(String... requiredKeys) {
         if (parameters == null) {
             return false;

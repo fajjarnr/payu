@@ -3,9 +3,6 @@ package id.payu.account.domain.model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * User domain model.
- */
 public class User {
 
     private UUID id;
@@ -20,7 +17,6 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Constructors
     public User() {
     }
 
@@ -40,7 +36,6 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    // Getters
     public UUID getId() {
         return id;
     }
@@ -85,7 +80,6 @@ public class User {
         return updatedAt;
     }
 
-    // Setters
     public void setId(UUID id) {
         this.id = id;
     }
@@ -130,7 +124,6 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    // Builder
     public static Builder builder() {
         return new Builder();
     }

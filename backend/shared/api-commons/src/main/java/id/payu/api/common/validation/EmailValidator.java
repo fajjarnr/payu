@@ -4,9 +4,6 @@ import id.payu.api.common.constant.ApiConstants;
 
 import java.util.regex.Pattern;
 
-/**
- * Validator for email addresses.
- */
 public class EmailValidator extends AbstractRegexValidator<ValidEmail> {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(ApiConstants.EMAIL_PATTERN);

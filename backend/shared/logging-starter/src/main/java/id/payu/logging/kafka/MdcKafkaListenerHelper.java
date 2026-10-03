@@ -29,7 +29,6 @@ public final class MdcKafkaListenerHelper {
     private static final String DEFAULT_MDC_KEY = "correlation_id";
 
     private MdcKafkaListenerHelper() {
-        // utility class
     }
 
     /**

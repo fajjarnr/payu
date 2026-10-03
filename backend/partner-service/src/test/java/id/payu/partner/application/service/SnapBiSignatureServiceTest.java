@@ -102,7 +102,6 @@ public class SnapBiSignatureServiceTest {
             clientSecret, httpMethod, endpoint, accessToken, requestBody, timestamp);
         assertEquals(88, signature.length(), "HMAC-SHA512 signature must be 88 base64 chars, got " + signature);
 
-        // And it must match an independently computed HMAC-SHA512
         String hashedBody = signatureService.hashRequestBody(requestBody);
         String stringToSign = httpMethod + ":" + endpoint + ":" + accessToken + ":" + hashedBody + ":" + timestamp;
         javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA512");

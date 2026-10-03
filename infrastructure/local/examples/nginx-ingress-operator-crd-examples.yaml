@@ -1,11 +1,7 @@
-# =========================================================================
 # Contoh Custom Resource (CR) NginxIngress untuk NGINX Ingress Operator
 # Reference: https://docs.nginx.com/nginx-ingress-controller/installation/nginx-ingress-operator/
-# =========================================================================
 
-# -------------------------------------------------------------------------
-# 1. VERSI OPEN SOURCE (OSS) - Yang saat ini kita gunakan
-# -------------------------------------------------------------------------
+# Versi open source (OSS) - Yang saat ini kita gunakan
 apiVersion: charts.nginx.org/v1alpha1
 kind: NginxIngress
 metadata:
@@ -32,9 +28,7 @@ spec:
 
 ---
 
-# -------------------------------------------------------------------------
-# 2. VERSI PLUS (Komersial) - Membutuhkan Lisensi
-# -------------------------------------------------------------------------
+# Versi plus (Komersial) - Membutuhkan Lisensi
 apiVersion: charts.nginx.org/v1alpha1
 kind: NginxIngress
 metadata:

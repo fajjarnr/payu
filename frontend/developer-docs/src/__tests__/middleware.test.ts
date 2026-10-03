@@ -8,7 +8,6 @@ describe('Middleware', () => {
   });
 
   it('should have correct matcher patterns', () => {
-    // Based on middleware.ts config
     const expectedMatcher = ['/', '/(id|en)/:path*'];
     expect(expectedMatcher).toEqual(['/', '/(id|en)/:path*']);
   });
@@ -33,7 +32,6 @@ describe('Middleware', () => {
 
 describe('Middleware Locale Handling', () => {
   it('should redirect root to default locale', () => {
-    // Root path / should redirect to /id (default locale)
     expect(defaultLocale).toBe('id');
   });
 

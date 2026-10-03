@@ -11,7 +11,6 @@ vi.mock('@/lib/navigation', async (importOriginal) => ({
   useRouter: () => ({ replace: mockReplace }),
 }));
 
-// Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, initial: _initial, whileInView: _whileInView, transition: _transition, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode; initial?: unknown; whileInView?: unknown; transition?: unknown }) => <div {...props}>{children}</div>,
@@ -19,7 +18,6 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
-// Mock useBanners hook
 const mockBanners = [
   {
     id: '1',
@@ -57,7 +55,6 @@ vi.mock('@/hooks', () => ({
   }),
 }));
 
-// Mock Skeleton component
 vi.mock('@/components/ui/skeleton', () => ({
   Skeleton: ({ className }: { className?: string }) => <div data-testid="skeleton" className={className} />,
 }));
@@ -74,7 +71,6 @@ describe('BannerCarousel', () => {
     mockBannersData = mockBanners;
     mockIsLoading = false;
     mockError = null;
-    // Mock window.open
     global.open = vi.fn();
     global.window.location.href = '';
   });
@@ -129,18 +125,15 @@ describe('BannerCarousel', () => {
     const nextButton = screen.getByLabelText('Next banner');
     fireEvent.click(nextButton);
 
-    // Should show second banner
     expect(screen.getByText('New Arrival')).toBeInTheDocument();
   });
 
   it('should navigate to previous banner when previous button is clicked', () => {
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    // First click next to go to second banner
     const nextButton = screen.getByLabelText('Next banner');
     fireEvent.click(nextButton);
 
-    // Then click previous to go back
     const previousButton = screen.getByLabelText('Previous banner');
     fireEvent.click(previousButton);
 
@@ -201,13 +194,10 @@ describe('BannerCarousel', () => {
 
     renderWithIntl(<BannerCarousel {...defaultProps} autoPlayInterval={1000} />);
 
-    // Initially shows first banner
     expect(screen.getByText('Summer Sale')).toBeInTheDocument();
 
-    // Fast forward past autoPlayInterval
     vi.advanceTimersByTime(1000);
 
-    // Should show second banner
     expect(screen.getByText('New Arrival')).toBeInTheDocument();
 
     vi.useRealTimers();
@@ -224,7 +214,6 @@ describe('BannerCarousel', () => {
 
       vi.advanceTimersByTime(2000);
 
-      // Should still show first banner
       expect(screen.getByText('Summer Sale')).toBeInTheDocument();
     }
 
@@ -292,11 +281,9 @@ describe('BannerCarousel', () => {
 
     renderWithIntl(<BannerCarousel {...defaultProps} autoPlayInterval={100} />);
 
-    // Go to last banner
     vi.advanceTimersByTime(100);
     expect(screen.getByText('New Arrival')).toBeInTheDocument();
 
-    // Should wrap to first banner
     vi.advanceTimersByTime(100);
     expect(screen.getByText('Summer Sale')).toBeInTheDocument();
 

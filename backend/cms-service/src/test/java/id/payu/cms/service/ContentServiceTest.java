@@ -81,14 +81,11 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should create content successfully")
     void shouldCreateContentSuccessfully() {
-        // Given
         when(contentRepository.existsByTitleIgnoreCase("Test Banner")).thenReturn(false);
         when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
-        // When
         var response = contentService.createContent(contentRequest, "admin");
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getTitle()).isEqualTo("Test Banner");
         assertThat(response.getContentType()).isEqualTo("BANNER");
@@ -98,10 +95,8 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should throw exception when creating content with duplicate title")
     void shouldThrowExceptionWhenCreatingContentWithDuplicateTitle() {
-        // Given
         when(contentRepository.existsByTitleIgnoreCase("Test Banner")).thenReturn(true);
 
-        // When/Then
         assertThatThrownBy(() -> contentService.createContent(contentRequest, "admin"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("already exists");
@@ -112,14 +107,11 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should get content by ID successfully")
     void shouldGetContentByIdSuccessfully() {
-        // Given
         UUID contentId = content.getId();
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
 
-        // When
         var response = contentService.getContentById(contentId);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(contentId);
         verify(contentRepository).findById(contentId);
@@ -128,11 +120,9 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should throw exception when content not found")
     void shouldThrowExceptionWhenContentNotFound() {
-        // Given
         UUID contentId = UUID.randomUUID();
         when(contentRepository.findById(contentId)).thenReturn(Optional.empty());
 
-        // When/Then
         assertThatThrownBy(() -> contentService.getContentById(contentId))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("not found");
@@ -141,30 +131,24 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should delete content successfully")
     void shouldDeleteContentSuccessfully() {
-        // Given
         UUID contentId = content.getId();
         when(contentRepository.existsById(contentId)).thenReturn(true);
         doNothing().when(contentRepository).deleteById(contentId);
 
-        // When
         contentService.deleteContent(contentId);
 
-        // Then
         verify(contentRepository).deleteById(contentId);
     }
 
     @Test
     @DisplayName("Should update content status successfully")
     void shouldUpdateContentStatusSuccessfully() {
-        // Given
         UUID contentId = content.getId();
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
         when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
-        // When
         var response = contentService.updateContentStatus(contentId, "ACTIVE", "admin");
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo("ACTIVE");
         verify(contentRepository).save(any(ContentEntity.class));
@@ -173,84 +157,67 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should check if content is active")
     void shouldCheckIfContentIsActive() {
-        // Given
         content.setStatus(ContentStatus.ACTIVE);
         content.setStartDate(LocalDate.now().minusDays(1));
         content.setEndDate(LocalDate.now().plusDays(1));
 
-        // When
         boolean isActive = content.isActive();
 
-        // Then
         assertThat(isActive).isTrue();
     }
 
     @Test
     @DisplayName("Should return false when content status is not active")
     void shouldReturnFalseWhenContentStatusIsNotActive() {
-        // Given
         content.setStatus(ContentStatus.DRAFT);
 
-        // When
         boolean isActive = content.isActive();
 
-        // Then
         assertThat(isActive).isFalse();
     }
 
     @Test
     @DisplayName("Should match targeting rules")
     void shouldMatchTargetingRules() {
-        // Given
         HashMap<String, Object> rules = new HashMap<>();
         rules.put("segment", "PREMIUM");
         rules.put("location", "JAKARTA");
         content.setTargetingRules(rules);
 
-        // When
         boolean matches = content.matchesTargeting("PREMIUM", "JAKARTA", "MOBILE");
 
-        // Then
         assertThat(matches).isTrue();
     }
 
     @Test
     @DisplayName("Should not match targeting rules when segment differs")
     void shouldNotMatchTargetingRulesWhenSegmentDiffers() {
-        // Given
         HashMap<String, Object> rules = new HashMap<>();
         rules.put("segment", "PREMIUM");
         content.setTargetingRules(rules);
 
-        // When
         boolean matches = content.matchesTargeting("BASIC", "JAKARTA", "MOBILE");
 
-        // Then
         assertThat(matches).isFalse();
     }
 
     @Test
     @DisplayName("Should match targeting rules when rules are empty")
     void shouldMatchTargetingRulesWhenRulesAreEmpty() {
-        // Given
         content.setTargetingRules(null);
 
-        // When
         boolean matches = content.matchesTargeting("ANY", "ANY", "ANY");
 
-        // Then
         assertThat(matches).isTrue();
     }
 
     @Test
     @DisplayName("BUG-CMS-NPE-002: should not throw NPE when targeting rule value is null")
     void shouldNotThrowNpeWhenTargetingRuleValueIsNull() {
-        // Given — map contains "segment" key with explicit null value
         HashMap<String, Object> rules = new HashMap<>();
         rules.put("segment", null);
         content.setTargetingRules(rules);
 
-        // When + Then — must not throw NullPointerException
         boolean matches = content.matchesTargeting("PREMIUM", "JAKARTA", "MOBILE");
         assertThat(matches).isTrue();
     }
@@ -258,14 +225,12 @@ class ContentServiceTest {
     @Test
     @DisplayName("BUG-CMS-NPE-002: should not throw NPE when user input is null")
     void shouldNotThrowNpeWhenUserInputIsNull() {
-        // Given — rule is set
         HashMap<String, Object> rules = new HashMap<>();
         rules.put("segment", "PREMIUM");
         rules.put("location", "JAKARTA");
         rules.put("device", "MOBILE");
         content.setTargetingRules(rules);
 
-        // When + Then — null inputs must not throw NPE
         boolean matches = content.matchesTargeting(null, null, null);
         assertThat(matches).isTrue();
     }
@@ -273,23 +238,20 @@ class ContentServiceTest {
     @Test
     @DisplayName("BUG-CMS-NPE-002: should handle mixed null rule values and null inputs")
     void shouldHandleMixedNullValues() {
-        // Given — segment rule is null in map, user passed valid value
         HashMap<String, Object> rules = new HashMap<>();
         rules.put("segment", null);
         rules.put("location", "JAKARTA");
         content.setTargetingRules(rules);
 
-        // When
         boolean matches = content.matchesTargeting("PREMIUM", "BANDUNG", "MOBILE");
 
-        // Then — null rule value should be treated as wildcard (match), then location mismatch
+        // Null rule value is treated as wildcard; location mismatch fails the match
         assertThat(matches).isFalse();
     }
 
     @Test
     @DisplayName("Should update content successfully")
     void shouldUpdateContentSuccessfully() {
-        // Given
         UUID contentId = content.getId();
         ContentRequest updateRequest = ContentRequest.builder()
             .contentType("PROMO")
@@ -309,10 +271,8 @@ class ContentServiceTest {
         when(contentRepository.existsByTitleIgnoreCase("Updated Banner")).thenReturn(false);
         when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
-        // When
         var response = contentService.updateContent(contentId, updateRequest, "admin");
 
-        // Then
         assertThat(response).isNotNull();
         verify(contentRepository).save(any(ContentEntity.class));
     }
@@ -320,13 +280,10 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should get content by type")
     void shouldGetContentByType() {
-        // Given
         when(contentRepository.findByContentType("BANNER")).thenReturn(List.of(content));
 
-        // When
         var result = contentService.getContentByType("BANNER");
 
-        // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getContentType()).isEqualTo("BANNER");
     }
@@ -334,13 +291,10 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should get content by status")
     void shouldGetContentByStatus() {
-        // Given
         when(contentRepository.findByStatus(ContentStatus.DRAFT)).thenReturn(List.of(content));
 
-        // When
         var result = contentService.getContentByStatus("draft");
 
-        // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getStatus()).isEqualTo("DRAFT");
     }
@@ -348,53 +302,41 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should get active content by type")
     void shouldGetActiveContentByType() {
-        // Given
         when(contentRepository.findActiveByContentType("BANNER", LocalDate.now())).thenReturn(List.of(content));
 
-        // When
         var result = contentService.getActiveContentByType("BANNER");
 
-        // Then
         assertThat(result).hasSize(1);
     }
 
     @Test
     @DisplayName("Should get scheduled content to activate")
     void shouldGetScheduledContentToActivate() {
-        // Given
         when(contentRepository.findScheduledToActivate(LocalDate.now())).thenReturn(List.of(content));
 
-        // When
         var result = contentService.getScheduledContentToActivate();
 
-        // Then
         assertThat(result).hasSize(1);
     }
 
     @Test
     @DisplayName("Should get expired active content")
     void shouldGetExpiredActiveContent() {
-        // Given
         when(contentRepository.findActiveToArchive(LocalDate.now())).thenReturn(List.of(content));
 
-        // When
         var result = contentService.getExpiredActiveContent();
 
-        // Then
         assertThat(result).hasSize(1);
     }
 
     @Test
     @DisplayName("Should activate scheduled content")
     void shouldActivateScheduledContent() {
-        // Given
         UUID contentId = content.getId();
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
 
-        // When
         contentService.activateScheduledContent(List.of(contentId));
 
-        // Then
         assertThat(content.getStatus()).isEqualTo(ContentStatus.ACTIVE);
         verify(contentRepository).save(any(ContentEntity.class));
     }
@@ -402,15 +344,12 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should archive expired content")
     void shouldArchiveExpiredContent() {
-        // Given
         content.setStatus(ContentStatus.ACTIVE);
         UUID contentId = content.getId();
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
 
-        // When
         contentService.archiveExpiredContent(List.of(contentId));
 
-        // Then
         assertThat(content.getStatus()).isEqualTo(ContentStatus.ARCHIVED);
         verify(contentRepository).save(any(ContentEntity.class));
     }
@@ -418,29 +357,24 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should throw exception when deleting non-existent content")
     void shouldThrowExceptionWhenDeletingNonExistentContent() {
-        // Given
         UUID contentId = UUID.randomUUID();
         when(contentRepository.existsById(contentId)).thenReturn(false);
 
-        // When/Then
         assertThatThrownBy(() -> contentService.deleteContent(contentId))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("not found");
     }
 
-    // ─── Additional Unit Tests (TEST-001) ──────────────────────────────────────
 
     @Test
     @DisplayName("Should get all content with pagination")
     void shouldGetAllContentWithPagination() {
-        // Given (BUG-CMS-HEX-001: port signature is findAll(int,int,String,String))
+        // BUG-CMS-HEX-001: port signature is findAll(int,int,String,String)
         when(contentRepository.findAll(0, 20, "createdAt", "desc"))
             .thenReturn(List.of(content));
 
-        // When
         var result = contentService.getAllContent(0, 20, "createdAt", "desc");
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getContents()).hasSize(1);
         assertThat(result.getPage()).isEqualTo(0);
@@ -454,26 +388,22 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should get all content with ascending sort")
     void shouldGetAllContentWithAscendingSort() {
-        // Given (BUG-CMS-HEX-001: port signature is findAll(int,int,String,String))
+        // BUG-CMS-HEX-001: port signature is findAll(int,int,String,String)
         when(contentRepository.findAll(0, 10, "title", "asc"))
             .thenReturn(List.of(content));
 
-        // When
         var result = contentService.getAllContent(0, 10, "title", "asc");
 
-        // Then
         assertThat(result).isNotNull();
     }
 
     @Test
     @DisplayName("Should handle DataIntegrityViolationException on concurrent create")
     void shouldHandleDataIntegrityViolationExceptionOnConcurrentCreate() {
-        // Given
         when(contentRepository.existsByTitleIgnoreCase("Test Banner")).thenReturn(false);
         when(contentRepository.save(any(ContentEntity.class)))
             .thenThrow(new DataIntegrityViolationException("Unique constraint violation"));
 
-        // When/Then
         assertThatThrownBy(() -> contentService.createContent(contentRequest, "admin"))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("already exists");
@@ -482,7 +412,6 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should increment version on update")
     void shouldIncrementVersionOnUpdate() {
-        // Given
         UUID contentId = content.getId();
         ContentRequest updateRequest = ContentRequest.builder()
             .contentType("BANNER")
@@ -496,17 +425,14 @@ class ContentServiceTest {
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
         when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
-        // When
         contentService.updateContent(contentId, updateRequest, "admin");
 
-        // Then
-        assertThat(content.getVersion()).isEqualTo(2); // Was 1, incremented to 2
+        assertThat(content.getVersion()).isEqualTo(2);
     }
 
     @Test
     @DisplayName("Should handle null priority by defaulting to 0")
     void shouldHandleNullPriority() {
-        // Given
         ContentRequest requestWithNullPriority = ContentRequest.builder()
             .contentType("BANNER")
             .title("No Priority Banner")
@@ -517,14 +443,12 @@ class ContentServiceTest {
         when(contentRepository.existsByTitleIgnoreCase("No Priority Banner")).thenReturn(false);
         when(contentRepository.save(any(ContentEntity.class))).thenAnswer(inv -> {
             ContentEntity c = inv.getArgument(0);
-            assertThat(c.getPriority()).isEqualTo(0); // Default to 0
+            assertThat(c.getPriority()).isEqualTo(0);
             return c;
         });
 
-        // When
         var response = contentService.createContent(requestWithNullPriority, "admin");
 
-        // Then
         assertThat(response).isNotNull();
         verify(contentRepository).save(any(ContentEntity.class));
     }
@@ -532,34 +456,27 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should return empty list when no content of requested type exists")
     void shouldReturnEmptyListWhenNoContentOfRequestedType() {
-        // Given
         when(contentRepository.findByContentType("POPUP")).thenReturn(Collections.emptyList());
 
-        // When
         var result = contentService.getContentByType("POPUP");
 
-        // Then
         assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("Should return empty list when no active content of type exists")
     void shouldReturnEmptyListWhenNoActiveContentOfType() {
-        // Given
         when(contentRepository.findActiveByContentType("POPUP", LocalDate.now()))
             .thenReturn(Collections.emptyList());
 
-        // When
         var result = contentService.getActiveContentByType("POPUP");
 
-        // Then
         assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("Should throw IllegalArgumentException for invalid status value")
     void shouldThrowExceptionForInvalidStatusValue() {
-        // Given: Passing an invalid status string
         assertThatThrownBy(() -> contentService.getContentByStatus("INVALID_STATUS"))
             .isInstanceOf(IllegalArgumentException.class);
     }
@@ -567,25 +484,20 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should accept case-insensitive status values")
     void shouldAcceptCaseInsensitiveStatusValues() {
-        // Given
         when(contentRepository.findByStatus(ContentStatus.DRAFT))
             .thenReturn(List.of(content));
 
-        // When
         var result = contentService.getContentByStatus("dRaFt");
 
-        // Then
         assertThat(result).hasSize(1);
     }
 
     @Test
     @DisplayName("Should throw exception when updating non-existent content")
     void shouldThrowExceptionWhenUpdatingNonExistentContent() {
-        // Given
         UUID nonExistentId = UUID.randomUUID();
         when(contentRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        // When/Then
         assertThatThrownBy(() -> contentService.updateContent(nonExistentId, contentRequest, "admin"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("not found");
@@ -594,11 +506,9 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should throw exception when updating content status for non-existent content")
     void shouldThrowExceptionWhenUpdatingStatusForNonExistentContent() {
-        // Given
         UUID nonExistentId = UUID.randomUUID();
         when(contentRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        // When/Then
         assertThatThrownBy(() -> contentService.updateContentStatus(nonExistentId, "ACTIVE", "admin"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("not found");
@@ -607,7 +517,6 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should reject update when title changed to existing title")
     void shouldRejectUpdateWhenTitleChangedToExistingTitle() {
-        // Given
         UUID contentId = content.getId();
         ContentRequest updateRequest = ContentRequest.builder()
             .contentType("BANNER")
@@ -619,7 +528,6 @@ class ContentServiceTest {
         when(contentRepository.findById(contentId)).thenReturn(Optional.of(content));
         when(contentRepository.existsByTitleIgnoreCase("Different Title")).thenReturn(true);
 
-        // When/Then
         assertThatThrownBy(() -> contentService.updateContent(contentId, updateRequest, "admin"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("already exists");
@@ -628,7 +536,6 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should update content when title unchanged (skip uniqueness check)")
     void shouldUpdateContentWhenTitleUnchanged() {
-        // Given
         UUID contentId = content.getId();
         ContentRequest sameTitleRequest = ContentRequest.builder()
             .contentType("PROMO")
@@ -641,10 +548,8 @@ class ContentServiceTest {
         // Should NOT call existsByTitleIgnoreCase when title is unchanged
         when(contentRepository.save(any(ContentEntity.class))).thenReturn(content);
 
-        // When
         var response = contentService.updateContent(contentId, sameTitleRequest, "admin");
 
-        // Then
         assertThat(response).isNotNull();
         verify(contentRepository, never()).existsByTitleIgnoreCase(any());
     }
@@ -652,99 +557,78 @@ class ContentServiceTest {
     @Test
     @DisplayName("Should handle empty list for activate scheduled content")
     void shouldHandleEmptyListForActivateScheduledContent() {
-        // Given: empty list
 
-        // When
         contentService.activateScheduledContent(Collections.emptyList());
 
-        // Then: no exception, no interactions with repository
         verify(contentRepository, never()).findById(any());
     }
 
     @Test
     @DisplayName("Should handle empty list for archive expired content")
     void shouldHandleEmptyListForArchiveExpiredContent() {
-        // Given: empty list
 
-        // When
         contentService.archiveExpiredContent(Collections.emptyList());
 
-        // Then: no exception, no interactions with repository
         verify(contentRepository, never()).findById(any());
     }
 
     @Test
     @DisplayName("Should return false for isActive when dates are not within range")
     void shouldReturnFalseForIsActiveWhenDatesNotWithinRange() {
-        // Given
         content.setStatus(ContentStatus.ACTIVE);
-        content.setStartDate(LocalDate.now().plusDays(1)); // starts tomorrow
+        content.setStartDate(LocalDate.now().plusDays(1));
         content.setEndDate(LocalDate.now().plusDays(10));
 
-        // When
         boolean isActive = content.isActive();
 
-        // Then
         assertThat(isActive).isFalse();
     }
 
     @Test
     @DisplayName("Should return false for isActive when past end date")
     void shouldReturnFalseForIsActiveWhenPastEndDate() {
-        // Given
         content.setStatus(ContentStatus.ACTIVE);
         content.setStartDate(LocalDate.now().minusDays(10));
-        content.setEndDate(LocalDate.now().minusDays(1)); // ended yesterday
+        content.setEndDate(LocalDate.now().minusDays(1));
 
-        // When
         boolean isActive = content.isActive();
 
-        // Then
         assertThat(isActive).isFalse();
     }
 
     @Test
     @DisplayName("Should return true for isActive with null dates (indefinite)")
     void shouldReturnTrueForIsActiveWithNullDates() {
-        // Given
         content.setStatus(ContentStatus.ACTIVE);
         content.setStartDate(null);
         content.setEndDate(null);
 
-        // When
         boolean isActive = content.isActive();
 
-        // Then
         assertThat(isActive).isTrue();
     }
 
     @Test
     @DisplayName("Should not match targeting when location differs")
     void shouldNotMatchTargetingWhenLocationDiffers() {
-        // Given
         HashMap<String, Object> rules = new HashMap<>();
         rules.put("location", "JAKARTA");
         content.setTargetingRules(rules);
 
-        // When
         boolean matches = content.matchesTargeting("PREMIUM", "BANDUNG", "MOBILE");
 
-        // Then
         assertThat(matches).isFalse();
     }
 
     @Test
     @DisplayName("Should not match targeting when device differs")
     void shouldNotMatchTargetingWhenDeviceDiffers() {
-        // Given
         HashMap<String, Object> rules = new HashMap<>();
         rules.put("device", "MOBILE");
         content.setTargetingRules(rules);
 
-        // When
         boolean matches = content.matchesTargeting("PREMIUM", "JAKARTA", "DESKTOP");
 
-        // Then
         assertThat(matches).isFalse();
     }
 }

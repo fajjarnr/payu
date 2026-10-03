@@ -258,8 +258,6 @@ class SandboxResourceTest {
             .body("refundExample.refundReferenceNo", notNullValue());
     }
 
-    // ────────── NEW TESTS ──────────
-
     @Test
     @DisplayName("should create payment with minimal request body")
     void testCreatePayment_MinimalRequest() {
@@ -294,7 +292,6 @@ class SandboxResourceTest {
     @DisplayName("should complete full payment lifecycle: create -> get -> refund -> stats")
     @Tag("integration")
     void testFullPaymentLifecycle() {
-        // 1. Create payment
         String paymentBody = """
             {
               "partnerReferenceNo": "LIFECYCLE-001",
@@ -320,7 +317,6 @@ class SandboxResourceTest {
             .body("paymentStatus", equalTo("COMPLETED"))
             .extract().path("paymentReferenceNo");
 
-        // 2. Get payment status
         given()
             .when()
             .get("/api/v1/sandbox/payments/" + paymentRef)
@@ -329,7 +325,6 @@ class SandboxResourceTest {
             .body("paymentReferenceNo", equalTo(paymentRef))
             .body("paymentStatus", equalTo("COMPLETED"));
 
-        // 3. Create refund
         String refundBody = """
             {
               "refundReferenceNo": "LIFECYCLE-REFUND-001",
@@ -350,7 +345,6 @@ class SandboxResourceTest {
             .body("refundStatus", equalTo("COMPLETED"))
             .body("amount.value", equalTo(150000.00f));
 
-        // 4. Verify stats reflect operations
         given()
             .get("/api/v1/sandbox/stats")
             .then()

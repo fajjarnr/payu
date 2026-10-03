@@ -42,8 +42,6 @@ import static org.hamcrest.Matchers.not;
 @DisplayName("Gateway Filter Chain Integration Tests")
 public class GatewayFilterChainIntegrationTest {
 
-    // Health check tests
-
     @Test
     @DisplayName("Health check should return UP status")
     void testHealthCheck() {
@@ -71,8 +69,6 @@ public class GatewayFilterChainIntegrationTest {
                 .statusCode(200)
                 .body("status", equalTo("UP"));
     }
-
-    // CORS filter tests
 
     @Nested
     @DisplayName("CORS Filter Tests")
@@ -118,8 +114,6 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // Tenant filter tests
-
     @Nested
     @DisplayName("Tenant Filter Tests")
     class TenantTests {
@@ -146,11 +140,9 @@ public class GatewayFilterChainIntegrationTest {
         @Test
         @DisplayName("Request should handle multiple tenant headers")
         void testTenantMultipleRequests() {
-            // First request with default tenant
             given().when().get("/api/v1/accounts")
                     .then().statusCode(anyOf(is(200), is(429), is(503), is(404)));
 
-            // Second request with custom tenant
             given()
                     .header("X-Tenant-Id", "tenant-456")
                     .when().get("/api/v1/accounts")
@@ -158,8 +150,6 @@ public class GatewayFilterChainIntegrationTest {
                     .statusCode(anyOf(is(200), is(429), is(503), is(404)));
         }
     }
-
-    // API version filter tests
 
     @Nested
     @DisplayName("API Version Filter Tests")
@@ -194,8 +184,6 @@ public class GatewayFilterChainIntegrationTest {
                     .statusCode(anyOf(is(400), is(406), is(429), is(503), is(404)));
         }
     }
-
-    // Correlation ID filter tests
 
     @Nested
     @DisplayName("Correlation ID Filter Tests")
@@ -237,8 +225,6 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // Request validation tests
-
     @Nested
     @DisplayName("Request Validation Tests")
     class ValidationTests {
@@ -279,8 +265,6 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // Error handling tests
-
     @Nested
     @DisplayName("Error Handling Tests")
     class ErrorHandlingTests {
@@ -317,8 +301,6 @@ public class GatewayFilterChainIntegrationTest {
                     ));
         }
     }
-
-    // HTTP methods tests
 
     @Nested
     @DisplayName("HTTP Methods Tests")
@@ -379,8 +361,6 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // Query parameters tests
-
     @Nested
     @DisplayName("Query Parameters Tests")
     class QueryParametersTests {
@@ -423,8 +403,6 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // Headers tests
-
     @Nested
     @DisplayName("Headers Tests")
     class HeadersTests {
@@ -464,8 +442,6 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // Metrics and openapi tests
-
     @Test
     @DisplayName("Gateway should expose Prometheus metrics")
     void testMetricsEndpoint() {
@@ -484,8 +460,6 @@ public class GatewayFilterChainIntegrationTest {
                 .statusCode(200)
                 .contentType(anyOf(containsString("yaml"), containsString("json")));
     }
-
-    // Different service routes tests
 
     @Nested
     @DisplayName("Service Routes Tests")
@@ -582,8 +556,6 @@ public class GatewayFilterChainIntegrationTest {
         }
     }
 
-    // Request body tests
-
     @Nested
     @DisplayName("Request Body Tests")
     class RequestBodyTests {
@@ -630,8 +602,6 @@ public class GatewayFilterChainIntegrationTest {
                     .statusCode(anyOf(is(201), is(400), is(415), is(429), is(503)));
         }
     }
-
-    // Path parameters tests
 
     @Nested
     @DisplayName("Path Parameters Tests")

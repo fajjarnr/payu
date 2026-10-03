@@ -90,7 +90,6 @@ public class SandboxController extends BaseController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getTestScenarios() {
         Map<String, Object> scenarios = new HashMap<>();
 
-        // Success scenarios
         scenarios.put("success_transfer", Map.of(
                 "description", "Successful transfer to test account",
                 "testAccount", SandboxDataSeederService.TEST_BCA_ACCOUNT,

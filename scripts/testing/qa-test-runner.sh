@@ -4,14 +4,12 @@
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Results tracking
 declare -A RESULTS
 TOTAL_TESTS=0
 TOTAL_FAILED=0
@@ -21,7 +19,6 @@ echo -e "${BLUE}PayU Digital Banking - QA Test Suite${NC}"
 echo -e "${BLUE}======================================${NC}"
 echo ""
 
-# Services to test (Spring Boot services)
 SPRING_BOOT_SERVICES=(
     "account-service"
     "auth-service"
@@ -36,7 +33,6 @@ SPRING_BOOT_SERVICES=(
     "ab-testing-service"
 )
 
-# Quarkus services
 QUARKUS_SERVICES=(
     "billing-service"
     "notification-service"
@@ -48,27 +44,23 @@ QUARKUS_SERVICES=(
     "api-portal-service"
 )
 
-# Python services
 PYTHON_SERVICES=(
     "kyc-service"
     "analytics-service"
 )
 
-# Shared libraries
 SHARED_LIBS=(
     "security-starter"
     "resilience-starter"
     "cache-starter"
 )
 
-# Function to test a Spring Boot service
 test_spring_service() {
     local service=$1
     echo -e "${BLUE}Testing: $service${NC}"
 
     cd /home/ubuntu/payu/backend/$service
 
-    # Run tests and capture results
     if mvn test -q 2>&1; then
         local output=$(mvn test 2>&1 | grep -E "Tests run:" | tail -1)
         local tests=$(echo "$output" | grep -oP 'Tests run: \K\d+' || echo "0")
@@ -93,7 +85,6 @@ test_spring_service() {
     echo ""
 }
 
-# Function to test a Quarkus service
 test_quarkus_service() {
     local service=$1
     echo -e "${BLUE}Testing: $service (Quarkus)${NC}"
@@ -150,7 +141,6 @@ test_quarkus_service() {
     echo ""
 }
 
-# Function to test a Python service
 test_python_service() {
     local service=$1
     echo -e "${BLUE}Testing: $service (Python)${NC}"
@@ -185,7 +175,6 @@ test_python_service() {
     echo ""
 }
 
-# Function to test shared library
 test_shared_lib() {
     local lib=$1
     echo -e "${BLUE}Testing: shared/$lib (Spring Boot)${NC}"
@@ -215,10 +204,6 @@ test_shared_lib() {
     fi
     echo ""
 }
-
-# ============================================================================
-# MAIN EXECUTION
-# ============================================================================
 
 echo -e "${YELLOW}Phase 1: Testing Spring Boot Services${NC}\n"
 for service in "${SPRING_BOOT_SERVICES[@]}"; do
@@ -256,10 +241,6 @@ for lib in "${SHARED_LIBS[@]}"; do
     fi
 done
 
-# ============================================================================
-# SUMMARY REPORT
-# ============================================================================
-
 echo -e "${BLUE}======================================${NC}"
 echo -e "${BLUE}QA Test Summary Report${NC}"
 echo -e "${BLUE}======================================${NC}"
@@ -268,7 +249,6 @@ echo ""
 echo -e "${YELLOW}Test Results:${NC}"
 echo ""
 
-# Count results
 PASS_COUNT=0
 FAIL_COUNT=0
 BUILD_FAIL_COUNT=0
@@ -308,7 +288,6 @@ echo -e "  ${YELLOW}Build Failures: $BUILD_FAIL_COUNT${NC}"
 echo -e "  ${GRAY}Skipped: $SKIP_COUNT${NC}"
 echo ""
 
-# Overall status
 if [ $TOTAL_FAILED -eq 0 ] && [ $BUILD_FAIL_COUNT -eq 0 ]; then
     echo -e "${GREEN}✓ ALL TESTS PASSED${NC}"
     exit 0

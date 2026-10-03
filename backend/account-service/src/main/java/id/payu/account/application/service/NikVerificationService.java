@@ -44,10 +44,8 @@ public class NikVerificationService implements VerifyNikUseCase {
         log.info("Processing NIK verification for: ********{}",
             request.nik() != null && request.nik().length() >= 4 ? request.nik().substring(request.nik().length() - 4) : "");
 
-        // Validate NIK format
         validateNikFormat(request.nik());
 
-        // Call the adapter
         VerifyNikResponse response = kycVerificationPort.verifyNik(request);
 
         log.info("NIK verification completed with status: {}, verified: {}",
@@ -56,9 +54,6 @@ public class NikVerificationService implements VerifyNikUseCase {
         return CompletableFuture.completedFuture(response);
     }
 
-    /**
-     * Fallback method when Dukcapil service is unavailable.
-     */
     private CompletableFuture<VerifyNikResponse> verifyNikFallback(VerifyNikRequest request, Throwable throwable) {
         log.error("Dukcapil service unavailable during NIK verification: {}", throwable.getMessage());
 
@@ -70,9 +65,6 @@ public class NikVerificationService implements VerifyNikUseCase {
         return CompletableFuture.completedFuture(fallbackResponse);
     }
 
-    /**
-     * Validate NIK format before sending to external service.
-     */
     private void validateNikFormat(String nik) {
         if (nik == null || nik.isEmpty()) {
             throw new AccountDomainException.InvalidNikException("NIK cannot be empty");

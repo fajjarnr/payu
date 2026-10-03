@@ -6,24 +6,20 @@
 
 set -euo pipefail
 
-# Color codes
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BACKUP_ROOT="${BACKUP_ROOT:-/tmp/payu_backups_test}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 TEST_RESULTS_FILE="${BACKUP_ROOT}/test_results_${TIMESTAMP}.json"
 
-# Create backup root for testing
 mkdir -p "${BACKUP_ROOT}"
 
-# Logging functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -49,12 +45,10 @@ log_section() {
     echo "=========================================="
 }
 
-# Test counters
 TESTS_PASSED=0
 TESTS_FAILED=0
 TESTS_SKIPPED=0
 
-# Track tests
 test_passed() {
     TESTS_PASSED=$((TESTS_PASSED + 1))
     log_success "$1"
@@ -70,7 +64,6 @@ test_skipped() {
     log_warning "$1"
 }
 
-# Check if Docker is available
 check_docker() {
     if ! command -v docker &> /dev/null; then
         test_failed "Docker is not available"
@@ -86,7 +79,6 @@ check_docker() {
     return 0
 }
 
-# Check if compose command is available
 check_compose() {
     if command -v podman-compose &> /dev/null; then
         COMPOSE_CMD="podman-compose -f ${PROJECT_ROOT}/infrastructure/local-podman/podman-compose.yml"
@@ -106,7 +98,6 @@ check_compose() {
     fi
 }
 
-# Verify backup scripts exist and are executable
 verify_backup_scripts() {
     log_section "Verifying Backup Scripts"
 
@@ -125,7 +116,6 @@ verify_backup_scripts() {
         elif [[ ! -x "${script_path}" ]]; then
             test_failed "Backup script not executable: ${script}"
         else
-            # Verify shell syntax
             if bash -n "${script_path}" 2>&1; then
                 test_passed "Backup script has valid syntax: ${script}"
             else
@@ -135,7 +125,6 @@ verify_backup_scripts() {
     done
 }
 
-# Verify DRP documentation
 verify_drp_documentation() {
     log_section "Verifying DRP Documentation"
 
@@ -146,7 +135,6 @@ verify_drp_documentation() {
         return 1
     fi
 
-    # Check for required sections
     local required_sections=(
         "Executive Summary"
         "Recovery Objectives"
@@ -169,7 +157,6 @@ verify_drp_documentation() {
         fi
     done
 
-    # Check for RTO/RPO definitions
     if grep -qE "(RTO|Recovery Time Objective)" "${drp_path}"; then
         test_passed "DRP defines RTO"
     else
@@ -183,17 +170,14 @@ verify_drp_documentation() {
     fi
 }
 
-# Start infrastructure for testing
 start_infrastructure() {
     log_section "Starting Infrastructure"
 
     cd "${PROJECT_ROOT}"
 
-    # Stop any existing containers
     log_info "Stopping existing containers..."
     $COMPOSE_CMD down -v > /dev/null 2>&1 || true
 
-    # Start infrastructure
     log_info "Starting infrastructure services..."
     if $COMPOSE_CMD up -d postgres redis kafka; then
         test_passed "Infrastructure services started"
@@ -202,7 +186,6 @@ start_infrastructure() {
         return 1
     fi
 
-    # Wait for PostgreSQL
     log_info "Waiting for PostgreSQL to be ready..."
     local timeout=60
     local elapsed=0
@@ -220,7 +203,6 @@ start_infrastructure() {
         return 1
     fi
 
-    # Wait for Redis
     log_info "Waiting for Redis to be ready..."
     timeout=30
     elapsed=0
@@ -238,7 +220,6 @@ start_infrastructure() {
         return 1
     fi
 
-    # Wait for Kafka
     log_info "Waiting for Kafka to be ready..."
     timeout=60
     elapsed=0
@@ -257,11 +238,9 @@ start_infrastructure() {
     fi
 }
 
-# Test PostgreSQL backup
 test_postgres_backup() {
     log_section "Testing PostgreSQL Backup"
 
-    # Create test data
     log_info "Creating test data in PostgreSQL..."
     docker exec payu-postgres psql -U payu -d payu_account -c "
         CREATE TABLE IF NOT EXISTS backup_test_table (
@@ -279,7 +258,6 @@ test_postgres_backup() {
         return 1
     fi
 
-    # Run backup script
     log_info "Running PostgreSQL backup..."
     if BACKUP_ROOT="${BACKUP_ROOT}" "${SCRIPT_DIR}/backup_postgres.sh" test > /dev/null 2>&1; then
         test_passed "PostgreSQL backup completed"
@@ -288,7 +266,6 @@ test_postgres_backup() {
         return 1
     fi
 
-    # Verify backup file exists
     local backup_file
     backup_file=$(ls -1 ${BACKUP_ROOT}/postgres/daily/*.dump.gz 2>/dev/null | tail -1)
 
@@ -299,7 +276,6 @@ test_postgres_backup() {
         return 1
     fi
 
-    # Verify backup integrity
     log_info "Verifying PostgreSQL backup integrity..."
     if docker exec payu-postgres pg_restore -l /dev/stdin <(gunzip -c "${backup_file}") &> /dev/null; then
         test_passed "PostgreSQL backup integrity verified"
@@ -309,11 +285,9 @@ test_postgres_backup() {
     fi
 }
 
-# Test PostgreSQL restore
 test_postgres_restore() {
     log_section "Testing PostgreSQL Restore"
 
-    # Get backup file
     local backup_file
     backup_file=$(ls -1 ${BACKUP_ROOT}/postgres/daily/*.dump.gz 2>/dev/null | tail -1)
 
@@ -322,14 +296,11 @@ test_postgres_restore() {
         return 1
     fi
 
-    # Get original row count
     local original_count
     original_count=$(docker exec payu-postgres psql -U payu -d payu_account -t -c "SELECT COUNT(*) FROM backup_test_table;" 2>/dev/null | tr -d ' ')
 
-    # Delete test table
     docker exec payu-postgres psql -U payu -d payu_account -c "DROP TABLE IF EXISTS backup_test_table;" &> /dev/null
 
-    # Restore from backup
     log_info "Restoring PostgreSQL from backup..."
     if gunzip -c "${backup_file}" | docker exec -i payu-postgres pg_restore -U payu -d payu_account -Fc &> /dev/null; then
         test_passed "PostgreSQL restore completed"
@@ -338,7 +309,6 @@ test_postgres_restore() {
         return 1
     fi
 
-    # Verify data restoration
     log_info "Verifying data restoration..."
     local restored_count
     restored_count=$(docker exec payu-postgres psql -U payu -d payu_account -t -c "SELECT COUNT(*) FROM backup_test_table;" 2>/dev/null | tr -d ' ')
@@ -351,11 +321,9 @@ test_postgres_restore() {
     fi
 }
 
-# Test Redis backup
 test_redis_backup() {
     log_section "Testing Redis Backup"
 
-    # Create test data
     log_info "Creating test data in Redis..."
     docker exec payu-redis redis-cli SET "backup_test_key_1" "test_value_1" &> /dev/null
     docker exec payu-redis redis-cli SET "backup_test_key_2" "test_value_2" &> /dev/null
@@ -367,7 +335,6 @@ test_redis_backup() {
         return 1
     fi
 
-    # Run backup
     log_info "Running Redis backup..."
     if BACKUP_ROOT="${BACKUP_ROOT}" "${SCRIPT_DIR}/backup_restore_redis.sh" backup > /dev/null 2>&1; then
         test_passed "Redis backup completed"
@@ -376,7 +343,6 @@ test_redis_backup() {
         return 1
     fi
 
-    # Verify backup file exists
     local backup_file
     backup_file=$(ls -1 ${BACKUP_ROOT}/redis/snapshots/dump_*.rdb 2>/dev/null | tail -1)
 
@@ -388,11 +354,9 @@ test_redis_backup() {
     fi
 }
 
-# Test Kafka backup
 test_kafka_backup() {
     log_section "Testing Kafka Backup"
 
-    # Create test topic
     local topic_name="backup_test_topic_${TIMESTAMP}"
 
     log_info "Creating test Kafka topic..."
@@ -405,7 +369,6 @@ test_kafka_backup() {
         return 1
     fi
 
-    # Produce test messages
     log_info "Producing test messages to Kafka..."
     echo "test_message_1" | docker exec -i payu-kafka kafka-console-producer --bootstrap-server localhost:9092 --topic "${topic_name}" &> /dev/null
     echo "test_message_2" | docker exec -i payu-kafka kafka-console-producer --bootstrap-server localhost:9092 --topic "${topic_name}" &> /dev/null
@@ -417,7 +380,6 @@ test_kafka_backup() {
         return 1
     fi
 
-    # Run backup
     log_info "Running Kafka backup..."
     if BACKUP_ROOT="${BACKUP_ROOT}" "${SCRIPT_DIR}/backup_restore_kafka.sh" backup > /dev/null 2>&1; then
         test_passed "Kafka backup completed"
@@ -426,7 +388,6 @@ test_kafka_backup() {
         return 1
     fi
 
-    # Verify backup file exists
     local backup_dir="${BACKUP_ROOT}/kafka/topics"
 
     if [[ -d "${backup_dir}" ]]; then
@@ -441,11 +402,9 @@ test_kafka_backup() {
     fi
 }
 
-# Test orchestration script
 test_orchestration() {
     log_section "Testing Backup Orchestration"
 
-    # Test help command
     log_info "Testing orchestration help..."
     if "${SCRIPT_DIR}/run_backup.sh" --help &> /dev/null; then
         test_passed "Orchestration script help works"
@@ -454,7 +413,6 @@ test_orchestration() {
         return 1
     fi
 
-    # Test backup all components
     log_info "Running orchestrated backup..."
     if BACKUP_ROOT="${BACKUP_ROOT}" "${SCRIPT_DIR}/run_backup.sh" postgres redis kafka config > /dev/null 2>&1; then
         test_passed "Orchestrated backup completed"
@@ -464,7 +422,6 @@ test_orchestration() {
     fi
 }
 
-# Run Python tests
 run_python_tests() {
     log_section "Running Python Tests"
 
@@ -478,7 +435,6 @@ run_python_tests() {
     test_passed "Python tests completed"
 }
 
-# Generate test report
 generate_report() {
     log_section "Test Results Summary"
 
@@ -510,7 +466,6 @@ generate_report() {
     fi
 }
 
-# Cleanup
 cleanup() {
     log_section "Cleanup"
 
@@ -522,16 +477,13 @@ cleanup() {
     log_info "Cleanup completed"
 }
 
-# Main execution
 main() {
     log_info "PayU Disaster Recovery & Backup-Restore Verification"
     log_info "Backup Root: ${BACKUP_ROOT}"
     log_info "Timestamp: ${TIMESTAMP}"
 
-    # Initialize test results file
     echo "[]" > "${TEST_RESULTS_FILE}"
 
-    # Check prerequisites
     if ! check_docker; then
         log_error "Docker not available, exiting"
         exit 1
@@ -542,36 +494,28 @@ main() {
         exit 1
     fi
 
-    # Verify scripts and documentation
     verify_backup_scripts
     verify_drp_documentation
 
-    # Start infrastructure
     start_infrastructure
 
-    # Run tests
     test_postgres_backup
     test_postgres_restore
     test_redis_backup
     test_kafka_backup
     test_orchestration
 
-    # Run Python tests
     run_python_tests
 
-    # Generate report
     generate_report
 
     local exit_code=$?
 
-    # Cleanup
     cleanup
 
     exit ${exit_code}
 }
 
-# Trap errors and cleanup
 trap cleanup EXIT
 
-# Run main function
 main "$@"

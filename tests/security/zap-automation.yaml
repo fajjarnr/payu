@@ -1,9 +1,6 @@
-# =============================================================================
 # ZAP Automation Framework Configuration for PayU
-# =============================================================================
 # This file defines the automated security scanning pipeline for OWASP ZAP.
 # Used by both CI and manual scans.
-# =============================================================================
 env:
   contexts:
     - name: "PayU API Gateway"

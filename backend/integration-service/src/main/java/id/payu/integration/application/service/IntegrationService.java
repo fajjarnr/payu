@@ -54,7 +54,6 @@ public class IntegrationService implements IntegrationUseCase {
         );
 
         try {
-            // Send to Camel route for processing
             messagePublisherPort.routeInternal("direct:swift-inbound", message, java.util.Map.of());
             return message.getMessageId();
         } catch (Exception e) {
@@ -206,9 +205,6 @@ public class IntegrationService implements IntegrationUseCase {
         };
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
 
     private String processSwiftMessageFallback(String swiftMessage, String messageType, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
@@ -271,7 +267,6 @@ public class IntegrationService implements IntegrationUseCase {
     }
 
     private String extractBusinessReference(String swiftMessage) {
-        // Extract transaction reference from SWIFT message
         // In production, this would parse the SWIFT message format
         if (swiftMessage != null && swiftMessage.length() > 20) {
             return "SWIFT_" + swiftMessage.substring(0, 20).replaceAll("[^a-zA-Z0-9]", "_");

@@ -15,7 +15,6 @@ import scala.concurrent.duration._
  */
 abstract class BaseSimulation extends Simulation {
 
-  // ========== CONFIGURATION ==========
 
   // Environment-specific URLs (can be overridden with system properties)
   val baseUrl: String = System.getProperty("baseUrl", "http://localhost:8080")
@@ -40,7 +39,6 @@ abstract class BaseSimulation extends Simulation {
   val maxThreshold: Int = Integer.getInteger("maxThreshold", 5000) // 5s
   val successRateThreshold: Double = java.lang.Double.parseDouble(System.getProperty("successRateThreshold", "99.0"))
 
-  // ========== HTTP PROTOCOL ==========
 
   val httpProtocol = http
     .baseUrl(baseUrl)
@@ -50,7 +48,6 @@ abstract class BaseSimulation extends Simulation {
     .contentTypeHeader("application/json")
     .userAgentHeader("PayU-PerformanceTest/1.0")
 
-  // ========== COMMON HEADERS ==========
 
   val commonHeaders = Map(
     "Accept" -> "application/json",
@@ -62,7 +59,6 @@ abstract class BaseSimulation extends Simulation {
     "Authorization" -> "Bearer ${access_token}"
   )
 
-  // ========== COMMON CHECKS ==========
 
   val successCheck = status.in(200, 201, 202)
   val createdCheck = status.is(201)
@@ -80,7 +76,6 @@ abstract class BaseSimulation extends Simulation {
   val balanceCheck = jsonPath("$.available_balance").exists().saveAs("available_balance")
   val statusCheck = jsonPath("$.status").exists()
 
-  // ========== COMMON REQUESTS ==========
 
   // Login request
   def loginRequest(username: String = "${username}", password: String = "${password}") = {
@@ -110,7 +105,6 @@ abstract class BaseSimulation extends Simulation {
       .check(balanceCheck)
   }
 
-  // ========== COMMON ASSERTIONS ==========
 
   def globalAssertions = Seq(
     global.responseTime.percentile3.lte(p95Threshold),
@@ -126,13 +120,11 @@ abstract class BaseSimulation extends Simulation {
     details(requestName).successfulRequests.percent.gte(successRateThreshold)
   )
 
-  // ========== LOAD INJECTION HELPERS ==========
 
   def standardRampUp = rampUsersPerSec(minUsers.toDouble) to maxUsers during (rampUpDuration)
   def standardSustainedLoad = constantUsersPerSec(maxUsers) during (sustainedDuration)
   def standardInjection = inject(standardRampUp, standardSustainedLoad)
 
-  // ========== FEEDERS ==========
 
   val userFeeder = csv("data/users.csv").circular
   val accountFeeder = csv("data/accounts.csv").circular
@@ -155,20 +147,17 @@ abstract class BaseSimulation extends Simulation {
     "tip_amount" -> (Math.random() * 50000).toInt.toString
   ))
 
-  // ========== PAUSE HELPERS ==========
 
   def shortPause = pause(500.milliseconds, 1.seconds)
   def mediumPause = pause(1, 3)
   def longPause = pause(3, 6)
 
-  // ========== THROTTLE HELPERS ==========
 
   def throttleRps(targetRps: Double) = throttle(
     reachRps(targetRps) in (rampUpDuration / 2),
     holdFor(sustainedDuration)
   )
 
-  // ========== SCENARIO HELPERS ==========
 
   /**
    * Creates a scenario with authentication

@@ -5,7 +5,6 @@ import { useVIPStatus } from '@/hooks/useVIPStatus';
 import { useUserSegment } from '@/hooks/useUserSegment';
 import { useAuthStore } from '@/stores';
 
-// Mock dependencies
 vi.mock('@/hooks/useUserSegment');
 vi.mock('@/stores');
 
@@ -625,7 +624,6 @@ describe('useVIPStatus hook', () => {
       user: mockUser
     });
 
-    // Start as VIP
     mockUseUserSegment.mockReturnValue({
       currentTier: 'VIP',
       isVIP: true,
@@ -638,7 +636,6 @@ describe('useVIPStatus hook', () => {
     expect(result.current.isVIP).toBe(true);
     expect(result.current.tier).toBe('VIP');
 
-    // Change to Gold
     mockUseUserSegment.mockReturnValue({
       currentTier: 'GOLD',
       isVIP: false,
@@ -646,7 +643,6 @@ describe('useVIPStatus hook', () => {
       isSuccess: true
     });
 
-    // Rerender to get updated state
     const { result: newResult } = renderHook(() => useVIPStatus(), { wrapper });
 
     expect(newResult.current.isVIP).toBe(false);

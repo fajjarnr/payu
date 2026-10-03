@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useSilentRefresh } from '@/hooks/useSilentRefresh';
 
-// --- Store mocks ---
 const mockSetAuthenticated = vi.fn();
 const mockSetTokenExpiry = vi.fn();
 const mockLogout = vi.fn();
@@ -23,7 +22,6 @@ vi.mock('@/stores', () => ({
   }),
 }));
 
-// --- Fetch mock ---
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
@@ -204,7 +202,6 @@ describe('useSilentRefresh', () => {
 
     renderHook(() => useSilentRefresh());
 
-    // Simulate tab becoming visible
     await act(async () => {
       Object.defineProperty(document, 'visibilityState', {
         value: 'visible',
@@ -215,7 +212,6 @@ describe('useSilentRefresh', () => {
       await vi.runAllTimersAsync();
     });
 
-    // Should have triggered an eager refresh
     expect(mockFetch).toHaveBeenCalledWith('/api/auth/refresh', {
       method: 'POST',
       credentials: 'include',
@@ -231,7 +227,6 @@ describe('useSilentRefresh', () => {
 
     renderHook(() => useSilentRefresh());
 
-    // Simulate tab becoming visible
     await act(async () => {
       Object.defineProperty(document, 'visibilityState', {
         value: 'visible',
@@ -241,7 +236,6 @@ describe('useSilentRefresh', () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
 
-    // Should NOT have called refresh
     expect(mockFetch).not.toHaveBeenCalled();
   });
 

@@ -1949,15 +1949,12 @@ services:
       retries: 3
       start_period: 30s
 
-  # ============================================================
   # DevSecOps Tool Stack — Complete Local Security Pipeline
-  # ============================================================
   # These containers provide a local DevSecOps lab environment
   # matching the tool stack defined in DEVSECOPS_ARCHITECTURE.md.
   # Long-running servers (SonarQube, Trivy, ZAP) run continuously.
   # CLI tools (Gitleaks, Nuclei, k6, Syft, Grype) sleep until
   # invoked via: podman compose run --rm <service> <args>
-  # ============================================================
 
   sonarqube:
     <<: *infra-defaults

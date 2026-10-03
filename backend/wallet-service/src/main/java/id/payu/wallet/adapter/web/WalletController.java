@@ -231,7 +231,6 @@ public class WalletController extends BaseController {
      * Validates that the authenticated user owns the reservation.
      * Used by ownership-based access control on commit/release endpoints.
      *
-     * @param reservationId the reservation ID to check
      * @param accountId the authenticated user's account ID
      * @return true if the user owns the reservation, false otherwise
      */

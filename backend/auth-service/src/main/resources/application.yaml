@@ -96,10 +96,8 @@ resilience4j:
   ratelimiter:
     instances:
       loginRateLimiter:
-        # Global ceiling across the whole service; the per-IP/per-account
-        # brute-force control is the @RateLimit aspect (10/min). Without an
-        # explicit config Resilience4j defaults (50 permits / 500ns refresh)
-        # deny almost every login.
+        # Global ceiling; per-IP/per-account brute-force control is the @RateLimit
+        # aspect. Without explicit config, Resilience4j defaults deny almost every login.
         limit-for-period: 30
         limit-refresh-period: 1m
         timeout-duration: 0s

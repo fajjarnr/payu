@@ -61,7 +61,6 @@ public class SplitPaymentRuleEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getPartnerId() { return partnerId; }

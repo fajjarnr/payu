@@ -1,11 +1,9 @@
 #!/bin/bash
 set -e
 
-# ============================================
 # PayU Test Environment Health Check Script
 # Validates all test services are healthy before running tests.
 # Works with docker or podman; auto-detects running containers.
-# ============================================
 
 echo "=========================================="
 echo "PayU Test Environment Health Check"
@@ -28,7 +26,6 @@ print_status() {
 print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
 print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
 
-# ── Detect container runtime ──
 CONTAINER_CLI=""
 COMPOSE_CMD=""
 COMPOSE_FILE="infrastructure/local/podman/podman-compose.yml"
@@ -67,7 +64,6 @@ fi
 
 echo ""
 
-# ── Step 2: Infrastructure container health ──
 if [ "$RUNNING_COUNT" -gt 0 ]; then
     echo "Step 2: Infrastructure health"
 
@@ -197,7 +193,6 @@ if [ "$RUNNING_COUNT" -gt 0 ]; then
     fi
 fi
 
-# ── Final summary ──
 echo ""
 echo "=========================================="
 echo "Health Check Summary"

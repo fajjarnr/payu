@@ -14,7 +14,7 @@
 # Security note: Egress is NOT restricted by these policies.
 # Use OpenShift Service Mesh or Kyverno for egress controls.
 
-# --- Dashboard: accept traffic on port 5601 from any source ---
+# Dashboard: accept traffic on port 5601 from any source
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -32,7 +32,7 @@ spec:
         - port: 5601
           protocol: TCP
 
-# --- Indexer: 9300 from other indexers, 9200 from dashboard/manager/indexer/job ---
+# Indexer: 9300 from other indexers, 9200 from dashboard/manager/indexer/job
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -72,7 +72,7 @@ spec:
         - port: 9200
           protocol: TCP
 
-# --- Manager Master: 1515/55000 from dashboard+agents, 1516 from workers ---
+# Manager master: 1515/55000 from dashboard+agents, 1516 from workers
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -111,7 +111,7 @@ spec:
         - port: 1516
           protocol: TCP
 
-# --- Manager Worker: 1514 from agents (any), 1516 from manager cluster ---
+# Manager worker: 1514 from agents (any), 1516 from manager cluster
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

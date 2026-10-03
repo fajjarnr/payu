@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # Deployment Verification Script
-# ==============================
 # Verifies deployment health across multiple dimensions
 #
 # Usage: ./verify-deployment.sh [environment]
@@ -14,14 +13,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NAMESPACE="${NAMESPACE:-payu-dev}"
 ENVIRONMENT="${1:-}"
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Verification results
 CHECKS_PASSED=0
 CHECKS_FAILED=0
 WARNINGS=0
@@ -60,7 +57,6 @@ print_section() {
 }
 
 detect_services() {
-    # Get list of services from deployments
     SERVICES=$(oc get deployments -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -v 'canary' | sort -u || echo "")
 
     if [ -z "$SERVICES" ]; then
@@ -75,7 +71,6 @@ check_pod_health() {
     local service=$1
     local label="app=${service}"
 
-    # Check if pods exist
     POD_COUNT=$(oc get pods -n "${NAMESPACE}" -l "${label}" --no-headers 2>/dev/null | wc -l)
 
     if [ "$POD_COUNT" -eq 0 ]; then
@@ -94,10 +89,8 @@ check_pod_health() {
         fi
     fi
 
-    # Check running pods
     RUNNING_PODS=$(oc get pods -n "${NAMESPACE}" -l "${label}" --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
 
-    # Check ready pods
     READY_PODS=$(oc get pods -n "${NAMESPACE}" -l "${label}" -o jsonpath='{range .items[*]}{range .status.conditions[?(@.type=="Ready")]}{@.status}{"\n"}{end}{end}' 2>/dev/null | grep -c "True" || echo "0")
 
     if [ "$RUNNING_PODS" -eq "$POD_COUNT" ] && [ "$READY_PODS" -eq "$POD_COUNT" ]; then
@@ -106,7 +99,6 @@ check_pod_health() {
     else
         print_error "${service}: Only ${READY_PODS}/${POD_COUNT} pods ready (${RUNNING_PODS} running)"
 
-        # Show failing pods
         echo "    Failing pods:"
         oc get pods -n "${NAMESPACE}" -l "${label}" --no-headers 2>/dev/null | grep -v "Running" | head -3 | while read pod_line; do
             echo "      - ${pod_line}"
@@ -118,13 +110,11 @@ check_pod_health() {
 check_deployment_status() {
     local service=$1
 
-    # Check deployment exists
     if ! oc get deployment "${service}" -n "${NAMESPACE}" >/dev/null 2>&1; then
         print_warning "No deployment found for ${service}"
         return 0
     fi
 
-    # Get deployment details
     DESIRED=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
     READY=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null)
     READY=${READY:-0}
@@ -152,7 +142,6 @@ check_deployment_status() {
 check_health_endpoints() {
     local service=$1
 
-    # Get route URL
     ROUTE_URL=$(oc get route "${service}" -n "${NAMESPACE}" -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
 
     if [ -z "$ROUTE_URL" ]; then
@@ -160,7 +149,6 @@ check_health_endpoints() {
         return 0
     fi
 
-    # Try health endpoint
     HEALTH_URL="https://${ROUTE_URL}/actuator/health"
     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "${HEALTH_URL}" 2>/dev/null || echo "000")
 
@@ -182,7 +170,6 @@ check_health_endpoints() {
 check_readiness_probes() {
     local service=$1
 
-    # Get pods with failing readiness probes
     FAILING_PODS=$(oc get pods -n "${NAMESPACE}" -l "app=${service}" -o jsonpath='{range .items[*]}{@.metadata.name}{":"}{range @.status.conditions[?(@.type=="Ready")]}{@.status}{"\n"}{end}{end}' 2>/dev/null | grep ":False" | wc -l)
 
     if [ "$FAILING_PODS" -eq 0 ]; then
@@ -197,13 +184,11 @@ check_readiness_probes() {
 check_resource_usage() {
     local service=$1
 
-    # Check if metrics are available
     if ! oc top pod -n "${NAMESPACE}" -l "app=${service}" >/dev/null 2>&1; then
         print_warning "${service}: Metrics not available for resource check"
         return 0
     fi
 
-    # Get resource usage
     HIGH_CPU=$(oc top pod -n "${NAMESPACE}" -l "app=${service}" --no-headers 2>/dev/null | awk '{if ($2+0 > 90) print $1}' | wc -l)
     HIGH_MEM=$(oc top pod -n "${NAMESPACE}" -l "app=${service}" --no-headers 2>/dev/null | awk '{if ($3+0 > 90) print $1}' | wc -l)
 
@@ -219,7 +204,6 @@ check_resource_usage() {
 check_events() {
     local service=$1
 
-    # Check for warning events in the last 5 minutes
     RECENT_WARNINGS=$(oc get events -n "${NAMESPACE}" --field-selector type=Warning --sort-by='.lastTimestamp' 2>/dev/null | grep -i "${service}" | tail -5 | wc -l)
 
     if [ "$RECENT_WARNINGS" -eq 0 ]; then
@@ -235,7 +219,6 @@ check_logs_for_errors() {
     local service=$1
     local error_count=0
 
-    # Sample logs from the last 2 minutes for errors
     error_count=$(oc logs -n "${NAMESPACE}" -l "app=${service}" --since=2m 2>/dev/null | grep -iE "(error|exception|fatal)" | wc -l || echo "0")
 
     if [ "$error_count" -eq 0 ]; then
@@ -250,15 +233,12 @@ check_logs_for_errors() {
 check_database_connectivity() {
     local service=$1
 
-    # Check if service uses database by looking for DB env vars
     HAS_DB=$(oc get deployment "${service}" -n "${NAMESPACE}" -o jsonpath='{.spec.template.spec.containers[0].env}' 2>/dev/null | grep -i "database\|postgres\|jdbc" | wc -l || echo "0")
 
     if [ "$HAS_DB" -eq 0 ]; then
-        # No database expected
         return 0
     fi
 
-    # Check for database connection errors in logs
     DB_ERRORS=$(oc logs -n "${NAMESPACE}" -l "app=${service}" --since=5m 2>/dev/null | grep -iE "(connection refused|database|jdbc.*error)" | wc -l || echo "0")
 
     if [ "$DB_ERRORS" -eq 0 ]; then
@@ -311,17 +291,13 @@ verify_single_service() {
 main() {
     print_header
 
-    # Validate OpenShift CLI
     if ! command -v oc &> /dev/null; then
         print_error "OpenShift CLI (oc) not found"
         exit 1
     fi
 
-    # If environment specified, verify specific deployment
     if [ -n "$ENVIRONMENT" ]; then
-        # Check for blue/green deployments
         if [ "$ENVIRONMENT" = "blue" ] || [ "$ENVIRONMENT" = "green" ]; then
-            # Find services with blue/green deployments
             for svc in $(oc get deployments -n "${NAMESPACE}" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null | tr ' ' '\n' | grep "-${ENVIRONMENT}$" | sed "s/-${ENVIRONMENT}$//" | sort -u); do
                 verify_single_service "${svc}-${ENVIRONMENT}"
             done
@@ -329,11 +305,9 @@ main() {
             verify_single_service "${ENVIRONMENT}"
         fi
     else
-        # Verify all services
         detect_services
 
         for service in $SERVICES; do
-            # Skip canary deployments
             if [[ "$service" == *"-canary" ]]; then
                 continue
             fi
@@ -341,7 +315,6 @@ main() {
         done
     fi
 
-    # Generate summary
     generate_summary
     exit $?
 }

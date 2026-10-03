@@ -41,10 +41,6 @@ public class AccountSecurityService {
 
     /**
      * Checks if the authenticated user owns the specified account.
-     *
-     * @param accountId     the account UUID from the path variable
-     * @param authentication the Spring Security Authentication (contains JWT)
-     * @return true if the authenticated user owns the account
      */
     public boolean isAccountOwner(UUID accountId, Authentication authentication) {
         if (accountId == null || authentication == null) {
@@ -66,7 +62,6 @@ public class AccountSecurityService {
                 return false;
             }
 
-            // Find the internal User by Keycloak externalId
             Optional<User> userOpt = userPersistencePort.findByExternalId(externalId);
             if (userOpt.isEmpty()) {
                 log.warn("Account ownership check failed: no user found for externalId={}", externalId);
@@ -75,7 +70,6 @@ public class AccountSecurityService {
 
             User user = userOpt.get();
 
-            // Check if any of the user's accounts match the requested accountId
             List<UUID> accountIds = userPersistencePort.findAccountIdsByUserId(user.getId());
         boolean isOwner = accountIds.contains(accountId);
             

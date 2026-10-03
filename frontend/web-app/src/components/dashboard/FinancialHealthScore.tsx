@@ -63,7 +63,6 @@ export default function FinancialHealthScore({
     );
   }
 
-  // Determine health level based on score
   const getHealthLevel = (score: number): HealthLevel => {
     if (score >= 85) {
       return {
@@ -114,7 +113,6 @@ export default function FinancialHealthScore({
   const scoreChange = previousScore != null ? score - previousScore : 0;
   const isImprovement = scoreChange > 0;
 
-  // Calculate stroke dasharray for circular progress
   const circumference = 2 * Math.PI * 54; // radius = 54
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (score / 100) * circumference;

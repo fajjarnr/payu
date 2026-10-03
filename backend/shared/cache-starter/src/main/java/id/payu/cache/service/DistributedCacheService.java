@@ -61,7 +61,6 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
     private final CacheProperties properties;
     private final ObjectMapper objectMapper;
 
-    // Metrics
     private Counter hitCounter;
     private Counter missCounter;
     private Counter staleCounter;
@@ -69,12 +68,6 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
     private Timer getTimer;
     private Timer putTimer;
 
-    /**
-     * Creates a native Hot Rod cache service.
-     *
-     * @param hotRodCache configured named remote cache
-     * @param properties cache configuration properties
-     */
     protected DistributedCacheService(
             Supplier<RemoteCache<String, Object>> hotRodCacheSupplier,
             CacheProperties properties) {
@@ -101,15 +94,11 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
 
     }
 
-    /**
-     * Get value from cache.
-     */
     public <T> T get(String key, Class<T> type) {
         return get(key, type, null);
     }
 
     /**
-     * Get value from cache with fallback supplier.
      * BUG-BE-074 FIX: Uses ObjectMapper.convertValue() for type-safe deserialization
      * instead of unsafe casts. GenericJackson2JsonRedisSerializer deserializes to
      * LinkedHashMap — convertValue properly converts to target type.
@@ -248,9 +237,6 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
         return null;
     }
 
-    /**
-     * Put value in cache with default TTL.
-     */
     public void put(String key, Object value) {
         Timer.Sample sample = Timer.start();
 
@@ -293,9 +279,6 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
         }
     }
 
-    /**
-     * Evict entry from cache.
-     */
     public void evict(String key) {
         try {
             hotRodCache().remove(key);
@@ -305,9 +288,6 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
         }
     }
 
-    /**
-     * Check if key exists in cache.
-     */
     public boolean exists(String key) {
         try {
             return hotRodCache().containsKey(key);
@@ -421,7 +401,6 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
         // Case 1: Already a CacheEntry (JDK serialization or properly typed)
         if (value instanceof CacheEntry) {
             CacheEntry<T> entry = (CacheEntry<T>) value;
-            // Ensure inner value is properly typed
             Object innerValue = entry.getValue();
             if (innerValue != null && !innerType.isInstance(innerValue)) {
                 T converted = convertToType(innerValue, innerType);
@@ -436,7 +415,6 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
                 Map<String, Object> map = sanitizeMap((Map<?, ?>) value);
                 // Check if map looks like a CacheEntry (has value, createdAt, softTtl, hardTtl)
                 if (map.containsKey("value") && map.containsKey("createdAt")) {
-                    // Convert the entire map to CacheEntry using ObjectMapper
                     JavaType cacheEntryType = objectMapper.getTypeFactory()
                             .constructParametricType(CacheEntry.class, innerType);
                     CacheEntry<T> entry = objectMapper.convertValue(map, cacheEntryType);
@@ -458,10 +436,6 @@ public class DistributedCacheService implements DistributedCache, DistributedAto
     /**
      * Safely convert a deserialized value to the target type.
      * Handles LinkedHashMap from JSON serialization and direct type matches.
-     *
-     * @param value the raw deserialized value
-     * @param type  the target type
-     * @return converted value
      */
     private <T> T convertToType(Object value, Class<T> type) {
         if (value == null) {

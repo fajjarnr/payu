@@ -41,9 +41,7 @@ spec:
   domain: digital-banking
 
 ---
-# ============================================================
-# CORE BANKING SERVICES (Spring Boot 4.1 / Red Hat Runtimes)
-# ============================================================
+# Core banking services (Spring Boot 4.1 / Red Hat Runtimes)
 
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -223,9 +221,7 @@ spec:
     - resource:statement-db
     - component:transaction-service
 
-# ============================================================
-# SUPPORTING SERVICES (Spring Boot 4.1)
-# ============================================================
+# Supporting services (Spring Boot 4.1)
 
 ---
 apiVersion: backstage.io/v1alpha1
@@ -432,9 +428,7 @@ spec:
   dependsOn:
     - component:lending-service
 
-# ============================================================
-# NATIVE SERVICES (Red Hat Build of Quarkus 3.x)
-# ============================================================
+# Native services (Red Hat Build of Quarkus 3.x)
 
 ---
 apiVersion: backstage.io/v1alpha1
@@ -519,9 +513,7 @@ spec:
   providesApis:
     - portal-api
 
-# ============================================================
-# ML / DATA SERVICES (Python 3.12 on UBI)
-# ============================================================
+# ML / data services (Python 3.12 on UBI)
 
 ---
 apiVersion: backstage.io/v1alpha1
@@ -564,9 +556,7 @@ spec:
     - resource:analytics-db
     - resource:kafka
 
-# ============================================================
-# FRONTEND APPLICATIONS
-# ============================================================
+# Frontend applications
 
 ---
 apiVersion: backstage.io/v1alpha1
@@ -619,9 +609,7 @@ spec:
   dependsOn:
     - component:gateway-service
 
-# ============================================================
-# EXTERNAL SERVICE SIMULATORS
-# ============================================================
+# External service simulators
 
 ---
 apiVersion: backstage.io/v1alpha1
@@ -698,9 +686,7 @@ spec:
   owner: group:platform-team
   system: payu
 
-# ============================================================
-# SHARED LIBRARIES
-# ============================================================
+# Shared libraries
 
 ---
 apiVersion: backstage.io/v1alpha1
@@ -940,9 +926,7 @@ spec:
   owner: group:core-banking-team
   system: payu
 
-# ============================================================
-# INFRASTRUCTURE RESOURCES
-# ============================================================
+# Infrastructure resources
 
 ---
 apiVersion: backstage.io/v1alpha1

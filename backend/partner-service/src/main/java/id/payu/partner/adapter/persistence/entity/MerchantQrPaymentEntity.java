@@ -86,7 +86,6 @@ public class MerchantQrPaymentEntity {
                 merchant.getMerchantCode(), amount.toPlainString(), currency, referenceId);
     }
 
-    // Domain methods
 
     public boolean isPending() {
         return status == QrPaymentStatus.PENDING && expiresAt.isAfter(LocalDateTime.now());
@@ -108,7 +107,6 @@ public class MerchantQrPaymentEntity {
         }
     }
 
-    // Getters and setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

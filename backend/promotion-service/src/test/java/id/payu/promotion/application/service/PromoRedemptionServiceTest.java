@@ -53,7 +53,6 @@ class PromoRedemptionServiceTest {
     @Test
     @DisplayName("should apply promo and record usage successfully")
     void shouldApplyPromoAndRecordUsage() {
-        // Given
         String promoCode = "DISCOUNT10";
         BigDecimal transactionAmount = new BigDecimal("100000");
 
@@ -68,16 +67,13 @@ class PromoRedemptionServiceTest {
         when(promoUsageRepository.recordUsage(any()))
                 .thenReturn(true);
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertTrue(response.success());
         assertEquals(0, new BigDecimal("10000").compareTo(response.discountAmount()));
         assertEquals(0, new BigDecimal("90000").compareTo(response.finalAmount()));
         assertEquals(promoCode, response.promoCode());
 
-        // Verify usage was recorded
         ArgumentCaptor<PromoUsage> usageCaptor = ArgumentCaptor.forClass(PromoUsage.class);
         verify(promoUsageRepository).recordUsage(usageCaptor.capture());
 
@@ -110,7 +106,6 @@ class PromoRedemptionServiceTest {
     @Test
     @DisplayName("should return error for invalid promo code")
     void shouldReturnErrorForInvalidPromo() {
-        // Given
         String promoCode = "INVALID";
         ApplyPromoRequest request = new ApplyPromoRequest(
                 promoCode, USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID
@@ -119,22 +114,18 @@ class PromoRedemptionServiceTest {
         when(promoCodeRepository.findByCode(promoCode))
                 .thenReturn(Optional.empty());
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertFalse(response.success());
         assertEquals("PROMO_NOT_FOUND", response.errorCode());
         assertNotNull(response.errorMessage());
 
-        // Verify no usage was recorded
         verify(promoUsageRepository, never()).recordUsage(any());
     }
 
     @Test
     @DisplayName("should rollback usage on transaction failure")
     void shouldRollbackUsageOnTransactionFailure() {
-        // Given
         String promoCode = "DISCOUNT10";
         ApplyPromoRequest request = new ApplyPromoRequest(
                 promoCode, USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID
@@ -147,10 +138,8 @@ class PromoRedemptionServiceTest {
         when(promoUsageRepository.recordUsage(any()))
                 .thenThrow(new RuntimeException("Database error"));
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertFalse(response.success());
         assertEquals("RECORD_FAILED", response.errorCode());
     }
@@ -158,7 +147,6 @@ class PromoRedemptionServiceTest {
     @Test
     @DisplayName("should reject already used promo code")
     void shouldRejectAlreadyUsedPromo() {
-        // Given
         String promoCode = "ONETIME";
         ApplyPromoRequest request = new ApplyPromoRequest(
                 promoCode, USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID
@@ -172,10 +160,8 @@ class PromoRedemptionServiceTest {
         when(promoUsageRepository.hasUserUsedPromo(USER_ID, promoCode))
                 .thenReturn(true);
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertFalse(response.success());
         assertEquals("ALREADY_USED", response.errorCode());
     }
@@ -183,7 +169,6 @@ class PromoRedemptionServiceTest {
     @Test
     @DisplayName("should reject expired promo code")
     void shouldRejectExpiredPromo() {
-        // Given
         String promoCode = "EXPIRED";
         ApplyPromoRequest request = new ApplyPromoRequest(
                 promoCode, USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID
@@ -195,10 +180,8 @@ class PromoRedemptionServiceTest {
         when(promoCodeRepository.findByCode(promoCode))
                 .thenReturn(Optional.of(promo));
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertFalse(response.success());
         assertEquals("EXPIRED", response.errorCode());
     }
@@ -206,7 +189,6 @@ class PromoRedemptionServiceTest {
     @Test
     @DisplayName("should reject transaction below minimum amount")
     void shouldRejectBelowMinimumAmount() {
-        // Given
         String promoCode = "BIGONLY";
         ApplyPromoRequest request = new ApplyPromoRequest(
                 promoCode, USER_ID, TRANSACTION_ID, new BigDecimal("50000"), PARTNER_ID
@@ -218,10 +200,8 @@ class PromoRedemptionServiceTest {
         when(promoCodeRepository.findByCode(promoCode))
                 .thenReturn(Optional.of(promo));
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertFalse(response.success());
         assertEquals("MIN_AMOUNT_NOT_MET", response.errorCode());
     }
@@ -229,7 +209,6 @@ class PromoRedemptionServiceTest {
     @Test
     @DisplayName("should calculate fixed discount correctly")
     void shouldCalculateFixedDiscount() {
-        // Given
         String promoCode = "CASH5000";
         BigDecimal transactionAmount = new BigDecimal("100000");
         ApplyPromoRequest request = new ApplyPromoRequest(
@@ -243,10 +222,8 @@ class PromoRedemptionServiceTest {
         when(promoUsageRepository.recordUsage(any()))
                 .thenReturn(true);
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertTrue(response.success());
         assertEquals(0, new BigDecimal("5000").compareTo(response.discountAmount()));
         assertEquals(0, new BigDecimal("95000").compareTo(response.finalAmount()));
@@ -255,25 +232,21 @@ class PromoRedemptionServiceTest {
     @Test
     @DisplayName("should validate promo with idempotency key")
     void shouldValidatePromoWithIdempotency() {
-        // Given
         String promoCode = "DISCOUNT10";
         String idempotencyKey = "idem-123";
         ApplyPromoRequest request = new ApplyPromoRequest(
                 promoCode, USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID, idempotencyKey
         );
 
-        // Simulate already processed with same idempotency key
         when(promoUsageRepository.findByIdempotencyKey(idempotencyKey))
                 .thenReturn(Optional.of(createExistingUsage(promoCode)));
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then - should return cached result
+        // Should return cached result
         assertTrue(response.success());
         assertEquals(new BigDecimal("10000"), response.discountAmount());
 
-        // Should not query promo code or record new usage
         verify(promoCodeRepository, never()).findByCode(any());
         verify(promoUsageRepository, never()).recordUsage(any());
     }

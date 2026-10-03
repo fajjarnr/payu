@@ -150,10 +150,6 @@ public class DataAccessAuditService implements DataAccessAuditUseCase {
         return persistencePort.findByFilters(userId, accessedBy, serviceName, operationType, startDate, endDate, pageable);
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
-
     private DataAccessAudit logDataAccessFallback(String userId, String accessedBy, String serviceName,
                                                    String resourceType, String resourceId,
                                                    DataOperationType operationType, String purpose, Exception ex) {

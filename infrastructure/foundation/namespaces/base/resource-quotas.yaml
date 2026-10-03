@@ -1,9 +1,6 @@
-# ------------------------------------------------------------
 # PayU DevSecOps — ResourceQuota (Phase 1 Foundation)
 # Scaled for 3-worker lab cluster
-# ------------------------------------------------------------
 
-# --- payu-dev ---
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -23,7 +20,6 @@ spec:
     configmaps: "100"
     # ponytail: see comment above dev quota — secrets 100→150 for barman HA
 ---
-# --- payu-sit ---
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -42,7 +38,6 @@ spec:
     secrets: "100"
     configmaps: "100"
 ---
-# --- payu-uat ---
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -61,7 +56,6 @@ spec:
     secrets: "120"
     configmaps: "120"
 ---
-# --- payu-preprod ---
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -80,7 +74,6 @@ spec:
     secrets: "120"
     configmaps: "120"
 ---
-# --- payu (production) ---
 apiVersion: v1
 kind: ResourceQuota
 metadata:

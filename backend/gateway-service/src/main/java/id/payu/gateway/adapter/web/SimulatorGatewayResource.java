@@ -46,8 +46,6 @@ public class SimulatorGatewayResource {
         this.webClient = WebClient.create(vertx);
     }
 
-    // BI-FAST simulator
-
     @POST
     @Path("/bifast/inquiry")
     @Timeout(value = 30, unit = ChronoUnit.SECONDS)
@@ -73,8 +71,6 @@ public class SimulatorGatewayResource {
     public Uni<Response> bifastStatus(@PathParam("ref") String ref, @Context HttpHeaders headers) {
         return proxy("bi-fast", "/api/v1/status/" + ref, "GET", null, headers);
     }
-
-    // Dukcapil simulator
 
     @POST
     @Path("/dukcapil/verify")
@@ -102,8 +98,6 @@ public class SimulatorGatewayResource {
         return proxy("dukcapil", "/api/v1/nik/" + nik, "GET", null, headers);
     }
 
-    // QRIS simulator
-
     @POST
     @Path("/qris/generate")
     @Timeout(value = 15, unit = ChronoUnit.SECONDS)
@@ -130,8 +124,6 @@ public class SimulatorGatewayResource {
         return proxy("qris", "/api/v1/status/" + qrId, "GET", null, headers);
     }
 
-    // Proxy logic
-
     private Uni<Response> proxy(String simulator, String path, String method, 
                                  String body, HttpHeaders headers) {
         GatewayConfig.ServiceConfig simulatorConfig = config.simulators().get(simulator);
@@ -157,7 +149,6 @@ public class SimulatorGatewayResource {
             fullPath
         );
 
-        // Forward headers
         String correlationId = headers.getHeaderString("X-Correlation-Id");
         if (correlationId != null) {
             request.putHeader("X-Correlation-Id", correlationId);
@@ -165,7 +156,6 @@ public class SimulatorGatewayResource {
         request.putHeader("Content-Type", "application/json");
         request.putHeader("Accept", "application/json");
 
-        // Send request
         Uni<HttpResponse<Buffer>> responseUni;
         if (body != null && !body.isBlank()) {
             responseUni = request.sendBuffer(Buffer.buffer(body));
@@ -185,7 +175,6 @@ public class SimulatorGatewayResource {
             
             builder.type(MediaType.APPLICATION_JSON);
             
-            // Forward correlation ID
             String respCorrelationId = response.getHeader("X-Correlation-Id");
             if (respCorrelationId != null) {
                 builder.header("X-Correlation-Id", respCorrelationId);

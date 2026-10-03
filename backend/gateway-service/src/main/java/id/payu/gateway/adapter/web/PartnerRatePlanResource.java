@@ -53,8 +53,6 @@ public class PartnerRatePlanResource {
     @Inject
     PartnerRateLimitService partnerRateLimitService;
 
-    // Rate Plan CRUD Operations
-
     @GET
     @Operation(summary = "List rate plans", description = "Returns all rate plans, optionally filtered by active status")
     @APIResponse(responseCode = "200", description = "Rate plans retrieved successfully",
@@ -97,7 +95,6 @@ public class PartnerRatePlanResource {
             RateLimit.of(request.requestsPerMinute(), request.requestsPerHour(), request.requestsPerDay())
         );
 
-        // Add endpoint overrides if provided
         if (request.endpointOverrides() != null) {
             request.endpointOverrides().forEach((endpoint, limits) ->
                 plan.addEndpointOverride(endpoint, RateLimit.of(
@@ -164,8 +161,6 @@ public class PartnerRatePlanResource {
                 ? Response.noContent().build()
                 : Response.status(Response.Status.NOT_FOUND).build());
     }
-
-    // Partner Assignment Operations
 
     @POST
     @Path("/assignments")
@@ -253,8 +248,6 @@ public class PartnerRatePlanResource {
                 "limitingWindow", result.limitingWindow()
             )).build());
     }
-
-    // DTOs
 
     public record CreateRatePlanRequest(
         String name,

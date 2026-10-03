@@ -74,7 +74,6 @@ class LendingControllerSecurityTest {
 
     @Test
     void applyLoan_WithAuthenticatedUser_ShouldUsePrincipalUserId() {
-        // Given: Authenticated user with UUID
         UUID authenticatedUserId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         Principal principal = () -> authenticatedUserId.toString();
 
@@ -94,15 +93,12 @@ class LendingControllerSecurityTest {
         when(lendingApplicationService.applyLoan(any()))
                 .thenReturn(CompletableFuture.completedFuture(expectedLoan));
 
-        // When: Apply for loan
         // Note: This test verifies the service is called with correct userId
         // Full HTTP integration test requires MockMvc with servlet context
         CompletableFuture<ResponseEntity<ApiResponse<Loan>>> result = lendingController.applyLoan(command, principal);
 
-        // Then: Should use authenticated user's ID (service call verification)
         assertNotNull(result);
 
-        // Verify the service was called with authenticated user's ID
         verify(lendingApplicationService).applyLoan(argThat(request ->
                 request.userId().equals(authenticatedUserId) &&
                         request.externalId().equals("EXT-001") &&
@@ -112,7 +108,6 @@ class LendingControllerSecurityTest {
 
     @Test
     void applyLoan_WithDifferentUserIdInBody_ShouldIgnoreAndUsePrincipal() {
-        // Given: Authenticated user
         UUID authenticatedUserId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         UUID maliciousUserId = UUID.fromString("660e8400-e29b-41d4-a716-446655440001");
         Principal principal = () -> authenticatedUserId.toString();
@@ -134,10 +129,8 @@ class LendingControllerSecurityTest {
         when(lendingApplicationService.applyLoan(any()))
                 .thenReturn(CompletableFuture.completedFuture(expectedLoan));
 
-        // When: Apply for loan
         CompletableFuture<ResponseEntity<ApiResponse<Loan>>> result = lendingController.applyLoan(command, principal);
 
-        // Then: Should use authenticated user's ID, not any potential malicious ID
         result.join();
 
         verify(lendingApplicationService).applyLoan(argThat(request ->
@@ -148,7 +141,6 @@ class LendingControllerSecurityTest {
 
     @Test
     void applyLoan_WithoutPrincipal_ShouldFail() {
-        // Given: No principal (unauthenticated)
         LoanApplicationCommand command = new LoanApplicationCommand(
                 "EXT-003",
                 LoanType.PERSONAL_LOAN,
@@ -157,7 +149,6 @@ class LendingControllerSecurityTest {
                 "Test"
         );
 
-        // When/Then: Should throw exception when principal is null
         assertThrows(NullPointerException.class, () -> {
             lendingController.applyLoan(command, null);
         });
@@ -167,7 +158,6 @@ class LendingControllerSecurityTest {
 
     @Test
     void applyLoan_WithInvalidPrincipalFormat_ShouldFail() {
-        // Given: Invalid principal format
         Principal invalidPrincipal = () -> "not-a-valid-uuid";
 
         LoanApplicationCommand command = new LoanApplicationCommand(
@@ -178,7 +168,6 @@ class LendingControllerSecurityTest {
                 "Test"
         );
 
-        // When/Then: Should throw IllegalArgumentException for invalid UUID
         assertThrows(IllegalArgumentException.class, () -> {
             lendingController.applyLoan(command, invalidPrincipal);
         });
@@ -188,7 +177,6 @@ class LendingControllerSecurityTest {
 
     @Test
     void verifyApplyLoanEndpoint_HasPreAuthorizeAnnotation() throws NoSuchMethodException {
-        // Verify that the applyLoan method has @PreAuthorize annotation
         var method = LendingController.class.getMethod("applyLoan",
                 LoanApplicationCommand.class,
                 Principal.class);
@@ -203,7 +191,6 @@ class LendingControllerSecurityTest {
 
     @Test
     void verifyApplyLoanEndpoint_AcceptsLoanApplicationCommand() throws NoSuchMethodException {
-        // Verify that the applyLoan method accepts LoanApplicationCommand (without userId)
         var method = LendingController.class.getMethod("applyLoan",
                 LoanApplicationCommand.class,
                 Principal.class);
@@ -214,7 +201,6 @@ class LendingControllerSecurityTest {
         assertNotNull(requestBodyAnnotation,
                 "First parameter should have @RequestBody annotation");
 
-        // Verify the parameter type is LoanApplicationCommand (not LoanApplicationRequest)
         assertEquals(LoanApplicationCommand.class, method.getParameterTypes()[0],
                 "Request body should be LoanApplicationCommand (without userId field)");
     }

@@ -4,27 +4,9 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '@/stores';
 
 /**
- * Proactive / Silent Token Refresh
- * ==================================
- * Schedules an automatic token refresh BEFORE the accessToken cookie expires,
- * ensuring the user is never kicked to the login page mid-session.
- *
- * Strategy:
- * - Refresh 2 minutes before the token expires (i.e., at t = expiresAt - 120s)
- * - Fall back to refreshing at 80% of the token's lifetime if expiresAt is unknown
- * - On browser tab focus (visibilitychange), check immediately if token is
- *   about to expire (< 3 minutes remaining) and refresh eagerly
- * - On refresh success, reschedule the next refresh based on the new expiresIn
- *   returned by the BFF (the store will be updated via useRefreshToken)
- *
- * Security note:
- * - We NEVER read or store the actual token (httpOnly cookie = invisible to JS)
- * - We only use the timestamp stored in Zustand (set during login/refresh) to
- *   know when to trigger the /api/auth/refresh BFF call
- *
- * References:
- * - OWASP ASVS 2.7.3: Silent re-authentication
- * - PCI-DSS 8.3.9: Session idle timeout handling
+ * Proactive token refresh before the httpOnly cookie expires.
+ * Never reads the actual token — only the expiry timestamp in Zustand.
+ * OWASP ASVS 2.7.3, PCI-DSS 8.3.9.
  */
 
 // Refresh this many ms before the token actually expires
@@ -95,7 +77,6 @@ export function useSilentRefresh() {
   const retryAttemptsRef = useRef(0);
   const MAX_RETRY_ATTEMPTS = 5;
 
-  /** Schedule the next proactive refresh */
   const scheduleRefresh = useCallback((expiresAt: number | null) => {
     clearTimer();
 
@@ -118,7 +99,6 @@ export function useSilentRefresh() {
     }, delay);
   }, [clearTimer, doRefresh]);
 
-  // Schedule/reschedule whenever tokenExpiresAt or isAuthenticated changes
   useEffect(() => {
     // BUG-AUTH-002: Immediate refresh on mount if authenticated but tokenExpiresAt is null
     if (isAuthenticated && tokenExpiresAt === null) {
@@ -129,7 +109,6 @@ export function useSilentRefresh() {
     return clearTimer;
   }, [tokenExpiresAt, isAuthenticated, scheduleRefresh, clearTimer, doRefresh]);
 
-  // Eager refresh when the user returns to the tab
   useEffect(() => {
     if (typeof document === 'undefined') return;
 

@@ -52,7 +52,6 @@ public class OpenApiAutoConfiguration {
                                 .name(properties.getLicenseName())
                                 .url(properties.getLicenseUrl())));
 
-        // Configure servers
         List<Server> servers = new ArrayList<>();
         servers.add(new Server().url("http://localhost:" + serverPort).description("Local Development"));
         

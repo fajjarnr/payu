@@ -1,5 +1,3 @@
-// PayU Platform - CRUD Load Test
-// ================================
 // Verified coverage by default:
 // - Account onboarding and session validation
 // - Wallet balance reads

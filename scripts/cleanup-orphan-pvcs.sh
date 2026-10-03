@@ -10,17 +10,14 @@ KUBECTL="${KUBECTL:-oc}"
 if ! command -v "$KUBECTL" >/dev/null 2>&1; then KUBECTL="kubectl"; fi
 if ! command -v "$KUBECTL" >/dev/null 2>&1; then echo "[!] oc/kubectl not found, showing local podman volumes instead"; podman volume ls 2>&1 | head -20; exit 0; fi
 
-# List PVCs with age; delete those without owner PipelineRun still running
 # Safe: delete PVCs where pipelinerun already Succeeded/Failed (ownerReference removed after GC)
 PVC_LIST=$($KUBECTL get pvc -n "$NS" -o json 2>/dev/null | jq -r '.items[] | "\(.metadata.name) \(.metadata.creationTimestamp)"' || true)
 if [ -z "$PVC_LIST" ]; then echo "[*] No PVCs found or cluster not reachable"; exit 0; fi
 echo "$PVC_LIST" | while read -r name ts; do
   echo "  - $name $ts"
 done
-# Actual delete: only if --apply supplied
 if [ "${3:-}" = "--apply" ]; then
   echo "[*] Deleting orphan PVCs..."
-  # Delete PVCs older than AGE_HOURS whose PipelineRun no longer exists or is Completed
   $KUBECTL get pvc -n "$NS" -o name | while read -r pvc; do
     age=$($KUBECTL get "$pvc" -n "$NS" -o jsonpath='{.metadata.creationTimestamp}' 2>/dev/null || echo "")
     # simple age check via find would need more logic; for now list and require manual confirm

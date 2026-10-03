@@ -85,7 +85,6 @@ public class SubscriptionPlanEntity {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getPartnerId() { return partnerId; }

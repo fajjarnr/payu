@@ -51,7 +51,6 @@ class IdempotencyServiceTest {
         service = new IdempotencyService(repository, objectMapper);
     }
 
-    // Idempotencykey tests
 
     @Test
     @DisplayName("Should create IdempotencyKey from valid UUID")
@@ -114,7 +113,6 @@ class IdempotencyServiceTest {
         assertThat(lowerCase.value()).isEqualTo(upperCase.value());
     }
 
-    // Request fingerprint tests
 
     @Test
     @DisplayName("Should compute consistent fingerprint for same request")
@@ -160,7 +158,6 @@ class IdempotencyServiceTest {
         assertThat(fingerprint).isNotEmpty();
     }
 
-    // Get entry tests
 
     @Test
     @DisplayName("Should return empty when no entry exists")
@@ -226,7 +223,6 @@ class IdempotencyServiceTest {
                 .hasMessageContaining("currently being processed");
     }
 
-    // Start request tests
 
     @Test
     @DisplayName("Should successfully start new request")
@@ -259,7 +255,6 @@ class IdempotencyServiceTest {
         assertThat(started).isFalse();
     }
 
-    // Store response tests
 
     @Test
     @DisplayName("Should store successful response")
@@ -296,7 +291,6 @@ class IdempotencyServiceTest {
         verify(repository).update(any(), any(), anyLong());
     }
 
-    // Store error tests
 
     @Test
     @DisplayName("Should store error response")
@@ -316,7 +310,6 @@ class IdempotencyServiceTest {
         );
     }
 
-    // Delete tests
 
     @Test
     @DisplayName("Should delete idempotency entry")
@@ -326,7 +319,6 @@ class IdempotencyServiceTest {
         verify(repository).delete(argThat(key -> key.value().equals(VALID_KEY)));
     }
 
-    // Exists tests
 
     @Test
     @DisplayName("Should check if entry exists")
@@ -348,7 +340,6 @@ class IdempotencyServiceTest {
         assertThat(exists).isFalse();
     }
 
-    // Idempotencyentry tests
 
     @Test
     @DisplayName("Should create in-progress entry")
@@ -398,7 +389,6 @@ class IdempotencyServiceTest {
         assertThat(entry.matchesFingerprint("different")).isFalse();
     }
 
-    // Test data classes
 
     private record TestRequest(String field, Double amount) {}
 

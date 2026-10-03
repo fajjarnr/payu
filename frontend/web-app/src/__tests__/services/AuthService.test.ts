@@ -13,8 +13,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 /**
- * SECURITY NOTICE: Test Updates
- * ================================
+ * Security notice: test updates
  * These tests have been updated to reflect the security fix:
  * - Tokens are NO LONGER stored in localStorage
  * - Tokens are managed via httpOnly cookies by the backend
@@ -35,14 +34,13 @@ describe('AuthService', () => {
 
   describe('logout', () => {
     it('should clear session state without touching localStorage', async () => {
-      // Set authenticated state first
       AuthService.getInstance()['authenticated'] = true;
 
       mockFetch.mockResolvedValue({ ok: true });
       await AuthService.getInstance().logout();
 
       expect(AuthService.getInstance().isAuthenticated()).toBe(false);
-      // SECURITY: No localStorage operations - tokens are in httpOnly cookies
+      // Security: No localStorage operations - tokens are in httpOnly cookies
       // Backend clears the cookies
     });
   });
@@ -95,7 +93,7 @@ describe('AuthService', () => {
 
       await AuthService.getInstance().refreshToken();
 
-      // SECURITY: Backend manages refresh token via httpOnly cookie
+      // Security: Backend manages refresh token via httpOnly cookie
       expect(mockFetch).toHaveBeenCalledWith('/api/auth/refresh', {
         method: 'POST',
         credentials: 'include',

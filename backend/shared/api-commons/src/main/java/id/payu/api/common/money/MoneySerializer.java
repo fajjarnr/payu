@@ -37,12 +37,6 @@ public class MoneySerializer extends JsonSerializer<Money> {
         gen.writeEndObject();
     }
 
-    /**
-     * Formats the money for display purposes.
-     *
-     * @param money the money to format
-     * @return formatted string
-     */
     private String formatMoney(Money money) {
         return String.format("%s %s", money.getCurrencyCode(), money.getAmount().toPlainString());
     }

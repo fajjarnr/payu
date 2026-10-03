@@ -29,8 +29,6 @@ public class PartnerRatePlan {
         this.active = true;
     }
 
-    // Domain behavior
-
     public void activate() {
         this.active = true;
     }
@@ -67,8 +65,6 @@ public class PartnerRatePlan {
     public boolean isEffectiveNow() {
         return isEffectiveAt(Instant.now());
     }
-
-    // Getters
 
     public String getId() {
         return id;

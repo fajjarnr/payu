@@ -42,7 +42,6 @@ export default function TransferConfirmScreen() {
 
   const [selectedTransferType, setSelectedTransferType] = useState(transferTypes[0]);
 
-  // Parse transfer data from params
   const transferData = params.data ? JSON.parse(params.data as string) : null;
 
   if (!transferData) {
@@ -60,7 +59,6 @@ export default function TransferConfirmScreen() {
       return;
     }
 
-    // Check if biometric is available
     const biometricAvailable = await authenticate('Confirm Transfer');
 
     if (biometricAvailable) {
@@ -90,10 +88,8 @@ export default function TransferConfirmScreen() {
       setTransactionResult(result);
       setStep('success');
 
-      // Track transaction
       trackTransaction(selectedTransferType.id, transferData.amount, 'success');
 
-      // Refresh wallet balance
       await refreshPrimary();
     } catch (error: any) {
       setTransactionResult(error);
@@ -140,7 +136,6 @@ Status: ${step === 'success' ? 'Success' : 'Failed'}
     <View>
       <Text style={[styles.title, { color: colors.text }]}>Review Transfer</Text>
 
-      {/* Transfer Type Selection */}
       <Card padding="lg" style={styles.card}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Transfer Method</Text>
         {transferTypes.map((type) => (
@@ -170,7 +165,6 @@ Status: ${step === 'success' ? 'Success' : 'Failed'}
         ))}
       </Card>
 
-      {/* Transfer Details */}
       <Card padding="lg" style={styles.card}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Transfer Details</Text>
 

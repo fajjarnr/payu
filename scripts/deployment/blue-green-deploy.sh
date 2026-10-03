@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # Blue-Green Deployment Script
-# =============================
 # Deploys a new version using blue-green strategy
 #
 # Usage: ./blue-green-deploy.sh <service-name> <version>
@@ -16,7 +15,6 @@ VERSION="${2:-}"
 BLUE_WEIGHT="${BLUE_WEIGHT:-0}"
 GREEN_WEIGHT="${GREEN_WEIGHT:-100}"
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -68,7 +66,6 @@ validate_inputs() {
 detect_current_version() {
     print_info "Detecting current deployment..."
 
-    # Check which version is currently active
     CURRENT_SELECTOR=$(oc get route "${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.spec.to.name}' 2>/dev/null || echo "")
 
     if [[ "$CURRENT_SELECTOR" == *"-blue"* ]]; then
@@ -89,13 +86,11 @@ detect_current_version() {
 pre_deployment_checks() {
     print_info "Running pre-deployment checks..."
 
-    # Check if service exists
     if ! oc get deployment "${SERVICE}-${CURRENT_VERSION}" -n "${NAMESPACE}" &> /dev/null; then
         print_error "Service ${SERVICE}-${CURRENT_VERSION} not found"
         exit 1
     fi
 
-    # Check database migration compatibility
     if [ -f "${SCRIPT_DIR}/verify-db-compatibility.sh" ]; then
         "${SCRIPT_DIR}/verify-db-compatibility.sh" || {
             print_error "Database compatibility check failed"
@@ -103,7 +98,6 @@ pre_deployment_checks() {
         }
     fi
 
-    # Verify current version health
     READY_REPLICAS=$(oc get deployment "${SERVICE}-${CURRENT_VERSION}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
     if [ "$READY_REPLICAS" -eq 0 ]; then
         print_error "Current version has 0 ready replicas"
@@ -116,13 +110,10 @@ pre_deployment_checks() {
 deploy_target_version() {
     print_info "Deploying ${TARGET_VERSION} version ${VERSION}..."
 
-    # Update image tag for target deployment
     oc set image "deployment/${SERVICE}-${TARGET_VERSION}" "${SERVICE}-${TARGET_VERSION}=image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/${SERVICE}:${VERSION}" -n "${NAMESPACE}"
 
-    # Trigger rollout
     oc rollout latest "deployment/${SERVICE}-${TARGET_VERSION}" -n "${NAMESPACE}" 2>/dev/null || true
 
-    # Wait for rollout
     print_info "Waiting for rollout to complete..."
     if ! oc rollout status "deployment/${SERVICE}-${TARGET_VERSION}" -n "${NAMESPACE}" --timeout=300s; then
         print_error "Rollout failed or timed out"
@@ -137,14 +128,12 @@ deploy_target_version() {
 verify_target_health() {
     print_info "Verifying target version health..."
 
-    # Run verification script if available
     if [ -f "${SCRIPT_DIR}/verify-deployment.sh" ]; then
         "${SCRIPT_DIR}/verify-deployment.sh" "${TARGET_VERSION}" || {
             print_error "Health verification failed"
             return 1
         }
     else
-        # Basic health check
         READY_REPLICAS=$(oc get deployment "${SERVICE}-${TARGET_VERSION}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
         DESIRED_REPLICAS=$(oc get deployment "${SERVICE}-${TARGET_VERSION}" -n "${NAMESPACE}" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
 
@@ -153,7 +142,6 @@ verify_target_health() {
             return 1
         fi
 
-        # Check pod health
         UNHEALTHY_PODS=$(oc get pods -n "${NAMESPACE}" -l "app=${SERVICE}-${TARGET_VERSION}" --field-selector=status.phase!=Running 2>/dev/null | wc -l)
         if [ "$UNHEALTHY_PODS" -gt 0 ]; then
             print_error "Found unhealthy pods"
@@ -167,7 +155,6 @@ verify_target_health() {
 switch_traffic() {
     print_info "Switching traffic to ${TARGET_VERSION}..."
 
-    # Update route to point to target
     oc patch route "${SERVICE}" -n "${NAMESPACE}" -p \
         "{\"spec\":{\"to\":{\"name\":\"${SERVICE}-${TARGET_VERSION}\"}}}"
 
@@ -182,7 +169,6 @@ monitor_deployment() {
     local errors=0
 
     while [ $(date +%s) -lt $end_time ]; do
-        # Check error rate
         if command -v curl &> /dev/null; then
             GATEWAY_URL=$(oc get route "${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
             if [ -n "$GATEWAY_URL" ]; then
@@ -194,7 +180,6 @@ monitor_deployment() {
             fi
         fi
 
-        # Check pod status
         UNHEALTHY_PODS=$(oc get pods -n "${NAMESPACE}" -l "app=${SERVICE}-${TARGET_VERSION}" --field-selector=status.phase!=Running 2>/dev/null | grep -v NAME | wc -l)
         if [ "$UNHEALTHY_PODS" -gt 0 ]; then
             errors=$((errors + 1))
@@ -217,11 +202,9 @@ monitor_deployment() {
 rollback() {
     print_warning "Rolling back to ${CURRENT_VERSION}..."
 
-    # Switch traffic back
     oc patch route "${SERVICE}" -n "${NAMESPACE}" -p \
         "{\"spec\":{\"to\":{\"name\":\"${SERVICE}-${CURRENT_VERSION}\"}}}"
 
-    # Scale down target version
     oc scale "deployment/${SERVICE}-${TARGET_VERSION}" -n "${NAMESPACE}" --replicas=0
 
     print_success "Rollback complete"
@@ -234,22 +217,18 @@ main() {
     detect_current_version
     pre_deployment_checks
 
-    # Deploy
     if ! deploy_target_version; then
         print_error "Deployment failed"
         exit 1
     fi
 
-    # Verify
     if ! verify_target_health; then
         print_error "Health verification failed"
         exit 1
     fi
 
-    # Switch traffic
     switch_traffic
 
-    # Monitor
     if ! monitor_deployment 300; then
         print_error "Deployment monitoring detected issues"
         read -p "Rollback? (y/N) " -n 1 -r

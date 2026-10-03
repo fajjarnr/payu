@@ -1,4 +1,3 @@
-# Environment-specific configuration for Local Development
 spring:
   cloud:
     vault:

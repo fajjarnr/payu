@@ -106,7 +106,6 @@ public class Wallet {
         return new WalletBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getAccountId() { return accountId; }

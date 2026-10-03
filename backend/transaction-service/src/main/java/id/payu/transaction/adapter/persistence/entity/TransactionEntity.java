@@ -210,8 +210,6 @@ public class TransactionEntity implements Persistable<UUID> {
     /**
      * Gets the monetary amount.
      * For backward compatibility, reconstructs Money from deprecated fields if amount is null.
-     *
-     * @return the monetary amount
      */
     public Money getAmount() {
         if (amount == null && amountValue != null && currencyCode != null) {
@@ -223,8 +221,6 @@ public class TransactionEntity implements Persistable<UUID> {
     /**
      * Sets the monetary amount.
      * Also updates deprecated fields for JPA compatibility.
-     *
-     * @param amount the monetary amount
      */
     public void setAmount(Money amount) {
         this.amount = amount;
@@ -380,7 +376,6 @@ public class TransactionEntity implements Persistable<UUID> {
 
     /**
      * Gets the currency code from the amount or currencyCode field.
-     * @return the currency code
      */
     public String getCurrency() {
         if (amount != null) {

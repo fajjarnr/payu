@@ -187,7 +187,6 @@ class TestAnalyticsAPIEndpoints:
                 mock_request, "user_123", mock_db_session, _auth_claims("user_123")
             )
 
-            # Handler returns ApiResponse envelope dict
             assert isinstance(result, dict)
             assert result["success"] is True
             assert result["data"]["user_id"] == "user_123"
@@ -629,7 +628,6 @@ class TestAnalyticsAPIValidation:
             )
             mock_service_class.return_value = mock_service
 
-            # Test different group_by values
             for group_by in ["category", "merchant", "day"]:
                 request_data = GetSpendingTrendsRequest(
                     user_id="user_123", period_days=30, group_by=group_by

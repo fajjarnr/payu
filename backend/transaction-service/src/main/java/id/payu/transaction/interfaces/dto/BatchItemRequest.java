@@ -32,7 +32,6 @@ public class BatchItemRequest {
     public BatchItemRequest() {
     }
 
-    // Getters and Setters
     public BigDecimal getAmount() {
         return amount;
     }

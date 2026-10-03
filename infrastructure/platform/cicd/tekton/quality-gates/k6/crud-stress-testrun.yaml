@@ -2,7 +2,7 @@
 # Distributed across 4 runner pods (parallelism=4), each running a shard.
 # Total peak VUs: 1000 across 4 pods = 250 VUs/pod — matches existing stress stages.
 #
-# AUTOSCALING NOTE: This TestRun is designed to trigger the ClusterAutoscaler.
+# Autoscaling note: This TestRun is designed to trigger the ClusterAutoscaler.
 # At parallelism=4 with 1.5 CPU request per pod, 6 CPU are needed beyond current capacity,
 # which causes MachineAutoscaler to provision 1-2 new r6a.4xlarge nodes (16 CPU each).
 #

@@ -1,10 +1,8 @@
 #!/bin/bash
-# ============================================
 # PayU Promotion Service E2E Test
 # Read-only promotion queries through gateway -> promotion-service
 #
 # Mode: GATEWAY_MODE=internal (default) or apicast
-# ============================================
 
 set -e
 

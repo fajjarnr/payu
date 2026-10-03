@@ -1,4 +1,3 @@
-// Wallet hooks
 export {
   useWallets,
   usePrimaryWallet,
@@ -10,7 +9,6 @@ export {
   walletKeys,
 } from './useWalletQuery';
 
-// Transaction hooks
 export {
   useTransactions,
   useInfiniteTransactions,
@@ -24,7 +22,6 @@ export {
   transactionKeys,
 } from './useTransactionQuery';
 
-// Auth hooks
 export {
   useLogin,
   useRegister,

@@ -3,7 +3,6 @@ kind: Kustomization
 
 # Vault Dev — lab bootstrap (vault.yaml + ESO bridge + init job)
 # Production variant lives in overlays/prod/ directory.
-# ============================================================
 
 resources:
   - vault.yaml

@@ -44,9 +44,6 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    /**
-     * Extract authenticated user ID from JWT token.
-     */
     private String extractUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {

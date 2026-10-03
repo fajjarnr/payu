@@ -42,8 +42,6 @@ public class PromoCode {
     /**
      * Applies this promo code to a transaction context.
      *
-     * @param context the transaction context
-     * @return PromoResult containing discount details
      * @throws PromoExpiredException if promo has expired
      * @throws PromoAlreadyUsedException if user already used this promo (for ONCE_PER_USER)
      * @throws MinimumAmountNotMetException if transaction amount is below minimum
@@ -52,7 +50,6 @@ public class PromoCode {
     public PromoResult apply(TransactionContext context) {
         PromoResult result = preview(context);
 
-        // Mark as used
         markUsedBy(context.getUserId());
 
         return result;
@@ -74,32 +71,26 @@ public class PromoCode {
      * Validates if this promo can be applied to the given context.
      */
     private void validateCanApply(TransactionContext context) {
-        // Check status
         if (status != PromoStatus.ACTIVE) {
             throw new InvalidPromoException(code, "Promo is inactive");
         }
 
-        // Check expiry
         if (expiryDate != null && Instant.now().isAfter(expiryDate)) {
             throw new PromoExpiredException(code);
         }
 
-        // Check usage limit
         if (maxUsageCount != null && currentUsageCount >= maxUsageCount) {
             throw new InvalidPromoException(code, "Promo usage limit reached");
         }
 
-        // Check user eligibility
         if (usageType == UsageType.ONCE_PER_USER && usedByUserIds.contains(context.getUserId())) {
             throw new PromoAlreadyUsedException(code, context.getUserId());
         }
 
-        // Check minimum amount
         if (minimumAmount != null && context.getAmount().compareTo(minimumAmount) < 0) {
             throw new MinimumAmountNotMetException(code, minimumAmount, context.getAmount());
         }
 
-        // Check excluded partners
         if (excludedPartnerIds != null && excludedPartnerIds.contains(context.getPartnerId())) {
             throw new InvalidPromoException(code, "User not eligible for this promo");
         }
@@ -118,12 +109,10 @@ public class PromoCode {
             discount = discountValue;
         }
 
-        // Apply max discount cap if set
         if (maxDiscountAmount != null && discount.compareTo(maxDiscountAmount) > 0) {
             discount = maxDiscountAmount;
         }
 
-        // Don't allow discount greater than transaction amount
         if (discount.compareTo(amount) > 0) {
             discount = amount;
         }
@@ -162,7 +151,6 @@ public class PromoCode {
         return true;
     }
 
-    // Getters and setters for JPA compatibility
     public String getCode() {
         return code;
     }

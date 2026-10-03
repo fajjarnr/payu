@@ -31,7 +31,6 @@ export const useUpdateUser = () => {
       // Preserve active accountId (not part of the profile response).
       const currentAccountId = useAuthStore.getState().accountId || user.id;
       setAuth(user, currentAccountId);
-      // Invalidate user queries to refetch
       queryClient.invalidateQueries({ queryKey: ['user'] });
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     },

@@ -33,7 +33,6 @@ public class ApiKeyValidationFilter implements ContainerRequestFilter {
 
         String path = requestContext.getUriInfo().getPath();
 
-        // Check if path should bypass API key validation
         for (String bypassPath : config.apiKeys().bypassPaths()) {
             if (path.startsWith(bypassPath) || path.equals(bypassPath)) {
                 Log.debugf("Bypassing API key validation for path: %s", path);
@@ -41,7 +40,6 @@ public class ApiKeyValidationFilter implements ContainerRequestFilter {
             }
         }
 
-        // Get API key from header
         String apiKey = requestContext.getHeaderString(config.apiKeys().headerName());
 
         if (apiKey == null || apiKey.isBlank()) {
@@ -57,7 +55,6 @@ public class ApiKeyValidationFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Validate API key
         apiKeyService.validateApiKey(apiKey)
             .subscribe()
             .with(userId -> {
@@ -72,12 +69,10 @@ public class ApiKeyValidationFilter implements ContainerRequestFilter {
                             .build()
                     );
                 } else {
-                    // Store user ID in request context for downstream use
                     requestContext.setProperty("user-id", userId);
                     Log.debugf("API key validated for user: %s", userId);
                 }
             }, failure -> {
-                // If validation fails, fail open (allow request) or fail closed based on config
                 Log.errorf(failure, "API key validation failed for path: %s", path);
                 requestContext.abortWith(
                     Response.status(Response.Status.INTERNAL_SERVER_ERROR)

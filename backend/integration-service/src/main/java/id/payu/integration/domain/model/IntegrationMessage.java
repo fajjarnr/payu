@@ -56,71 +56,44 @@ public class IntegrationMessage {
 
     private Long version;
 
-    /**
-     * Mark message as being validated.
-     */
     public void markValidating() {
         this.status = MessageStatus.VALIDATING;
     }
 
-    /**
-     * Mark message as being transformed.
-     */
     public void markTransforming() {
         this.status = MessageStatus.TRANSFORMING;
     }
 
-    /**
-     * Mark message as transformed with the transformed payload.
-     */
     public void markTransformed(String transformedPayload) {
         this.transformedPayload = transformedPayload;
         this.status = MessageStatus.TRANSFORMED;
     }
 
-    /**
-     * Mark message as being sent.
-     */
     public void markSending() {
         this.status = MessageStatus.SENDING;
     }
 
-    /**
-     * Mark message as successfully sent.
-     */
     public void markSent() {
         this.status = MessageStatus.SENT;
         this.processedAt = LocalDateTime.now();
     }
 
-    /**
-     * Mark message as failed with error message.
-     */
     public void markFailed(String errorMessage) {
         this.status = MessageStatus.FAILED;
         this.errorMessage = errorMessage;
         this.processedAt = LocalDateTime.now();
     }
 
-    /**
-     * Mark message for retry.
-     */
     public void markRetrying() {
         this.status = MessageStatus.RETRYING;
         this.retryCount++;
         this.lastRetryAt = LocalDateTime.now();
     }
 
-    /**
-     * Check if message can be retried.
-     */
     public boolean canRetry() {
         return retryCount < maxRetries;
     }
 
-    /**
-     * Cancel message processing.
-     */
     public void cancel() {
         this.status = MessageStatus.CANCELLED;
         this.processedAt = LocalDateTime.now();

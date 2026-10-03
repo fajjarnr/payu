@@ -76,7 +76,6 @@ class RepaymentScheduleIntegrationTest {
         loanId = createTestLoan(loanTenureMonths);
     }
 
-    // ─── create repayment schedule ──────────────────────────────────
 
     @Test
     @DisplayName("Should create repayment schedule with correct number of installments matching tenure")
@@ -110,7 +109,6 @@ class RepaymentScheduleIntegrationTest {
                 .andExpect(jsonPath("$.data").isArray());
     }
 
-    // ─── process repayment ──────────────────────────────────────────
 
     @Test
     @DisplayName("Should mark installment as FULLY_PAID when repayment covers installment amount")
@@ -174,7 +172,6 @@ class RepaymentScheduleIntegrationTest {
                 .andExpect(status().is4xxClientError());
     }
 
-    // ─── helpers ────────────────────────────────────────────────────
 
     private JsonNode createSchedule() throws Exception {
         String body = mockMvc.perform(post(BASE_PATH + "/loans/" + loanId + "/repayment-schedule")

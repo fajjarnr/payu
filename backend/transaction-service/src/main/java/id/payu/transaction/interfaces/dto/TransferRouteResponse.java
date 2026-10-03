@@ -152,9 +152,7 @@ public class TransferRouteResponse {
     /**
      * Creates a response DTO from a domain entity.
      *
-     * @param route the domain entity
      * @param eligible whether this route is eligible for the requested amount
-     * @return the response DTO
      */
     public static TransferRouteResponse fromEntity(TransferRoute route, boolean eligible) {
         return TransferRouteResponse.builder()

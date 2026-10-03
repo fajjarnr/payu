@@ -39,11 +39,9 @@ class TestFactoryUsage:
 
     def test_user_factory_with_overrides(self):
         """Test that user_factory accepts kwargs for overrides"""
-        # Create user with specific KYC status
         verified_user = user_factory(kyc_status="VERIFIED")
         assert verified_user["kyc_status"] == "VERIFIED"
 
-        # Create user with specific email
         custom_user = user_factory(email="test@example.com")
         assert custom_user["email"] == "test@example.com"
 
@@ -66,7 +64,6 @@ class TestFactoryUsage:
         poor_quality_ktp = ktp_ocr_factory(confidence=0.65)
         assert poor_quality_ktp["confidence"] == 0.65
 
-        # Create KTP with specific gender
         female_ktp = ktp_ocr_factory(gender="PEREMPUAN")
         assert female_ktp["gender"] == "PEREMPUAN"
 
@@ -147,18 +144,15 @@ class TestFactoryUsage:
         """Test using factory data with mocked services"""
         from app.services.kyc_service import KycService
 
-        # Create mock session
         mock_session = AsyncMock()
         mock_session.commit = AsyncMock()
         mock_session.refresh = AsyncMock()
 
-        # Use factory to generate test data
         test_user = user_factory(user_id="test_user_123")
         test_kyc = kyc_verification_factory(
             user_id=test_user["user_id"], status="PENDING"
         )
 
-        # Verify factory data can be used with service
         service = KycService(mock_session)
         assert test_kyc["user_id"] == test_user["user_id"]
         assert test_kyc["status"] == "PENDING"
@@ -177,24 +171,19 @@ class TestFactoryUsage:
         # With factory - one line, generates unique data
         user2 = user_factory()
 
-        # Both produce valid test data, but factory is:
-        # - More concise (1 line vs 5 lines)
-        # - Generates unique data each time
-        # - Easier to maintain
+        # Factory version: same valid data, fewer lines, unique per call
         assert "user_id" in user1
         assert "user_id" in user2
         assert len(user2["user_id"]) > 0
 
     def test_batch_data_generation_with_factories(self):
         """Test generating multiple test data instances easily"""
-        # Generate 10 unique users with one line
         users = [user_factory() for _ in range(10)]
 
         # All users should be unique
         user_ids = [u["user_id"] for u in users]
         assert len(set(user_ids)) == 10  # All unique
 
-        # Generate 5 KTP OCR results
         ktp_results = [ktp_ocr_factory() for _ in range(5)]
 
         # All should have valid NIKs

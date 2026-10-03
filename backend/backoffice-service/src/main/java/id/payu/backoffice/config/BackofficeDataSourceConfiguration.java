@@ -17,14 +17,6 @@ import javax.sql.DataSource;
 
 /**
  * Configuration for Primary and Read Replica DataSources with optimized HikariCP.
- *
- * <p>Features:</p>
- * <ul>
- *   <li>Primary datasource for write operations</li>
- *   <li>Read replica datasource for reporting/analytics queries</li>
- *   <li>Tuned HikariCP connection pool settings</li>
- *   <li>Connection validation and leak detection</li>
- * </ul>
  */
 @Configuration
 public class BackofficeDataSourceConfiguration {

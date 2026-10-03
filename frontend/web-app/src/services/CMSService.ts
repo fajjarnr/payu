@@ -35,10 +35,7 @@ export interface ContentResponse {
 export type ContentType = 'BANNER' | 'PROMO' | 'ALERT' | 'POPUP';
 export type ActionType = 'LINK' | 'DEEP_LINK' | 'DISMISS';
 
-/**
- * CMSService handles content retrieval from the public CMS API.
- * No authentication required for public content access.
- */
+/** CMSService handles content retrieval from the public CMS API. No authentication required. */
 export class CMSService {
   private static instance: CMSService;
   private baseURL = '/public/contents';
@@ -52,11 +49,7 @@ export class CMSService {
     return CMSService.instance;
   }
 
-  /**
-   * Fetch active content by type
-   * @param type - Content type (BANNER, PROMO, ALERT, POPUP)
-   * @param options - Optional targeting parameters
-   */
+  /** Fetch active content by type */
   async getActiveContentByType(
     type: ContentType,
     options?: {
@@ -78,9 +71,6 @@ export class CMSService {
     return response.data.sort((a, b) => b.priority - a.priority);
   }
 
-  /**
-   * Fetch banner content
-   */
   async getBanners(options?: {
     segment?: string;
     location?: string;
@@ -89,9 +79,6 @@ export class CMSService {
     return this.getActiveContentByType('BANNER', options);
   }
 
-  /**
-   * Fetch promotional content
-   */
   async getPromos(options?: {
     segment?: string;
     location?: string;
@@ -100,9 +87,6 @@ export class CMSService {
     return this.getActiveContentByType('PROMO', options);
   }
 
-  /**
-   * Fetch alert content (emergency alerts)
-   */
   async getAlerts(options?: {
     segment?: string;
     location?: string;
@@ -111,9 +95,6 @@ export class CMSService {
     return this.getActiveContentByType('ALERT', options);
   }
 
-  /**
-   * Fetch popup content
-   */
   async getPopups(options?: {
     segment?: string;
     location?: string;

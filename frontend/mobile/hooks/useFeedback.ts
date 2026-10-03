@@ -75,7 +75,6 @@ export const useFeedback = () => {
     trackEvent('experience_rated', { rating });
 
     if (rating >= 4) {
-      // High rating - ask for app store review
       Alert.alert(
         'Glad you like it!',
         'Would you like to rate us on the app store?',
@@ -85,13 +84,11 @@ export const useFeedback = () => {
         ]
       );
     } else {
-      // Low rating - show feedback form
       showFeedback();
     }
   };
 
   const openAppStore = () => {
-    // Open app store for rating
     trackEvent('app_store_rating_requested');
   };
 
@@ -122,7 +119,6 @@ export const useFeedback = () => {
   };
 };
 
-// Feedback widget component hook
 export const useFeedbackWidget = (triggerAfter?: number) => {
   const [showWidget, setShowWidget] = useState(false);
   const { trackEvent } = useAnalytics();
@@ -148,13 +144,11 @@ export const useFeedbackWidget = (triggerAfter?: number) => {
   };
 };
 
-// In-app feedback survey hook (not fully implemented)
 export const useFeedbackSurvey = () => {
   const [currentSurvey, setCurrentSurvey] = useState<{ id: string } | null>(null);
   const [surveyResponses, setSurveyResponses] = useState<Record<string, unknown>>({});
 
   const startSurvey = (surveyId: string) => {
-    // Load survey configuration
     setCurrentSurvey({ id: surveyId });
   };
 
@@ -169,7 +163,6 @@ export const useFeedbackSurvey = () => {
     if (!currentSurvey) return false;
 
     try {
-      // TODO: Implement survey submission when backend is ready
       // await feedbackService.submitSurvey({
       //   surveyId: currentSurvey.id,
       //   responses: surveyResponses,

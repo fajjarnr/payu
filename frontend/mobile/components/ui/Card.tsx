@@ -19,7 +19,6 @@ export const CardComponent: React.FC<CardProps> = ({
 }) => {
   const { colors } = useTheme();
 
-  // Memoize padding calculation
   const paddingValue = useMemo(() => {
     switch (padding) {
       case 'none':
@@ -35,7 +34,6 @@ export const CardComponent: React.FC<CardProps> = ({
     }
   }, [padding]);
 
-  // Memoize card style to avoid recalculations
   const cardStyle = useMemo<ViewStyle>(() => ({
     backgroundColor: colors.card,
     borderRadius: 20,
@@ -57,7 +55,6 @@ export const CardComponent: React.FC<CardProps> = ({
   return <View style={cardStyle}>{children}</View>;
 };
 
-// Memoize Card component for performance optimization in lists
 export const Card = memo(CardComponent, (prevProps, nextProps) => {
   return (
     prevProps.variant === nextProps.variant &&

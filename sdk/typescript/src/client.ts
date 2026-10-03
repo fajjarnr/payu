@@ -3,9 +3,6 @@ import { AuthInterceptor } from './interceptors/auth';
 import { RetryInterceptor } from './interceptors/retry';
 import { PayUError } from './errors';
 
-/**
- * Configuration options for PayUClient.
- */
 export interface PayUClientConfig {
   /** API Key from PayU Dashboard */
   apiKey: string;
@@ -17,17 +14,12 @@ export interface PayUClientConfig {
   baseUrl?: string;
   /** Request timeout in milliseconds */
   timeout?: number;
-  /** Enable automatic retries */
   enableRetries?: boolean;
-  /** Maximum retry attempts */
   maxRetries?: number;
 }
 
 /**
- * Main client for PayU Payment Gateway API.
- *
- * Provides authenticated access to all PayU endpoints with
- * automatic retry logic and error handling.
+ * Provides authenticated access to all PayU endpoints with automatic retry logic and error handling.
  */
 export class PayUClient {
   private readonly httpClient: AxiosInstance;
@@ -53,9 +45,6 @@ export class PayUClient {
     this.setupInterceptors();
   }
 
-  /**
-   * Get the base URL for the configured environment.
-   */
   private getBaseUrl(): string {
     if (this.config.baseUrl) {
       return this.config.baseUrl;
@@ -66,9 +55,6 @@ export class PayUClient {
       : 'https://sandbox-api.payu.fajjjar.my.id';
   }
 
-  /**
-   * Create and configure the Axios instance.
-   */
   private createHttpClient(): AxiosInstance {
     return axios.create({
       baseURL: this.getBaseUrl(),
@@ -81,11 +67,7 @@ export class PayUClient {
     });
   }
 
-  /**
-   * Setup request/response interceptors.
-   */
   private setupInterceptors(): void {
-    // Auth interceptor
     const authInterceptor = new AuthInterceptor({
       apiKey: this.config.apiKey,
       apiSecret: this.config.apiSecret
@@ -96,7 +78,6 @@ export class PayUClient {
       (error) => Promise.reject(error)
     );
 
-    // Retry interceptor
     if (this.config.enableRetries) {
       const retryInterceptor = new RetryInterceptor({
         maxRetries: this.config.maxRetries || 3,
@@ -109,7 +90,6 @@ export class PayUClient {
       );
     }
 
-    // Error handling interceptor
     this.httpClient.interceptors.response.use(
       (response) => response,
       this.handleError.bind(this)
@@ -134,7 +114,6 @@ export class PayUClient {
         error
       );
     } else {
-      // Something else happened
       throw new PayUError(
         'UNKNOWN_ERROR',
         error.message || 'An unknown error occurred',
@@ -143,9 +122,6 @@ export class PayUClient {
     }
   }
 
-  /**
-   * Validate client configuration.
-   */
   private validateConfig(config: PayUClientConfig): void {
     if (!config.apiKey) {
       throw new Error('API Key is required');
@@ -172,9 +148,6 @@ export class PayUClient {
 
   // Lazy-loaded API resources
 
-  /**
-   * Payments API
-   */
   get payments(): any {
     if (!this._payments) {
       this._payments = new (require('./generated/api').PaymentsApi)(undefined, this.getBaseUrl(), this.httpClient);
@@ -182,9 +155,6 @@ export class PayUClient {
     return this._payments;
   }
 
-  /**
-   * Transfers API
-   */
   get transfers(): any {
     if (!this._transfers) {
       this._transfers = new (require('./generated/api').TransfersApi)(undefined, this.getBaseUrl(), this.httpClient);
@@ -192,9 +162,6 @@ export class PayUClient {
     return this._transfers;
   }
 
-  /**
-   * Wallets API
-   */
   get wallets(): any {
     if (!this._wallets) {
       this._wallets = new (require('./generated/api').WalletsApi)(undefined, this.getBaseUrl(), this.httpClient);
@@ -202,9 +169,6 @@ export class PayUClient {
     return this._wallets;
   }
 
-  /**
-   * Transactions API
-   */
   get transactions(): any {
     if (!this._transactions) {
       this._transactions = new (require('./generated/api').TransactionsApi)(undefined, this.getBaseUrl(), this.httpClient);

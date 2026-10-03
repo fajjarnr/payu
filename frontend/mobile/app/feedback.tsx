@@ -163,7 +163,6 @@ export default function FeedbackScreen() {
     >
       <Text style={[styles.title, { color: colors.text }]}>Send Feedback</Text>
 
-      {/* Category Selection */}
       <View style={styles.section}>
         <Text style={[styles.label, { color: colors.text }]}>Category</Text>
         <View style={styles.categoryListContainer}>
@@ -179,7 +178,6 @@ export default function FeedbackScreen() {
         </View>
       </View>
 
-      {/* Rating */}
       <View style={styles.section}>
         <Text style={[styles.label, { color: colors.text }]}>
           How would you rate this?
@@ -189,7 +187,6 @@ export default function FeedbackScreen() {
         </View>
       </View>
 
-      {/* Message */}
       <View style={styles.section}>
         <Input
           label="Your Feedback"
@@ -201,7 +198,6 @@ export default function FeedbackScreen() {
         />
       </View>
 
-      {/* Screenshots */}
       <View style={styles.section}>
         <Text style={[styles.label, { color: colors.text }]}>
           Screenshots (Optional)
@@ -229,7 +225,6 @@ export default function FeedbackScreen() {
         </View>
       </View>
 
-      {/* Submit Button */}
       <Button
         title="Submit Feedback"
         onPress={handleSubmit}

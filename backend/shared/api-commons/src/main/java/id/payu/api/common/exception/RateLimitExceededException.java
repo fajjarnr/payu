@@ -1,7 +1,6 @@
 package id.payu.api.common.exception;
 
 /**
- * Exception thrown when rate limit is exceeded.
  * Results in HTTP 429 Too Many Requests response.
  */
 public class RateLimitExceededException extends BusinessException {

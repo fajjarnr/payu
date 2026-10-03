@@ -7,9 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Request DTO for SWIFT message processing.
- */
 @Data
 @Builder
 @NoArgsConstructor

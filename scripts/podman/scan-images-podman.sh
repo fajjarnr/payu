@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# PayU Platform - Scan Images with Trivy using Podman
-# =================================================
 # This script scans PayU container images for vulnerabilities using Trivy
 # Requirements: podman, trivy, jq
-#
 # Usage: ./scan-images-podman.sh [OPTIONS]
 #   -a, --all             Scan all local images
 #   -t, --tag TAG         Scan specific tag (e.g., payu:latest)
@@ -17,20 +14,17 @@
 
 set -euo pipefail
 
-# Configuration
 DEFAULT_SEVERITY="CRITICAL,HIGH,MEDIUM"
 DEFAULT_FORMAT="table"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../" && pwd)"
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -78,7 +72,6 @@ Examples:
 EOF
 }
 
-# Parse arguments
 SCAN_ALL=false
 TAG=""
 SEVERITY="$DEFAULT_SEVERITY"
@@ -128,7 +121,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check dependencies
 check_dependencies() {
     local missing_deps=()
 
@@ -145,15 +137,12 @@ check_dependencies() {
     fi
 }
 
-# Get list of images to scan
 get_images_to_scan() {
     if [[ "$SCAN_ALL" == true ]]; then
-        # Get all PayU images
         podman images --format "table {{.Repository}}:{{.Tag}}" | \
             grep -E "(payu|localhost)" | \
             grep -v "<none>" || true
     elif [[ -n "$TAG" ]]; then
-        # Check if specific tag exists
         if podman image exists "$TAG"; then
             echo "$TAG"
         else
@@ -165,7 +154,6 @@ get_images_to_scan() {
             exit 1
         fi
     else
-        # Get PayU service images
         find "$PROJECT_ROOT" -name "Containerfile" -type f | \
             while read -r containerfile; do
                 local service_dir
@@ -173,7 +161,6 @@ get_images_to_scan() {
                 local service_name
                 service_name=$(basename "$service_dir")
 
-                # Check if image exists
                 local local_image="localhost/${service_name}:1.4.0"
                 if podman image exists "$local_image"; then
                     echo "$local_image"
@@ -182,14 +169,12 @@ get_images_to_scan() {
     fi
 }
 
-# Scan single image
 scan_image() {
     local image="$1"
     local output_file="${2:-}"
 
     log_info "Scanning image: $image"
 
-    # Trivy command
     local trivy_cmd=(
         trivy image
         --format "$FORMAT"
@@ -197,24 +182,20 @@ scan_image() {
         --template "{{.Target}}: {{.VulnerabilitiesCount}} vulnerabilities ({{.CriticalCount}} critical, {{.HighCount}} high, {{.MediumCount}} medium, {{.LowCount}} low)"
     )
 
-    # Add output file if specified
     if [[ -n "$output_file" ]]; then
         trivy_cmd+=("--output=$output_file")
     fi
 
-    # Add security options
     trivy_cmd+=(
         --scanners vuln,secret,misconfig
         --skip-dirs "/proc"
         --skip-files "/.dockerenv"
     )
 
-    # Add timeout if specified
     if [[ -n "${TRIVY_TIMEOUT:-}" ]]; then
         trivy_cmd+=("--timeout=${TRIVY_TIMEOUT}s")
     fi
 
-    # Add cache options
     if [[ -z "${TRIVY_SKIP_UPDATE:-}" ]]; then
         trivy_cmd+=("--update")
     fi
@@ -225,13 +206,11 @@ scan_image() {
         trivy_cmd+=("--cache-dir=/tmp/trivy-cache")
     fi
 
-    # Execute scan
     if [[ "$VERBOSE" == true ]]; then
         log_info "Trivy command: ${trivy_cmd[*]}"
     fi
 
     if "${trivy_cmd[@]}" "$image"; then
-        # Parse results for summary
         if [[ "$FORMAT" == "table" && -z "$output_file" ]]; then
             local vuln_count
             vuln_count=$(trivy image --format json --severity "$SEVERITY" "$image" | \
@@ -249,24 +228,19 @@ scan_image() {
     fi
 }
 
-# Generate security report
 generate_report() {
     local scan_results="$1"
     local timestamp=$(date +%Y%m%d_%H%M%S)
 
-    # Create reports directory
     local reports_dir="$PROJECT_ROOT/reports/security"
     mkdir -p "$reports_dir"
 
-    # Generate different report formats
     if [[ -f "$scan_results" ]]; then
-        # JSON summary
         local json_report="${reports_dir}/trivy_summary_${timestamp}.json"
         if command -v jq >/dev/null 2>&1; then
             jq -c '.' "$scan_results" > "$json_report" 2>/dev/null || true
         fi
 
-        # HTML report
         local html_report="${reports_dir}/trivy_report_${timestamp}.html"
         cat > "$html_report" << EOF
 <!DOCTYPE html>
@@ -301,7 +275,6 @@ EOF
     fi
 }
 
-# Main execution
 main() {
     log_info "PayU Platform - Scan Images with Trivy using Podman"
     log_info "===================================================="
@@ -311,16 +284,13 @@ main() {
     log_info "Format: $FORMAT"
     log_info "Output: ${OUTPUT_FILE:-stdout}"
 
-    # Check dependencies
     check_dependencies
 
-    # Update Trivy database if not skipped
     if [[ -z "${TRIVY_SKIP_UPDATE:-}" ]]; then
         log_info "Updating vulnerability database..."
         trivy image --update >/dev/null 2>&1 || true
     fi
 
-    # Get images to scan
     log_info "Getting images to scan..."
     local images
     images=$(get_images_to_scan)
@@ -334,14 +304,12 @@ main() {
     log_info "Found $image_count image(s) to scan:"
     echo "$images" | sed 's/^/  - /'
 
-    # Create temporary output file if format is not table
     local temp_output=""
     if [[ "$FORMAT" != "table" && -z "$OUTPUT_FILE" ]]; then
         temp_output=$(mktemp)
         OUTPUT_FILE="$temp_output"
     fi
 
-    # Scan images
     local total_vulnerabilities=0
     local critical_vulnerabilities=0
     local high_vulnerabilities=0
@@ -350,7 +318,6 @@ main() {
     while read -r image; do
         if [[ -n "$image" ]]; then
             if scan_image "$image" "$OUTPUT_FILE"; then
-                # Count vulnerabilities
                 if [[ "$FORMAT" == "json" && -f "$OUTPUT_FILE" ]]; then
                     local vulns
                     vulns=$(jq '.Results[0].Vulnerabilities | length // 0' "$OUTPUT_FILE" 2>/dev/null || echo "0")
@@ -370,12 +337,10 @@ main() {
         fi
     done <<< "$images"
 
-    # Clean up temporary file
     if [[ -n "$temp_output" ]]; then
         rm -f "$temp_output"
     fi
 
-    # Summary
     log_info "Scan Summary:"
     log_info "  Total images scanned: $image_count"
     log_info "  Total vulnerabilities: ${total_vulnerabilities:-0}"
@@ -397,5 +362,4 @@ main() {
     fi
 }
 
-# Execute main function
 main "$@"

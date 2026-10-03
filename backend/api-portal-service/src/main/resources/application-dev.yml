@@ -1,4 +1,3 @@
-# Environment-specific configuration for Dev Profile (similar to local)
 spring:
   cloud:
     vault:

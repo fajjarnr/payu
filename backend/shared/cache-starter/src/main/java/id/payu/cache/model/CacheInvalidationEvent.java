@@ -59,13 +59,6 @@ public class CacheInvalidationEvent {
      */
     private String correlationId;
 
-    /**
-     * Invalidation types.
-     */
-
-    /**
-     * Create a single key invalidation event.
-     */
     public static CacheInvalidationEvent forKey(String cacheName, String key, String service) {
         return CacheInvalidationEvent.builder()
             .cacheName(cacheName)
@@ -76,9 +69,6 @@ public class CacheInvalidationEvent {
             .build();
     }
 
-    /**
-     * Create a pattern-based invalidation event.
-     */
     public static CacheInvalidationEvent forPattern(String cacheName, String pattern, String service) {
         return CacheInvalidationEvent.builder()
             .cacheName(cacheName)
@@ -89,9 +79,6 @@ public class CacheInvalidationEvent {
             .build();
     }
 
-    /**
-     * Create an invalidate-all event.
-     */
     public static CacheInvalidationEvent forAll(String cacheName, String service) {
         return CacheInvalidationEvent.builder()
             .cacheName(cacheName)

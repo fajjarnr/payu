@@ -68,7 +68,6 @@ public class EnhancedCreditScoringService {
                 }
             }
 
-            // Fire Drools rules
             rulesEngineService.fireRules(fact);
 
         } catch (Exception e) {

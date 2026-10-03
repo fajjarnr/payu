@@ -14,32 +14,11 @@ if (typeof window !== 'undefined') {
 /**
  * Authentication State Management Store
  *
- * SECURITY NOTICE: Token Storage
- * ================================
- * This store does NOT persist JWT tokens (access_token, refresh_token).
- * Tokens are managed exclusively via httpOnly cookies from the backend.
- *
- * What IS held in memory:
- * - User profile data for the current render session
- * - Account ID for the current render session
- * - Authentication state (boolean)
- *
- * What is NOT stored here:
- * - access_token (managed via httpOnly cookie)
- * - refresh_token (managed via httpOnly cookie)
- *
- * Why this approach?
- * - Prevents XSS attacks from stealing tokens from localStorage
- * - httpOnly cookies are inaccessible to JavaScript
- * - Complies with PCI-DSS and OWASP security standards
- *
- * References:
- * - OWASP ASVS 2.7.1: Verify the application does not expose session tokens
- * - PCI-DSS Requirement 8.2.4: Secure authentication handling
+ * SECURITY: Tokens are managed via httpOnly cookies, not localStorage.
+ * This prevents XSS attacks from stealing tokens (OWASP ASVS 2.7.1, PCI-DSS 8.2.4).
+ * Only user profile data and auth state are held in memory.
  */
 interface AuthState {
-  // NOTE: token and refreshToken are REMOVED for security
-  // Tokens are now managed via httpOnly cookies by the backend
   user: User | Partial<User> | null;
   accountId: string | null;
   /** True when user is authenticated - derived from user and accountId presence */
@@ -102,7 +81,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   }
 }));
 
-// Selector hook for derived isAuthenticated state
 export const useIsAuthenticated = () => {
   return useAuthStore((state) => !!state.user && !!state.accountId);
 };

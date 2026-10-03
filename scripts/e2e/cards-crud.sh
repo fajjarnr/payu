@@ -1,5 +1,4 @@
 #!/bin/bash
-# ============================================
 # PayU Cards CRUD E2E Test
 # Full CREATE/READ/UPDATE/DELETE + idempotency + error flows
 #
@@ -11,7 +10,6 @@
 #
 # Pre-reqs wallet-service needs a wallet row with accountId =
 # customer1 Keycloak sub (7753193d-...)
-# ============================================
 
 set -e
 
@@ -57,7 +55,6 @@ refresh_jwt() {
 JWT=$(refresh_jwt)
 echo "JWT: ${JWT:0:30}..."
 
-# ---- helpers ----
 
 assert_http() {
     local label="$1" expected="$2" actual="$3"
@@ -111,7 +108,6 @@ run_test() {
     echo "$code"
 }
 
-# ============================================
 echo "MODE=$GATEWAY_MODE ACCT=$ACCT"
 echo
 echo "========== PHASE 1: CRUD Happy Path =========="
@@ -186,7 +182,6 @@ fi
 assert_http "T5 READ after freeze" "200" "$T5"
 assert_json "T5 status" "data.status" "FROZEN"
 
-# ============================================
 echo
 echo "========== PHASE 2: Idempotency & Edge Cases =========="
 
@@ -236,7 +231,6 @@ else
 fi
 assert_http "T9 UNFREEZE idempotent" "200" "$T9"
 
-# ============================================
 echo
 echo "========== PHASE 3: Error Flows =========="
 
@@ -279,7 +273,6 @@ else
 fi
 assert_http "T12 invalid JWT" "401" "$T12"
 
-# ============================================
 echo
 echo "========== PHASE 4: Lifecycle Cleanup =========="
 
@@ -307,7 +300,6 @@ fi
 assert_http "T14 verify exists" "200" "$T14"
 assert_json "T14 final status" "data.status" "FROZEN"
 
-# ============================================
 echo
 if [ "$FAILED" -eq 0 ]; then
     echo "=== ALL 14 TESTS PASSED ==="

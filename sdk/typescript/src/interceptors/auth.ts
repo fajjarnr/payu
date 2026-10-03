@@ -1,9 +1,6 @@
 import { InternalAxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
 
-/**
- * Configuration for AuthInterceptor.
- */
 export interface AuthConfig {
   apiKey: string;
   apiSecret: string;

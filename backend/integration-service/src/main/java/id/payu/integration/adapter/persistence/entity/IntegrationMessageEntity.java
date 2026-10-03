@@ -14,9 +14,6 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import id.payu.security.annotation.SensitivityLevel;
 
-/**
- * JPA entity for IntegrationMessage.
- */
 @Entity
 @Table(name = "integration_messages", indexes = {
     @Index(name = "idx_intmsg_status", columnList = "status"),

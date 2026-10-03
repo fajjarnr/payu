@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# =============================================================================
 # OWASP ZAP DAST (Dynamic Application Security Testing) Runner
-# =============================================================================
 # Runs OWASP ZAP automated security scans against PayU services.
 # Designed for CI pipeline integration (Tekton/GitLab CI).
 #
@@ -12,7 +10,6 @@
 #   ./run-zap-scan.sh baseline http://localhost:8080
 #   ./run-zap-scan.sh api http://localhost:8080/v3/api-docs
 #   ./run-zap-scan.sh full http://staging.payu.fajjjar.my.id
-# =============================================================================
 
 set -euo pipefail
 

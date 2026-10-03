@@ -13,10 +13,8 @@
 # NOTE: This is a TEMPLATE. Adjust configuration values as needed.
 # See README.md for full setup instructions.
 ---
-# ============================================================================
 # Plugin 1: API Key Authentication
 # Validates partner API keys before forwarding to PayU gateway
-# ============================================================================
 apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
@@ -44,10 +42,8 @@ config:
   run_on_preflight: false
 
 ---
-# ============================================================================
 # Plugin 2: Rate Limiting (Global Default)
 # Per-partner rate limits; override per consumer for specific plans
-# ============================================================================
 apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
@@ -86,10 +82,8 @@ config:
   fault_tolerant: true
 
 ---
-# ============================================================================
 # Plugin 3: Request Transformer — PayU Header Injection
 # Injects partner identification headers for the PayU gateway (Tier 2)
-# ============================================================================
 apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
@@ -118,10 +112,8 @@ config:
       - "x-consumer-id"
 
 ---
-# ============================================================================
 # Plugin 4: Correlation ID — End-to-End Request Tracing
 # Ensures every request has a unique correlation ID across both tiers
-# ============================================================================
 apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
@@ -139,10 +131,8 @@ config:
   echo_downstream: true
 
 ---
-# ============================================================================
 # Plugin 5: IP Restriction (Optional — per-partner allowlists)
 # Apply to specific consumers/routes for partners with static IP requirements
-# ============================================================================
 apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
@@ -163,10 +153,8 @@ config:
   message: "Access denied: IP not in allowlist for this partner"
 
 ---
-# ============================================================================
 # KongIngress: Upstream configuration for PayU Gateway Service
 # Defines how Kong connects to the PayU gateway backend
-# ============================================================================
 apiVersion: configuration.konghq.com/v1
 kind: KongIngress
 metadata:

@@ -1,5 +1,4 @@
 #!/bin/bash
-# E2E Test Execution Script
 # This script runs the E2E test suite with various options
 
 set -e

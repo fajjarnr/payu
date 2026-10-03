@@ -94,7 +94,6 @@
             <artifactId>quarkus-config-yaml</artifactId>
         </dependency>
 
-        <!-- Cache -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-cache</artifactId>
@@ -110,7 +109,6 @@
             <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
 
-        <!-- OpenTelemetry -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-opentelemetry</artifactId>

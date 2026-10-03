@@ -1,5 +1,3 @@
-// PayU Partner Service - CRUD Baseline Performance Test
-// ========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -76,7 +74,6 @@ export default function () {
 
   group('Partner Service - CRUD Operations', () => {
 
-    // ===== CREATE: Register Partner =====
     group('CREATE: Register Partner', () => {
       const partnerData = generatePartnerData(uniqueId);
 
@@ -92,7 +89,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Partners =====
     group('READ: List Partners', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.partner}`, { page: 0, size: 10 }, auth.token);
@@ -102,7 +98,6 @@ export default function () {
     });
 
     if (partnerId) {
-      // ===== READ: Get Partner Detail =====
       group('READ: Get Partner Detail', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.partner}/${partnerId}`, auth.token);
@@ -111,7 +106,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Update Partner =====
       group('UPDATE: Update Partner', () => {
         const updateData = {
           name: `Updated Partner ${Date.now()}`,
@@ -126,7 +120,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Verify Partner =====
       group('UPDATE: Verify Partner', () => {
         const verifyData = {
           verified: true,
@@ -140,7 +133,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== READ: Get Partner Services =====
       group('READ: Get Partner Services', () => {
         const startTime = Date.now();
         const result = list(`${SERVICE_ENDPOINTS.partner}/${partnerId}/services`, {}, auth.token);
@@ -149,7 +141,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== CREATE: Add Partner Service =====
       group('CREATE: Add Service', () => {
         const serviceData = generateServiceData(uniqueId);
 
@@ -160,7 +151,6 @@ export default function () {
         sleep(0.5);
       });
 
-      // ===== READ: Get Partner Transactions =====
       group('READ: Get Transactions', () => {
         const startTime = Date.now();
         const result = list(`${SERVICE_ENDPOINTS.partner}/${partnerId}/transactions`, { period: '30d' }, auth.token);

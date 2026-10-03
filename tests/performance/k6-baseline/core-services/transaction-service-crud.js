@@ -1,5 +1,3 @@
-// PayU Transaction Service - CRUD Baseline Performance Test
-// ==========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -67,7 +65,6 @@ export default function () {
 
   group('Transaction Service - CRUD Operations', () => {
 
-    // ===== CREATE: Create Transfer =====
     group('CREATE: Create Transfer', () => {
       const transferData = generateTransferData(uniqueId);
 
@@ -83,7 +80,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Transactions =====
     group('READ: List Transactions', () => {
       const startTime = Date.now();
       const result = list(SERVICE_ENDPOINTS.transaction, { page: 0, size: 10 }, auth.token);
@@ -92,7 +88,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Transaction History =====
     group('READ: Get History', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.transaction}/history`, { period: '30d' }, auth.token);
@@ -102,7 +97,6 @@ export default function () {
     });
 
     if (transactionId) {
-      // ===== READ: Get Transaction Detail =====
       group('READ: Get Transaction', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.transaction}/${transactionId}`, auth.token);
@@ -111,7 +105,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Update Transaction Status =====
       group('UPDATE: Update Status', () => {
         const statusData = {
           status: 'COMPLETED',
@@ -125,7 +118,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Cancel Transaction =====
       group('UPDATE: Cancel Transaction', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.transaction}/${transactionId}/cancel`, { reason: 'Test cancel' }, auth.token);

@@ -9,15 +9,11 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 
 import java.util.List;
 
-/**
- * Constants and utility methods for OpenAPI documentation.
- */
 public final class OpenApiConstants {
 
     private OpenApiConstants() {
     }
 
-    // Tags
 
     public static final class Tags {
         public static final String AUTH = "Authentication";
@@ -35,11 +31,7 @@ public final class OpenApiConstants {
         public static final String HEALTH = "Health Checks";
     }
 
-    // Common responses
 
-    /**
-     * Creates a 400 Bad Request response.
-     */
     public static ApiResponse badRequest(String description) {
         return new ApiResponse()
                 .description(description)
@@ -48,9 +40,6 @@ public final class OpenApiConstants {
                                 new MediaType().schema(new Schema<>().$ref("#/components/schemas/Error"))));
     }
 
-    /**
-     * Creates a 401 Unauthorized response.
-     */
     public static ApiResponse unauthorized() {
         return new ApiResponse()
                 .description("Authentication required")
@@ -65,9 +54,6 @@ public final class OpenApiConstants {
                                                 """)));
     }
 
-    /**
-     * Creates a 403 Forbidden response.
-     */
     public static ApiResponse forbidden() {
         return new ApiResponse()
                 .description("Access denied")
@@ -82,9 +68,6 @@ public final class OpenApiConstants {
                                                 """)));
     }
 
-    /**
-     * Creates a 404 Not Found response.
-     */
     public static ApiResponse notFound() {
         return new ApiResponse()
                 .description("Resource not found")
@@ -93,9 +76,6 @@ public final class OpenApiConstants {
                                 new MediaType().schema(new Schema<>().$ref("#/components/schemas/Error"))));
     }
 
-    /**
-     * Creates a 409 Conflict response.
-     */
     public static ApiResponse conflict(String description) {
         return new ApiResponse()
                 .description(description)
@@ -104,9 +84,6 @@ public final class OpenApiConstants {
                                 new MediaType().schema(new Schema<>().$ref("#/components/schemas/Error"))));
     }
 
-    /**
-     * Creates a 422 Unprocessable Entity response.
-     */
     public static ApiResponse unprocessableEntity(String description) {
         return new ApiResponse()
                 .description(description)
@@ -115,9 +92,6 @@ public final class OpenApiConstants {
                                 new MediaType().schema(new Schema<>().$ref("#/components/schemas/Error"))));
     }
 
-    /**
-     * Creates a 429 Too Many Requests response.
-     */
     public static ApiResponse tooManyRequests() {
         return new ApiResponse()
                 .description("Rate limit exceeded")
@@ -132,9 +106,6 @@ public final class OpenApiConstants {
                                                 """)));
     }
 
-    /**
-     * Creates a 500 Internal Server Error response.
-     */
     public static ApiResponse internalServerError() {
         return new ApiResponse()
                 .description("Internal server error")
@@ -143,9 +114,6 @@ public final class OpenApiConstants {
                                 new MediaType().schema(new Schema<>().$ref("#/components/schemas/Error"))));
     }
 
-    /**
-     * Creates a 502 Bad Gateway response.
-     */
     public static ApiResponse badGateway(String description) {
         return new ApiResponse()
                 .description(description)
@@ -154,9 +122,6 @@ public final class OpenApiConstants {
                                 new MediaType().schema(new Schema<>().$ref("#/components/schemas/Error"))));
     }
 
-    /**
-     * Creates a 503 Service Unavailable response.
-     */
     public static ApiResponse serviceUnavailable() {
         return new ApiResponse()
                 .description("Service temporarily unavailable")
@@ -165,9 +130,6 @@ public final class OpenApiConstants {
                                 new MediaType().schema(new Schema<>().$ref("#/components/schemas/Error"))));
     }
 
-    /**
-     * Adds common responses to an operation.
-     */
     public static Operation addCommonResponses(Operation operation) {
         ApiResponses responses = operation.getResponses();
         if (responses == null) {

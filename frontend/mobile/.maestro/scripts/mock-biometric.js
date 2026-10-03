@@ -13,18 +13,14 @@
 
 const result = process.env.BIOMETRIC_RESULT || 'success';
 
-// Output format expected by Maestro
 const output = {
   success: result === 'success',
   result: result,
   timestamp: new Date().toISOString(),
 };
 
-// Log for debugging
 console.error(`[Mock Biometric] Simulating ${result} result`);
 
-// Output JSON for Maestro to consume
 console.log(JSON.stringify(output));
 
-// Exit with appropriate code
 process.exit(result === 'success' ? 0 : 1);

@@ -53,10 +53,8 @@ public class AnalyticsEndpointsIntegrationTest {
     void setUp() {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
-        // Standard mock behavior for health
         when(analyticsService.getBufferSize()).thenReturn(0L);
 
-        // Standard mock behavior for endpoint metrics
         when(analyticsService.getEndpointMetrics(anyString(), anyString(), any(), any()))
             .thenAnswer(invocation -> {
                 String path = invocation.getArgument(0);
@@ -72,20 +70,16 @@ public class AnalyticsEndpointsIntegrationTest {
                 ));
             });
 
-        // Mock for top endpoints
         when(analyticsService.getTopEndpoints(anyInt(), any(), any()))
             .thenReturn(Multi.createFrom().items(
                 new EndpointUsage("/api/v1/test", HttpMethod.GET, 10L, 5.0, 0.0)
             ));
             
-        // Mock for partner metrics
         when(analyticsService.getPartnerMetrics(anyString(), any(), any()))
             .thenReturn(Uni.createFrom().item(
                 new PartnerMetrics("partner-test", 100L, 100L, 0L, 0L, 5.0, 5L, 5L, Collections.emptyMap())
             ));
     }
-
-    // Analytics health tests
 
     @Test
     @Order(1)
@@ -100,8 +94,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body("status", equalTo("UP"))
                 .body("service", equalTo("analytics"));
     }
-
-    // Metrics endpoint tests
 
     @Test
     @Order(10)
@@ -153,8 +145,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body("error", equalTo("path parameter is required"));
     }
 
-    // Different path tests
-
     @Test
     @Order(20)
     @DisplayName("Should query metrics for accounts endpoint")
@@ -191,8 +181,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // Different method tests
-
     @Test
     @Order(30)
     @DisplayName("Should query metrics for GET requests")
@@ -219,8 +207,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // Metrics not found tests
-
     @Test
     @Order(40)
     @DisplayName("Should return 404 when metrics not found for endpoint")
@@ -235,8 +221,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body("error", equalTo("METRICS_NOT_FOUND"))
                 .body("message", containsString("No metrics found"));
     }
-
-    // Special characters in path tests
 
     @Test
     @Order(50)
@@ -264,13 +248,10 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // Case sensitivity tests
-
     @Test
     @Order(60)
     @DisplayName("Should handle method parameter case insensitively")
     void testMetricsMethodCase() {
-        // Test lowercase
         given()
                 .queryParam("path", "/api/v1/accounts")
                 .queryParam("method", "get")
@@ -279,7 +260,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404)));
 
-        // Test uppercase
         given()
                 .queryParam("path", "/api/v1/accounts")
                 .queryParam("method", "GET")
@@ -288,7 +268,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404)));
 
-        // Test mixed case
         given()
                 .queryParam("path", "/api/v1/accounts")
                 .queryParam("method", "Get")
@@ -297,8 +276,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404)));
     }
-
-    // Response format tests
 
     @Test
     @Order(70)
@@ -313,13 +290,10 @@ public class AnalyticsEndpointsIntegrationTest {
                 .contentType(containsString("application/json"));
     }
 
-    // HTTP methods tests
-
     @Test
     @Order(80)
     @DisplayName("Metrics endpoint should only support GET method")
     void testMetricsHttpMethods() {
-        // GET should work (but might return 404 if no metrics)
         given()
                 .queryParam("path", "/api/v1/accounts")
                 .when()
@@ -327,7 +301,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404)));
 
-        // POST should not be allowed
         given()
                 .queryParam("path", "/api/v1/accounts")
                 .when()
@@ -335,7 +308,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(405), is(404)));
 
-        // PUT should not be allowed
         given()
                 .queryParam("path", "/api/v1/accounts")
                 .when()
@@ -343,7 +315,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(405), is(404)));
 
-        // DELETE should not be allowed
         given()
                 .queryParam("path", "/api/v1/accounts")
                 .when()
@@ -351,8 +322,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(405), is(404)));
     }
-
-    // Concurrent requests tests
 
     @Test
     @Order(90)
@@ -375,8 +344,6 @@ public class AnalyticsEndpointsIntegrationTest {
             thread.join();
         }
     }
-
-    // Response time tests
 
     @Test
     @Order(100)
@@ -411,8 +378,6 @@ public class AnalyticsEndpointsIntegrationTest {
         Assertions.assertTrue(responseTime < 1000, "Analytics health endpoint should respond within 1 second");
     }
 
-    // CORS tests
-
     @Test
     @Order(110)
     @DisplayName("Analytics endpoints should support CORS")
@@ -424,8 +389,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(200);
     }
-
-    // Error response tests
 
     @Test
     @Order(120)
@@ -452,8 +415,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body(notNullValue());
     }
 
-    // Query parameter encoding tests
-
     @Test
     @Order(130)
     @DisplayName("Should handle URL-encoded paths")
@@ -466,8 +427,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // Root path tests
-
     @Test
     @Order(140)
     @DisplayName("Should handle root path query")
@@ -479,8 +438,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404)));
     }
-
-    // Multiple parameters tests
 
     @Test
     @Order(150)
@@ -497,8 +454,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // Analytics configuration tests
-
     @Test
     @Order(160)
     @DisplayName("Should verify analytics is enabled")
@@ -512,14 +467,10 @@ public class AnalyticsEndpointsIntegrationTest {
                 .body("status", equalTo("UP"));
     }
 
-    // Empty response tests
-
     @Test
     @Order(170)
     @DisplayName("Should handle empty metrics response")
     void testMetricsEmptyResponse() {
-        // This tests the case where no metrics are available for an endpoint
-        // The response could be 404 or 200 with empty array
         given()
                 .queryParam("path", "/api/v1/never-visited-endpoint")
                 .queryParam("method", "DELETE")
@@ -528,8 +479,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404)));
     }
-
-    // Cross-origin tests
 
     @Test
     @Order(180)
@@ -551,8 +500,6 @@ public class AnalyticsEndpointsIntegrationTest {
         }
     }
 
-    // Metrics aggregation tests
-
     @Test
     @Order(190)
     @DisplayName("Should aggregate metrics across all HTTP methods when method not specified")
@@ -565,8 +512,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404)));
     }
-
-    // Long path tests
 
     @Test
     @Order(200)
@@ -582,8 +527,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(404)));
     }
 
-    // Custom header tests
-
     @Test
     @Order(210)
     @DisplayName("Should handle custom headers in request")
@@ -597,8 +540,6 @@ public class AnalyticsEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404)));
     }
-
-    // Analytics error handling tests
 
     @Test
     @Order(220)

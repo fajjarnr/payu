@@ -13,8 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests for {@link CacheThreadPoolConfig}.
- *
  * <p>Verifies:
  * <ul>
  *   <li>Thread pool beans are created with correct configuration</li>
@@ -32,13 +30,10 @@ class CacheThreadPoolConfigTest {
 
     @Test
     void cacheRefreshExecutor_shouldCreateBoundedThreadPool() {
-        // Given
         CacheProperties properties = createCacheProperties(4);
 
-        // When
         Executor executor = config.cacheRefreshExecutor(properties, meterRegistry);
 
-        // Then
         assertThat(executor).isNotNull();
         assertThat(executor).isInstanceOf(ThreadPoolTaskExecutor.class);
 
@@ -50,13 +45,10 @@ class CacheThreadPoolConfigTest {
 
     @Test
     void cacheRefreshExecutor_shouldConfigureGracefulShutdown() {
-        // Given
         CacheProperties properties = createCacheProperties(2);
 
-        // When
         Executor executor = config.cacheRefreshExecutor(properties, meterRegistry);
 
-        // Then
         // Verify the executor was created successfully (graceful shutdown is configured
         // via setWaitForTasksToCompleteOnShutdown/setAwaitTerminationSeconds but
         // ThreadPoolTaskExecutor does not expose public getters for these in Spring 6.x)
@@ -67,13 +59,10 @@ class CacheThreadPoolConfigTest {
 
     @Test
     void cacheRefreshExecutor_shouldRegisterMicrometerMetrics() {
-        // Given
         CacheProperties properties = createCacheProperties(2);
 
-        // When
         config.cacheRefreshExecutor(properties, meterRegistry);
 
-        // Then
         assertThat(meterRegistry.getMeters())
             .anySatisfy(meter -> assertThat(meter.getId().getTag("name"))
                 .isEqualTo("cache.refresh.executor"));

@@ -8,8 +8,5 @@ import id.payu.billing.interfaces.dto.CreatePaymentRequest;
  */
 public interface PayBillUseCase {
 
-    /**
-     * Create and process a bill payment.
-     */
     BillPayment createPayment(CreatePaymentRequest request);
 }

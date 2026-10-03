@@ -4,7 +4,6 @@
 # (which forces namespace: payu-dev)
 #
 # Usage: ./scripts/apply-cluster-infra.sh
-# ============================================================
 
 set -euo pipefail
 

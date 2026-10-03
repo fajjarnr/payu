@@ -1,7 +1,6 @@
 import api from '@/lib/api';
 import { formatExactDecimal, type Money } from '@/lib/currency';
 
-// FX Rate Types
 export interface FxRate {
   id: string;
   fromCurrency: string;
@@ -15,7 +14,6 @@ export interface FxRate {
 // BUG-BE-087: FxRateResponse is identical to FxRate — use FxRate directly
 export type FxRateResponse = FxRate;
 
-// FX Conversion Types
 export type FxConversionStatus = 'PENDING' | 'COMPLETED' | 'REVERSED' | 'FAILED';
 
 export interface FxConversion {
@@ -44,7 +42,6 @@ export interface ConvertCurrencyRequest {
 
 export type FxConversionRequest = ConvertCurrencyRequest;
 
-// Currency Info
 export interface CurrencyInfo {
   code: string;
   name: string;

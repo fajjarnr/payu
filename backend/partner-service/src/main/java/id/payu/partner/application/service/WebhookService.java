@@ -173,7 +173,6 @@ public class WebhookService {
                 .map(this::toDeliveryDTO);
     }
 
-    // --- Internal helpers ---
 
     private WebhookSubscriptionEntity findSubscriptionForPartner(Long partnerId, Long subscriptionId) {
         WebhookSubscriptionEntity subscription = subscriptionRepository.findById(subscriptionId)

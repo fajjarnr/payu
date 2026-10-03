@@ -1,5 +1,3 @@
-// PayU Platform - Load Test
-// =========================
 // Sustained load test to validate platform performance
 // Run: k6 run load-test.js
 

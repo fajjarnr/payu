@@ -51,12 +51,10 @@ public class GrpcTracingInterceptor {
             String spanId = headers.get(SPAN_ID_KEY);
             String sampled = headers.get(SAMPLED_KEY);
 
-            // Generate new trace ID if not present
             if (traceId == null || traceId.isEmpty()) {
                 traceId = generateTraceId();
             }
 
-            // Generate new span ID if not present
             if (spanId == null || spanId.isEmpty()) {
                 spanId = generateSpanId();
             }
@@ -65,7 +63,6 @@ public class GrpcTracingInterceptor {
             MDC.put(MDC_TRACE_ID, traceId);
             MDC.put(MDC_SPAN_ID, spanId);
 
-            // Create gRPC context with tracing info
             io.grpc.Context context = io.grpc.Context.current()
                     .withValue(TRACE_ID_CONTEXT_KEY, traceId)
                     .withValue(SPAN_ID_CONTEXT_KEY, spanId);
@@ -170,7 +167,6 @@ public class GrpcTracingInterceptor {
 
                 @Override
                 public void start(Listener<RespT> responseListener, Metadata headers) {
-                    // Get trace context from MDC or generate new
                     String traceId = MDC.get(MDC_TRACE_ID);
                     String spanId = MDC.get(MDC_SPAN_ID);
 

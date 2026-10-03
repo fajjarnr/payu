@@ -1,10 +1,7 @@
-# =============================================================================
 # Pod Disruption Budget (PDB) for PayU Services
-# =============================================================================
 # Ensures minimum availability during node maintenance, upgrades, or eviction
 # minAvailable: 1 means at least 1 pod must remain running
 # This prevents total service outage during voluntary disruptions
-# =============================================================================
 
 # Critical Services - Require at least 1 pod during disruptions
 ---

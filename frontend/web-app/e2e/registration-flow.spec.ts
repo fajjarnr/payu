@@ -38,7 +38,6 @@ test.describe('Registration Flow', () => {
   test('should navigate to step 2 when clicking continue button', async ({ page }) => {
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Should show profile form
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
     await expect(page.getByPlaceholder(/16 digit/)).toBeVisible();
   });
@@ -62,7 +61,6 @@ test.describe('Registration Flow', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Should show validation error
     await expect(page.locator('.text-red-500')).toBeVisible();
   });
 
@@ -80,17 +78,15 @@ test.describe('Registration Flow', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Should show validation error or prevent submission
     await page.waitForTimeout(1000);
   });
 
   test('should validate required fields', async ({ page }) => {
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Submit without filling required fields
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Should show validation errors - use first() due to strict mode
+    // Use first() to avoid strict-mode violations.
     await expect(page.locator('.text-red-500').first()).toBeVisible();
   });
 
@@ -122,15 +118,12 @@ test.describe('Registration Flow', () => {
   });
 
   test('should update progress tracker when moving to step 2', async ({ page }) => {
-    // First step should be active
     await expect(page.getByText('Identitas').first()).toBeVisible();
 
     await page.click('button:has-text("Lanjut ke Profil Data")');
 
-    // Wait for step transition
     await page.waitForTimeout(500);
 
-    // Second step should be active now - wait for the title to appear
     await expect(page.getByText('Lengkapi Profil')).toBeVisible();
   });
 
@@ -147,7 +140,6 @@ test.describe('Registration Flow', () => {
     // Left panel should be hidden on mobile
     await expect(page.locator('aside')).not.toBeVisible();
 
-    // Main content should be visible
     await expect(page.getByText('Unggah e-KTP')).toBeVisible();
   });
 
@@ -162,7 +154,6 @@ test.describe('Registration Flow', () => {
     // This will likely fail due to backend, but let's check the structure
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Wait a moment for any response
     await page.waitForTimeout(2000);
   });
 
@@ -174,7 +165,6 @@ test.describe('Registration Flow', () => {
 
     await backButton.click();
 
-    // Should return to step 1
     await expect(page.getByText('Unggah e-KTP')).toBeVisible();
   });
 });
@@ -194,15 +184,12 @@ test.describe('Registration Flow - Form Validation', () => {
 
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Should show validation error
     await expect(page.locator('.text-red-500')).toBeVisible();
   });
 
   test('should require all fields to be filled', async ({ page }) => {
-    // Don't fill any fields
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
 
-    // Should show multiple validation errors
     const errors = await page.locator('.text-red-500').count();
     expect(errors).toBeGreaterThan(0);
   });
@@ -225,7 +212,6 @@ test.describe('Registration Flow - Accessibility', () => {
   });
 
   test('should have proper heading hierarchy', async ({ page }) => {
-    // Check that the main heading exists
     const h1Count = await page.locator('h1').count();
     expect(h1Count).toBeGreaterThanOrEqual(1);
   });
@@ -247,10 +233,8 @@ test.describe('Registration Flow - Accessibility', () => {
     await page.getByPlaceholder(/nama@email.com/).fill('test@example.com');
     await page.getByPlaceholder(/unik & mudah diingat/).fill('testuser123');
 
-    // Press Enter on the last field
     await page.keyboard.press('Enter');
 
-    // Wait for any response
     await page.waitForTimeout(1000);
   });
 });

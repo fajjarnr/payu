@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAnalyticsWebSocket } from '@/hooks/useAnalytics';
 import { useWebSocket } from '@/hooks/useWebSocket';
 
-// Mock useWebSocket hook
 vi.mock('@/hooks/useWebSocket', () => ({
   useWebSocket: vi.fn()
 }));
@@ -85,7 +84,6 @@ describe('useAnalyticsWebSocket hook', () => {
 
     expect(result.current.isConnected).toBe(false);
 
-    // Simulate WebSocket open event
     act(() => { capturedOptions?.onOpen?.(new Event('open')); });
 
     expect(result.current.isConnected).toBe(true);
@@ -98,7 +96,6 @@ describe('useAnalyticsWebSocket hook', () => {
 
     mockUseWebSocket.mockImplementation((_url, options) => {
       capturedOptions = options;
-      // Start as connected
       if (options?.onOpen) {
         setTimeout(() => options.onOpen!(new Event('open')), 0);
       }
@@ -109,12 +106,10 @@ describe('useAnalyticsWebSocket hook', () => {
       wrapper
     });
 
-    // Wait for connection
     waitFor(() => {
       expect(result.current.isConnected).toBe(true);
     });
 
-    // Simulate WebSocket close event
     act(() => { capturedOptions?.onClose?.(new CloseEvent('close')); });
 
     expect(result.current.isConnected).toBe(false);
@@ -149,7 +144,6 @@ describe('useAnalyticsWebSocket hook', () => {
       ]
     };
 
-    // Simulate receiving BALANCE_UPDATE message
     act(() => {
       capturedOptions?.onMessage?.({ type: 'BALANCE_UPDATE', data: mockAnalyticsData });
     });
@@ -183,7 +177,6 @@ describe('useAnalyticsWebSocket hook', () => {
       spendingBreakdown: []
     };
 
-    // Simulate receiving a different message type
     act(() => {
       capturedOptions?.onMessage?.({ type: 'OTHER_UPDATE', data: mockAnalyticsData });
     });
@@ -229,14 +222,12 @@ describe('useAnalyticsWebSocket hook', () => {
       spendingBreakdown: []
     };
 
-    // First update
     act(() => {
       capturedOptions?.onMessage?.({ type: 'BALANCE_UPDATE', data: firstUpdate });
     });
 
     expect(result.current.analytics).toEqual(firstUpdate);
 
-    // Second update
     act(() => {
       capturedOptions?.onMessage?.({ type: 'BALANCE_UPDATE', data: secondUpdate });
     });
@@ -257,7 +248,6 @@ describe('useAnalyticsWebSocket hook', () => {
       expect.any(Object)
     );
 
-    // Restore original value
     if (originalWsUrl === undefined) {
       delete process.env.NEXT_PUBLIC_WS_URL;
     } else {
@@ -292,10 +282,8 @@ describe('useAnalyticsWebSocket hook', () => {
       wrapper
     });
 
-    // Simulate error event
     capturedOptions?.onError?.(new Event('error'));
 
-    // Hook should still be functional after error
     expect(result.current).toBeDefined();
   });
 
@@ -313,14 +301,11 @@ describe('useAnalyticsWebSocket hook', () => {
       wrapper
     });
 
-    // Initial state
     expect(result.current.isConnected).toBe(false);
 
-    // Open connection
     act(() => { capturedOptions?.onOpen?.(new Event('open')); });
     expect(result.current.isConnected).toBe(true);
 
-    // Close connection
     act(() => { capturedOptions?.onClose?.(new CloseEvent('close')); });
     expect(result.current.isConnected).toBe(false);
   });

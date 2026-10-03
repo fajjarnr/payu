@@ -95,9 +95,7 @@ describe('QuickActions', () => {
     const editButton = screen.getByLabelText('Edit urutan aksi cepat');
     fireEvent.click(editButton);
 
-    // Simulate drag end event
-    // Note: Full drag-drop testing requires more setup with dnd-kit
-    // This is a basic test to ensure the callback exists
+    // Full drag-drop testing requires dnd-kit setup
     expect(onReorder).toBeDefined();
   });
 
@@ -163,7 +161,6 @@ describe('QuickActions', () => {
   it('should be keyboard navigable', () => {
     renderWithIntl(<QuickActions actions={mockActions} />);
 
-    // Check that actions are rendered as anchor tags with href
     const transferLink = screen.getByLabelText('Transfer uang ke akun lain');
     const qrisLink = screen.getByLabelText('Pembayaran QRIS');
 

@@ -23,9 +23,6 @@ public class SagaRecoveryService {
     private final SagaRepository sagaRepository;
     private final SagaProperties properties;
 
-    /**
-     * Recover a specific saga by ID.
-     */
     public boolean recoverSaga(String sagaId) {
         log.info("Attempting to recover saga: {}", sagaId);
 
@@ -34,9 +31,6 @@ public class SagaRecoveryService {
                 .orElse(false);
     }
 
-    /**
-     * Recover a saga instance.
-     */
     protected boolean recoverSagaInstance(SagaInstance instance) {
         String sagaId = instance.getSagaId();
         SagaState currentState = SagaState.valueOf(instance.getCurrentState());
@@ -65,9 +59,6 @@ public class SagaRecoveryService {
         return true;
     }
 
-    /**
-     * Recover all sagas that can be retried.
-     */
     public int recoverRetryableSagas() {
         List<SagaInstance> retryable = sagaRepository.findRetryableSagas(
                 Instant.now().minus(Duration.ofMinutes(5)));
@@ -84,9 +75,6 @@ public class SagaRecoveryService {
         return recovered;
     }
 
-    /**
-     * Recover all stalled sagas.
-     */
     public int recoverStalledSagas(Duration stallThreshold) {
         List<SagaInstance> stalled = sagaRepository.findStalledSagas(
                 Instant.now().minus(stallThreshold));
@@ -161,9 +149,6 @@ public class SagaRecoveryService {
                 .orElse(false);
     }
 
-    /**
-     * Resume a paused saga.
-     */
     public boolean resumeSaga(String sagaId) {
         log.info("Resuming saga: {}", sagaId);
 
@@ -183,9 +168,6 @@ public class SagaRecoveryService {
                 .orElse(false);
     }
 
-    /**
-     * Scheduled recovery job.
-     */
     @SchedulerLock(name = "SagaRecoveryService_scheduledRecovery", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
     @Scheduled(fixedDelay = 300000) // Every 5 minutes
     public void scheduledRecovery() {

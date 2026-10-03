@@ -4,9 +4,6 @@ import id.payu.api.common.constant.ApiConstants;
 
 import java.util.regex.Pattern;
 
-/**
- * Validator for Indonesian phone numbers.
- */
 public class IndonesianPhoneNumberValidator extends AbstractRegexValidator<ValidIndonesianPhoneNumber> {
 
     private static final Pattern INTERNATIONAL_PATTERN = Pattern.compile(ApiConstants.PHONE_NUMBER_PATTERN);

@@ -10,7 +10,6 @@ interface AvatarProps {
   style?: ViewStyle;
 }
 
-// Performance: Memoized initials calculation with memoization
 const getInitials = useCallback((name?: string): string => {
   if (!name) return '?';
   const parts = name.trim().split(' ');
@@ -29,10 +28,8 @@ export const AvatarComponent: React.FC<AvatarProps> = ({
 }) => {
   const { colors } = useTheme();
 
-  // Performance: Memoize initials to avoid recalculation on every render
   const initials = useMemo(() => getInitials(name), [name]);
 
-  // Performance: Memoize avatar style
   const avatarStyle = useMemo<ViewStyle>(() => ({
     width: size,
     height: size,
@@ -43,19 +40,16 @@ export const AvatarComponent: React.FC<AvatarProps> = ({
     ...style,
   }), [size, style]);
 
-  // Performance: Memoize text style
   const textStyle = useMemo(() => ({
     color: '#ffffff',
     fontSize: size / 2.5,
     fontWeight: '700' as const,
   }), [size]);
 
-  // Performance: Memoize image source
   const imageSource = useMemo(() => {
     return source || (src ? { uri: src } : undefined);
   }, [source, src]);
 
-  // Performance: Memoize image style
   const imageStyle = useMemo<ImageStyle>(() => ({
     width: size,
     height: size,
@@ -79,7 +73,6 @@ export const AvatarComponent: React.FC<AvatarProps> = ({
   );
 };
 
-// Performance: Memoize Avatar component to prevent unnecessary re-renders in lists
 export const Avatar = memo(AvatarComponent, (prevProps, nextProps) => {
   return (
     prevProps.size === nextProps.size &&

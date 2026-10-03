@@ -123,5 +123,4 @@ import jakarta.enterprise.context.ApplicationScoped;
     in = SecuritySchemeIn.HEADER
 )
 public class OpenApiConfig {
-    // Configuration is provided entirely through annotations
 }

@@ -128,7 +128,6 @@ class CorrelationIdFilterTest {
             "Blank header should trigger new UUID generation");
     }
 
-    // JUnit helper - assertEquals variant with message
     private static void assertEquals(int expected, int actual, String message) {
         if (expected != actual) {
             throw new AssertionError(message + " ==> expected: <" + expected + "> but was: <" + actual + ">");

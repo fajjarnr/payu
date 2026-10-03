@@ -23,7 +23,6 @@ public class CalculatedSplit {
         this.amount = amount;
     }
 
-    // Getters and Setters
     public UUID getStakeholderId() { return stakeholderId; }
     public void setStakeholderId(UUID stakeholderId) { this.stakeholderId = stakeholderId; }
     public String getAccountId() { return accountId; }

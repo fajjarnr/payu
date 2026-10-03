@@ -65,15 +65,12 @@ public class ResponseTransformationFilter implements ContainerResponseFilter {
         String path = requestContext.getUriInfo().getPath();
         String method = requestContext.getMethod();
 
-        // Skip health and metrics endpoints
         if (path.startsWith("/q/") || path.equals("/health") || path.equals("/status")) {
             return;
         }
 
-        // Transform headers
         transformHeaders(requestContext, responseContext, path, method);
 
-        // Transform body (masking)
         transformBody(requestContext, responseContext, path, method);
 
         Log.debugf("Applied response transformations for %s %s", method, path);
@@ -95,11 +92,9 @@ public class ResponseTransformationFilter implements ContainerResponseFilter {
             }
         }
 
-        // Apply transformations
         Map<String, List<String>> transformedHeaders =
             transformationService.transformResponseHeaders(path, method, headers);
 
-        // Apply transformed headers back to response
         for (Map.Entry<String, List<String>> entry : transformedHeaders.entrySet()) {
             String headerName = entry.getKey();
             List<String> values = entry.getValue();
@@ -116,7 +111,6 @@ public class ResponseTransformationFilter implements ContainerResponseFilter {
     private void transformBody(ContainerRequestContext requestContext,
                                ContainerResponseContext responseContext,
                                String path, String method) {
-        // Only process JSON responses
         if (responseContext.getMediaType() == null ||
             !responseContext.getMediaType().toString().contains("json")) {
             return;

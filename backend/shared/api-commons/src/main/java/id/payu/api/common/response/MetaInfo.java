@@ -36,9 +36,6 @@ public class MetaInfo {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private Instant timestamp;
 
-    /**
-     * Creates MetaInfo with current timestamp and generated request ID.
-     */
     public static MetaInfo now() {
         return new MetaInfo(
                 "req-" + UUID.randomUUID().toString().substring(0, 8),
@@ -46,9 +43,6 @@ public class MetaInfo {
         );
     }
 
-    /**
-     * Creates MetaInfo with provided request ID and current timestamp.
-     */
     public static MetaInfo withRequestId(String requestId) {
         return new MetaInfo(
                 requestId,

@@ -78,16 +78,12 @@ public class OutboxService {
     private final ObjectMapper objectMapper;
 
     /**
-     * Creates a new outbox event.
      * <p>
      * The event is persisted to the database within the current transaction.
      * It will be published to Kafka by the OutboxPublisher in a separate process.
      *
      * @param aggregateType the type of aggregate that generated the event (e.g., "Wallet")
-     * @param aggregateId the ID of the aggregate instance
      * @param eventType the type of event (e.g., "WalletCredited")
-     * @param payload the event payload data
-     * @return the created OutboxEvent
      */
     @Transactional
     public OutboxEvent createEvent(
@@ -99,16 +95,6 @@ public class OutboxService {
         return createEvent(aggregateType, aggregateId, eventType, payload, null, null);
     }
 
-    /**
-     * Creates a new outbox event with custom headers.
-     *
-     * @param aggregateType the type of aggregate that generated the event
-     * @param aggregateId the ID of the aggregate instance
-     * @param eventType the type of event
-     * @param payload the event payload data
-     * @param headers custom headers for the event
-     * @return the created OutboxEvent
-     */
     @Transactional
     public OutboxEvent createEvent(
             @NotBlank String aggregateType,
@@ -123,13 +109,8 @@ public class OutboxService {
     /**
      * Creates a new outbox event with custom headers and destination topic.
      *
-     * @param aggregateType the type of aggregate that generated the event
-     * @param aggregateId the ID of the aggregate instance
-     * @param eventType the type of event
-     * @param payload the event payload data
      * @param headers custom headers for the event (can be null)
      * @param destinationTopic the destination Kafka topic (can be null for default)
-     * @return the created OutboxEvent
      */
     @Transactional
     public OutboxEvent createEvent(
@@ -189,15 +170,8 @@ public class OutboxService {
     }
 
     /**
-     * Creates an outbox event from a domain event object with custom headers and topic.
-     *
-     * @param aggregateType the type of aggregate
-     * @param aggregateId the ID of the aggregate instance
-     * @param eventType the type of event
-     * @param domainEvent the domain event object to serialize
      * @param headers custom headers (can be null)
      * @param destinationTopic the destination topic (can be null)
-     * @return the created OutboxEvent
      */
     @Transactional
     public OutboxEvent createEventFromObject(
@@ -209,7 +183,6 @@ public class OutboxService {
             String destinationTopic) {
 
         try {
-            // Convert domain event object to Map
             @SuppressWarnings("unchecked")
             Map<String, Object> payload = objectMapper.convertValue(domainEvent, Map.class);
 
@@ -220,20 +193,12 @@ public class OutboxService {
         }
     }
 
-    /**
-     * Gets the count of pending (unpublished) events.
-     *
-     * @return the number of unpublished events
-     */
     public long getPendingEventCount() {
         return outboxRepository.countUnpublishedEvents();
     }
 
     /**
      * Gets the count of failed events (exceeded max retries).
-     *
-     * @param maxRetries the maximum retry count threshold
-     * @return the number of failed events
      */
     public long getFailedEventCount(int maxRetries) {
         return outboxRepository.countFailedEvents(maxRetries);

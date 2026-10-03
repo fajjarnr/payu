@@ -10,18 +10,8 @@ import id.payu.lending.interfaces.dto.LoanRejectedEvent;
  */
 public interface LoanEventPublisherPort {
 
-    /**
-     * Publish event when a loan is approved.
-     *
-     * @param event the loan approved event
-     */
     void publishLoanApproved(LoanApprovedEvent event);
 
-    /**
-     * Publish event when a loan is rejected.
-     *
-     * @param event the loan rejected event
-     */
     void publishLoanRejected(LoanRejectedEvent event);
 
     void publishRepaymentProcessed(LoanRepaymentProcessedEvent event);

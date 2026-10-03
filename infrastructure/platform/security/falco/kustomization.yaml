@@ -8,7 +8,6 @@
 #
 # RHACS covers: image CVE, network policy, deployment risk, basic runtime
 # Falco covers: granular syscalls, custom rules, instant alerting
-# ============================================================
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

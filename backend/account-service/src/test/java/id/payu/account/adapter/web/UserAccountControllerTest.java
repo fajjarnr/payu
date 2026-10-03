@@ -31,7 +31,6 @@ class UserAccountControllerTest {
         mvc = MockMvcBuilders
                 .standaloneSetup(new UserAccountController(userPort, "payu-backend"))
                 .build();
-        // Simulate trusted service request for tests
         org.springframework.security.oauth2.jwt.Jwt jwt = org.springframework.security.oauth2.jwt.Jwt
                 .withTokenValue("test")
                 .header("alg", "RS256")

@@ -1,19 +1,16 @@
 import { test, expect } from './fixtures';
 
 test('capture landing page and dashboard', async ({ authPage: page }) => {
-    // 1. Check Landing Page
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     await page.screenshot({ path: 'test-results/landing-page.png', fullPage: true });
     console.warn('Landing page screenshot saved.');
 
-    // 2. Check Dashboard with authentication
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
     await page.screenshot({ path: 'test-results/dashboard-ui.png', fullPage: true });
     console.warn('Dashboard screenshot saved.');
 
-    // Check for Dashboard elements
     const welcomeText = page.getByText(/Selamat Datang|Welcome/);
 
     if (await welcomeText.isVisible().catch(() => false)) {
@@ -156,7 +153,6 @@ test.describe('UI Check - No Console Errors', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    // Wait a bit for any async errors
     await page.waitForTimeout(1000);
 
     // Filter out expected errors (e.g., from analytics, third-party scripts, BFF proxy, backend API calls)
@@ -318,7 +314,6 @@ test.describe('UI Check - Visual Elements', () => {
     // Footer may not exist on all pages; check for footer or bottom section
     const footer = page.locator('footer, [role="contentinfo"]').first();
     const hasFooter = await footer.isVisible().catch(() => false);
-    // If no footer element, ensure page at least has body content
     if (!hasFooter) {
       await expect(page.locator('body')).toBeVisible();
     } else {

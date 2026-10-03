@@ -163,10 +163,6 @@ public class AgentTrainingService {
         );
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
-
     private List<AgentTrainingResponse> getAllAgentTrainingsFallback(Exception ex) {
         // L-068: rethrow business exceptions so GlobalExceptionHandler maps them
         if (ex instanceof DataIntegrityViolationException

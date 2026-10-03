@@ -170,7 +170,6 @@ public class PartnerControllerTest {
     @Test
     @WithMockUser(username = "test@example.com", roles = "ADMIN")
     public void testGetMyPartner_JwtFallback() throws Exception {
-        // Tests fallback path where principal name contains email ( Covers Jwt email claim path via same fallback)
         PartnerDTO partner = new PartnerDTO(
             1L, "Test PartnerEntity", "MERCHANT", "test@example.com",
             "+62123456789", true, "client-id", null, "public-key"

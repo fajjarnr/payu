@@ -12,9 +12,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * DTO for IntegrationMessage response.
- */
 @Data
 @Builder
 @NoArgsConstructor

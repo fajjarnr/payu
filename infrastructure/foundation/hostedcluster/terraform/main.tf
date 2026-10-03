@@ -1,4 +1,3 @@
-###############################################################################
 # Per-cluster infrastructure
 #
 # Each entry in var.clusters provisions:
@@ -13,7 +12,6 @@
 # The SHARED OIDC S3 bucket itself is created once (not per-cluster), and the
 # HCP operator's `hypershift-operator-oidc-provider-s3-credentials` secret in
 # the `local-cluster` namespace must point to it.
-###############################################################################
 
 data "aws_caller_identity" "current" {}
 
@@ -23,7 +21,7 @@ locals {
   shared_oidc_bucket_arn  = "arn:aws:s3:::${local.shared_oidc_bucket_name}"
 }
 
-# --- Single shared OIDC S3 bucket --------------------------------------------
+# Single shared OIDC S3 bucket
 # All clusters' OIDC discovery docs are published under per-cluster sub-paths:
 #   s3://<shared-bucket>/<cluster-name>/.well-known/openid-configuration
 #   s3://<shared-bucket>/<cluster-name>/openid/v1/jwks
@@ -65,7 +63,7 @@ resource "aws_s3_bucket_policy" "shared_oidc" {
   depends_on = [aws_s3_bucket_public_access_block.shared_oidc]
 }
 
-# --- Per-cluster VPC --------------------------------------------------------
+# Per-cluster VPC
 module "vpc" {
   source   = "./modules/vpc"
   for_each = local.clusters
@@ -77,9 +75,8 @@ module "vpc" {
   tags           = merge(var.common_tags, each.value.extra_tags, { environment = each.value.environment })
 }
 
-# --- Per-cluster IAM roles (each cluster's roles reference its own OIDC
-# provider, but ALL OIDC providers point to the SHARED bucket at the
-# per-cluster sub-path) -------------------------------------------------------
+# Per-cluster IAM roles: each cluster's roles reference its own OIDC provider,
+# but all OIDC providers point to the shared bucket at the per-cluster sub-path.
 module "iam" {
   source   = "./modules/iam"
   for_each = local.clusters
@@ -91,7 +88,7 @@ module "iam" {
   shared_oidc_bucket = local.shared_oidc_bucket_name
 }
 
-# --- Route53 private zone VPC association ------------------------------------
+# Route53 private zone VPC association
 # CRITICAL: Guest worker nodes live in dedicated VPCs. Without associating
 # those VPCs with the private hosted zone, nodes cannot resolve api-int.<domain>
 # via AWS DNS. The Machine Config Daemon (MCD) uses api-int post-ignition to

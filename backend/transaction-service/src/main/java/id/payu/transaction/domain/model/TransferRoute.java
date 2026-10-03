@@ -159,7 +159,6 @@ public class TransferRoute implements Comparable<TransferRoute> {
      *   <li>Amount must have the same currency as the route limits</li>
      * </ul>
      *
-     * @param amount the amount to check
      * @return true if the route can handle this amount
      * @throws IllegalArgumentException if amount is null
      */
@@ -180,7 +179,6 @@ public class TransferRoute implements Comparable<TransferRoute> {
     /**
      * Calculates the total amount including fees.
      *
-     * @param amount the transfer amount
      * @return the total amount (transfer amount + fee)
      * @throws IllegalArgumentException if amount is null or has different currency
      */
@@ -210,7 +208,6 @@ public class TransferRoute implements Comparable<TransferRoute> {
      * Compares this route with another based on fee (cheapest first).
      * This enables sorting routes by cost for smart routing decisions.
      *
-     * @param other the route to compare with
      * @return negative if this route is cheaper, positive if more expensive,
      *         zero if fees are equal
      */

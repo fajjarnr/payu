@@ -174,8 +174,6 @@ class SecurityConfigTest {
                 .andExpect(status().isUnauthorized());
     }
  
-    // Verify wildcard actuator access is blocked by auth
- 
     @Test
     @DisplayName("Should require authentication for non-existent actuator endpoint")
     void shouldRequireAuthenticationForNonExistentActuatorEndpoint() throws Exception {

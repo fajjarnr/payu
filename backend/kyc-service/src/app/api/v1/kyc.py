@@ -72,7 +72,6 @@ async def start_kyc_verification(
     Supports idempotency for safe retries.
     Rate limit: 10 requests per minute per IP.
     """
-    # Validate ownership
     if request_data.user_id != auth.get("sub"):
          raise HTTPException(status_code=403, detail="Forbidden: You can only start KYC for yourself")
     # X-Idempotency-Key canonical; Idempotency-Key fallback for compat
@@ -84,7 +83,6 @@ async def start_kyc_verification(
     )
     log.info("Starting KYC verification")
 
-    # Check idempotency cache
     if idempotency_key:
         cached = await get_cached_result(
             idempotency_key=idempotency_key,
@@ -116,7 +114,6 @@ async def start_kyc_verification(
             "message": "Please upload KTP image",
         }
 
-        # Store result for idempotency
         if idempotency_key:
             await cache_result(
                 idempotency_key=idempotency_key,
@@ -159,7 +156,6 @@ async def upload_ktp(
     )
     log.info("Processing KTP image upload")
 
-    # Check idempotency cache
     if idempotency_key:
         cached = await get_cached_result(
             idempotency_key=idempotency_key,
@@ -190,7 +186,6 @@ async def upload_ktp(
             "next_step": "Please upload selfie image",
         }
 
-        # Store result for idempotency
         if idempotency_key:
             await cache_result(
                 idempotency_key=idempotency_key,
@@ -242,7 +237,6 @@ async def upload_selfie(
     )
     log.info("Processing selfie image upload")
 
-    # Check idempotency cache
     if idempotency_key:
         cached = await get_cached_result(
             idempotency_key=idempotency_key,
@@ -274,7 +268,6 @@ async def upload_selfie(
             "dukcapil_result": result.get("dukcapil_result"),
         }
 
-        # Store result for idempotency
         if idempotency_key:
             await cache_result(
                 idempotency_key=idempotency_key,
@@ -363,7 +356,6 @@ async def get_user_kyc_history(
     auth: dict = Depends(require_auth),
 ):
     """BUG-SECURITY-017 FIX: Get KYC verification history with IDOR check."""
-    # Validate ownership
     if user_id != auth.get("sub"):
          raise HTTPException(status_code=403, detail="Forbidden: You can only access your own KYC history")
     log = logger.bind(

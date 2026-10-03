@@ -12,9 +12,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Spring Data JPA repository for IntegrationMessageEntity.
- */
 @Repository
 public interface IntegrationMessageJpaRepository extends JpaRepository<IntegrationMessageEntity, String> {
 

@@ -77,13 +77,11 @@ class ApiPortalResourceTest {
             .body("status", equalTo("UP"));
     }
 
-    // ────────── NEW TESTS ──────────
-
     @Test
     @DisplayName("should return OpenAPI spec for known service (or 404 if unreachable)")
     void testGetServiceSpec_ForExistingService() {
         // account-service is in the config but unreachable at localhost:8080
-        // When unreachable: spec is null -> resource returns 404
+        // unreachable: spec is null -> resource returns 404
         given()
             .when().get("/api/v1/portal/services/account-service/openapi")
             .then()

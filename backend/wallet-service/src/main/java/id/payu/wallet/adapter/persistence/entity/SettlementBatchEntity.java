@@ -92,7 +92,6 @@ public class SettlementBatchEntity {
     public SettlementBatchEntity() {
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getPartnerId() { return partnerId; }

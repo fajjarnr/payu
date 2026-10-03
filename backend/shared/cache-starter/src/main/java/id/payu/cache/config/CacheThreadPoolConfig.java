@@ -50,10 +50,6 @@ public class CacheThreadPoolConfig {
      *
      * <p>This executor is used for asynchronous cache refresh operations when
      * stale data is served while fresh data is being fetched in the background.</p>
-     *
-     * @param properties Cache properties for configuration
-     * @param meterRegistry Micrometer registry for metrics
-     * @return Executor configured for cache refresh operations
      */
     @Bean(name = "cacheRefreshExecutor")
     @ConditionalOnMissingBean(name = "cacheRefreshExecutor")
@@ -71,7 +67,6 @@ public class CacheThreadPoolConfig {
         executor.setTaskDecorator(new CacheTaskDecorator());
         executor.initialize();
 
-        // Register Micrometer metrics
         ExecutorServiceMetrics.monitor(
                 meterRegistry,
                 executor.getThreadPoolExecutor(),
@@ -91,7 +86,6 @@ public class CacheThreadPoolConfig {
     private static class CacheTaskDecorator implements org.springframework.core.task.TaskDecorator {
         @Override
         public Runnable decorate(Runnable runnable) {
-            // Capture current MDC context
             Map<String, String> mdcContext = org.slf4j.MDC.getCopyOfContextMap();
 
             return () -> {

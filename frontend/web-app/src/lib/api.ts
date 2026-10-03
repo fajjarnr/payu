@@ -18,10 +18,8 @@ const api = axios.create({
   withCredentials: true, // include httpOnly cookies in every request
 });
 
-// Export isAxiosError for type checking
 export { isAxiosError };
 
-// ── Response unwrapper: auto-extract ApiResponse.data wrapper ───────
 // BUG-CROSS-003: Backend wraps responses in ApiResponse<T> = { success, data, message }.
 // Frontend services expect response.data to be T directly, not the wrapper.
 // This interceptor transparently unwraps so `response.data` always contains
@@ -40,7 +38,6 @@ api.interceptors.response.use((response) => {
   return response;
 });
 
-// ── 401 interceptor: transparent token refresh via BFF ──────────────
 // BUG-FE-009 FIX: Encapsulated token refresh state to prevent global mutation issues
 class TokenRefreshManager {
   private isRefreshing = false;

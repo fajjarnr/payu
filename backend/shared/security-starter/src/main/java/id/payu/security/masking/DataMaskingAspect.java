@@ -73,10 +73,8 @@ public class DataMaskingAspect {
             visitedObjects.get().clear();
             recursionDepth.set(0);
 
-            // Mask arguments before logging
             Object[] maskedArgs = maskArguments(joinPoint.getArgs());
 
-            // Log masked arguments
             if (log.isDebugEnabled()) {
                 log.debug("Executing: {} with masked args: {}", joinPoint.getSignature(),
                         formatArgs(maskedArgs));
@@ -91,7 +89,6 @@ public class DataMaskingAspect {
 
         Object result = joinPoint.proceed();
 
-        // Mask return value before logging
         try {
             if (log.isDebugEnabled() && result != null) {
                 recursionDepth.set(0);
@@ -152,7 +149,6 @@ public class DataMaskingAspect {
             return value.getClass().getSimpleName() + "[...]";
         }
 
-        // Handle objects by converting to string and masking
         recursionDepth.set(depth + 1);
         try {
             return maskObject(value);
@@ -166,7 +162,6 @@ public class DataMaskingAspect {
             return value;
         }
 
-        // Check if it's an email
         if (value.contains("@") && EMAIL_PATTERN.matcher(value).matches()) {
             return maskEmail(value);
         }
@@ -274,7 +269,6 @@ public class DataMaskingAspect {
                 fields[i].setAccessible(true);
                 String fieldName = fields[i].getName();
 
-                // Get field value
                 Object fieldValue;
                 try {
                     fieldValue = fields[i].get(obj);
@@ -283,17 +277,14 @@ public class DataMaskingAspect {
                     continue;
                 }
 
-                // Check if field has @Sensitive annotation
                 Sensitive sensitiveAnnotation = fields[i].getAnnotation(Sensitive.class);
                 boolean isFieldSensitive = sensitiveAnnotation != null;
 
-                // Check if field name is in masking properties configuration
                 boolean isConfiguredMasked = properties.getMasking().getFields().stream()
                         .anyMatch(fieldName::equalsIgnoreCase);
 
                 boolean shouldMask = isFieldSensitive || isConfiguredMasked;
 
-                // Apply masking based on sensitivity level
                 if (shouldMask && fieldValue != null) {
                     sb.append(fieldName).append("=").append(maskFieldBySensitivity(fieldValue, sensitiveAnnotation));
                 } else if (fieldValue != null) {

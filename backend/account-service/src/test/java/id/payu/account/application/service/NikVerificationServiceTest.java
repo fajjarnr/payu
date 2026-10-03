@@ -73,14 +73,11 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should return verified response when NIK matches")
         void shouldReturnVerifiedResponseWhenNikMatches() {
-            // Given
             given(kycVerificationPort.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(successResponse);
 
-            // When
             CompletableFuture<VerifyNikResponse> result = nikVerificationService.verifyNik(validRequest);
 
-            // Then
             assertThat(result).isCompletedWithValue(successResponse);
             verify(kycVerificationPort).verifyNik(validRequest);
         }
@@ -88,14 +85,11 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should return not found response when NIK not in database")
         void shouldReturnNotFoundResponseWhenNikNotFound() {
-            // Given
             given(kycVerificationPort.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(notFoundResponse);
 
-            // When
             CompletableFuture<VerifyNikResponse> result = nikVerificationService.verifyNik(validRequest);
 
-            // Then
             assertThat(result).isCompletedWithValue(notFoundResponse);
             assertThat(result.join().verified()).isFalse();
             assertThat(result.join().responseCode()).isEqualTo("14");
@@ -104,11 +98,9 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should return service unavailable response when adapter throws exception")
         void shouldReturnServiceUnavailableResponseWhenAdapterThrows() {
-            // Given
             given(kycVerificationPort.verifyNik(any(VerifyNikRequest.class)))
                 .willThrow(new AccountDomainException.DukcapilServiceUnavailableException());
 
-            // When/Then
             // In unit test without Spring AOP proxy, fallback is not active — exception propagates
             assertThatThrownBy(() -> nikVerificationService.verifyNik(validRequest))
                 .isInstanceOf(AccountDomainException.DukcapilServiceUnavailableException.class);
@@ -117,7 +109,6 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should throw InvalidNikException when NIK is null")
         void shouldThrowExceptionWhenNikIsNull() {
-            // Given
             VerifyNikRequest invalidRequest = new VerifyNikRequest(
                 null,
                 "John Doe",
@@ -125,7 +116,6 @@ class NikVerificationServiceTest {
                 "1990-01-15"
             );
 
-            // When/Then
             assertThatThrownBy(() -> nikVerificationService.verifyNik(invalidRequest).join())
                 .isInstanceOf(AccountDomainException.InvalidNikException.class)
                 .hasMessageContaining("NIK cannot be empty");
@@ -136,7 +126,6 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should throw InvalidNikException when NIK is empty")
         void shouldThrowExceptionWhenNikIsEmpty() {
-            // Given
             VerifyNikRequest invalidRequest = new VerifyNikRequest(
                 "",
                 "John Doe",
@@ -144,7 +133,6 @@ class NikVerificationServiceTest {
                 "1990-01-15"
             );
 
-            // When/Then
             assertThatThrownBy(() -> nikVerificationService.verifyNik(invalidRequest).join())
                 .isInstanceOf(AccountDomainException.InvalidNikException.class);
 
@@ -154,7 +142,6 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should throw InvalidNikException when NIK is not 16 digits")
         void shouldThrowExceptionWhenNikNot16Digits() {
-            // Given
             VerifyNikRequest invalidRequest = new VerifyNikRequest(
                 "12345",
                 "John Doe",
@@ -162,7 +149,6 @@ class NikVerificationServiceTest {
                 "1990-01-15"
             );
 
-            // When/Then
             assertThatThrownBy(() -> nikVerificationService.verifyNik(invalidRequest).join())
                 .isInstanceOf(AccountDomainException.InvalidNikException.class);
 
@@ -172,7 +158,6 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should throw InvalidNikException when NIK contains non-digits")
         void shouldThrowExceptionWhenNikContainsNonDigits() {
-            // Given
             VerifyNikRequest invalidRequest = new VerifyNikRequest(
                 "3201abcd56789001",
                 "John Doe",
@@ -180,7 +165,6 @@ class NikVerificationServiceTest {
                 "1990-01-15"
             );
 
-            // When/Then
             assertThatThrownBy(() -> nikVerificationService.verifyNik(invalidRequest).join())
                 .isInstanceOf(AccountDomainException.InvalidNikException.class);
 
@@ -190,7 +174,6 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should throw InvalidNikException when NIK is all same digits")
         void shouldThrowExceptionWhenNikAllSameDigits() {
-            // Given
             VerifyNikRequest invalidRequest = new VerifyNikRequest(
                 "1111111111111111",
                 "John Doe",
@@ -198,7 +181,6 @@ class NikVerificationServiceTest {
                 "1990-01-15"
             );
 
-            // When/Then
             assertThatThrownBy(() -> nikVerificationService.verifyNik(invalidRequest).join())
                 .isInstanceOf(AccountDomainException.InvalidNikException.class);
 
@@ -208,7 +190,6 @@ class NikVerificationServiceTest {
         @Test
         @DisplayName("should handle request without birth place")
         void shouldHandleRequestWithoutBirthPlace() {
-            // Given
             VerifyNikRequest requestWithoutBirthPlace = new VerifyNikRequest(
                 "3201234567890001",
                 "John Doe",
@@ -219,21 +200,17 @@ class NikVerificationServiceTest {
             given(kycVerificationPort.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(successResponse);
 
-            // When
             CompletableFuture<VerifyNikResponse> result = nikVerificationService.verifyNik(requestWithoutBirthPlace);
 
-            // Then
             assertThat(result).isCompletedWithValue(successResponse);
         }
 
         @Test
         @DisplayName("should propagate verification failed exception from adapter")
         void shouldPropagateVerificationFailedException() {
-            // Given
             given(kycVerificationPort.verifyNik(any(VerifyNikRequest.class)))
                 .willThrow(new AccountDomainException.DukcapilVerificationFailedException("Network error"));
 
-            // When/Then
             assertThatThrownBy(() -> nikVerificationService.verifyNik(validRequest).join())
                 .isInstanceOf(AccountDomainException.DukcapilVerificationFailedException.class)
                 .hasMessageContaining("Network error");

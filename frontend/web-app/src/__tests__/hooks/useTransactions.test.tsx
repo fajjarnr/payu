@@ -11,7 +11,6 @@ import TransactionService from '@/services/TransactionService';
 import type { Transaction, TransactionType } from '@/types';
 import { asMoney } from '@/lib/currency';
 
-// Mock TransactionService
 vi.mock('@/services/TransactionService');
 
 describe('useTransactions hook', () => {
@@ -515,7 +514,6 @@ describe('Transaction hooks integration', () => {
     vi.mocked(TransactionService.getAccountTransactions).mockResolvedValue(mockTransactions);
     vi.mocked(TransactionService.initiateTransfer).mockResolvedValue(mockTransferResponse);
 
-    // First, fetch transactions
     const { result: transactionsResult } = renderHook(() => useTransactions('account-1'), {
       wrapper
     });
@@ -526,7 +524,6 @@ describe('Transaction hooks integration', () => {
 
     const initialCallCount = vi.mocked(TransactionService.getAccountTransactions).mock.calls.length;
 
-    // Then initiate transfer
     const { result: transferResult } = renderHook(() => useInitiateTransfer(), { wrapper });
 
     await act(async () => {
@@ -540,7 +537,6 @@ describe('Transaction hooks integration', () => {
       });
     });
 
-    // Transactions should be refetched after transfer
     await waitFor(() => {
       expect(vi.mocked(TransactionService.getAccountTransactions).mock.calls.length).toBeGreaterThan(
         initialCallCount
@@ -566,14 +562,12 @@ describe('Transaction hooks integration', () => {
     vi.mocked(TransactionService.getTransaction).mockResolvedValue(mockTransaction);
     vi.mocked(TransactionService.getAccountTransactions).mockResolvedValue(mockTransactions);
 
-    // Fetch transaction list
     const { result: listResult } = renderHook(() => useTransactions('account-1'), { wrapper });
 
     await waitFor(() => {
       expect(listResult.current.isSuccess).toBe(true);
     });
 
-    // Fetch single transaction
     const { result: detailResult } = renderHook(() => useTransaction('txn-1'), { wrapper });
 
     await waitFor(() => {

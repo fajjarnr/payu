@@ -56,20 +56,10 @@ public class WebhookProcessingException extends RuntimeException {
         this.retryable = retryable;
     }
 
-    /**
-     * Gets the webhook ID associated with this exception.
-     *
-     * @return the webhook ID
-     */
     public String getWebhookId() {
         return webhookId;
     }
 
-    /**
-     * Checks if this error is retryable.
-     *
-     * @return true if the operation should be retried
-     */
     public boolean isRetryable() {
         return retryable;
     }

@@ -1,16 +1,13 @@
 #!/bin/bash
 set -e
 
-# ============================================
 # PayU Test Data Seeding Script
 # Populates test databases with known test data
-# ============================================
 
 echo "=========================================="
 echo "PayU Test Data Seeding"
 echo "=========================================="
 
-# Color codes
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -29,7 +26,6 @@ print_warning() {
     echo -e "${YELLOW}⚠${NC} $1"
 }
 
-# Determine container CLI (podman or docker)
 if command -v podman > /dev/null 2>&1; then
     CONTAINER_CLI="podman"
 else
@@ -44,7 +40,6 @@ else
     COMPOSE_CMD="docker compose -f infrastructure/local-podman/podman-compose.yml"
 fi
 
-# Check if environment is running
 echo ""
 echo "Checking environment..."
 if ! $CONTAINER_CLI ps | grep -q "payu-postgres"; then
@@ -122,11 +117,9 @@ print_status $? "Test wallets table created"
 echo ""
 echo "Step 4: Seeding test wallets..."
 
-# Get user IDs
 USER1_ID=$($POSTGRES_CMD -d payu_test_account -tAc "SELECT id FROM test_users WHERE phone_number='6281234567890' LIMIT 1" 2>/dev/null | tr -d ' ')
 USER2_ID=$($POSTGRES_CMD -d payu_test_account -tAc "SELECT id FROM test_users WHERE phone_number='6281234567891' LIMIT 1" 2>/dev/null | tr -d ' ')
 
-# Create wallets for test users
 $POSTGRES_CMD -d payu_test_wallet << 'EOF' > /dev/null 2>&1
 INSERT INTO test_wallets (user_id, account_number, balance, status)
 SELECT
@@ -180,7 +173,6 @@ print_status $? "Test transactions table created"
 echo ""
 echo "Step 7: Seeding sample transactions..."
 
-# Get wallet account numbers
 ACCOUNT1=$($POSTGRES_CMD -d payu_test_wallet -tAc "SELECT account_number FROM test_wallets WHERE user_id = (SELECT id FROM payu_test_account.test_users WHERE phone_number='6281234567890' LIMIT 1) LIMIT 1" 2>/dev/null | tr -d ' ')
 ACCOUNT2=$($POSTGRES_CMD -d payu_test_wallet -tAc "SELECT account_number FROM test_wallets WHERE user_id = (SELECT id FROM payu_test_account.test_users WHERE phone_number='6281234567891' LIMIT 1) LIMIT 1" 2>/dev/null | tr -d ' ')
 
@@ -281,7 +273,6 @@ CREATE INDEX IF NOT EXISTS idx_test_notifications_is_read ON test_notifications(
 EOF
 print_status $? "Test notifications table created"
 
-# Final Summary
 echo ""
 echo "=========================================="
 echo "Test Data Seeding Complete"

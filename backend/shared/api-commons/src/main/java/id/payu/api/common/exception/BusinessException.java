@@ -5,7 +5,6 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * Base exception for all business rule violations in PayU services.
  * All business exceptions should extend this class to maintain consistent error handling.
  */
 @Getter

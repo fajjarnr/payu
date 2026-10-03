@@ -10,7 +10,6 @@ import {
 } from '@/hooks/useCMS';
 import CMSService from '@/services/CMSService';
 
-// Mock CMSService
 vi.mock('@/services/CMSService');
 
 describe('useActiveContent hook', () => {
@@ -227,7 +226,6 @@ describe('useActiveContent hook', () => {
       expect(result2.current.isSuccess).toBe(true);
     });
 
-    // Should not call service again due to staleTime
     expect(CMSService.getActiveContentByType).toHaveBeenCalledTimes(1);
   });
 
@@ -242,7 +240,6 @@ describe('useActiveContent hook', () => {
 
     const callCount = vi.mocked(CMSService.getActiveContentByType).mock.calls.length;
 
-    // Simulate window focus (this would normally trigger refetch if enabled)
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
@@ -615,7 +612,6 @@ describe('CMS hooks integration', () => {
     const { result: banners } = renderHook(() => useBanners(), { wrapper });
     const { result: popups } = renderHook(() => usePopups(), { wrapper });
 
-    // Banners should load first
     await waitFor(
       () => {
         expect(banners.current.isSuccess).toBe(true);
@@ -623,7 +619,6 @@ describe('CMS hooks integration', () => {
       { timeout: 200 }
     );
 
-    // Both should eventually succeed
     await waitFor(
       () => {
         expect(popups.current.isSuccess).toBe(true);

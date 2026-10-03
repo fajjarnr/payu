@@ -60,7 +60,6 @@ public class ApiKeyRotationService {
             .with(
                 unused -> {
                     Log.infof("Generated new API key for user %s, expires at %s", userId, expiresAt);
-                    // Store metadata
                     storeMetadata(apiKey, userId, expiresAt);
                 },
                 failure -> Log.errorf(failure, "Failed to store API key for user %s", userId)
@@ -94,7 +93,6 @@ public class ApiKeyRotationService {
      * Rotate an API key (generate new one, invalidate old).
      */
     public Uni<String> rotateApiKey(String oldApiKey) {
-        // Get user ID from old key
         String cacheKey = API_KEY_PREFIX + oldApiKey;
 
         return cache.get(cacheKey)
@@ -103,10 +101,8 @@ public class ApiKeyRotationService {
                     return Uni.createFrom().failure(new IllegalArgumentException("Invalid API key"));
                 }
 
-                // Delete old key
                 return cache.remove(cacheKey)
                     .flatMap(deleted -> {
-                        // Generate new key
                         String newApiKey = generateApiKey(userId);
                         return Uni.createFrom().item(newApiKey);
                     });

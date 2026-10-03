@@ -257,7 +257,6 @@ public class GlobalExceptionHandler {
     /**
      * Extracts a safe error message that doesn't contain sensitive information.
      *
-     * @param ex The exception
      * @return A safe error message
      */
     private String getSafeErrorMessage(Exception ex) {

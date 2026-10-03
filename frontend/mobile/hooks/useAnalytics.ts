@@ -4,9 +4,7 @@ import { Platform } from 'react-native';
 
 // expo-screen-orientation is optional, only import if available
 try {
-  // Module not available, will use fallback
 } catch {
-  // Module not available, will use fallback
 }
 
 interface AnalyticsEvent {
@@ -110,7 +108,6 @@ export const useAnalytics = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    // Track screen views
     const unsubscribe = navigation?.addListener('state', (e) => {
       const screenName = e.data.state.routes[e.data.state.index]?.name || 'unknown';
       analytics.trackScreenView(screenName);
@@ -148,7 +145,6 @@ export const useAnalytics = () => {
   };
 };
 
-// Error tracking utility
 export const trackError = (error: Error, context?: string) => {
   analytics.trackError(error, context);
 
@@ -160,7 +156,6 @@ export const trackError = (error: Error, context?: string) => {
   });
 };
 
-// Performance tracking
 export const trackPerformance = (metricName: string, duration: number) => {
   analytics.trackEvent('performance_metric', {
     metric_name: metricName,
@@ -168,7 +163,6 @@ export const trackPerformance = (metricName: string, duration: number) => {
   });
 };
 
-// User engagement tracking
 export const trackEngagement = (feature: string, duration: number) => {
   analytics.trackEvent('engagement', {
     feature,

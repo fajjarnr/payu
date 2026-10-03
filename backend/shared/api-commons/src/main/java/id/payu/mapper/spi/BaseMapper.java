@@ -44,52 +44,16 @@ import java.util.Set;
  */
 public interface BaseMapper<E, D> {
 
-    /**
-     * Convert a domain object to an entity.
-     *
-     * @param domain the domain object
-     * @return the entity object
-     */
     E toEntity(D domain);
 
-    /**
-     * Convert an entity to a domain object.
-     *
-     * @param entity the entity object
-     * @return the domain object
-     */
     D toDomain(E entity);
 
-    /**
-     * Convert a list of entities to a list of domain objects.
-     *
-     * @param entities the list of entities
-     * @return the list of domain objects
-     */
     List<D> toDomainList(List<E> entities);
 
-    /**
-     * Convert a list of domain objects to a list of entities.
-     *
-     * @param domains the list of domain objects
-     * @return the list of entities
-     */
     List<E> toEntityList(List<D> domains);
 
-    /**
-     * Convert a set of entities to a set of domain objects.
-     *
-     * @param entities the set of entities
-     * @return the set of domain objects
-     */
     Set<D> toDomainSet(Set<E> entities);
 
-    /**
-     * Convert a set of domain objects to a set of entities.
-     *
-     * @param domains the set of domain objects
-     * @return the set of entities
-     */
     Set<E> toEntitySet(Set<D> domains);
 
     /**

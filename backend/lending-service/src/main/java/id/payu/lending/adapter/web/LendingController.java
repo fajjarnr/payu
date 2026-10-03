@@ -101,7 +101,6 @@ public class LendingController extends BaseController {
         UUID authenticatedUserId = UUID.fromString(principal.getName());
         log.info("Received loan application request for authenticated user: {}", authenticatedUserId);
 
-        // Create a new request with the authenticated user's ID
         LoanApplicationRequest securedRequest = new LoanApplicationRequest(
                 authenticatedUserId,
                 command.externalId(),
@@ -440,9 +439,7 @@ public class LendingController extends BaseController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // ═══════════════════════════════════════════════════════
     //  Installment / PayLater Checkout (GAP-012)
-    // ═══════════════════════════════════════════════════════
 
     @PostMapping("/installments/tenor-options")
     @PreAuthorize("isAuthenticated()")

@@ -14,7 +14,6 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 
-// Screen reader announcer component
 const LiveRegion = ({ message }: { message: string }) => (
   <div
     role="status"
@@ -27,7 +26,6 @@ const LiveRegion = ({ message }: { message: string }) => (
   </div>
 );
 
-// Form with proper labels
 const AccessibleForm = () => (
   <form>
     <div>
@@ -51,7 +49,6 @@ const AccessibleForm = () => (
   </form>
 );
 
-// Data table with proper headers
 const DataTable = () => (
   <table>
     <caption>Transaction History</caption>
@@ -77,7 +74,6 @@ const DataTable = () => (
   </table>
 );
 
-// Component with ARIA landmarks
 const PageWithLandmarks = () => (
   <>
     <header role="banner">
@@ -106,7 +102,6 @@ const PageWithLandmarks = () => (
   </>
 );
 
-// Button with accessible name
 const IconButton = () => (
   <button
     type="button"
@@ -119,7 +114,6 @@ const IconButton = () => (
   </button>
 );
 
-// Progress indicator
 const ProgressBar = ({ value, max }: { value: number; max: number }) => (
   <div
     role="progressbar"
@@ -132,7 +126,6 @@ const ProgressBar = ({ value, max }: { value: number; max: number }) => (
   </div>
 );
 
-// Alert/Error message
 const Alert = ({ type, message }: { type: 'error' | 'success' | 'warning'; message: string }) => {
   const role = type === 'error' ? 'alert' : 'status';
   const live = type === 'error' ? 'assertive' : 'polite';
@@ -149,7 +142,6 @@ const Alert = ({ type, message }: { type: 'error' | 'success' | 'warning'; messa
   );
 };
 
-// Breadcrumb navigation
 const Breadcrumb = () => (
   <nav aria-label="Breadcrumb">
     <ol>

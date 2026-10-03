@@ -40,7 +40,6 @@ public class DailySettlementResponse {
         return new DailySettlementResponseBuilder();
     }
 
-    // Getters and Setters
     public LocalDate getSettlementDate() { return settlementDate; }
     public void setSettlementDate(LocalDate settlementDate) { this.settlementDate = settlementDate; }
     public int getTotalTransactions() { return totalTransactions; }

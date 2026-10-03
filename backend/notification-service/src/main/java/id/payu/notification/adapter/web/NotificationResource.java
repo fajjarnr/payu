@@ -66,8 +66,6 @@ public class NotificationResource {
      * <p>Supports multiple channels: PUSH, SMS, EMAIL, IN_APP.
      * Notifications are queued for asynchronous delivery with automatic retry on failure.</p>
      *
-     * @param request the notification request containing channel, recipient, and content
-     * @return the created notification with tracking ID
      */
     @POST
     @Operation(
@@ -155,7 +153,6 @@ public class NotificationResource {
      * List all recent notifications (paginated).
      *
      * @param limit maximum number of notifications to return (default: 20, max: 100)
-     * @return list of recent notifications
      */
     @GET
     @Operation(
@@ -202,7 +199,6 @@ public class NotificationResource {
     /**
      * Get notification details by ID.
      *
-     * @param id the notification UUID
      * @return the notification details or 404 if not found
      */
     @GET
@@ -275,9 +271,7 @@ public class NotificationResource {
     /**
      * Get all notifications for a user.
      *
-     * @param userId the user ID to fetch notifications for
      * @param limit maximum number of notifications to return (default: 20)
-     * @return list of notifications for the user
      */
     @GET
     @Path("/user/{userId}")
@@ -349,8 +343,6 @@ public class NotificationResource {
      *
      * <p>Only applicable to IN_APP notifications. Other channels ignore this operation.</p>
      *
-     * @param id the notification UUID to mark as read
-     * @return success confirmation
      */
     @POST
     @Path("/{id}/read")

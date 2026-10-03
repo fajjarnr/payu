@@ -28,7 +28,6 @@ export default function SupportPage() {
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6 lg:space-y-8">
-          {/* Header */}
           <StaggerContainer>
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
@@ -39,7 +38,6 @@ export default function SupportPage() {
               </div>
             </StaggerItem>
 
-            {/* Support Channels */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {supportChannels.map((channel, i) => (
                 <StaggerItem key={i}>
@@ -61,7 +59,6 @@ export default function SupportPage() {
               ))}
             </div>
 
-            {/* Knowledge Base */}
             <StaggerItem className="mt-4">
               <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
@@ -85,7 +82,6 @@ export default function SupportPage() {
               </div>
             </StaggerItem>
 
-            {/* System Status Banner */}
             <StaggerItem className="mt-4">
               <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl group">
                 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-left">

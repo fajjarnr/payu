@@ -201,7 +201,6 @@ export class WalletService {
   }
 }
 
-// Card types
 // BUG-CROSS-047: Aligned VirtualCard interface with backend CardResponse
 export interface VirtualCard {
   id: string;
@@ -225,7 +224,6 @@ export interface UpdateCardRequest {
   dailyLimit?: Money;
 }
 
-// Pocket types
 
 // BUG-CROSS-043: Aligned CreatePocketRequest with backend — removed target/type, added description
 export interface CreatePocketRequest {
@@ -235,7 +233,6 @@ export interface CreatePocketRequest {
   description?: string;
 }
 
-// Ledger types
 export interface LedgerEntry {
   id: string;
   accountId: string;

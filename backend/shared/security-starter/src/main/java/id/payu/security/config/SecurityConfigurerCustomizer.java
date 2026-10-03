@@ -38,6 +38,5 @@ public interface SecurityConfigurerCustomizer {
      * Default is no-op.
      */
     default void configure(HttpSecurity http) throws Exception {
-        // no-op
     }
 }

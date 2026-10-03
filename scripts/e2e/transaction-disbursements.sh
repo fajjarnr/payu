@@ -1,8 +1,6 @@
 #!/bin/bash
-# ============================================
 # PayU Transaction Disbursements + Split Bills + Smart Routing E2E
 # Read-only queries through gateway -> transaction-service
-# ============================================
 
 set -e
 

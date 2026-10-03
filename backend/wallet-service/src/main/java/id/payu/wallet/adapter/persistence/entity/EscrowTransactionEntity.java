@@ -127,7 +127,6 @@ public class EscrowTransactionEntity implements Persistable<UUID> {
     public EscrowTransactionEntity() {
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getBuyerAccountId() { return buyerAccountId; }

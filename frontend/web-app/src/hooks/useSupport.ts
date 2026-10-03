@@ -5,7 +5,7 @@ import { MutationPresets } from '@/lib/mutation-config';
 import SupportService from '@/services/SupportService';
 import type { CreateAgentRequest, CreateModuleRequest, AssignTrainingRequest, TrainingStatus, CreateTicketRequest } from '@/services/SupportService';
 
-// ── Training Dashboard ──
+// Training Dashboard
 export function useTrainingStatus() {
   return useQuery({
     queryKey: ['support-training-status'],
@@ -53,7 +53,7 @@ export function useUpdateAgentStatus() {
   });
 }
 
-// ── Training Modules ──
+// Training Modules
 export function useTrainingModules() {
   return useQuery({
     queryKey: ['training-modules'],
@@ -91,7 +91,7 @@ export function useUpdateModuleStatus() {
   });
 }
 
-// ── Training Assignments ──
+// Training Assignments
 export function useAgentTrainings(agentId: number) {
   return useQuery({
     queryKey: ['agent-trainings', agentId],
@@ -120,7 +120,7 @@ export function useAssignTraining() {
   });
 }
 
-// ── Tickets (frontend-only for now) ──
+// Tickets (frontend-only for now)
 export function useTickets() {
   return useQuery({
     queryKey: ['support-tickets'],

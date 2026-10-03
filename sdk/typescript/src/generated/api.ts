@@ -90,9 +90,6 @@ export class TransfersApi extends BaseApi {
   }
 }
 
-/**
- * Wallets API.
- */
 export class WalletsApi extends BaseApi {
   /**
    * Get wallet balance for an account.
@@ -105,9 +102,6 @@ export class WalletsApi extends BaseApi {
   }
 }
 
-/**
- * Transactions API.
- */
 export class TransactionsApi extends BaseApi {
   /**
    * Get transaction details by ID.

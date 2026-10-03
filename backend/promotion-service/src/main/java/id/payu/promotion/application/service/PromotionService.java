@@ -167,7 +167,6 @@ public class PromotionService {
             throw new IllegalArgumentException("PromotionEntity has reached maximum redemptions");
         }
 
-        // Refresh promotion to reflect the atomic increment in the current persistence context
         promotion = incremented.get();
 
         if (promotion.getMinTransactionAmount() != null &&

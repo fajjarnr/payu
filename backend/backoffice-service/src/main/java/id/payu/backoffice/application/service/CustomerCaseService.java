@@ -95,8 +95,6 @@ public class CustomerCaseService {
         repository.deleteById(id);
     }
 
-    // ─── Fallback methods ──────────────────────────────────────────────────────
-
     private CustomerCase createFallback(CustomerCaseRequest request, Throwable ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException

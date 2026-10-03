@@ -26,19 +26,10 @@ public interface SagaRepository extends JpaRepository<SagaInstance, String> {
     @Query("SELECT s FROM SagaInstance s WHERE s.sagaId = :sagaId")
     Optional<SagaInstance> findBySagaId(@Param("sagaId") String sagaId);
 
-    /**
-     * Find all sagas by type.
-     */
     List<SagaInstance> findBySagaType(String sagaType);
 
-    /**
-     * Find all sagas by current state.
-     */
     List<SagaInstance> findByCurrentState(String currentState);
 
-    /**
-     * Find sagas by type and state.
-     */
     List<SagaInstance> findBySagaTypeAndCurrentState(String sagaType, String currentState);
 
     /**
@@ -56,14 +47,8 @@ public interface SagaRepository extends JpaRepository<SagaInstance, String> {
            "AND s.retryCount < s.maxRetries AND s.lastUpdatedAt < :retryThreshold")
     List<SagaInstance> findRetryableSagas(@Param("retryThreshold") Instant retryThreshold);
 
-    /**
-     * Count sagas by type and state.
-     */
     long countBySagaTypeAndCurrentState(String sagaType, String currentState);
 
-    /**
-     * Check if saga exists by ID.
-     */
     boolean existsBySagaId(String sagaId);
 
     /**
@@ -78,14 +63,8 @@ public interface SagaRepository extends JpaRepository<SagaInstance, String> {
                                @Param("expectedVersion") Long expectedVersion,
                                @Param("now") Instant now);
 
-    /**
-     * Find sagas started within a time range.
-     */
     List<SagaInstance> findByStartedAtBetween(Instant start, Instant end);
 
-    /**
-     * Find sagas by type with pagination.
-     */
     Page<SagaInstance> findBySagaType(String sagaType, Pageable pageable);
 
     /**
@@ -94,9 +73,6 @@ public interface SagaRepository extends JpaRepository<SagaInstance, String> {
     @Query("SELECT s FROM SagaInstance s WHERE s.currentState NOT IN ('COMPLETED', 'FAILED', 'COMPENSATED')")
     List<SagaInstance> findIncompleteSagas();
 
-    /**
-     * Delete completed sagas older than a given date.
-     */
     @Modifying
     @Query("DELETE FROM SagaInstance s WHERE s.currentState = 'COMPLETED' AND s.completedAt < :threshold")
     int deleteOldCompletedSagas(@Param("threshold") Instant threshold);

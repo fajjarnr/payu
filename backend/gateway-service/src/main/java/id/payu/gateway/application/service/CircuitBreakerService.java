@@ -45,11 +45,6 @@ public class CircuitBreakerService {
 
     /**
      * Execute a proxy call with circuit breaker protection.
-     *
-     * @param serviceName   the backend service name
-     * @param action        the actual proxy call supplier
-     * @param fallbackStatus the HTTP status code for the fallback response (typically 503)
-     * @return Uni<jakarta.ws.rs.core.Response> with circuit breaker protection
      */
     public Uni<jakarta.ws.rs.core.Response> execute(String serviceName,
                                                       Supplier<Uni<jakarta.ws.rs.core.Response>> action) {
@@ -59,7 +54,6 @@ public class CircuitBreakerService {
 
         ServiceCircuitBreaker cb = getOrCreate(serviceName);
 
-        // If circuit is OPEN, check if delay has elapsed
         if (cb.getState() == State.OPEN) {
             if (cb.shouldAttemptReset()) {
                 cb.transitionTo(State.HALF_OPEN);
@@ -171,8 +165,6 @@ public class CircuitBreakerService {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r");
     }
-
-    // Inner classes
 
     /**
      * DTO for circuit breaker state info (exposed via health endpoint).

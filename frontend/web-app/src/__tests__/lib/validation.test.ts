@@ -53,10 +53,10 @@ describe('validation.ts - validatePhoneNumber', () => {
     });
 
     it('should accept all valid lengths (10-13 digits)', () => {
-      expect(validatePhoneNumber('0812345678').isValid).toBe(true); // 10 digits
-      expect(validatePhoneNumber('08123456789').isValid).toBe(true); // 11 digits
-      expect(validatePhoneNumber('081234567890').isValid).toBe(true); // 12 digits
-      expect(validatePhoneNumber('0812345678901').isValid).toBe(true); // 13 digits
+      expect(validatePhoneNumber('0812345678').isValid).toBe(true);
+      expect(validatePhoneNumber('08123456789').isValid).toBe(true);
+      expect(validatePhoneNumber('081234567890').isValid).toBe(true);
+      expect(validatePhoneNumber('0812345678901').isValid).toBe(true);
     });
   });
 

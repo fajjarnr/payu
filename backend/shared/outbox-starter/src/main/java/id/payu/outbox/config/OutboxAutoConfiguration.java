@@ -118,9 +118,6 @@ public class OutboxAutoConfiguration {
 
     /**
      * Creates the OutboxService bean if not already defined.
-     *
-     * @param outboxRepository the outbox repository
-     * @return the configured OutboxService
      */
     @Bean
     @ConditionalOnMissingBean

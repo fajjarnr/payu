@@ -44,7 +44,6 @@ export default function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(notificationPermission);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
 
-  // Memoize logout handler
   const handleLogout = useCallback(() => {
     Alert.alert(
       'Logout',
@@ -62,12 +61,10 @@ export default function ProfileScreen() {
     );
   }, [logout]);
 
-  // Memoize navigation handlers
   const handleChangePIN = useCallback(() => {
     router.push('/profile/change-pin');
   }, [router]);
 
-  // Memoize security check with cleanup
   const handleSecurityCheck = useCallback(async () => {
     if (!isMountedRef.current) return;
 
@@ -89,7 +86,6 @@ export default function ProfileScreen() {
     }
   }, [checkJailbreak]);
 
-  // Memoize notification toggle
   const toggleNotifications = useCallback(async (value: boolean) => {
     if (!isMountedRef.current) return;
 
@@ -105,7 +101,6 @@ export default function ProfileScreen() {
     }
   }, [notificationPermission]);
 
-  // Memoize biometric toggle with cleanup
   const toggleBiometrics = useCallback(async (value: boolean) => {
     if (!isMountedRef.current) return;
 
@@ -133,7 +128,6 @@ export default function ProfileScreen() {
 
   // Memoize settings sections to prevent recreation on every render
   const settingsSections: SettingItem[][] = useMemo(() => [
-    // Account Settings
     [
       {
         id: 'personal-info',
@@ -157,7 +151,6 @@ export default function ProfileScreen() {
         onPress: handleSecurityCheck,
       },
     ],
-    // Security Settings
     [
       {
         id: 'app-lock',
@@ -194,7 +187,6 @@ export default function ProfileScreen() {
         },
       },
     ],
-    // Notification Settings
     [
       {
         id: 'notifications',
@@ -212,7 +204,6 @@ export default function ProfileScreen() {
         onPress: () => router.push('/profile/notification-prefs'),
       },
     ],
-    // App Settings
     [
       {
         id: 'language',
@@ -261,7 +252,6 @@ export default function ProfileScreen() {
     ],
   ], [router, handleChangePIN, handleSecurityCheck, lockEnabled, biometricEnabled, notificationsEnabled, toggleAppLock, toggleBiometrics, toggleNotifications, setSessionTimeout, showFeedback]);
 
-  // Flatten settings sections for FlashList
   const flattenedSettings = useMemo(() => {
     const items: Array<{ type: 'header' | 'item'; data?: SettingItem; sectionIndex?: number }> = [];
     settingsSections.forEach((section, sectionIndex) => {
@@ -272,7 +262,6 @@ export default function ProfileScreen() {
     return items;
   }, [settingsSections]);
 
-  // Memoize render item for performance
   const renderSettingItem = useCallback(({ item }: { item: typeof flattenedSettings[0] }) => {
     if (item.type === 'header' || !item.data) return null;
     const settingItem = item.data;
@@ -314,7 +303,6 @@ export default function ProfileScreen() {
     );
   }, [colors.border, colors.text, colors.textSecondary, settingsSections]);
 
-  // Cleanup on unmount
   React.useEffect(() => {
     return () => {
       isMountedRef.current = false;
@@ -323,7 +311,6 @@ export default function ProfileScreen() {
 
   const ListHeaderComponent = useCallback(() => (
     <>
-      {/* Profile Header */}
       <Card padding="lg" style={styles.profileCard}>
         <View style={styles.profileHeader}>
           <Avatar
@@ -369,7 +356,6 @@ export default function ProfileScreen() {
 
   const ListFooterComponent = useCallback(() => (
     <>
-      {/* Logout Button */}
       <Button
         title="Log Out"
         onPress={handleLogout}
@@ -378,7 +364,6 @@ export default function ProfileScreen() {
         style={styles.logoutButton}
       />
 
-      {/* Version Info */}
       <Text style={[styles.version, { color: colors.textSecondary }]}>
         PayU Mobile v1.0.0
       </Text>

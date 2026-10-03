@@ -32,7 +32,6 @@ class ProductCatalogPersistenceAdapterTest {
     @InjectMocks
     private ProductCatalogPersistenceAdapter adapter;
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
 
     private ProductDefinitionEntity sampleEntity(String code) {
         return ProductDefinitionEntity.builder()
@@ -62,7 +61,6 @@ class ProductCatalogPersistenceAdapterTest {
                 .build();
     }
 
-    // ── Save ────────────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("save()")
@@ -85,7 +83,6 @@ class ProductCatalogPersistenceAdapterTest {
         }
     }
 
-    // ── FindByCode ──────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("findByCode()")
@@ -116,7 +113,6 @@ class ProductCatalogPersistenceAdapterTest {
         }
     }
 
-    // ── FindAllActive ───────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("findAllActive()")
@@ -149,7 +145,6 @@ class ProductCatalogPersistenceAdapterTest {
         }
     }
 
-    // ── FindAll ─────────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("findAll()")
@@ -171,7 +166,6 @@ class ProductCatalogPersistenceAdapterTest {
         }
     }
 
-    // ── FindByType ──────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("findByType()")
@@ -193,7 +187,6 @@ class ProductCatalogPersistenceAdapterTest {
         }
     }
 
-    // ── ExistsByCode ────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("existsByCode()")

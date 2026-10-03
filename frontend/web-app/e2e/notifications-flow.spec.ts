@@ -42,7 +42,6 @@ test.describe('Notifications Flow', () => {
     const promoBtn = page.locator('button').filter({ hasText: 'PROMO' });
     await promoBtn.click();
     await waitForAnimations(page);
-    // After filtering, the PROMO button should appear active (emerald bg)
     await expect(promoBtn).toBeVisible();
   });
 });

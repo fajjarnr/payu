@@ -79,7 +79,6 @@ public class SplitPaymentExecutionEntity {
     @Column(name = "failure_reason", length = 512)
     private String failureReason;
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getSplitRuleId() { return splitRuleId; }

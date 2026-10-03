@@ -50,37 +50,31 @@ public class AuditAspect {
         Method method = signature.getMethod();
         Audited audited = method.getAnnotation(Audited.class);
 
-        // Get HTTP request context
         HttpServletRequest request = getCurrentRequest();
 
-        // Build audit event
         AuditEvent.AuditEventBuilder eventBuilder = AuditEvent.builder()
                 .eventType(audited.operation().name())
                 .operation(method.getName())
                 .entityType(audited.entityType())
                 .timestamp(Instant.now());
 
-        // Extract entity ID from arguments if available
         Object[] args = joinPoint.getArgs();
         if (args.length > 0 && args[0] != null) {
             eventBuilder.entityId(extractEntityId(args[0]));
         }
 
-        // Add HTTP context
         if (request != null) {
             eventBuilder
                     .ipAddress(getClientIpAddress(request))
                     .userAgent(request.getHeader("User-Agent"))
                     .sessionId(request.getSession(false) != null ? request.getSession().getId() : null);
 
-            // Extract user ID from request
             String userId = extractUserId(request);
             if (userId != null) {
                 eventBuilder.userId(userId);
             }
         }
 
-        // Add context data
         Map<String, Object> context = new HashMap<>();
         context.put("className", joinPoint.getTarget().getClass().getSimpleName());
         context.put("methodName", method.getName());
@@ -94,10 +88,8 @@ public class AuditAspect {
         AuditEvent event = eventBuilder.build();
 
         try {
-            // Proceed with the method execution
             Object result = joinPoint.proceed();
 
-            // Mark as successful
             event.setSuccess(true);
 
             // Publish audit event (Kafka or SLF4J fallback)
@@ -105,7 +97,6 @@ public class AuditAspect {
 
             return result;
         } catch (Exception e) {
-            // Mark as failed
             event.setSuccess(false);
             event.setErrorMessage(e.getMessage());
 

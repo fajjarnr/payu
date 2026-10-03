@@ -15,40 +15,23 @@ import {
 } from '@/types';
 
 /**
- * Auth Query Hooks - React Query Integration for Authentication
- *
- * SECURITY POLICY: Token Storage (P2-C2)
- * ========================================
- *
- * CRITICAL: Tokens are NEVER stored in React Query cache.
- * Tokens are stored ONLY in SecureStore (encrypted).
- *
- * This file provides hooks for auth operations while ensuring:
- * - Tokens go directly to SecureStore (never React Query cache)
- * - User data can be cached (non-sensitive)
- * - Session state is memory-only (not persisted)
- *
- * @module useAuthQuery
- * @version 2.0.0 - Secure token handling
+ * Auth query hooks. Security policy P2-C2: tokens go only to SecureStore and are
+ * never stored in the React Query cache; session state is memory-only.
  */
 
-// Query keys
 export const authKeys = {
   all: ['auth'] as const,
   user: () => [...authKeys.all, 'user'] as const,
   session: () => [...authKeys.all, 'session'] as const,
-  // SECURITY: No 'tokens' key - tokens are NEVER in React Query cache
+  // Security: no 'tokens' key - tokens are never in the React Query cache
 };
 
-// Types for auth state
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
 }
 
-/**
- * Hook for login with token storage
- */
+/** Login; tokens are written to SecureStore, never the query cache. */
 export function useLogin(
   options?: UseMutationOptions<AuthResponse, Error, LoginCredentials>
 ) {
@@ -61,7 +44,7 @@ export function useLogin(
       return response;
     },
     onSuccess: async (data) => {
-      // SECURITY: Store tokens ONLY in SecureStore (encrypted)
+      // Security: store tokens only in SecureStore (encrypted)
       // NEVER store tokens in React Query cache
       // Performance: Parallel write operations for better response time
       await Promise.all([
@@ -88,9 +71,6 @@ export function useLogin(
   });
 }
 
-/**
- * Hook for registration
- */
 export function useRegister(
   options?: UseMutationOptions<AuthResponse, Error, RegisterData>
 ) {
@@ -103,7 +83,7 @@ export function useRegister(
       return response;
     },
     onSuccess: async (data) => {
-      // SECURITY: Store tokens ONLY in SecureStore (encrypted)
+      // Security: store tokens only in SecureStore (encrypted)
       // NEVER store tokens in React Query cache
       // Performance: Parallel write operations for better response time
       await Promise.all([
@@ -122,9 +102,7 @@ export function useRegister(
   });
 }
 
-/**
- * Hook for logout with cache clearing
- */
+/** Logout; clears the React Query cache. */
 export function useLogout(
   options?: UseMutationOptions<void, Error, void>
 ) {
@@ -165,9 +143,6 @@ export function useLogout(
   });
 }
 
-/**
- * Hook for token refresh
- */
 export function useRefreshToken(
   options?: UseMutationOptions<AuthResponse, Error, string>
 ) {
@@ -180,7 +155,7 @@ export function useRefreshToken(
       return response;
     },
     onSuccess: async (data) => {
-      // SECURITY: Store refreshed tokens ONLY in SecureStore (encrypted)
+      // Security: store refreshed tokens only in SecureStore (encrypted)
       // NEVER store tokens in React Query cache
       await storage.set(AUTH_CONFIG.TOKEN_KEY, data.tokens);
 
@@ -190,9 +165,6 @@ export function useRefreshToken(
   });
 }
 
-/**
- * Hook for password reset request
- */
 export function useRequestPasswordReset(
   options?: UseMutationOptions<void, Error, string>
 ) {
@@ -205,9 +177,6 @@ export function useRequestPasswordReset(
   });
 }
 
-/**
- * Hook for password reset confirmation
- */
 export function useResetPassword(
   options?: UseMutationOptions<void, Error, { token: string; password: string }>
 ) {
@@ -220,9 +189,6 @@ export function useResetPassword(
   });
 }
 
-/**
- * Hook for changing password
- */
 export function useChangePassword(
   options?: UseMutationOptions<void, Error, { oldPassword: string; newPassword: string }>
 ) {
@@ -241,9 +207,6 @@ export function useChangePassword(
   });
 }
 
-/**
- * Hook for email verification
- */
 export function useVerifyEmail(
   options?: UseMutationOptions<void, Error, string>
 ) {
@@ -257,10 +220,8 @@ export function useVerifyEmail(
 }
 
 /**
- * Hook to get current auth state from cache
- *
- * SECURITY: getTokens() reads directly from SecureStore
- * Tokens are NEVER stored in React Query cache
+ * Reads the current auth state from cache. getTokens() reads SecureStore directly;
+ * tokens are never stored in the React Query cache.
  */
 export function useAuthState() {
   const queryClient = useQueryClient();
@@ -269,7 +230,7 @@ export function useAuthState() {
     getUser: () => queryClient.getQueryData<User>(authKeys.user()),
     /**
      * Get tokens from SecureStore (not from React Query cache)
-     * SECURITY: Tokens are never in React Query cache
+     * Security: tokens are never in the React Query cache
      */
     getTokens: async () => {
       return await storage.get<AuthTokens>(AUTH_CONFIG.TOKEN_KEY);
@@ -278,7 +239,7 @@ export function useAuthState() {
       queryClient.getQueryData<AuthState>(authKeys.session()),
     /**
      * Set auth state after login/register
-     * SECURITY: Tokens go to SecureStore only, never React Query cache
+     * Security: tokens go to SecureStore only, never the React Query cache
      */
     setAuth: async (data: AuthResponse) => {
       // Store tokens in SecureStore (encrypted)
@@ -310,11 +271,8 @@ export function useAuthState() {
 }
 
 /**
- * Hook to initialize auth state from storage
- * Call this in your app initialization
- *
- * SECURITY: Only loads non-sensitive data into React Query cache.
- * Tokens stay in SecureStore and are never loaded into cache.
+ * Initializes auth state from storage. Only non-sensitive data enters the cache;
+ * tokens stay in SecureStore.
  */
 export function useInitializeAuth() {
   const queryClient = useQueryClient();
@@ -322,7 +280,7 @@ export function useInitializeAuth() {
   return {
     initialize: async (): Promise<AuthState | null> => {
       try {
-        // SECURITY: Only load user data into cache
+        // Security: only user data enters the cache
         // Tokens remain in SecureStore only
         // Performance: Parallel read operations for faster initialization
         const [user, tokens] = await Promise.all([
@@ -339,7 +297,7 @@ export function useInitializeAuth() {
           // Set only non-sensitive data in cache
           queryClient.setQueryData(authKeys.user(), user);
           queryClient.setQueryData(authKeys.session(), authState);
-          // SECURITY: No tokens in cache - they stay in SecureStore
+          // Security: no tokens in cache - they stay in SecureStore
 
           return authState;
         }

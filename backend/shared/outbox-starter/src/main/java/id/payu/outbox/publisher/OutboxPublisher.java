@@ -175,8 +175,6 @@ public class OutboxPublisher {
 
     /**
      * Publishes a single outbox event to Kafka (public API, used by publishEventById/retryFailedEvents).
-     * <p>
-     * @param event the outbox event to publish
      */
     public void publishEvent(OutboxEvent event) {
         sendToKafka(event);
@@ -189,8 +187,6 @@ public class OutboxPublisher {
      * The event is serialized to JSON and sent to the appropriate topic.
      * Custom headers from the event are included in the Kafka record.
      * The aggregate ID is used as the Kafka message key for ordering guarantees.
-     *
-     * @param event the outbox event to send
      */
     private void sendToKafka(OutboxEvent event) {
         Timer.Sample timer = Timer.start(meterRegistry);
@@ -341,9 +337,6 @@ public class OutboxPublisher {
     /**
      * Manually triggers publishing of a specific event by ID.
      * Useful for retrying failed events through an admin API.
-     *
-     * @param eventId the ID of the event to publish
-     * @return true if the event was successfully published, false otherwise
      */
     @Transactional
     public boolean publishEventById(java.util.UUID eventId) {
@@ -367,8 +360,6 @@ public class OutboxPublisher {
     /**
      * Retries all failed events (those that have not exceeded max retries).
      * Can be triggered manually through an admin endpoint.
-     *
-     * @return the number of events queued for retry
      */
     @Transactional
     public int retryFailedEvents() {
@@ -392,9 +383,6 @@ public class OutboxPublisher {
     /**
      * Handles a publish failure by incrementing the retry count and recording the error.
      * Used by publishEventById and retryFailedEvents (within @Transactional context).
-     *
-     * @param event the event that failed to publish
-     * @param exception the exception that occurred
      */
     private void handlePublishFailureInline(OutboxEvent event, Exception exception) {
         String errorMessage = exception.getMessage();
@@ -436,12 +424,6 @@ public class OutboxPublisher {
         }
     }
 
-    /**
-     * Serializes the payload map to JSON string.
-     *
-     * @param payload the payload map
-     * @return JSON string representation
-     */
     // BUG-BE-095: Use shared ObjectMapper instance instead of creating new one per call
     private static final com.fasterxml.jackson.databind.ObjectMapper OUTBOX_MAPPER =
             new com.fasterxml.jackson.databind.ObjectMapper()

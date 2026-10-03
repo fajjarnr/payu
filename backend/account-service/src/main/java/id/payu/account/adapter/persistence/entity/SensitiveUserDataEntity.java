@@ -95,7 +95,6 @@ public class SensitiveUserDataEntity {
         updatedAt = java.time.LocalDateTime.now();
     }
 
-    // Constructors
     public SensitiveUserDataEntity() {
     }
 
@@ -115,7 +114,6 @@ public class SensitiveUserDataEntity {
         this.updatedAt = updatedAt;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -196,7 +194,6 @@ public class SensitiveUserDataEntity {
         this.updatedAt = updatedAt;
     }
 
-    // Builder
     public static Builder builder() {
         return new Builder();
     }
@@ -291,7 +288,6 @@ public class SensitiveUserDataEntity {
             this.country = country;
         }
 
-        // Getters and Setters
         public String getStreet() {
             return street;
         }

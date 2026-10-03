@@ -1,4 +1,3 @@
-# Environment-specific configuration for SIT
 spring:
   cloud:
     vault:

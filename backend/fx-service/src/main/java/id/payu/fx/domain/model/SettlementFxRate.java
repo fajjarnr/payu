@@ -62,23 +62,14 @@ public class SettlementFxRate {
         return fxRate;
     }
 
-    /**
-     * Check if the locked rate is still valid.
-     */
     public boolean isValid() {
         return active && LocalDateTime.now().isBefore(expiresAt);
     }
 
-    /**
-     * Check if the rate lock has expired.
-     */
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
     }
 
-    /**
-     * Convert amount using the locked rate.
-     */
     public BigDecimal convert(BigDecimal amount) {
         if (!isValid()) {
             throw new IllegalStateException("FX rate lock has expired");
@@ -86,9 +77,6 @@ public class SettlementFxRate {
         return amount.multiply(rate).setScale(4, java.math.RoundingMode.HALF_EVEN);
     }
 
-    /**
-     * Invalidate the rate lock.
-     */
     public void invalidate() {
         this.active = false;
     }
@@ -97,7 +85,6 @@ public class SettlementFxRate {
         return new SettlementFxRateBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getPartnerId() { return partnerId; }

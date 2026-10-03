@@ -31,14 +31,12 @@ export default function HistoryScreen() {
 
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // Flatten infinite query pages into a single array (memoized)
   const transactions = useMemo(
     () => transactionsData?.pages.flatMap(page => page.items) ?? [],
     [transactionsData]
   );
   const hasMore = hasNextPage ?? false;
 
-  // Memoize onRefresh with mount check
   const onRefresh = useCallback(async () => {
     if (!isMountedRef.current) return;
 
@@ -52,14 +50,12 @@ export default function HistoryScreen() {
     }
   }, [refetch]);
 
-  // Cleanup on unmount
   React.useEffect(() => {
     return () => {
       isMountedRef.current = false;
     };
   }, []);
 
-  // Transform data into grouped format with date headers
   const listData = useMemo(() => {
     const groups: ({ type: 'header'; date: string } | { type: 'item'; transaction: any })[] = [];
 
@@ -83,7 +79,6 @@ export default function HistoryScreen() {
       groupedByDate[groupKey].push(transaction);
     });
 
-    // Convert to flat array with headers
     Object.entries(groupedByDate).forEach(([dateLabel, txs]) => {
       groups.push({ type: 'header', date: dateLabel });
       txs.forEach((transaction) => {
@@ -169,7 +164,6 @@ export default function HistoryScreen() {
     </Card>
   ), [colors.text, colors.textSecondary]);
 
-  // Memoize key extractor for FlashList
   const keyExtractor = useCallback((item: typeof listData[0], index: number) => {
     if (item.type === 'header') {
       return `header-${item.date}-${index}`;
@@ -177,14 +171,12 @@ export default function HistoryScreen() {
     return `transaction-${item.transaction.id}`;
   }, []);
 
-  // Memoize end reached handler
   const handleEndReached = useCallback(() => {
     if (hasMore && !isFetchingNextPage && isMountedRef.current) {
       fetchNextPage();
     }
   }, [hasMore, isFetchingNextPage, fetchNextPage]);
 
-  // Show loading state separately
   if (isLoadingTransactions) {
     return (
       <View style={styles.container}>
@@ -196,7 +188,6 @@ export default function HistoryScreen() {
     );
   }
 
-  // Show empty state when there's no data
   if (transactions.length === 0) {
     return (
       <View style={styles.container}>

@@ -39,9 +39,6 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
      *
      * <p>JournalEntry relationship is not mapped directly; it's handled by JPA
      * when persisting. The journalEntryId is stored as a simple field.</p>
-     *
-     * @param domain the domain LedgerEntry
-     * @return the LedgerEntryEntity
      */
     @Override
     @BeanMapping(ignoreUnmappedSourceProperties = "journalEntryId")
@@ -61,9 +58,6 @@ public interface LedgerEntryMapper extends BaseMapper<LedgerEntryEntity, LedgerE
      * Convert LedgerEntryEntity to domain LedgerEntry.
      *
      * <p>Maps the journalEntry relationship to journalEntryId in the domain.</p>
-     *
-     * @param entity the LedgerEntryEntity
-     * @return the domain LedgerEntry
      */
     @Override
     @BeanMapping(ignoreUnmappedSourceProperties = {"new", "journalEntry"})

@@ -1,4 +1,3 @@
-// User & Auth Types
 export interface User {
   id: string;
   email: string;
@@ -33,7 +32,6 @@ export interface AuthResponse {
   tokens: AuthTokens;
 }
 
-// Wallet Types
 export interface Wallet {
   id: string;
   userId: string;
@@ -52,7 +50,6 @@ export interface Pocket {
   icon: string;
 }
 
-// Transaction Types
 export interface Transaction {
   id: string;
   userId: string;
@@ -94,7 +91,6 @@ export interface QRISPaymentData {
   idempotencyKey?: string;
 }
 
-// Card Types
 export interface VirtualCard {
   id: string;
   lastFour: string;
@@ -109,7 +105,6 @@ export interface VirtualCard {
   createdAt: string;
 }
 
-// QRIS Types
 export interface QRISData {
   merchantName: string;
   amount: number;
@@ -117,7 +112,6 @@ export interface QRISData {
   terminalId: string;
 }
 
-// API Response Types
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -133,7 +127,6 @@ export interface PaginatedResponse<T> {
   hasMore: boolean;
 }
 
-// Navigation Types
 export type RootStackParamList = {
   auth: undefined;
   tabs: undefined;
@@ -158,7 +151,6 @@ export type TabsParamList = {
   profile: undefined;
 };
 
-// Component Props Types
 export interface ButtonProps {
   title: string;
   onPress: () => void;
@@ -198,7 +190,6 @@ export interface ModalProps {
   children: React.ReactNode;
 }
 
-// Notification Types
 export interface PushNotification {
   id: string;
   title: string;
@@ -208,7 +199,6 @@ export interface PushNotification {
   createdAt: string;
 }
 
-// Feedback Types
 export interface FeedbackData {
   category: 'bug' | 'feature' | 'ui' | 'performance' | 'other';
   rating: number;

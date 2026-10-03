@@ -35,7 +35,6 @@ public class CorrelationIdFilter implements Filter {
             : "unknown-service";
 
         try {
-            // Set MDC values for this request
             MDC.put(properties.getCorrelation().getMdcKey(), correlationId);
             MDC.put("service", serviceName);
             MDC.put("service_version", properties.getServiceVersion());

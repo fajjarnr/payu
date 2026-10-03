@@ -3,11 +3,9 @@
 -- IMP-002: Chart of Accounts (CoA) for GL classification
 -- Flyway migration for wallet-service
 
--- ============================================================
--- 1. JOURNAL ENTRIES TABLE (IMP-001)
+-- Journal entries table (IMP-001)
 -- Parent entity that groups paired DEBIT + CREDIT ledger entries.
 -- Constraint: sum(debit) == sum(credit) enforced at application layer.
--- ============================================================
 
 CREATE TABLE IF NOT EXISTS journal_entries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -29,11 +27,9 @@ CREATE INDEX IF NOT EXISTS idx_journal_number ON journal_entries(journal_number)
 
 COMMENT ON TABLE journal_entries IS 'Double-entry journal: groups paired DEBIT+CREDIT ledger entries. sum(debit) must equal sum(credit) per journal.';
 
--- ============================================================
--- 2. CHART OF ACCOUNTS TABLE (IMP-002)
+-- Chart of accounts table (IMP-002)
 -- Hierarchical GL account classification for banking operations.
 -- Follows PSAK (Indonesian Accounting Standards) structure.
--- ============================================================
 
 CREATE TABLE IF NOT EXISTS chart_of_accounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -61,10 +57,8 @@ CREATE INDEX IF NOT EXISTS idx_coa_category ON chart_of_accounts(category);
 
 COMMENT ON TABLE chart_of_accounts IS 'Chart of Accounts for GL classification. Hierarchical code structure for banking operations per PSAK.';
 
--- ============================================================
--- 3. ALTER LEDGER_ENTRIES: Add journal_entry_id and coa_code
+-- Alter ledger_entries: add journal_entry_id and coa_code
 -- Links existing ledger entries to journals and CoA.
--- ============================================================
 
 ALTER TABLE ledger_entries
     ADD COLUMN IF NOT EXISTS journal_entry_id UUID,
@@ -93,9 +87,7 @@ ALTER TABLE ledger_entries
 -- Note: We intentionally do NOT re-add fk_ledger_account because account_id
 -- now stores string identifiers that may not directly map to wallets.id (UUID).
 
--- ============================================================
--- 4. SEED DATA: Standard Banking Chart of Accounts
--- ============================================================
+-- Seed data: standard banking chart of accounts
 
 -- Level 1: Top-level categories
 INSERT INTO chart_of_accounts (id, code, name, description, account_type, category, parent_id, level, active, normal_balance, currency)

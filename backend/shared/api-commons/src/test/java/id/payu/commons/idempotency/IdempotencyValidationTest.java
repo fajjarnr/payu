@@ -33,7 +33,6 @@ class IdempotencyValidationTest {
 
     @Test
     void shouldReturnCachedResponseForDuplicateRequest() {
-        // Given: A previous request with the same idempotency key
         String idempotencyKey = "550e8400-e29b-41d4-a716-446655440001";
         TestRequest request = new TestRequest("amount", 1000);
         // Compute fingerprint that matches the request
@@ -50,10 +49,8 @@ class IdempotencyValidationTest {
         when(repository.exists(any(IdempotencyKey.class)))
                 .thenReturn(true);
 
-        // When: Making a duplicate request
         Optional<IdempotencyEntry> result = idempotencyService.get(idempotencyKey, request);
 
-        // Then: Should return the cached response
         assertThat(result).isPresent();
         assertThat(result.get().getHttpStatus()).isEqualTo(200);
         assertThat(result.get().getResponseBody()).contains("\"amount\":1000");
@@ -61,7 +58,6 @@ class IdempotencyValidationTest {
 
     @Test
     void shouldRejectDifferentRequestWithSameKey() {
-        // Given: A previous request with different body
         String idempotencyKey = "550e8400-e29b-41d4-a716-446655440002";
         TestRequest originalRequest = new TestRequest("amount", 1000);
         TestRequest differentRequest = new TestRequest("amount", 2000);
@@ -78,8 +74,6 @@ class IdempotencyValidationTest {
         when(repository.findByKey(any(IdempotencyKey.class)))
                 .thenReturn(Optional.of(cachedEntry));
 
-        // When: Making a request with different body
-        // Then: Should throw ConflictException
         assertThatThrownBy(() -> idempotencyService.get(idempotencyKey, differentRequest))
                 .isInstanceOf(id.payu.api.common.exception.ConflictException.class)
                 .hasMessageContaining("Idempotency-Key was already used with a different request body");
@@ -87,7 +81,6 @@ class IdempotencyValidationTest {
 
     @Test
     void shouldDetectInProgressRequest() {
-        // Given: A request currently in progress
         String idempotencyKey = "550e8400-e29b-41d4-a716-446655440003";
         TestRequest request = new TestRequest("action", "transfer");
 
@@ -101,8 +94,6 @@ class IdempotencyValidationTest {
         when(repository.findByKey(any(IdempotencyKey.class)))
                 .thenReturn(Optional.of(inProgressEntry));
 
-        // When: Making a concurrent request
-        // Then: Should throw ConflictException for in-progress
         assertThatThrownBy(() -> idempotencyService.get(idempotencyKey, request))
                 .isInstanceOf(id.payu.api.common.exception.ConflictException.class)
                 .hasMessageContaining("A request with this Idempotency-Key is currently being processed");
@@ -110,7 +101,6 @@ class IdempotencyValidationTest {
 
     @Test
     void shouldStoreSuccessfulResponse() {
-        // Given: A new request
         String idempotencyKey = "550e8400-e29b-41d4-a716-446655440004";
         TestRequest request = new TestRequest("amount", 5000);
         TestResponse response = new TestResponse("success", 5000);
@@ -120,23 +110,18 @@ class IdempotencyValidationTest {
         when(repository.exists(any(IdempotencyKey.class)))
                 .thenReturn(false);
 
-        // When: Starting a new request
         boolean started = idempotencyService.startRequest(idempotencyKey, request);
 
-        // Then: Should mark as started
         assertThat(started).isTrue();
 
-        // When: Storing the response
         idempotencyService.storeResponse(idempotencyKey, request,
                 org.springframework.http.HttpStatus.CREATED, response);
 
-        // Then: Should update repository
         verify(repository).update(any(IdempotencyKey.class), any(IdempotencyEntry.class), any(Long.class));
     }
 
     @Test
     void shouldStoreErrorResponse() {
-        // Given: A request that fails
         String idempotencyKey = "550e8400-e29b-41d4-a716-446655440005";
         TestRequest request = new TestRequest("amount", -1);
         Exception error = new IllegalArgumentException("Invalid amount");
@@ -146,43 +131,34 @@ class IdempotencyValidationTest {
 
         idempotencyService.startRequest(idempotencyKey, request);
 
-        // When: Storing error response
         idempotencyService.storeError(idempotencyKey, request,
                 org.springframework.http.HttpStatus.BAD_REQUEST, error);
 
-        // Then: Should update repository with error
         verify(repository).update(any(IdempotencyKey.class), any(IdempotencyEntry.class), any(Long.class));
     }
 
     @Test
     void shouldComputeConsistentFingerprint() {
-        // Given: Two identical request objects
         TestRequest request1 = new TestRequest("from", "ACC001", "to", "ACC002", "amount", 1000);
         TestRequest request2 = new TestRequest("from", "ACC001", "to", "ACC002", "amount", 1000);
 
-        // When: Computing fingerprints
         String fingerprint1 = idempotencyService.computeFingerprint(request1);
         String fingerprint2 = idempotencyService.computeFingerprint(request2);
 
-        // Then: Fingerprints should be identical
         assertThat(fingerprint1).isEqualTo(fingerprint2);
     }
 
     @Test
     void shouldComputeDifferentFingerprintsForDifferentRequests() {
-        // Given: Two different request objects
         TestRequest request1 = new TestRequest("amount", 1000);
         TestRequest request2 = new TestRequest("amount", 2000);
 
-        // When: Computing fingerprints
         String fingerprint1 = idempotencyService.computeFingerprint(request1);
         String fingerprint2 = idempotencyService.computeFingerprint(request2);
 
-        // Then: Fingerprints should be different
         assertThat(fingerprint1).isNotEqualTo(fingerprint2);
     }
 
-    // Test DTOs
     static class TestRequest {
         private final String field1;
         private final Object value1;

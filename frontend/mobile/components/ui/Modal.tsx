@@ -26,20 +26,17 @@ export const ModalComponent: React.FC<ModalProps> = ({
 }) => {
   const { colors } = useTheme();
 
-  // Performance: Memoize container style
   const containerStyle = useMemo<ViewStyle>(() => [
     styles.container,
     { backgroundColor: colors.background },
     style,
   ], [colors.background, style]);
 
-  // Performance: Memoize title style
   const titleStyle = useMemo<ViewStyle>(() => [
     styles.title,
     { color: colors.text },
   ], [colors.text]);
 
-  // Performance: Memoize close button handler
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
@@ -75,7 +72,6 @@ export const ModalComponent: React.FC<ModalProps> = ({
   );
 };
 
-// Performance: Memoize Modal component to prevent unnecessary re-renders
 export const Modal = memo(ModalComponent, (prevProps, nextProps) => {
   return (
     prevProps.visible === nextProps.visible &&

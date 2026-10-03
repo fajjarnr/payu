@@ -3,7 +3,6 @@ import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import PersonalizedGreeting from '@/components/personalization/PersonalizedGreeting';
 import { PersonalizedWelcomeBanner } from '@/components/personalization/PersonalizedGreeting';
 
-// Mock the hooks
 vi.mock('@/hooks/useUserSegment', () => ({
   useUserSegment: () => ({
     currentTier: 'VIP',
@@ -33,7 +32,6 @@ vi.mock('@/hooks/useUserSegment', () => ({
   }),
 }));
 
-// Mock zustand store properly
 vi.mock('@/stores/authStore', () => ({
   useAuthStore: vi.fn((selector) => {
     const state = {
@@ -66,7 +64,6 @@ describe('PersonalizedGreeting', () => {
       <PersonalizedGreeting showTimeBased={true} showSegment={false} />
     );
 
-    // Should not have VIP badge styling
     expect(container.querySelector('.from-amber-500')).toBeNull();
   });
 });

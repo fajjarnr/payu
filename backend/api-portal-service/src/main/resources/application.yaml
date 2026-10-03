@@ -36,7 +36,6 @@ quarkus:
           "service.environment":
             value: dev
             type: STRING
-  # OpenTelemetry
   otel:
     sdk:
       disabled: ${OTEL_SDK_DISABLED:true}

@@ -1,10 +1,6 @@
-# ============================================
 # PayU KYC Service - Python FastAPI Docker Ignore
-# ============================================
-# This file provides dockerignore patterns for the
-# KYC service (Python FastAPI with ML/OCR components).
 
-# --- Python Build Artifacts & Cache ---
+# Python Build Artifacts & Cache
 __pycache__/
 *.py[cod]
 *$py.class
@@ -29,7 +25,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# --- Virtual Environments ---
+# Virtual Environments
 venv/
 env/
 ENV/
@@ -37,7 +33,7 @@ ENV/
 env.bak/
 venv.bak/
 
-# --- PyCharm, JetBrains, VSCode ---
+# PyCharm, JetBrains, VSCode
 .idea/
 .vscode/
 *.swp
@@ -49,15 +45,15 @@ venv.bak/
 *.iml
 .history/
 
-# --- Jupyter Notebook ---
+# Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb
 
-# --- PyInstaller ---
+# PyInstaller
 *.manifest
 *.spec
 
-# --- Unit Test / Coverage Reports ---
+# Unit Test / Coverage Reports
 htmlcov/
 .tox/
 .nox/
@@ -72,7 +68,7 @@ coverage.xml
 .pytest_cache/
 *.pytest_cache
 
-# --- Environments & Secrets ---
+# Environments & Secrets
 .env
 .env.*
 .env.local
@@ -90,7 +86,7 @@ credentials.json
 .secrets/
 vault-token/
 
-# --- Machine Learning / Model Files ---
+# Machine Learning / Model Files
 models/
 checkpoints/
 *.pth
@@ -102,7 +98,7 @@ checkpoints/
 *.safetensors
 !models/.gitkeep
 
-# --- Data & Datasets ---
+# Data & Datasets
 data/
 datasets/
 *.csv
@@ -110,13 +106,13 @@ datasets/
 *.parquet
 !data/.gitkeep
 
-# --- Logs ---
+# Logs
 *.log
 logs/
 log/*.log
 *.log.*
 
-# --- Documentation ---
+# Documentation
 *.md
 README.md
 CHANGELOG.md
@@ -125,18 +121,18 @@ docs/
 !docs/build/
 docs/_build/
 
-# --- Docker (prevent self-inclusion) ---
+# Docker (prevent self-inclusion)
 Dockerfile*
 .dockerignore
 docker-compose*.yml
 
-# --- Git ---
+# Git
 .git/
 .gitignore
 .gitattributes
 .github/
 
-# --- OS Files ---
+# OS Files
 .DS_Store
 .DS_Store?
 ._*
@@ -146,38 +142,38 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# --- Database ---
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
-# --- MyPy & Type Checking ---
+# MyPy & Type Checking
 .mypy_cache/
 .dmypy.json
 dmypy.json
 .pyre/
 .pytype/
 
-# --- Ruff (Python Linter) ---
+# Ruff (Python Linter)
 .ruff_cache/
 
-# --- CI/CD ---
+# CI/CD
 .gitlab-ci.yml
 .travis.yml
 azure-pipelines.yml
 .jenkinsfile
 .circleci/
 
-# --- Misc ---
+# Misc
 .editorconfig
 *.bak
 *.tmp
 temp/
 tmp/
 
-# --- MLflow (if used) ---
+# MLflow (if used)
 mlruns/
 mlflow.db
 
-# --- Weights & Biases (if used) ---
+# Weights & Biases (if used)
 wandb/

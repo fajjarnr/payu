@@ -2,15 +2,13 @@
 # Prerequisites:
 # 1. External Secrets Operator is installed in the cluster.
 # 2. Secret payu-dev/vault-bootstrap exists and contains key root-token.
-# ============================================================
 #
 # IMPORTANT: This remains a lab/dev Vault topology. For production use:
 # - Raft storage with PVC-backed HA replicas
 # - Auto-unseal via KMS/HSM
 # - Non-root bootstrap workflow with short-lived admin token
-# ============================================================
 #
-# LESSONS LEARNED (Provisioning):
+# Lessons learned (provisioning):
 # 1. Red Hat ESO v1.1.0 deploys controller in 'external-secrets' namespace
 #    (NOT openshift-operators). Requires 'ExternalSecretsConfig' CR named 'cluster'
 #    to trigger operand deployment.

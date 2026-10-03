@@ -18,7 +18,6 @@ interface EmergencyAlertProps {
   storageKey?: string;
 }
 
-// Alert type icons mapping
 const ALERT_ICONS: Record<string, React.ElementType> = {
   INFO: Info,
   WARNING: AlertTriangle,
@@ -65,7 +64,6 @@ export default function EmergencyAlert({
     }
   }
 
-  // Save dismissed alerts to localStorage
   const saveDismissedAlert = (alertId: string) => {
     const updated = new Set(dismissedAlerts);
     updated.add(alertId);
@@ -95,14 +93,12 @@ export default function EmergencyAlert({
     }
   };
 
-  // Filter out dismissed alerts
   const activeAlerts = alerts?.filter((alert) => !dismissedAlerts.has(alert.id)) ?? [];
 
   if (isLoading || activeAlerts.length === 0) {
     return null;
   }
 
-  // Get alert type from metadata
   const getAlertType = (alert: Content): "default" | "destructive" => {
     const type = alert.metadata?.alertType as string;
     return type === 'ERROR' ? 'destructive' : 'default';

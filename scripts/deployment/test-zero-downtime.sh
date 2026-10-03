@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # Zero-Downtime Deployment Test Script
-# ====================================
 # Tests that deployments happen without service interruption
 #
 # Usage: ./test-zero-downtime.sh <service-name> [duration-seconds]
@@ -14,12 +13,10 @@ NAMESPACE="${NAMESPACE:-payu-dev}"
 SERVICE="${1:-gateway-service}"
 DURATION="${2:-300}"  # Default 5 minutes
 
-# Test configuration
 REQUEST_INTERVAL=1     # Seconds between requests
-CONCURRENT_REQUESTS=5  # Parallel requests
-ERROR_THRESHOLD=5      # Max errors allowed
+CONCURRENT_REQUESTS=5
+ERROR_THRESHOLD=5
 
-# Results
 REQUESTS_SENT=0
 REQUESTS_SUCCESS=0
 REQUESTS_FAILED=0
@@ -28,7 +25,6 @@ MAX_RESPONSE_TIME=0
 DEPLOYMENT_START_TIME=""
 DEPLOYMENT_END_TIME=""
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -65,7 +61,6 @@ print_info() {
 }
 
 get_service_url() {
-    # Get route URL for service
     SERVICE_URL=$(oc get route "${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
 
     if [ -z "$SERVICE_URL" ]; then
@@ -82,7 +77,6 @@ send_request() {
 
     start_time=$(date +%s%N)
 
-    # Send request with timeout
     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}\n%{time_total}" \
         --max-time 10 \
         -H "Accept: application/json" \
@@ -113,7 +107,6 @@ test_single_request() {
     else
         REQUESTS_FAILED=$((REQUESTS_FAILED + 1))
 
-        # Check if during deployment
         if [ -n "$DEPLOYMENT_START_TIME" ] && [ -z "$DEPLOYMENT_END_TIME" ]; then
             ERRORS_DURING_DEPLOYMENT=$((ERRORS_DURING_DEPLOYMENT + 1))
         fi
@@ -134,14 +127,12 @@ continuous_test() {
     echo ""
 
     while [ $(date +%s) -lt $end_time ]; do
-        # Run concurrent requests
         for i in $(seq 1 $CONCURRENT_REQUESTS); do
             test_single_request "$url" &
         done
 
         wait
 
-        # Progress indicator
         if [ $((REQUESTS_SENT % 50)) -eq 0 ]; then
             echo -ne "\rRequests: ${REQUESTS_SENT} | Success: ${REQUESTS_SUCCESS} | Failed: ${REQUESTS_FAILED}"
         fi
@@ -157,14 +148,11 @@ trigger_deployment() {
 
     print_info "Triggering deployment for ${service}..."
 
-    # Record start time
     DEPLOYMENT_START_TIME=$(date +%s)
 
-    # Trigger rollout (this could be replaced with actual deployment command)
     if oc get deployment "${service}" -n "${NAMESPACE}" >/dev/null 2>&1; then
         oc rollout restart "deployment/${service}" -n "${NAMESPACE}"
 
-        # Wait for deployment to complete
         if oc rollout status "deployment/${service}" -n "${NAMESPACE}" --timeout=300s; then
             DEPLOYMENT_END_TIME=$(date +%s)
             print_success "Deployment completed"
@@ -228,7 +216,6 @@ print_results() {
     echo ""
     echo -e "${BLUE}========================================${NC}"
 
-    # Determine pass/fail
     if [ $SUCCESS_RATE -ge 99 ] && [ $ERRORS_DURING_DEPLOYMENT -eq 0 ]; then
         echo -e "${GREEN}✓ ZERO-DOWNTIME TEST PASSED${NC}"
         echo "  Service maintained availability during deployment"
@@ -251,7 +238,6 @@ run_blue_green_test() {
     print_info "This will switch traffic between blue and green environments"
     echo ""
 
-    # Detect current active version
     CURRENT_SELECTOR=$(oc get route "${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.spec.to.name}' 2>/dev/null || echo "")
 
     if [[ "$CURRENT_SELECTOR" == *"-blue"* ]]; then
@@ -267,14 +253,12 @@ run_blue_green_test() {
 
     print_info "Current: ${CURRENT}, Target: ${TARGET}"
 
-    # Start load test in background
     continuous_test "$url" "$DURATION" &
     local test_pid=$!
 
     # Wait a moment for test to establish baseline
     sleep 5
 
-    # Trigger traffic switch
     print_info "Switching traffic to ${TARGET}..."
     DEPLOYMENT_START_TIME=$(date +%s)
 
@@ -283,7 +267,6 @@ run_blue_green_test() {
 
     DEPLOYMENT_END_TIME=$(date +%s)
 
-    # Wait for test to complete
     wait $test_pid
 
     return 0
@@ -296,19 +279,16 @@ run_canary_test() {
     print_info "This will progressively shift traffic to canary version"
     echo ""
 
-    # Check if canary deployment exists
     if ! oc get deployment "${SERVICE}-canary" -n "${NAMESPACE}" >/dev/null 2>&1; then
         print_warning "No canary deployment found"
         return 1
     fi
 
-    # Start load test in background
     continuous_test "$url" "$DURATION" &
     local test_pid=$!
 
     sleep 5
 
-    # Progressive traffic shift
     local percentages=(10 25 50 75 100)
 
     for pct in "${percentages[@]}"; do
@@ -337,7 +317,6 @@ run_canary_test() {
 
         DEPLOYMENT_END_TIME=$(date +%s)
 
-        # Wait between shifts
         sleep 30
     done
 
@@ -348,7 +327,6 @@ run_canary_test() {
 main() {
     print_header
 
-    # Validate inputs
     if ! command -v oc &> /dev/null; then
         print_error "OpenShift CLI (oc) not found"
         exit 1
@@ -359,12 +337,10 @@ main() {
         exit 1
     fi
 
-    # Get service URL
     local url
     url=$(get_service_url)
     print_info "Target URL: ${url}"
 
-    # Check which test to run
     if [ -n "${TEST_TYPE:-}" ]; then
         case "$TEST_TYPE" in
             blue-green)
@@ -379,7 +355,6 @@ main() {
                 ;;
         esac
     else
-        # Auto-detect deployment pattern
         if oc get deployment "${SERVICE}-blue" -n "${NAMESPACE}" >/dev/null 2>&1 || \
            oc get deployment "${SERVICE}-green" -n "${NAMESPACE}" >/dev/null 2>&1; then
             run_blue_green_test "$url" || {
@@ -394,11 +369,9 @@ main() {
         else
             print_info "Running standard deployment test..."
 
-            # Start continuous test in background
             continuous_test "$url" "$DURATION" &
             local test_pid=$!
 
-            # Trigger a deployment if requested
             if [ "${TRIGGER_DEPLOY:-false}" = "true" ]; then
                 sleep 10
                 trigger_deployment "$SERVICE"
@@ -408,7 +381,6 @@ main() {
         fi
     fi
 
-    # Calculate and display results
     calculate_statistics "$DURATION"
     print_results "$DURATION"
     exit $?

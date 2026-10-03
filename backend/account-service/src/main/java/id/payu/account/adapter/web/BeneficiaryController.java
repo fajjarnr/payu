@@ -78,21 +78,18 @@ public class BeneficiaryController {
             return forbidden(accountId, jwt);
         }
 
-        // Check beneficiary limit
         long count = beneficiaryPersistencePort.countActiveByUserId(accountId);
         if (count >= MAX_BENEFICIARIES) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(ApiResponse.error("BEN_001", "Maximum " + MAX_BENEFICIARIES + " beneficiaries allowed"));
         }
 
-        // Check for duplicates
         if (beneficiaryPersistencePort.existsByUserIdAndBankCodeAndAccountNumber(
                 accountId, request.getBankCode(), request.getAccountNumber())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiResponse.error("BEN_002", "Beneficiary already exists"));
         }
 
-        // Get user
         var user = userPersistencePort.findById(accountId).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

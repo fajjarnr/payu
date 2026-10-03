@@ -65,7 +65,6 @@ class TestLivenessService:
 
     def test_detect_face_with_face(self, liveness_service, valid_face_image):
         """Test face detection when face is present"""
-        # Mock Haar cascade to return face coordinates
         mock_faces = np.array([[200, 100, 200, 200]])  # x, y, w, h
 
         with patch("cv2.CascadeClassifier") as mock_cascade:
@@ -81,7 +80,6 @@ class TestLivenessService:
 
     def test_detect_face_without_face(self, liveness_service, blank_image):
         """Test face detection when no face is present"""
-        # Mock Haar cascade to return empty array
         with patch("cv2.CascadeClassifier") as mock_cascade:
             mock_instance = MagicMock()
             mock_instance.detectMultiScale.return_value = np.array([])
@@ -94,7 +92,6 @@ class TestLivenessService:
 
     def test_detect_face_selects_largest_face(self, liveness_service):
         """Test that largest face is selected when multiple faces detected"""
-        # Mock multiple faces
         mock_faces = np.array(
             [
                 [100, 100, 100, 100],  # Area: 10000
@@ -156,7 +153,6 @@ class TestLivenessService:
 
     def test_calculate_blur_score(self, liveness_service):
         """Test blur score calculation"""
-        # Create test image with some variance
         img = np.random.randint(100, 150, (100, 100, 3), dtype=np.uint8)
         blur_score = liveness_service._calculate_blur_score(img)
 
@@ -241,7 +237,6 @@ class TestLivenessService:
 
     def test_liveness_feature_weights(self, liveness_service):
         """Test that liveness features use correct weights"""
-        # Mock features with known values
         img = np.random.randint(0, 255, (200, 200, 3), dtype=np.uint8)
         face_box = (0, 0, 200, 200)
 

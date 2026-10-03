@@ -164,7 +164,6 @@ class TestRecommendationEngine:
         assert isinstance(recommendations, list)
         assert len(recommendations) <= 5  # Max 5 recommendations returned
 
-        # Check recommendation structure matches actual implementation
         for rec in recommendations:
             assert "recommendation_id" in rec
             assert "recommendation_type" in rec
@@ -319,7 +318,6 @@ class TestRecommendationEngine:
             sample_user_metrics, sample_spending_trends
         )
 
-        # Check that priorities are in descending order (higher priority first)
         priorities = [rec.get("priority", 0) for rec in recommendations]
         assert priorities == sorted(priorities, reverse=True)
 

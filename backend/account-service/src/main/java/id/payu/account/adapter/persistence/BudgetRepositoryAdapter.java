@@ -12,9 +12,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Adapter implementation of BudgetRepositoryPort using JPA.
- */
 @Component
 public class BudgetRepositoryAdapter implements BudgetRepositoryPort {
 

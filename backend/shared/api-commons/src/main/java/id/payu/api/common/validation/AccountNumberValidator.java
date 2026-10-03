@@ -4,9 +4,6 @@ import id.payu.api.common.constant.ApiConstants;
 
 import java.util.regex.Pattern;
 
-/**
- * Validator for PayU account numbers.
- */
 public class AccountNumberValidator extends AbstractRegexValidator<ValidAccountNumber> {
 
     private static final Pattern ACCOUNT_NUMBER_PATTERN = Pattern.compile(ApiConstants.ACCOUNT_NUMBER_PATTERN);

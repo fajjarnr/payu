@@ -58,8 +58,6 @@ public class ApiAnalyticsEvent {
         }
     }
 
-    // Business methods
-
     public boolean isError() {
         return statusCode >= 400;
     }
@@ -80,8 +78,6 @@ public class ApiAnalyticsEvent {
         String pid = partnerId != null ? partnerId : "anonymous";
         return pid + ":" + method.name() + ":" + endpoint;
     }
-
-    // Getters
 
     public String getId() {
         return id;
@@ -130,8 +126,6 @@ public class ApiAnalyticsEvent {
     public String getCorrelationId() {
         return correlationId;
     }
-
-    // Builder
 
     public static Builder builder() {
         return new Builder();

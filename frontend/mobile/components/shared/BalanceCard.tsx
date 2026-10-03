@@ -20,24 +20,20 @@ export const BalanceCardComponent: React.FC<BalanceCardProps> = ({
   onToggleBalance,
   style,
 }) => {
-  // Memoize balance text calculation
   const balanceText = useMemo(() => {
     return showBalance ? formatCurrency(balance) : '••••••••';
   }, [showBalance, balance]);
 
-  // Memoize accessibility label
   const a11yLabel = useMemo(() => {
     return showBalance
       ? `Balance: ${formatCurrencyForA11y(balance, 'IDR', 'id')}`
       : 'Balance hidden';
   }, [showBalance, balance]);
 
-  // Memoize eye button accessibility label
   const eyeButtonA11yLabel = useMemo(() => {
     return showBalance ? 'Hide balance' : 'Show balance';
   }, [showBalance]);
 
-  // Memoize toggle handler
   const handleToggle = useCallback(() => {
     onToggleBalance?.();
   }, [onToggleBalance]);
@@ -100,7 +96,6 @@ export const BalanceCardComponent: React.FC<BalanceCardProps> = ({
   );
 };
 
-// Memoize BalanceCard component for performance optimization
 export const BalanceCard = memo(BalanceCardComponent, (prevProps, nextProps) => {
   return (
     prevProps.balance === nextProps.balance &&

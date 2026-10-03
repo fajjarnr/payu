@@ -51,7 +51,6 @@ test.describe('Bill Pay Flow', () => {
     await page.click('button:has-text("Konfirmasi & Bayar Sekarang")');
     await waitForAnimations(page);
 
-    // Check for validation - the button should still be visible as we didn't fill required fields
     await expect(page.getByText('Bayar Listrik (PLN)')).toBeVisible();
   });
 
@@ -92,7 +91,6 @@ test.describe('Bill Pay Flow', () => {
     await payButton.click();
     await waitForAnimations(page);
 
-    // Check for processing text or button still being in loading state
     try {
       await expect(page.getByText('Sedang Memproses')).toBeVisible({ timeout: 2000 });
     } catch {

@@ -229,7 +229,6 @@ class ApiKeyServiceTest {
 
             assertNotNull(result.getKeySuffix());
             assertEquals(4, result.getKeySuffix().length());
-            // Suffix must match last 4 chars of the plain key
             String plainKey = result.getApiKey();
             assertEquals(plainKey.substring(plainKey.length() - 4), result.getKeySuffix());
         }
@@ -257,7 +256,6 @@ class ApiKeyServiceTest {
             assertEquals("Production Key (rotated)", result.getName());
             assertEquals("standard", result.getRatePlan());
 
-            // Verify old key was marked rotated
             ArgumentCaptor<ApiKeyEntity> captor = ArgumentCaptor.forClass(ApiKeyEntity.class);
             verify(apiKeyRepository, times(2)).save(captor.capture());
 

@@ -43,9 +43,6 @@ public class PublicProductController extends BaseController {
         return okList(products.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
-    /**
-     * Get a specific active product by code.
-     */
     @GetMapping("/{code}")
     public ResponseEntity<ProductResponse> getProduct(@PathVariable String code) {
         log.debug("Getting product: {}", code);
@@ -56,9 +53,6 @@ public class PublicProductController extends BaseController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Get a specific product parameter value.
-     */
     @GetMapping("/{code}/parameters/{key}")
     public ResponseEntity<Object> getProductParameter(
             @PathVariable String code,

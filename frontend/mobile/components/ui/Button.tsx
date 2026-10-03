@@ -35,7 +35,6 @@ export const ButtonComponent: React.FC<ButtonProps> = ({
 }) => {
   const { colors } = useTheme();
 
-  // Memoize style calculations for performance
   const buttonStyle = useMemo<ViewStyle>(() => {
     const getBackgroundColor = () => {
       if (disabled) return colors.border;
@@ -125,7 +124,6 @@ export const ButtonComponent: React.FC<ButtonProps> = ({
     };
   }, [colors, disabled, variant, size, icon]);
 
-  // Memoize press handler to prevent unnecessary re-renders
   const handlePress = useCallback(() => {
     if (!disabled && !loading) {
       onPress();
@@ -154,7 +152,6 @@ export const ButtonComponent: React.FC<ButtonProps> = ({
   );
 };
 
-// Memoize Button component for performance optimization in lists
 export const Button = memo(ButtonComponent, (prevProps, nextProps) => {
   return (
     prevProps.title === nextProps.title &&

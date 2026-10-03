@@ -71,9 +71,6 @@ public class RestClientAutoConfiguration {
                 .requestInterceptor(new CorrelationIdInterceptor());
     }
 
-    /**
-     * Creates the default {@link RestClient} instance from the builder.
-     */
     @Bean
     @ConditionalOnMissingBean(name = "payuRestClient")
     public RestClient payuDefaultRestClient(RestClient.Builder payuRestClientBuilder) {
@@ -81,8 +78,6 @@ public class RestClientAutoConfiguration {
     }
 
     /**
-     * Creates a dedicated {@link CircuitBreakerRegistry} for REST client calls.
-     * <p>
      * ponytail: separate registry per downstream protocol. If throughput matters,
      * consolidate with resilience-starter's global registry and use per-endpoint
      * config keys (rest-* ) to keep independent tuning. Track as PON-005.
@@ -112,7 +107,6 @@ public class RestClientAutoConfiguration {
     }
 
     /**
-     * Creates a dedicated {@link RetryRegistry} for REST client calls.
      * Only retries on server errors and network failures, not on client errors.
      */
     @Bean
@@ -136,9 +130,6 @@ public class RestClientAutoConfiguration {
         return RetryRegistry.of(defaultConfig);
     }
 
-    /**
-     * Creates the main {@link PayuRestClient} bean with resilience wiring.
-     */
     @Bean
     @ConditionalOnMissingBean(PayuRestClient.class)
     public PayuRestClient payuRestClientWrapper(
@@ -150,9 +141,6 @@ public class RestClientAutoConfiguration {
                 restClientCircuitBreakerRegistry, restClientRetryRegistry);
     }
 
-    /**
-     * Auto-configures a standard RestTemplate bean with PayU timeouts.
-     */
     @Bean
     @ConditionalOnMissingBean
     public RestTemplate restTemplate() {

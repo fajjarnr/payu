@@ -19,7 +19,6 @@ flag() { printf 'DRIFT: %s\n' "$*"; FAIL=1; }
 command -v oc >/dev/null || { echo "no oc"; exit 2; }
 command -v python3 >/dev/null || { echo "no python3"; exit 2; }
 
-# [1] Per-service overlay render vs live Deployment (image + env names).
 for dir in "$OVERLAY"/*/; do
   [ -f "$dir/kustomization.yaml" ] || continue
   rendered="$(oc kustomize "$dir" 2>/dev/null || true)"
@@ -48,7 +47,6 @@ for d in yaml.safe_load_all(sys.stdin):
 ")
 done
 
-# [2] Root overlay tags must agree with per-service overlays (no downgrade on root apply).
 root_tags="$(oc kustomize "$OVERLAY" 2>/dev/null | python3 -c "
 import sys, yaml
 for d in yaml.safe_load_all(sys.stdin):
@@ -72,7 +70,6 @@ for d in yaml.safe_load_all(sys.stdin):
   done
 done <<<"$root_tags"
 
-# [3] Every referenced image tag exists in the internal registry.
 REGISTRY="$(oc get route default-route -n openshift-image-registry -o jsonpath='{.spec.host}' 2>/dev/null || true)"
 if [ -n "$REGISTRY" ]; then
   while IFS= read -r img; do

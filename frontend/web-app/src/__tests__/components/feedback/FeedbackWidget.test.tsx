@@ -5,20 +5,16 @@ import { vi, type Mock } from 'vitest';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
-// Import user-event with compatible version
 import userEvent from '@testing-library/user-event';
 
-// Mock a11yUtils
 vi.mock('@/lib/a11y', () => ({
   a11yUtils: {
     useFocusTrap: vi.fn(),
   },
 }));
 
-// Mock fetch
 global.fetch = vi.fn();
 
-// Mock navigator.mediaDevices
 Object.defineProperty(navigator, 'mediaDevices', {
   writable: true,
   value: {
@@ -65,13 +61,11 @@ describe('FeedbackWidget', () => {
   it('should close modal when close button is clicked', async () => {
     renderWithIntl(<FeedbackWidget />);
 
-    // Open modal
     const floatingButton = screen.getByLabelText('Kirim Feedback');
     await act(async () => {
       fireEvent.click(floatingButton);
     });
 
-    // Close modal using the dialog's close button (X button in DialogContent)
     const closeButton = screen.getByRole('button', { name: 'Close' });
     await act(async () => {
       fireEvent.click(closeButton);
@@ -85,13 +79,11 @@ describe('FeedbackWidget', () => {
   it('should close modal when backdrop is clicked', async () => {
     const { container } = renderWithIntl(<FeedbackWidget />);
 
-    // Open modal
     const floatingButton = screen.getByLabelText('Kirim Feedback');
     await act(async () => {
       fireEvent.click(floatingButton);
     });
 
-    // Click backdrop
     const backdrop = container.querySelector('.bg-black\\/50');
     if (backdrop) {
       await act(async () => {
@@ -562,7 +554,6 @@ describe('FeedbackWidget', () => {
 
     const { rerender } = renderWithIntl(<FeedbackWidget />); // eslint-disable-line @typescript-eslint/no-unused-vars
 
-    // Open modal
     const floatingButton = screen.getByLabelText('Kirim Feedback');
     fireEvent.click(floatingButton);
 
@@ -570,7 +561,6 @@ describe('FeedbackWidget', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
-    // Fill in the form
     const subjectInput = screen.getByLabelText('Subjek') as HTMLInputElement;
     const messageInput = screen.getByLabelText('Pesan') as HTMLTextAreaElement;
 
@@ -581,39 +571,32 @@ describe('FeedbackWidget', () => {
       await userEvent.type(messageInput, 'Test message');
     });
 
-    // Submit the form
     const submitButton = screen.getByRole('button', { name: 'Kirim Sekarang' });
     await act(async () => {
       fireEvent.click(submitButton);
     });
 
-    // Verify success message is shown
     await waitFor(() => {
       expect(screen.getByText('Terima Kasih!')).toBeInTheDocument();
     });
 
-    // Advance timers to trigger modal close
     act(() => {
       vi.advanceTimersByTime(3000);
     });
 
-    // Verify modal is closed
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    // Reopen modal - get fresh reference to button
     const newFloatingButton = screen.getByLabelText('Kirim Feedback');
     await act(async () => {
       fireEvent.click(newFloatingButton);
     });
 
-    // Verify modal is open and form is reset
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
-    // Get fresh input references and verify they are empty
     const newSubjectInput = screen.getByLabelText('Subjek') as HTMLInputElement;
     const newMessageInput = screen.getByLabelText('Pesan') as HTMLTextAreaElement;
 

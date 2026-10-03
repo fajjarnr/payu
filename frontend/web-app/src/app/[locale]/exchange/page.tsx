@@ -27,7 +27,6 @@ export default function ExchangePage() {
   const accountId = useAuthStore((state) => state.accountId);
   const addToast = useUIStore((state) => state.addToast);
 
-  // Form setup
   const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<ExchangeRequest>({
     resolver: zodResolver(exchangeSchema),
     defaultValues: {
@@ -37,7 +36,6 @@ export default function ExchangePage() {
     }
   });
 
-  // Watch form values
   const fromCurrency = useWatch({ control, name: 'fromCurrency' });
   const toCurrency = useWatch({ control, name: 'toCurrency' });
   const amount = useWatch({ control, name: 'amount' });
@@ -51,17 +49,13 @@ export default function ExchangePage() {
     fromCurrency !== toCurrency
   );
 
-  // Estimate conversion (real-time preview)
   const estimateMutation = useFxEstimate();
   const [estimatedAmount, setEstimatedAmount] = useState<Money | null>(null);
 
-  // Execute conversion
   const conversionMutation = useFxConversion();
 
-  // User's conversion history
   const { data: conversions, isLoading: isLoadingConversions } = useFxConversions(!!accountId);
 
-  // Swap currencies
   const handleSwap = useCallback(() => {
     setValue('fromCurrency', toCurrency);
     setValue('toCurrency', fromCurrency);
@@ -73,7 +67,6 @@ export default function ExchangePage() {
   const estimateMutationRef = useRef(estimateMutation);
   useEffect(() => { estimateMutationRef.current = estimateMutation; }, [estimateMutation]);
 
-  // Handle amount change with debounce
   useEffect(() => {
     if (compareCurrency(amount, '0') > 0 && fromCurrency !== toCurrency) {
       const timer = setTimeout(async () => {
@@ -93,7 +86,6 @@ export default function ExchangePage() {
     }
   }, [amount, fromCurrency, toCurrency]);
 
-  // React 19 "adjusting state during render" — when the input is cleared or
   // currencies match, reset the previous estimate during render (avoids the
   // cascading-render warning from setState-in-effect).
   if (!(compareCurrency(amount, '0') > 0 && fromCurrency !== toCurrency) && estimatedAmount !== null) {
@@ -102,7 +94,6 @@ export default function ExchangePage() {
 
   const displayAmount = estimatedAmount;
 
-  // Format currency
   const formatCurrency = (value: Money | number, currencyCode: string) => {
     const currency = SUPPORTED_CURRENCIES[currencyCode];
     if (!currency) return `${value} ${currencyCode}`;
@@ -139,11 +130,9 @@ export default function ExchangePage() {
     });
   };
 
-  // Get currency info
   const fromCurrencyInfo = SUPPORTED_CURRENCIES[fromCurrency];
   const toCurrencyInfo = SUPPORTED_CURRENCIES[toCurrency];
 
-  // Recent conversions (last 5)
   const recentConversions = Array.isArray(conversions) ? conversions.slice(0, 5) : [];
 
   return (

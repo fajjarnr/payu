@@ -97,7 +97,6 @@ describe('BalanceCard', () => {
     it('should call onToggleBalance when eye button is pressed', () => {
       render(<BalanceCard {...defaultProps} />);
 
-      // Find the eye button by accessibility label
       const eyeButton = screen.getByLabelText('Hide balance');
       fireEvent.press(eyeButton);
 
@@ -107,7 +106,6 @@ describe('BalanceCard', () => {
     it('should not render eye button when onToggleBalance is not provided', () => {
       render(<BalanceCard balance={defaultProps.balance} />);
 
-      // Query for the hide/show balance button should return null
       const eyeButton = screen.queryByLabelText('Hide balance');
       expect(eyeButton).toBeNull();
     });
@@ -131,7 +129,6 @@ describe('BalanceCard', () => {
     it('should handle decimal balance values', () => {
       render(<BalanceCard {...defaultProps} balance={1500000.75} />);
 
-      // formatCurrency should handle decimals appropriately
       expect(screen.getByText(formatCurrency(1500000.75))).toBeTruthy();
     });
 

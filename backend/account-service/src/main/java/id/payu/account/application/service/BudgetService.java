@@ -32,15 +32,6 @@ public class BudgetService {
         this.budgetRepository = budgetRepository;
     }
 
-    /**
-     * Create a new budget for a user.
-     *
-     * @param userId the user ID
-     * @param category the spending category
-     * @param limitAmount the budget limit
-     * @param period the budget period
-     * @return the created budget
-     */
     @Transactional
     public Budget createBudget(UUID userId, String category, BigDecimal limitAmount, BudgetPeriod period) {
         log.info("Creating budget for user={}, category={}, limit={}, period={}",
@@ -67,23 +58,11 @@ public class BudgetService {
         return saved;
     }
 
-    /**
-     * Get all budgets for a user.
-     *
-     * @param userId the user ID
-     * @return list of budgets
-     */
     @Transactional(readOnly = true)
     public List<Budget> getUserBudgets(UUID userId) {
         return budgetRepository.findByUserId(userId);
     }
 
-    /**
-     * Get active budgets for a user.
-     *
-     * @param userId the user ID
-     * @return list of active budgets
-     */
     @Transactional(readOnly = true)
     public List<Budget> getActiveBudgets(UUID userId) {
         return budgetRepository.findActiveByUserId(userId);
@@ -91,10 +70,6 @@ public class BudgetService {
 
     /**
      * Get a budget by ID, only when it belongs to the given account (ACCOUNT-002).
-     *
-     * @param accountId the owning account ID
-     * @param budgetId the budget ID
-     * @return optional budget
      */
     @Transactional(readOnly = true)
     public Optional<Budget> getBudget(UUID accountId, UUID budgetId) {
@@ -104,13 +79,6 @@ public class BudgetService {
 
     /**
      * Update a budget, only when it belongs to the given account (ACCOUNT-002).
-     *
-     * @param accountId the owning account ID
-     * @param budgetId the budget ID
-     * @param newLimit the new limit amount (optional)
-     * @param newPeriod the new period (optional)
-     * @param active the active status (optional)
-     * @return the updated budget
      */
     @Transactional
     public Budget updateBudget(UUID accountId, UUID budgetId, BigDecimal newLimit,
@@ -137,9 +105,6 @@ public class BudgetService {
 
     /**
      * Delete a budget, only when it belongs to the given account (ACCOUNT-002).
-     *
-     * @param accountId the owning account ID
-     * @param budgetId the budget ID
      */
     @Transactional
     public void deleteBudget(UUID accountId, UUID budgetId) {
@@ -159,11 +124,6 @@ public class BudgetService {
 
     /**
      * Check if a transaction is allowed within budget constraints.
-     *
-     * @param userId the user ID
-     * @param category the spending category
-     * @param amount the transaction amount
-     * @return BudgetCheckResult indicating if transaction is allowed
      */
     @Transactional
     public BudgetCheckResult checkBudget(UUID userId, String category, BigDecimal amount) {
@@ -181,7 +141,7 @@ public class BudgetService {
             BudgetStatus status = budget.getStatus();
 
             if (status == BudgetStatus.PAUSED) {
-                continue; // Skip paused budgets
+                continue;
             }
 
             if (status == BudgetStatus.EXCEEDED) {
@@ -203,13 +163,6 @@ public class BudgetService {
         return new BudgetCheckResult(BudgetCheckStatus.ALLOWED, null, null);
     }
 
-    /**
-     * Record a transaction against the budget.
-     *
-     * @param userId the user ID
-     * @param category the spending category
-     * @param amount the transaction amount
-     */
     @Transactional
     public void recordTransaction(UUID userId, String category, BigDecimal amount) {
         List<Budget> budgets = budgetRepository.findByUserIdAndCategory(userId, category);
@@ -224,12 +177,6 @@ public class BudgetService {
         }
     }
 
-    /**
-     * Get budget status for all user budgets.
-     *
-     * @param userId the user ID
-     * @return list of budget status information
-     */
     @Transactional
     public List<BudgetStatusInfo> getAllBudgetStatus(UUID userId) {
         List<Budget> budgets = budgetRepository.findByUserId(userId);
@@ -286,7 +233,6 @@ public class BudgetService {
         };
     }
 
-    // Result records
     public record BudgetCheckResult(BudgetCheckStatus status, Budget budget, String message) {}
     public record BudgetStatusInfo(UUID budgetId, String category, BudgetStatus status,
                                    BigDecimal limitAmount, BigDecimal currentSpent,

@@ -59,22 +59,15 @@ class MonitoringConfigurationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // Mock security beans
     @MockitoBean
     private JwtDecoder jwtDecoder;
 
-    // Mock shared library dependencies
     @MockitoBean(name = "cacheInvalidationPublisher")
     private Object cacheInvalidationPublisher;
 
-    // Mock KafkaTemplate for cache invalidation
     @MockitoBean
     private KafkaTemplate<Object, Object> kafkaTemplate;
 
-    /**
-     * Test configuration for Prometheus metrics.
-     * Provides PrometheusMeterRegistry bean for /actuator/prometheus endpoint.
-     */
     @TestConfiguration
     static class PrometheusTestConfiguration {
         @Bean
@@ -86,9 +79,7 @@ class MonitoringConfigurationTest {
     @Test
     @DisplayName("Should expose Prometheus metrics endpoint")
     void shouldExposePrometheusMetrics() throws Exception {
-        // Note: /actuator/prometheus endpoint requires full PrometheusMetricsExportAutoConfiguration
-        // In unit test environment, we verify the metrics endpoint is available instead
-        // The PrometheusMeterRegistry bean is provided by @TestConfiguration
+        // /actuator/prometheus needs the full export stack; verify /actuator/metrics instead.
         mockMvc.perform(get("/actuator/metrics"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.names").isArray());
@@ -97,8 +88,7 @@ class MonitoringConfigurationTest {
     @Test
     @DisplayName("Should include JVM metrics in Prometheus output")
     void shouldIncludeJVMMetrics() throws Exception {
-        // Verify JVM metrics are available via /actuator/metrics endpoint
-        // The /actuator/prometheus endpoint requires full metrics export stack
+        // JVM metrics are exposed via /actuator/metrics (prometheus needs the full stack).
         mockMvc.perform(get("/actuator/metrics/jvm.memory.used"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("jvm.memory.used"));
@@ -146,14 +136,11 @@ class MonitoringConfigurationTest {
     @Test
     @DisplayName("Should return application name in metrics")
     void shouldReturnApplicationNameInMetrics() throws Exception {
-        // Verify the metrics endpoint is accessible and returns metric names
-        // The application name tag is configured in application.yaml
-        // In unit test environment, we verify the metrics infrastructure works
+        // Metrics endpoint is accessible and returns metric names.
         mockMvc.perform(get("/actuator/metrics"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.names").isArray());
 
-        // Note: The /actuator/prometheus endpoint requires full metrics export stack
-        // In production with Prometheus scraping, this would return metrics with application tags
+        // /actuator/prometheus needs the full export stack (present in prod with Prometheus).
     }
 }

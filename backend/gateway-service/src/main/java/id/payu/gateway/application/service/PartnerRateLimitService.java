@@ -51,16 +51,11 @@ public class PartnerRateLimitService {
 
     /**
      * Check if a partner's request is within their rate limits.
-     *
-     * @param partnerId The partner ID
-     * @param endpoint  The API endpoint being accessed
-     * @return Uni containing RateLimitCheck result
      */
     public Uni<RateLimitCheck> checkRateLimit(String partnerId, String endpoint) {
         return getEffectiveRateLimit(partnerId, endpoint)
             .flatMap(rateLimit -> {
                 if (rateLimit == null) {
-                    // No rate limit configured, allow
                     return Uni.createFrom().item(RateLimitCheck.allowAll());
                 }
 
@@ -107,7 +102,6 @@ public class PartnerRateLimitService {
      * Assign a rate plan to a partner.
      */
     public Uni<PartnerRatePlan> assignRatePlan(String partnerId, String ratePlanId) {
-        // Deactivate existing assignment first
         return partnerRatePlanRepository.deactivateByPartnerId(partnerId)
             .flatMap(unused -> {
                 PartnerRatePlan newAssignment = new PartnerRatePlan(
@@ -127,7 +121,6 @@ public class PartnerRateLimitService {
         String hourKey = buildCounterKey(partnerId, endpoint, "hour");
         String dayKey = buildCounterKey(partnerId, endpoint, "day");
 
-        // Increment counters with TTL
         incrementCounter(minuteKey, 60);
         incrementCounter(hourKey, 3600);
         incrementCounter(dayKey, 86400);
@@ -147,7 +140,6 @@ public class PartnerRateLimitService {
         String hourKey = buildCounterKey(partnerId, endpoint, "hour");
         String dayKey = buildCounterKey(partnerId, endpoint, "day");
 
-        // Get all counters in parallel
         Uni<Long> minuteCount = getCounterValue(minuteKey);
         Uni<Long> hourCount = getCounterValue(hourKey);
         Uni<Long> dayCount = getCounterValue(dayKey);

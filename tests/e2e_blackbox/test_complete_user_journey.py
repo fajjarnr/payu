@@ -31,7 +31,7 @@ class TestFullUserJourney:
         user_id = registered_user.get("userId")
         assert user_id is not None, "User ID not set — registration fixture did not succeed"
 
-        # Step 3: Wallet balance check — wallet-service circuit breaker is open
+        # Wallet balance check — wallet-service circuit breaker is open
         response = authenticated_api.get(f"/api/v1/wallets/{user_id}/balance")
         assert response.status_code in [403, 429, 500, 503], (
             f"Expected 403/500/503 (wallet-service auth denied or circuit breaker open), got {response.status_code}: {response.text}"
@@ -41,7 +41,7 @@ class TestFullUserJourney:
             assert body["error"] == "CIRCUIT_OPEN"
             assert "wallet-service" in body["message"]
 
-        # Step 4: Transaction history — wallet transactions also fail via circuit breaker
+        # Transaction history — wallet transactions also fail via circuit breaker
         response = authenticated_api.get(f"/api/v1/wallets/{user_id}/transactions")
         assert response.status_code in [403, 429, 500, 503], (
             f"Expected 403/500/503 (wallet-service auth denied or circuit breaker), got {response.status_code}"
@@ -78,7 +78,7 @@ class TestFullUserJourney:
         3. Payment creation — returns 404 (gateway root /payments POST route
            doesn't match billing-service endpoint)
         """
-        # Step 1: List billers — this works
+        # List billers — this works
         response = authenticated_api.get("/api/v1/billers")
         assert response.status_code == 200, (
             f"Expected 200 from billers list, got {response.status_code}: {response.text}"
@@ -95,7 +95,6 @@ class TestFullUserJourney:
         assert "displayName" in first_biller
         assert "category" in first_biller
 
-        # Step 2: Get biller categories
         response = authenticated_api.get("/api/v1/billers/categories")
         assert response.status_code == 200, (
             f"Expected 200 from biller categories, got {response.status_code}: {response.text}"
@@ -106,7 +105,7 @@ class TestFullUserJourney:
         assert isinstance(categories, list)
         assert len(categories) > 0
 
-        # Step 3: Attempt bill payment — POST /api/v1/payments returns 404
+        # Attempt bill payment — POST /api/v1/payments returns 404
         # The gateway's paymentRootPost route exists but the billing-service
         # doesn't have a matching endpoint, resulting in a 404 from the gateway.
         response = authenticated_api.post("/api/v1/payments", json={

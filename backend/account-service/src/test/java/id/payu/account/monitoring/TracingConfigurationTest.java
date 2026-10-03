@@ -50,7 +50,6 @@ class TracingConfigurationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // Mock security beans
     @MockitoBean
     private JwtDecoder jwtDecoder;
 
@@ -59,11 +58,9 @@ class TracingConfigurationTest {
     @MockitoBean
     private Tracer tracerBean;
 
-    // Mock shared library dependencies
     @MockitoBean(name = "cacheInvalidationPublisher")
     private Object cacheInvalidationPublisher;
 
-    // Mock KafkaTemplate for cache invalidation
     @MockitoBean
     private KafkaTemplate<Object, Object> kafkaTemplate;
 
@@ -91,15 +88,11 @@ class TracingConfigurationTest {
     @Test
     @DisplayName("Should include tracing in actuator configuration")
     void shouldIncludeTracingInActuatorConfiguration() throws Exception {
-        // The /actuator/tracing endpoint requires full tracing stack
-        // In unit test environment, we verify the application context loads
-        // and health endpoint is accessible
+        // /actuator/tracing needs the full tracing stack; verify context loads and health is up.
         mockMvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk());
 
-        // Note: /actuator/tracing endpoint returns 404 in unit test environment
-        // This is expected - full tracing actuator requires OTEL integration
-        // In production with Jaeger/OTEL collector, this endpoint would be available
+        // /actuator/tracing returns 404 without OTEL; expected in unit tests.
     }
 
     @Test

@@ -16,20 +16,8 @@ import java.util.UUID;
 @Repository
 public interface RefundJpaRepository extends JpaRepository<RefundEntity, UUID> {
 
-    /**
-     * Finds all refunds for a transaction.
-     *
-     * @param transactionId the transaction ID
-     * @return list of refund entities
-     */
     List<RefundEntity> findByTransactionId(UUID transactionId);
 
-    /**
-     * Finds refunds by status.
-     *
-     * @param status the refund status
-     * @return list of refund entities
-     */
     List<RefundEntity> findByStatus(RefundStatus status);
 
     /**

@@ -63,7 +63,6 @@ public class DiscrepancyEntity {
     public DiscrepancyEntity() {
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public SettlementBatchEntity getSettlementBatch() { return settlementBatch; }

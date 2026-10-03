@@ -53,7 +53,6 @@ def configure_logging(config: Optional[LoggingConfig] = None) -> None:
     if config is None:
         config = LoggingConfig.from_env()
 
-    # Set standard library logging level
     import logging
 
     logging.basicConfig(
@@ -62,17 +61,11 @@ def configure_logging(config: Optional[LoggingConfig] = None) -> None:
         level=getattr(logging, config.log_level.upper()),
     )
 
-    # Configure structlog
     shared_processors = [
-        # Add timestamp
         structlog.processors.TimeStamper(fmt="iso"),
-        # Add log level
         structlog.stdlib.add_log_level,
-        # Add logger name
         structlog.stdlib.add_logger_name,
-        # Format exception info
         structlog.processors.format_exc_info,
-        # Add call site info (file, line)
         structlog.processors.CallsiteParameterAdder(
             {
                 structlog.processors.CallsiteParameter.FILENAME,
@@ -83,20 +76,16 @@ def configure_logging(config: Optional[LoggingConfig] = None) -> None:
     ]
 
     if config.json_format:
-        # JSON format for production
         structlog.configure(
             processors=shared_processors
             + [
-                # Add service metadata
                 lambda _, __, event_dict: {
                     **event_dict,
                     "service": config.service_name,
                     "service_version": config.service_version,
                     "environment": config.environment,
                 },
-                # Add OpenTelemetry trace info
                 _add_otel_trace_info,
-                # Render as JSON
                 structlog.processors.JSONRenderer(),
             ],
             wrapper_class=structlog.stdlib.BoundLogger,
@@ -105,11 +94,9 @@ def configure_logging(config: Optional[LoggingConfig] = None) -> None:
             cache_logger_on_first_use=True,
         )
     else:
-        # Plain text format for development
         structlog.configure(
             processors=shared_processors
             + [
-                # Render as console output
                 structlog.dev.ConsoleRenderer(
                     colors=True,
                     exception_formatter=structlog.dev.rich_traceback,
@@ -137,7 +124,6 @@ def _add_otel_trace_info(
             event_dict["span_id"] = format_span_id(span_context.span_id)
             event_dict["trace_flags"] = str(span_context.trace_flags)
     except ImportError:
-        # OpenTelemetry not installed, skip
         pass
 
     return event_dict

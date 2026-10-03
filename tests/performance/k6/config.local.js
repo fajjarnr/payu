@@ -1,5 +1,3 @@
-// PayU Platform - k6 Load Test Configuration (Local Environment)
-// ================================================================
 
 const gatewayUrl = __ENV.GATEWAY_URL || 'http://localhost:8080';
 const keycloakUrl = __ENV.KEYCLOAK_URL || 'http://localhost:8099';

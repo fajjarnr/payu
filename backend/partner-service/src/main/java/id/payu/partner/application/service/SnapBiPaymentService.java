@@ -202,7 +202,6 @@ public class SnapBiPaymentService {
 
     @Transactional
     public RefundResponse createRefund(String partnerId, String referenceNo, RefundRequest request) {
-        // Serialize cumulative refund checks on the payment parent row.
         SnapBiPaymentEntity record = paymentRepository.findForUpdateByPartnerIdAndReferenceNo(partnerId, referenceNo)
             .orElse(null);
 
@@ -269,7 +268,6 @@ public class SnapBiPaymentService {
             );
         }
 
-        // Check cumulative refunds using database aggregate query
         BigDecimal totalRefunded = refundRepository.sumRefundedAmountByPayuReferenceNo(record.getPayuReferenceNo());
 
         BigDecimal newTotal = totalRefunded.add(request.amount.value);

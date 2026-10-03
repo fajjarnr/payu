@@ -36,9 +36,6 @@ public class ApiResponse<T> {
     @Schema(description = "Pagination information (present only for paginated responses)")
     private PaginationInfo pagination;
 
-    /**
-     * Creates a successful response with data.
-     */
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
                 .success(true)
@@ -47,9 +44,6 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    /**
-     * Creates a successful response with data and pagination.
-     */
     public static <T> ApiResponse<T> success(T data, PaginationInfo pagination) {
         return ApiResponse.<T>builder()
                 .success(true)
@@ -59,9 +53,6 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    /**
-     * Creates an error response with code and message.
-     */
     public static <T> ApiResponse<T> error(String code, String message) {
         return ApiResponse.<T>builder()
                 .success(false)
@@ -70,9 +61,6 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    /**
-     * Creates an error response with code, message, and details.
-     */
     public static <T> ApiResponse<T> error(String code, String message, java.util.List<FieldError> details) {
         return ApiResponse.<T>builder()
                 .success(false)
@@ -81,9 +69,6 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    /**
-     * Creates an error response from ErrorInfo.
-     */
     public static <T> ApiResponse<T> error(ErrorInfo errorInfo) {
         return ApiResponse.<T>builder()
                 .success(false)

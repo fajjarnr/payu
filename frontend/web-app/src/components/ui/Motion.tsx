@@ -83,10 +83,8 @@ export const StaggerContainer = ({ children, staggerDelay = 0.1, className }: St
  const shouldReduceMotion = useReducedMotion();
  return (
  <motion.div
-  // Mount-driven (not whileInView): async data re-renders during the
-  // stagger orchestration window permanently orphaned late children at
-  // opacity 0 (invisible dashboard sections). With animate latched,
-  // re-rendering children always resolve to "visible".
+  // Mount-driven, not whileInView: async re-renders during stagger
+  // orphaned late children at opacity 0.
   initial={shouldReduceMotion ? false : "hidden"}
   animate="visible"
   variants={{
@@ -113,10 +111,8 @@ interface StaggerItemProps {
 export const StaggerItem = ({ children, className }: StaggerItemProps) => {
  const shouldReduceMotion = useReducedMotion();
  return (
- // Self-sufficient (own animate, not parent propagation): variant context
- // from StaggerContainer demonstrably stalls in production (async
- // re-renders orphan children at opacity 0). Container keeps
- // staggerChildren for ordering; items resolve visibility on their own.
+ // Own animate, not parent propagation: variant context from
+ // StaggerContainer orphans children at opacity 0 on async re-render.
  <motion.div
   initial={shouldReduceMotion ? false : "hidden"}
   animate="visible"

@@ -548,7 +548,6 @@ describe('CMSService', () => {
 
       await service.getAlerts();
 
-      // Verify the endpoint starts with /public
       const callArgs = vi.mocked(api.get).mock.calls[0];
       expect(callArgs[0]).toMatch(/^\/public\//);
     });

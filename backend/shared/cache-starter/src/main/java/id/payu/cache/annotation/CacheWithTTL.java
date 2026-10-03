@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  *   <li>Custom TTL per method or cache</li>
  *   <li>Stale-while-revalidate pattern for improved performance</li>
  *   <li>Automatic key generation using SpEL</li>
-   <li>Conditional caching based on result</li>
+ *   <li>Conditional caching based on result</li>
  *   <li>Cache invalidation support</li>
  * </ul>
  *

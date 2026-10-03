@@ -26,7 +26,6 @@ public class CashbackNotification {
         this.message = message;
     }
 
-    // Getters and setters
     public String getAccountId() {
         return accountId;
     }

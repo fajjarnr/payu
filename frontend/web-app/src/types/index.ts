@@ -301,7 +301,6 @@ export interface UserSegmentsResponse {
   totalScore: number;
 }
 
-// FX Exchange Types
 export type FxConversionStatus = 'PENDING' | 'COMPLETED' | 'REVERSED' | 'FAILED';
 
 export interface FxRate {

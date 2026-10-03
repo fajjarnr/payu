@@ -84,7 +84,6 @@ public class StepUpController {
             log.info("StepUp verify {} fail {}/3", req.challengeId(), fails);
             return ResponseEntity.ok(new VerifyResponse(false));
         }
-        // success: reset counter, delete challenge
         pin.setFailedAttempts(0);
         pin.setLockedUntil(null);
         pinRepo.save(pin);

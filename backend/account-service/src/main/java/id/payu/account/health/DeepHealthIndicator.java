@@ -49,7 +49,6 @@ public class DeepHealthIndicator implements HealthIndicator {
     public Health health() {
         Map<String, Object> details = new HashMap<>();
 
-        // Check database
         Health dbHealth = checkDatabase();
         details.put("database", dbHealth.getDetails());
         boolean dbUp = dbHealth.getStatus() == Status.UP;
@@ -60,13 +59,11 @@ public class DeepHealthIndicator implements HealthIndicator {
         boolean dataGridUp = dataGridHealth.getStatus() == Status.UP;
         dataGridHealthy.set(dataGridUp);
 
-        // Check Kafka
         Health kafkaHealth = checkKafka();
         details.put("kafka", kafkaHealth.getDetails());
         boolean kafkaUp = kafkaHealth.getStatus() == Status.UP;
         kafkaHealthy.set(kafkaUp);
 
-        // Overall status
         boolean allHealthy = dbUp && dataGridUp && kafkaUp;
         Status status = allHealthy ? Status.UP : Status.DOWN;
 
@@ -75,9 +72,6 @@ public class DeepHealthIndicator implements HealthIndicator {
             .build();
     }
 
-    /**
-     * Check database connectivity with actual query.
-     */
     private Health checkDatabase() {
         long start = System.currentTimeMillis();
         try (Connection conn = dataSource.getConnection()) {
@@ -107,9 +101,6 @@ public class DeepHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Check Data Grid connectivity through Hot Rod.
-     */
     private Health checkDataGrid() {
         long start = System.currentTimeMillis();
         try {
@@ -130,17 +121,12 @@ public class DeepHealthIndicator implements HealthIndicator {
         }
     }
 
-    /**
-     * Check Kafka connectivity.
-     */
     private Health checkKafka() {
         long start = System.currentTimeMillis();
         try {
-            // Try to get cluster info
             var partitions = kafkaTemplate.getProducerFactory().getConfigurationProperties();
             long duration = System.currentTimeMillis() - start;
 
-            // Check listener containers if available
             boolean listenersRunning = true;
             if (listenerRegistry != null) {
                 listenersRunning = listenerRegistry.getListenerContainerIds().stream()

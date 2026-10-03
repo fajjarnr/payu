@@ -170,7 +170,6 @@ export default function BillsPage() {
      </div>
     </div>
 
-    {/* Biller Grid */}
     <div className="bg-card rounded-2xl p-8 sm:p-12 border border-border relative overflow-hidden shadow-sm">
      <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-primary/5 rounded-full blur-3xl" />
      <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase mb-6 text-center opacity-60">Kategori Layanan</h3>
@@ -196,7 +195,6 @@ export default function BillsPage() {
      </div>
     </div>
 
-    {/* Recent Bills */}
     <div className="space-y-8">
      <h3 className="text-xl font-bold text-foreground tracking-tight">Aktivitas Terakhir</h3>
      {!isLoading && recentBills.length > 0 ? (

@@ -27,8 +27,6 @@ public class TransactionCompletedConsumer {
     /**
      * Consumes transaction completed events from Kafka.
      *
-     * @param event the transaction completed event
-     * @param acknowledgment the Kafka acknowledgment
      */
     @KafkaListener(
             topics = "${app.kafka.topics.transaction-completed:transaction.completed}",
@@ -45,7 +43,6 @@ public class TransactionCompletedConsumer {
             LOG.debug("Successfully processed transaction event: {}", event.transactionId());
         } catch (Exception e) {
             LOG.error("Failed to process transaction event: {}", event.transactionId(), e);
-            // Don't acknowledge - will be retried
             throw e;
         }
     }

@@ -68,7 +68,6 @@ public class FxConversionService implements FxConversionUseCase {
             throw new IllegalStateException("Insufficient balance or wallet debit failed");
         }
 
-        // Credit target currency to wallet
         boolean credited = walletServicePort.credit(
                 saved.getAccountId(), txId, saved.getToAmount(), saved.getToCurrency());
 
@@ -138,7 +137,6 @@ public class FxConversionService implements FxConversionUseCase {
             throw new IllegalStateException("Cannot reverse conversion: insufficient target currency balance");
         }
 
-        // Credit back the source currency that was debited during conversion
         boolean credited = walletServicePort.credit(
                 conversion.getAccountId(), txId + "-REV",
                 conversion.getFromAmount(), conversion.getFromCurrency());
@@ -160,10 +158,6 @@ public class FxConversionService implements FxConversionUseCase {
                 txId, conversion.getToAmount(), conversion.getToCurrency(),
                 conversion.getFromAmount(), conversion.getFromCurrency());
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
 
     private FxConversion createConversionFallback(FxConversion conversion, Exception ex) {
         if (ex instanceof DataIntegrityViolationException

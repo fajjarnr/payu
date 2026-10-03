@@ -1,4 +1,3 @@
-# Environment-specific configuration for Pre-Production
 spring:
   cloud:
     vault:

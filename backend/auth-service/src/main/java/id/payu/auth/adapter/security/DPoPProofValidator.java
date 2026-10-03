@@ -157,7 +157,6 @@ public class DPoPProofValidator {
             long expiry = now + properties.getJtiTtlSeconds();
             Long prev = fallbackJti.putIfAbsent(jti, expiry);
             replay = prev != null && prev > now;
-            // clean expired occasionally
             if (fallbackJti.size() > 1000) {
                 fallbackJti.entrySet().removeIf(e -> e.getValue() < now);
             }

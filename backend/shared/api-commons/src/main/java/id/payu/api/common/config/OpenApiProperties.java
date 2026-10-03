@@ -13,7 +13,6 @@ public class OpenApiProperties {
     private String licenseUrl = "https://payu.fajjjar.my.id/license";
     private boolean addBearerAuth = true;
 
-    // Getters and Setters
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }

@@ -74,8 +74,6 @@ public class BudgetEntity {
     public BudgetEntity() {
     }
 
-    // Getters and Setters
-
     public UUID getId() {
         return id;
     }

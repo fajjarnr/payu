@@ -54,12 +54,10 @@ class SandboxIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Clean up
         apiKeyRepository.deleteAll();
         merchantRepository.deleteAll();
         partnerRepository.deleteAll();
 
-        // Create test partner
         testPartner = new PartnerEntity();
         testPartner.setPartnerCode("TEST-PARTNER-001");
         testPartner.setName("Test PartnerEntity");
@@ -69,7 +67,6 @@ class SandboxIntegrationTest {
         testPartner.setActive(true);
         testPartner = partnerRepository.save(testPartner);
 
-        // Create sandbox API key
         sandboxKey = new ApiKeyEntity(
                 testPartner,
                 "payu_test_",
@@ -82,7 +79,6 @@ class SandboxIntegrationTest {
         sandboxKey.setRatePlan("sandbox");
         sandboxKey = apiKeyRepository.save(sandboxKey);
 
-        // Create production API key
         productionKey = new ApiKeyEntity(
                 testPartner,
                 "payu_live_",
@@ -158,9 +154,6 @@ class SandboxIntegrationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void requestWithSandboxKey_AddsSandboxHeader() throws Exception {
-        // This test verifies the filter adds the header
-        // In a real scenario, we'd need to hit an endpoint that uses the filter
-        // For now, we just verify the key is correctly set up
         mockMvc.perform(get("/admin/sandbox/status")
                         .header("X-API-Key", "payu_test_sandbox_key_12345")
                         .contentType(MediaType.APPLICATION_JSON))

@@ -2,7 +2,6 @@ import { walletService } from '../wallet.service';
 import { apiClient } from '../api';
 import { Wallet, ApiResponse } from '@/types';
 
-// Mock the apiClient
 jest.mock('../api', () => ({
   apiClient: {
     get: jest.fn(),

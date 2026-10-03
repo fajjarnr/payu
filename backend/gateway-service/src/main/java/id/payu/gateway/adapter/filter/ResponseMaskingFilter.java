@@ -66,12 +66,10 @@ public class ResponseMaskingFilter implements ContainerResponseFilter {
 
         String path = requestContext.getUriInfo().getPath();
 
-        // Only mask responses for partner/external API paths
         if (!shouldMask(path)) {
             return;
         }
 
-        // Only process JSON responses
         if (responseContext.getMediaType() == null ||
                 !responseContext.getMediaType().toString().contains("json")) {
             return;
@@ -141,7 +139,6 @@ public class ResponseMaskingFilter implements ContainerResponseFilter {
                 if (blacklistedFields.contains(fieldName)) {
                     toRemove.add(fieldName);
                 } else {
-                    // Recursively process nested objects/arrays
                     removed += maskFields(objectNode.get(fieldName));
                 }
             }

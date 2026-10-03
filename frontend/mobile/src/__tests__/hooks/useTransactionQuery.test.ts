@@ -14,7 +14,6 @@ import {
 import { transactionService } from '@/services/transaction.service';
 import { Transaction, TransferData } from '@/types';
 
-// Mock dependencies
 jest.mock('@/services/transaction.service');
 
 describe('useTransactionQuery', () => {

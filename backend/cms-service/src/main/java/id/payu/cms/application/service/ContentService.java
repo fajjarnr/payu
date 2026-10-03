@@ -37,9 +37,6 @@ public class ContentService {
 
     private final ContentPersistencePort contentRepository;  // BUG-CMS-HEX-001: use port interface, not JPA repo
 
-    /**
-     * Create new content
-     */
     @Transactional
     @CacheEvict(value = "contents", allEntries = true)
     @CircuitBreaker(name = "cmsService", fallbackMethod = "createContentFallback")
@@ -47,7 +44,6 @@ public class ContentService {
     public ContentResponse createContent(ContentRequest request, String createdBy) {
         log.info("Creating new content: {}", request.getTitle());
 
-        // Validate unique title
         if (contentRepository.existsByTitleIgnoreCase(request.getTitle())) {
             throw new IllegalArgumentException(
                 "Content with title '" + request.getTitle() + "' already exists"
@@ -85,9 +81,6 @@ public class ContentService {
         return toResponse(saved);
     }
 
-    /**
-     * Update existing content
-     */
     @Transactional
     @CacheEvict(value = "contents", allEntries = true)
     public ContentResponse updateContent(UUID id, ContentRequest request, String updatedBy) {
@@ -96,7 +89,6 @@ public class ContentService {
         ContentEntity content = contentRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Content not found with ID: " + id));
 
-        // Check title uniqueness if changed
         if (!content.getTitle().equalsIgnoreCase(request.getTitle()) &&
             contentRepository.existsByTitleIgnoreCase(request.getTitle())) {
             throw new IllegalArgumentException(
@@ -104,7 +96,6 @@ public class ContentService {
             );
         }
 
-        // Update fields
         content.setContentType(request.getContentType());
         content.setTitle(request.getTitle());
         content.setDescription(request.getDescription());
@@ -125,9 +116,6 @@ public class ContentService {
         return toResponse(saved);
     }
 
-    /**
-     * Get content by ID
-     */
     @Cacheable(value = "contents", key = "#id")
     @CircuitBreaker(name = "cmsService", fallbackMethod = "getContentByIdFallback")
     @Retry(name = "cmsService")
@@ -137,9 +125,6 @@ public class ContentService {
         return toResponse(content);
     }
 
-    /**
-     * Get all content with pagination
-     */
     public ContentListResponse getAllContent(int page, int size, String sortBy, String sortDirection) {
         // BUG-CMS-HEX-001: use port's primitive signature, not Spring's Pageable
         List<ContentEntity> contents = contentRepository.findAll(page, size, sortBy, sortDirection);
@@ -158,9 +143,6 @@ public class ContentService {
             .build();
     }
 
-    /**
-     * Get content by type
-     */
     @Cacheable(value = "contents", key = "'type:' + #type")
     public List<ContentResponse> getContentByType(String type) {
         return contentRepository.findByContentType(type).stream()
@@ -168,9 +150,6 @@ public class ContentService {
             .collect(Collectors.toList());
     }
 
-    /**
-     * Get content by status
-     */
     @Cacheable(value = "contents", key = "'status:' + #status")
     public List<ContentResponse> getContentByStatus(String status) {
         ContentStatus contentStatus = ContentStatus.valueOf(status.toUpperCase());
@@ -179,9 +158,6 @@ public class ContentService {
             .collect(Collectors.toList());
     }
 
-    /**
-     * Get active content by type (for public API)
-     */
     @Cacheable(value = "activeContents", key = "#type")
     public List<ContentResponse> getActiveContentByType(String type) {
         List<ContentEntity> contents = contentRepository.findActiveByContentType(type, LocalDate.now());
@@ -190,9 +166,6 @@ public class ContentService {
             .collect(Collectors.toList());
     }
 
-    /**
-     * Update content status
-     */
     @Transactional
     @CacheEvict(value = {"contents", "activeContents"}, allEntries = true)
     public ContentResponse updateContentStatus(UUID id, String status, String updatedBy) {
@@ -209,9 +182,6 @@ public class ContentService {
         return toResponse(saved);
     }
 
-    /**
-     * Delete content
-     */
     @Transactional
     @CacheEvict(value = {"contents", "activeContents"}, allEntries = true)
     public void deleteContent(UUID id) {
@@ -222,21 +192,14 @@ public class ContentService {
         log.info("Content deleted: {}", id);
     }
 
-    /**
-     * Get scheduled content to activate
-     */
     public List<ContentEntity> getScheduledContentToActivate() {
         return contentRepository.findScheduledToActivate(LocalDate.now());
     }
 
-    /**
-     * Get expired active content to archive
-     */
     public List<ContentEntity> getExpiredActiveContent() {
         return contentRepository.findActiveToArchive(LocalDate.now());
     }
 
-    // ─── Fallback methods ──────────────────────────────────────────────────────
 
     private ContentResponse createContentFallback(ContentRequest request, String createdBy, Throwable ex) {
         if (ex instanceof DataIntegrityViolationException
@@ -261,9 +224,6 @@ public class ContentService {
         log.error("Circuit breaker triggered for getContentById [id={}]: {}", id, ex.getMessage());
         throw new IllegalStateException("CMS service temporarily unavailable. Please retry later.", ex);
     }
-    /**
-     * Activate scheduled content
-     */
     @Transactional
     @CacheEvict(value = {"contents", "activeContents"}, allEntries = true)
     public void activateScheduledContent(List<UUID> contentIds) {
@@ -276,9 +236,6 @@ public class ContentService {
         });
     }
 
-    /**
-     * Archive expired content
-     */
     @Transactional
     @CacheEvict(value = {"contents", "activeContents"}, allEntries = true)
     public void archiveExpiredContent(List<UUID> contentIds) {
@@ -291,9 +248,6 @@ public class ContentService {
         });
     }
 
-    /**
-     * Convert entity to response DTO
-     */
     private ContentResponse toResponse(ContentEntity content) {
         return ContentResponse.builder()
             .id(content.getId())

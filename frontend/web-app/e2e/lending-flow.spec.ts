@@ -2,12 +2,9 @@ import { test, expect } from './fixtures';
 
 test.describe('Lending Flow', () => {
   test.beforeEach(async ({ authPage: page }) => {
-    // Navigate to lending page (assumes user is logged in)
     await page.goto('/lending');
     await page.waitForLoadState('domcontentloaded');
-    // Wait for React to hydrate and Framer Motion animations to finish.
-    // Without this, PayLater tab clicks may fail because event handlers
-    // are not yet attached or elements are still animating.
+    // Wait for React hydration and Framer Motion; without it PayLater tab clicks fail.
     await page.waitForSelector('[data-testid="lending-tabs"]', { timeout: 10000 });
     await page.waitForTimeout(1000);
   });
@@ -31,7 +28,6 @@ test.describe('Lending Flow', () => {
   });
 
   test('should switch to PayLater tab', async ({ authPage: page }) => {
-    // Click the PayLater tab
     await page.locator('[data-testid="paylater-tab"]').click({ force: true });
 
     // Wait for the PayLater content to appear (content-based wait instead of arbitrary timeout)
@@ -51,12 +47,10 @@ test.describe('Lending Flow', () => {
   });
 
   test('should display credit score progress bar', async ({ authPage: page }) => {
-    // The progress bar container uses Tailwind classes with special chars that can't be used as CSS selectors.
-    // Use the score card's gradient container as reference and find the progress bar within it.
+    // Tailwind classes with special chars can't be used as CSS selectors — locate via the score card.
     const scoreCard = page.locator('[class*="bg-gradient-to-br"][class*="from-gray-900"]');
     await expect(scoreCard).toBeVisible();
 
-    // The progress bar is inside the score card - a div with h-2 and rounded-full
     const progressBar = scoreCard.locator('[class*="h-2"][class*="rounded-full"]').first();
     await expect(progressBar).toBeVisible();
   });
@@ -136,8 +130,7 @@ test.describe('Lending Flow', () => {
   });
 
   test('should have apply loan buttons', async ({ authPage: page }) => {
-    // ButtonMotion wraps Button, creating nested button elements.
-    // Use data-testid to target the actual Button elements (not the ButtonMotion wrappers).
+    // ButtonMotion wraps Button (nested buttons) — target the real Button via data-testid.
     const applyButtons = page.locator('[data-testid^="apply-loan-"]');
     await expect(applyButtons).toHaveCount(2);
   });
@@ -146,7 +139,6 @@ test.describe('Lending Flow', () => {
     await page.locator('[data-testid="paylater-tab"]').click({ force: true });
     await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
 
-    // Check for activate button text
     await expect(page.getByText('Aktifkan PayLater')).toBeVisible();
   });
 
@@ -163,11 +155,9 @@ test.describe('Lending Flow', () => {
     await page.goto('/lending');
     await page.waitForLoadState('domcontentloaded');
 
-    // Check that key elements are visible
     await expect(page.getByText('Pinjaman & Kredit')).toBeVisible();
     await expect(page.getByText('Skor Kredit Anda')).toBeVisible();
 
-    // Take screenshot
     await page.screenshot({
       path: 'e2e/screenshots/lending-mobile.png',
       fullPage: true
@@ -201,7 +191,6 @@ test.describe('Lending Flow - Loan Application', () => {
     const applyButton = page.getByTestId('apply-loan-0');
     await applyButton.click();
 
-    // In real scenario would open loan application form
     await expect(applyButton).toBeVisible();
   });
 
@@ -209,7 +198,6 @@ test.describe('Lending Flow - Loan Application', () => {
     const applyButton = page.getByTestId('apply-loan-1');
     await applyButton.click();
 
-    // In real scenario would open loan application form
     await expect(applyButton).toBeVisible();
   });
 
@@ -232,7 +220,6 @@ test.describe('Lending Flow - Loan Application', () => {
   });
 
   test('should have interactive loan cards', async ({ authPage: page }) => {
-    // Use text content to find the loan product cards
     await expect(page.getByText('Pinjaman Personal')).toBeVisible();
     await expect(page.getByText('Pinjaman Multiguna')).toBeVisible();
 
@@ -252,12 +239,10 @@ test.describe('Lending Flow - PayLater', () => {
     await page.waitForTimeout(1000);
     // Use force:true — Playwright's stability check conflicts with Framer Motion
     await page.locator('[data-testid="paylater-tab"]').click({ force: true });
-    // Wait for PayLater tab content to render
     await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
   });
 
   test('should display PayLater credit card', async ({ authPage: page }) => {
-    // Check for PayLater content which indicates the card is displayed
     await expect(page.getByText('PayLater Limit')).toBeVisible();
     await expect(page.getByText('Tersedia untuk belanja sekarang, bayar nanti')).toBeVisible();
   });
@@ -267,14 +252,11 @@ test.describe('Lending Flow - PayLater', () => {
   });
 
   test('should display PayLater usage bar', async ({ authPage: page }) => {
-    // Check for usage bar text content
     await expect(page.getByText('Limit Terpakai')).toBeVisible();
   });
 
   test('should display transaction list', async ({ authPage: page }) => {
-    // Wait for transaction section to render before checking entries
     await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible({ timeout: 15000 });
-    // Check for transaction entries
     await expect(page.getByText('TokoBapak')).toBeVisible();
     await expect(page.getByText('Traveloka')).toBeVisible();
     await expect(page.getByText('Shopee')).toBeVisible();
@@ -316,7 +298,6 @@ test.describe('Lending Flow - PayLater', () => {
   });
 
   test('should have proper status styling', async ({ authPage: page }) => {
-    // Wait for transaction data to render
     await expect(page.getByText('Riwayat Transaksi PayLater')).toBeVisible({ timeout: 15000 });
     // Check for status text content rather than CSS classes
     await expect(page.getByText('Dibayar').first()).toBeVisible();
@@ -345,7 +326,6 @@ test.describe('Lending Flow - Credit Score', () => {
   });
 
   test('should have credit score factors with icons', async ({ authPage: page }) => {
-    // Wait for at least one factor text to render (auto-retry ensures data is loaded)
     await expect(page.getByText('Pembayaran tepat waktu')).toBeVisible();
     // The check icons use the text-success-light class (grade badge + 3 factor icons = 4)
     const checkIcons = page.locator('.text-success-light');
@@ -373,11 +353,9 @@ test.describe('Lending Flow - Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ authPage: page }) => {
-    // Tab through page
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
 
-    // Should reach a button
     const focused = page.locator(':focus');
     await expect(focused).toBeVisible();
   });
@@ -388,11 +366,9 @@ test.describe('Lending Flow - Accessibility', () => {
   });
 
   test('should switch tabs with keyboard', async ({ authPage: page }) => {
-    // Click the PayLater tab directly instead of relying on keyboard navigation
-    // which is timing-sensitive and may not work consistently
+    // Click the PayLater tab directly; keyboard navigation is timing-sensitive here.
     await page.locator('[data-testid="paylater-tab"]').click({ force: true });
 
-    // Wait for PayLater content to appear (content-based wait)
     await expect(page.getByText('PayLater Limit')).toBeVisible({ timeout: 15000 });
   });
 });
@@ -444,7 +420,6 @@ test.describe('Lending Flow - Error Handling', () => {
     const applyButton = page.getByTestId('apply-loan-0');
     await applyButton.click();
 
-    // In real scenario, might show error for insufficient credit score
     await expect(applyButton).toBeVisible();
   });
 
@@ -474,7 +449,6 @@ test.describe('Lending Flow - Interactive Elements', () => {
   });
 
   test('should have hover effects on loan cards', async ({ authPage: page }) => {
-    // Verify loan product cards are present
     await expect(page.getByText('Pinjaman Personal')).toBeVisible();
     await expect(page.getByText('Pinjaman Multiguna')).toBeVisible();
   });
@@ -488,7 +462,6 @@ test.describe('Lending Flow - Interactive Elements', () => {
   });
 
   test('should have smooth transitions', async ({ authPage: page }) => {
-    // Verify page is responsive and displays content
     await expect(page.getByText('Pinjaman & Kredit')).toBeVisible();
   });
 });

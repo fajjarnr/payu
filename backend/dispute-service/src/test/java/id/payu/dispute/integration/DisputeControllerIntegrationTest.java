@@ -107,14 +107,12 @@ class DisputeControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Clean up before each test
         disputePersistencePort.findAll().forEach(d -> disputePersistencePort.deleteById(d.getId()));
     }
 
     @Test
     @DisplayName("Should open dispute and retrieve it")
     void shouldOpenDisputeAndRetrieveIt() throws Exception {
-        // Create open dispute request
         OpenDisputeRequest request = OpenDisputeRequest.builder()
                 .transactionId(TRANSACTION_ID)
                 .customerId(CUSTOMER_ID)
@@ -124,7 +122,6 @@ class DisputeControllerIntegrationTest {
                 .reason("Product not received")
                 .build();
 
-        // Open dispute
         String responseJson = mockMvc.perform(post("/api/v1/disputes")
                         .header("Idempotency-Key", "integration-dispute-open")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -140,7 +137,6 @@ class DisputeControllerIntegrationTest {
 
         DisputeResponse response = objectMapper.readValue(responseJson, DisputeResponse.class);
 
-        // Retrieve dispute by ID
         mockMvc.perform(get("/api/v1/disputes/{disputeId}", response.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(response.getId().toString()))
@@ -150,12 +146,10 @@ class DisputeControllerIntegrationTest {
     @Test
     @DisplayName("Should start investigation and resolve dispute")
     void shouldStartInvestigationAndResolveDispute() throws Exception {
-        // Create dispute
         Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID,
                 new BigDecimal("100000.00"), "IDR", "Test dispute");
         dispute = disputePersistencePort.save(dispute);
 
-        // Start investigation
         StartInvestigationRequest investigationRequest = StartInvestigationRequest.builder()
                 .investigationId("INV-001")
                 .build();
@@ -167,7 +161,6 @@ class DisputeControllerIntegrationTest {
                 .andExpect(jsonPath("$.status").value("INVESTIGATING"))
                 .andExpect(jsonPath("$.investigationId").value("INV-001"));
 
-        // Resolve dispute
         ResolveDisputeRequest resolveRequest = ResolveDisputeRequest.builder()
                 .resolutionType("REFUND_CUSTOMER")
                 .resolution("Evidence supports customer claim")
@@ -184,12 +177,10 @@ class DisputeControllerIntegrationTest {
     @Test
     @DisplayName("Should add evidence to dispute")
     void shouldAddEvidenceToDispute() throws Exception {
-        // Create dispute
         Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID,
                 new BigDecimal("100000.00"), "IDR", "Test dispute");
         dispute = disputePersistencePort.save(dispute);
 
-        // Add evidence
         AddEvidenceRequest evidenceRequest = AddEvidenceRequest.builder()
                 .fileName("receipt.pdf")
                 .fileUrl("https://storage.payu.fajjjar.my.id/evidence/receipt.pdf")
@@ -207,12 +198,10 @@ class DisputeControllerIntegrationTest {
     @Test
     @DisplayName("Should reject dispute")
     void shouldRejectDispute() throws Exception {
-        // Create dispute
         Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID,
                 new BigDecimal("100000.00"), "IDR", "Test dispute");
         dispute = disputePersistencePort.save(dispute);
 
-        // Reject dispute
         RejectDisputeRequest rejectRequest = RejectDisputeRequest.builder()
                 .rejectionReason("Dispute filed after deadline")
                 .build();
@@ -228,7 +217,6 @@ class DisputeControllerIntegrationTest {
     @Test
     @DisplayName("Should get disputes by customer")
     void shouldGetDisputesByCustomer() throws Exception {
-        // Create disputes
         Dispute dispute1 = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID,
                 new BigDecimal("100000.00"), "IDR", "Dispute 1");
         Dispute dispute2 = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID,

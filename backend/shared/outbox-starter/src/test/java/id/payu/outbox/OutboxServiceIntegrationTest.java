@@ -64,8 +64,6 @@ class OutboxServiceIntegrationTest {
         outboxRepository.deleteAll();
     }
 
-    // ─── Save Event Tests ───────────────────────────────────────────────
-
     @Nested
     @DisplayName("Save Outbox Event")
     @Transactional
@@ -74,7 +72,6 @@ class OutboxServiceIntegrationTest {
         @Test
         @DisplayName("Should save an outbox event and verify it's stored in database")
         void shouldSaveEventAndVerifyStored() {
-            // Given
             String aggregateType = "Wallet";
             String aggregateId = "wallet-001";
             String eventType = "WalletCredited";
@@ -84,10 +81,8 @@ class OutboxServiceIntegrationTest {
                     "currency", "IDR"
             );
 
-            // When
             OutboxEvent savedEvent = outboxService.createEvent(aggregateType, aggregateId, eventType, payload);
 
-            // Then
             assertThat(savedEvent).isNotNull();
             assertThat(savedEvent.getId()).isNotNull();
             assertThat(savedEvent.getAggregateType()).isEqualTo(aggregateType);
@@ -107,14 +102,12 @@ class OutboxServiceIntegrationTest {
         @Test
         @DisplayName("Should save event with custom headers and destination topic")
         void shouldSaveEventWithHeadersAndTopic() {
-            // Given
             Map<String, Object> headers = Map.of(
                     "correlationId", "corr-123",
                     "traceId", "trace-456"
             );
             String destinationTopic = "payu.wallet.credited.v1";
 
-            // When
             OutboxEvent savedEvent = outboxService.createEvent(
                     "Transaction",
                     "tx-001",
@@ -124,7 +117,6 @@ class OutboxServiceIntegrationTest {
                     destinationTopic
             );
 
-            // Then
             assertThat(savedEvent.getHeaders()).isEqualTo(headers);
             assertThat(savedEvent.getDestinationTopic()).isEqualTo(destinationTopic);
 
@@ -137,7 +129,6 @@ class OutboxServiceIntegrationTest {
         @Test
         @DisplayName("Should save multiple events and verify count")
         void shouldSaveMultipleEvents() {
-            // When
             for (int i = 0; i < 5; i++) {
                 outboxService.createEvent(
                         "Wallet",
@@ -147,13 +138,11 @@ class OutboxServiceIntegrationTest {
                 );
             }
 
-            // Then
             long count = outboxRepository.count();
             assertThat(count).isEqualTo(5);
         }
     }
 
-    // ─── Mark as Published Tests ────────────────────────────────────────
 
     @Nested
     @DisplayName("Mark Event as Published")
@@ -163,7 +152,6 @@ class OutboxServiceIntegrationTest {
         @DisplayName("Should mark an event as published using repository")
         @Transactional
         void shouldMarkEventAsPublished() {
-            // Given
             OutboxEvent event = outboxService.createEvent(
                     "Wallet",
                     "wallet-001",
@@ -177,7 +165,6 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             Instant publishedAt = Instant.now();
             int updated = outboxRepository.markAsPublished(eventId, publishedAt);
 
@@ -185,7 +172,6 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // Then
             assertThat(updated).isEqualTo(1);
 
             OutboxEvent updatedEvent = outboxRepository.findById(eventId).orElseThrow();
@@ -197,7 +183,6 @@ class OutboxServiceIntegrationTest {
         @DisplayName("Should not update already published event")
         @Transactional
         void shouldNotUpdateAlreadyPublishedEvent() {
-            // Given
             OutboxEvent event = outboxService.createEvent(
                     "Wallet",
                     "wallet-001",
@@ -213,12 +198,10 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When - try to mark again
             Instant secondPublishTime = Instant.now();
             int updated = outboxRepository.markAsPublished(event.getId(), secondPublishTime);
             entityManager.flush();
 
-            // Then - should not update because published_at is already set
             assertThat(updated).isEqualTo(0);
 
             OutboxEvent retrieved = outboxRepository.findById(event.getId()).orElseThrow();
@@ -230,7 +213,6 @@ class OutboxServiceIntegrationTest {
         @DisplayName("Should mark event as published using entity method")
         @Transactional
         void shouldMarkAsPublishedUsingEntityMethod() {
-            // Given
             OutboxEvent event = outboxService.createEvent(
                     "Wallet",
                     "wallet-001",
@@ -238,18 +220,15 @@ class OutboxServiceIntegrationTest {
                     Map.of("amount", 50000)
             );
 
-            // When
             event.markAsPublished();
             outboxRepository.save(event);
 
-            // Then
             OutboxEvent retrieved = outboxRepository.findById(event.getId()).orElseThrow();
             assertThat(retrieved.isPublished()).isTrue();
             assertThat(retrieved.getPublishedAt()).isNotNull();
         }
     }
 
-    // ─── Query Pending Events Tests ─────────────────────────────────────
 
     @Nested
     @DisplayName("Query Pending Events")
@@ -259,7 +238,6 @@ class OutboxServiceIntegrationTest {
         @Test
         @DisplayName("Should find unpublished events")
         void shouldFindUnpublishedEvents() {
-            // Given
             OutboxEvent unpublished1 = createUnpublishedEvent("Wallet", "w-1", "Event1");
             OutboxEvent unpublished2 = createUnpublishedEvent("Wallet", "w-2", "Event2");
             OutboxEvent published = createPublishedEvent("Wallet", "w-3", "Event3");
@@ -267,11 +245,9 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             Pageable pageable = PageRequest.of(0, 10);
             List<OutboxEvent> unpublished = outboxRepository.findUnpublishedEvents(pageable).getContent();
 
-            // Then
             assertThat(unpublished).hasSize(2);
             assertThat(unpublished)
                     .extracting(OutboxEvent::getId)
@@ -281,7 +257,6 @@ class OutboxServiceIntegrationTest {
         @Test
         @DisplayName("Should count unpublished events")
         void shouldCountUnpublishedEvents() {
-            // Given
             createUnpublishedEvent("Wallet", "w-1", "Event1");
             createUnpublishedEvent("Wallet", "w-2", "Event2");
             createPublishedEvent("Wallet", "w-3", "Event3");
@@ -289,17 +264,14 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             long count = outboxRepository.countUnpublishedEvents();
 
-            // Then
             assertThat(count).isEqualTo(2);
         }
 
         @Test
         @DisplayName("Should return pending event count from service")
         void shouldReturnPendingCountFromService() {
-            // Given
             createUnpublishedEvent("Wallet", "w-1", "Event1");
             createUnpublishedEvent("Wallet", "w-2", "Event2");
             createPublishedEvent("Wallet", "w-3", "Event3");
@@ -307,17 +279,14 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             long count = outboxService.getPendingEventCount();
 
-            // Then
             assertThat(count).isEqualTo(2);
         }
 
         @Test
         @DisplayName("Should find unpublished events for retry")
         void shouldFindUnpublishedEventsForRetry() {
-            // Given
             OutboxEvent event1 = createUnpublishedEvent("Wallet", "w-1", "Event1");
             event1.setRetryCount(1);
             outboxRepository.save(event1);
@@ -329,17 +298,14 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             Pageable pageable = PageRequest.of(0, 10);
             List<OutboxEvent> retryable = outboxRepository.findUnpublishedEventsForRetry(3, pageable).getContent();
 
-            // Then
             assertThat(retryable).hasSize(1);
             assertThat(retryable.get(0).getId()).isEqualTo(event1.getId());
         }
     }
 
-    // ─── Delete Old Events Tests ────────────────────────────────────────
 
     @Nested
     @DisplayName("Delete Old Processed Events")
@@ -349,7 +315,6 @@ class OutboxServiceIntegrationTest {
         @DisplayName("Should delete published events older than cutoff date")
         @Transactional
         void shouldDeleteOldPublishedEvents() {
-            // Given - Create events with specific timestamps
             Instant oldPublishedAt = Instant.now().minus(40, ChronoUnit.DAYS);
             OutboxEvent oldEvent = createPublishedEventWithTimestamp("Wallet", "w-1", "Event1", oldPublishedAt);
 
@@ -359,12 +324,10 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             Instant cutoffDate = Instant.now().minus(30, ChronoUnit.DAYS);
             int deleted = outboxRepository.deletePublishedEventsOlderThan(cutoffDate);
             entityManager.flush();
 
-            // Then
             assertThat(deleted).isEqualTo(1);
             assertThat(outboxRepository.findById(oldEvent.getId())).isEmpty();
             assertThat(outboxRepository.findById(recentEvent.getId())).isPresent();
@@ -374,7 +337,6 @@ class OutboxServiceIntegrationTest {
         @DisplayName("OUTBOX-001: failed events past cutoff are counted, never deleted")
         @Transactional
         void shouldCountFailedEventsWithoutDeleting() {
-            // Given
             Instant oldCreatedAt = Instant.now().minus(10, ChronoUnit.DAYS);
             OutboxEvent oldFailedEvent = createFailedEventAt("Wallet", "w-1", "Event1", oldCreatedAt, 5);
 
@@ -384,12 +346,11 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             Instant cutoffDate = Instant.now().minus(7, ChronoUnit.DAYS);
             long archived = outboxRepository.countFailedEventsOlderThan(3, cutoffDate);
             entityManager.flush();
 
-            // Then: counted but still archived (no DELETE)
+            // counted but still archived (no DELETE)
             assertThat(archived).isEqualTo(1);
             assertThat(outboxRepository.findById(oldFailedEvent.getId())).isPresent();
             assertThat(outboxRepository.findById(recentFailedEvent.getId())).isPresent();
@@ -399,36 +360,30 @@ class OutboxServiceIntegrationTest {
         @DisplayName("Should not delete unpublished events when deleting published")
         @Transactional
         void shouldNotDeleteUnpublishedEvents() {
-            // Given
             OutboxEvent unpublished = createUnpublishedEvent("Wallet", "w-1", "Event1");
             OutboxEvent published = createPublishedEvent("Wallet", "w-2", "Event2");
 
             entityManager.flush();
             entityManager.clear();
 
-            // When
             Instant cutoffDate = Instant.now().minus(1, ChronoUnit.DAYS);
             int deleted = outboxRepository.deletePublishedEventsOlderThan(cutoffDate);
             entityManager.flush();
 
-            // Then
             assertThat(deleted).isEqualTo(0); // Published event is not old enough
             assertThat(outboxRepository.findById(unpublished.getId())).isPresent();
             assertThat(outboxRepository.findById(published.getId())).isPresent();
         }
     }
 
-    // ─── Retry Mechanism Tests ──────────────────────────────────────────
 
     @Nested
     @DisplayName("Retry Mechanism")
     class RetryMechanismTests {
-
         @Test
         @DisplayName("Should increment retry count and set error message")
         @Transactional
         void shouldIncrementRetryCount() {
-            // Given
             OutboxEvent event = outboxService.createEvent(
                     "Wallet",
                     "wallet-001",
@@ -440,12 +395,10 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             int updated = outboxRepository.incrementRetryCount(eventId, "Connection timeout");
             entityManager.flush();
             entityManager.clear();
 
-            // Then
             assertThat(updated).isEqualTo(1);
 
             OutboxEvent updatedEvent = outboxRepository.findById(eventId).orElseThrow();
@@ -457,7 +410,6 @@ class OutboxServiceIntegrationTest {
         @DisplayName("Should count failed events exceeding max retries")
         @Transactional
         void shouldCountFailedEvents() {
-            // Given
             OutboxEvent failedEvent = createUnpublishedEvent("Wallet", "w-1", "Event1");
             failedEvent.setRetryCount(5);
             outboxRepository.save(failedEvent);
@@ -469,10 +421,8 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             long failedCount = outboxRepository.countFailedEvents(3);
 
-            // Then
             assertThat(failedCount).isEqualTo(1);
         }
 
@@ -480,7 +430,6 @@ class OutboxServiceIntegrationTest {
         @DisplayName("Should return failed event count from service")
         @Transactional
         void shouldReturnFailedCountFromService() {
-            // Given
             OutboxEvent failedEvent = createUnpublishedEvent("Wallet", "w-1", "Event1");
             failedEvent.setRetryCount(5);
             outboxRepository.save(failedEvent);
@@ -488,25 +437,20 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             long count = outboxService.getFailedEventCount(3);
 
-            // Then
             assertThat(count).isEqualTo(1);
         }
     }
 
-    // ─── Find by Aggregate Tests ────────────────────────────────────────
 
     @Nested
     @DisplayName("Find Events by Aggregate")
     @Transactional
     class FindByAggregateTests {
-
         @Test
         @DisplayName("Should find events by aggregate type and ID")
         void shouldFindEventsByAggregateTypeAndId() {
-            // Given
             String aggregateType = "Wallet";
             String aggregateId = "wallet-001";
 
@@ -518,13 +462,11 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             Pageable pageable = PageRequest.of(0, 10);
             List<OutboxEvent> events = outboxRepository
                     .findByAggregateTypeAndAggregateIdOrderBySequenceNumAsc(aggregateType, aggregateId, pageable)
                     .getContent();
 
-            // Then
             assertThat(events).hasSize(2);
             assertThat(events)
                     .extracting(OutboxEvent::getEventType)
@@ -534,7 +476,6 @@ class OutboxServiceIntegrationTest {
         @Test
         @DisplayName("Should find events by aggregate type")
         void shouldFindEventsByAggregateType() {
-            // Given
             outboxService.createEvent("Wallet", "w-1", "Event1", Map.of());
             outboxService.createEvent("Wallet", "w-2", "Event2", Map.of());
             outboxService.createEvent("Transaction", "tx-1", "Event3", Map.of());
@@ -542,18 +483,15 @@ class OutboxServiceIntegrationTest {
             entityManager.flush();
             entityManager.clear();
 
-            // When
             Pageable pageable = PageRequest.of(0, 10);
             List<OutboxEvent> walletEvents = outboxRepository
                     .findByAggregateTypeOrderBySequenceNumAsc("Wallet", pageable)
                     .getContent();
 
-            // Then
             assertThat(walletEvents).hasSize(2);
         }
     }
 
-    // ─── Helper Methods ─────────────────────────────────────────────────
 
     private OutboxEvent createUnpublishedEvent(String aggregateType, String aggregateId, String eventType) {
         return outboxService.createEvent(

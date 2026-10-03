@@ -223,8 +223,6 @@ public class DisbursementEntity {
     /**
      * Sets the monetary amount.
      * Also updates deprecated fields for JPA compatibility.
-     *
-     * @param amount the monetary amount
      */
     public void setAmount(Money amount) {
         this.amount = amount;
@@ -439,11 +437,7 @@ public class DisbursementEntity {
      * Creates a new disbursement with the specified parameters.
      * Generates a unique idempotency key automatically.
      *
-     * @param sourceAccountId the source wallet/account ID
-     * @param amount the amount to disburse
      * @param bankCode the destination bank code (e.g., "014" for BCA)
-     * @param accountNumber the destination account number
-     * @param accountName the destination account name
      * @return a new DisbursementEntity in PENDING status
      * @throws IllegalArgumentException if any required parameter is invalid
      */
@@ -456,11 +450,6 @@ public class DisbursementEntity {
     /**
      * Creates a new disbursement with a specific idempotency key.
      *
-     * @param sourceAccountId the source wallet/account ID
-     * @param amount the amount to disburse
-     * @param bankCode the destination bank code
-     * @param accountNumber the destination account number
-     * @param accountName the destination account name
      * @param idempotencyKey the idempotency key for duplicate protection
      * @return a new DisbursementEntity in PENDING status
      * @throws IllegalArgumentException if any required parameter is invalid

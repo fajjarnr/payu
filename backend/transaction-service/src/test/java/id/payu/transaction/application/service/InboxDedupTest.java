@@ -60,8 +60,6 @@ class InboxDedupTest {
                 .updatedAt(Instant.now())
                 .build();
         tx = txRepo.save(tx);
-        // mock wallet commit will be invoked; use lenient mock via real bean? walletServicePort is mockitoBean if needed
-        // For this test, we rely on existing mockitoBean from context; if not mocked, commit may throw but we handle via try
         // First settle should mark inbox and complete
         try {
             handler.settleInterbankTransfer(ref, "COMPLETED", null);

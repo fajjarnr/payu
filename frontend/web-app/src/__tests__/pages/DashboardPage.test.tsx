@@ -14,7 +14,6 @@ const createWrapper = () => {
   return wrapper;
 };
 
-// Common mocks
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => {
     const map: Record<string, string> = {
@@ -71,7 +70,6 @@ vi.mock('@/stores/authStore', () => ({
   }),
 }));
 
-// Mock dashboard components
 vi.mock('@/components/dashboard', () => ({
   BalanceCard: () => <div data-testid="balance-card">Balance Card</div>,
   QuickActions: () => <div data-testid="quick-actions">Quick Actions</div>,
@@ -107,7 +105,6 @@ vi.mock('@/lib/navigation', () => ({
   ),
 }));
 
-// Mock next/dynamic
 vi.mock('next/dynamic', () => ({
   default: () => () => <div data-testid="dynamic-component">Dynamic</div>,
 }));

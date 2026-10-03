@@ -37,8 +37,6 @@ public class RatePlan {
         this.updatedAt = this.createdAt;
     }
 
-    // Domain behavior
-
     public void activate() {
         this.active = true;
         this.updatedAt = Instant.now();
@@ -83,12 +81,10 @@ public class RatePlan {
     public RateLimit getEffectiveLimit(String endpoint) {
         Objects.requireNonNull(endpoint, "Endpoint cannot be null");
 
-        // Check for exact match first
         if (endpointOverrides.containsKey(endpoint)) {
             return endpointOverrides.get(endpoint);
         }
 
-        // Check for pattern matches (e.g., "/api/v1/accounts/*" matches "/api/v1/accounts/123")
         for (Map.Entry<String, RateLimit> entry : endpointOverrides.entrySet()) {
             String pattern = entry.getKey();
             if (matchesPattern(endpoint, pattern)) {
@@ -110,8 +106,6 @@ public class RatePlan {
     public boolean hasEndpointOverride(String endpoint) {
         return endpointOverrides.containsKey(endpoint);
     }
-
-    // Getters
 
     public String getId() {
         return id;

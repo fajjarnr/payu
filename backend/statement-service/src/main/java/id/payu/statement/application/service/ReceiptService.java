@@ -80,7 +80,6 @@ public class ReceiptService {
     public ReceiptResponse generateReceipt(ReceiptGenerationRequest request) {
         log.info("Generating receipt for transaction: {}", request.getTransactionId());
 
-        // Check if receipt already exists
         Optional<Receipt> existingReceipt = receiptRepository.findByTransactionId(request.getTransactionId());
         if (existingReceipt.isPresent()) {
             log.info("Receipt already exists for transaction: {}", request.getTransactionId());
@@ -127,8 +126,6 @@ public class ReceiptService {
     /**
      * Get a receipt by its ID.
      *
-     * @param receiptId The receipt ID
-     * @return The receipt response
      * @throws ReceiptException if receipt not found
      */
     @CircuitBreaker(name = "statement", fallbackMethod = "getReceiptFallback")
@@ -142,7 +139,6 @@ public class ReceiptService {
 
         validateOwnership(receipt, customerId);
 
-        // Check if expired
         if (receipt.isExpired() && receipt.getStatus() != ReceiptStatus.EXPIRED) {
             receipt.markAsExpired();
             receiptRepository.save(receipt);
@@ -154,7 +150,6 @@ public class ReceiptService {
     /**
      * Get a receipt by transaction ID.
      *
-     * @param transactionId The transaction ID
      * @return Optional containing the receipt response if found
      */
     @Transactional(readOnly = true)
@@ -171,7 +166,6 @@ public class ReceiptService {
     /**
      * Generate PDF bytes for a receipt.
      *
-     * @param receiptId The receipt ID
      * @return PDF bytes
      * @throws ReceiptException if receipt not found or PDF generation fails
      */
@@ -186,7 +180,6 @@ public class ReceiptService {
 
         validateOwnership(receipt, customerId);
 
-        // Check if expired
         if (receipt.isExpired()) {
             throw new ReceiptException("RECEIPT_003", "Receipt has expired");
         }
@@ -206,7 +199,6 @@ public class ReceiptService {
     /**
      * Generate PDF bytes for a receipt by transaction ID.
      *
-     * @param transactionId The transaction ID
      * @return PDF bytes
      * @throws ReceiptException if receipt not found or PDF generation fails
      */
@@ -221,10 +213,6 @@ public class ReceiptService {
 
         return generatePdf(receipt.getId(), customerId);
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
 
     private ReceiptResponse generateReceiptFallback(ReceiptGenerationRequest request, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
@@ -733,7 +721,6 @@ public class ReceiptService {
             }
         }
 
-        // Getters and Setters
         public String getTransactionId() {
             return transactionId;
         }

@@ -14,7 +14,7 @@ import id.payu.billing.domain.model.BillingInterval;
  */
 public interface SubscriptionUseCase {
 
-    // --- Plan Management ---
+    // Plan management
 
     SubscriptionPlan createPlan(SubscriptionActor actor, String partnerId, String planName, String description,
                                  BillingInterval interval,
@@ -27,7 +27,7 @@ public interface SubscriptionUseCase {
 
     void deactivatePlan(SubscriptionActor actor, UUID planId);
 
-    // --- Subscription Lifecycle ---
+    // Subscription lifecycle
 
     Subscription subscribe(SubscriptionActor actor, String accountId, UUID planId, String externalReferenceId);
 
@@ -39,7 +39,7 @@ public interface SubscriptionUseCase {
 
     Subscription cancelSubscription(SubscriptionActor actor, UUID subscriptionId, String reason);
 
-    // --- Charging ---
+    // Charging
 
     /**
      * Process all due subscriptions — called by scheduler.

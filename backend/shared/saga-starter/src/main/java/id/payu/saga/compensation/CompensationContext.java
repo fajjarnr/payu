@@ -59,9 +59,6 @@ public class CompensationContext<T> {
     @Builder.Default
     private java.util.List<String> compensatedSteps = new java.util.ArrayList<>();
 
-    /**
-     * Create a new context for a step compensation.
-     */
     public static <T> CompensationContext<T> forStep(String sagaId, String sagaType,
                                                       String stepName, T sagaData) {
         return CompensationContext.<T>builder()
@@ -73,9 +70,6 @@ public class CompensationContext<T> {
                 .build();
     }
 
-    /**
-     * Add metadata to the context.
-     */
     public CompensationContext<T> withMetadata(String key, Object value) {
         if (this.metadata == null) {
             this.metadata = new HashMap<>();
@@ -84,9 +78,6 @@ public class CompensationContext<T> {
         return this;
     }
 
-    /**
-     * Mark a step as compensated.
-     */
     public void markStepCompensated(String stepName) {
         if (this.compensatedSteps == null) {
             this.compensatedSteps = new java.util.ArrayList<>();
@@ -95,9 +86,6 @@ public class CompensationContext<T> {
         this.partialCompensation = true;
     }
 
-    /**
-     * Check if a step has already been compensated.
-     */
     public boolean isStepCompensated(String stepName) {
         return this.compensatedSteps != null && this.compensatedSteps.contains(stepName);
     }

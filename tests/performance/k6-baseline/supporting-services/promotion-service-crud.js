@@ -1,5 +1,3 @@
-// PayU Promotion Service - CRUD Baseline Performance Test
-// ==========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -88,7 +86,6 @@ export default function () {
 
   group('Promotion Service - CRUD Operations', () => {
 
-    // ===== CREATE: Create Campaign =====
     group('CREATE: Create Campaign', () => {
       const campaignData = generateCampaignData(uniqueId);
 
@@ -104,7 +101,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Campaigns =====
     group('READ: List Campaigns', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.promotion}/campaigns`, { status: 'ACTIVE' }, auth.token);
@@ -114,7 +110,6 @@ export default function () {
     });
 
     if (campaignId) {
-      // ===== READ: Get Campaign Detail =====
       group('READ: Get Campaign Detail', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.promotion}/campaigns/${campaignId}`, auth.token);
@@ -123,7 +118,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Update Campaign =====
       group('UPDATE: Update Campaign', () => {
         const updateData = {
           name: `Updated Campaign ${Date.now()}`,
@@ -137,7 +131,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Activate Campaign =====
       group('UPDATE: Activate Campaign', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.promotion}/campaigns/${campaignId}/activate`, {}, auth.token);
@@ -147,7 +140,6 @@ export default function () {
       });
     }
 
-    // ===== CREATE: Create Voucher =====
     group('CREATE: Create Voucher', () => {
       const voucherData = generateVoucherData(uniqueId.substring(0, 8));
       voucherCode = voucherData.code;
@@ -159,7 +151,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: Get User Promotions =====
     group('READ: Get User Promos', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.promotion}/my-promos`, {}, auth.token);
@@ -168,7 +159,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Validate Promo =====
     group('CREATE: Validate Promo', () => {
       const validationData = {
         promoCode: voucherCode || 'TESTCODE',
@@ -183,7 +173,6 @@ export default function () {
     });
 
     if (voucherCode) {
-      // ===== CREATE: Redeem Voucher =====
       group('CREATE: Redeem Voucher', () => {
         const redemptionData = generateRedemptionData(voucherCode);
 

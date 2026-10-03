@@ -8,8 +8,5 @@ import id.payu.billing.interfaces.dto.TopUpRequest;
  */
 public interface TopUpUseCase {
 
-    /**
-     * Create and process an e-wallet top-up.
-     */
     BillPayment createTopUp(TopUpRequest request);
 }

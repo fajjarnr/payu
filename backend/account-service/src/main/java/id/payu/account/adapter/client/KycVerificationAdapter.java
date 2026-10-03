@@ -71,9 +71,6 @@ public class KycVerificationAdapter implements KycVerificationPort {
         }
     }
 
-    /**
-     * Fallback method when Dukcapil service is unavailable.
-     */
     private VerifyNikResponse verifyNikFallback(VerifyNikRequest request, Throwable throwable) {
         String requestId = UUID.randomUUID().toString();
         String maskedNik = maskNik(request.nik());

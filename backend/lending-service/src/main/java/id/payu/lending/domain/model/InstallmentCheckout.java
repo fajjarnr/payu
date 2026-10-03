@@ -34,7 +34,6 @@ public class InstallmentCheckout {
 
     public InstallmentCheckout() {}
 
-    // Domain methods
 
     public void approve(UUID loanId) {
         this.status = CheckoutStatus.APPROVED;
@@ -53,7 +52,6 @@ public class InstallmentCheckout {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
 
     public UUID getId() {
         return id;

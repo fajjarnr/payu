@@ -4,7 +4,7 @@ spring:
     vault:
       enabled: ${VAULT_ENABLED:true}
   datasource:
-    url: ${DATABASE_URL}  # FAIL-FAST: Must be configured
+    url: ${DATABASE_URL}  # fail-fast: Must be configured
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
   security:

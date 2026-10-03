@@ -35,8 +35,6 @@ class FraudCaseServiceTest {
         testUserId = "test-user-" + System.currentTimeMillis();
     }
 
-    // Create Fraud Case Tests
-
     @Test
     @Transactional
     void testCreateFraudCase_Success() {
@@ -85,8 +83,6 @@ class FraudCaseServiceTest {
         assertNotNull(fraudCase);
         assertEquals(RiskLevel.MEDIUM, fraudCase.getRiskLevel());
     }
-
-    // Query Fraud Case Tests
 
     @Test
     @Transactional
@@ -200,8 +196,6 @@ class FraudCaseServiceTest {
         assertTrue(results.size() >= 1);
     }
 
-    // Assign Fraud Case Tests
-
     @Test
     @Transactional
     void testAssign_Success() {
@@ -231,8 +225,6 @@ class FraudCaseServiceTest {
             fraudCaseService.assign(UUID.randomUUID(), "admin1");
         });
     }
-
-    // Resolve Fraud Case Tests
 
     @Test
     @Transactional
@@ -352,8 +344,6 @@ class FraudCaseServiceTest {
             fraudCaseService.resolve(UUID.randomUUID(), request, "admin1");
         });
     }
-
-    // Delete Fraud Case Tests
 
     @Test
     @Transactional

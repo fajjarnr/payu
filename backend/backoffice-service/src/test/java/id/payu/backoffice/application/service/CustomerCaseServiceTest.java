@@ -34,8 +34,6 @@ class CustomerCaseServiceTest {
         testUserId = "test-user-" + System.currentTimeMillis();
     }
 
-    // Create Customer Case Tests
-
     @Test
     @Transactional
     void testCreateCustomerCase_Success() {
@@ -119,8 +117,6 @@ class CustomerCaseServiceTest {
 
         assertNotEquals(result1.getCaseNumber(), result2.getCaseNumber());
     }
-
-    // Query Customer Case Tests
 
     @Test
     @Transactional
@@ -263,8 +259,6 @@ class CustomerCaseServiceTest {
         assertTrue(results.size() >= 1);
     }
 
-    // Assign Customer Case Tests
-
     @Test
     @Transactional
     void testAssign_Success() {
@@ -294,8 +288,6 @@ class CustomerCaseServiceTest {
             customerCaseService.assign(UUID.randomUUID(), "agent1");
         });
     }
-
-    // Update Customer Case Tests
 
     @Test
     @Transactional
@@ -395,8 +387,6 @@ class CustomerCaseServiceTest {
         });
     }
 
-    // Delete Customer Case Tests
-
     @Test
     @Transactional
     void testDelete_Success() {
@@ -419,14 +409,11 @@ class CustomerCaseServiceTest {
         assertFalse(result.isPresent());
     }
 
-    // Pagination Tests
-
     @Test
     @Transactional
     void testListAll_WithPagination() {
         String uniqueUser = "user-paginate-" + System.currentTimeMillis();
 
-        // Create multiple cases
         for (int i = 0; i < 5; i++) {
             CustomerCaseRequest request = new CustomerCaseRequest(
                     uniqueUser,
@@ -440,11 +427,9 @@ class CustomerCaseServiceTest {
             customerCaseService.create(request);
         }
 
-        // Get first page
         List<CustomerCase> page1 = customerCaseService.listAll(0, 2);
         assertTrue(page1.size() <= 2);
 
-        // Get second page
         List<CustomerCase> page2 = customerCaseService.listAll(1, 2);
         assertTrue(page2.size() <= 2);
     }

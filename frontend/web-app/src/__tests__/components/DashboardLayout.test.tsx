@@ -16,7 +16,6 @@ vi.mock('@/lib/navigation', async (importOriginal) => ({
   }),
 }));
 
-// Mock child components
 vi.mock('@/components/personalization', () => ({
   PersonalizedGreeting: ({ showTimeBased, showSegment }: { showTimeBased?: boolean; showSegment?: boolean }) => (
     <div data-show-time-based={showTimeBased} data-show-segment={showSegment}>
@@ -55,7 +54,6 @@ describe('DashboardLayout', () => {
   it('should render desktop sidebar with main menu items', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    // Check inside desktop sidebar
     const desktopSidebar = screen.getByLabelText('Sidebar Navigasi Desktop');
     const { getByText } = within(desktopSidebar);
 
@@ -74,7 +72,6 @@ describe('DashboardLayout', () => {
   it('should render desktop sidebar with other menu items', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    // Check inside desktop sidebar
     const desktopSidebar = screen.getByLabelText('Sidebar Navigasi Desktop');
     const { getByText } = within(desktopSidebar);
 
@@ -117,7 +114,6 @@ describe('DashboardLayout', () => {
   it('should close mobile sidebar when close button is clicked', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    // Open mobile sidebar
     const menuButton = screen.getByTestId('mobile-menu-trigger');
     fireEvent.click(menuButton);
 
@@ -130,7 +126,6 @@ describe('DashboardLayout', () => {
   it('should render mobile sidebar overlay', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    // Open mobile sidebar
     const menuButton = screen.getByTestId('mobile-menu-trigger');
     fireEvent.click(menuButton);
 
@@ -143,11 +138,9 @@ describe('DashboardLayout', () => {
     const onLogout = vi.fn();
     renderWithIntl(<DashboardLayout {...defaultProps} onLogout={onLogout} />);
 
-    // Open user menu
     const profileButton = screen.getByLabelText('Menu profil pengguna');
     fireEvent.pointerDown(profileButton, { button: 0, ctrlKey: false });
 
-    // Click logout
     const logoutButton = screen.getByTestId('logout-button');
     fireEvent.click(logoutButton);
 

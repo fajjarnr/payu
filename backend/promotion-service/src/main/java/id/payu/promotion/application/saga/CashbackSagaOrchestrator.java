@@ -102,13 +102,11 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
 
     /**
      * Compensation for CREDIT_WALLET step.
-     * Note: In a real cashback scenario, we typically don't reverse credits
-     * as it creates a poor user experience. Instead, we log for reconciliation.
+     * Credits are not reversed to avoid poor user experience; logged for reconciliation.
      */
     private StepResult<CashbackSagaContext> compensateCreditWallet(CashbackSagaContext context) {
         LOG.warn("Saga Compensation: CREDIT_WALLET for account={}", context.getAccountId());
-        // In production, you might want to create a reversal transaction
-        // For now, we log and mark as success since we don't want to fail compensation
+        // Compensation succeeds to avoid failing the saga; reversal logged for reconciliation.
         return StepResult.success(context, "Credit wallet compensation logged");
     }
 
@@ -131,7 +129,7 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
             cashback.setMerchantCode(request.merchantCode());
             cashback.setCategoryCode(request.categoryCode());
             cashback.setCashbackCode(request.cashbackCode());
-            // IMPORTANT: Status is only set to CREDITED after wallet credit succeeds
+            // Status is only set to CREDITED after wallet credit succeeds
             cashback.setStatus(CashbackStatus.CREDITED);
             cashback.setCreditedAt(LocalDateTime.now());
 
@@ -203,8 +201,6 @@ public class CashbackSagaOrchestrator extends SagaOrchestrator<CashbackSagaConte
     /**
      * Execute cashback saga with the given request.
      *
-     * @param context the saga context containing request data
-     * @return SagaResult containing the execution result
      */
     public SagaResult<CashbackSagaContext> executeCashbackSaga(CashbackSagaContext context) {
         return execute(context);

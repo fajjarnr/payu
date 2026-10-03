@@ -35,7 +35,6 @@ public class ApiVersionFilter implements ContainerRequestFilter {
 
         String path = requestContext.getUriInfo().getPath();
 
-        // Skip health and metrics endpoints
         if (path.startsWith("/q/") || path.equals("/health")) {
             return;
         }
@@ -49,10 +48,8 @@ public class ApiVersionFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Extract version from path or header
         String version = extractVersion(path, requestContext);
 
-        // Validate version
         if (!isValidVersion(version)) {
             Log.warnf("Invalid API version requested: %s", version);
             requestContext.abortWith(
@@ -67,7 +64,6 @@ public class ApiVersionFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Check for deprecation warnings
         if (config.versioning().deprecatedVersions().orElse(List.of()).contains(version)) {
             String warning = DEPRECATION_WARNINGS.get(version);
             if (warning != null) {
@@ -76,7 +72,6 @@ public class ApiVersionFilter implements ContainerRequestFilter {
             }
         }
 
-        // Store version in context for downstream use
         requestContext.setProperty("api-version", version);
         requestContext.getHeaders().add(VERSION_HEADER, version);
 
@@ -84,7 +79,6 @@ public class ApiVersionFilter implements ContainerRequestFilter {
     }
 
     private String extractVersion(String path, ContainerRequestContext requestContext) {
-        // Try to extract from path first (e.g., /api/v1/accounts)
         String[] pathParts = path.split("/");
         for (String part : pathParts) {
             if (part.startsWith("v") && part.length() > 1) {
@@ -92,13 +86,11 @@ public class ApiVersionFilter implements ContainerRequestFilter {
             }
         }
 
-        // Fall back to header
         String headerVersion = requestContext.getHeaderString(VERSION_HEADER);
         if (headerVersion != null && !headerVersion.isBlank()) {
             return headerVersion.startsWith("v") ? headerVersion : "v" + headerVersion;
         }
 
-        // Use default version
         return config.versioning().defaultVersion();
     }
 

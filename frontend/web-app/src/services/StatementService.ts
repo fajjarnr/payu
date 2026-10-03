@@ -1,10 +1,6 @@
 import api, { isAxiosError } from '@/lib/api';
 import type { Money } from '@/types';
 
-/**
- * Statement Service Types
- * Based on backend StatementResponse DTO
- */
 
 // XBUG-001 Fix: Changed 'READY' to 'COMPLETED' to match backend StatementStatus enum.
 // Backend returns COMPLETED, not READY — frontend was stuck in infinite polling loop.
@@ -57,24 +53,10 @@ export interface ApiResponseType<T> {
   code?: string;
 }
 
-/**
- * Statement Period Type
- */
 export type PeriodType = 'monthly' | 'quarterly' | 'annually';
 
-/**
- * Statement Format Type
- */
 export type StatementFormat = 'PDF' | 'CSV';
 
-/**
- * Statement Service for PayU Digital Banking Platform
- *
- * SECURITY NOTICE:
- * - All API calls are authenticated via JWT tokens (managed by api.ts)
- * - Users can only access their own statements (enforced by backend)
- * - PDF downloads are handled as blob responses
- */
 export class StatementService {
   private static instance: StatementService;
 

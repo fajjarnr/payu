@@ -21,7 +21,6 @@ from app.main import app
 from app.models.schemas import KycStatus
 from app.database import KycVerificationEntity
 
-# Import factory functions
 from tests.factories import (
     user_factory,
     kyc_verification_factory,
@@ -103,7 +102,6 @@ class TestKycApiWithFactories:
         from httpx import AsyncClient, ASGITransport
         from app.database import get_db_session
 
-        # Use factory to generate test user
         test_user = user_factory(kyc_status="PENDING")
 
         mock_entity = KycVerificationEntity(
@@ -140,7 +138,6 @@ class TestKycApiWithFactories:
         from httpx import AsyncClient, ASGITransport
         from app.database import get_db_session
 
-        # Use factory to generate test KYC verification
         test_kyc = kyc_verification_factory(status="PROCESSING")
 
         async def override_get_db():
@@ -151,7 +148,6 @@ class TestKycApiWithFactories:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            # Use factory-generated sample image
             response = await client.post(
                 "/api/v1/kyc/verify/ktp",
                 json={
@@ -180,7 +176,6 @@ class TestKycApiWithFactories:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            # Use factory-generated sample image
             response = await client.post(
                 "/api/v1/kyc/verify/selfie",
                 json={
@@ -199,7 +194,6 @@ class TestKycApiWithFactories:
         from httpx import AsyncClient, ASGITransport
         from app.database import get_db_session
 
-        # Use factory to generate different KYC statuses
         for status in ["PENDING", "VERIFIED", "REJECTED"]:
             test_kyc = kyc_verification_factory(status=status)
 
@@ -236,7 +230,6 @@ class TestKycApiWithFactories:
         from httpx import AsyncClient, ASGITransport
         from app.database import get_db_session
 
-        # Generate multiple test users with different statuses
         test_users = [
             user_factory(kyc_status="VERIFIED"),
             user_factory(kyc_status="PENDING"),
@@ -270,7 +263,6 @@ class TestKycApiWithFactories:
         from httpx import AsyncClient, ASGITransport
         from app.database import get_db_session
 
-        # Factory allows easy edge case creation
         new_user = user_factory(
             kyc_status="UNVERIFIED", account_created_at="2024-01-01T00:00:00"
         )
@@ -297,7 +289,6 @@ class TestKycApiWithFactories:
     async def test_batch_test_generation_with_factories(self, mock_db_session):
         """Demonstrate batch testing with factory-generated data"""
 
-        # Generate 10 different test scenarios
         test_scenarios = [
             kyc_verification_factory(status=status)
             for status in ["PENDING", "PROCESSING", "VERIFIED", "REJECTED", "FAILED"]
@@ -310,7 +301,6 @@ class TestKycApiWithFactories:
         user_ids = [s["user_id"] for s in test_scenarios]
         assert len(set(user_ids)) == 10  # All unique
 
-        # Verify all scenarios have required fields
         for scenario in test_scenarios:
             assert "user_id" in scenario
             assert "status" in scenario
@@ -363,13 +353,11 @@ class TestFactoryPatternComparison:
 
     def test_factory_enables_rapid_variation(self):
         """Test that factories enable rapid test variation"""
-        # Generate 20 users with different statuses
         users_by_status = {
             status: [user_factory(kyc_status=status) for _ in range(5)]
             for status in ["PENDING", "VERIFIED", "REJECTED"]
         }
 
-        # Verify we have the right distribution
         assert len(users_by_status["PENDING"]) == 5
         assert len(users_by_status["VERIFIED"]) == 5
         assert len(users_by_status["REJECTED"]) == 5

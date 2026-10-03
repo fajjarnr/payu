@@ -19,7 +19,6 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Set, Optional
 from collections import defaultdict
 
-# Colors for terminal output
 RED = '\033[0;31m'
 GREEN = '\033[0;32m'
 YELLOW = '\033[1;33m'
@@ -64,7 +63,6 @@ class OpenAPIValidator:
         services = []
         for item in self.backend_dir.iterdir():
             if item.is_dir() and not item.name.startswith('.'):
-                # Check if it has a src/main/java structure
                 java_dir = item / "src" / "main" / "java"
                 if java_dir.exists():
                     services.append(item.name)
@@ -88,7 +86,6 @@ class OpenAPIValidator:
             if not base_dir.exists():
                 continue
 
-            # Common controller package patterns - try all package name variants
             for pkg_name in package_names:
                 patterns = [
                     base_dir / "id" / "payu" / pkg_name / "adapter" / "web",
@@ -102,7 +99,6 @@ class OpenAPIValidator:
                     if pattern.exists():
                         return pattern
 
-                # Also check for rest subdirectory under adapter/web
                 rest_pattern = base_dir / "id" / "payu" / pkg_name / "adapter" / "web" / "rest"
                 if rest_pattern.exists():
                     return rest_pattern
@@ -124,9 +120,7 @@ class OpenAPIValidator:
             if class_match:
                 base_path = class_match.group(1).strip()
 
-            # Find all method-level mappings
             for i, line in enumerate(lines, 1):
-                # Check for mapping annotations
                 mapping_patterns = [
                     (r'@GetMapping\s*\(\s*["\']([^"\']+)["\']', 'GET'),
                     (r'@PostMapping\s*\(\s*["\']([^"\']+)["\']', 'POST'),
@@ -145,7 +139,6 @@ class OpenAPIValidator:
                         else:
                             path = match.group(1)
 
-                        # Combine base path with method path
                         full_path = base_path + path
                         full_path = full_path.replace("//", "/")
 
@@ -157,7 +150,6 @@ class OpenAPIValidator:
                             line_number=i
                         )
 
-                        # Look ahead for @Operation annotation
                         has_operation, summary, tags = self._check_operation_annotation(lines, i)
                         endpoint.has_operation = has_operation
                         endpoint.operation_summary = summary
@@ -177,13 +169,10 @@ class OpenAPIValidator:
         for i in range(max(0, start_idx - 15), start_idx):
             line = lines[i - 1]  # Adjust for 0-based indexing
 
-            # Check for @Operation
             if '@Operation' in line:
-                # Extract summary
                 summary_match = re.search(r'summary\s*=\s*["\']([^"\']+)["\']', line)
                 summary = summary_match.group(1) if summary_match else ""
 
-                # Extract tags
                 tags = []
                 tags_match = re.search(r'tags\s*=\s*{([^}]+)}', line)
                 if tags_match:
@@ -192,7 +181,6 @@ class OpenAPIValidator:
 
                 return True, summary, tags
 
-            # Stop if we hit another method annotation
             if '@' in line and 'Mapping' in line:
                 break
 
@@ -201,13 +189,11 @@ class OpenAPIValidator:
         for i in range(start_idx, min(len(lines), start_idx + 20)):
             line = lines[i]
 
-            # Check for @Operation
             if '@Operation' in line:
                 # Extract summary - might be on same line or next lines
                 summary_match = re.search(r'summary\s*=\s*["\']([^"\']+)["\']', line)
                 summary = summary_match.group(1) if summary_match else ""
 
-                # If not on same line, check next few lines
                 if not summary:
                     for j in range(i + 1, min(i + 5, len(lines))):
                         summary_match = re.search(r'summary\s*=\s*["\']([^"\']+)["\']', lines[j])
@@ -215,7 +201,6 @@ class OpenAPIValidator:
                             summary = summary_match.group(1)
                             break
 
-                # Extract tags
                 tags = []
                 tags_match = re.search(r'tags\s*=\s*{([^}]+)}', line)
                 if tags_match:
@@ -224,7 +209,6 @@ class OpenAPIValidator:
 
                 return True, summary, tags
 
-            # Stop if we hit the method declaration (public/private/protected)
             if line.strip().startswith('public') or line.strip().startswith('private') or line.strip().startswith('protected'):
                 break
 
@@ -238,7 +222,6 @@ class OpenAPIValidator:
         if not controller_dir:
             return result
 
-        # Find all controller files
         controller_files = list(controller_dir.glob("*Controller.java"))
         if not controller_files:
             # Try parent directory
@@ -259,7 +242,6 @@ class OpenAPIValidator:
                 else:
                     result.undocumented_endpoints.append(endpoint)
 
-                # Track by controller
                 if endpoint.controller not in result.controllers:
                     result.controllers[endpoint.controller] = []
                 result.controllers[endpoint.controller].append(endpoint)
@@ -301,7 +283,7 @@ class OpenAPIValidator:
                     print(f"{RED}✗ {service}:{NC} {coverage:.0f}% documented")
                     print(f"   {result.documented_endpoints}/{result.total_endpoints} endpoints, {undocumented_count} missing documentation\n")
 
-                    for endpoint in result.undocumented_endpoints[:5]:  # Show first 5
+                    for endpoint in result.undocumented_endpoints[:5]:
                         print(f"     {YELLOW}{endpoint.method}{NC} {endpoint.path} ({endpoint.controller}:{endpoint.line_number})")
 
                     if len(result.undocumented_endpoints) > 5:
@@ -311,7 +293,6 @@ class OpenAPIValidator:
                 if not summary_only:
                     print(f"{GREEN}✓ {service}:{NC} 100% documented ({result.total_endpoints} endpoints)")
 
-        # Print summary
         print(f"\n{CYAN}{'=' * 60}{NC}")
         print(f"{CYAN}SUMMARY{NC}")
         print(f"{CYAN}{'=' * 60}{NC}")
@@ -388,7 +369,6 @@ def main():
     if args.json:
         validator.generate_json_report()
 
-    # Exit with error code if issues found
     total_undocumented = sum(len(r.undocumented_endpoints) for r in validator.results.values())
     sys.exit(1 if total_undocumented > 0 else 0)
 

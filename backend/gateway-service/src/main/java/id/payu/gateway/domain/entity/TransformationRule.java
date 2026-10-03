@@ -35,8 +35,6 @@ public class TransformationRule {
         this.updatedAt = this.createdAt;
     }
 
-    // Domain behavior
-
     public void activate() {
         this.active = true;
         this.updatedAt = Instant.now();
@@ -100,8 +98,6 @@ public class TransformationRule {
             action.execute(context);
         }
     }
-
-    // Getters
 
     public String getId() {
         return id;

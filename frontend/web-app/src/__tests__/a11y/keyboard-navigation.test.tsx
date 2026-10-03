@@ -13,7 +13,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { axe } from 'jest-axe';
 
-// Test component for keyboard navigation
 const KeyboardNavigableForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +34,6 @@ const KeyboardNavigableForm = () => {
   );
 };
 
-// Component with skip link
 const PageWithSkipLink = () => (
   <>
     <a href="#main-content" className="skip-link">Skip to main content</a>
@@ -50,7 +48,6 @@ const PageWithSkipLink = () => (
   </>
 );
 
-// Component with focus trap (modal)
 const ModalWithFocusTrap = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
 
@@ -64,7 +61,6 @@ const ModalWithFocusTrap = ({ isOpen, onClose }: { isOpen: boolean; onClose: () 
   );
 };
 
-// Component with tabindex
 const TabOrderComponent = () => (
   <div>
     <button data-testid="first">First</button>
@@ -89,7 +85,6 @@ describe('Keyboard Navigation - WCAG 2.1 AA Compliance', () => {
       fireEvent.change(input, { target: { value: 'test' } });
       fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
-      // Form should be submittable via keyboard
       expect(container.querySelector('form')).toBeInTheDocument();
     });
 
@@ -97,7 +92,6 @@ describe('Keyboard Navigation - WCAG 2.1 AA Compliance', () => {
       const { container } = render(<KeyboardNavigableForm />);
       const results = await axe(container);
 
-      // Check for tabindex violations
       const tabindexViolations = results.violations.filter(
         v => v.id === 'tabindex'
       );
@@ -110,11 +104,9 @@ describe('Keyboard Navigation - WCAG 2.1 AA Compliance', () => {
 
       const button = screen.getByText('Click me');
 
-      // Test Enter key - buttons trigger onClick with Enter by default
       fireEvent.click(button);
       expect(handleClick).toHaveBeenCalledTimes(1);
 
-      // Test that button is properly configured for keyboard activation
       expect(button.tagName).toBe('BUTTON');
       expect(button).not.toHaveAttribute('tabindex');
     });
@@ -127,7 +119,6 @@ describe('Keyboard Navigation - WCAG 2.1 AA Compliance', () => {
       );
       const results = await axe(container);
 
-      // Check for focus trap violations
       const focusTrapViolations = results.violations.filter(
         v => v.id === 'focus-order-semantics' || v.id === 'aria-hidden-focus'
       );
@@ -140,7 +131,6 @@ describe('Keyboard Navigation - WCAG 2.1 AA Compliance', () => {
       const { container } = render(<TabOrderComponent />);
       const results = await axe(container);
 
-      // Check for focus order violations
       const focusOrderViolations = results.violations.filter(
         v => v.id === 'focus-order-semantics'
       );
@@ -154,9 +144,9 @@ describe('Keyboard Navigation - WCAG 2.1 AA Compliance', () => {
       const second = screen.getByTestId('second');
       const third = screen.getByTestId('third');
 
-      // Elements should be in DOM order
-      expect(first.compareDocumentPosition(second)).toBe(4); // second follows first
-      expect(second.compareDocumentPosition(third)).toBe(4); // third follows second
+      // 4 = Node.DOCUMENT_POSITION_FOLLOWING
+      expect(first.compareDocumentPosition(second)).toBe(4);
+      expect(second.compareDocumentPosition(third)).toBe(4);
     });
   });
 
@@ -180,7 +170,6 @@ describe('Keyboard Navigation - WCAG 2.1 AA Compliance', () => {
       const { container } = render(<PageWithSkipLink />);
       const results = await axe(container);
 
-      // Check for skip link
       const skipLinkViolations = results.violations.filter(
         v => v.id === 'skip-link'
       );
@@ -285,7 +274,6 @@ describe('Keyboard Navigation - Complex Interactions', () => {
     const checkbox = screen.getByTestId('checkbox');
     fireEvent.keyDown(checkbox, { key: ' ', code: 'Space' });
 
-    // Checkbox should be toggleable
     expect(checkbox).toBeInTheDocument();
   });
 

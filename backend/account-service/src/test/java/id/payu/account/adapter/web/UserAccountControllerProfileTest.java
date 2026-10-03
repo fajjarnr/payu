@@ -36,7 +36,6 @@ class UserAccountControllerProfileTest {
         userPersistencePort = mock(UserPersistencePort.class);
         UserAccountController controller = new UserAccountController(userPersistencePort, "payu-backend");
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
-        // Simulate trusted service request for tests
         org.springframework.security.oauth2.jwt.Jwt jwt = org.springframework.security.oauth2.jwt.Jwt
                 .withTokenValue("test")
                 .header("alg", "RS256")

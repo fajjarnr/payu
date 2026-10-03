@@ -1,5 +1,3 @@
-// PayU Platform - Unified K6 Baseline Test Runner
-// ==================================================
 // This script runs baseline tests for multiple services
 // Usage: k6 run unified-baseline-runner.js --env SERVICES=wallet,transaction
 

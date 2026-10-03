@@ -139,7 +139,6 @@ public class Dispute {
         return status == DisputeStatus.RESOLVED || status == DisputeStatus.REJECTED;
     }
 
-    // Getters
 
     public UUID getId() {
         return id;

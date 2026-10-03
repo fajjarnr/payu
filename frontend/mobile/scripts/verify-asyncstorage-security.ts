@@ -2,7 +2,6 @@
 
 /**
  * AsyncStorage Security Verification Script
- * ===========================================
  *
  * This script audits AsyncStorage to ensure no sensitive financial or PII data
  * is being persisted (violating PCI-DSS and OJK compliance).
@@ -21,7 +20,6 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Sensitive query keys that must NOT be in AsyncStorage
 const SENSITIVE_QUERY_KEYS = [
   'wallet',
   'wallets',
@@ -192,7 +190,6 @@ async function main() {
   process.exit(report.isSecure ? 0 : 1);
 }
 
-// Only run if executed directly
 if (require.main === module) {
   main().catch((error) => {
     console.error('Script error:', error);

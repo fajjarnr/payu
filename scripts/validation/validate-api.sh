@@ -1,22 +1,16 @@
 #!/bin/bash
 
-# =============================================================================
-# PayU API Validation Script
-# =============================================================================
-# This script validates OpenAPI specifications using Spectral
+# Validates OpenAPI specifications using Spectral.
 # Usage: ./scripts/validate-api.sh [options] [files...]
-# =============================================================================
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Default values
 RULESET=".spectral.yaml"
 FORMAT="stylish"
 FAIL_SEVERITY="error"
@@ -27,12 +21,7 @@ FIX_MODE=false
 PARALLEL=false
 MAX_JOBS=4
 
-# Spectral version
 SPECTRAL_VERSION="6.14.2"
-
-# =============================================================================
-# Helper Functions
-# =============================================================================
 
 print_usage() {
     cat << EOF
@@ -142,7 +131,6 @@ find_openapi_files() {
 
     log_verbose "Searching for OpenAPI files..."
 
-    # Common patterns for OpenAPI files
     local patterns=(
         "openapi*.yaml"
         "openapi*.yml"
@@ -155,7 +143,6 @@ find_openapi_files() {
         "*spec*.yml"
     )
 
-    # Search in common directories
     local dirs=(
         "."
         "docs/openapi"
@@ -176,7 +163,6 @@ find_openapi_files() {
         fi
     done
 
-    # Remove duplicates and sort
     echo "$files" | tr ' ' '\n' | sort -u | grep -v '^$' || true
 }
 
@@ -186,13 +172,11 @@ validate_file() {
 
     log_verbose "Validating: $file"
 
-    # Check if file exists
     if [ ! -f "$file" ]; then
         log_error "File not found: $file"
         return 1
     fi
 
-    # Determine output file if output directory is set
     local output_file=""
     if [ -n "$OUTPUT_DIR" ]; then
         local basename
@@ -200,7 +184,6 @@ validate_file() {
         output_file="${OUTPUT_DIR}/spectral-report-${basename}.${FORMAT}"
     fi
 
-    # Build spectral command
     local cmd="spectral lint \"$file\" --ruleset \"$RULESET\" --fail-severity=$FAIL_SEVERITY --format=$FORMAT"
 
     if [ -n "$output_file" ]; then
@@ -211,7 +194,6 @@ validate_file() {
         echo "Command: $cmd"
     fi
 
-    # Run validation
     if eval "$cmd"; then
         log_success "$file"
         return 0
@@ -231,7 +213,6 @@ validate_parallel() {
 
     log_info "Running validations in parallel (max $MAX_JOBS jobs)..."
 
-    # Function to run validation in background
     run_validation() {
         local file="$1"
         local idx="$2"
@@ -244,10 +225,8 @@ validate_parallel() {
         fi
     }
 
-    # Run validations in parallel
     local idx=0
     for file in "${files[@]}"; do
-        # Wait if we've reached max jobs
         while [ $(jobs -r | wc -l) -ge "$MAX_JOBS" ]; do
             sleep 0.1
         done
@@ -257,10 +236,8 @@ validate_parallel() {
         ((idx++))
     done
 
-    # Wait for all jobs to complete
     wait
 
-    # Collect results
     idx=0
     for file in "${files[@]}"; do
         local result_file="/tmp/spectral_result_${idx}"
@@ -296,14 +273,12 @@ watch_mode() {
     log_info "Watch mode enabled. Press Ctrl+C to stop."
     echo ""
 
-    # Initial validation
     log_info "Running initial validation..."
     for file in "${files[@]}"; do
         validate_file "$file" || true
     done
     echo ""
 
-    # Watch for changes
     fswatch -o "${files[@]}" | while read -r; do
         echo ""
         log_info "File changed, revalidating..."
@@ -337,14 +312,9 @@ generate_summary() {
     fi
 }
 
-# =============================================================================
-# Main Script
-# =============================================================================
-
 main() {
     local files=()
 
-    # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
@@ -408,10 +378,8 @@ main() {
         esac
     done
 
-    # Check if Spectral is installed
     check_spectral
 
-    # Check if ruleset exists
     if [ ! -f "$RULESET" ]; then
         log_error "Ruleset not found: $RULESET"
         exit 1
@@ -421,13 +389,11 @@ main() {
     log_verbose "Fail severity: $FAIL_SEVERITY"
     log_verbose "Output format: $FORMAT"
 
-    # Create output directory if specified
     if [ -n "$OUTPUT_DIR" ]; then
         mkdir -p "$OUTPUT_DIR"
         log_verbose "Output directory: $OUTPUT_DIR"
     fi
 
-    # Find files if none specified
     if [ ${#files[@]} -eq 0 ]; then
         log_info "No files specified, searching for OpenAPI files..."
         mapfile -t files < <(find_openapi_files)
@@ -440,13 +406,11 @@ main() {
         log_info "Found ${#files[@]} OpenAPI file(s)"
     fi
 
-    # Watch mode
     if [ "$WATCH_MODE" = true ]; then
         watch_mode "${files[@]}"
         exit 0
     fi
 
-    # Run validations
     log_info "Validating ${#files[@]} file(s)..."
     echo ""
 
@@ -455,7 +419,6 @@ main() {
     local failed=0
 
     if [ "$PARALLEL" = true ]; then
-        # Parallel validation
         if validate_parallel "${files[@]}"; then
             passed=$total
             failed=0
@@ -464,7 +427,6 @@ main() {
             failed=$?
         fi
     else
-        # Sequential validation
         for file in "${files[@]}"; do
             if validate_file "$file"; then
                 ((passed++))
@@ -474,10 +436,8 @@ main() {
         done
     fi
 
-    # Generate summary
     generate_summary "$total" "$passed" "$failed"
 
-    # Exit with appropriate code
     if [ $failed -gt 0 ]; then
         echo ""
         log_error "Validation failed for $failed file(s)"
@@ -489,5 +449,4 @@ main() {
     fi
 }
 
-# Run main function
 main "$@"

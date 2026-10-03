@@ -33,7 +33,6 @@ spec:
           set -e
           set -o pipefail
 
-          # Configuration
           PRIMARY_REGION="primary"
           SECONDARY_REGION="secondary"
           NAMESPACE="payu"
@@ -57,7 +56,6 @@ spec:
           log "Primary -> Secondary Region"
           log "========================================="
 
-          # Pre-flight checks
           log "Step 1: Pre-flight checks"
           log "Checking secondary region connectivity..."
           oc get node -l topology.kubernetes.io/zone=${SECONDARY_REGION} || check "Cannot connect to secondary region"
@@ -76,7 +74,6 @@ spec:
           oc exec -n ${NAMESPACE} kafka-secondary-kafka-0 -- kafka-broker-api-versions --bootstrap-server localhost:9092 || check "Kafka secondary not accessible"
           log "Kafka secondary is accessible"
 
-          # Step 2: Stop replication
           log "Step 2: Stopping replication services"
           log "Stopping MirrorMaker2..."
           oc scale -n ${NAMESPACE} kafka-mirror-primary-to-secondary --replicas=0 || log "Warning: Failed to scale MirrorMaker2"
@@ -84,7 +81,6 @@ spec:
           log "Stopping PostgreSQL subscription..."
           oc exec -n ${NAMESPACE} postgres-secondary-0 -- psql -U payu -d payudb -c "ALTER SUBSCRIPTION payu_subscription DISABLE;" || log "Warning: Failed to disable subscription"
 
-          # Step 3: Promote secondary database
           log "Step 3: Promoting secondary PostgreSQL"
           oc exec -n ${NAMESPACE} postgres-secondary-0 -- psql -U payu -d payudb <<EOF
           -- Promote standby to primary
@@ -100,7 +96,6 @@ spec:
 
           log "PostgreSQL promoted successfully"
 
-          # Step 4: Scale up services on secondary
           log "Step 4: Scaling up services on secondary region"
           for service in ${SERVICES}; do
             log "Scaling ${service} to full capacity..."
@@ -117,7 +112,6 @@ spec:
             oc rollout status -n ${NAMESPACE} deployment/${service} --timeout=5m || log "Warning: ${service} rollout timeout"
           done
 
-          # Step 5: Update DNS routing
           log "Step 5: Updating DNS routing"
           # This would typically be done via external DNS management
           # For OpenShift, we update external routes
@@ -134,7 +128,6 @@ spec:
           # Placeholder for DNS update logic
           log "DNS routing updated (implementation depends on external DNS provider)"
 
-          # Step 6: Health check
           log "Step 6: Performing health checks"
           log "Checking critical endpoints..."
 
@@ -152,7 +145,6 @@ spec:
             log "${service}: ${READY_REPLICAS}/${DESIRED_REPLICAS} ready"
           done
 
-          # Step 7: Update region labels
           log "Step 7: Updating region labels"
           oc label -n ${NAMESPACE} namespace ${NAMESPACE} role=active --overwrite
           oc label -n ${NAMESPACE} pod -l region=${SECONDARY_REGION} role=active --overwrite || true
@@ -231,12 +223,10 @@ spec:
           log "Secondary -> Primary Region"
           log "========================================="
 
-          # Step 1: Verify primary region health
           log "Step 1: Verifying primary region is healthy"
           oc get node -l topology.kubernetes.io/zone=${PRIMARY_REGION} || { log "Primary region not accessible"; exit 1; }
           log "Primary region is accessible"
 
-          # Step 2: Sync data from secondary to primary
           log "Step 2: Syncing data from secondary to primary"
           log "Setting up reverse replication..."
 
@@ -255,7 +245,6 @@ spec:
           log "Waiting for data sync..."
           sleep 60
 
-          # Step 3: Verify data synchronization
           log "Step 3: Verifying data synchronization"
           # Check replication lag
           LAG_CHECK=$(oc exec -n ${NAMESPACE} postgres-primary-0 -- psql -U payu -d payudb -t -c "SELECT COALESCE(sum(lag_bytes), 0) FROM pg_stat_subscription;")
@@ -267,14 +256,12 @@ spec:
             log "WARNING: Some replication lag detected. Continuing with caution."
           fi
 
-          # Step 4: Stop all services on secondary
           log "Step 4: Scaling down services on secondary"
           for service in ${SERVICES}; do
             log "Scaling down ${service} on secondary..."
             oc scale -n ${NAMESPACE} deployment/${service} --replicas=0 || log "Warning: Failed to scale down ${service}"
           done
 
-          # Step 5: Scale up services on primary
           log "Step 5: Scaling up services on primary"
           for service in ${SERVICES}; do
             log "Scaling ${service} to full capacity on primary..."
@@ -283,11 +270,9 @@ spec:
             sleep 2
           done
 
-          # Step 6: Update DNS routing
           log "Step 6: Updating DNS routing back to primary"
           log "DNS routing updated (implementation depends on external DNS provider)"
 
-          # Step 7: Update region labels
           log "Step 7: Updating region labels"
           oc label -n ${NAMESPACE} namespace ${NAMESPACE} role=passive --overwrite
 

@@ -1,7 +1,6 @@
 # PayU Platform - AMQ Streams Console (Kafka UI)
 # Web-based UI for managing Apache Kafka clusters
 # Prerequisite: amq-streams-console operator subscription installed
-# ============================================================
 
 # KafkaUser for Console authentication (SASL/SCRAM)
 apiVersion: kafka.strimzi.io/v1

@@ -61,7 +61,6 @@ class CashbackProcessorIntegrationTest {
     @Test
     @DisplayName("should process cashback for matching fixed rule")
     void shouldProcessCashbackForFixedRule() {
-        // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE001")
                 .name("Fixed CashbackEntity")
@@ -80,10 +79,8 @@ class CashbackProcessorIntegrationTest {
                 .categoryCode("GROCERY")
                 .build();
 
-        // When
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then
         assertTrue(result.isSuccess());
         assertEquals(1, result.getProcessedCount());
         assertEquals(0, new BigDecimal("5000").compareTo(result.getTotalCashbackAmount()));
@@ -99,7 +96,6 @@ class CashbackProcessorIntegrationTest {
     @Test
     @DisplayName("should process cashback for matching percentage rule")
     void shouldProcessCashbackForPercentageRule() {
-        // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE002")
                 .name("Percentage CashbackEntity")
@@ -119,10 +115,9 @@ class CashbackProcessorIntegrationTest {
                 .categoryCode("DINING")
                 .build();
 
-        // When
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then - 5% of 200k = 10k, capped at 10k max
+        // 5% of 200k = 10k, capped at 10k max
         assertTrue(result.isSuccess());
         assertEquals(1, result.getProcessedCount());
         assertEquals(0, new BigDecimal("10000").compareTo(result.getTotalCashbackAmount()));
@@ -131,7 +126,6 @@ class CashbackProcessorIntegrationTest {
     @Test
     @DisplayName("should skip non-matching transactions")
     void shouldSkipNonMatchingTransactions() {
-        // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE003")
                 .name("High Minimum")
@@ -150,10 +144,8 @@ class CashbackProcessorIntegrationTest {
                 .categoryCode("GROCERY")
                 .build();
 
-        // When
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then
         assertTrue(result.isSuccess()); // Success but no cashback
         assertEquals(0, result.getProcessedCount());
         assertEquals(BigDecimal.ZERO, result.getTotalCashbackAmount());
@@ -164,7 +156,6 @@ class CashbackProcessorIntegrationTest {
     @Test
     @DisplayName("should skip already processed transactions")
     void shouldSkipAlreadyProcessedTransactions() {
-        // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE004")
                 .name("Fixed CashbackEntity")
@@ -181,24 +172,19 @@ class CashbackProcessorIntegrationTest {
                 .amount(new BigDecimal("100000"))
                 .build();
 
-        // When - First processing
         cashbackProcessorService.process(event);
 
-        // When - Second processing (should be skipped)
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then
         assertTrue(result.isSuccess());
         assertEquals(0, result.getProcessedCount());
 
-        // Wallet should only be called once
         verify(walletServicePort, times(1)).creditWallet(any(), any(), any(), any());
     }
 
     @Test
     @DisplayName("should filter by merchant code")
     void shouldFilterByMerchantCode() {
-        // Given
         CashbackRule rule = CashbackRule.builder()
                 .ruleId("RULE005")
                 .name("Specific Merchant")
@@ -224,11 +210,9 @@ class CashbackProcessorIntegrationTest {
                 .merchantCode("OTHER_MERCHANT")
                 .build();
 
-        // When
         CashbackResult result1 = cashbackProcessorService.process(matchingEvent);
         CashbackResult result2 = cashbackProcessorService.process(nonMatchingEvent);
 
-        // Then
         assertEquals(1, result1.getProcessedCount());
         assertEquals(0, result2.getProcessedCount());
     }

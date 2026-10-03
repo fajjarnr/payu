@@ -1,5 +1,4 @@
 # Custom Maven Task with JDK 25 for PayU services.
-# ============================================================
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:

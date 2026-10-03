@@ -214,7 +214,6 @@ export class LendingService {
   }
 }
 
-// Pre-approval types
 export interface PreApprovalCheckRequest {
   userId: string;
   loanType: 'PERSONAL_LOAN' | 'INSTALMENT_LOAN' | 'MICRO_LOAN';

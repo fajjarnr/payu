@@ -27,10 +27,8 @@ import java.util.Map;
 public class FallbackHandler {
 
     /**
-     * Handle Circuit Breaker Open Exception.
      * Returns HTTP 503 Service Unavailable with retry-after guidance.
      *
-     * @param ex the CallNotPermittedException
      * @return error response map with retry information
      */
     @ExceptionHandler(CallNotPermittedException.class)
@@ -49,11 +47,7 @@ public class FallbackHandler {
     }
 
     /**
-     * Handle Rate Limit Exceeded Exception.
      * Returns HTTP 429 Too Many Requests.
-     *
-     * @param ex the RequestNotPermitted
-     * @return error response map
      */
     @ExceptionHandler(RequestNotPermitted.class)
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
@@ -69,11 +63,7 @@ public class FallbackHandler {
     }
 
     /**
-     * Handle Bulkhead Full Exception.
      * Returns HTTP 503 Service Unavailable when concurrent call limit is reached.
-     *
-     * @param ex the BulkheadFullException
-     * @return error response map
      */
     @ExceptionHandler(io.github.resilience4j.bulkhead.BulkheadFullException.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
@@ -89,11 +79,7 @@ public class FallbackHandler {
     }
 
     /**
-     * Handle Timeout Exception.
      * Returns HTTP 408 Request Timeout.
-     *
-     * @param ex the TimeoutException
-     * @return error response map
      */
     // BUG-BE-098: Removed duplicate TimeoutException.class (was listed twice)
     @ExceptionHandler({java.util.concurrent.TimeoutException.class})
@@ -110,11 +96,7 @@ public class FallbackHandler {
     }
 
     /**
-     * Handle generic resilience exceptions.
      * Returns HTTP 503 for resilience-related failures.
-     *
-     * @param ex the exception
-     * @return error response map
      */
     @ExceptionHandler({io.github.resilience4j.retry.MaxRetriesExceededException.class})
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
@@ -134,26 +116,12 @@ public class FallbackHandler {
      * Interface for implementing custom fallback strategies.
      * Implementations should provide alternative responses when the primary
      * service call fails due to resilience patterns.
-     *
-     * @param <T> the return type of the fallback
      */
     @FunctionalInterface
     public interface FallbackStrategy<T> {
-        /**
-         * Execute the fallback logic.
-         *
-         * @param exception the exception that caused the fallback
-         * @return the fallback response
-         */
         T execute(Exception exception);
     }
 
-    /**
-     * Get a standardized error response for circuit breaker open state.
-     *
-     * @param serviceName the name of the service
-     * @return error response map
-     */
     // BUG-BE-108: Added timestamp to error responses for debugging
     public static Map<String, Object> getCircuitBreakerOpenResponse(String serviceName) {
         Map<String, Object> response = new HashMap<>();
@@ -165,12 +133,6 @@ public class FallbackHandler {
         return response;
     }
 
-    /**
-     * Get a standardized error response for bulkhead full.
-     *
-     * @param serviceName the name of the service
-     * @return error response map
-     */
     public static Map<String, Object> getBulkheadFullResponse(String serviceName) {
         Map<String, Object> response = new HashMap<>();
         response.put("error", "SERVICE_BUSY");

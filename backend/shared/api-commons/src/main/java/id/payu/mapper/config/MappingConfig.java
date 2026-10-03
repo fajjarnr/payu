@@ -37,5 +37,4 @@ import org.mapstruct.ReportingPolicy;
         mappingInheritanceStrategy = MappingInheritanceStrategy.AUTO_INHERIT_FROM_CONFIG
 )
 public interface MappingConfig {
-    // Shared configuration for all mappers
 }

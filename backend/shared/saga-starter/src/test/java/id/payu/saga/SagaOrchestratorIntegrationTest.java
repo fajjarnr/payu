@@ -483,7 +483,7 @@ class SagaOrchestratorIntegrationTest {
         @Test
         @DisplayName("should find sagas by state")
         void shouldFindSagasByState() {
-            // Given - Create a completed saga
+            // Create a completed saga
             List<SagaStep<Map<String, Object>>> successSteps = List.of(
                     SagaStep.of("step1", data -> StepResult.success(data))
             );
@@ -510,7 +510,6 @@ class SagaOrchestratorIntegrationTest {
             orchestrator.init("ExistenceSaga", steps);
             SagaResult<Map<String, Object>> result = orchestrator.execute(new HashMap<>());
 
-            // When & Then
             assertThat(sagaRepository.existsBySagaId(result.getSagaId())).isTrue();
             assertThat(sagaRepository.existsBySagaId("non-existent-id")).isFalse();
         }
@@ -788,7 +787,7 @@ class SagaOrchestratorIntegrationTest {
             // When
             SagaResult<Map<String, Object>> result = orchestrator.execute(new HashMap<>());
 
-            // Then - Since step1 succeeded, compensation is triggered
+            // Since step1 succeeded, compensation is triggered
             assertThat(result.isCompensated()).isTrue();
 
             Optional<SagaInstance> savedInstance = sagaRepository.findBySagaId(result.getSagaId());

@@ -1,5 +1,3 @@
-// PayU Statement Service - CRUD Baseline Performance Test
-// ==========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -72,7 +70,6 @@ export default function () {
 
   group('Statement Service - CRUD Operations', () => {
 
-    // ===== CREATE: Generate Statement =====
     group('CREATE: Generate Statement', () => {
       const statementData = generateStatementRequestData();
 
@@ -88,7 +85,6 @@ export default function () {
       sleep(1);
     });
 
-    // ===== READ: List Statements =====
     group('READ: List Statements', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.statement}`, { page: 0, size: 10 }, auth.token);
@@ -98,7 +94,6 @@ export default function () {
     });
 
     if (statementId) {
-      // ===== READ: Get Statement Detail =====
       group('READ: Get Statement Detail', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.statement}/${statementId}`, auth.token);
@@ -107,7 +102,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== READ: Download Statement =====
       group('READ: Download Statement', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.statement}/${statementId}/download`, auth.token);
@@ -116,7 +110,6 @@ export default function () {
         sleep(0.5);
       });
 
-      // ===== CREATE: Email Statement =====
       group('CREATE: Email Statement', () => {
         const emailData = {
           email: `user${uniqueId}@payu.test`,
@@ -131,7 +124,6 @@ export default function () {
       });
     }
 
-    // ===== READ: Transaction Summary =====
     group('READ: Transaction Summary', () => {
       const now = new Date();
       const params = {
@@ -147,7 +139,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Schedule Statement =====
     group('CREATE: Schedule Statement', () => {
       const scheduleData = generateScheduleStatementData(uniqueId);
 

@@ -1,5 +1,3 @@
-// PayU Backoffice Service - CRUD Baseline Performance Test
-// ===========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -46,7 +44,6 @@ export default function () {
 
   group('Backoffice Service - CRUD Operations', () => {
 
-    // ===== READ: Get Dashboard Metrics =====
     group('READ: Dashboard Metrics', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.backoffice}/dashboard/metrics`, auth.token);
@@ -55,7 +52,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get System Health =====
     group('READ: System Health', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.backoffice}/system/health`, auth.token);
@@ -64,7 +60,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Users =====
     group('READ: Get Users', () => {
       const params = {
         page: 0,
@@ -79,7 +74,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get User Detail =====
     group('READ: Get User Detail', () => {
       const userId = `USR${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -90,7 +84,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== UPDATE: Update User Status =====
     group('UPDATE: Update User Status', () => {
       const userId = `USR${Math.floor(100000 + Math.random() * 900000)}`;
       const updateData = {
@@ -106,7 +99,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Transactions =====
     group('READ: Get Transactions', () => {
       const params = {
         page: 0,
@@ -122,7 +114,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Audit Logs =====
     group('READ: Get Audit Logs', () => {
       const params = {
         page: 0,
@@ -138,7 +129,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Generate Report =====
     group('CREATE: Generate Report', () => {
       const reportData = {
         reportType: REPORT_TYPES[Math.floor(Math.random() * REPORT_TYPES.length)],

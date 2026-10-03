@@ -36,18 +36,15 @@ public class DependencyHealthIndicator {
     public Health health() {
         Map<String, Object> details = new HashMap<>();
 
-        // Get liveness and readiness state
         LivenessState livenessState = availability.getLivenessState();
         ReadinessState readinessState = availability.getReadinessState();
 
         details.put("liveness", livenessState.toString());
         details.put("readiness", readinessState.toString());
 
-        // Get deep health status
         Health deepHealth = deepHealthIndicator.health();
         details.put("deepHealth", deepHealth.getStatus().toString());
 
-        // Dependency health summary
         Map<String, String> dependencySummary = new HashMap<>();
 
         if (deepHealth.getStatus() == Status.UP) {
@@ -56,11 +53,8 @@ public class DependencyHealthIndicator {
             dependencySummary.put("overall", "UNHEALTHY");
         }
 
-        // Extract individual dependency status. DeepHealthIndicator stores each
-        // dependency's Health in its own details map (Health.down()/.up() are
-        // the values), so read the status via a fresh Health check is wrong —
-        // deepHealth.getDetails() returns Map<String, Object> with the Health
-        // objects directly as values.
+        // DeepHealthIndicator stores each dependency's Health as a detail value,
+        // so read status directly from the details map, not a fresh Health check.
         var deepDetails = deepHealth.getDetails();
         for (String dep : java.util.List.of("database", "redis", "kafka")) {
             if (deepDetails.get(dep) instanceof Health depHealth) {
@@ -70,7 +64,6 @@ public class DependencyHealthIndicator {
 
         details.put("dependencies", dependencySummary);
 
-        // Overall status based on deep health
         return Health.status(deepHealth.getStatus())
             .withDetails(details)
             .build();

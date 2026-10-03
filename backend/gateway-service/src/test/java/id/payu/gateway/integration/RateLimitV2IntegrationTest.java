@@ -38,13 +38,10 @@ public class RateLimitV2IntegrationTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    // Per-ip rate limiting tests
-
     @Test
     @Order(1)
     @DisplayName("Should allow requests within IP rate limit")
     void testAllowWithinIpRateLimit() {
-        // Make a few requests that should be within the rate limit
         for (int i = 0; i < 5; i++) {
             given()
                     .when()
@@ -58,7 +55,6 @@ public class RateLimitV2IntegrationTest {
     @Order(2)
     @DisplayName("Should return 429 when IP rate limit exceeded")
     void testExceedIpRateLimit() {
-        // Make many rapid requests to try to trigger rate limiting.
         // The per-IP rate limit is configured to 200 requests with refill of 20 per minute.
         // Even if we don't exhaust the limit, we verify all responses are valid (including 429).
         boolean gotRateLimited = false;
@@ -78,8 +74,6 @@ public class RateLimitV2IntegrationTest {
         // but we verified all responses are valid status codes (no 500)
     }
 
-    // Per-user rate limiting tests
-
     @Test
     @Order(10)
     @DisplayName("Should allow requests within user rate limit when user ID provided")
@@ -98,7 +92,6 @@ public class RateLimitV2IntegrationTest {
     @Order(11)
     @DisplayName("Should track rate limits separately for different users")
     void testSeparateRateLimitsPerUser() {
-        // Make requests for user 1
         for (int i = 0; i < 3; i++) {
             given()
                     .header("X-User-Id", "test-user-1")
@@ -118,8 +111,6 @@ public class RateLimitV2IntegrationTest {
                     .statusCode(anyOf(is(200), is(404), is(503)));
         }
     }
-
-    // Endpoint-specific rate limiting tests
 
     @Test
     @Order(20)
@@ -148,15 +139,11 @@ public class RateLimitV2IntegrationTest {
     @Order(21)
     @DisplayName("Should track rate limits separately for each endpoint")
     void testSeparateRateLimitsPerEndpoint() {
-        // Make requests to multiple endpoints
         given().when().get("/api/v1/accounts").then().statusCode(anyOf(is(200), is(404), is(503)));
         given().when().get("/api/v1/wallets").then().statusCode(anyOf(is(200), is(404), is(503)));
         given().when().get("/api/v1/transactions").then().statusCode(anyOf(is(200), is(404), is(503)));
 
-        // Each endpoint should have its own rate limit counter
     }
-
-    // Health endpoint bypass tests
 
     @Test
     @Order(30)
@@ -185,8 +172,6 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // Rate limit response headers tests
-
     @Test
     @Order(40)
     @DisplayName("Should include rate limit headers in response")
@@ -202,8 +187,6 @@ public class RateLimitV2IntegrationTest {
     @Order(41)
     @DisplayName("Should return proper error response when rate limited")
     void testRateLimitErrorResponse() {
-        // Verify that when the gateway returns 429, the response body is non-null.
-        // We make a batch of requests; any 429 response should have a body.
         for (int i = 0; i < 50; i++) {
             int statusCode = given()
                     .when()
@@ -212,7 +195,6 @@ public class RateLimitV2IntegrationTest {
                     .statusCode(anyOf(is(200), is(404), is(429), is(503)))
                     .extract().statusCode();
             if (statusCode == 429) {
-                // If we got rate limited, verify the response has content
                 given()
                         .when()
                         .get("/api/v1/accounts")
@@ -222,8 +204,6 @@ public class RateLimitV2IntegrationTest {
             }
         }
     }
-
-    // Concurrent requests tests
 
     @Test
     @Order(50)
@@ -246,8 +226,6 @@ public class RateLimitV2IntegrationTest {
             thread.join();
         }
     }
-
-    // X-forwarded-for tests
 
     @Test
     @Order(60)
@@ -272,8 +250,6 @@ public class RateLimitV2IntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
-
-    // Different HTTP methods tests
 
     @Test
     @Order(70)
@@ -318,13 +294,10 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // Token bucket refill tests
-
     @Test
     @Order(80)
     @DisplayName("Should refill tokens over time")
     void testTokenRefill() throws InterruptedException {
-        // Make some requests
         for (int i = 0; i < 5; i++) {
             given()
                     .header("X-User-Id", "refill-test-user")
@@ -335,7 +308,6 @@ public class RateLimitV2IntegrationTest {
         }
 
         // Wait a bit for tokens to refill (refill duration is 60s, so we can't test fully)
-        // But we can verify the system continues to work
         Thread.sleep(100);
 
         given()
@@ -345,8 +317,6 @@ public class RateLimitV2IntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
-
-    // Rate limit disabled tests
 
     @Test
     @Order(90)
@@ -363,8 +333,6 @@ public class RateLimitV2IntegrationTest {
         }
     }
 
-    // Combined user and IP rate limiting tests
-
     @Test
     @Order(100)
     @DisplayName("Should apply both user and IP rate limits")
@@ -379,8 +347,6 @@ public class RateLimitV2IntegrationTest {
                 .statusCode(anyOf(is(200), is(404), is(503)));
     }
 
-    // Default rate limit tests
-
     @Test
     @Order(110)
     @DisplayName("Should apply default rate limit to uncategorized endpoints")
@@ -392,8 +358,6 @@ public class RateLimitV2IntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(404), is(503), is(429)));
     }
-
-    // Rate limit reset time tests
 
     @Test
     @Order(120)

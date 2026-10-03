@@ -15,9 +15,6 @@ from datetime import datetime, timedelta, timezone
 import json
 
 
-# =============================================================================
-# Configuration
-# =============================================================================
 BASE_URL = "http://localhost:8080/api/v1"
 GATEWAY_URL = "http://localhost:8080"
 KEYCLOAK_URL = "http://localhost:8099"
@@ -42,9 +39,6 @@ RECIPIENT_LEGACY = "ACC-002"
 TEST_OTP = "123456"
 
 
-# =============================================================================
-# Test Data Fixtures
-# =============================================================================
 @pytest.fixture
 def auth_token():
     """Service-to-service token via Keycloak client_credentials grant.
@@ -74,16 +68,12 @@ def test_user(auth_token):
     """Create or get test user"""
     headers = {"Authorization": f"Bearer {auth_token}"}
 
-    # Get current user info
     response = requests.get(f"{ACCOUNT_URL}/api/v1/accounts/me", headers=headers)
     assert response.status_code == 200
 
     return response.json()
 
 
-# =============================================================================
-# Critical Financial Flow Tests
-# =============================================================================
 class TestCriticalFinancialFlows:
     """Test critical financial operations"""
 
@@ -127,7 +117,6 @@ class TestCriticalFinancialFlows:
         assert auth_token is not None
         assert len(auth_token) > 0
 
-        # Verify token is valid JWT
         parts = auth_token.split('.')
         assert len(parts) == 3, "Invalid JWT format"
 
@@ -240,7 +229,6 @@ class TestCriticalFinancialFlows:
         """
         headers = {"Authorization": f"Bearer {auth_token}"}
 
-        # Get first page
         params = {"page": 0, "size": 10}
         response = requests.get(
             f"{WALLET_URL}/api/v1/wallets/{SENDER_UUID}/transactions",
@@ -328,9 +316,6 @@ class TestCriticalFinancialFlows:
         assert response.status_code in [200, 202], f"Statement generation failed: {response.text}"
 
 
-# =============================================================================
-# Performance Regression Tests
-# =============================================================================
 class TestPerformanceRegression:
     """Test that response times remain within acceptable limits"""
 
@@ -368,9 +353,6 @@ class TestPerformanceRegression:
         assert elapsed_ms < 1000, f"Transaction list too slow: {elapsed_ms:.0f}ms"
 
 
-# =============================================================================
-# Data Integrity Tests
-# =============================================================================
 class TestDataIntegrity:
     """Test data consistency and integrity"""
 
@@ -462,9 +444,6 @@ class TestDataIntegrity:
             f"Replay double-moved money: {balance_after} != {balance_before - 5000}"
 
 
-# =============================================================================
-# API Compatibility Tests
-# =============================================================================
 class TestAPICompatibility:
     """Test API contracts remain stable"""
 
@@ -520,9 +499,6 @@ class TestAPICompatibility:
                 f"Health check failed for {service_name}: {response.text}"
 
 
-# =============================================================================
-# VA Settlement Live E2E (CB-008 / MVP-003)
-# =============================================================================
 SIGNATURE_SECRET = b"local-development-callback-signature-secret"
 
 
@@ -593,9 +569,6 @@ class TestVirtualAccountSettlementE2E:
         assert fetched.get("paymentReference") == pay_ref
 
 
-# =============================================================================
-# Test Run Configuration
-# =============================================================================
 @pytest.mark.regression
 def test_regression_suite_summary():
     """

@@ -129,9 +129,6 @@ public abstract class HexagonalArchitectureTest {
      * Utility method to import classes for a specific package.
      *
      * <p>Useful for programmatic rule checking in custom tests.
-     *
-     * @param packageName the base package to import
-     * @return imported JavaClasses for analysis
      */
     protected static JavaClasses importClasses(String packageName) {
         return new ClassFileImporter()
@@ -140,13 +137,6 @@ public abstract class HexagonalArchitectureTest {
                 .importPackages(packageName);
     }
 
-    /**
-     * Utility method to import classes with custom import options.
-     *
-     * @param packageName the base package to import
-     * @param importOptions additional import options
-     * @return imported JavaClasses for analysis
-     */
     protected static JavaClasses importClasses(String packageName, ImportOption... importOptions) {
         ClassFileImporter importer = new ClassFileImporter();
         for (ImportOption option : importOptions) {

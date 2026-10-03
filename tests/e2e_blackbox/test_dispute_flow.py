@@ -81,7 +81,6 @@ class TestDisputeServiceFlow:
         response = authenticated_api.post(f"/api/v1/disputes/{fake_id}/escalate", json=payload)
         assert response.status_code in [200, 400, 404, 429, 500, 503], f"Unexpected status: {response.status_code}"
 
-    # --- Refund Tests ---
 
     def test_create_full_refund(self, authenticated_api):
         """Create a full refund for a transaction"""

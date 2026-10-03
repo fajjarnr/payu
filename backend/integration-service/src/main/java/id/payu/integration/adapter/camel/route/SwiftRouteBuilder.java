@@ -42,13 +42,11 @@ public class SwiftRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        // Global error handler for SWIFT routes
         onException(Exception.class)
             .log(LoggingLevel.ERROR, "Error processing SWIFT message: ${exception.message}")
             .to("direct:swift-error-handler")
             .handled(true);
 
-        // Route: SWIFT inbound from Artemis
         from("jms:queue:payu.integration.commands")
             .routeId("swift-inbound-jms-route")
             .log(LoggingLevel.INFO, "Received SWIFT message from Artemis")
@@ -59,19 +57,16 @@ public class SwiftRouteBuilder extends RouteBuilder {
             })
             .to("direct:swift-process");
 
-        // Route: SWIFT inbound from REST API
         from("direct:swift-inbound")
             .routeId("swift-inbound-direct-route")
             .log(LoggingLevel.INFO, "Processing SWIFT message from direct endpoint")
             .to("direct:swift-process");
 
-        // Route: SWIFT processing pipeline
         from("direct:swift-process")
             .routeId("swift-process-route")
             .process(exchange -> {
                 IntegrationMessage message = exchange.getIn().getBody(IntegrationMessage.class);
                 if (message == null) {
-                    // Create message from raw payload
                     String payload = exchange.getIn().getBody(String.class);
                     String messageTypeStr = exchange.getIn().getHeader("SwiftMessageType", String.class);
                     MessageType type = parseMessageType(messageTypeStr);
@@ -113,7 +108,6 @@ public class SwiftRouteBuilder extends RouteBuilder {
             })
             .log(LoggingLevel.INFO, "SWIFT message processed successfully: ${body.messageId}");
 
-        // Route: SWIFT outbound to network
         from("direct:swift-outbound")
             .routeId("swift-outbound-route")
             .log(LoggingLevel.INFO, "Sending SWIFT message to network")
@@ -127,7 +121,6 @@ public class SwiftRouteBuilder extends RouteBuilder {
             .toD("${exchangeProperty.swiftEndpoint:https://swift-gateway.payu.fajjjar.my.id/api/v1/messages}")
             .log(LoggingLevel.INFO, "SWIFT message sent successfully");
 
-        // Route: Error handler
         from("direct:swift-error-handler")
             .routeId("swift-error-handler-route")
             .process(exchange -> {

@@ -77,7 +77,6 @@ class TestDukcapilClient:
             assert result.match_score == 0.95
             assert result.notes == "Data matched successfully"
 
-            # Verify correct API call
             mock_post.assert_called_once()
             call_args = mock_post.call_args
             assert "verify" in call_args[0][0]
@@ -212,7 +211,6 @@ class TestDukcapilClient:
         with patch.object(dukcapil_client.client, "post", return_value=mock_resp):
             result = await dukcapil_client.verify_nik("3201012345678901")
 
-            # Exception is caught and returns error result
             assert result.is_valid is False
             assert result.status == "ERROR"
             assert "Error" in result.notes
@@ -239,7 +237,6 @@ class TestDukcapilClient:
         ) as mock_post:
             await dukcapil_client.verify_nik("3201012345678901")
 
-            # Check that NIK was sent in request body
             call_kwargs = mock_post.call_args[1]
             assert "json" in call_kwargs
             assert call_kwargs["json"]["nik"] == "3201012345678901"
@@ -309,7 +306,6 @@ class TestDukcapilClient:
             ):
                 return await dukcapil_client.verify_nik(nik)
 
-        # Run concurrent requests
         results = await asyncio.gather(
             verify("3201012345678901"),
             verify("3201012345678902"),

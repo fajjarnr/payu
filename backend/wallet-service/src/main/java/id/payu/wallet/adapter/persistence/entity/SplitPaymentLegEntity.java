@@ -47,7 +47,6 @@ public class SplitPaymentLegEntity {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public SplitPaymentExecutionEntity getExecution() { return execution; }

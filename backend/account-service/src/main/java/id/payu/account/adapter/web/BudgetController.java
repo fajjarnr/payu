@@ -28,9 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * REST controller for budget management.
- */
 @RestController
 @RequestMapping("/api/v1/accounts/{accountId}/budgets")
 @Tag(name = "Budgets", description = "Budget management endpoints for spending control")
@@ -213,7 +210,6 @@ public class BudgetController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    // Request/Response DTOs
     public record CreateBudgetRequest(
             @NotNull String category,
             @NotNull @Positive BigDecimal limitAmount,

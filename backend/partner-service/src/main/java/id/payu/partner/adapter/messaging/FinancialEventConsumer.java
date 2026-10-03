@@ -93,7 +93,6 @@ public class FinancialEventConsumer {
             // Extract event ID from payload if present, otherwise generate one
             String eventId = extractEventId(payload);
 
-            // Add source metadata
             payload.put("_source_topic", topic);
 
             webhookDispatcher.dispatch(eventType, eventId, payload);
@@ -115,7 +114,6 @@ public class FinancialEventConsumer {
      * Maps internal topic names to partner-facing event types.
      */
     String deriveEventType(String topic, ConsumerRecord<String, String> record) {
-        // Check for explicit event type in Kafka headers
         if (record.headers() != null) {
             var header = record.headers().lastHeader("X-Event-Type");
             if (header != null) {
@@ -127,7 +125,6 @@ public class FinancialEventConsumer {
             }
         }
 
-        // Map topic to event type
         return switch (topic) {
             case "payu.transaction.initiated.v1" -> "transaction.initiated";
             case "payu.transaction.validated.v1" -> "transaction.validated";

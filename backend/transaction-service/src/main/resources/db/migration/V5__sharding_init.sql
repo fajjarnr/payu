@@ -1,6 +1,4 @@
--- ===================================================================
 -- Transaction Service Sharding/Partitioning Migration
--- ===================================================================
 -- This migration implements PostgreSQL declarative partitioning by hash
 -- on sender_account_id to distribute data across multiple partitions.
 --
@@ -15,13 +13,11 @@
 -- 2. Partition pruning for efficient queries
 -- 3. Parallel query execution
 -- 4. Easier archival and maintenance
--- ===================================================================
 
 -- Begin transaction for atomic migration
 BEGIN;
 
--- 1. Create the partitioned table (new schema)
--- ===================================================================
+-- Create the partitioned table (new schema)
 CREATE TABLE IF NOT EXISTS transactions_partitioned (
     id UUID NOT NULL,
     reference_number VARCHAR(50) NOT NULL,
@@ -42,13 +38,11 @@ CREATE TABLE IF NOT EXISTS transactions_partitioned (
     CONSTRAINT valid_status CHECK (status IN ('PENDING', 'VALIDATING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'))
 ) PARTITION BY HASH (sender_account_id);
 
--- 2. Create default partition for any data that doesn't match partitions
--- ===================================================================
+-- Create default partition for any data that doesn't match partitions
 -- NOTE: HASH partitioning does not support default partitions in PostgreSQL.
 -- Removing CREATE TABLE IF NOT EXISTS transactions_partition_default...
 
--- 3. Create individual partitions
--- ===================================================================
+-- Create individual partitions
 -- Using modulo 8 for hash partitioning
 CREATE TABLE IF NOT EXISTS transactions_partition_0 PARTITION OF transactions_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 0);
@@ -74,8 +68,7 @@ CREATE TABLE IF NOT EXISTS transactions_partition_6 PARTITION OF transactions_pa
 CREATE TABLE IF NOT EXISTS transactions_partition_7 PARTITION OF transactions_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 7);
 
--- 4. Create primary key and indexes on partitioned table
--- ===================================================================
+-- Create primary key and indexes on partitioned table
 -- Note: Primary keys on partitioned tables must include the partition key
 ALTER TABLE transactions_partitioned ADD CONSTRAINT pk_transactions_partitioned
     PRIMARY KEY (id, sender_account_id);
@@ -104,8 +97,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_partitioned_type
 CREATE INDEX IF NOT EXISTS idx_transactions_partitioned_account_created
     ON transactions_partitioned (sender_account_id, created_at DESC);
 
--- 5. Create function to migrate data from legacy table
--- ===================================================================
+-- Create function to migrate data from legacy table
 CREATE OR REPLACE FUNCTION migrate_to_partitions()
 RETURNS BIGINT AS $$
 DECLARE
@@ -129,8 +121,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 6. Create function to check migration status
--- ===================================================================
+-- Create function to check migration status
 CREATE OR REPLACE FUNCTION get_migration_status()
 RETURNS TABLE(
     legacy_count BIGINT,
@@ -152,14 +143,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7. Create view for transparent access (optional - for gradual migration)
--- ===================================================================
+-- Create view for transparent access (optional - for gradual migration)
 -- This view allows queries to work seamlessly during migration
 CREATE OR REPLACE VIEW transactions_view AS
 SELECT * FROM transactions_partitioned;
 
--- 8. Grant permissions (adjust based on your security requirements)
--- ===================================================================
+-- Grant permissions (adjust based on your security requirements)
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON transactions_partitioned TO payu_app;
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON transactions_partition_0 TO payu_app;
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON transactions_partition_1 TO payu_app;
@@ -171,8 +160,7 @@ SELECT * FROM transactions_partitioned;
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON transactions_partition_7 TO payu_app;
 -- GRANT USAGE ON SCHEMA public TO payu_app;
 
--- 9. Add comments for documentation
--- ===================================================================
+-- Add comments for documentation
 COMMENT ON TABLE transactions_partitioned IS 'Hash-partitioned transactions table by sender_account_id';
 COMMENT ON TABLE transactions_partition_0 IS 'Partition 0 for transactions (hash modulus 8, remainder 0)';
 COMMENT ON TABLE transactions_partition_1 IS 'Partition 1 for transactions (hash modulus 8, remainder 1)';
@@ -187,9 +175,7 @@ COMMENT ON FUNCTION get_migration_status() IS 'Check migration status between le
 
 COMMIT;
 
--- ===================================================================
 -- Migration Instructions:
--- ===================================================================
 -- 1. Run this migration to create the partitioned table structure
 -- 2. Optionally migrate existing data by executing: SELECT migrate_to_partitions();
 -- 3. Check migration status: SELECT * FROM get_migration_status();
@@ -198,4 +184,3 @@ COMMIT;
 --    DROP TABLE transactions CASCADE;
 -- 6. Rename the view to match the original table name (optional):
 --    CREATE OR REPLACE VIEW transactions AS SELECT * FROM transactions_partitioned;
--- ===================================================================

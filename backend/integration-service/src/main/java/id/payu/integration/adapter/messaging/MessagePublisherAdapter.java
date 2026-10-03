@@ -81,9 +81,6 @@ public class MessagePublisherAdapter implements MessagePublisherPort {
         }
     }
 
-    /**
-     * Exception for message publishing errors.
-     */
     public static class MessagePublishException extends RuntimeException {
         public MessagePublishException(String message, Throwable cause) {
             super(message, cause);

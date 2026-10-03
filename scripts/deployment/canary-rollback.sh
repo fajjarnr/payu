@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # Canary Rollback Script
-# ======================
 # Instantly rolls back canary deployment to 0% traffic
 #
 # Usage: ./canary-rollback.sh <service-name>
@@ -13,7 +12,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NAMESPACE="${NAMESPACE:-payu-dev}"
 SERVICE="${1:-}"
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -82,7 +80,6 @@ check_canary_exists() {
         exit 0
     fi
 
-    # Get current canary percentage
     if [ "$USE_ROUTE" = true ]; then
         CURRENT_PERCENTAGE=$(oc get route "${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.spec.alternateBackends[0].weight}' 2>/dev/null || echo "0")
     else
@@ -101,11 +98,9 @@ rollback_traffic() {
     print_info "Instantly routing 100% traffic to stable version..."
 
     if [ "$USE_ROUTE" = true ]; then
-        # Remove canary from route and set 100% to stable
         oc patch route "${SERVICE}" -n "${NAMESPACE}" --type='json' -p '[{"op": "remove", "path": "/spec/alternateBackends"}]' 2>/dev/null || true
         oc patch route "${SERVICE}" -n "${NAMESPACE}" -p '{"spec":{"to":{"weight": 100}}}'
     else
-        # Reset VirtualService to 100% stable
         oc patch virtualservice "${SERVICE}" -n "${NAMESPACE}" --type='json' -p "[{
             \"op\": \"replace\",
             \"path\": \"/spec/http/0/route\",
@@ -124,14 +119,11 @@ rollback_traffic() {
 scale_down_canary() {
     print_info "Scaling down canary deployment..."
 
-    # Get current replicas for logging
     CURRENT_REPLICAS=$(oc get deployment "${SERVICE}-canary" -n "${NAMESPACE}" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "0")
     print_info "Current canary replicas: ${CURRENT_REPLICAS}"
 
-    # Scale to 0
     oc scale "deployment/${SERVICE}-canary" -n "${NAMESPACE}" --replicas=0
 
-    # Wait for pods to terminate
     print_info "Waiting for canary pods to terminate..."
     timeout=60
     while [ $timeout -gt 0 ]; do
@@ -153,7 +145,6 @@ scale_down_canary() {
 verify_rollback() {
     print_info "Verifying rollback..."
 
-    # Check stable deployment is ready
     STABLE_READY=$(oc get deployment "${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
     if [ "$STABLE_READY" -lt 1 ]; then
         print_error "Stable deployment has no ready replicas!"
@@ -168,7 +159,6 @@ verify_rollback() {
         fi
     fi
 
-    # Verify route is 100% stable
     if [ "$USE_ROUTE" = true ]; then
         STABLE_WEIGHT=$(oc get route "${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.spec.to.weight}' 2>/dev/null || echo "100")
         if [ "$STABLE_WEIGHT" -ne 100 ]; then
@@ -183,13 +173,10 @@ verify_rollback() {
 cleanup_canary() {
     print_info "Cleaning up canary resources..."
 
-    # Delete canary deployment
     oc delete deployment "${SERVICE}-canary" -n "${NAMESPACE}" --ignore-not-found=true
 
-    # Delete canary service if exists
     oc delete service "${SERVICE}-canary" -n "${NAMESPACE}" --ignore-not-found=true
 
-    # Clean up state file
     local state_file="/tmp/canary-${SERVICE}-state.json"
     if [ -f "$state_file" ]; then
         rm -f "$state_file"
@@ -200,7 +187,6 @@ cleanup_canary() {
 }
 
 record_rollback() {
-    # Log rollback event for metrics
     print_info "Recording rollback event..."
 
     cat << EOF
@@ -222,7 +208,6 @@ main() {
     load_state
     check_canary_exists
 
-    # Confirm rollback if canary has traffic
     if [ "${CURRENT_PERCENTAGE:-0}" -gt 0 ]; then
         print_warning "This will instantly rollback ${CURRENT_PERCENTAGE}% of traffic from canary"
         read -p "Proceed with rollback? (y/N) " -n 1 -r
@@ -233,13 +218,11 @@ main() {
         fi
     fi
 
-    # Execute rollback
     rollback_traffic
     scale_down_canary
     verify_rollback
     cleanup_canary
 
-    # Record event
     record_rollback > "/tmp/canary-rollback-${SERVICE}-$(date +%s).json"
 
     print_success "Canary rollback complete!"

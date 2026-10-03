@@ -104,7 +104,6 @@ public class BatchDisbursementEntity {
     public BatchDisbursementEntity() {
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -197,8 +196,6 @@ public class BatchDisbursementEntity {
      * Creates a new batch disbursement with the specified parameters.
      * Generates a unique idempotency key automatically.
      *
-     * @param sourceAccountId the source wallet/account ID
-     * @param name the batch name/description
      * @return a new BatchDisbursementEntity in PENDING status
      * @throws IllegalArgumentException if any required parameter is invalid
      */
@@ -209,8 +206,6 @@ public class BatchDisbursementEntity {
     /**
      * Creates a new batch disbursement with a specific idempotency key.
      *
-     * @param sourceAccountId the source wallet/account ID
-     * @param name the batch name/description
      * @param idempotencyKey the idempotency key for duplicate protection
      * @return a new BatchDisbursementEntity in PENDING status
      * @throws IllegalArgumentException if any required parameter is invalid
@@ -272,8 +267,6 @@ public class BatchDisbursementEntity {
 
     /**
      * Gets the number of items in the batch.
-     *
-     * @return the item count
      */
     public int getItemCount() {
         return items.size();
@@ -336,8 +329,6 @@ public class BatchDisbursementEntity {
 
     /**
      * Gets the progress percentage (0-100) based on terminal items.
-     *
-     * @return the progress percentage
      */
     public int getProgressPercentage() {
         if (items.isEmpty()) {

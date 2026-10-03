@@ -74,7 +74,6 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
             return Uni.createFrom().voidItem();
         }
 
-        // Group events by day for efficient storage
         Map<String, List<String>> eventsByDay = new HashMap<>();
 
         for (ApiAnalyticsEvent event : events) {
@@ -87,7 +86,6 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
             }
         }
 
-        // Store each day's events
         Uni<Void> result = Uni.createFrom().voidItem();
 
         for (Map.Entry<String, List<String>> entry : eventsByDay.entrySet()) {
@@ -104,7 +102,6 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
 
     @Override
     public Multi<ApiAnalyticsEvent> findByPartnerId(String partnerId, Instant from, Instant to) {
-        // Scan through daily keys and filter by partner
         return findByTimeRange(from, to)
             .filter(event -> partnerId.equals(event.getPartnerId()));
     }
@@ -137,7 +134,6 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
         return findByTimeRange(from, to)
             .collect().asList()
             .onItem().transformToMulti(events -> {
-                // Group by endpoint and calculate metrics
                 Map<String, List<ApiAnalyticsEvent>> byEndpoint = events.stream()
                     .collect(java.util.stream.Collectors.groupingBy(
                         e -> e.getMethod().name() + ":" + e.getEndpoint()
@@ -172,20 +168,17 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
 
     @Override
     public Uni<Long> deleteOlderThan(Instant cutoff) {
-        // Calculate which daily keys to delete
         // This is a simplified implementation
         return Uni.createFrom().item(0L);
     }
 
     @Override
     public Uni<Void> aggregateDailyMetrics(Instant day) {
-        // Aggregate metrics for the given day
         // Store aggregated results with longer retention
         return Uni.createFrom().voidItem();
     }
 
     private Multi<ApiAnalyticsEvent> findByTimeRange(Instant from, Instant to) {
-        // Generate daily keys for the time range
         List<String> keys = new java.util.ArrayList<>();
         Instant current = from.truncatedTo(java.time.temporal.ChronoUnit.DAYS);
 
@@ -194,7 +187,6 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
             current = current.plus(Duration.ofDays(1));
         }
 
-        // Fetch events from all keys
         return Multi.createFrom().iterable(keys)
             .onItem().transformToMultiAndConcatenate(key ->
                 cache.readList(key)

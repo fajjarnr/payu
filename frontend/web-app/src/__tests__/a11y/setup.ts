@@ -7,14 +7,11 @@
 import { expect } from 'vitest';
 import { toHaveNoViolations } from 'jest-axe';
 
-// Extend Vitest's expect with jest-axe matchers
 expect.extend(toHaveNoViolations);
 
-// Export axe configuration for consistent testing
 // See: https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md
 export const axeConfig = {
   rules: {
-    // WCAG 2.1 Level AA rules
     'color-contrast': { enabled: true },
     'image-alt': { enabled: true },
     'label': { enabled: true },

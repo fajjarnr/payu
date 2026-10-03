@@ -1,9 +1,7 @@
 # Resilience4j Default Configuration for PayU Financial Services Platform
 # This file provides standard resilience patterns optimized for financial operations
 
-# =============================================================================
-# CIRCUIT BREAKER CONFIGURATION
-# =============================================================================
+# Circuit breaker configuration
 resilience4j.circuitbreaker:
   configs:
     # Default configuration for financial services
@@ -61,9 +59,7 @@ resilience4j.circuitbreaker:
     # Default instance uses the default config
     default:
       baseConfig: default
-# =============================================================================
-# BULKHEAD CONFIGURATION (Thread Pool & Semaphore)
-# =============================================================================
+# Bulkhead configuration (thread pool & semaphore)
 resilience4j.bulkhead:
   configs:
     # Default semaphore-based bulkhead configuration
@@ -97,9 +93,7 @@ resilience4j.bulkhead:
     instances:
       default:
         baseConfig: default
-# =============================================================================
-# RETRY CONFIGURATION
-# =============================================================================
+# Retry configuration
 resilience4j.retry:
   configs:
     # Default retry configuration for financial services
@@ -144,9 +138,7 @@ resilience4j.retry:
   instances:
     default:
       baseConfig: default
-# =============================================================================
-# RATE LIMITER CONFIGURATION
-# =============================================================================
+# Rate limiter configuration
 resilience4j.ratelimiter:
   configs:
     # Default rate limiter configuration
@@ -176,9 +168,7 @@ resilience4j.ratelimiter:
   instances:
     default:
       baseConfig: default
-# =============================================================================
-# TIME LIMITER CONFIGURATION
-# =============================================================================
+# Time limiter configuration
 resilience4j.timelimiter:
   configs:
     # Default time limiter configuration

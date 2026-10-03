@@ -16,31 +16,16 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "payu.grpc")
 public class GrpcStarterProperties {
 
-    /**
-     * Server configuration
-     */
     private Server server = new Server();
 
-    /**
-     * Client configurations per service
-     */
     private Map<String, ClientConfig> clients = new HashMap<>();
 
-    /**
-     * Interceptor configuration
-     */
     private Interceptor interceptors = new Interceptor();
 
     @Data
     public static class Server {
-        /**
-         * Whether to enable gRPC server
-         */
         private boolean enabled = true;
 
-        /**
-         * gRPC server port
-         */
         private int port = 9090;
 
         /**
@@ -53,9 +38,6 @@ public class GrpcStarterProperties {
          */
         private int maxMessageSize = 4194304; // 4MB
 
-        /**
-         * Security configuration
-         */
         private Security security = new Security();
 
         @Data
@@ -90,14 +72,8 @@ public class GrpcStarterProperties {
          */
         private String negotiationType = "PLAINTEXT";
 
-        /**
-         * Whether to enable retry
-         */
         private boolean retryEnabled = true;
 
-        /**
-         * Maximum retry attempts
-         */
         private int maxRetryAttempts = 3;
 
         /**
@@ -123,19 +99,10 @@ public class GrpcStarterProperties {
 
     @Data
     public static class Interceptor {
-        /**
-         * Tracing interceptor configuration
-         */
         private Tracing tracing = new Tracing();
 
-        /**
-         * Auth interceptor configuration
-         */
         private Auth auth = new Auth();
 
-        /**
-         * Error handling interceptor configuration
-         */
         private ErrorHandling errorHandling = new ErrorHandling();
 
         @Data

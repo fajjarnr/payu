@@ -101,9 +101,8 @@ test.describe('Login Flow - OIDC PKCE journey (LOGIN-003)', () => {
   });
 
   test('real login lands on the dashboard with httpOnly cookies (LOGIN-001)', async ({ page }) => {
-    // Requires the local podman stack (Keycloak on :8099 with the seeded realm).
-    // The seeded users carry a temporary password, so the first login shows
-    // Keycloak's "update password" page; update it and continue.
+    // Requires the local podman stack (Keycloak :8099, seeded realm). Seeded users have a
+    // temporary password, so the first login shows Keycloak's update-password page.
     const newPassword = 'Dev-customer1-new-2026';
     await page.goto('/login');
     await page.click('[data-testid="login-submit-button"]');

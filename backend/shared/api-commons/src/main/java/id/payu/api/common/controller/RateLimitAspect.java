@@ -40,7 +40,6 @@ public class RateLimitAspect {
     }
 
     /**
-     * Applies rate limiting to methods annotated with @RateLimit.
      * Fails closed if the distributed cache is unavailable.
      */
     @Around("@annotation(rateLimit)")
@@ -76,9 +75,6 @@ public class RateLimitAspect {
         return joinPoint.proceed();
     }
 
-    /**
-     * Builds the rate limit key for the distributed cache.
-     */
     private String buildRateLimitKey(HttpServletRequest request, String prefix, long windowSeconds) {
         String identifier = getClientIdentifier(request);
         return String.format("rate_limit:%s:%s:%s",
@@ -104,9 +100,6 @@ public class RateLimitAspect {
         return getClientIpAddress(request);
     }
 
-    /**
-     * Gets the client IP address.
-     */
     private String getClientIpAddress(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
@@ -121,9 +114,6 @@ public class RateLimitAspect {
         return ip;
     }
 
-    /**
-     * Gets the current HTTP request.
-     */
     private HttpServletRequest getCurrentRequest() {
         ServletRequestAttributes attributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

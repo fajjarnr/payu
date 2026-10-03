@@ -479,8 +479,6 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
         }
     }
 
-    // Helper methods
-
     private Money toMoney(BigDecimal amount, String currency) {
         return Money.newBuilder()
                 .setAmount(amount.toPlainString())

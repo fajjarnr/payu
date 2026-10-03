@@ -45,7 +45,6 @@ public final class IdempotencyKey {
      * Creates an IdempotencyKey from a string value.
      *
      * @param value the idempotency key string (must be valid UUID format)
-     * @return a new IdempotencyKey instance
      * @throws IllegalArgumentException if value is null, empty, too long, or invalid format
      */
     public static IdempotencyKey of(String value) {
@@ -55,8 +54,6 @@ public final class IdempotencyKey {
 
     /**
      * Creates a new random IdempotencyKey using UUID v4.
-     *
-     * @return a new randomly generated IdempotencyKey
      */
     public static IdempotencyKey generate() {
         return new IdempotencyKey(UUID.randomUUID().toString());
@@ -65,7 +62,6 @@ public final class IdempotencyKey {
     /**
      * Validates the idempotency key format.
      *
-     * @param value the key to validate
      * @throws IllegalArgumentException if validation fails
      */
     private static void validate(String value) {
@@ -98,8 +94,6 @@ public final class IdempotencyKey {
 
     /**
      * Returns the Redis cache key for this idempotency key.
-     *
-     * @return formatted cache key
      */
     public String toCacheKey() {
         return "idempotency:" + value;
@@ -107,8 +101,6 @@ public final class IdempotencyKey {
 
     /**
      * Returns the Redis cache key for storing the request fingerprint.
-     *
-     * @return formatted fingerprint cache key
      */
     public String toFingerprintKey() {
         return "idempotency:" + value + ":fingerprint";

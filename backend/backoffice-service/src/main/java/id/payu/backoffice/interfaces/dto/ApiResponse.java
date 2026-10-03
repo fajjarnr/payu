@@ -26,9 +26,6 @@ public record ApiResponse<T>(
         @Schema(description = "Response metadata including request ID and timestamp")
         MetaInfo meta
 ) {
-    /**
-     * Creates a successful response with data.
-     */
     public static <T> ApiResponse<T> success(T data) {
         return new ApiResponse<>(
                 true,
@@ -38,9 +35,6 @@ public record ApiResponse<T>(
         );
     }
 
-    /**
-     * Creates a successful response with data and custom request ID.
-     */
     public static <T> ApiResponse<T> success(T data, String requestId) {
         return new ApiResponse<>(
                 true,
@@ -50,9 +44,6 @@ public record ApiResponse<T>(
         );
     }
 
-    /**
-     * Creates an error response with code and message.
-     */
     public static <T> ApiResponse<T> error(String code, String message) {
         return new ApiResponse<>(
                 false,
@@ -62,9 +53,6 @@ public record ApiResponse<T>(
         );
     }
 
-    /**
-     * Creates an error response with code, message, and custom request ID.
-     */
     public static <T> ApiResponse<T> error(String code, String message, String requestId) {
         return new ApiResponse<>(
                 false,
@@ -74,16 +62,10 @@ public record ApiResponse<T>(
         );
     }
 
-    /**
-     * Creates a not found error response.
-     */
     public static <T> ApiResponse<T> notFound(String resourceName) {
         return error("NOT_FOUND", resourceName + " not found");
     }
 
-    /**
-     * Creates a bad request error response.
-     */
     public static <T> ApiResponse<T> badRequest(String message) {
         return error("BAD_REQUEST", message);
     }

@@ -76,7 +76,6 @@ public class RouteRegistry {
             return Optional.empty();
         }
 
-        // Try longest prefix match first
         String bestMatch = null;
         RouteDefinition bestDef = null;
 
@@ -94,7 +93,6 @@ public class RouteRegistry {
             return Optional.empty();
         }
 
-        // Build backend target path
         String subPath = pathAfterApiV1.substring(bestMatch.length());
         String targetPath = bestDef.targetPrefix() + subPath;
 
@@ -120,14 +118,11 @@ public class RouteRegistry {
      * This ensures backward compatibility even without explicit YAML config.
      */
     private void loadDefaultRoutes() {
-        // Account Service
         registerDefault("accounts", "account-service", "/api/v1/accounts");
 
-        // Wallet Service
         registerDefault("wallets", "wallet-service", "/api/v1/wallets");
         registerDefault("cards", "wallet-service", "/api/v1/cards");
 
-        // Transaction Service
         registerDefault("transactions", "transaction-service", "/api/v1/transactions");
         registerDefault("disbursements", "transaction-service", "/api/v1/disbursements");
         registerDefault("smart-routing", "transaction-service", "/api/v1/transfers/routes");
@@ -141,46 +136,35 @@ public class RouteRegistry {
         registerDefault("escrow", "wallet-service", "/api/v1/escrow");
         registerDefault("settlements", "wallet-service", "/api/v1/settlements");
 
-        // Billing Service
         registerDefault("billers", "billing-service", "/api/v1/billers");
         registerDefault("payments", "billing-service", "/api/v1/payments");
         registerDefault("billing/payments", "billing-service", "/api/v1/payments");
 
-        // Notification Service
         registerDefault("notifications", "notification-service", "/api/v1/notifications");
 
-        // Auth Service
         registerDefault("auth", "auth-service", "/api/v1/auth");
         registerDefault("biometric", "auth-service", "/api/v1/biometric");
 
-        // Partner Service
         registerDefault("partners", "partner-service", "/partners");
         registerDefault("v1/partner", "partner-service", "/v1/partner");
         registerDefault("v1.0", "partner-service", "/v1.0");
 
-        // Promotion Service
         registerDefault("promotions", "promotion-service", "/api/v1/promotions");
         registerDefault("cashbacks", "promotion-service", "/api/v1/cashbacks");
         registerDefault("loyalty-points", "promotion-service", "/api/v1/loyalty-points");
         registerDefault("rewards", "promotion-service", "/api/v1/rewards");
         registerDefault("referrals", "promotion-service", "/api/v1/referrals");
 
-        // Lending Service
         registerDefault("lending", "lending-service", "/api/v1/lending");
 
-        // Investment Service
         registerDefault("investments", "investment-service", "/api/v1/investments");
 
-        // Compliance Service
         registerDefault("compliance", "compliance-service", "/api/v1/compliance");
 
-        // Backoffice Service
         registerDefault("backoffice", "backoffice-service", "/api/v1/backoffice");
 
-        // Support Service
         registerDefault("support", "support-service", "/api/v1/support");
 
-        // CMS Service
         registerDefault("contents", "cms-service", "/api/v1/contents");
         registerDefault("public/contents", "cms-service", "/api/v1/public/contents");
 
@@ -190,22 +174,18 @@ public class RouteRegistry {
         // CMS Service (alternate /cms prefix)
         registerDefault("cms", "cms-service", "/api/v1/contents");
 
-        // Product Catalog Service
         registerDefault("products", "product-catalog-service", "/products");
 
-        // Integration Service
         registerDefault("integration", "integration-service", "/api/v1/integration");
 
         // TopUp - add explicit topup route
         registerDefault("topup", "billing-service", "/api/v1/topup");
 
-        // KYC Service
         registerDefault("kyc", "kyc-service", "/api/v1/kyc");
 
         // Compliance Service - GDPR audit
         registerDefault("gdpr-audit", "compliance-service", "/api/v1/gdpr-audit");
 
-        // Dispute Service
         registerDefault("disputes", "dispute-service", "/api/v1/disputes");
         registerDefault("refunds", "dispute-service", "/api/v1/refunds");
 
@@ -223,8 +203,6 @@ public class RouteRegistry {
                 true
         ));
     }
-
-    // Inner classes
 
     /**
      * A registered route definition.

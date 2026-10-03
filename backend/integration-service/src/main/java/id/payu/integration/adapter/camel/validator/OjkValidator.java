@@ -23,9 +23,6 @@ public class OjkValidator {
     private static final Pattern INSTITUTION_CODE_PATTERN = Pattern.compile("^[A-Z]{4}$");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    /**
-     * Validate OJK CSV report format.
-     */
     public ValidationResult validateCsv(String csvContent) {
         log.debug("Validating OJK CSV report");
 
@@ -42,13 +39,11 @@ public class OjkValidator {
             return new ValidationResult(false, errors);
         }
 
-        // Validate header
         String header = lines[0].trim();
         if (!header.contains("ReportDate") || !header.contains("ReportType") || !header.contains("InstitutionCode")) {
             errors.add("CSV header missing required columns");
         }
 
-        // Validate data rows
         if (lines.length < 2) {
             errors.add("CSV has no data rows");
         } else {
@@ -67,9 +62,6 @@ public class OjkValidator {
         return new ValidationResult(valid, errors);
     }
 
-    /**
-     * Validate OJK XML report format.
-     */
     public ValidationResult validateXml(String xmlContent) {
         log.debug("Validating OJK XML report");
 
@@ -80,7 +72,6 @@ public class OjkValidator {
             return new ValidationResult(false, errors);
         }
 
-        // Basic XML structure validation
         if (!xmlContent.trim().startsWith("<?xml")) {
             errors.add("XML declaration missing");
         }
@@ -89,7 +80,6 @@ public class OjkValidator {
             errors.add("Root element OJKReport missing");
         }
 
-        // Validate required sections
         if (!xmlContent.contains("<Header>") || !xmlContent.contains("</Header>")) {
             errors.add("Header section missing");
         }
@@ -106,7 +96,6 @@ public class OjkValidator {
             errors.add("ReportDate element missing");
         }
 
-        // Validate well-formedness
         try {
             javax.xml.parsers.DocumentBuilderFactory.newInstance()
                     .newDocumentBuilder()
@@ -126,15 +115,11 @@ public class OjkValidator {
         return new ValidationResult(valid, errors);
     }
 
-    /**
-     * Validate report data before transformation.
-     */
     public ValidationResult validateReportData(java.util.Map<String, Object> reportData) {
         log.debug("Validating OJK report data");
 
         List<String> errors = new ArrayList<>();
 
-        // Validate report date
         String reportDate = (String) reportData.get("reportDate");
         if (reportDate == null || reportDate.isEmpty()) {
             errors.add("Report date is required");
@@ -146,13 +131,11 @@ public class OjkValidator {
             }
         }
 
-        // Validate report type
         String reportType = (String) reportData.get("reportType");
         if (reportType == null || reportType.isEmpty()) {
             errors.add("Report type is required");
         }
 
-        // Validate institution code
         String institutionCode = (String) reportData.get("institutionCode");
         if (institutionCode == null || institutionCode.isEmpty()) {
             errors.add("Institution code is required");
@@ -160,7 +143,6 @@ public class OjkValidator {
             errors.add("Invalid institution code format: " + institutionCode);
         }
 
-        // Validate amounts
         Object totalAmount = reportData.get("totalAmount");
         if (totalAmount != null) {
             try {
@@ -182,7 +164,7 @@ public class OjkValidator {
 
     private void validateCsvRow(String row, int lineNumber, List<String> errors) {
         if (row.trim().isEmpty()) {
-            return; // Skip empty lines
+            return;
         }
 
         String[] fields = row.split(",");
@@ -191,37 +173,30 @@ public class OjkValidator {
             return;
         }
 
-        // Validate date
         try {
             LocalDate.parse(fields[0].trim(), DATE_FORMATTER);
         } catch (DateTimeParseException e) {
             errors.add("Line " + lineNumber + ": Invalid date format: " + fields[0]);
         }
 
-        // Validate transaction count
         try {
             Integer.parseInt(fields[3].trim());
         } catch (NumberFormatException e) {
             errors.add("Line " + lineNumber + ": Invalid transaction count: " + fields[3]);
         }
 
-        // Validate amount
         try {
             new BigDecimal(fields[4].trim());
         } catch (NumberFormatException e) {
             errors.add("Line " + lineNumber + ": Invalid amount: " + fields[4]);
         }
 
-        // Validate currency
         String currency = fields[5].trim();
         if (!currency.matches("[A-Z]{3}")) {
             errors.add("Line " + lineNumber + ": Invalid currency code: " + currency);
         }
     }
 
-    /**
-     * Result of validation.
-     */
     public record ValidationResult(boolean valid, List<String> errors) {
         public boolean hasErrors() {
             return !errors.isEmpty();

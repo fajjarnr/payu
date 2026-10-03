@@ -30,5 +30,4 @@ export { RetryInterceptor } from './interceptors/retry';
 export * from './generated/models';
 export * from './generated/api';
 
-// Version
 export const VERSION = '1.0.0';

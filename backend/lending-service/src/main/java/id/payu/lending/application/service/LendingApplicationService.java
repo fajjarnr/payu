@@ -218,19 +218,16 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
 
         BigDecimal score = calculateDefaultScore(userId);
 
-        // Check if credit score already exists for this user
         Optional<CreditScore> existingScore = creditScorePersistenceAdapter.findByUserId(userId);
 
         CreditScore creditScore;
         if (existingScore.isPresent()) {
-            // Update existing credit score
             creditScore = existingScore.get();
             creditScore.setScore(score);
             creditScore.setRiskCategory(lendingDmnService.evaluatePricing(score).riskCategory());
             creditScore.setLastCalculatedAt(LocalDateTime.now());
             creditScore.setUpdatedAt(LocalDateTime.now());
         } else {
-            // Create new credit score
             creditScore = new CreditScore();
             creditScore.setUserId(userId);
             creditScore.setScore(score);
@@ -270,7 +267,6 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
     }
 
     private BigDecimal calculateInterestRate(BigDecimal creditScore) {
-        // Delegates to DMN pricing table (pricing.dmn)
         return lendingDmnService.evaluatePricing(creditScore).interestRate();
     }
 
@@ -290,7 +286,6 @@ public class LendingApplicationService implements ApplyLoanUseCase, GetLoanUseCa
     }
 
     private RiskCategory determineRiskCategory(BigDecimal score) {
-        // Delegates to DMN pricing table
         return lendingDmnService.evaluatePricing(score).riskCategory();
     }
 }

@@ -3,7 +3,6 @@ import { getFinancialMutationHeaders, idempotencyKeyFor } from '@/lib/utils';
 import { assertUUID } from '@/lib/validation';
 import type { TransactionType, TransactionStatus, TransferType, Transaction, TransactionFilters, Money } from '@/types';
 
-// Re-export types for convenience
 export type { TransactionType, TransactionStatus };
 export type { TransferType };
 // IMP-014: Re-export Transaction from centralized types/index.ts

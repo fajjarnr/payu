@@ -71,7 +71,6 @@ class PayLaterIntegrationTest {
     @MockitoBean
     private id.payu.lending.domain.port.out.WalletPaymentPort walletPaymentPort;
 
-    // ─── activate pay-later ─────────────────────────────────────────
 
     @Test
     @DisplayName("Should activate PayLater and return 201 with correct credit limit")
@@ -120,7 +119,6 @@ class PayLaterIntegrationTest {
                 .andExpect(jsonPath("$.data.userId").value(userId.toString()));
     }
 
-    // ─── record purchase ────────────────────────────────────────────
 
     @Test
     @DisplayName("Should reduce available credit after recording a purchase")
@@ -155,7 +153,6 @@ class PayLaterIntegrationTest {
                         creditLimit.subtract(purchaseAmount).doubleValue()));
     }
 
-    // ─── record payment ─────────────────────────────────────────────
 
     @Test
     @DisplayName("Should increase available credit after recording a payment")
@@ -195,7 +192,6 @@ class PayLaterIntegrationTest {
                 .andExpect(jsonPath("$.data.availableCredit").value(expectedAvailable.doubleValue()));
     }
 
-    // ─── credit limit enforcement ───────────────────────────────────
 
     @Test
     @DisplayName("Should reject purchase that exceeds available credit limit")
@@ -216,7 +212,6 @@ class PayLaterIntegrationTest {
                 .andExpect(status().is4xxClientError());
     }
 
-    // ─── transaction history ────────────────────────────────────────
 
     @Test
     @DisplayName("Should return correct transaction history after purchases and payments")
@@ -250,7 +245,6 @@ class PayLaterIntegrationTest {
         assertThat(data.size()).isGreaterThanOrEqualTo(3); // 2 purchases + 1 payment
     }
 
-    // ─── helpers ────────────────────────────────────────────────────
 
     private void activatePayLaterForUser(UUID userId, BigDecimal creditLimit) throws Exception {
         PayLaterLimitRequest request = new PayLaterLimitRequest(creditLimit, 1);

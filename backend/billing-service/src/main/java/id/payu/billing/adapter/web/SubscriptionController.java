@@ -72,9 +72,7 @@ public class SubscriptionController {
                 accountId != null ? accountId : jwt.getSubject(), partnerId, partner, privileged);
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Plan Management
-    // ═══════════════════════════════════════════════════════
+    // Plan management
 
     @PostMapping("/plans")
     @ResponseStatus(HttpStatus.CREATED)
@@ -128,9 +126,7 @@ public class SubscriptionController {
         return ApiResponse.success(null);
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Subscription Lifecycle
-    // ═══════════════════════════════════════════════════════
+    // Subscription lifecycle
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -195,9 +191,7 @@ public class SubscriptionController {
         return ApiResponse.success(SubscriptionResponse.from(sub));
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Charge History
-    // ═══════════════════════════════════════════════════════
+    // Charge history
 
     @GetMapping("/{subscriptionId}/charges")
     @PreAuthorize("isAuthenticated()")

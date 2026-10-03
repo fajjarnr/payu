@@ -34,8 +34,6 @@ public class HealthEndpointsIntegrationTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    // Custom health endpoint tests
-
     @Test
     @Order(1)
     @DisplayName("Custom health endpoint should return UP status")
@@ -64,8 +62,6 @@ public class HealthEndpointsIntegrationTest {
                 .body("service", equalTo("gateway-service"))
                 .body("version", equalTo("1.0.0"));
     }
-
-    // Status endpoint tests
 
     @Test
     @Order(10)
@@ -126,8 +122,6 @@ public class HealthEndpointsIntegrationTest {
                 .body("uptime", matchesPattern("^(\\d+d )?\\d+h \\d+m \\d+s$|^\\d+m \\d+s$|^\\d+s$"));
     }
 
-    // Version endpoint tests
-
     @Test
     @Order(20)
     @DisplayName("Version endpoint should return version information")
@@ -139,8 +133,6 @@ public class HealthEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(400)));
     }
-
-    // Quarkus health endpoint tests
 
     @Test
     @Order(30)
@@ -191,8 +183,6 @@ public class HealthEndpointsIntegrationTest {
                 .body("checks", notNullValue());
     }
 
-    // Analytics health tests
-
     @Test
     @Order(40)
     @DisplayName("Analytics health endpoint should return UP")
@@ -205,8 +195,6 @@ public class HealthEndpointsIntegrationTest {
                 .body("status", equalTo("UP"))
                 .body("service", equalTo("analytics"));
     }
-
-    // Concurrent health check tests
 
     @Test
     @Order(50)
@@ -229,8 +217,6 @@ public class HealthEndpointsIntegrationTest {
             thread.join();
         }
     }
-
-    // Response time tests
 
     @Test
     @Order(60)
@@ -264,42 +250,34 @@ public class HealthEndpointsIntegrationTest {
         Assertions.assertTrue(responseTime < 1000, "Status endpoint should respond within 1 second");
     }
 
-    // Different HTTP methods tests
-
     @Test
     @Order(70)
     @DisplayName("Health endpoints should only support GET method")
     void testHealthEndpointMethods() {
-        // GET should work
         given()
                 .when()
                 .get("/health")
                 .then()
                 .statusCode(200);
 
-        // POST should not be allowed (might return 405 or 404 depending on routing)
         given()
                 .when()
                 .post("/health")
                 .then()
                 .statusCode(anyOf(is(405), is(404)));
 
-        // PUT should not be allowed
         given()
                 .when()
                 .put("/health")
                 .then()
                 .statusCode(anyOf(is(405), is(404)));
 
-        // DELETE should not be allowed
         given()
                 .when()
                 .delete("/health")
                 .then()
                 .statusCode(anyOf(is(405), is(404)));
     }
-
-    // JSON format tests
 
     @Test
     @Order(80)
@@ -325,8 +303,6 @@ public class HealthEndpointsIntegrationTest {
                 .contentType(containsString("application/json"));
     }
 
-    // Cache control tests
-
     @Test
     @Order(90)
     @DisplayName("Health endpoints should not be cached")
@@ -338,8 +314,6 @@ public class HealthEndpointsIntegrationTest {
                 .statusCode(200)
                 .header("Cache-Control", anyOf(containsString("no-cache"), nullValue()));
     }
-
-    // Uptime tracking tests
 
     @Test
     @Order(100)
@@ -353,10 +327,8 @@ public class HealthEndpointsIntegrationTest {
                 .extract()
                 .path("uptimeMs");
 
-        // Wait a bit
         Thread.sleep(100);
 
-        // Get uptime again
         Number laterUptime = given()
                 .when()
                 .get("/status")
@@ -366,8 +338,6 @@ public class HealthEndpointsIntegrationTest {
 
         Assertions.assertTrue(laterUptime.longValue() > initialUptime.longValue(), "Uptime should increase over time");
     }
-
-    // Error handling tests
 
     @Test
     @Order(110)
@@ -379,8 +349,6 @@ public class HealthEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(404), is(405)));
     }
-
-    // Memory validation tests
 
     @Test
     @Order(120)
@@ -412,20 +380,16 @@ public class HealthEndpointsIntegrationTest {
         Assertions.assertTrue(used.longValue() + free.longValue() <= total.longValue(), "Used + Free should not exceed Total");
     }
 
-    // Service identification tests
-
     @Test
     @Order(130)
     @DisplayName("All health endpoints should identify as gateway-service")
     void testServiceIdentification() {
-        // Custom health endpoint
         given()
                 .when()
                 .get("/health")
                 .then()
                 .body("service", equalTo("gateway-service"));
 
-        // Status endpoint
         given()
                 .when()
                 .get("/status")
@@ -440,8 +404,6 @@ public class HealthEndpointsIntegrationTest {
                 .statusCode(anyOf(is(200), is(400)));
     }
 
-    // Timestamp tests
-
     @Test
     @Order(140)
     @DisplayName("Status endpoint timestamp should be current")
@@ -455,7 +417,6 @@ public class HealthEndpointsIntegrationTest {
                 .path("timestamp");
 
         Assertions.assertNotNull(timestamp, "Timestamp should not be null");
-        // Verify it's a valid ISO-8601 timestamp
         Instant parsed = Instant.parse(timestamp);
         Assertions.assertTrue(parsed.toEpochMilli() > System.currentTimeMillis() - 5000,
                 "Timestamp should be recent");
@@ -479,8 +440,6 @@ public class HealthEndpointsIntegrationTest {
                 "Timestamp should be recent");
     }
 
-    // CORS tests
-
     @Test
     @Order(150)
     @DisplayName("Health endpoints should support CORS preflight")
@@ -493,8 +452,6 @@ public class HealthEndpointsIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(204), is(200)));
     }
-
-    // Cross-service health tests
 
     @Test
     @Order(160)
@@ -518,8 +475,6 @@ public class HealthEndpointsIntegrationTest {
         }
     }
 
-    // Content type tests
-
     @Test
     @Order(170)
     @DisplayName("Health endpoints should return UTF-8 charset")
@@ -531,8 +486,6 @@ public class HealthEndpointsIntegrationTest {
                 .statusCode(200)
                 .contentType(containsString("application/json"));
     }
-
-    // Start time tests
 
     @Test
     @Order(180)

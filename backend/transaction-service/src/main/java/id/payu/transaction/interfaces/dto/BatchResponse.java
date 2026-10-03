@@ -229,9 +229,6 @@ public class BatchResponse {
 
     /**
      * Creates a response DTO from a domain entity.
-     *
-     * @param batch the domain entity
-     * @return the response DTO
      */
     public static BatchResponse fromEntity(BatchDisbursementEntity batch) {
         return BatchResponse.builder()

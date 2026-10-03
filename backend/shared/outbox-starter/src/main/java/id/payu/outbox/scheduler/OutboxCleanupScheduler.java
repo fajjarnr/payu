@@ -59,13 +59,11 @@ public class OutboxCleanupScheduler {
         log.info("Starting outbox cleanup job");
 
         try {
-            // Calculate cutoff dates
             Instant publishedCutoff = Instant.now()
                     .minus(outboxProperties.getCleanup().getRetentionDays(), ChronoUnit.DAYS);
             Instant failedCutoff = Instant.now()
                     .minus(outboxProperties.getCleanup().getFailedRetentionDays(), ChronoUnit.DAYS);
 
-            // Delete old published events
             int publishedDeleted = outboxRepository.deletePublishedEventsOlderThan(publishedCutoff);
             if (publishedDeleted > 0) {
                 log.info("Deleted {} published events older than {} days",

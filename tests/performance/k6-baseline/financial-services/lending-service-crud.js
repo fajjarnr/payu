@@ -1,5 +1,3 @@
-// PayU Lending Service - CRUD Baseline Performance Test
-// ======================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -64,7 +62,6 @@ export default function () {
 
   group('Lending Service - CRUD Operations', () => {
 
-    // ===== READ: Check Eligibility =====
     group('READ: Check Eligibility', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.lending}/eligibility`, auth.token);
@@ -73,7 +70,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Calculate EMI =====
     group('CREATE: Calculate EMI', () => {
       const emiData = {
         amount: 10000000,
@@ -88,7 +84,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Apply for Loan =====
     group('CREATE: Apply Loan', () => {
       const loanData = generateLoanApplicationData(uniqueId);
 
@@ -104,7 +99,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Loans =====
     group('READ: List Loans', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.lending}/loans`, { page: 0, size: 10 }, auth.token);
@@ -114,7 +108,6 @@ export default function () {
     });
 
     if (loanId) {
-      // ===== READ: Get Loan Detail =====
       group('READ: Get Loan', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.lending}/loans/${loanId}`, auth.token);
@@ -123,7 +116,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== READ: Get Repayment Schedule =====
       group('READ: Get Schedule', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.lending}/loans/${loanId}/schedule`, auth.token);
@@ -132,7 +124,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== CREATE: Make Payment =====
       group('CREATE: Make Payment', () => {
         const paymentData = generatePaymentData();
 
@@ -143,7 +134,6 @@ export default function () {
         sleep(0.5);
       });
 
-      // ===== UPDATE: Update Loan Status =====
       group('UPDATE: Update Status', () => {
         const statusData = {
           status: 'ACTIVE',

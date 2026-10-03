@@ -1,11 +1,9 @@
 #!/bin/bash
-# ============================================
 # PayU FX Rates & Conversion E2E Test
 # Full read/estimate/convert/reverse flow
 #
 # Gateway routing: gateway-service -> fx-service
 # Mode: GATEWAY_MODE=internal (default, via oc exec)
-# ============================================
 
 set -e
 
@@ -80,7 +78,6 @@ run_test() {
     echo "$code"
 }
 
-# ============================================
 echo
 echo "========== FX Status & Rate Queries =========="
 

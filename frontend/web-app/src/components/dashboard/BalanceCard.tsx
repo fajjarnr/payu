@@ -115,13 +115,10 @@ export default function BalanceCard({
       {/* Col 2: Visual Card Representation (Hero) */}
       <div className="lg:col-span-12 xl:col-span-1">
         <div className="relative aspect-[1.6/1] lg:aspect-auto lg:h-full min-h-[220px] sm:min-h-[260px] lg:min-h-[300px] xl:min-h-0 rounded-2xl overflow-hidden shadow-glass group border border-white/10">
-          {/* Gradient background */}
           <div className="absolute inset-0 card-gradient" />
 
-          {/* Glass overlay */}
           <div className="absolute inset-0 bg-white/5 backdrop-blur-md" />
 
-          {/* Decorative circles */}
           <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/20 blur-xl transition-transform group-hover:scale-110 pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
 

@@ -114,7 +114,6 @@ public class PaymentLinkEntity {
         this.expiresAt = expiresAt;
     }
 
-    // Domain methods
 
     public boolean isActive() {
         return status == PaymentLinkStatus.ACTIVE && expiresAt.isAfter(LocalDateTime.now());
@@ -143,7 +142,6 @@ public class PaymentLinkEntity {
         this.status = PaymentLinkStatus.CANCELLED;
     }
 
-    // Getters and setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

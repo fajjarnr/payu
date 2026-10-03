@@ -32,7 +32,7 @@ export {
   useFxReverse
 } from './useFx';
 
-// ── Investment ──
+// Investment
 export {
   useInvestmentAccount,
   useGoldHoldings,
@@ -43,7 +43,7 @@ export {
   useSellInvestment
 } from './useInvestments';
 
-// ── Lending ──
+// Lending
 export {
   useCreditScore,
   useLoan,
@@ -57,10 +57,10 @@ export {
   usePayLaterPayment
 } from './useLending';
 
-// ── Notifications ──
+// Notifications
 export { useNotifications, useNotification, useMarkNotificationRead } from './useNotifications';
 
-// ── Rewards & Promotions ──
+// Rewards & Promotions
 export {
   useActivePromotions,
   useLoyaltyBalance,
@@ -74,7 +74,7 @@ export {
   useClaimPromotion
 } from './useRewards';
 
-// ── Cards ──
+// Cards
 export {
   useCards,
   useCard,
@@ -85,7 +85,7 @@ export {
   useUpdateCard
 } from './useCards';
 
-// ── Pockets ──
+// Pockets
 export {
   usePockets,
   usePocket,
@@ -99,7 +99,7 @@ export {
   useClosePocket
 } from './usePockets';
 
-// ── Biometric ──
+// Biometric
 export {
   useBiometricChallenge,
   useBiometricRegistrations,
@@ -108,7 +108,7 @@ export {
   useRevokeBiometric
 } from './useBiometric';
 
-// ── Scheduled Transfers ──
+// Scheduled Transfers
 export {
   useScheduledTransfers,
   useScheduledTransfer,
@@ -119,7 +119,7 @@ export {
   useResumeScheduledTransfer
 } from './useScheduledTransfers';
 
-// ── Split Bill ──
+// Split Bill
 export {
   useSplitBills,
   useSplitBill,
@@ -134,7 +134,7 @@ export {
   useSettleSplitBill
 } from './useSplitBill';
 
-// ── Support ──
+// Support
 export {
   useTrainingStatus,
   useSupportAgents,
@@ -152,7 +152,7 @@ export {
   useCreateTicket
 } from './useSupport';
 
-// ── Compliance ──
+// Compliance
 export {
   useAuditReports,
   useAuditReport,
@@ -165,7 +165,7 @@ export {
   useDeleteGdprAudit
 } from './useCompliance';
 
-// ── Partner ──
+// Partner
 export {
   usePartners,
   usePartner,
@@ -181,5 +181,5 @@ export {
   useSnapBiPayment
 } from './usePartner';
 
-// ── User ──
+// User
 export { useUser, useUpdateUser } from './useUser';

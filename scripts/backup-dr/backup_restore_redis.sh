@@ -6,18 +6,15 @@
 
 set -euo pipefail
 
-# Configuration
 CONTAINER_NAME="payu-redis"
 BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
 BACKUP_DIR="${BACKUP_ROOT}/redis/snapshots"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="${BACKUP_ROOT}/logs/redis_backup_restore_${TIMESTAMP}.log"
 
-# Create backup directory if it doesn't exist
 mkdir -p "${BACKUP_DIR}"
 mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
-# Logging function
 log() {
     local level="$1"
     shift
@@ -26,7 +23,6 @@ log() {
     echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}" >&2
 }
 
-# Check if container is running
 check_container() {
     log "INFO" "Checking if Redis container is running..."
     if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
@@ -37,7 +33,6 @@ check_container() {
     return 0
 }
 
-# Test Redis connectivity
 test_connection() {
     log "INFO" "Testing Redis connectivity..."
     if ! docker exec "${CONTAINER_NAME}" redis-cli ping > /dev/null 2>&1; then
@@ -48,7 +43,6 @@ test_connection() {
     return 0
 }
 
-# Trigger Redis background save
 trigger_save() {
     log "INFO" "Triggering background save..."
 
@@ -63,7 +57,6 @@ trigger_save() {
     fi
 }
 
-# Wait for save to complete
 wait_for_save() {
     log "INFO" "Waiting for save to complete..."
 
@@ -87,23 +80,19 @@ wait_for_save() {
     return 1
 }
 
-# Backup RDB file
 backup_snapshot() {
     local backup_file="${BACKUP_DIR}/dump_${TIMESTAMP}.rdb"
 
     log "INFO" "Creating backup to: ${backup_file}"
 
-    # Trigger background save
     if ! trigger_save; then
         return 1
     fi
 
-    # Wait for save to complete
     if ! wait_for_save; then
         return 1
     fi
 
-    # Copy RDB file from container
     if docker cp "${CONTAINER_NAME}:/data/dump.rdb" "${backup_file}"; then
         local file_size=$(du -h "${backup_file}" | cut -f1)
         log "INFO" "Successfully backed up Redis snapshot to ${backup_file} (${file_size})"
@@ -114,7 +103,6 @@ backup_snapshot() {
     fi
 }
 
-# Restore RDB file
 restore_snapshot() {
     local backup_file="$1"
     local force="${2:-false}"
@@ -135,11 +123,9 @@ restore_snapshot() {
         fi
     fi
 
-    # Stop Redis container
     log "INFO" "Stopping Redis container..."
     docker stop "${CONTAINER_NAME}" || true
 
-    # Get the Docker volume name for Redis data
     local volume_name=$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{if .Destination == "/data"}}{{.Name}}{{end}}{{end}}' 2>/dev/null)
 
     if [[ -z "${volume_name}" ]]; then
@@ -151,17 +137,14 @@ restore_snapshot() {
         docker exec "${CONTAINER_NAME}" mv /data/dump_temp.rdb /data/dump.rdb
         docker restart "${CONTAINER_NAME}"
     else
-        # Use Docker volume directly
         log "INFO" "Copying backup to Docker volume..."
         docker run --rm -v "${volume_name}:/data" -v "$(dirname ${backup_file}):/backup" alpine:latest cp "/backup/$(basename ${backup_file})" /data/dump.rdb
         docker start "${CONTAINER_NAME}"
     fi
 
-    # Wait for Redis to start
     log "INFO" "Waiting for Redis to start..."
     sleep 5
 
-    # Verify Redis is running
     if test_connection; then
         log "INFO" "Redis is running after restore"
         return 0
@@ -171,7 +154,6 @@ restore_snapshot() {
     fi
 }
 
-# List available backups
 list_backups() {
     log "INFO" "Available Redis snapshots:"
 
@@ -185,7 +167,6 @@ list_backups() {
     ls -lht ${BACKUP_DIR}/dump_*.rdb | awk 'NR>1 {print "  " $9 " (" $5 ", " $6 " " $7 " " $8 ")"}'
 }
 
-# Clean up old backups
 cleanup_old_backups() {
     local retention_days="${1:-7}"
 
@@ -197,7 +178,6 @@ cleanup_old_backups() {
     log "INFO" "Deleted ${deleted} old backup(s). ${remaining} backup(s) remaining"
 }
 
-# Get Redis statistics
 get_stats() {
     log "INFO" "Redis Statistics:"
 
@@ -211,7 +191,6 @@ get_stats() {
     echo "Last Save: $(echo "${info}" | grep "^rdb_last_save_time:" | cut -d: -f2 | tr -d '\r')"
 }
 
-# Find the latest backup
 find_latest_backup() {
     local backup_file=$(ls -t ${BACKUP_DIR}/dump_*.rdb 2>/dev/null | head -1)
 
@@ -224,7 +203,6 @@ find_latest_backup() {
     return 0
 }
 
-# Verify backup integrity
 verify_backup() {
     local backup_file="$1"
 
@@ -235,7 +213,6 @@ verify_backup() {
         return 1
     fi
 
-    # Check file size
     local file_size=$(du -k "${backup_file}" | cut -f1)
 
     if [[ ${file_size} -eq 0 ]]; then
@@ -256,7 +233,6 @@ verify_backup() {
     return 0
 }
 
-# Main routine
 main() {
     local action="$1"
     shift || true

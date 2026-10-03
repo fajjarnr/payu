@@ -28,10 +28,6 @@ public class PaymentNotificationService {
 
     /**
      * Updates the status of a transaction.
-     *
-     * @param transactionId the unique transaction identifier
-     * @param status the new transaction status
-     * @param timestamp the time of status update
      */
     public void updateTransactionStatus(String transactionId, TransactionStatus status, Instant timestamp) {
         LOG.info("Updating transaction status: transactionId={}, status={}, timestamp={}",
@@ -42,10 +38,6 @@ public class PaymentNotificationService {
 
     /**
      * Credits an amount to a wallet.
-     *
-     * @param accountNumber the destination account number
-     * @param amount the amount to credit
-     * @param referenceId the reference identifier for the transaction
      */
     public void creditWallet(String accountNumber, BigDecimal amount, String referenceId) {
         if (accountNumber == null) {
@@ -59,10 +51,6 @@ public class PaymentNotificationService {
 
     /**
      * Debits an amount from a wallet.
-     *
-     * @param accountNumber the source account number
-     * @param amount the amount to debit
-     * @param referenceId the reference identifier for the transaction
      */
     public void debitWallet(String accountNumber, BigDecimal amount, String referenceId) {
         if (accountNumber == null) {
@@ -76,9 +64,6 @@ public class PaymentNotificationService {
 
     /**
      * Releases a hold on funds in an account.
-     *
-     * @param accountNumber the account number
-     * @param transactionId the transaction identifier
      */
     public void releaseHold(String accountNumber, String transactionId) {
         if (accountNumber == null) {
@@ -91,9 +76,6 @@ public class PaymentNotificationService {
 
     /**
      * Schedules a timeout for a pending transaction.
-     *
-     * @param transactionId the transaction identifier
-     * @param timeoutAt the time when the timeout should occur
      */
     public void schedulePendingTimeout(String transactionId, Instant timeoutAt) {
         LOG.info("Scheduling pending timeout: transactionId={}, timeoutAt={}", transactionId, timeoutAt);
@@ -102,11 +84,6 @@ public class PaymentNotificationService {
 
     /**
      * Creates a refund transaction record.
-     *
-     * @param originalTransactionId the original transaction being refunded
-     * @param amount the refund amount
-     * @param reason the reason for the refund
-     * @return the refund transaction identifier
      */
     public String createRefundTransaction(String originalTransactionId, BigDecimal amount, String reason) {
         String refundId = "REFUND-" + System.currentTimeMillis();
@@ -118,10 +95,6 @@ public class PaymentNotificationService {
 
     /**
      * Sends a notification to a user.
-     *
-     * @param accountNumber the user's account number
-     * @param title the notification title
-     * @param message the notification message
      */
     public void sendUserNotification(String accountNumber, String title, String message) {
         if (accountNumber == null) {
@@ -134,8 +107,6 @@ public class PaymentNotificationService {
 
     /**
      * Notifies that a webhook was processed successfully.
-     *
-     * @param webhookId the webhook identifier
      */
     public void notifySuccess(String webhookId) {
         LOG.info("Webhook processed successfully: webhookId={}", webhookId);
@@ -144,9 +115,6 @@ public class PaymentNotificationService {
 
     /**
      * Notifies that a webhook processing failed.
-     *
-     * @param webhookId the webhook identifier
-     * @param errorMessage the error message
      */
     public void notifyFailure(String webhookId, String errorMessage) {
         LOG.error("Webhook processing failed: webhookId={}, error={}", webhookId, errorMessage);

@@ -100,10 +100,6 @@ public class TrainingModuleService {
         );
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
-
     private List<TrainingModuleResponse> getAllTrainingModulesFallback(Exception ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException

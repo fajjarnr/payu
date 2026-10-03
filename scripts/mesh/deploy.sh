@@ -5,19 +5,16 @@
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NAMESPACE="${NAMESPACE:-istio-system}"
 ENV="${ENV:-prod}"
 DRY_RUN="${DRY_RUN:-false}"
 
-# Functions
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
 }
@@ -33,22 +30,18 @@ log_error() {
 check_prerequisites() {
     log_info "Checking prerequisites..."
 
-    # Check if oc command is available
     if ! command -v oc &> /dev/null; then
         log_error "oc command not found. Please install OpenShift CLI."
         exit 1
     fi
 
-    # Check if user is logged in
     if ! oc whoami &> /dev/null; then
         log_error "Not logged in to OpenShift. Please run 'oc login'."
         exit 1
     fi
 
-    # Check if Service Mesh Operator is installed
     if ! oc get csv -n openshift-operators | grep -q "service-mesh"; then
         log_warn "Service Mesh Operator not found. Installing..."
-        # Operator installation would go here
     fi
 
     log_info "Prerequisites check passed."
@@ -128,7 +121,6 @@ enable_sidecar_injection() {
         if [ "$DRY_RUN" = "true" ]; then
             log_warn "DRY RUN: Would label namespace $ns"
         else
-            # Check if namespace exists
             if oc get namespace "$ns" &> /dev/null; then
                 oc label namespace "$ns" "maistra.io/member-of=istio-system" --overwrite
                 log_info "Enabled sidecar injection for namespace: $ns"
@@ -207,7 +199,6 @@ print_usage() {
     echo ""
 }
 
-# Parse command line arguments
 STEP=""
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -239,7 +230,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Main deployment flow
 main() {
     log_info "Starting Service Mesh deployment for environment: $ENV"
     log_info "Target namespace: $NAMESPACE"
@@ -284,5 +274,4 @@ main() {
     print_next_steps
 }
 
-# Run main function
 main

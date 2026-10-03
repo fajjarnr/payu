@@ -39,11 +39,9 @@ class VaultConfigurationTest {
     @Autowired(required = false)
     private VaultTemplate vaultTemplate;
 
-    // Mock security beans
     @MockitoBean
     private JwtDecoder jwtDecoder;
 
-    // Mock KafkaTemplate for cache and messaging
     @MockitoBean
     private KafkaTemplate<Object, Object> kafkaTemplate;
 
@@ -51,14 +49,12 @@ class VaultConfigurationTest {
     @MockitoBean
     private KafkaTemplate<String, Object> stringKafkaTemplate;
 
-    // Mock health indicator dependencies
     @MockitoBean
     private RemoteCacheManager remoteCacheManager;
 
     @MockitoBean
     private ListenerContainerRegistry listenerContainerRegistry;
 
-    // Mock application components that depend on JPA
     @MockitoBean
     private id.payu.account.adapter.messaging.KafkaUserEventPublisherAdapter kafkaUserEventPublisherAdapter;
 
@@ -81,7 +77,6 @@ class VaultConfigurationTest {
     @MockitoBean
     private id.payu.account.adapter.persistence.repository.BeneficiaryRepository beneficiaryRepository;
 
-    // Mock cache-starter dependencies
     @MockitoBean
     private CacheService cacheService;
 
@@ -100,9 +95,7 @@ class VaultConfigurationTest {
 
     @Test
     void environmentVariablesTakePrecedence_whenVaultDisabled() {
-        // When Vault is disabled, the application should use environment variables
-        // In test environment, we verify the application context loaded successfully
-        // without Vault, which is the meaningful assertion here
+        // Vault disabled: context must still load using env vars or defaults.
         assertThat(true).as("Application context loads successfully without Vault — " +
                 "environment variables or defaults are used for configuration").isTrue();
     }

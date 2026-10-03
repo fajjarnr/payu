@@ -65,7 +65,6 @@ public class BodyMaskingRule {
             }
             return jsonBody;
         } catch (Exception e) {
-            // Return original if parsing fails
             return jsonBody;
         }
     }

@@ -62,17 +62,12 @@ public class Budget {
         this.version = version;
     }
 
-    // Domain behaviors
-
     /**
      * Checks if a spending amount is allowed within this budget.
      *
      * Business rules:
      * - Budget must be active
      * - Total spent after transaction must not exceed limit (unless in lenient mode)
-     *
-     * @param amount the amount to spend
-     * @return true if spending is allowed
      */
     public boolean canSpend(BigDecimal amount) {
         if (!active) {
@@ -89,8 +84,6 @@ public class Budget {
 
     /**
      * Records a spending transaction against this budget.
-     *
-     * @param amount the amount spent
      * @throws IllegalStateException if budget is not active
      * @throws IllegalArgumentException if amount is invalid
      */
@@ -110,19 +103,15 @@ public class Budget {
     /**
      * Resets the budget spending if the period has elapsed.
      * Should be called before checking budget status.
-     *
-     * @return true if the spending was reset, false otherwise
      */
     public boolean resetIfNeeded() {
         if (resetDate == null) {
-            // First time setup
             this.resetDate = calculateNextResetDate();
             return false;
         }
 
         LocalDate today = LocalDate.now();
         if (today.isAfter(resetDate) || today.isEqual(resetDate)) {
-            // Period has elapsed, reset spending
             this.currentSpent = BigDecimal.ZERO;
             this.resetDate = calculateNextResetDate();
             this.updatedAt = LocalDateTime.now();
@@ -131,9 +120,6 @@ public class Budget {
         return false;
     }
 
-    /**
-     * Calculates the next reset date based on the period type.
-     */
     private LocalDate calculateNextResetDate() {
         LocalDate today = LocalDate.now();
         return switch (period) {
@@ -161,8 +147,6 @@ public class Budget {
 
     /**
      * Updates the budget limit.
-     *
-     * @param newLimit the new limit amount
      */
     public void updateLimit(BigDecimal newLimit) {
         if (newLimit == null || newLimit.compareTo(BigDecimal.ZERO) <= 0) {
@@ -172,12 +156,8 @@ public class Budget {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Query methods
-
     /**
      * Gets the current budget status based on spending.
-     *
-     * @return BudgetStatus indicating current state
      */
     public BudgetStatus getStatus() {
         if (!active) {
@@ -199,8 +179,6 @@ public class Budget {
 
     /**
      * Calculates the percentage of budget spent.
-     *
-     * @return percentage spent (0-100+)
      */
     public BigDecimal getSpentPercentage() {
         if (limitAmount == null || limitAmount.compareTo(BigDecimal.ZERO) == 0) {
@@ -220,8 +198,6 @@ public class Budget {
 
     /**
      * Checks if the budget has been exceeded.
-     *
-     * @return true if spending exceeds limit
      */
     public boolean isExceeded() {
         return currentSpent.compareTo(limitAmount) > 0;
@@ -229,15 +205,11 @@ public class Budget {
 
     /**
      * Checks if the budget is near its limit (above warning threshold).
-     *
-     * @return true if near limit
      */
     public boolean isNearLimit() {
         BigDecimal threshold = limitAmount.multiply(warningThreshold);
         return currentSpent.compareTo(threshold) >= 0 && !isExceeded();
     }
-
-    // Getters and setters
 
     public UUID getId() {
         return id;
@@ -334,8 +306,6 @@ public class Budget {
     public void setVersion(long version) {
         this.version = version;
     }
-
-    // Builder
 
     public static Builder builder() {
         return new Builder();

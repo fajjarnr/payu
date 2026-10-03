@@ -56,7 +56,6 @@ public class KeycloakService {
      * @param code         the authorization code from the OIDC callback
      * @param codeVerifier the PKCE code_verifier held by the BFF
      * @param redirectUri  the exact redirect_uri used in the authorize request
-     * @return token response
      * @throws IllegalArgumentException when Keycloak rejects the code (invalid/expired)
      * @throws ResourceAccessException  when the identity provider is unreachable
      */
@@ -104,7 +103,6 @@ public class KeycloakService {
      * subsequent refresh with the same token is rejected. Uses the web client
      * because the session was issued through the OIDC authorization-code flow.
      *
-     * @param refreshToken the refresh token to revoke
      * @throws IllegalArgumentException if the token cannot be parsed or is rejected
      */
     public void revokeSession(String refreshToken) {
@@ -143,8 +141,6 @@ public class KeycloakService {
      * Uses the web client because the refresh token was issued to it.
      * ADR-0062: forwards DPoP proof when bound token (public client requires same key).
      *
-     * @param refreshToken the refresh token
-     * @return LoginResponse containing new access tokens
      * @throws IllegalArgumentException if refresh fails
      */
     public LoginResponse refreshTokenBlocking(String refreshToken) {

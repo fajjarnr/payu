@@ -38,7 +38,6 @@ public class CorrelationIdWebFilter implements WebFilter {
             correlationId = UUID.randomUUID().toString().replace("-", "");
         }
 
-        // Add correlation ID to response header
         exchange.getResponse().getHeaders().set(headerName, correlationId);
 
         String finalCorrelationId = correlationId;

@@ -11,15 +11,9 @@ import java.util.UUID;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Spring Data JPA repository for BillPaymentEntity entity.
- */
 @Repository
 public interface BillPaymentRepository extends JpaRepository<BillPaymentEntity, UUID> {
 
-    /**
-     * Find payment by reference number.
-     */
     Optional<BillPaymentEntity> findByReferenceNumber(String referenceNumber);
 
     Optional<BillPaymentEntity> findByIdempotencyKey(String idempotencyKey);

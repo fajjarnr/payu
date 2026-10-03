@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # PayU Seed Data Initialization Script
-# =====================================
 # Initializes test data across all services for development/testing.
 #
 # Usage:
@@ -13,14 +12,12 @@
 
 set -e
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Configuration
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:8080}"
 KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:8099}"
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
@@ -39,20 +36,14 @@ print_success() { echo -e "${GREEN}✓${NC} $1"; }
 print_error() { echo -e "${RED}✗${NC} $1"; }
 print_info() { echo -e "${CYAN}ℹ${NC} $1"; }
 
-# ============================================================================
-# KEYCLOAK SEED DATA
-# ============================================================================
-
 seed_keycloak() {
     print_header "Seeding Keycloak Data"
 
-    # Check if Keycloak is running
     if ! curl -s -f "$KEYCLOAK_URL" > /dev/null 2>&1; then
         print_error "Keycloak not reachable at $KEYCLOAK_URL"
         return 1
     fi
 
-    # Get admin token
     print_info "Getting Keycloak admin token..."
     KEYCLOAK_ADMIN_PWD="${KEYCLOAK_ADMIN_PASSWORD:?ERROR: KEYCLOAK_ADMIN_PASSWORD must be set}"
     ADMIN_TOKEN=$(curl -s -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
@@ -69,7 +60,6 @@ seed_keycloak() {
 
     print_success "Admin token obtained"
 
-    # Create realm if not exists
     print_info "Checking if 'payu' realm exists..."
     REALM_EXISTS=$(curl -s -X GET "$KEYCLOAK_URL/admin/realms" \
         -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[] | select(.realm=="payu") | .realm' // empty)
@@ -85,7 +75,6 @@ seed_keycloak() {
         print_info "Realm 'payu' already exists"
     fi
 
-    # Verify users
     print_info "Verifying test users..."
     USERS=$(curl -s -X GET "$KEYCLOAK_URL/admin/realms/payu/users?max=10" \
         -H "Authorization: Bearer $ADMIN_TOKEN")
@@ -97,26 +86,19 @@ seed_keycloak() {
     print_success "Keycloak seed data complete"
 }
 
-# ============================================================================
-# DATABASE SEED DATA
-# ============================================================================
-
 seed_database() {
     print_header "Seeding Database Data"
 
-    # Check PostgreSQL connection
     if ! PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d postgres -c "SELECT 1" > /dev/null 2>&1; then
         print_error "PostgreSQL not reachable at $POSTGRES_HOST:$POSTGRES_PORT"
         return 1
     fi
 
-    # Run seed data migrations for each service
     local services=("payu_account" "payu_wallet" "payu_transaction")
 
     for service in "${services[@]}"; do
         print_info "Seeding $service..."
 
-        # Check if V99 migration exists
         if [ "$service" = "payu_account" ]; then
             MIGRATION_FILE="backend/account-service/src/main/resources/db/migration/V99__seed_test_data.sql"
         elif [ "$service" = "payu_wallet" ]; then
@@ -136,14 +118,9 @@ seed_database() {
     print_success "Database seed data complete"
 }
 
-# ============================================================================
-# VERIFICATION
-# ============================================================================
-
 verify_seed_data() {
     print_header "Verifying Seed Data"
 
-    # Verify Keycloak
     print_info "Verifying Keycloak users..."
     ADMIN_TOKEN=$(curl -s -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
@@ -157,14 +134,11 @@ verify_seed_data() {
 
     print_success "Keycloak users: $KEYCLOAK_USERS"
 
-    # Verify Database
     print_info "Verifying database records..."
 
-    # Account service
     USER_COUNT=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d payu_account -tAc "SELECT COUNT(*) FROM users" 2>/dev/null || echo "0")
     ACCOUNT_COUNT=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d payu_account -tAc "SELECT COUNT(*) FROM accounts" 2>/dev/null || echo "0")
 
-    # Wallet service
     WALLET_COUNT=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d payu_wallet -tAc "SELECT COUNT(*) FROM wallets" 2>/dev/null || echo "0")
 
     echo ""
@@ -173,10 +147,8 @@ verify_seed_data() {
     echo "  Accounts: $ACCOUNT_COUNT"
     echo "  Wallets:  $WALLET_COUNT"
 
-    # Test API access
     print_info "Testing API access..."
 
-    # Test login with customer1
     TEST_USER_PWD="${KEYCLOAK_TEST_USER_PASSWORD:-P@ssw0rd123}"
     LOGIN_RESPONSE=$(curl -s -X POST "$GATEWAY_URL/api/v1/auth/login" \
         -H "Content-Type: application/json" \
@@ -188,10 +160,6 @@ verify_seed_data() {
         print_error "customer1 login: FAILED"
     fi
 }
-
-# ============================================================================
-# MAIN
-# ============================================================================
 
 main() {
     cd "$(dirname "$0")/.."

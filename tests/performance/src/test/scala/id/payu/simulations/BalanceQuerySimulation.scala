@@ -20,27 +20,22 @@ import scala.concurrent.duration._
  */
 class BalanceQuerySimulation extends Simulation {
 
-  // Base URLs for different environments
   val baseUrl = System.getProperty("baseUrl", "http://localhost:8080")
   val authUrl = System.getProperty("authUrl", s"$baseUrl/auth")
   val walletUrl = System.getProperty("walletUrl", s"$baseUrl/wallet")
 
-  // HTTP Protocol Configuration
   val httpProtocol = http
     .baseUrl(baseUrl)
     .acceptHeader("application/json")
     .contentTypeHeader("application/json")
     .userAgentHeader("PayU-PerformanceTest/1.0")
 
-  // Feeders for test data
   val userFeeder = csv("data/users.csv").circular
   val accountFeeder = csv("data/accounts.csv").circular
 
-  // Scenario Definition
   val balanceQueryScenario = scenario("Balance Query Scenario")
     .feed(userFeeder)
     .feed(accountFeeder)
-    // Login first to get token
     .exec(
       http("Login Request")
         .post(s"$authUrl/api/v1/auth/login")
@@ -90,23 +85,18 @@ class BalanceQuerySimulation extends Simulation {
       .pause(1, 2)
     }
 
-  // Load Simulation Setup
   setUp(
     balanceQueryScenario.inject(
-      // Ramp-up from 10 to 1000 users over 5 minutes
       rampUsersPerSec(10) to 1000 during (5 minutes),
-      // Sustained load for 10 minutes
       constantUsersPerSec(1000) during (10 minutes)
     )
   ).protocols(httpProtocol)
     .assertions(
-      // Global assertions
       global.responseTime.percentile3.lte(500),  // p95 < 500ms (read operation)
       global.responseTime.percentile4.lte(1000), // p99 < 1s
       global.responseTime.max.lte(2000),         // max < 2s
       global.successfulRequests.percent.gte(99.9), // success rate > 99.9%
 
-      // Specific to balance query requests
       details("Balance Query Scenario" / "Query Main Balance").responseTime.percentile3.lte(500),
       details("Balance Query Scenario" / "Query Main Balance").responseTime.percentile4.lte(1000),
       details("Balance Query Scenario" / "Query Main Balance").responseTime.max.lte(2000),

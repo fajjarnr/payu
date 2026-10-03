@@ -1,6 +1,4 @@
-# =============================================================================
 # PayU Platform - Vault Raft Snapshot CronJob
-# =============================================================================
 # INFRA-005: Automated Raft snapshots to encrypted S3 every 6 hours
 #
 # This CronJob:
@@ -21,7 +19,6 @@
 #   - successfulJobsHistoryLimit: 7 (~2 days of history)
 #   - failedJobsHistoryLimit: 3
 #   - S3 lifecycle policy recommended for snapshot rotation (e.g., 30 days)
-# =============================================================================
 
 apiVersion: batch/v1
 kind: CronJob
@@ -61,7 +58,7 @@ spec:
         spec:
           restartPolicy: OnFailure
 
-          # --- Security Context (OpenShift restricted-v2 compatible) ---
+          # Security Context (OpenShift restricted-v2 compatible)
           securityContext:
             runAsNonRoot: true
             seccompProfile:
@@ -122,7 +119,6 @@ spec:
 
                   echo "=== Vault Raft Snapshot — $(date -u) ==="
 
-                  # 1. Verify Vault is reachable and unsealed
                   echo "[1/5] Checking Vault status..."
                   if ! vault status -format=json 2>/dev/null | grep -q '"sealed":false'; then
                     echo "ERROR: Vault is sealed or unreachable. Aborting snapshot."
@@ -130,13 +126,11 @@ spec:
                   fi
                   echo "Vault is unsealed and healthy."
 
-                  # 2. Create Raft snapshot
                   echo "[2/5] Creating Raft snapshot: ${SNAPSHOT_FILE}"
                   vault operator raft snapshot save "${SNAPSHOT_FILE}"
                   SNAPSHOT_SIZE="$(du -h "${SNAPSHOT_FILE}" | cut -f1)"
                   echo "Snapshot created: ${SNAPSHOT_FILE} (${SNAPSHOT_SIZE})"
 
-                  # 3. Install AWS CLI (Alpine-based Vault image)
                   echo "[3/5] Installing AWS CLI..."
                   apk add --no-cache aws-cli 2>/dev/null || {
                     echo "aws-cli package not available; installing via pip..."
@@ -145,7 +139,6 @@ spec:
                   }
                   echo "AWS CLI ready."
 
-                  # 4. Upload snapshot to S3 with server-side encryption
                   echo "[4/5] Uploading snapshot to s3://${S3_BUCKET}/${S3_KEY}"
                   aws s3 cp "${SNAPSHOT_FILE}" "s3://${S3_BUCKET}/${S3_KEY}" \
                     --region "${AWS_REGION}" \
@@ -153,13 +146,12 @@ spec:
                     --storage-class STANDARD_IA
                   echo "Upload complete: s3://${S3_BUCKET}/${S3_KEY}"
 
-                  # 5. Cleanup local snapshot
                   echo "[5/5] Cleaning up local snapshot..."
                   rm -f "${SNAPSHOT_FILE}"
 
                   echo "=== Snapshot completed successfully at $(date -u) ==="
 
-              # --- Resource limits (snapshot is CPU/memory-bound briefly) ---
+              # Resource limits (snapshot is CPU/memory-bound briefly)
               resources:
                 requests:
                   memory: "256Mi"
@@ -168,7 +160,7 @@ spec:
                   memory: "512Mi"
                   cpu: "500m"
 
-              # --- Container security context ---
+              # Container security context
               securityContext:
                 allowPrivilegeEscalation: false
                 capabilities:

@@ -86,7 +86,6 @@ class TestLendingFlow:
         jwt_sub = self._get_jwt_sub(auth_token)
         assert jwt_sub is not None
 
-        # First calculate to ensure it exists
         authenticated_api.post(
             "/api/v1/lending/credit-score/calculate",
             params={"userId": jwt_sub}
@@ -128,7 +127,6 @@ class TestLendingFlow:
         """
         Create a loan then get its details.
         """
-        # Create a loan first
         response = authenticated_api.post("/api/v1/lending/loans", json={
             "externalId": str(uuid.uuid4()),
             "loanType": "PERSONAL_LOAN",
@@ -163,7 +161,6 @@ class TestLendingFlow:
         """
         Create repayment schedule for a loan.
         """
-        # Create a loan
         response = authenticated_api.post("/api/v1/lending/loans", json={
             "externalId": str(uuid.uuid4()),
             "loanType": "PERSONAL_LOAN",
@@ -226,7 +223,6 @@ class TestLendingFlow:
         jwt_sub = self._get_jwt_sub(auth_token)
         assert jwt_sub is not None
 
-        # Ensure paylater is activated first
         authenticated_api.post("/api/v1/lending/paylater/activate", json={
             "creditLimit": 5000000,
             "billingCycleDay": 25

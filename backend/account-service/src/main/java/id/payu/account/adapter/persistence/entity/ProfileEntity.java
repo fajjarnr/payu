@@ -71,7 +71,6 @@ public class ProfileEntity {
     @Column(name = "additional_data", columnDefinition = "jsonb")
     private Map<String, Object> additionalData = new HashMap<>();
 
-    // Constructors
     public ProfileEntity() {
     }
 
@@ -90,7 +89,6 @@ public class ProfileEntity {
         this.additionalData = additionalData != null ? additionalData : new HashMap<>();
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -171,7 +169,6 @@ public class ProfileEntity {
         this.additionalData = additionalData != null ? additionalData : new HashMap<>();
     }
 
-    // Builder
     public static Builder builder() {
         return new Builder();
     }

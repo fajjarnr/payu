@@ -5,8 +5,6 @@ import React from 'react';
 describe('Code Block Components', () => {
   describe('Code Block Rendering', () => {
     it('should render code blocks with correct structure', () => {
-      // Test that code blocks follow the expected structure
-      // This validates the CSS class usage in the pages
       const CodeBlock = ({ children }: { children: React.ReactNode }) => (
         <div className="code-block">
           <pre>

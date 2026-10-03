@@ -1,16 +1,6 @@
 /**
- * Security Test Suite for QueryProvider
- * =====================================
- *
- * Tests to verify that sensitive financial and PII data is NOT persisted
- * to AsyncStorage (which is unencrypted).
- *
- * Compliance:
- * - PCI-DSS Requirement 3: Protect stored cardholder data
- * - OJK Regulation: Financial data encryption at rest
- * - PayU Security Policy P2-C2: Secure token storage
- *
- * @version 2.0.0
+ * Verifies sensitive financial/PII data is never persisted to AsyncStorage (unencrypted).
+ * Compliance: PCI-DSS Req 3, OJK financial-data encryption, PayU Security Policy P2-C2.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -20,7 +10,6 @@ import {
   devLogAsyncStorageContents,
 } from '../QueryProvider';
 
-// Mock query cache data structures
 const createMockQueryCache = (queries: Array<{ queryKey: string[]; state: { data: unknown } }>) => ({
   clientState: {
     queries,
@@ -29,12 +18,10 @@ const createMockQueryCache = (queries: Array<{ queryKey: string[]; state: { data
 
 describe('QueryProvider Security Tests', () => {
   beforeEach(async () => {
-    // Clear AsyncStorage before each test
     await AsyncStorage.clear();
   });
 
   afterEach(async () => {
-    // Clean up after each test
     await AsyncStorage.clear();
   });
 
@@ -444,13 +431,7 @@ describe('QueryProvider Security Tests', () => {
   });
 });
 
-/**
- * Integration Test: Query Key Classification
- * ===========================================
- *
- * This section documents how query keys should be classified
- * for the shouldDehydrateQuery function in QueryProvider.
- */
+/** Documents how query keys are classified for shouldDehydrateQuery. */
 describe('Query Key Classification (Documentation)', () => {
   it('documents all sensitive query key patterns', () => {
     const sensitivePatterns = [

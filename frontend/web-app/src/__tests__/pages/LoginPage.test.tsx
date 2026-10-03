@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import LoginPage from '@/app/[locale]/login/page';
 
-// Mock next-intl
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => {
     const map: Record<string, string> = {
@@ -19,7 +18,6 @@ vi.mock('next-intl', () => ({
   },
 }));
 
-// Mock next/navigation
 vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(() => new URLSearchParams()),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -27,7 +25,6 @@ vi.mock('next/navigation', () => ({
 
 import { useSearchParams } from 'next/navigation';
 
-// Mock stores
 vi.mock('@/stores/authStore', () => ({
   useAuthStore: () => ({
     user: null,
@@ -37,7 +34,6 @@ vi.mock('@/stores/authStore', () => ({
   }),
 }));
 
-// Mock navigation lib
 vi.mock('@/lib/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   Link: ({ children, ...props }: { children: React.ReactNode; href: string }) => (
@@ -45,12 +41,10 @@ vi.mock('@/lib/navigation', () => ({
   ),
 }));
 
-// Mock next/image
 vi.mock('next/image', () => ({
   default: (props: Record<string, unknown>) => <img {...props} />,
 }));
 
-// Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: { children?: React.ReactNode }) => <div {...props}>{children}</div>,
@@ -62,7 +56,6 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-// Mock tanstack query
 vi.mock('@tanstack/react-query', () => ({
   useMutation: () => ({
     mutateAsync: vi.fn(),
@@ -94,7 +87,6 @@ describe('LoginPage', () => {
   });
 
   it('should show an error banner when the OIDC flow failed', () => {
-    // Re-render with error search param
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('error=authentication_failed') as unknown as import('next/navigation').ReadonlyURLSearchParams);
     render(<LoginPage />);
 

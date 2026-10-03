@@ -116,9 +116,6 @@ public class HealthController extends BaseController {
         }
     }
 
-    /**
-     * Check Kafka listener status.
-     */
     private boolean checkKafka(Map<String, Object> details) {
         if (listenerRegistry == null || listenerRegistry.getListenerContainerIds().isEmpty()) {
             details.put("kafka", "NOT_CONFIGURED");

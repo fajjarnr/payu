@@ -59,8 +59,6 @@ export const visuallyHidden = `
 
 /**
  * useFocusTrap hook to trap focus within a component (modals, dialogs)
- * @param active - Whether the focus trap is active
- * @param containerRef - Optional ref to the container element for better scoping
  */
 export function useFocusTrap(active: boolean = true, containerRef?: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -98,9 +96,6 @@ export function useFocusTrap(active: boolean = true, containerRef?: React.RefObj
   }, [active, containerRef]);
 }
 
-/**
- * useA11yAnnouncer hook for screen reader announcements
- */
 export function useA11yAnnouncer() {
   const [announcement, setAnnouncement] = useState('');
 
@@ -124,9 +119,6 @@ export function useA11yAnnouncer() {
   };
 }
 
-/**
- * getA11yProps - Helper to generate accessibility props
- */
 export function getA11yProps(config: {
   label?: string;
   describedBy?: string;
@@ -149,10 +141,6 @@ export function getA11yProps(config: {
   return props;
 }
 
-/**
- * a11yUtils - Collection of accessibility utilities
- * Exported as a namespace for easier importing
- */
 export const a11yUtils = {
   useFocusTrap,
   useA11yAnnouncer,

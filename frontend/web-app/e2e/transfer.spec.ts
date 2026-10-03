@@ -41,7 +41,6 @@ test.describe('PayU E2E — login + transfer (real)', () => {
         }, TEST_USER.recipient);
       });
     } else {
-      // No favorite seeded — fill directly
       const recipientInput = page.getByTestId('recipient-account-input');
       await recipientInput.click({ force: true }).catch(() => {});
       await recipientInput.fill(TEST_USER.recipient).catch(async () => {

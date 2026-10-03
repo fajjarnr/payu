@@ -2,7 +2,6 @@
 # Seeds Vault with initial secrets after deployment
 # Run ONCE after Vault pod is ready:
 #   oc apply -f vault-init-job.yaml
-# ============================================================
 #
 # This job:
 # 1. Enables KV-v2 secrets engine
@@ -11,7 +10,6 @@
 # IMPORTANT:
 # - Secret payu-dev/vault-bootstrap must exist with key root-token
 # - Override POSTGRES_* and KEYCLOAK_* env vars in a PipelineRun/Job patch when needed
-# ============================================================
 
 apiVersion: batch/v1
 kind: Job

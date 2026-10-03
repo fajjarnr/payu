@@ -33,16 +33,13 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  // Memoize balance calculation
   const balance = useMemo(() => wallet?.balance ?? 0, [wallet?.balance]);
 
-  // Flatten infinite query pages into a single array (memoized)
   const transactions = useMemo(
     () => transactionsData?.pages.flatMap(page => page.items) ?? [],
     [transactionsData]
   );
 
-  // Display transactions (limited to 5, memoized)
   const displayTransactions = useMemo(
     () => transactions.slice(0, 5),
     [transactions]
@@ -53,10 +50,8 @@ export default function HomeScreen() {
     return () => router.push(`/transaction/${transactionId}`);
   }, [router]);
 
-  // Key extractor for FlashList
   const keyExtractor = useCallback((item: Transaction) => `transaction-${item.id}`, []);
 
-  // Render item for FlashList
   const renderTransactionItem: ListRenderItem<Transaction> = useCallback(({ item }) => (
     <TransactionItem
       transaction={item}
@@ -65,7 +60,6 @@ export default function HomeScreen() {
     />
   ), [handleTransactionPress]);
 
-  // Memoize onRefresh with proper cleanup
   const onRefresh = useCallback(async () => {
     if (!isMountedRef.current) return;
 
@@ -81,34 +75,28 @@ export default function HomeScreen() {
     }
   }, [refetch, refreshPrimary]);
 
-  // Memoize load more function
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage && isMountedRef.current) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Memoize toggle balance callback
   const handleToggleBalance = useCallback(() => {
     setShowBalance(!showBalance);
   }, [showBalance, setShowBalance]);
 
-  // Memoize notification press callback
   const handleNotificationPress = useCallback(() => {
     router.push('/notifications');
   }, [router]);
 
-  // Memoize action press callback
   const handleActionPress = useCallback((action: any) => {
     router.push(action.route);
   }, [router]);
 
-  // Memoize see all press callback
   const handleSeeAllPress = useCallback(() => {
     router.push('/(tabs)/history');
   }, [router]);
 
-  // Cleanup on unmount
   React.useEffect(() => {
     return () => {
       isMountedRef.current = false;
@@ -117,7 +105,6 @@ export default function HomeScreen() {
 
   const ListHeaderComponent = useCallback(() => (
     <>
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={[styles.greeting, { color: colors.text }]}>
@@ -135,7 +122,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Balance Card */}
       <BalanceCard
         balance={balance}
         accountNumber="•••• 1234"
@@ -144,7 +130,6 @@ export default function HomeScreen() {
         style={styles.balanceCard}
       />
 
-      {/* Quick Actions */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Quick Actions
@@ -154,7 +139,6 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Recent Transactions Header */}
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Recent Transactions
@@ -191,7 +175,6 @@ export default function HomeScreen() {
     ) : null
   ), [hasNextPage, loadMore]);
 
-  // Show loading or empty state in a ScrollView
   if (isLoadingTransactions || transactions.length === 0) {
     return (
       <FlashList

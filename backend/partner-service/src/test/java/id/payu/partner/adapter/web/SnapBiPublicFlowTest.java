@@ -109,9 +109,6 @@ class SnapBiPublicFlowTest {
         partner.setWebhookUrl("https://partner.example.com/webhooks/payu");
         partner = partnerRepository.save(partner);
 
-        // Deterministic token round-trip without the distributed cache:
-        // generateAccessToken issues a fixed token; getClientIdFromToken resolves
-        // it back to this partner's client key.
         when(tokenService.generateAccessToken(clientKey, partner.getId().toString(), partner.getName()))
                 .thenReturn("fixture-token-" + partner.getId());
         when(tokenService.getClientIdFromToken("fixture-token-" + partner.getId()))
@@ -125,7 +122,6 @@ class SnapBiPublicFlowTest {
     @Test
     @DisplayName("full flow: token -> payment -> status -> refund")
     void fullMoneyFlowThroughPublicContract() throws Exception {
-        // --- token ---
         String tokenBody = "{\"grantType\":\"client_credentials\"}";
         String tokenTs = timestamp();
         String tokenSig = signatureService.generateSignatureWithClientKey(
@@ -145,7 +141,6 @@ class SnapBiPublicFlowTest {
         JsonNode tokenJson = objectMapper.readTree(tokenResponse);
         String accessToken = tokenJson.get("accessToken").asText();
 
-        // --- payment ---
         String paymentBody = """
                 {"partnerReferenceNo":"PRN-006-%s","amount":{"value":"100.00","currency":"IDR"},
                  "sourceAccountNo":"SRC-006","beneficiaryAccountNo":"BEN-006","beneficiaryBankCode":"014"}
@@ -170,7 +165,6 @@ class SnapBiPublicFlowTest {
 
         verify(walletSettlementPort).settle(anyString(), anyString(), any(), anyString(), anyString());
 
-        // --- status ---
         String statusTs = timestamp();
         String statusSig = signatureService.generateSignature(
                 clientSecret, "GET", CONTRACT_BASE + "/payments/" + payuRef, accessToken, "", statusTs);
@@ -183,7 +177,6 @@ class SnapBiPublicFlowTest {
                 .andExpect(jsonPath("$.responseCode").value("2002500"))
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
 
-        // --- refund ---
         String refundBody = """
                 {"partnerRefundNo":"RFN-006-%s","amount":{"value":"100.00","currency":"IDR"},"reason":"fixture refund"}
                 """.formatted(System.currentTimeMillis());

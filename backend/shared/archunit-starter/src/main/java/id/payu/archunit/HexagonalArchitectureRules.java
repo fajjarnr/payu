@@ -43,10 +43,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 public final class HexagonalArchitectureRules {
 
     private HexagonalArchitectureRules() {
-        // Utility class - prevent instantiation
     }
-
-    // Layer package patterns
 
     /**
      * Standard package patterns for hexagonal architecture layers.
@@ -104,15 +101,11 @@ public final class HexagonalArchitectureRules {
         "..external.."
     };
 
-    // Rule 1: domain independence
-
     /**
      * Rule: Domain layer should not depend on infrastructure, adapters, or Spring framework.
      *
      * <p>This ensures the domain layer remains pure Java with no framework dependencies,
      * making it highly testable and portable.
-     *
-     * @return ArchRule enforcing domain independence
      */
     public static ArchRule domainShouldNotDependOnInfrastructure() {
         return noClasses()
@@ -133,8 +126,6 @@ public final class HexagonalArchitectureRules {
      * Rule: Domain layer should not depend on application layer.
      *
      * <p>The domain is the inner core and should not know about use cases or application services.
-     *
-     * @return ArchRule enforcing domain-application boundary
      */
     public static ArchRule domainShouldNotDependOnApplication() {
         return noClasses()
@@ -147,15 +138,11 @@ public final class HexagonalArchitectureRules {
                         "Application layer depends on domain, not vice versa");
     }
 
-    // Rule 2: application layer port access
-
     /**
      * Rule: Application layer should only access repositories through port interfaces.
      *
      * <p>Application services should depend on Repository Port interfaces (output ports),
      * not on concrete repository implementations.
-     *
-     * @return ArchRule enforcing port-based repository access
      */
     public static ArchRule applicationShouldOnlyAccessRepositoriesThroughPorts() {
         return classes()
@@ -191,15 +178,11 @@ public final class HexagonalArchitectureRules {
                         "should be in infrastructure layer");
     }
 
-    // Rule 3: adapter isolation
-
     /**
      * Rule: Adapters should not leak into domain layer.
      *
      * <p>Domain code should never directly call adapter classes. All communication
      * should go through ports.
-     *
-     * @return ArchRule enforcing adapter isolation
      */
     public static ArchRule adaptersShouldNotLeakIntoDomain() {
         return noClasses()
@@ -214,8 +197,6 @@ public final class HexagonalArchitectureRules {
 
     /**
      * Rule: Adapters should implement ports and be in infrastructure layer.
-     *
-     * @return ArchRule enforcing adapter location and implementation
      */
     public static ArchRule adaptersShouldImplementPorts() {
         return classes()
@@ -229,14 +210,10 @@ public final class HexagonalArchitectureRules {
                 .because("Adapters should be in infrastructure layer and implement Port interfaces");
     }
 
-    // Rule 4: transactional use cases
-
     /**
      * Rule: All use case methods should be annotated with @Transactional.
      *
      * <p>Ensures that business operations are atomic and properly managed.
-     *
-     * @return ArchRule enforcing @Transactional on use cases
      */
     public static ArchRule useCasesShouldBeTransactional() {
         return methods()
@@ -260,8 +237,6 @@ public final class HexagonalArchitectureRules {
     /**
      * Alternative rule: Use cases that modify state should be transactional.
      * Excludes query methods (starting with 'get', 'find', 'search').
-     *
-     * @return ArchRule enforcing @Transactional on state-modifying use cases
      */
     public static ArchRule stateModifyingUseCasesShouldBeTransactional() {
         return methods()
@@ -301,15 +276,11 @@ public final class HexagonalArchitectureRules {
                         "data consistency. Query methods are excluded");
     }
 
-    // Rule 5: repository port contracts
-
     /**
      * Rule: Repository port methods should return domain objects, not entities.
      *
      * <p>Repository ports (interfaces in domain layer) should work with domain aggregates
      * and value objects, not JPA entities or infrastructure types.
-     *
-     * @return ArchRule enforcing domain object returns from repository ports
      */
     public static ArchRule repositoriesShouldNotReturnEntities() {
         return methods()
@@ -336,7 +307,6 @@ public final class HexagonalArchitectureRules {
                     public void check(JavaMethod method, ConditionEvents events) {
                         JavaClass returnType = method.getRawReturnType();
 
-                        // Check if return type contains "Entity" in name
                         if (returnType.getSimpleName().endsWith("Entity")) {
                             events.add(SimpleConditionEvent.violated(method,
                                     String.format("Method %s in %s returns JPA entity %s. " +
@@ -346,7 +316,6 @@ public final class HexagonalArchitectureRules {
                                             returnType.getName())));
                         }
 
-                        // Check for JPA annotations on return type
                         if (returnType.isAnnotatedWith("jakarta.persistence.Entity")) {
                             events.add(SimpleConditionEvent.violated(method,
                                     String.format("Method %s in %s returns type annotated with @Entity. " +
@@ -360,12 +329,8 @@ public final class HexagonalArchitectureRules {
                         "This keeps the domain layer independent of persistence technology");
     }
 
-    // Additional helper rules
-
     /**
      * Rule: Domain entities should be in domain.model package.
-     *
-     * @return ArchRule enforcing domain entity location
      */
     public static ArchRule domainEntitiesShouldBeInModelPackage() {
         return classes()
@@ -380,8 +345,6 @@ public final class HexagonalArchitectureRules {
 
     /**
      * Rule: JPA entities should be in infrastructure/persistence layer.
-     *
-     * @return ArchRule enforcing JPA entity location
      */
     public static ArchRule jpaEntitiesShouldBeInInfrastructure() {
         return classes()
@@ -399,8 +362,6 @@ public final class HexagonalArchitectureRules {
 
     /**
      * Rule: Ports should be interfaces.
-     *
-     * @return ArchRule enforcing port interface type
      */
     public static ArchRule portsShouldBeInterfaces() {
         return classes()
@@ -415,8 +376,6 @@ public final class HexagonalArchitectureRules {
 
     /**
      * Rule: Dependency direction should follow: Infrastructure → Application → Domain.
-     *
-     * @return ArchRule enforcing correct dependency direction
      */
     public static ArchRule dependencyDirectionShouldFollowHexagonal() {
         return noClasses()
@@ -442,8 +401,6 @@ public final class HexagonalArchitectureRules {
      * live in the client adapter package. Application/scheduler code that talks
      * to another service directly over HTTP bypasses the hexagonal boundary and
      * the resilience/correlation handling of the adapter layer.
-     *
-     * @return ArchRule forbidding raw HTTP clients outside adapter.client
      */
     public static ArchRule httpClientsOnlyInClientAdapters() {
         return noClasses()
@@ -468,11 +425,6 @@ public final class HexagonalArchitectureRules {
                         + "(config classes may wire client beans)");
     }
 
-    /**
-     * Combined rule set for comprehensive hexagonal architecture validation.
-     *
-     * @return List of all core hexagonal architecture rules
-     */
     public static List<ArchRule> allRules() {
         return Arrays.asList(
                 domainShouldNotDependOnInfrastructure(),

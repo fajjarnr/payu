@@ -3,12 +3,6 @@
  * Handles Indonesian locale formatting and timezone handling
  */
 
-/**
- * Format date to Indonesian locale string
- * @param date - Date to format (Date object, ISO string, or timestamp)
- * @param options - Formatting options
- * @returns Formatted date string
- */
 export function formatDate(
   date: Date | string | number | null | undefined,
   options: {
@@ -24,7 +18,6 @@ export function formatDate(
 
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
 
-  // Check if invalid date
   if (isNaN(dateObj.getTime())) {
     return '-';
   }
@@ -63,12 +56,6 @@ export function formatDate(
   return dateObj.toLocaleDateString(locale, formatOptions);
 }
 
-/**
- * Format date and time to Indonesian locale string
- * @param date - Date to format
- * @param options - Formatting options
- * @returns Formatted datetime string
- */
 export function formatDateTime(
   date: Date | string | number | null | undefined,
   options: {
@@ -116,9 +103,6 @@ export function formatDateTime(
 
 /**
  * Format relative time (e.g., "2 jam yang lalu", "besok")
- * @param date - Date to compare
- * @param options - Formatting options
- * @returns Relative time string
  */
 export function relativeTime(
   date: Date | string | number | null | undefined,
@@ -149,7 +133,6 @@ export function relativeTime(
   const diffMonths = (now.getFullYear() - dateObj.getFullYear()) * 12 + (now.getMonth() - dateObj.getMonth());
   const diffYears = Math.floor(diffDays / 365);
 
-  // Future
   if (diffMs < 0) {
     const absDiffSeconds = Math.abs(diffSeconds);
     const absDiffMinutes = Math.abs(diffMinutes);
@@ -173,7 +156,6 @@ export function relativeTime(
     }
   }
 
-  // Past
   if (diffSeconds < 60) {
     return 'baru saja';
   }
@@ -204,8 +186,6 @@ export function relativeTime(
 
 /**
  * Format date for API requests (ISO 8601)
- * @param date - Date to format
- * @returns ISO string or null
  */
 export function toISOString(date: Date | string | number | null | undefined): string | null {
   if (!date) {
@@ -223,8 +203,6 @@ export function toISOString(date: Date | string | number | null | undefined): st
 
 /**
  * Parse date from various formats
- * @param date - Date string or object to parse
- * @returns Date object or null
  */
 export function parseDate(date: string | Date | null | undefined): Date | null {
   if (!date) {
@@ -239,11 +217,6 @@ export function parseDate(date: string | Date | null | undefined): Date | null {
   return isNaN(parsed.getTime()) ? null : parsed;
 }
 
-/**
- * Check if date is today
- * @param date - Date to check
- * @returns True if date is today
- */
 export function isToday(date: Date | string | number): boolean {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
   const today = new Date();
@@ -255,53 +228,28 @@ export function isToday(date: Date | string | number): boolean {
   );
 }
 
-/**
- * Check if date is in the past
- * @param date - Date to check
- * @returns True if date is in the past
- */
 export function isPast(date: Date | string | number): boolean {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
   return dateObj.getTime() < new Date().getTime();
 }
 
-/**
- * Check if date is in the future
- * @param date - Date to check
- * @returns True if date is in the future
- */
 export function isFuture(date: Date | string | number): boolean {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
   return dateObj.getTime() > new Date().getTime();
 }
 
-/**
- * Get start of day
- * @param date - Date to get start of day for (default: today)
- * @returns Date object set to midnight
- */
 export function startOfDay(date: Date | string | number = new Date()): Date {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : new Date(date);
   dateObj.setHours(0, 0, 0, 0);
   return dateObj;
 }
 
-/**
- * Get end of day
- * @param date - Date to get end of day for (default: today)
- * @returns Date object set to 23:59:59.999
- */
 export function endOfDay(date: Date | string | number = new Date()): Date {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : new Date(date);
   dateObj.setHours(23, 59, 59, 999);
   return dateObj;
 }
 
-/**
- * Get start of month
- * @param date - Date to get start of month for (default: today)
- * @returns Date object set to first day of month at midnight
- */
 export function startOfMonth(date: Date | string | number = new Date()): Date {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : new Date(date);
   dateObj.setDate(1);
@@ -309,11 +257,6 @@ export function startOfMonth(date: Date | string | number = new Date()): Date {
   return dateObj;
 }
 
-/**
- * Get end of month
- * @param date - Date to get end of month for (default: today)
- * @returns Date object set to last day of month at 23:59:59.999
- */
 export function endOfMonth(date: Date | string | number = new Date()): Date {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : new Date(date);
   dateObj.setMonth(dateObj.getMonth() + 1);
@@ -322,56 +265,26 @@ export function endOfMonth(date: Date | string | number = new Date()): Date {
   return dateObj;
 }
 
-/**
- * Add days to date
- * @param date - Date to add days to
- * @param days - Number of days to add
- * @returns New date with days added
- */
 export function addDays(date: Date | string | number, days: number): Date {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : new Date(date);
   dateObj.setDate(dateObj.getDate() + days);
   return dateObj;
 }
 
-/**
- * Subtract days from date
- * @param date - Date to subtract days from
- * @param days - Number of days to subtract
- * @returns New date with days subtracted
- */
 export function subtractDays(date: Date | string | number, days: number): Date {
   return addDays(date, -days);
 }
 
-/**
- * Add months to date
- * @param date - Date to add months to
- * @param months - Number of months to add
- * @returns New date with months added
- */
 export function addMonths(date: Date | string | number, months: number): Date {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : new Date(date);
   dateObj.setMonth(dateObj.getMonth() + months);
   return dateObj;
 }
 
-/**
- * Subtract months from date
- * @param date - Date to subtract months from
- * @param months - Number of months to subtract
- * @returns New date with months subtracted
- */
 export function subtractMonths(date: Date | string | number, months: number): Date {
   return addMonths(date, -months);
 }
 
-/**
- * Get difference between two dates in days
- * @param date1 - First date
- * @param date2 - Second date
- * @returns Difference in days (can be negative)
- */
 export function diffInDays(date1: Date | string | number, date2: Date | string | number): number {
   const d1 = typeof date1 === 'string' || typeof date1 === 'number' ? new Date(date1) : new Date(date1);
   const d2 = typeof date2 === 'string' || typeof date2 === 'number' ? new Date(date2) : new Date(date2);
@@ -380,13 +293,6 @@ export function diffInDays(date1: Date | string | number, date2: Date | string |
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
-/**
- * Format date range
- * @param startDate - Start date
- * @param endDate - End date
- * @param options - Formatting options
- * @returns Formatted date range string
- */
 export function formatDateRange(
   startDate: Date | string | number,
   endDate: Date | string | number,
@@ -401,12 +307,10 @@ export function formatDateRange(
     return '-';
   }
 
-  // Same day
   if (start.toDateString() === end.toDateString()) {
     return formatDate(start, { format, locale });
   }
 
-  // Same month
   if (
     start.getMonth() === end.getMonth() &&
     start.getFullYear() === end.getFullYear()
@@ -416,20 +320,13 @@ export function formatDateRange(
     return `${start.toLocaleDateString(locale, { day: 'numeric', month: format === 'short' ? 'short' : 'long' })} - ${end.toLocaleDateString(locale, { day: 'numeric', month: format === 'short' ? 'short' : 'long', year: 'numeric' })}`;
   }
 
-  // Same year
   if (start.getFullYear() === end.getFullYear()) {
     return `${formatDate(start, { format: 'day-month', locale })} - ${formatDate(end, { format, locale })}`;
   }
 
-  // Different years
   return `${formatDate(start, { format, locale })} - ${formatDate(end, { format, locale })}`;
 }
 
-/**
- * Get age from birth date
- * @param birthDate - Birth date
- * @returns Age in years
- */
 export function getAge(birthDate: Date | string | number): number {
   const birth = typeof birthDate === 'string' || typeof birthDate === 'number' ? new Date(birthDate) : birthDate;
   const today = new Date();
@@ -444,12 +341,6 @@ export function getAge(birthDate: Date | string | number): number {
   return age;
 }
 
-/**
- * Format duration in human-readable format
- * @param seconds - Duration in seconds
- * @param options - Formatting options
- * @returns Formatted duration string
- */
 export function formatDuration(
   seconds: number,
   options: { locale?: string; style?: 'long' | 'short' } = {}
@@ -479,13 +370,6 @@ export function formatDuration(
   return parts.join(' ');
 }
 
-/**
- * Check if date is within specified range
- * @param date - Date to check
- * @param startDate - Range start
- * @param endDate - Range end
- * @returns True if date is within range
- */
 export function isWithinRange(
   date: Date | string | number,
   startDate: Date | string | number,
@@ -500,7 +384,6 @@ export function isWithinRange(
 
 /**
  * Get timezone offset in minutes
- * @param date - Date to get offset for (default: now)
  * @returns Offset in minutes (e.g., +420 for WIB/UTC+7)
  */
 export function getTimezoneOffset(date: Date | string | number = new Date()): number {
@@ -510,9 +393,6 @@ export function getTimezoneOffset(date: Date | string | number = new Date()): nu
 
 /**
  * Format date with time suffix (pagi, siang, sore, malam)
- * @param date - Date to format
- * @param options - Formatting options
- * @returns Formatted date with time suffix
  */
 export function formatDateTimeWithSuffix(
   date: Date | string | number | null | undefined,

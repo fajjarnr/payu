@@ -11,31 +11,7 @@ import java.lang.annotation.Target;
 
 /**
  * Marker annotation for integration tests that require Docker.
- * <p>
- * Integration tests annotated with {@code @IntegrationTest} will only run
- * when the {@code docker.enabled} system property is set to {@code true}.
- * <p>
- * Usage:
- * <pre>
- * {@code
- * @IntegrationTest
- * @SpringBootTest
- * @ActiveProfiles("integrationtest")
- * class MyRepositoryIntegrationTest {
- *     // Integration test methods
- * }
- * }
- * </pre>
- * <p>
- * Running integration tests:
- * <pre>
- * ./mvnw test -Ddocker.enabled=true
- * </pre>
- * <p>
- * Skipping integration tests (default):
- * <pre>
- * ./mvnw test
- * </pre>
+ * Tests only run when the {@code docker.enabled} system property is {@code true}.
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

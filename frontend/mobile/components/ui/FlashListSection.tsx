@@ -30,15 +30,12 @@ export const FlashListSectionComponent: React.FC<FlashListSectionProps> = ({
 }) => {
   const { colors } = useTheme();
 
-  // Performance: Memoize render item callback
   const renderItem = useCallback(({ item }: { item: ListItem }) => {
     return item.component;
   }, []);
 
-  // Performance: Memoize key extractor
   const keyExtractor = useCallback((item: ListItem) => item.id, []);
 
-  // Performance: Memoize list style
   const listStyle = useMemo<ViewStyle>(() => ({
     backgroundColor: colors.background,
   }), [colors.background]);
@@ -57,7 +54,6 @@ export const FlashListSectionComponent: React.FC<FlashListSectionProps> = ({
   );
 };
 
-// Performance: Memoize FlashListSection component to prevent unnecessary re-renders
 export const FlashListSection = memo(FlashListSectionComponent, (prevProps, nextProps) => {
   return (
     prevProps.items === nextProps.items &&

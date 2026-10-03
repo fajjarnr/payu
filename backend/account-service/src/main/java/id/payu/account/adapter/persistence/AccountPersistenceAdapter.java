@@ -40,7 +40,6 @@ public class AccountPersistenceAdapter implements AccountPersistencePort {
     @Override
     public Optional<id.payu.account.domain.model.Account> findByExternalId(String externalId) {
         // External ID is not stored in accounts table - return empty
-        // This would need to be added to schema if required
         return Optional.empty();
     }
 

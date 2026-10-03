@@ -60,9 +60,7 @@ catalog:
   rules:
     - allow: [Component, System, API, Resource, Location, Group, User]
   locations:
-    # ──────────────────────────────────────────────
     # PayU Core Banking Services (Spring Boot 3.4)
-    # ──────────────────────────────────────────────
     - type: url
       target: https://github.com/payu-org/payu/blob/main/backend/account-service/catalog-info.yaml
       rules:
@@ -128,9 +126,7 @@ catalog:
       rules:
         - allow: [Component, API]
 
-    # ──────────────────────────────────────────────
     # Quarkus Native Services
-    # ──────────────────────────────────────────────
     - type: url
       target: https://github.com/payu-org/payu/blob/main/backend/billing-service/catalog-info.yaml
       rules:
@@ -148,9 +144,7 @@ catalog:
       rules:
         - allow: [Component, API]
 
-    # ──────────────────────────────────────────────
     # Python FastAPI Services
-    # ──────────────────────────────────────────────
     - type: url
       target: https://github.com/payu-org/payu/blob/main/backend/kyc-service/catalog-info.yaml
       rules:

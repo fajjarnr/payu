@@ -5,9 +5,6 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.math.BigDecimal;
 
-/**
- * Abstract base class for amount validators.
- */
 public abstract class AbstractAmountValidator<A extends java.lang.annotation.Annotation>
         implements ConstraintValidator<A, BigDecimal> {
 

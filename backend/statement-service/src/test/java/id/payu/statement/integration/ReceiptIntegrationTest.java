@@ -47,14 +47,12 @@ class ReceiptIntegrationTest {
         // Clear receipts before each test
         receiptJpaRepository.deleteAll();
 
-        // Setup mock JWT token for authentication
         authToken = "Bearer mock-jwt-token";
     }
 
     @Test
     @DisplayName("Should generate receipt for transaction")
     void shouldGenerateReceiptForTransaction() {
-        // Given
         ReceiptGenerationRequest request = ReceiptGenerationRequest.builder()
                 .transactionId("TXN-INT-001")
                 .customerId("CUST-001")
@@ -65,28 +63,24 @@ class ReceiptIntegrationTest {
         headers.set("Authorization", authToken);
         HttpEntity<ReceiptGenerationRequest> entity = new HttpEntity<>(request, headers);
 
-        // When
         ResponseEntity<ReceiptResponse> response = restTemplate.postForEntity(
                 "/api/v1/statements/receipts/generate",
                 entity,
                 ReceiptResponse.class
         );
 
-        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("TXN-INT-001", response.getBody().getTransactionId());
         assertNotNull(response.getBody().getReceiptId());
         assertEquals(ReceiptStatus.GENERATED, response.getBody().getStatus());
 
-        // Verify in database
         assertTrue(receiptJpaRepository.existsByTransactionId("TXN-INT-001"));
     }
 
     @Test
     @DisplayName("Should return existing receipt when regenerating")
     void shouldReturnExistingReceiptWhenRegenerating() {
-        // Given - Create existing receipt
         ReceiptEntity existingReceipt = ReceiptEntity.builder()
                 .id(UUID.randomUUID())
                 .transactionId("TXN-INT-002")
@@ -116,19 +110,16 @@ class ReceiptIntegrationTest {
         headers.set("Authorization", authToken);
         HttpEntity<ReceiptGenerationRequest> entity = new HttpEntity<>(request, headers);
 
-        // When
         ResponseEntity<ReceiptResponse> response = restTemplate.postForEntity(
                 "/api/v1/statements/receipts/generate",
                 entity,
                 ReceiptResponse.class
         );
 
-        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(existingReceipt.getId(), response.getBody().getReceiptId());
 
-        // Verify access count was updated
         ReceiptEntity updated = receiptJpaRepository.findByTransactionId("TXN-INT-002").orElseThrow();
         assertEquals(1, updated.getAccessCount());
     }
@@ -136,7 +127,6 @@ class ReceiptIntegrationTest {
     @Test
     @DisplayName("Should get receipt by ID")
     void shouldGetReceiptById() {
-        // Given
         UUID receiptId = UUID.randomUUID();
         ReceiptEntity receipt = ReceiptEntity.builder()
                 .id(receiptId)
@@ -161,7 +151,6 @@ class ReceiptIntegrationTest {
         headers.set("Authorization", authToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // When
         ResponseEntity<ReceiptResponse> response = restTemplate.exchange(
                 "/api/v1/statements/receipts/" + receiptId,
                 HttpMethod.GET,
@@ -169,7 +158,6 @@ class ReceiptIntegrationTest {
                 ReceiptResponse.class
         );
 
-        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(receiptId, response.getBody().getReceiptId());
@@ -181,14 +169,12 @@ class ReceiptIntegrationTest {
     @Test
     @DisplayName("Should return 404 for non-existent receipt")
     void shouldReturn404ForNonExistentReceipt() {
-        // Given
         UUID nonExistentId = UUID.randomUUID();
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", authToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // When
         ResponseEntity<String> response = restTemplate.exchange(
                 "/api/v1/statements/receipts/" + nonExistentId,
                 HttpMethod.GET,
@@ -196,14 +182,12 @@ class ReceiptIntegrationTest {
                 String.class
         );
 
-        // Then
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     @DisplayName("Should get receipt by transaction ID")
     void shouldGetReceiptByTransactionId() {
-        // Given
         UUID receiptId = UUID.randomUUID();
         ReceiptEntity receipt = ReceiptEntity.builder()
                 .id(receiptId)
@@ -228,7 +212,6 @@ class ReceiptIntegrationTest {
         headers.set("Authorization", authToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // When
         ResponseEntity<ReceiptResponse> response = restTemplate.exchange(
                 "/api/v1/statements/receipts/transaction/TXN-INT-004",
                 HttpMethod.GET,
@@ -236,7 +219,6 @@ class ReceiptIntegrationTest {
                 ReceiptResponse.class
         );
 
-        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(receiptId, response.getBody().getReceiptId());
@@ -246,7 +228,6 @@ class ReceiptIntegrationTest {
     @Test
     @DisplayName("Should download receipt PDF")
     void shouldDownloadReceiptPdf() {
-        // Given
         UUID receiptId = UUID.randomUUID();
         ReceiptEntity receipt = ReceiptEntity.builder()
                 .id(receiptId)
@@ -271,7 +252,6 @@ class ReceiptIntegrationTest {
         headers.set("Authorization", authToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // When
         ResponseEntity<byte[]> response = restTemplate.exchange(
                 "/api/v1/statements/receipts/" + receiptId + "/download",
                 HttpMethod.GET,
@@ -279,13 +259,11 @@ class ReceiptIntegrationTest {
                 byte[].class
         );
 
-        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().length > 0);
         assertEquals(MediaType.APPLICATION_PDF, response.getHeaders().getContentType());
 
-        // Verify access count was updated
         ReceiptEntity updated = receiptJpaRepository.findById(receiptId).orElseThrow();
         assertEquals(1, updated.getAccessCount());
         assertNotNull(updated.getLastAccessedAt());
@@ -294,7 +272,6 @@ class ReceiptIntegrationTest {
     @Test
     @DisplayName("Should return 410 for expired receipt PDF download")
     void shouldReturn410ForExpiredReceiptPdfDownload() {
-        // Given
         UUID receiptId = UUID.randomUUID();
         ReceiptEntity expiredReceipt = ReceiptEntity.builder()
                 .id(receiptId)
@@ -319,7 +296,6 @@ class ReceiptIntegrationTest {
         headers.set("Authorization", authToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // When
         ResponseEntity<String> response = restTemplate.exchange(
                 "/api/v1/statements/receipts/" + receiptId + "/download",
                 HttpMethod.GET,
@@ -327,14 +303,12 @@ class ReceiptIntegrationTest {
                 String.class
         );
 
-        // Then
         assertEquals(HttpStatus.GONE, response.getStatusCode());
     }
 
     @Test
     @DisplayName("Should return masked account numbers")
     void shouldReturnMaskedAccountNumbers() {
-        // Given
         UUID receiptId = UUID.randomUUID();
         ReceiptEntity receipt = ReceiptEntity.builder()
                 .id(receiptId)
@@ -359,7 +333,6 @@ class ReceiptIntegrationTest {
         headers.set("Authorization", authToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // When
         ResponseEntity<ReceiptResponse> response = restTemplate.exchange(
                 "/api/v1/statements/receipts/" + receiptId,
                 HttpMethod.GET,
@@ -367,7 +340,6 @@ class ReceiptIntegrationTest {
                 ReceiptResponse.class
         );
 
-        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("****7890", response.getBody().getSenderAccountMasked());

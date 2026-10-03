@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# PayU Platform - Build Single Service with Podman
-# ===============================================
 # This script builds a single PayU microservice using Podman
 # Requirements: podman, buildah
-#
 # Usage: ./build-service-podman.sh <SERVICE_NAME> [OPTIONS]
 #   SERVICE_NAME           Name of the service to build
 #   -t, --tag TAG          Tag for the image (default: 1.4.0)
@@ -15,20 +12,17 @@
 
 set -euo pipefail
 
-# Configuration
 DEFAULT_TAG="1.5.0"
 DEFAULT_REGISTRY="localhost"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../" && pwd)"
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -75,7 +69,6 @@ Examples:
 EOF
 }
 
-# Parse arguments
 SERVICE_NAME=""
 TAG="$DEFAULT_TAG"
 PUSH=false
@@ -91,7 +84,6 @@ fi
 SERVICE_NAME="$1"
 shift
 
-# Parse options
 while [[ $# -gt 0 ]]; do
     case $1 in
         -t|--tag)
@@ -122,7 +114,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check dependencies
 check_dependencies() {
     local missing_deps=()
 
@@ -139,20 +130,16 @@ check_dependencies() {
     fi
 }
 
-# Find Containerfile for service
 find_containerfile() {
     local service_name="$1"
     local containerfile
 
-    # Find Containerfile by exact path match
     containerfile=$(find "$PROJECT_ROOT" -name "Containerfile" -path "*/${service_name}/Containerfile" -type f | head -1)
 
-    # If not found, try service name pattern
     if [[ -z "$containerfile" ]]; then
         containerfile=$(find "$PROJECT_ROOT" -name "Containerfile" -type f | grep -i "${service_name}" | head -1)
     fi
 
-    # If still not found, look for partial matches
     if [[ -z "$containerfile" ]]; then
         local services
         services=$(find "$PROJECT_ROOT" -name "Containerfile" -type f | sort)
@@ -178,7 +165,6 @@ find_containerfile() {
     echo "$containerfile"
 }
 
-# Get build context
 get_build_context() {
     local containerfile="$1"
     local context_dir
@@ -197,7 +183,6 @@ get_build_context() {
     echo "$context_dir"
 }
 
-# Generate quadlet file
 generate_quadlet() {
     local service_name="$1"
     local image_tag="$2"
@@ -246,7 +231,6 @@ EOF
     log_success "Generated quadlet file: $quadlet_file"
 }
 
-# Build service
 build_service() {
     local service_name="$1"
     local containerfile="$2"
@@ -258,11 +242,9 @@ build_service() {
     log_info "Context: ${context_dir}"
     log_info "Tag: ${full_tag}"
 
-    # Create quadlet directory
     local quadlet_dir="$PROJECT_ROOT/infrastructure/quadlet"
     mkdir -p "$quadlet_dir"
 
-    # Build command
     local build_cmd=(
         podman build
         --tag "${full_tag}"
@@ -270,24 +252,20 @@ build_service() {
         "${context_dir}"
     )
 
-    # Add platform if specified
     if [[ -n "${PODMAN_PLATFORM:-}" ]]; then
         build_cmd+=("--platform=${PODMAN_PLATFORM}")
     fi
 
-    # Add build arguments from environment
     if [[ -n "${BUILD_ARGS:-}" ]]; then
         for arg in $BUILD_ARGS; do
             build_cmd+=("--build-arg=$arg")
         done
     fi
 
-    # Add multi-stage build support
     if [[ -n "${BUILD_STAGE:-}" ]]; then
         build_cmd+=("--target=${BUILD_STAGE}")
     fi
 
-    # Add security options
     build_cmd+=(
         --security-opt label=disable
         --security-opt no-new-privileges
@@ -296,17 +274,14 @@ build_service() {
         --volume "${HOME}/.m2:/root/.m2:z"
     )
 
-    # Add network if specified
     if [[ -n "${PODMAN_NETWORK:-}" ]]; then
         build_cmd+=("--network=${PODMAN_NETWORK}")
     fi
 
-    # Add parallel build if available
     if podman build --help | grep -q -- --jobs; then
         build_cmd+=("--jobs=${JOBS:-4}")
     fi
 
-    # Execute build
     if [[ "$VERBOSE" == true ]]; then
         log_info "Build command: ${build_cmd[*]}"
     fi
@@ -314,7 +289,6 @@ build_service() {
     if "${build_cmd[@]}"; then
         log_success "✓ Built ${service_name} (${full_tag})"
 
-        # Generate quadlet file
         generate_quadlet "$service_name" "$full_tag" "$quadlet_dir"
 
         echo "${full_tag}"
@@ -324,7 +298,6 @@ build_service() {
     fi
 }
 
-# Show service information
 show_service_info() {
     local service_name="$1"
     local containerfile="$2"
@@ -335,7 +308,6 @@ show_service_info() {
     log_info "  Containerfile: ${containerfile}"
     log_info "  Context: ${context_dir}"
 
-    # Show Containerfile contents summary
     if [[ -f "$containerfile" ]]; then
         local base_image
         base_image=$(grep "^FROM" "$containerfile" | head -1 | sed 's/FROM[[:space:]]*//')
@@ -347,7 +319,6 @@ show_service_info() {
     fi
 }
 
-# Main execution
 main() {
     log_info "PayU Platform - Build Single Service with Podman"
     log_info "================================================"
@@ -356,27 +327,21 @@ main() {
     log_info "Registry: ${REGISTRY}"
     log_info "Push after build: ${PUSH}"
 
-    # Check dependencies
     check_dependencies
 
-    # Find Containerfile
     log_info "Finding Containerfile for service: ${SERVICE_NAME}"
     local containerfile
     containerfile=$(find_containerfile "$SERVICE_NAME")
 
-    # Get build context
     local context_dir
     context_dir=$(get_build_context "$containerfile")
 
-    # Show service information
     show_service_info "$SERVICE_NAME" "$containerfile" "$context_dir"
 
-    # Build service
     local result
     result=$(build_service "$SERVICE_NAME" "$containerfile" "$context_dir")
 
     if [[ $? -eq 0 ]]; then
-        # Push image if requested
         if [[ "$PUSH" == true ]]; then
             log_info "Pushing image to ${REGISTRY}..."
             if podman push "$result"; then
@@ -393,5 +358,4 @@ main() {
     fi
 }
 
-# Execute main function
 main "$@"

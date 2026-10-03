@@ -1,10 +1,8 @@
 #!/bin/bash
-# ============================================
 # PayU Billing Billers E2E Test
 # Read-only biller catalog queries through gateway -> billing-service
 #
 # Mode: GATEWAY_MODE=internal (default) or apicast
-# ============================================
 
 set -e
 

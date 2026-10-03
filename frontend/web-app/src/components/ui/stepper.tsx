@@ -20,7 +20,6 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
         return (
           <React.Fragment key={step}>
             <div className="flex flex-col items-center flex-1 relative group">
-              {/* Connector Line */}
               {index > 0 && (
                 <div 
                   className={cn(
@@ -30,7 +29,6 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                 />
               )}
               
-              {/* Step Circle */}
               <div 
                 className={cn(
                   "relative z-10 flex h-10 w-10 items-center justify-center rounded-xl border-2 transition-all duration-300",
@@ -48,7 +46,6 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                 )}
               </div>
               
-              {/* Step Label */}
               <div className="mt-4 text-center">
                 <span className={cn(
                   "text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-300",

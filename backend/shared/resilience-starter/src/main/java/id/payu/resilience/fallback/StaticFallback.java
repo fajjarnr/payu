@@ -59,12 +59,6 @@ public class StaticFallback<T> implements FallbackProvider<T> {
         return new Builder<T>().withDefault(value).build();
     }
 
-    /**
-     * Create a static fallback builder.
-     *
-     * @param <T> the type of the value
-     * @return a new builder
-     */
     public static <T> Builder<T> builder() {
         return new Builder<>();
     }
@@ -73,7 +67,6 @@ public class StaticFallback<T> implements FallbackProvider<T> {
     public T provide(Exception exception) {
         log.debug("Providing static fallback for exception: {}", exception.getClass().getSimpleName());
 
-        // Check for specific exception mapping
         if (exceptionMappings != null) {
             for (Map.Entry<Class<? extends Exception>, T> entry : exceptionMappings.entrySet()) {
                 if (entry.getKey().isInstance(exception)) {
@@ -83,7 +76,6 @@ public class StaticFallback<T> implements FallbackProvider<T> {
             }
         }
 
-        // Use exception mapper if provided
         if (exceptionMapper != null) {
             try {
                 return exceptionMapper.apply(exception);
@@ -92,7 +84,6 @@ public class StaticFallback<T> implements FallbackProvider<T> {
             }
         }
 
-        // Return default value
         if (defaultValue != null) {
             return defaultValue;
         }
@@ -100,56 +91,26 @@ public class StaticFallback<T> implements FallbackProvider<T> {
         throw new IllegalStateException("No fallback value configured for exception: " + exception.getMessage(), exception);
     }
 
-    /**
-     * Builder for StaticFallback.
-     *
-     * @param <T> the type of the fallback value
-     */
     public static class Builder<T> {
         private T defaultValue;
         private final Map<Class<? extends Exception>, T> exceptionMappings = new HashMap<>();
         private Function<Exception, T> exceptionMapper;
 
-        /**
-         * Set the default fallback value.
-         *
-         * @param value the default value
-         * @return this builder
-         */
         public Builder<T> withDefault(T value) {
             this.defaultValue = value;
             return this;
         }
 
-        /**
-         * Map a specific exception type to a fallback value.
-         *
-         * @param exceptionClass the exception class
-         * @param value          the fallback value for this exception
-         * @param <E>          the exception type
-         * @return this builder
-         */
         public <E extends Exception> Builder<T> mapException(Class<E> exceptionClass, T value) {
             this.exceptionMappings.put(exceptionClass, value);
             return this;
         }
 
-        /**
-         * Set a function to map exceptions to fallback values.
-         *
-         * @param mapper the exception mapper
-         * @return this builder
-         */
         public Builder<T> withExceptionMapper(Function<Exception, T> mapper) {
             this.exceptionMapper = mapper;
             return this;
         }
 
-        /**
-         * Build the StaticFallback instance.
-         *
-         * @return the configured StaticFallback
-         */
         public StaticFallback<T> build() {
             return new StaticFallback<>(this);
         }
@@ -161,15 +122,8 @@ public class StaticFallback<T> implements FallbackProvider<T> {
     public static class Financial {
 
         private Financial() {
-            // Utility class
         }
 
-        /**
-         * Create a standard error response for unavailable services.
-         *
-         * @param serviceName the name of the unavailable service
-         * @return a map with error details
-         */
         public static Map<String, Object> serviceUnavailable(String serviceName) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "SERVICE_UNAVAILABLE");
@@ -180,12 +134,6 @@ public class StaticFallback<T> implements FallbackProvider<T> {
             return response;
         }
 
-        /**
-         * Create a standard error response for degraded operations.
-         *
-         * @param operation the name of the operation
-         * @return a map with error details
-         */
         public static Map<String, Object> degradedResponse(String operation) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "DEGRADED_MODE");
@@ -195,24 +143,11 @@ public class StaticFallback<T> implements FallbackProvider<T> {
             return response;
         }
 
-        /**
-         * Create a standard empty list response.
-         *
-         * @param <T> the type of list elements
-         * @return an empty list
-         */
         @SuppressWarnings("unchecked")
         public static <T> java.util.List<T> emptyList() {
             return java.util.Collections.emptyList();
         }
 
-        /**
-         * Create a standard empty map response.
-         *
-         * @param <K> the type of keys
-         * @param <V> the type of values
-         * @return an empty map
-         */
         @SuppressWarnings("unchecked")
         public static <K, V> Map<K, V> emptyMap() {
             return java.util.Collections.emptyMap();

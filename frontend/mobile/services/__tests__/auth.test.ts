@@ -2,7 +2,6 @@ import { authService } from '../auth.service';
 import { apiClient } from '../api';
 import { LoginCredentials, RegisterData, AuthResponse, ApiResponse } from '@/types';
 
-// Mock the apiClient
 jest.mock('../api', () => ({
   apiClient: {
     post: jest.fn(),

@@ -106,7 +106,6 @@ public class WebhookDeliveryEntity {
         this.maxAttempts = subscription.getMaxRetries();
     }
 
-    // --- Domain Methods ---
 
     /**
      * Record a successful delivery.
@@ -159,7 +158,6 @@ public class WebhookDeliveryEntity {
         return value.length() > maxLength ? value.substring(0, maxLength) : value;
     }
 
-    // --- Getters/Setters ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

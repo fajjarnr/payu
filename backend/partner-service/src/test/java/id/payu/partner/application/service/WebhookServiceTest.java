@@ -113,7 +113,6 @@ class WebhookServiceTest {
             assertFalse(result.getSecret().isEmpty());
             assertEquals(3, result.getMaxRetries());
 
-            // Verify saved entity
             ArgumentCaptor<WebhookSubscriptionEntity> captor =
                     ArgumentCaptor.forClass(WebhookSubscriptionEntity.class);
             verify(subscriptionRepository).save(captor.capture());

@@ -36,9 +36,6 @@ public class AdminProductController extends BaseController {
         this.productCatalogUseCase = productCatalogUseCase;
     }
 
-    /**
-     * Create a new product definition.
-     */
     @PostMapping
     @Audited(operation = AuditOperation.CREATE)
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody CreateProductRequest request) {
@@ -56,9 +53,6 @@ public class AdminProductController extends BaseController {
         return created("/admin/products/" + created.getProductCode(), toResponse(created));
     }
 
-    /**
-     * Get all products (including inactive).
-     */
     @GetMapping
     @Audited(operation = AuditOperation.READ)
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
@@ -67,9 +61,6 @@ public class AdminProductController extends BaseController {
         return okList(products.stream().map(this::toResponse).collect(Collectors.toList()));
     }
 
-    /**
-     * Get a specific product by code.
-     */
     @GetMapping("/{code}")
     @Audited(operation = AuditOperation.READ)
     public ResponseEntity<ProductResponse> getProduct(@PathVariable String code) {
@@ -80,9 +71,6 @@ public class AdminProductController extends BaseController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Update a product definition.
-     */
     @PutMapping("/{code}")
     @Audited(operation = AuditOperation.UPDATE)
     public ResponseEntity<ProductResponse> updateProduct(
@@ -101,9 +89,6 @@ public class AdminProductController extends BaseController {
         return ok(toResponse(updated));
     }
 
-    /**
-     * Soft delete (deactivate) a product.
-     */
     @DeleteMapping("/{code}")
     @Audited(operation = AuditOperation.UPDATE)
     public ResponseEntity<Void> deactivateProduct(@PathVariable String code) {
@@ -112,9 +97,6 @@ public class AdminProductController extends BaseController {
         return noContent();
     }
 
-    /**
-     * Activate a product.
-     */
     @PostMapping("/{code}/activate")
     @Audited(operation = AuditOperation.UPDATE)
     public ResponseEntity<Void> activateProduct(@PathVariable String code) {
@@ -123,9 +105,6 @@ public class AdminProductController extends BaseController {
         return noContent();
     }
 
-    /**
-     * Get products by type.
-     */
     @GetMapping("/type/{type}")
     @Audited(operation = AuditOperation.READ)
     public ResponseEntity<List<ProductResponse>> getProductsByType(@PathVariable ProductType type) {

@@ -36,25 +36,16 @@ public abstract class ReactiveSagaOrchestrator<T> {
         this.sagaRepository = sagaRepository;
     }
 
-    /**
-     * Initialize the orchestrator.
-     */
     protected void initialize(String sagaType, List<SagaStep<T>> steps) {
         this.sagaType = sagaType;
         this.steps.addAll(steps);
         log.info("Initialized reactive saga orchestrator for type: {} with {} steps", sagaType, steps.size());
     }
 
-    /**
-     * Execute saga reactively.
-     */
     public Mono<SagaResult<T>> execute(T initialData) {
         String sagaId = UUID.randomUUID().toString();
         return executeWithId(sagaId, initialData);
     }
-    /**
-     * Execute saga with specific ID reactively.
-     */
     public Mono<SagaResult<T>> executeWithId(String sagaId, T initialData) {
         log.info("Starting reactive saga execution: {} - type: {}", sagaId, sagaType);
 
@@ -63,9 +54,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
                 .onErrorResume(e -> handleExecutionError(sagaId, e));
     }
 
-    /**
-     * Create saga instance reactively.
-     */
     protected Mono<SagaInstance> createSagaInstanceMono(String sagaId, T initialData) {
         return Mono.fromCallable(() -> {
             Map<String, Object> payload = new HashMap<>();
@@ -78,9 +66,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    /**
-     * Execute all saga steps reactively.
-     */
     protected Mono<SagaResult<T>> executeSteps(String sagaId, SagaInstance instance, T initialData) {
         // Use a concurrent map to track state across reactive operations
         final Map<String, Object> executionState = new ConcurrentHashMap<>();
@@ -92,7 +77,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
                 .takeWhile(result -> result.isSuccess() || shouldContinueOnFailure(result))
                 .collectList()
                 .flatMap(results -> {
-                    // Check if any result failed
                     Optional<StepResult<T>> failure = results.stream()
                             .filter(r -> !r.isSuccess() && !shouldContinueOnFailure(r))
                             .findFirst();
@@ -114,16 +98,12 @@ public abstract class ReactiveSagaOrchestrator<T> {
                                 });
                     }
 
-                    // All steps succeeded
                     @SuppressWarnings("unchecked")
                     T finalData = (T) executionState.get("data");
                     return completeSaga(sagaId, instance, finalData);
                 });
     }
 
-    /**
-     * Execute a single step with reactive retry logic.
-     */
     protected Mono<StepResult<T>> executeSingleStep(String sagaId, SagaInstance instance,
                                                      SagaStep<T> step, Map<String, Object> executionState) {
         log.debug("Executing reactive step: {} for saga: {}", step.getName(), sagaId);
@@ -131,13 +111,11 @@ public abstract class ReactiveSagaOrchestrator<T> {
         @SuppressWarnings("unchecked")
         T currentData = (T) executionState.get("data");
 
-        // Check preconditions
         if (!step.canExecute(currentData)) {
             log.warn("Precondition not met for step: {} in saga: {}", step.getName(), sagaId);
             return Mono.just(StepResult.success(currentData, "Precondition not met, skipped"));
         }
 
-        // Update state
         return updateSagaState(sagaId, "EXECUTING_" + step.getName())
                 .then(executeStepWithRetryReactive(step, currentData)
                         .flatMap(result -> {
@@ -155,9 +133,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
                 );
     }
 
-    /**
-     * Execute step with reactive retry.
-     */
     protected Mono<StepResult<T>> executeStepWithRetryReactive(SagaStep<T> step, T data) {
         return Mono.defer(() -> {
             try {
@@ -176,9 +151,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
         });
     }
 
-    /**
-     * Reactive compensation.
-     */
     protected Mono<SagaResult<T>> compensateReactive(String sagaId, List<String> executedSteps,
                                                       T currentData, Throwable error) {
         log.info("Starting reactive compensation for saga: {}", sagaId);
@@ -199,9 +171,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
                 });
     }
 
-    /**
-     * Execute compensation steps reactively.
-     */
     protected Mono<SagaResult<T>> executeCompensationSteps(String sagaId, List<String> executedSteps, T currentData) {
         List<String> stepsToCompensate = new ArrayList<>(executedSteps);
         Collections.reverse(stepsToCompensate);
@@ -235,9 +204,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
                 });
     }
 
-    /**
-     * Compensate a single step.
-     */
     protected Mono<Boolean> compensateSingleStep(String sagaId, String stepName, T currentData) {
         Optional<SagaStep<T>> stepOpt = steps.stream()
                 .filter(s -> s.getName().equals(stepName) && s.hasCompensation())
@@ -260,9 +226,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-    /**
-     * Complete the saga successfully.
-     */
     protected Mono<SagaResult<T>> completeSaga(String sagaId, SagaInstance instance, T finalData) {
         return updateSagaState(sagaId, SagaState.COMPLETED.name())
                 .then(Mono.fromCallable(() -> {
@@ -277,9 +240,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
                 }).subscribeOn(Schedulers.boundedElastic()));
     }
 
-    /**
-     * Update saga state reactively.
-     */
     protected Mono<Void> updateSagaState(String sagaId, String newState) {
         return Mono.fromCallable(() -> {
             Optional<SagaInstance> instanceOpt = sagaRepository.findBySagaId(sagaId);
@@ -292,9 +252,6 @@ public abstract class ReactiveSagaOrchestrator<T> {
         }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
-    /**
-     * Record step completion.
-     */
     protected Mono<Void> recordStepCompletion(String sagaId, String stepName, Map<String, Object> metadata) {
         return Mono.fromCallable(() -> {
             Optional<SagaInstance> instanceOpt = sagaRepository.findBySagaId(sagaId);
@@ -307,25 +264,16 @@ public abstract class ReactiveSagaOrchestrator<T> {
         }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
-    /**
-     * Handle execution errors.
-     */
     protected Mono<SagaResult<T>> handleExecutionError(String sagaId, Throwable error) {
         log.error("Reactive saga execution error: {}", sagaId, error);
         return updateSagaState(sagaId, SagaState.FAILED.name())
                 .then(Mono.just(SagaResult.failure(sagaId, sagaType, error.getMessage(), "EXECUTION")));
     }
 
-    /**
-     * Check if saga should continue on step failure.
-     */
     protected boolean shouldContinueOnFailure(StepResult<T> result) {
         return !result.isTriggerCompensation();
     }
 
-    /**
-     * Get saga type.
-     */
     public String getSagaType() {
         return sagaType;
     }

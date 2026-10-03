@@ -1,7 +1,5 @@
 #!/bin/bash
 #
-# PayU K6 Load Testing Suite - Automated Execution Script
-# ========================================================
 #
 # Usage:
 #   chmod +x run-all-tests.sh

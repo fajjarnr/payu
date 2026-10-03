@@ -68,9 +68,6 @@ public class MessageProcessingService {
         return messageRepository.save(message);
     }
 
-    /**
-     * Validate a message.
-     */
     @Transactional
     public void validateMessage(String messageId) {
         IntegrationMessage message = findMessageOrThrow(messageId);
@@ -79,9 +76,6 @@ public class MessageProcessingService {
         log.debug("Message {} marked as validating", messageId);
     }
 
-    /**
-     * Transform a message.
-     */
     @Transactional
     public void transformMessage(String messageId, String transformedPayload) {
         IntegrationMessage message = findMessageOrThrow(messageId);
@@ -93,9 +87,6 @@ public class MessageProcessingService {
         log.debug("Message {} transformed successfully", messageId);
     }
 
-    /**
-     * Mark message as sent.
-     */
     @Transactional
     public void markSent(String messageId) {
         IntegrationMessage message = findMessageOrThrow(messageId);
@@ -104,9 +95,6 @@ public class MessageProcessingService {
         log.info("Message {} marked as sent", messageId);
     }
 
-    /**
-     * Mark message as failed.
-     */
     @Transactional
     public void markFailed(String messageId, String errorMessage) {
         IntegrationMessage message = findMessageOrThrow(messageId);
@@ -115,9 +103,6 @@ public class MessageProcessingService {
         log.error("Message {} failed: {}", messageId, errorMessage);
     }
 
-    /**
-     * Retry a failed message.
-     */
     @Transactional
     public boolean retryMessage(String messageId) {
         IntegrationMessage message = findMessageOrThrow(messageId);
@@ -134,9 +119,6 @@ public class MessageProcessingService {
         return true;
     }
 
-    /**
-     * Cancel a message and persist the terminal state.
-     */
     @Transactional
     public void cancelMessage(String messageId) {
         IntegrationMessage message = findMessageOrThrow(messageId);
@@ -147,33 +129,21 @@ public class MessageProcessingService {
         messageRepository.save(message);
     }
 
-    /**
-     * Get message by ID.
-     */
     @Transactional(readOnly = true)
     public Optional<IntegrationMessage> getMessage(String messageId) {
         return messageRepository.findById(messageId);
     }
 
-    /**
-     * Get messages by status.
-     */
     @Transactional(readOnly = true)
     public List<IntegrationMessage> getMessagesByStatus(MessageStatus status) {
         return messageRepository.findByStatus(status);
     }
 
-    /**
-     * Get retryable messages.
-     */
     @Transactional(readOnly = true)
     public List<IntegrationMessage> getRetryableMessages() {
         return messageRepository.findRetryableMessages();
     }
 
-    /**
-     * Get message status.
-     */
     @Transactional(readOnly = true)
     public MessageStatus getMessageStatus(String messageId) {
         return findMessageOrThrow(messageId).getStatus();
@@ -184,9 +154,6 @@ public class MessageProcessingService {
                 .orElseThrow(() -> new MessageNotFoundException("Message not found: " + messageId));
     }
 
-    /**
-     * Exception thrown when message is not found.
-     */
     public static class MessageNotFoundException extends RuntimeException {
         public MessageNotFoundException(String message) {
             super(message);

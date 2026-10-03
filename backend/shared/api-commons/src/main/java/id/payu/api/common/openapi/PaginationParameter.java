@@ -7,17 +7,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Utility class for adding pagination parameters to OpenAPI operations.
- */
 public final class PaginationParameter {
 
     private PaginationParameter() {
     }
 
-    /**
-     * Creates the page parameter.
-     */
     public static Parameter pageParam() {
         return new Parameter()
                 .name("page")
@@ -30,9 +24,6 @@ public final class PaginationParameter {
                         .example(0));
     }
 
-    /**
-     * Creates the size parameter.
-     */
     public static Parameter sizeParam() {
         return new Parameter()
                 .name("size")
@@ -46,9 +37,6 @@ public final class PaginationParameter {
                         .example(20));
     }
 
-    /**
-     * Creates the sort parameter.
-     */
     public static Parameter sortParam() {
         return new Parameter()
                 .name("sort")
@@ -60,9 +48,6 @@ public final class PaginationParameter {
                         .example("amount,asc"));
     }
 
-    /**
-     * Creates all pagination parameters.
-     */
     public static List<Parameter> all() {
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(pageParam());
@@ -71,9 +56,6 @@ public final class PaginationParameter {
         return parameters;
     }
 
-    /**
-     * Adds pagination parameters to an operation.
-     */
     public static Operation addTo(Operation operation) {
         all().forEach(operation::addParametersItem);
         return operation;

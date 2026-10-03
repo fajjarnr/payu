@@ -11,18 +11,15 @@ echo "PayU E2E Test Runner"
 echo "=========================================="
 echo "Project Root: $PROJECT_ROOT"
 
-# Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Function to check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Check Python and pip
 if command_exists python3; then
     echo -e "${GREEN}✓${NC} Python 3 found"
 else
@@ -37,7 +34,6 @@ else
     exit 1
 fi
 
-# Install dependencies for KYC Service
 echo ""
 echo "Installing dependencies for KYC Service..."
 if [ -d "$PROJECT_ROOT/backend/kyc-service" ]; then
@@ -48,7 +44,6 @@ else
     echo -e "${RED}✗${NC} KYC Service directory not found at $PROJECT_ROOT/backend/kyc-service"
 fi
 
-# Install dependencies for Analytics Service
 echo ""
 echo "Installing dependencies for Analytics Service..."
 if [ -d "$PROJECT_ROOT/backend/analytics-service" ]; then
@@ -59,7 +54,6 @@ else
     echo -e "${RED}✗${NC} Analytics Service directory not found at $PROJECT_ROOT/backend/analytics-service"
 fi
 
-# Install pytest for both services
 echo ""
 echo "Installing pytest..."
 if [ -d "$PROJECT_ROOT/backend/kyc-service" ]; then
@@ -72,7 +66,6 @@ if [ -d "$PROJECT_ROOT/backend/analytics-service" ]; then
 fi
 echo -e "${GREEN}✓${NC} pytest installed"
 
-# Run Unit Tests
 echo ""
 echo "=========================================="
 echo "Running Unit Tests"
@@ -92,7 +85,6 @@ if [ -d "$PROJECT_ROOT/backend/analytics-service" ]; then
     python3 -m pytest tests/unit/ -v --tb=short || echo -e "${YELLOW}Some tests failed${NC}"
 fi
 
-# Run E2E Tests
 echo ""
 echo "=========================================="
 echo "Running E2E Tests"
@@ -112,7 +104,6 @@ if [ -d "$PROJECT_ROOT/backend/analytics-service" ]; then
     python3 -m pytest tests/e2e/ -v --tb=short || echo -e "${YELLOW}Some tests failed${NC}"
 fi
 
-# Run Coverage Report
 echo ""
 echo "=========================================="
 echo "Running Coverage Reports"

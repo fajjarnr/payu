@@ -68,7 +68,6 @@ public class InstallmentService implements InstallmentUseCase {
     public List<InstallmentOption> getTenorOptions(UUID userId, BigDecimal amount) {
         log.info("Getting tenor options: userId={}", userId);
 
-        // Validate PayLater eligibility
         PayLater payLater = getActivePayLater(userId);
         BigDecimal available = payLater.getAvailableCredit();
 
@@ -101,7 +100,6 @@ public class InstallmentService implements InstallmentUseCase {
         log.info("Installment checkout: userId={}, partner={}, tenor={}x",
                 userId, partnerId, tenor);
 
-        // 1. Validate PayLater account is active with sufficient credit
         PayLater payLater = getActivePayLater(userId);
         BigDecimal available = payLater.getAvailableCredit();
 
@@ -110,13 +108,11 @@ public class InstallmentService implements InstallmentUseCase {
                     "Insufficient PayLater credit for checkout");
         }
 
-        // 2. Validate tenor
         if (tenor < 1 || tenor > 12) {
             throw new InstallmentException("INST_003",
                     "Invalid tenor: " + tenor + ". Must be between 1 and 12 months");
         }
 
-        // 3. Check for duplicate external order
         if (externalOrderId != null) {
             checkoutPersistencePort.findByExternalOrderId(externalOrderId).ifPresent(existing -> {
                 throw new InstallmentException("INST_004",
@@ -124,13 +120,11 @@ public class InstallmentService implements InstallmentUseCase {
             });
         }
 
-        // 4. Calculate installment
         BigDecimal annualRate = payLater.getInterestRate() != null
                 ? payLater.getInterestRate()
                 : DEFAULT_ANNUAL_RATE;
         InstallmentOption option = calculateOption(amount, tenor, annualRate);
 
-        // 5. Create the INSTALMENT_LOAN
         Loan loan = new Loan();
         loan.setExternalId("INST-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         loan.setUserId(userId);
@@ -150,16 +144,13 @@ public class InstallmentService implements InstallmentUseCase {
         Loan savedLoan = loanPersistencePort.save(loan);
         log.info("Created INSTALMENT_LOAN: id={}, externalId={}", savedLoan.getId(), savedLoan.getExternalId());
 
-        // 6. Generate repayment schedule
         generateRepaymentSchedule(savedLoan, option.getMonthlyPayment(), annualRate);
 
-        // 7. Debit PayLater credit
         payLater.setUsedCredit(payLater.getUsedCredit().add(amount));
         payLater.setAvailableCredit(payLater.getAvailableCredit().subtract(amount));
         payLater.setUpdatedAt(LocalDateTime.now());
         payLaterPersistencePort.save(payLater);
 
-        // 8. Create checkout record
         InstallmentCheckout checkout = new InstallmentCheckout();
         checkout.setUserId(userId);
         checkout.setPayLaterId(payLater.getId());
@@ -194,9 +185,6 @@ public class InstallmentService implements InstallmentUseCase {
         return checkoutPersistencePort.findByUserId(userId);
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Internal Helpers
-    // ═══════════════════════════════════════════════════════
 
     private PayLater getActivePayLater(UUID userId) {
         PayLater payLater = payLaterPersistencePort.findByUserId(userId)

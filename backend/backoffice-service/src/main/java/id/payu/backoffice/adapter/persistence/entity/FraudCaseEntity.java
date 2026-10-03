@@ -76,7 +76,6 @@ public class FraudCaseEntity {
     private Long version;
 
 
-    // Manual accessors for stability
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getUserId() { return userId; }

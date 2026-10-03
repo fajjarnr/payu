@@ -1,7 +1,6 @@
 # RHACS (Red Hat Advanced Cluster Security) Configuration
 # Central: ACS management server (stackrox namespace)
 # SecuredCluster: registers this cluster for runtime monitoring & compliance
-# ============================================================
 apiVersion: platform.stackrox.io/v1alpha1
 kind: Central
 metadata:

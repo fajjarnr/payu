@@ -47,7 +47,6 @@ public class TenantFilter implements ContainerRequestFilter, ContainerResponseFi
     }
 
     private String extractTenantId(ContainerRequestContext requestContext) {
-        // Priority 1: Explicit X-Tenant-Id header
         String tenantId = requestContext.getHeaderString(TENANT_ID_HEADER);
         if (tenantId != null && !tenantId.isBlank()) {
             return tenantId;

@@ -107,7 +107,6 @@ class CircuitBreakerServiceTest {
         @Test
         @DisplayName("should fail fast when circuit is OPEN")
         void shouldFailFastWhenOpen() {
-            // Force circuit open by sending many failures
             for (int i = 0; i < 12; i++) {
                 service.execute("test-service", () ->
                         Uni.createFrom().item(Response.status(503).entity("error").build())
@@ -127,7 +126,6 @@ class CircuitBreakerServiceTest {
         @Test
         @DisplayName("should include Retry-After header when circuit is OPEN")
         void shouldIncludeRetryAfterHeaderWhenOpen() {
-            // Force circuit open by sending many failures
             for (int i = 0; i < 12; i++) {
                 service.execute("test-service", () ->
                         Uni.createFrom().item(Response.status(503).entity("error").build())
@@ -224,7 +222,6 @@ class CircuitBreakerServiceTest {
         @Test
         @DisplayName("should reset circuit breaker")
         void shouldResetCircuitBreaker() {
-            // Generate some state
             service.execute("test-service", () ->
                     Uni.createFrom().item(Response.status(500).build())
             ).await().atMost(Duration.ofSeconds(5));
@@ -239,7 +236,6 @@ class CircuitBreakerServiceTest {
         @Test
         @DisplayName("should include openedAt and retryAfterSeconds in info when OPEN")
         void shouldIncludeOpenedAtAndRetryAfterInInfo() {
-            // Force circuit open
             for (int i = 0; i < 12; i++) {
                 service.execute("test-service", () ->
                         Uni.createFrom().item(Response.status(503).entity("error").build())

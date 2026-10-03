@@ -102,8 +102,6 @@ public class SettlementPersistenceAdapter implements SettlementPersistencePort {
                 .collect(Collectors.toList());
     }
 
-    // ---- Mappers ----
-
     private SettlementBatchEntity toSettlementBatchEntity(SettlementBatch domain) {
         SettlementBatchEntity entity = new SettlementBatchEntity();
         entity.setId(domain.getId());

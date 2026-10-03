@@ -41,13 +41,10 @@ class SubscriptionEventAdapterTest {
     @Test
     @DisplayName("should publish subscription.created event to correct topic via Outbox")
     void shouldPublishSubscriptionCreatedEvent() {
-        // Given
         Subscription subscription = createSampleSubscription();
 
-        // When
         adapter.publishSubscriptionCreated(subscription);
 
-        // Then
         ArgumentCaptor<CloudEventEnvelope> eventCaptor = ArgumentCaptor.forClass(CloudEventEnvelope.class);
         ArgumentCaptor<Map> headersCaptor = ArgumentCaptor.forClass(Map.class);
 
@@ -71,14 +68,11 @@ class SubscriptionEventAdapterTest {
     @Test
     @DisplayName("should publish charge.succeeded event to correct topic via Outbox")
     void shouldPublishChargeSucceededEvent() {
-        // Given
         Subscription subscription = createSampleSubscription();
         SubscriptionCharge charge = createSampleCharge(subscription.getId(), true);
 
-        // When
         adapter.publishChargeSucceeded(subscription, charge);
 
-        // Then
         ArgumentCaptor<CloudEventEnvelope> eventCaptor = ArgumentCaptor.forClass(CloudEventEnvelope.class);
         ArgumentCaptor<Map> headersCaptor = ArgumentCaptor.forClass(Map.class);
 
@@ -103,15 +97,12 @@ class SubscriptionEventAdapterTest {
     @Test
     @DisplayName("should publish charge.failed event to correct topic via Outbox")
     void shouldPublishChargeFailedEvent() {
-        // Given
         Subscription subscription = createSampleSubscription();
         SubscriptionCharge charge = createSampleCharge(subscription.getId(), false);
         charge.markFailed("Insufficient balance");
 
-        // When
         adapter.publishChargeFailed(subscription, charge);
 
-        // Then
         ArgumentCaptor<CloudEventEnvelope> eventCaptor = ArgumentCaptor.forClass(CloudEventEnvelope.class);
         ArgumentCaptor<Map> headersCaptor = ArgumentCaptor.forClass(Map.class);
 
@@ -153,8 +144,6 @@ class SubscriptionEventAdapterTest {
         assertNotNull(payload);
         assertEquals(SubscriptionEvent.SUBSCRIPTION_DUE, payload.getType());
     }
-
-    // Helper methods
 
     private Subscription createSampleSubscription() {
         Subscription sub = new Subscription();

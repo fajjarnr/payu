@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # PayU Environment Verification Script
-# =====================================
 # Comprehensive health check for PayU development environment.
 #
 # Usage:
@@ -13,7 +12,6 @@
 
 set -e
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -21,7 +19,6 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Counters
 PASS=0
 FAIL=0
 WARN=0
@@ -38,14 +35,9 @@ print_fail() { echo -e "${RED}✗ FAIL${NC} - $1"; ((FAIL++)); }
 print_warn() { echo -e "${YELLOW}⚠ WARN${NC} - $1"; ((WARN++)); }
 print_info() { echo -e "${BLUE}  ℹ${NC} - $1"; }
 
-# ============================================================================
-# 1. SYSTEM CHECKS
-# ============================================================================
-
 check_system() {
     print_header "1. System Environment"
 
-    # OS
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         print_pass "OS: $PRETTY_NAME"
@@ -53,28 +45,21 @@ check_system() {
         print_warn "OS: Unknown ($(uname -s))"
     fi
 
-    # Disk space
     DISK_AVAIL=$(df -h "$PROJECT_ROOT" | awk 'NR==2 {print $4}')
     DISK_USED=$(df -h "$PROJECT_ROOT" | awk 'NR==2 {print $5}')
     print_info "Disk: $DISK_USED used, $DISK_AVAIL available"
 
-    # Memory
     if [ -f /proc/meminfo ]; then
         MEM_TOTAL=$(awk '/MemTotal/ {printf "%.2f GB", $2/1024/1024}' /proc/meminfo)
         MEM_AVAIL=$(awk '/MemAvailable/ {printf "%.2f GB", $2/1024/1024}' /proc/meminfo)
         print_info "Memory: $MEM_TOTAL total, $MEM_AVAIL available"
     fi
 
-    # CPU
     if command -v nproc >/dev/null 2>&1; then
         CPUS=$(nproc)
         print_info "CPU Cores: $CPUS"
     fi
 }
-
-# ============================================================================
-# 2. DEPENDENCY CHECKS
-# ============================================================================
 
 check_dependencies() {
     print_header "2. Tool Dependencies"
@@ -109,7 +94,6 @@ check_dependencies() {
         fi
     done
 
-    # Optional tools
     echo ""
     print_info "Optional Tools:"
 
@@ -134,10 +118,6 @@ check_dependencies() {
         fi
     done
 }
-
-# ============================================================================
-# 3. PROJECT STRUCTURE CHECKS
-# ============================================================================
 
 check_project_structure() {
     print_header "3. Project Structure"
@@ -164,7 +144,6 @@ check_project_structure() {
         fi
     done
 
-    # Required files
     echo ""
     local required_files=(
         "infrastructure/local-podman/podman-compose.yml"
@@ -184,20 +163,14 @@ check_project_structure() {
     done
 }
 
-# ============================================================================
-# 4. CONTAINER & SERVICE CHECKS
-# ============================================================================
-
 check_containers() {
     print_header "4. Container Status"
 
-    # Check if Podman is running
     if ! podman info >/dev/null 2>&1; then
         print_fail "Podman daemon not running"
         return
     fi
 
-    # Get all PayU containers
     local containers=$(podman ps --filter "label=io.podman.compose.project=payu" --format "{{.Names}}")
 
     if [ -z "$containers" ]; then
@@ -206,7 +179,6 @@ check_containers() {
         return
     fi
 
-    # Check infrastructure containers
     local infra_services=(
         "payu-postgres:PostgreSQL"
         "payu-redis:Redis"
@@ -223,7 +195,6 @@ check_containers() {
         fi
     done
 
-    # Check backend services
     echo ""
     local backend_services=(
         "payu-account-service:Account Service"
@@ -254,7 +225,6 @@ check_containers() {
     for service in "${backend_services[@]}"; do
         IFS=':' read -r container name <<< "$service"
         if podman ps --filter "name=$container" --filter "status=running" --format "{{.Names}}" | grep -q "$container"; then
-            # Check health status
             health=$(podman inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null || echo "unknown")
             if [ "$health" = "healthy" ]; then
                 print_pass "$name is healthy"
@@ -268,7 +238,6 @@ check_containers() {
         fi
     done
 
-    # Check frontend
     echo ""
     if podman ps --filter "name=payu-web-app" --filter "status=running" --format "{{.Names}}" | grep -q "payu-web-app"; then
         print_pass "Web App is running"
@@ -276,10 +245,6 @@ check_containers() {
         print_warn "Web App is not running (may be running via npm run dev)"
     fi
 }
-
-# ============================================================================
-# 5. HEALTH ENDPOINT CHECKS
-# ============================================================================
 
 check_health_endpoints() {
     print_header "5. Health Endpoints"
@@ -326,7 +291,6 @@ check_health_endpoints() {
         fi
     done
 
-    # Check web app
     echo ""
     if curl -s -f http://localhost:3001 >/dev/null 2>&1; then
         print_pass "Web App: Responding"
@@ -334,7 +298,6 @@ check_health_endpoints() {
         print_warn "Web App: Not responding (may need npm run dev)"
     fi
 
-    # Check Keycloak
     if curl -s -f http://localhost:8099 >/dev/null 2>&1; then
         print_pass "Keycloak: Responding"
     else
@@ -342,18 +305,12 @@ check_health_endpoints() {
     fi
 }
 
-# ============================================================================
-# 6. DATABASE CHECKS
-# ============================================================================
-
 check_databases() {
     print_header "6. Database Connectivity"
 
-    # Check PostgreSQL
     if podman exec payu-postgres pg_isready -U payu >/dev/null 2>&1; then
         print_pass "PostgreSQL: Ready"
 
-        # Check databases
         local dbs=$(podman exec payu-postgres psql -U payu -d postgres -tAc "SELECT datname FROM pg_database WHERE datname LIKE 'payu_%' ORDER BY datname;")
         local db_count=$(echo "$dbs" | wc -l)
         print_info "PayU databases: $db_count found"
@@ -361,14 +318,12 @@ check_databases() {
         print_fail "PostgreSQL: Not ready"
     fi
 
-    # Check Redis
     if podman exec payu-redis redis-cli ping >/dev/null 2>&1; then
         print_pass "Redis: Ready"
     else
         print_fail "Redis: Not ready"
     fi
 
-    # Check Kafka
     if podman exec payu-kafka kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1; then
         print_pass "Kafka: Ready"
     else
@@ -376,21 +331,15 @@ check_databases() {
     fi
 }
 
-# ============================================================================
-# 7. NETWORK CHECKS
-# ============================================================================
-
 check_networks() {
     print_header "7. Network Configuration"
 
-    # Check PayU network
     if podman network exists payu_payu-network 2>/dev/null; then
         print_pass "Podman network: payu_payu-network exists"
     else
         print_warn "Podman network: payu_payu-network not found"
     fi
 
-    # Check port availability
     echo ""
     local ports=(
         "3001:Web App"
@@ -435,18 +384,12 @@ check_networks() {
     done
 }
 
-# ============================================================================
-# 8. CONFIGURATION CHECKS
-# ============================================================================
-
 check_configuration() {
     print_header "8. Configuration Files"
 
-    # Check .env file
     if [ -f .env ]; then
         print_pass ".env file exists"
 
-        # Check for critical variables
         if grep -q "POSTGRES_PASSWORD=your_secure" .env 2>/dev/null; then
             print_warn ".env: Using default passwords (change for production)"
         fi
@@ -454,17 +397,12 @@ check_configuration() {
         print_warn ".env file not found (copy from .env.example)"
     fi
 
-    # Check AI skills symlink
     if [ -L .claude/skills ]; then
         print_pass "AI skills symlink configured"
     elif [ -d .agents/skills ]; then
         print_warn "AI skills symlink not configured"
     fi
 }
-
-# ============================================================================
-# SUMMARY
-# ============================================================================
 
 print_summary() {
     print_header "Verification Summary"
@@ -504,12 +442,7 @@ print_summary() {
     fi
 }
 
-# ============================================================================
-# MAIN
-# ============================================================================
-
 main() {
-    # Get project root
     PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     cd "$PROJECT_ROOT"
 
@@ -549,7 +482,6 @@ EOF
             exit 0
             ;;
         *)
-            # Full verification
             check_system
             check_dependencies
             check_project_structure

@@ -50,7 +50,6 @@ public class StakeholderEntity {
     public StakeholderEntity() {
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public RevenueSplitEntity getRevenueSplit() { return revenueSplit; }

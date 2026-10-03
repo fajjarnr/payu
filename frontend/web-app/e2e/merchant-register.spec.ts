@@ -29,7 +29,6 @@ test('merchant register form submission with valid data', async ({ page }) => {
   await page.fill('input[type="email"]', 'merchant@test.com');
   await page.fill('input[type="tel"]', '+6281234567890');
 
-  // Click the Retail merchant type button (contains label text "Retail")
   const retailType = page.locator('button', { hasText: 'Retail' }).first();
   await retailType.click();
 
@@ -46,14 +45,11 @@ test('merchant type selection', async ({ page }) => {
   await page.goto('/merchant/register');
   await page.waitForLoadState('domcontentloaded');
 
-  // Click the Retail type button
   const retailType = page.locator('button', { hasText: 'Retail' }).first();
   await retailType.click();
 
-  // Verify the button containing "Retail" is visible (it already was, but now selected)
   await expect(page.locator('button', { hasText: 'Retail' }).first()).toBeVisible();
 
-  // Click the Food & Beverage type button
   const foodType = page.locator('button', { hasText: 'Food & Beverage' }).first();
   await foodType.click();
 

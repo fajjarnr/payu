@@ -49,7 +49,6 @@ export default function CardsScreen() {
     }
   };
 
-  // Render card item for FlashList
   const renderCardItem = useCallback(({ item }: { item: VirtualCard }) => (
     <TouchableOpacity
       onPress={() => selectCard(item.id)}
@@ -92,7 +91,6 @@ export default function CardsScreen() {
         </Card>
       ) : (
         <>
-          {/* Card Carousel */}
           <FlashList
             data={cards}
             renderItem={renderCardItem}
@@ -104,7 +102,6 @@ export default function CardsScreen() {
             pagingEnabled
           />
 
-          {/* Card Actions */}
           {selectedCard && (
             <Card padding="lg" style={styles.cardActions}>
               <Text style={[styles.actionsTitle, { color: colors.text }]}>
@@ -147,7 +144,6 @@ export default function CardsScreen() {
             </Card>
           )}
 
-          {/* Card Info */}
           {selectedCard && (
             <Card padding="lg" style={styles.cardInfo}>
               <View style={styles.infoRow}>

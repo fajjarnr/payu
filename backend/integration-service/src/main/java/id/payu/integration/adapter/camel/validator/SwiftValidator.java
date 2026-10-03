@@ -32,9 +32,6 @@ public class SwiftValidator {
     private static final Pattern FIELD_59_PATTERN = Pattern.compile(":59[AF]?:[^\n]+");
     private static final Pattern FIELD_71A_PATTERN = Pattern.compile(":71A:(SHA|BEN|OUR)");
 
-    /**
-     * Validate SWIFT message structure and content.
-     */
     public ValidationResult validate(IntegrationMessage message) {
         log.debug("Validating SWIFT message: {}", message.getMessageId());
 
@@ -46,13 +43,10 @@ public class SwiftValidator {
             return new ValidationResult(false, errors);
         }
 
-        // Validate message blocks
         validateMessageBlocks(payload, errors);
 
-        // Validate required fields based on message type
         validateRequiredFields(message.getType(), payload, errors);
 
-        // Validate field formats
         validateFieldFormats(payload, errors);
 
         boolean valid = errors.isEmpty();
@@ -65,25 +59,17 @@ public class SwiftValidator {
         return new ValidationResult(valid, errors);
     }
 
-    /**
-     * Quick validation for routing purposes.
-     */
     public boolean isValidFormat(String swiftMessage) {
         if (swiftMessage == null || swiftMessage.trim().isEmpty()) {
             return false;
         }
 
-        // Check for basic SWIFT structure
         return swiftMessage.contains("{1:") && swiftMessage.contains("{2:") && swiftMessage.contains("{4:");
     }
 
-    /**
-     * Detect SWIFT message type from content.
-     */
     public String detectMessageType(String swiftMessage) {
         if (swiftMessage == null) return "UNKNOWN";
 
-        // Look for message type in application header (block 2)
         java.util.regex.Matcher matcher = Pattern.compile("\\{2:[IEO](\\d{3})").matcher(swiftMessage);
         if (matcher.find()) {
             return "MT" + matcher.group(1);
@@ -211,16 +197,12 @@ public class SwiftValidator {
         java.util.regex.Matcher currencyMatcher = Pattern.compile(":32A:\\d{6}([A-Z]{3})").matcher(payload);
         if (currencyMatcher.find()) {
             String currency = currencyMatcher.group(1);
-            // Basic check for valid currency format
             if (!currency.matches("[A-Z]{3}")) {
                 errors.add("Invalid currency code in field 32A: " + currency);
             }
         }
     }
 
-    /**
-     * Result of validation.
-     */
     public record ValidationResult(boolean valid, List<String> errors) {
         public boolean hasErrors() {
             return !errors.isEmpty();

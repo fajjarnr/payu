@@ -46,13 +46,8 @@ public interface TransactionUseCase {
      */
     void processQrisPayment(ProcessQrisPaymentCommand command);
 
-    // Query Methods (Read Operations)
-
     /**
      * Gets a transaction by ID.
-     *
-     * @param query the transaction query
-     * @return the transaction
      */
     TransactionEntity getTransaction(GetTransactionQuery query);
 
@@ -71,11 +66,6 @@ public interface TransactionUseCase {
 
     /**
      * Updates tags for a transaction (IMP-037).
-     *
-     * @param transactionId the transaction ID
-     * @param userId the user ID for ownership validation
-     * @param tags the list of tags to set
-     * @return the updated transaction
      */
     TransactionEntity updateTransactionTags(UUID transactionId, String userId, List<String> tags);
 

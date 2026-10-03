@@ -46,21 +46,17 @@ public class CashbackProcessorService implements id.payu.promotion.application.p
      * Processes cashback for a completed transaction.
      * Evaluates all active rules and credits wallet for matching rules.
      *
-     * @param event the transaction completed event
-     * @return the result of cashback processing
      */
     @Transactional
     public CashbackResult process(TransactionCompletedEvent event) {
         LOG.info("Processing cashback for transaction: {}, account: {}",
                 event.transactionId(), event.accountId());
 
-        // Check if already processed
         if (cashbackRecordRepository.hasProcessedTransaction(event.transactionId())) {
             LOG.info("Transaction already processed for cashback: {}", event.transactionId());
             return CashbackResult.empty();
         }
 
-        // Build transaction domain object
         Transaction transaction = Transaction.builder()
                 .transactionId(event.transactionId())
                 .accountId(event.accountId())
@@ -70,7 +66,6 @@ public class CashbackProcessorService implements id.payu.promotion.application.p
                 .timestamp(event.timestamp())
                 .build();
 
-        // Find active rules
         List<CashbackRule> activeRules = cashbackRuleRepository.findActiveRules();
         LOG.debug("Found {} active cashback rules", activeRules.size());
 
@@ -79,7 +74,6 @@ public class CashbackProcessorService implements id.payu.promotion.application.p
         BigDecimal totalCashback = BigDecimal.ZERO;
         List<String> processedRuleIds = new ArrayList<>();
 
-        // Evaluate each rule
         for (CashbackRule rule : activeRules) {
             if (rule.matches(transaction)) {
                 matchedCount++;
@@ -118,10 +112,6 @@ public class CashbackProcessorService implements id.payu.promotion.application.p
      * the same event can never double-credit. Exceptions are rethrown so the Kafka
      * consumer retries and forwards to DLQ rather than acking a lost record.
      *
-     * @param event the transaction event
-     * @param rule the cashback rule
-     * @param amount the cashback amount
-     * @return true if cashback was successfully credited
      */
     private boolean processCashbackForRule(TransactionCompletedEvent event, CashbackRule rule, BigDecimal amount) {
         String referenceId = event.transactionId() + "-" + rule.getRuleId();
@@ -155,7 +145,6 @@ public class CashbackProcessorService implements id.payu.promotion.application.p
         record.setStatus(CashbackStatus.CREDITED);
         cashbackRecordRepository.save(record);
 
-        // Send notification
         CashbackNotification notification = new CashbackNotification(
                 event.accountId(),
                 event.transactionId(),

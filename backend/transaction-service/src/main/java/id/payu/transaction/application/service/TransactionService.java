@@ -177,7 +177,6 @@ public class TransactionService implements TransactionUseCase {
     public TransactionEntity updateTransactionTags(UUID transactionId, String userId, List<String> tags) {
         log.info("Updating tags for transaction: {}", transactionId);
 
-        // Verify ownership and get transaction
         GetTransactionQuery query = new GetTransactionQuery(transactionId, userId);
         TransactionEntity transaction = getTransaction(query);
 

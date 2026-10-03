@@ -153,10 +153,8 @@ class AccountFinancialIntegrityTest {
             try {
                 account.debit(new BigDecimal("150000"));
             } catch (Exception e) {
-                // Expected
             }
 
-            // Balance should remain unchanged
             assertThat(account.getBalance()).isEqualTo(originalBalance);
         }
 
@@ -206,7 +204,6 @@ class AccountFinancialIntegrityTest {
             try {
                 account.credit(new BigDecimal("1.00"));
             } catch (Exception e) {
-                // Expected
             }
 
             assertThat(account.getBalance()).isEqualTo(originalBalance);
@@ -243,7 +240,6 @@ class AccountFinancialIntegrityTest {
                         try {
                             account.debit(new BigDecimal("60000"));
                         } catch (Exception e) {
-                            // One should fail
                             assertThat(e).isInstanceOf(Account.InsufficientFundsException.class);
                         }
                     }, executor);
@@ -253,14 +249,12 @@ class AccountFinancialIntegrityTest {
                         try {
                             account.debit(new BigDecimal("60000"));
                         } catch (Exception e) {
-                            // One should fail
                             assertThat(e).isInstanceOf(Account.InsufficientFundsException.class);
                         }
                     }, executor);
 
             CompletableFuture.allOf(debit1, debit2).join();
 
-            // At least one debit should have failed, balance should be >= minimum
             assertThat(account.getBalance()).isGreaterThanOrEqualTo(new BigDecimal("10000"));
         }
 
@@ -271,7 +265,6 @@ class AccountFinancialIntegrityTest {
 
             ExecutorService executor = Executors.newFixedThreadPool(3);
 
-            // Three concurrent credits
             CompletableFuture<Void> credit1 = CompletableFuture.runAsync(
                     () -> account.credit(new BigDecimal("50000")), executor);
 
@@ -283,7 +276,6 @@ class AccountFinancialIntegrityTest {
 
             CompletableFuture.allOf(credit1, credit2, credit3).join();
 
-            // All credits should succeed
             assertThat(account.getBalance()).isEqualTo(new BigDecimal("200000"));
         }
 
@@ -294,7 +286,6 @@ class AccountFinancialIntegrityTest {
 
             ExecutorService executor = Executors.newFixedThreadPool(4);
 
-            // Mixed operations
             CompletableFuture<Void> credit1 = CompletableFuture.runAsync(
                     () -> account.credit(new BigDecimal("50000")), executor);
 
@@ -321,7 +312,6 @@ class AccountFinancialIntegrityTest {
 
             CompletableFuture.allOf(credit1, debit1, credit2, debit2).join();
 
-            // Final balance should be consistent
             assertThat(account.getBalance()).isGreaterThanOrEqualTo(new BigDecimal("10000"));
         }
     }
@@ -367,7 +357,6 @@ class AccountFinancialIntegrityTest {
 
             assertThat(account.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
 
-            // Should allow full debit
             assertThatThrownBy(() -> account.debit(new BigDecimal("1")))
                     .isInstanceOf(Account.InsufficientFundsException.class);
         }

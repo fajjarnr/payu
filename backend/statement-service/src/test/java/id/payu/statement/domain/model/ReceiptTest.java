@@ -33,12 +33,10 @@ class ReceiptTest {
     @Test
     @DisplayName("Should create receipt with all required fields")
     void shouldCreateReceiptWithAllRequiredFields() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         LocalDateTime timestamp = LocalDateTime.now();
 
-        // When
         Receipt receipt = Receipt.builder()
                 .id(UUID.randomUUID())
                 .transactionId(TRANSACTION_ID)
@@ -52,7 +50,6 @@ class ReceiptTest {
                 .referenceNumber(REFERENCE_NUMBER)
                 .build();
 
-        // Then
         assertNotNull(receipt.getId());
         assertEquals(TRANSACTION_ID, receipt.getTransactionId());
         assertEquals(CUSTOMER_ID, receipt.getCustomerId());
@@ -68,14 +65,11 @@ class ReceiptTest {
     @Test
     @DisplayName("Should generate receipt with default status as GENERATED")
     void shouldGenerateReceiptWithDefaultStatusGenerated() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
 
-        // When
         Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
-        // Then
         assertNotNull(receipt.getId());
         assertEquals(TRANSACTION_ID, receipt.getTransactionId());
         assertEquals(AMOUNT, receipt.getAmount());
@@ -91,16 +85,13 @@ class ReceiptTest {
     @Test
     @DisplayName("Should set expiry date to 90 days from generation")
     void shouldSetExpiryDateTo90DaysFromGeneration() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         LocalDateTime beforeGeneration = LocalDateTime.now();
 
-        // When
         Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
         LocalDateTime afterGeneration = LocalDateTime.now();
 
-        // Then
         assertNotNull(receipt.getExpiryDate());
         // Expiry should be 90 days from generation
         LocalDateTime expectedExpiryMin = beforeGeneration.plusDays(90).minusSeconds(1);
@@ -112,7 +103,6 @@ class ReceiptTest {
     @Test
     @DisplayName("Should return true for isExpired when current date is after expiry")
     void shouldReturnTrueForIsExpiredWhenAfterExpiry() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
@@ -132,49 +122,40 @@ class ReceiptTest {
                 .expiryDate(LocalDateTime.now().minusDays(1))
                 .build();
 
-        // When & Then
         assertTrue(expiredReceipt.isExpired());
     }
 
     @Test
     @DisplayName("Should return false for isExpired when current date is before expiry")
     void shouldReturnFalseForIsExpiredWhenBeforeExpiry() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
-        // When & Then
         assertFalse(receipt.isExpired());
     }
 
     @Test
     @DisplayName("Should mark receipt as expired")
     void shouldMarkReceiptAsExpired() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
-        // When
         receipt.markAsExpired();
 
-        // Then
         assertEquals(ReceiptStatus.EXPIRED, receipt.getStatus());
     }
 
     @Test
     @DisplayName("Should convert to shareable format with masked account numbers")
     void shouldConvertToShareableFormatWithMaskedAccountNumbers() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
-        // When
         ShareableReceipt shareable = receipt.toShareableFormat();
 
-        // Then
         assertNotNull(shareable);
         assertEquals(receipt.getId().toString(), shareable.getReceiptId());
         assertEquals(TRANSACTION_ID, shareable.getTransactionId());
@@ -198,11 +179,9 @@ class ReceiptTest {
     @Test
     @DisplayName("Should validate amount is positive")
     void shouldValidateAmountIsPositive() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
 
-        // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, BigDecimal.ZERO, CURRENCY, sender, recipient, REFERENCE_NUMBER)
         );
@@ -212,11 +191,9 @@ class ReceiptTest {
     @Test
     @DisplayName("Should validate transactionId is not blank")
     void shouldValidateTransactionIdIsNotBlank() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
 
-        // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 Receipt.generate("", CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER)
         );
@@ -226,10 +203,8 @@ class ReceiptTest {
     @Test
     @DisplayName("Should validate sender info is not null")
     void shouldValidateSenderInfoIsNotNull() {
-        // Given
         RecipientInfo recipient = createRecipientInfo();
 
-        // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, null, recipient, REFERENCE_NUMBER)
         );
@@ -239,10 +214,8 @@ class ReceiptTest {
     @Test
     @DisplayName("Should validate recipient info is not null")
     void shouldValidateRecipientInfoIsNotNull() {
-        // Given
         SenderInfo sender = createSenderInfo();
 
-        // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, null, REFERENCE_NUMBER)
         );
@@ -252,11 +225,9 @@ class ReceiptTest {
     @Test
     @DisplayName("Should validate reference number is not blank")
     void shouldValidateReferenceNumberIsNotBlank() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
 
-        // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, "")
         );
@@ -266,7 +237,6 @@ class ReceiptTest {
     @Test
     @DisplayName("Should mask account number correctly")
     void shouldMaskAccountNumberCorrectly() {
-        // Given & When & Then
         assertEquals("****5678", Receipt.maskAccountNumber("12345678"));
         assertEquals("****3490", Receipt.maskAccountNumber("123490"));
         assertEquals("****1", Receipt.maskAccountNumber("1"));
@@ -276,31 +246,25 @@ class ReceiptTest {
     @Test
     @DisplayName("Should generate unique receipt IDs")
     void shouldGenerateUniqueReceiptIds() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
 
-        // When
         Receipt receipt1 = Receipt.generate(TRANSACTION_ID + "1", CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
         Receipt receipt2 = Receipt.generate(TRANSACTION_ID + "2", CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
-        // Then
         assertNotEquals(receipt1.getId(), receipt2.getId());
     }
 
     @Test
     @DisplayName("Should update access count when accessed")
     void shouldUpdateAccessCountWhenAccessed() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, AMOUNT, CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
-        // When
         receipt.recordAccess();
         receipt.recordAccess();
 
-        // Then
         assertEquals(2, receipt.getAccessCount());
         assertNotNull(receipt.getLastAccessedAt());
     }
@@ -308,22 +272,18 @@ class ReceiptTest {
     @Test
     @DisplayName("Should return formatted amount with currency")
     void shouldReturnFormattedAmountWithCurrency() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         Receipt receipt = Receipt.generate(TRANSACTION_ID, CUSTOMER_ID, new BigDecimal("1500000.50"), CURRENCY, sender, recipient, REFERENCE_NUMBER);
 
-        // When
         String formattedAmount = receipt.getFormattedAmount();
 
-        // Then
         assertEquals("IDR 1.500.000,50", formattedAmount);
     }
 
     @Test
     @DisplayName("Should return formatted timestamp")
     void shouldReturnFormattedTimestamp() {
-        // Given
         SenderInfo sender = createSenderInfo();
         RecipientInfo recipient = createRecipientInfo();
         LocalDateTime timestamp = LocalDateTime.of(2024, 3, 1, 14, 30, 0);
@@ -342,10 +302,8 @@ class ReceiptTest {
                 .expiryDate(timestamp.plusDays(90))
                 .build();
 
-        // When
         String formattedTimestamp = receipt.getFormattedTimestamp();
 
-        // Then
         assertEquals("01 Maret 2024, 14:30 WIB", formattedTimestamp);
     }
 }

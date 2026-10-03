@@ -44,12 +44,7 @@ public class KeycloakConfig {
     }
 
     /**
-     * SB 4.1.0 + Spring 7 reactive autoconfig changed: WebClient.Builder is no longer
-     * auto-registered as @Bean even with spring-boot-starter-webflux on classpath.
-     * Must define explicitly for downstream @Autowired WebClient.Builder usage
-     * (KeycloakService.webClientBuilder constructor param).
-     *
-     * READY-056: Track Spring Boot upstream issue for proper autoconfig restoration.
+     * Spring Boot 4.1/Spring 7 no longer auto-registers WebClient.Builder (READY-056).
      */
     @Bean
     public WebClient.Builder webClientBuilder() {

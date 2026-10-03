@@ -34,7 +34,6 @@ public class ApiAnalyticsFilter implements ContainerResponseFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-        // Record start time for later use
         Long startTime = (Long) requestContext.getProperty(START_TIME_PROPERTY);
 
         if (startTime == null) {
@@ -48,15 +47,12 @@ public class ApiAnalyticsFilter implements ContainerResponseFilter {
         String method = requestContext.getMethod();
         int statusCode = responseContext.getStatus();
 
-        // Extract partner ID if available
         String partnerId = extractPartnerId(requestContext);
 
-        // Extract client info
         String clientIp = getClientIp(requestContext);
         String userAgent = requestContext.getHeaderString("User-Agent");
         String correlationId = requestContext.getHeaderString("X-Correlation-Id");
 
-        // Record metrics asynchronously
         try {
             analyticsService.recordEvent(partnerId, path, method, statusCode,
                 duration, clientIp, userAgent, correlationId);
@@ -69,13 +65,11 @@ public class ApiAnalyticsFilter implements ContainerResponseFilter {
     }
 
     private String extractPartnerId(ContainerRequestContext requestContext) {
-        // Try to get partner ID from header
         String partnerId = requestContext.getHeaderString("X-Partner-Id");
         if (partnerId != null && !partnerId.isBlank()) {
             return partnerId;
         }
 
-        // Try to get from API key
         String apiKey = requestContext.getHeaderString("X-API-Key");
         if (apiKey != null && !apiKey.isBlank()) {
             return derivePartnerFromApiKey(apiKey);

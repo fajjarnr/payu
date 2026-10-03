@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-/**
- * Request DTO for OJK report generation.
- */
 @Data
 @Builder
 @NoArgsConstructor

@@ -82,7 +82,6 @@ export default function SecurityPage() {
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6 lg:space-y-8">
-          {/* Header */}
           <StaggerContainer>
             <StaggerItem>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
@@ -97,7 +96,6 @@ export default function SecurityPage() {
               </div>
             </StaggerItem>
 
-            {/* Security Options */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <StaggerItem>
                 <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden group h-full">
@@ -149,7 +147,6 @@ export default function SecurityPage() {
               </StaggerItem>
             </div>
 
-            {/* Active Sessions */}
             <StaggerItem className="mt-8">
               <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6 relative z-10">
@@ -185,7 +182,6 @@ export default function SecurityPage() {
               </div>
             </StaggerItem>
 
-            {/* Panic Button Section */}
             <StaggerItem className="mt-8">
               <div className="bg-destructive rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-card group">
                 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">

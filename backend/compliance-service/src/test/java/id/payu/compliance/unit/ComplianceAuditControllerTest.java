@@ -76,7 +76,6 @@ class ComplianceAuditControllerTest {
         when(complianceAuditService.createAuditReport(any(UUID.class), eq(merchantId), eq(ComplianceStandard.PCI_DSS), any(List.class)))
                 .thenReturn(report);
 
-        // Call the controller (not the service mock directly)
         AuditReportRequest request = new AuditReportRequest(transactionId, merchantId, ComplianceStandard.PCI_DSS, checks);
         ResponseEntity<?> response = controller.createAuditReport(request);
 
@@ -102,7 +101,6 @@ class ComplianceAuditControllerTest {
 
         when(complianceAuditService.getAuditReport(reportId)).thenReturn(report);
 
-        // Call the controller (not the service mock directly)
         ResponseEntity<?> response = controller.getAuditReport(reportId);
 
         assertNotNull(response);
@@ -118,7 +116,6 @@ class ComplianceAuditControllerTest {
         when(complianceAuditService.getAuditReport(reportId))
                 .thenThrow(new IllegalArgumentException(errorMessage));
 
-        // Call the controller (not the service mock directly)
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             controller.getAuditReport(reportId);
         });

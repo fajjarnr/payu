@@ -22,7 +22,6 @@ public class PromoUsage {
         this.timestamp = Instant.now();
     }
 
-    // Getters and setters
     public String getId() {
         return id;
     }

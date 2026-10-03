@@ -44,12 +44,10 @@ console.warn('🔍 PayU Accessibility Audit');
 console.warn('=' .repeat(50));
 console.warn('');
 
-// Ensure output directory exists
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-// Check if build exists
 const buildDir = path.join(process.cwd(), '.next');
 if (!fs.existsSync(buildDir)) {
   console.error('❌ Build not found. Please run "npm run build" first.');
@@ -58,7 +56,6 @@ if (!fs.existsSync(buildDir)) {
 
 console.warn('✅ Build found');
 
-// Run axe-core audit using Playwright
 console.warn('📊 Running accessibility tests...');
 console.warn('');
 
@@ -93,7 +90,6 @@ try {
   process.exit(1);
 }
 
-// WCAG AA Compliance Checklist
 console.warn('WCAG 2.1 Level AA Compliance Checklist:');
 console.warn('-' .repeat(50));
 console.warn('');

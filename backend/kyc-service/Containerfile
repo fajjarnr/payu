@@ -1,7 +1,5 @@
-# ============================================
 # Stage 1: Builder
 # Red Hat UBI9 Python 3.12 for OpenShift production runtime parity.
-# ============================================
 FROM registry.access.redhat.com/ubi9/python-312@sha256:f0a3c86eb6ab0ef1a302f3edcc0e15bf2432492fc8a0903acdedae50c1786d2d AS builder
 COPY --from=ghcr.io/astral-sh/uv:0.5.20 /uv /usr/local/bin/uv
 
@@ -11,7 +9,6 @@ ENV UV_COMPILE_BYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_ROOT_USER_ACTION=ignore
 
-# Install build dependencies
 RUN dnf install -y --setopt=install_weak_deps=False \
     gcc \
     gcc-c++ \
@@ -23,15 +20,11 @@ RUN dnf install -y --setopt=install_weak_deps=False \
 COPY requirements.txt ./
 RUN uv pip install --target /opt/payu-python --extra-index-url https://download.pytorch.org/whl/cpu --no-cache -r requirements.txt
 
-# Copy application source
 COPY src/ /app/src/
 
-# ============================================
 # Stage 2: Runtime
-# ============================================
 FROM registry.access.redhat.com/ubi9/python-312@sha256:f0a3c86eb6ab0ef1a302f3edcc0e15bf2432492fc8a0903acdedae50c1786d2d
 
-# OCI Metadata Labels
 ARG APP_VERSION=1.5.0
 LABEL maintainer="backend-team@payu.fajjjar.my.id"
 LABEL org.opencontainers.image.title="payu-kyc-service"
@@ -54,10 +47,8 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
-# Copy installed packages from builder
 COPY --from=builder /opt/payu-python /opt/payu-python
 
-# Copy application source
 COPY --from=builder /app/src /app/src
 
 # Create application directories for OpenShift arbitrary-user compatible group 0.

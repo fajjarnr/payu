@@ -71,7 +71,6 @@ public class GatewayDispatchService {
 
         RouteRegistry.ResolvedRoute route = resolved.get();
 
-        // Check if HTTP method is allowed
         if (!route.definition().methods().contains(method)) {
             return Uni.createFrom().item(
                     Response.status(405)
@@ -94,7 +93,6 @@ public class GatewayDispatchService {
             return Uni.createFrom().item(Response.status(502).entity(errorMsg).build());
         }
 
-        // Capture query string from the incoming request and append to downstream path
         String queryString = (uriInfo != null) ? uriInfo.getRequestUri().getRawQuery() : null;
         String fullPath = (queryString != null && !queryString.isEmpty())
                 ? path + "?" + queryString
@@ -104,10 +102,8 @@ public class GatewayDispatchService {
         return circuitBreakerService.execute(serviceName, () -> {
             Uni<Response> call = doProxy(serviceName, serviceConfig, fullPath, method, body, headers);
 
-            // Apply retry with backoff
             call = retryAndTimeoutService.executeWithRetry(serviceName, call);
 
-            // Apply timeout
             Duration timeout = retryAndTimeoutService.getTimeout(serviceName);
             call = call.ifNoItem().after(timeout).fail();
 
@@ -133,7 +129,6 @@ public class GatewayDispatchService {
                 path
         );
 
-        // Forward matching headers (simple version)
         if (headers != null) {
             headers.getRequestHeaders().forEach((k, v) -> {
                 if (!k.equalsIgnoreCase("Host") && !k.equalsIgnoreCase("Content-Length")) {
@@ -142,7 +137,6 @@ public class GatewayDispatchService {
             });
         }
 
-        // Forward tenant ID from filter context
         String tenantId = headers != null ? headers.getHeaderString(TenantFilter.TENANT_ID_HEADER) : null;
         if (tenantId != null && !tenantId.isBlank()) {
             request.putHeader(TenantFilter.TENANT_ID_HEADER, tenantId);

@@ -89,7 +89,6 @@ public class ChartOfAccountEntity {
         return new ChartOfAccountEntityBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getCode() { return code; }

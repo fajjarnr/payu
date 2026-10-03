@@ -44,7 +44,6 @@ public class IncomeStatementResponse {
         return new IncomeStatementResponseBuilder();
     }
 
-    // Getters and Setters
     public LocalDate getPeriodFrom() { return periodFrom; }
     public void setPeriodFrom(LocalDate periodFrom) { this.periodFrom = periodFrom; }
     public LocalDate getPeriodTo() { return periodTo; }

@@ -121,7 +121,6 @@ public class MerchantEntity {
         this.status = MerchantStatus.PENDING_REVIEW;
     }
 
-    // Domain methods
 
     public boolean isActive() {
         return status == MerchantStatus.ACTIVE;
@@ -141,7 +140,6 @@ public class MerchantEntity {
         this.status = MerchantStatus.SUSPENDED;
     }
 
-    // Getters and setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

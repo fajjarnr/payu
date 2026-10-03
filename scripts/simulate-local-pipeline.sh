@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
-# =============================================================================
 # PayU Platform - Local Pipeline Simulation Script (DEVSECOPS-014)
-# =============================================================================
 # Simulates Tekton CI/CD pipeline stages locally for a given target service.
 #
 # Usage:
 #   ./scripts/simulate-local-pipeline.sh <service-name> [--skip-build] [--skip-scan]
 # Example:
 #   ./scripts/simulate-local-pipeline.sh cms-service
-# =============================================================================
 
 set -eo pipefail
 
@@ -55,9 +52,6 @@ echo -e "${BLUE}🚀 Starting Local CI/CD Pipeline Simulation for: ${YELLOW}${SE
 echo -e "${BLUE}Path: ${SERVICE_DIR}${NC}"
 echo -e "${BLUE}=====================================================================${NC}"
 
-# -----------------------------------------------------------------------------
-# Stage 1: Code Lint & ArchUnit Check
-# -----------------------------------------------------------------------------
 echo -e "\n${YELLOW}[Stage 1/4] Code Lint & ArchUnit Rule Check...${NC}"
 STAGE1_START=$(date +%s)
 
@@ -72,9 +66,6 @@ fi
 STAGE1_END=$(date +%s)
 echo -e "${GREEN}✓ Stage 1 Passed ($(( STAGE1_END - STAGE1_START ))s)${NC}"
 
-# -----------------------------------------------------------------------------
-# Stage 2: Unit & Integration Tests
-# -----------------------------------------------------------------------------
 echo -e "\n${YELLOW}[Stage 2/4] Unit & Integration Tests...${NC}"
 STAGE2_START=$(date +%s)
 
@@ -89,9 +80,6 @@ fi
 STAGE2_END=$(date +%s)
 echo -e "${GREEN}✓ Stage 2 Passed ($(( STAGE2_END - STAGE2_START ))s)${NC}"
 
-# -----------------------------------------------------------------------------
-# Stage 3: Container Build Simulation
-# -----------------------------------------------------------------------------
 echo -e "\n${YELLOW}[Stage 3/4] Container Image Build Simulation...${NC}"
 STAGE3_START=$(date +%s)
 
@@ -118,9 +106,6 @@ fi
 STAGE3_END=$(date +%s)
 echo -e "${GREEN}✓ Stage 3 Passed ($(( STAGE3_END - STAGE3_START ))s)${NC}"
 
-# -----------------------------------------------------------------------------
-# Stage 4: Container Vulnerability Security Scan
-# -----------------------------------------------------------------------------
 echo -e "\n${YELLOW}[Stage 4/4] Security & Vulnerability Scan...${NC}"
 STAGE4_START=$(date +%s)
 
@@ -141,9 +126,6 @@ fi
 STAGE4_END=$(date +%s)
 echo -e "${GREEN}✓ Stage 4 Passed ($(( STAGE4_END - STAGE4_START ))s)${NC}"
 
-# -----------------------------------------------------------------------------
-# Summary Report
-# -----------------------------------------------------------------------------
 TOTAL_END=$(date +%s)
 TOTAL_TIME=$((TOTAL_END - START_TIME))
 

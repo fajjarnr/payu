@@ -11,19 +11,10 @@ import java.util.UUID;
  */
 public interface PaymentQueryUseCase {
 
-    /**
-     * Find a payment by its ID.
-     */
     Optional<BillPayment> getPayment(UUID id);
 
-    /**
-     * Find a payment by its reference number.
-     */
     Optional<BillPayment> getPaymentByReference(String referenceNumber);
 
-    /**
-     * Find the paginated payment history of an account.
-     */
     PaymentPage getPaymentHistory(String accountId, int page, int size);
 
     /**

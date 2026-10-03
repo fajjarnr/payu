@@ -13,7 +13,6 @@ from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 
-# Helper functions (not fixtures) for creating mock objects
 def create_mock_row(**kwargs):
     """Create a mock database row"""
     row = MagicMock()
@@ -33,11 +32,9 @@ def mock_scalar_result(value: Optional[object]) -> MagicMock:
 def mock_query_result(rows: list) -> MagicMock:
     """Create a mock result for queries that return multiple rows"""
     result = MagicMock()
-    # Mock the result iteration
     result.__iter__ = lambda self: iter(rows)
     result.all = MagicMock(return_value=rows)
     result.first = MagicMock(return_value=rows[0] if rows else None)
-    # Mock column_descriptions for the service
     result.column_descriptions = [{"name": "total_amount", "type": type(None)}]
     return result
 
@@ -45,7 +42,6 @@ def mock_query_result(rows: list) -> MagicMock:
 def mock_scalars_result(values: list) -> AsyncMock:
     """Create a mock result for scalars() queries"""
     result = AsyncMock()
-    # Create a mock scalars() result that has all() and first() methods
     scalars_obj = MagicMock()
     scalars_obj.all = MagicMock(return_value=values)
     scalars_obj.first = MagicMock(return_value=values[0] if values else None)
@@ -56,7 +52,6 @@ def mock_scalars_result(values: list) -> AsyncMock:
     return result
 
 
-# Pytest fixtures
 @pytest.fixture
 def mock_settings():
     """Mock settings for testing"""
@@ -135,7 +130,6 @@ def sample_fraud_score_entity():
     )
 
 
-# Additional fixtures for tests that need helper functions as parameters
 @pytest.fixture
 def mock_scalars_result_fn():
     """Fixture providing the mock_scalars_result helper function for tests"""
@@ -157,7 +151,6 @@ def mock_execute_sequence():
     return _setup_execute_sequence
 
 
-# E2E Test Fixtures
 @pytest.fixture(scope="session")
 def test_settings():
     """Test settings with disabled Kafka and tracing for E2E tests"""
@@ -174,7 +167,6 @@ def test_settings():
     with patch("app.config.get_settings", return_value=test_settings):
         yield test_settings
 
-    # Restore original settings
     if original_settings:
         Settings._settings = original_settings
 

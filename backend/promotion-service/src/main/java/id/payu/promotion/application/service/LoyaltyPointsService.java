@@ -42,14 +42,11 @@ public class LoyaltyPointsService {
      * Add loyalty points to an account with race condition protection.
      * Uses pessimistic locking (SELECT FOR UPDATE) to prevent lost updates.
      *
-     * @param request the points addition request
-     * @return the created loyalty points record
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public LoyaltyPoints addPoints(CreateLoyaltyPointsRequest request) {
         LOG.info("Adding points: accountId={}, points={}", request.accountId(), request.points());
 
-        // Use atomic balance calculation with pessimistic lock to prevent race conditions
         Integer currentBalance = calculateCurrentBalanceWithLock(request.accountId());
 
         LoyaltyPoints loyaltyPoints = new LoyaltyPoints();
@@ -75,8 +72,6 @@ public class LoyaltyPointsService {
      * Redeem loyalty points from an account with race condition protection.
      * Uses pessimistic locking (SELECT FOR UPDATE) to prevent concurrent overdrafts.
      *
-     * @param request the points redemption request
-     * @return the created redemption record
      * @throws IllegalArgumentException if insufficient balance
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -94,7 +89,6 @@ public class LoyaltyPointsService {
                     "Points already redeemed for transaction: " + request.transactionId());
         }
 
-        // Use atomic balance calculation with pessimistic lock to prevent race conditions
         Integer currentBalance = calculateCurrentBalanceWithLock(request.accountId());
 
         if (currentBalance < request.points()) {
@@ -153,7 +147,6 @@ public class LoyaltyPointsService {
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         java.time.LocalDateTime expiryWindow = now.plusDays(30); // 30-day look-ahead
 
-        // Find the nearest expiry date among earned, non-expired points  
         java.time.LocalDateTime nearestExpiry = allPoints.stream()
             .filter(p -> p.getTransactionType() == TransactionType.EARNED)
             .filter(p -> p.getExpiryDate() != null)
@@ -163,7 +156,6 @@ public class LoyaltyPointsService {
             .min(java.time.LocalDateTime::compareTo)
             .orElse(null);
 
-        // Sum points expiring within the 30-day window
         int pointsExpiring = nearestExpiry == null ? 0 : allPoints.stream()
             .filter(p -> p.getTransactionType() == TransactionType.EARNED)
             .filter(p -> p.getExpiryDate() != null)
@@ -190,15 +182,11 @@ public class LoyaltyPointsService {
      * Uses PostgreSQL advisory lock to ensure serialization even when no previous
      * records exist for the account, preventing phantom reads/lost updates.
      *
-     * @param accountId the account ID
-     * @return the current balance (0 if no records)
      */
     @Transactional(readOnly = false) // MUST be readWrite for advisory lock to hold correctly in PG
     public Integer calculateCurrentBalanceWithLock(String accountId) {
-        // Acquire transaction-level advisory lock using Postgres hash function
         loyaltyPointsRepository.lockAccount(accountId);
 
-        // Safe to read the balance now, no other transaction can concurrently insert for this account
         Integer balance = loyaltyPointsRepository.calculateBalanceByAccountId(accountId);
         return balance != null ? balance : 0;
     }
@@ -207,8 +195,6 @@ public class LoyaltyPointsService {
      * Calculate current balance without locking (for read-only operations).
      * Use this for queries that don't modify the balance.
      *
-     * @param accountId the account ID
-     * @return the current balance (0 if no records)
      */
     public Integer calculateCurrentBalance(String accountId) {
         Integer balance = loyaltyPointsRepository.calculateBalanceByAccountId(accountId);

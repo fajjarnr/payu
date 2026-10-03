@@ -96,9 +96,6 @@ public class ProblemDetail {
                 .build();
     }
 
-    /**
-     * Builds a ProblemDetail with field-level validation errors.
-     */
     public static ProblemDetail of(HttpStatus status, String title, String detail, String errorCode,
                                    HttpServletRequest request, java.util.List<FieldViolation> errors) {
         ProblemDetail pd = of(status, title, detail, errorCode, request);

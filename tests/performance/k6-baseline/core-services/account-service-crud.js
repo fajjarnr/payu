@@ -1,5 +1,3 @@
-// PayU Account Service - CRUD Baseline Performance Test
-// ======================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -73,7 +71,6 @@ export default function () {
 
   group('Account Service - CRUD Operations', () => {
 
-    // ===== CREATE: Register new account =====
     group('CREATE: Register Account', () => {
       const userData = generateUserData(uniqueId);
 
@@ -95,7 +92,6 @@ export default function () {
       return;
     }
 
-    // ===== READ: Get profile =====
     group('READ: Get Profile', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.account}/profile`, auth.token);
@@ -104,7 +100,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: List accounts =====
     group('READ: List Accounts', () => {
       const startTime = Date.now();
       const result = list(SERVICE_ENDPOINTS.account, { page: 0, size: 10 }, auth.token);
@@ -113,7 +108,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== UPDATE: Update profile =====
     group('UPDATE: Update Profile', () => {
       const updateData = generateUpdateData();
 
@@ -124,7 +118,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Submit KYC =====
     group('CREATE: Submit KYC', () => {
       const kycData = generateKycData();
 
@@ -135,7 +128,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: Get KYC status =====
     group('READ: Get KYC Status', () => {
       const result = read(`${SERVICE_ENDPOINTS.account}/kyc/status`, auth.token);
 

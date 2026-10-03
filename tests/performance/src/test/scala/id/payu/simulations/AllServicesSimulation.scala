@@ -21,24 +21,20 @@ import scala.concurrent.duration._
  */
 class AllServicesSimulation extends Simulation {
 
-  // Base URLs for different environments
   val baseUrl = System.getProperty("baseUrl", "http://localhost:8080")
   val authUrl = System.getProperty("authUrl", s"$baseUrl/auth")
   val transactionUrl = System.getProperty("transactionUrl", s"$baseUrl/transaction")
   val walletUrl = System.getProperty("walletUrl", s"$baseUrl/wallet")
 
-  // HTTP Protocol Configuration
   val httpProtocol = http
     .baseUrl(baseUrl)
     .acceptHeader("application/json")
     .contentTypeHeader("application/json")
     .userAgentHeader("PayU-PerformanceTest/1.0")
 
-  // Feeders for test data
   val userFeeder = csv("data/users.csv").circular
   val accountFeeder = csv("data/accounts.csv").circular
 
-  // Random data generators
   val transferAmounts = Iterator.continually(Map(
     "amount" -> (10000 + (Math.random() * 990000).toInt).toString
   ))
@@ -49,9 +45,8 @@ class AllServicesSimulation extends Simulation {
     "tip_amount" -> (Math.random() * 50000).toInt.toString
   ))
 
-  // ========== SCENARIOS ==========
 
-  // 1. Login Scenario (20% of users)
+  // Login Scenario (20% of users)
   val loginScenario = scenario("Login Scenario")
     .feed(userFeeder)
     .exec(
@@ -68,7 +63,7 @@ class AllServicesSimulation extends Simulation {
     )
     .pause(2, 5)
 
-  // 2. Balance Query Scenario (30% of users)
+  // Balance Query Scenario (30% of users)
   val balanceScenario = scenario("Balance Query Scenario")
     .feed(userFeeder)
     .feed(accountFeeder)
@@ -104,7 +99,7 @@ class AllServicesSimulation extends Simulation {
       .pause(1, 2)
     }
 
-  // 3. Transfer Scenario (25% of users)
+  // Transfer Scenario (25% of users)
   val transferScenario = scenario("Transfer Scenario")
     .feed(userFeeder)
     .feed(accountFeeder)
@@ -149,7 +144,7 @@ class AllServicesSimulation extends Simulation {
       .pause(2, 4)
     }
 
-  // 4. QRIS Payment Scenario (25% of users)
+  // QRIS Payment Scenario (25% of users)
   val qrisScenario = scenario("QRIS Payment Scenario")
     .feed(userFeeder)
     .feed(accountFeeder)
@@ -198,7 +193,6 @@ class AllServicesSimulation extends Simulation {
     )
     .pause(4, 8)
 
-  // ========== LOAD SIMULATION SETUP ==========
 
   setUp(
     // Login: 20% of total load
@@ -225,14 +219,12 @@ class AllServicesSimulation extends Simulation {
       constantUsersPerSec(250) during (10 minutes)
     ).protocols(httpProtocol)
   ).assertions(
-    // Global assertions
     global.responseTime.percentile3.lte(1000), // p95 < 1s
     global.responseTime.percentile4.lte(2000), // p99 < 2s
     global.responseTime.max.lte(5000),        // max < 5s
     global.successfulRequests.percent.gte(99), // success rate > 99%
     global.requestsPerSec.gte(100),            // at least 100 requests/sec sustained
 
-    // Specific assertions for critical operations
     details("Login Scenario" / "Login").responseTime.percentile3.lte(1000),
     details("Balance Query Scenario" / "Query Balance").responseTime.percentile3.lte(500),
     details("Transfer Scenario" / "Transfer").responseTime.percentile3.lte(1000),

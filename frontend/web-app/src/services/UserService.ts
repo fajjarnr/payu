@@ -20,19 +20,11 @@ export class UserService {
     return UserService.instance;
   }
 
-  /**
-   * Update user profile
-   * PUT /api/v1/accounts/users/{userId}
-   */
   async updateUser(userId: string, data: UpdateUserRequest): Promise<User> {
     const response = await api.put(`/accounts/users/${userId}`, data);
     return response.data;
   }
 
-  /**
-   * Get user profile
-   * GET /api/v1/accounts/users/{userId}
-   */
   async getUser(userId: string): Promise<User> {
     const response = await api.get(`/accounts/users/${userId}`);
     return response.data;

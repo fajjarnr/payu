@@ -66,7 +66,6 @@ public class BackofficeAdminEntity {
 
     private LocalDateTime lastLoginAt;
 
-    // Manual accessors for stability
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getUsername() { return username; }

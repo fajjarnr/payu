@@ -73,7 +73,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should create and retrieve AML audit report successfully")
     void shouldCreateAndRetrieveAMLReport() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_001";
 
@@ -84,7 +83,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("CFT_001", "Terrorist Financing Check", ComplianceCheckResult.PASS)
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -92,7 +90,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report).isNotNull();
         assertThat(report.getId()).isNotNull();
         assertThat(report.getTransactionId()).isEqualTo(transactionId);
@@ -106,7 +103,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should retrieve audit report by ID from database")
     void shouldRetrieveAuditReportById() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_002";
 
@@ -121,10 +117,8 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // When
         AuditReport retrievedReport = complianceAuditService.getAuditReport(createdReport.getId());
 
-        // Then
         assertThat(retrievedReport).isNotNull();
         assertThat(retrievedReport.getId()).isEqualTo(createdReport.getId());
         assertThat(retrievedReport.getTransactionId()).isEqualTo(transactionId);
@@ -137,7 +131,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should retrieve all audit reports by transaction ID")
     void shouldRetrieveReportsByTransactionId() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_003";
 
@@ -152,10 +145,8 @@ class ComplianceIntegrationTest {
         complianceAuditService.createAuditReport(transactionId, merchantId, ComplianceStandard.AML, amlChecks);
         complianceAuditService.createAuditReport(transactionId, merchantId, ComplianceStandard.PCI_DSS, pciChecks);
 
-        // When
         List<AuditReport> reports = complianceAuditService.getReportsByTransaction(transactionId);
 
-        // Then
         assertThat(reports).hasSize(2);
         assertThat(reports)
             .allSatisfy(report -> assertThat(report.getTransactionId()).isEqualTo(transactionId));
@@ -168,7 +159,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should retrieve all audit reports by merchant ID")
     void shouldRetrieveReportsByMerchantId() {
-        // Given
         String merchantId = "MERCHANT_004";
 
         List<ComplianceCheck> checks = List.of(
@@ -179,10 +169,8 @@ class ComplianceIntegrationTest {
         complianceAuditService.createAuditReport(UUID.randomUUID(), merchantId, ComplianceStandard.AML, checks);
         complianceAuditService.createAuditReport(UUID.randomUUID(), merchantId, ComplianceStandard.CFT, checks);
 
-        // When
         List<AuditReport> reports = complianceAuditService.getReportsByMerchant(merchantId);
 
-        // Then
         assertThat(reports).hasSize(3);
         assertThat(reports)
             .allSatisfy(report -> assertThat(report.getMerchantId()).isEqualTo(merchantId));
@@ -191,7 +179,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Transaction should pass AML check when all checks pass")
     void transactionShouldPassAMLCheck() {
-        // Given - Normal transaction pattern
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_005";
         String accountId = "ACC_1234567890";
@@ -204,7 +191,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("AML_005", "Geographic Risk Assessment", ComplianceCheckResult.PASS)
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -212,7 +198,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report.getOverallStatus()).isEqualTo(ComplianceCheckResult.PASS);
         assertThat(report.getChecks()).hasSize(5);
         assertThat(report.getChecks())
@@ -222,7 +207,7 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Transaction should be flagged for manual review when warnings exist")
     void transactionShouldFlagForManualReview() {
-        // Given - Suspicious but not clearly fraudulent transaction
+        // Suspicious but not clearly fraudulent transaction
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_006";
 
@@ -234,7 +219,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("AML_005", "Geographic Risk Assessment", ComplianceCheckResult.PASS)
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -242,7 +226,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report.getOverallStatus()).isEqualTo(ComplianceCheckResult.WARNING);
         assertThat(report.getChecks()).hasSize(5);
         assertThat(report.getChecks().stream())
@@ -253,7 +236,7 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Transaction should be blocked when sanctioned entity detected")
     void transactionShouldBeBlockedForSanctionedEntity() {
-        // Given - Matched sanctions list
+        // Matched sanctions list
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_007";
 
@@ -264,7 +247,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("AML_003", "Transaction Amount Check", ComplianceCheckResult.PASS)
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -272,7 +254,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report.getOverallStatus()).isEqualTo(ComplianceCheckResult.FAIL);
         assertThat(report.getChecks()).hasSize(3);
         assertThat(report.getChecks().get(0).getStatus()).isEqualTo(ComplianceCheckResult.FAIL);
@@ -283,7 +264,7 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should detect suspicious transaction pattern for CFT")
     void shouldDetectSuspiciousTransactionForCFT() {
-        // Given - Potential terrorist financing pattern
+        // Potential terrorist financing pattern
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_008";
 
@@ -295,7 +276,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("CFT_003", "Wire Transfer Analysis", ComplianceCheckResult.PASS)
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -303,7 +283,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report.getOverallStatus()).isEqualTo(ComplianceCheckResult.WARNING);
         assertThat(report.getChecks()).hasSize(3);
         assertThat(report.getChecks().stream())
@@ -314,7 +293,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should create comprehensive PCI-DSS compliance report")
     void shouldCreatePCIDSSComplianceReport() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_009";
 
@@ -327,7 +305,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("PCI_006", "Network Security", ComplianceCheckResult.PASS)
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -335,7 +312,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report.getOverallStatus()).isEqualTo(ComplianceCheckResult.PASS);
         assertThat(report.getStandard()).isEqualTo(ComplianceStandard.PCI_DSS);
         assertThat(report.getChecks()).hasSize(6);
@@ -344,7 +320,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should create OJK compliance report")
     void shouldCreateOJKComplianceReport() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_010";
 
@@ -354,7 +329,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("OJK_003", "Reporting Requirements", ComplianceCheckResult.PASS)
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -362,7 +336,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report.getStandard()).isEqualTo(ComplianceStandard.OJK);
         assertThat(report.getOverallStatus()).isEqualTo(ComplianceCheckResult.PASS);
         assertThat(report.getChecks()).hasSize(3);
@@ -371,7 +344,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should create GDPR compliance report")
     void shouldCreateGDPRComplianceReport() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_011";
 
@@ -382,7 +354,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("GDPR_004", "Data Minimization", ComplianceCheckResult.WARNING)
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -390,7 +361,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report.getStandard()).isEqualTo(ComplianceStandard.GDPR);
         assertThat(report.getOverallStatus()).isEqualTo(ComplianceCheckResult.WARNING);
         assertThat(report.getChecks()).hasSize(4);
@@ -399,14 +369,12 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should create data access audit record")
     void shouldCreateDataAccessAuditRecord() {
-        // Given
         String userId = "USER_001";
         String accessedBy = "ADMIN_USER";
         String serviceName = "compliance-service";
         String resourceType = "AuditReport";
         String resourceId = UUID.randomUUID().toString();
 
-        // When
         dataAccessAuditService.logDataAccess(
             userId,
             accessedBy,
@@ -421,7 +389,7 @@ class ComplianceIntegrationTest {
             null
         );
 
-        // Then — verify the audit record was persisted by querying user access history
+        // Verify the audit record was persisted by querying user access history
         LocalDateTime since = LocalDateTime.now().minusMinutes(1);
         long accessCount = dataAccessAuditService.getUserDataAccessCount(userId, since);
         assertThat(accessCount).isGreaterThanOrEqualTo(1);
@@ -430,13 +398,12 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should record failed data access attempt")
     void shouldRecordFailedDataAccessAttempt() {
-        // Given
         String userId = "USER_002";
         String accessedBy = "UNAUTHORIZED_USER";
         String resourceType = "AuditReport";
         String resourceId = UUID.randomUUID().toString();
 
-        // When - no exception should be thrown
+        // No exception should be thrown
         dataAccessAuditService.logDataAccess(
             userId,
             accessedBy,
@@ -451,7 +418,7 @@ class ComplianceIntegrationTest {
             "Access denied: insufficient permissions"
         );
 
-        // Then - verify failed access attempts can be retrieved
+        // Verify failed access attempts can be retrieved
         LocalDateTime since = LocalDateTime.now().minusMinutes(1);
         List<DataAccessAudit> failedAttempts = dataAccessAuditService.getFailedAccessAttempts(since);
 
@@ -467,11 +434,9 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should record different data operation types")
     void shouldRecordDifferentOperationTypes() {
-        // Given
         String userId = "USER_003";
         String resourceId = UUID.randomUUID().toString();
 
-        // When
         dataAccessAuditService.logDataAccess(
             userId, "ADMIN", "service", "Resource", resourceId,
             DataOperationType.READ, "Read operation", "IP1", "Agent", true, null
@@ -497,7 +462,7 @@ class ComplianceIntegrationTest {
             DataOperationType.SEARCH, "Search operation", "IP1", "Agent", true, null
         );
 
-        // Then - verify user data access history
+        // Verify user data access history
         LocalDateTime since = LocalDateTime.now().minusMinutes(1);
         long accessCount = dataAccessAuditService.getUserDataAccessCount(userId, since);
 
@@ -507,7 +472,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should handle NOT_APPLICABLE compliance checks")
     void shouldHandleNotApplicableChecks() {
-        // Given
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_012";
 
@@ -517,7 +481,6 @@ class ComplianceIntegrationTest {
                 "Domestic transaction only")
         );
 
-        // When
         AuditReport report = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -525,7 +488,6 @@ class ComplianceIntegrationTest {
             checks
         );
 
-        // Then
         assertThat(report.getOverallStatus()).isEqualTo(ComplianceCheckResult.PASS);
         assertThat(report.getChecks()).hasSize(2);
         assertThat(report.getChecks().get(1).getStatus()).isEqualTo(ComplianceCheckResult.NOT_APPLICABLE);
@@ -534,7 +496,6 @@ class ComplianceIntegrationTest {
     @Test
     @DisplayName("Should generate comprehensive compliance report with mixed results")
     void shouldGenerateComprehensiveComplianceReport() {
-        // Given - Complex scenario with multiple standards
         UUID transactionId = UUID.randomUUID();
         String merchantId = "MERCHANT_013";
 
@@ -545,7 +506,6 @@ class ComplianceIntegrationTest {
             createComplianceCheck("AML_003", "Customer Due Diligence", ComplianceCheckResult.PASS)
         );
 
-        // When
         AuditReport amlReport = complianceAuditService.createAuditReport(
             transactionId,
             merchantId,
@@ -553,7 +513,6 @@ class ComplianceIntegrationTest {
             amlChecks
         );
 
-        // Then
         assertThat(amlReport.getOverallStatus()).isEqualTo(ComplianceCheckResult.WARNING);
         assertThat(amlReport.getChecks()).hasSize(3);
         assertThat(amlReport.getChecks().get(1).getDetails())
@@ -568,9 +527,6 @@ class ComplianceIntegrationTest {
         registry.add("spring.flyway.enabled", () -> "true");
     }
 
-    /**
-     * Helper method to create ComplianceCheck objects with default values.
-     */
     private ComplianceCheck createComplianceCheck(String checkId, String description, ComplianceCheckResult status) {
         return ComplianceCheck.builder()
             .checkId(checkId)
@@ -581,9 +537,6 @@ class ComplianceIntegrationTest {
             .build();
     }
 
-    /**
-     * Helper method to create ComplianceCheck objects with details.
-     */
     private ComplianceCheck createComplianceCheck(String checkId, String description, ComplianceCheckResult status, String details) {
         return ComplianceCheck.builder()
             .checkId(checkId)

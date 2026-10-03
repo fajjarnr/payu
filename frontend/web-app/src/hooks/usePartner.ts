@@ -5,7 +5,7 @@ import { MutationPresets } from '@/lib/mutation-config';
 import { PartnerService } from '@/services/PartnerService';
 import type { Partner } from '@/services/PartnerService';
 
-// ── Partner CRUD ──
+// Partner CRUD
 export function usePartners() {
   return useQuery({
     queryKey: ['partners'],
@@ -75,7 +75,7 @@ export function useDeletePartner() {
   });
 }
 
-// ── Certificates ──
+// Certificates
 export function usePartnerCertificates(partnerId: number) {
   return useQuery({
     queryKey: ['partner-certificates', partnerId],
@@ -125,7 +125,7 @@ export function useRotateCertificate() {
   });
 }
 
-// ── SNAP-BI ──
+// SNAP-BI
 // BUG-FE-033: useSnapBiAuthToken removed — SNAP-BI token exchange must happen server-side only.
 
 export function useSnapBiPayment() {

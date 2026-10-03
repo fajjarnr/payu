@@ -47,7 +47,6 @@ public class HealthResource {
         response.put("version", "1.0.0");
         response.put("timestamp", Instant.now());
 
-        // Include circuit breaker states per service
         Map<String, CircuitBreakerService.CircuitBreakerInfo> circuitStates =
                 circuitBreakerService.getCircuitStates();
         if (!circuitStates.isEmpty()) {
@@ -73,7 +72,6 @@ public class HealthResource {
                 cbSummary.put(entry.getKey(), serviceState);
             }
             response.put("circuitBreakers", cbSummary);
-            // Degrade overall status if any circuit is OPEN
             if (anyOpen) {
                 response.put("status", "DEGRADED");
             }

@@ -21,7 +21,6 @@ class TestAnalyticsWorkflowE2E:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            # Mock database query
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_user_metrics"
             ) as mock_get:
@@ -60,7 +59,6 @@ class TestAnalyticsWorkflowE2E:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            # Mock analytics service
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_spending_trends"
             ) as mock_get:
@@ -133,7 +131,6 @@ class TestAnalyticsWorkflowE2E:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            # Mock analytics service
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_cash_flow_analysis"
             ) as mock_get:
@@ -187,7 +184,6 @@ class TestAnalyticsWorkflowE2E:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            # Mock analytics service
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_recommendations"
             ) as mock_get:
@@ -246,7 +242,6 @@ class TestAnalyticsWorkflowE2E:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            # Step 1: Get user metrics
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_user_metrics"
             ) as mock_metrics:
@@ -265,7 +260,6 @@ class TestAnalyticsWorkflowE2E:
                 )
                 assert metrics_response.status_code == 200
 
-            # Step 2: Get spending trends
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_spending_trends"
             ) as mock_trends:
@@ -308,7 +302,6 @@ class TestAnalyticsWorkflowE2E:
                 )
                 assert trends_response.status_code == 200
 
-            # Step 3: Get cash flow
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_cash_flow_analysis"
             ) as mock_cf:
@@ -345,7 +338,6 @@ class TestAnalyticsWorkflowE2E:
                 )
                 assert cf_response.status_code == 200
 
-            # Step 4: Get recommendations (should trigger due to high spending)
             with patch(
                 "app.services.analytics_service.AnalyticsService.get_recommendations"
             ) as mock_rec:

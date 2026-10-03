@@ -5,7 +5,6 @@ import { vi } from 'vitest';
 import EmergencyAlert from '@/components/cms/EmergencyAlert';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
-// Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode; initial?: unknown; animate?: unknown; exit?: unknown; transition?: unknown }) => <div {...props}>{children}</div>,
@@ -13,7 +12,6 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
-// Mock useRouter
 const mockPush = vi.fn();
 vi.mock('@/lib/navigation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/navigation')>()),
@@ -22,7 +20,6 @@ vi.mock('@/lib/navigation', async (importOriginal) => ({
   }),
 }));
 
-// Mock useEmergencyAlerts hook
 const mockAlerts = [
   {
     id: 'alert-1',
@@ -60,7 +57,6 @@ vi.mock('@/hooks', () => ({
   }),
 }));
 
-// Mock localStorage
 const mockLocalStorage = {
   getItem: vi.fn((): string | null => null),
   setItem: vi.fn(),

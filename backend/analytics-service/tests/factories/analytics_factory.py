@@ -50,7 +50,6 @@ def transaction_factory(**kwargs) -> Dict[str, Any]:
         ),
     )
 
-    # Generate realistic amount based on transaction type
     if "amount" not in kwargs:
         if transaction_type == "QR_PAYMENT":
             amount = fake.pyfloat(
@@ -125,7 +124,6 @@ def transaction_factory(**kwargs) -> Dict[str, Any]:
     }
     defaults.update(kwargs)
 
-    # Ensure metadata is properly merged
     if "metadata" in kwargs and isinstance(kwargs["metadata"], dict):
         defaults["metadata"].update(kwargs["metadata"])
 
@@ -170,7 +168,6 @@ def user_history_factory(**kwargs) -> Dict[str, Any]:
         "average_transaction", round(total_amount / max(total_transactions, 1), 2)
     )
 
-    # Generate recent transactions
     num_recent = kwargs.get("num_recent", min(20, total_transactions))
     recent_transactions = []
     for i in range(num_recent):
@@ -287,7 +284,6 @@ def fraud_score_factory(**kwargs) -> Dict[str, Any]:
         "risk_level", random.choice(["MINIMAL", "LOW", "MEDIUM", "HIGH", "CRITICAL"])
     )
 
-    # Map risk level to score range
     risk_score_ranges = {
         "MINIMAL": (1, 20),
         "LOW": (20, 40),
@@ -373,9 +369,7 @@ def fraud_detection_result_factory(**kwargs) -> Dict[str, Any]:
         >>> result['is_blocked']
         True
     """
-    # Extract fraud_score kwargs if provided, otherwise use empty dict
     fraud_score_kwargs = kwargs.get("fraud_score", {})
-    # If risk_level is in top-level kwargs, pass it to fraud_score_factory
     if "risk_level" in kwargs and "risk_level" not in fraud_score_kwargs:
         fraud_score_kwargs["risk_level"] = kwargs["risk_level"]
 
@@ -505,7 +499,6 @@ def recommendation_factory(**kwargs) -> Dict[str, Any]:
         ),
     )
 
-    # Type-specific content
     type_content = {
         "SAVINGS_GOAL": {
             "title": "Set Up Your Savings Goal",
@@ -647,7 +640,6 @@ def portfolio_allocation_factory(**kwargs) -> Dict[str, Any]:
         ),
     )
 
-    # Asset class specific data
     asset_data = {
         "CASH": {"return": (3, 5), "risk": "CONSERVATIVE"},
         "FIXED_INCOME": {"return": (5, 8), "risk": "CONSERVATIVE"},
@@ -708,7 +700,6 @@ def robo_advisory_response_factory(**kwargs) -> Dict[str, Any]:
     """
     risk_profile = random.choice(["CONSERVATIVE", "MODERATE", "AGGRESSIVE"])
 
-    # Generate portfolio based on risk profile
     if risk_profile == "CONSERVATIVE":
         allocations = [
             portfolio_allocation_factory(asset_class="CASH", allocation_percentage=30),

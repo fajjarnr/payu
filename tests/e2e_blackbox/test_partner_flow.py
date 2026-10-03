@@ -68,7 +68,6 @@ class TestPartnerFlow:
         if admin_token is None:
             pytest.skip("Admin login returns 500 — backend bug (auth-service INTERNAL_ERROR for admin user)")
 
-        # Save current token, set admin token
         old_token = api.token
         api.set_token(admin_token)
         try:
@@ -91,7 +90,6 @@ class TestPartnerFlow:
                 # Known gateway/backend field mismatch bug
                 assert body is not None
         finally:
-            # Restore original token
             if old_token:
                 api.set_token(old_token)
             else:

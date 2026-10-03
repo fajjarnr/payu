@@ -32,7 +32,6 @@ export default function TransfersScreen() {
     fromPocket: primaryWallet?.id || '',
   });
 
-  // Update fromPocket when primaryWallet data loads
   useEffect(() => {
     if (primaryWallet?.id && !formData.fromPocket) {
       setFormData(prev => ({ ...prev, fromPocket: primaryWallet.id }));
@@ -77,8 +76,6 @@ export default function TransfersScreen() {
     };
 
     try {
-      // The transfer is created via React Query mutation
-      // Navigate to confirmation screen with the transfer data
       // @ts-ignore
       router.push({
         pathname: '/transfer-confirm',
@@ -103,7 +100,6 @@ export default function TransfersScreen() {
       <Text style={[styles.title, { color: colors.text }]}>Transfer Money</Text>
 
       <Card padding="lg">
-        {/* From Pocket */}
         <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>
             From
@@ -118,7 +114,6 @@ export default function TransfersScreen() {
           </View>
         </View>
 
-        {/* Amount */}
         <Input
           label="Amount"
           value={formData.amount}
@@ -130,7 +125,6 @@ export default function TransfersScreen() {
           error={errors.amount}
         />
 
-        {/* Recipient Bank */}
         <View style={styles.fieldGroup}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>
             Recipient Bank
@@ -145,7 +139,6 @@ export default function TransfersScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Recipient Account */}
         <Input
           label="Recipient Account Number"
           value={formData.recipientAccount}
@@ -157,7 +150,6 @@ export default function TransfersScreen() {
           error={errors.recipientAccount}
         />
 
-        {/* Description */}
         <Input
           label="Description"
           value={formData.description}
@@ -179,7 +171,6 @@ export default function TransfersScreen() {
         />
       </Card>
 
-      {/* Recent Recipients */}
       <View style={styles.recipientSection}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
           Recent Recipients

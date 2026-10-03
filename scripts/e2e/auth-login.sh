@@ -1,10 +1,8 @@
 #!/bin/bash
-# ============================================
 # PayU Auth Service E2E Test
 # Login + JWT validation through gateway -> auth-service
 #
 # Mode: GATEWAY_MODE=internal (default) or apicast
-# ============================================
 
 set -e
 

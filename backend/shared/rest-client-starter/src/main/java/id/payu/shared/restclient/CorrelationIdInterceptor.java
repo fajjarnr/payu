@@ -63,7 +63,6 @@ public class CorrelationIdInterceptor implements ClientHttpRequestInterceptor {
             request.getHeaders().set(CORRELATION_ID_HEADER, correlationId);
         }
 
-        // Propagate request ID if available
         String requestId = MDC.get(MDC_REQUEST_ID_KEY);
         if (requestId != null && !requestId.isBlank()
                 && !request.getHeaders().containsHeader(REQUEST_ID_HEADER)) {

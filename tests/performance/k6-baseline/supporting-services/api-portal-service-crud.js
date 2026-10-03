@@ -1,5 +1,3 @@
-// PayU API Portal Service - CRUD Baseline Performance Test
-// ===========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -60,7 +58,6 @@ export default function () {
 
   group('API Portal Service - CRUD Operations', () => {
 
-    // ===== READ: Get API Documentation =====
     group('READ: Get API Docs', () => {
       const params = {
         category: CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)]
@@ -73,7 +70,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get API Specification =====
     group('READ: Get API Spec', () => {
       const service = ['wallet', 'transaction', 'account'][Math.floor(Math.random() * 3)];
 
@@ -84,7 +80,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Create API Key =====
     group('CREATE: Create API Key', () => {
       const keyData = generateApiKeyData(uniqueId);
 
@@ -100,7 +95,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List API Keys =====
     group('READ: List API Keys', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.apiPortal}/keys`, {}, auth.token);
@@ -109,7 +103,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Usage Statistics =====
     group('READ: Get Usage Stats', () => {
       const params = {
         period: '30d'
@@ -122,7 +115,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Test Endpoint =====
     group('CREATE: Test Endpoint', () => {
       const testData = {
         endpoint: '/api/v1/wallets/balance',
@@ -140,7 +132,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Sandbox Data =====
     group('READ: Get Sandbox Data', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.apiPortal}/sandbox/data`, {}, auth.token);
@@ -150,7 +141,6 @@ export default function () {
     });
 
     if (apiKeyId) {
-      // ===== UPDATE: Revoke API Key =====
       group('UPDATE: Revoke API Key', () => {
         const revokeData = {
           reason: 'Test revocation during baseline'

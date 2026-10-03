@@ -48,19 +48,16 @@ export const InputComponent: React.FC<InputProps> = ({
 }) => {
   const { colors } = useTheme();
 
-  // Performance: Memoize placeholder text color
   const placeholderTextColor = useMemo(
     () => (colors as typeof colors & { textSecondary?: string }).textSecondary ?? '#6b7280',
     [colors]
   );
 
-  // Performance: Memoize container style
   const containerStyle = useMemo<ViewStyle>(() => ({
     marginBottom: 16,
     ...style,
   }), [style]);
 
-  // Performance: Memoize input container style
   const inputContainerStyle = useMemo<ViewStyle>(() => ({
     flexDirection: 'row' as const,
     alignItems: 'center',
@@ -73,7 +70,6 @@ export const InputComponent: React.FC<InputProps> = ({
     minHeight: multiline ? 100 : 56,
   }), [colors.card, colors.border, error, multiline]);
 
-  // Performance: Memoize input style
   const inputStyle = useMemo<TextStyle>(() => ({
     flex: 1,
     color: colors.text,
@@ -82,7 +78,6 @@ export const InputComponent: React.FC<InputProps> = ({
     minHeight: multiline ? 76 : 0,
   }), [colors.text, multiline]);
 
-  // Performance: Memoize label style
   const labelStyle = useMemo<TextStyle>(() => ({
     color: colors.text,
     fontSize: 14,
@@ -91,7 +86,6 @@ export const InputComponent: React.FC<InputProps> = ({
     marginLeft: 4,
   }), [colors.text]);
 
-  // Performance: Memoize error style
   const errorStyle = useMemo<TextStyle>(() => ({
     color: '#ef4444',
     fontSize: 12,
@@ -99,7 +93,6 @@ export const InputComponent: React.FC<InputProps> = ({
     marginLeft: 4,
   }), []);
 
-  // Performance: Memoize icon container style
   const iconContainerStyle = useMemo<ViewStyle>(() => ({
     marginRight: 12,
   }), []);
@@ -131,7 +124,6 @@ export const InputComponent: React.FC<InputProps> = ({
   );
 };
 
-// Performance: Memoize Input component to prevent unnecessary re-renders
 // Note: We skip value/onChangeText comparison since those change frequently
 export const Input = memo(InputComponent, (prevProps, nextProps) => {
   return (

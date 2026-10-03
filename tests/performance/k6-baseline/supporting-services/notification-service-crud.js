@@ -1,5 +1,3 @@
-// PayU Notification Service - CRUD Baseline Performance Test
-// =============================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -69,7 +67,6 @@ export default function () {
 
   group('Notification Service - CRUD Operations', () => {
 
-    // ===== CREATE: Register Device =====
     group('CREATE: Register Device', () => {
       const deviceData = generateDeviceData(uniqueId);
 
@@ -85,7 +82,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== CREATE: Send Notification =====
     group('CREATE: Send Notification', () => {
       const notificationData = generateNotificationData(uniqueId);
 
@@ -101,7 +97,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Notifications =====
     group('READ: List Notifications', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.notification}`, { page: 0, size: 20 }, auth.token);
@@ -111,7 +106,6 @@ export default function () {
     });
 
     if (notificationId) {
-      // ===== READ: Get Notification Detail =====
       group('READ: Get Notification', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.notification}/${notificationId}`, auth.token);
@@ -120,7 +114,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Mark as Read =====
       group('UPDATE: Mark as Read', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.notification}/${notificationId}/read`, {}, auth.token);
@@ -130,7 +123,6 @@ export default function () {
       });
     }
 
-    // ===== READ: Get Preferences =====
     group('READ: Get Preferences', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.notification}/preferences`, auth.token);
@@ -139,7 +131,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== UPDATE: Update Preferences =====
     group('UPDATE: Update Preferences', () => {
       const prefsData = {
         channels: {
@@ -164,7 +155,6 @@ export default function () {
     });
 
     if (deviceId) {
-      // ===== DELETE: Unregister Device =====
       group('DELETE: Unregister Device', () => {
         const startTime = Date.now();
         const result = del(`${SERVICE_ENDPOINTS.notification}/devices/${deviceId}`, auth.token);

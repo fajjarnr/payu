@@ -1,13 +1,10 @@
-# =============================================================================
 # Horizontal Pod Autoscaler (HPA) for PayU Workloads
-# =============================================================================
 # CPU utilization target 70%; min 1, max 5 for services; max 2 for simulators.
 # No sync-wave: HPAs sync in wave 0 with their Deployments. ArgoCD sync waves
 # wait for every resource in a wave to be Healthy before moving on, and an HPA
 # whose Deployment target does not exist yet can never be Healthy — putting
 # HPAs in wave -1 deadlocks the sync. require-hpa Kyverno policy is Audit so
 # Deployments are not blocked while HPAs land in the same wave.
-# =============================================================================
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

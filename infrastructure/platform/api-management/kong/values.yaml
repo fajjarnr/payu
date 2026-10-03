@@ -7,7 +7,6 @@
 #
 # NOTE: This is a TEMPLATE. Replace all <PLACEHOLDER> values before deploying.
 # See README.md for full setup instructions.
-# ---
 
 # -- Deployment configuration
 deployment:

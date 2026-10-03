@@ -24,10 +24,7 @@ public class ContentScheduler {
     private final ContentService contentService;
     private final ContentEventPublisher eventPublisher;
 
-    /**
-     * Activate scheduled content
-     * Runs every hour at the top of the hour
-     */
+    /** Runs every hour at the top of the hour. */
     @SchedulerLock(name = "ContentScheduler_activateScheduledContent", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1H")@Scheduled(cron = "0 0 * * * *")
     public void activateScheduledContent() {
         log.info("Checking for scheduled content to activate");
@@ -46,17 +43,13 @@ public class ContentScheduler {
         log.info("Activating {} scheduled content items", contentIds.size());
         contentService.activateScheduledContent(contentIds);
 
-        // Publish events for newly activated content
         scheduledContent.forEach(content -> {
             content.setStatus(ContentStatus.ACTIVE);
             eventPublisher.publishContentPublished(content);
         });
     }
 
-    /**
-     * Archive expired content
-     * Runs every hour at 30 minutes past the hour
-     */
+    /** Runs every hour at 30 minutes past the hour. */
     @SchedulerLock(name = "ContentScheduler_archiveExpiredContent", lockAtLeastFor = "PT1S", lockAtMostFor = "PT1H")@Scheduled(cron = "0 30 * * * *")
     public void archiveExpiredContent() {
         log.info("Checking for expired content to archive");
@@ -75,7 +68,6 @@ public class ContentScheduler {
         log.info("Archiving {} expired content items", contentIds.size());
         contentService.archiveExpiredContent(contentIds);
 
-        // Publish events for archived content
         expiredContent.forEach(eventPublisher::publishContentArchived);
     }
 }

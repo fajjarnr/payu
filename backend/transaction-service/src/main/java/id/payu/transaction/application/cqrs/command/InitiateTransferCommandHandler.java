@@ -99,7 +99,6 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
     public InitiateTransferCommandResult handle(InitiateTransferCommand command) {
         log.info("Handling InitiateTransferCommand for sender: {}", command.senderAccountId());
 
-        // Verify the user owns the sender account
         authorizationService.verifySenderAccountOwnership(command.senderAccountId(), command.userId());
         // GLOBAL-IMP-007: Idempotency payload fingerprint (Stripe/Adyen)
         // Cache layer (IdempotencyInterceptor) already does SHA-256 canonical JSON + 409,
@@ -410,7 +409,7 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
             bifastServicePort.initiateTransfer(bifastRequest);
             transaction.setStatus(TransactionStatus.PENDING);
         } catch (Exception e) {
-            // SAGA COMPENSATION: Release reserved balance on BiFast failure
+            // Saga compensation: Release reserved balance on BiFast failure
             log.error("BiFast transfer failed, initiating compensation. TransactionEntity: {}, Error: {}",
                     transaction.getId(), e.getMessage());
 

@@ -105,7 +105,6 @@ public class PayuLoggingAutoConfiguration {
         return registration;
     }
 
-    // ---- Reactive WebFlux Filters ----
 
     /**
      * Correlation ID filter for reactive (WebFlux) applications.

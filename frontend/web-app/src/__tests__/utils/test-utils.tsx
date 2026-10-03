@@ -5,9 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import messages from '../../../messages/id.json';
 
-// Mock locale messages
 const locale = 'id';
-// Mock hooks at module level
 vi.mock('@/hooks/useUserSegment', () => ({
   useUserSegment: () => ({
     currentTier: undefined,
@@ -59,5 +57,4 @@ export function renderWithIntl(ui: React.ReactElement) {
   );
 }
 
-// Re-export everything from @testing-library/react
 export * from '@testing-library/react';

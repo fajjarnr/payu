@@ -27,17 +27,14 @@ export function useDeeplinkHandler() {
   const { isAuthenticated } = useAuth();
 
   const parseDeeplink = useCallback((url: string): DeeplinkData => {
-    // Parse payu:// URLs
     if (!url.startsWith('payu://')) {
       return { action: 'unknown', params: {}, url };
     }
 
-    // Extract path and query parameters
     const urlWithoutScheme = url.replace('payu://', '');
     const [path, queryString] = urlWithoutScheme.split('?');
     const action = path as DeeplinkData['action'];
 
-    // Parse query parameters
     const params: Record<string, string> = {};
     if (queryString) {
       const searchParams = new URLSearchParams(queryString);
@@ -56,7 +53,6 @@ export function useDeeplinkHandler() {
 
     const data = parseDeeplink(url);
 
-    // Check authentication for protected routes
     if (!isAuthenticated && data.action !== 'unknown') {
       console.log('[Deeplink] User not authenticated, redirecting to login');
       router.push({
@@ -91,7 +87,6 @@ export function useDeeplinkHandler() {
       return;
     }
 
-    // Navigate to payment confirmation screen
     router.push({
       pathname: '/payment-confirm',
       params: {
@@ -109,7 +104,6 @@ export function useDeeplinkHandler() {
 
     console.log('[Deeplink] Processing topup action:', { amount, method });
 
-    // Navigate to topup screen with pre-filled amount
     router.push({
       pathname: '/(tabs)/topup',
       params: {
@@ -130,7 +124,6 @@ export function useDeeplinkHandler() {
       return;
     }
 
-    // Navigate to transfer screen with pre-filled data
     router.push({
       pathname: '/transfer-confirm',
       params: {
@@ -143,7 +136,6 @@ export function useDeeplinkHandler() {
   }, [router]);
 
   useEffect(() => {
-    // Handle initial URL (app opened via deeplink)
     const getInitialUrl = async () => {
       const initialUrl = await Linking.getInitialURL();
       if (initialUrl) {
@@ -153,7 +145,6 @@ export function useDeeplinkHandler() {
 
     getInitialUrl();
 
-    // Listen for deeplinks while app is running
     const subscription = Linking.addEventListener('url', ({ url }) => {
       handleDeeplink(url);
     });
@@ -163,7 +154,6 @@ export function useDeeplinkHandler() {
     };
   }, [handleDeeplink]);
 
-  // Generate a deeplink URL (for sharing)
   const generateDeeplink = useCallback((
     action: 'pay' | 'topup' | 'transfer',
     params: Record<string, string>

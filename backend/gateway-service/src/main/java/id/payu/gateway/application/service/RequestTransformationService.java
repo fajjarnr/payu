@@ -39,7 +39,6 @@ public class RequestTransformationService {
     @Inject
     ObjectMapper objectMapper;
 
-    // In-memory cache of active rules
     private volatile List<TransformationRule> cachedRules;
     private final Map<String, BodyMaskingRule> maskingRuleCache = new ConcurrentHashMap<>();
 
@@ -56,11 +55,6 @@ public class RequestTransformationService {
 
     /**
      * Transform request headers based on configured rules.
-     *
-     * @param path    The request path
-     * @param method  The HTTP method
-     * @param headers The current headers (modified in place)
-     * @return The transformed headers
      */
     public Map<String, List<String>> transformRequestHeaders(String path, String method,
                                                               Map<String, List<String>> headers) {
@@ -78,11 +72,6 @@ public class RequestTransformationService {
 
     /**
      * Transform response headers based on configured rules.
-     *
-     * @param path    The request path
-     * @param method  The HTTP method
-     * @param headers The current headers (modified in place)
-     * @return The transformed headers
      */
     public Map<String, List<String>> transformResponseHeaders(String path, String method,
                                                                Map<String, List<String>> headers) {
@@ -100,12 +89,6 @@ public class RequestTransformationService {
 
     /**
      * Mask sensitive fields in response body.
-     *
-     * @param path     The request path
-     * @param method   The HTTP method
-     * @param body     The response body
-     * @param mimeType The content type
-     * @return The masked body
      */
     public String maskResponseBody(String path, String method, String body, String mimeType) {
         if (body == null || body.isBlank()) {
@@ -116,7 +99,6 @@ public class RequestTransformationService {
             return body;
         }
 
-        // Get masking rules for this path
         BodyMaskingRule maskingRule = getMaskingRuleForPath(path, method);
 
         if (maskingRule == null || maskingRule.getFieldsToMask().isEmpty()) {
@@ -128,12 +110,6 @@ public class RequestTransformationService {
 
     /**
      * Apply all transformations to a request.
-     *
-     * @param path    The request path
-     * @param method  The HTTP method
-     * @param headers The headers
-     * @param body    The body
-     * @return Transformation result
      */
     public TransformationResult transformRequest(String path, String method,
                                                   Map<String, List<String>> headers, String body) {
@@ -150,13 +126,6 @@ public class RequestTransformationService {
 
     /**
      * Apply all transformations to a response.
-     *
-     * @param path     The request path
-     * @param method   The HTTP method
-     * @param headers  The headers
-     * @param body     The body
-     * @param mimeType The content type
-     * @return Transformation result
      */
     public TransformationResult transformResponse(String path, String method,
                                                    Map<String, List<String>> headers,
@@ -207,7 +176,6 @@ public class RequestTransformationService {
 
         for (TransformationRule rule : cachedRules) {
             if (rule.matches(context)) {
-                // Collect header operations from rule actions
                 // This is a simplified implementation - in production,
                 // rules would have strongly typed actions
             }
@@ -220,7 +188,6 @@ public class RequestTransformationService {
         String cacheKey = path + ":" + method;
 
         return maskingRuleCache.computeIfAbsent(cacheKey, k -> {
-            // Default masking rules for sensitive fields
             return BodyMaskingRule.defaultMasking();
         });
     }

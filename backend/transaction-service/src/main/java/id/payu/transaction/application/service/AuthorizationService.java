@@ -47,8 +47,6 @@ public class AuthorizationService {
      * <p>Supports multi-account scenarios by checking if the transaction's
      * sender account belongs to any of the user's accounts.</p>
      *
-     * @param transactionId The transaction ID to check
-     * @param userId The user ID requesting access
      * @throws org.springframework.security.access.AccessDeniedException if user doesn't own the transaction
      */
     public void verifyTransactionAccess(java.util.UUID transactionId, String userId) {
@@ -58,8 +56,7 @@ public class AuthorizationService {
         // Get all account IDs for the user (multi-account support)
         List<UUID> userAccountIds = accountServicePort.getAccountIdsByUserId(userId);
 
-        // Check if user owns the sender account OR recipient account associated with this transaction
-        // (Banking standard: both parties have a "need to know" visibility for their mutual transaction)
+        // Banking standard: both parties have a "need to know" visibility for their mutual transaction
         if (!userAccountIds.contains(transaction.getSenderAccountId()) && 
             !userAccountIds.contains(transaction.getRecipientAccountId())) {
             
@@ -76,8 +73,6 @@ public class AuthorizationService {
      * <p>Supports multi-account scenarios by checking against all accounts
      * associated with the user.</p>
      *
-     * @param accountId The account ID to check
-     * @param userId The user ID requesting access
      * @throws org.springframework.security.access.AccessDeniedException if user doesn't own the account
      */
     public void verifyAccountOwnership(java.util.UUID accountId, String userId) {

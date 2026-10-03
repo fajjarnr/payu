@@ -127,7 +127,6 @@ public class CachedAccountQueryService {
         log.info("Updating account: {}", account.getId());
         Account updated = accountPersistencePort.save(account);
 
-        // Invalidate related caches
         cacheService.invalidate("account:external:" + account.getExternalId());
         cacheService.invalidate("account:balance:" + account.getId());
         cacheService.invalidate("account:refresh:" + account.getId());
@@ -159,7 +158,6 @@ public class CachedAccountQueryService {
         return cacheService.exists("account:id:" + accountId);
     }
 
-    // Custom exceptions
     public static class AccountNotFoundException extends RuntimeException {
         public AccountNotFoundException(String id) {
             super("Account not found: " + id);

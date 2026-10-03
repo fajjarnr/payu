@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useUserSegment, useSegmentedOffers, useVIPStatus } from '@/hooks';
 import * as SegmentationService from '@/services/SegmentationService';
 
-// Mock the API module
 vi.mock('@/lib/api', () => ({
   default: {
     get: vi.fn(),

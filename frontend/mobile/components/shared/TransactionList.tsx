@@ -45,14 +45,12 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // Flatten infinite query pages into a single array (memoized)
   const transactions = useMemo(
     () => transactionsData?.pages.flatMap(page => page.items) ?? [],
     [transactionsData]
   );
   const hasMore = hasNextPage ?? false;
 
-  // Memoize onRefresh with mount check
   const onRefresh = useCallback(async () => {
     if (!isMountedRef.current) return;
 
@@ -66,14 +64,12 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     }
   }, [refetch]);
 
-  // Cleanup on unmount
   React.useEffect(() => {
     return () => {
       isMountedRef.current = false;
     };
   }, []);
 
-  // Transform data into grouped format with date headers
   const listData = useMemo(() => {
     if (!showDateHeaders) {
       return transactions.map(t => ({ type: 'item' as const, transaction: t }));
@@ -100,7 +96,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       groupedByDate[groupKey].push(transaction);
     });
 
-    // Convert to flat array with headers
     Object.entries(groupedByDate).forEach(([dateLabel, txs]) => {
       groups.push({ type: 'header', date: dateLabel });
       txs.forEach((transaction) => {
@@ -188,7 +183,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     </View>
   ), [colors.textSecondary]);
 
-  // Memoize key extractor for FlashList
   const keyExtractor = useCallback((item: typeof listData[0], index: number) => {
     if (item.type === 'header') {
       return `header-${item.date}-${index}`;
@@ -196,7 +190,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     return `transaction-${item.transaction.id}`;
   }, []);
 
-  // Memoize end reached handler
   const handleEndReached = useCallback(() => {
     if (hasMore && !isFetchingNextPage && !limit && isMountedRef.current) {
       fetchNextPage();

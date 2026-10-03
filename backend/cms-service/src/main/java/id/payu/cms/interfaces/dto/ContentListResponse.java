@@ -39,9 +39,6 @@ public class ContentListResponse {
     @Schema(description = "Is this the last page?", example = "false")
     private boolean last;
 
-    /**
-     * Create empty response
-     */
     public static ContentListResponse empty() {
         return ContentListResponse.builder()
             .contents(List.of())

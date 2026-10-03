@@ -12,7 +12,6 @@ public interface AccountServicePort {
     /**
      * Retrieves account IDs associated with a user.
      *
-     * @param userId the user ID to look up
      * @return list of account UUIDs belonging to the user
      */
     List<UUID> getAccountIdsByUserId(String userId);

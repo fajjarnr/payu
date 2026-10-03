@@ -47,7 +47,6 @@ public class CreatePaymentLinkRequest {
     public CreatePaymentLinkRequest() {
     }
 
-    // Getters and setters
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }

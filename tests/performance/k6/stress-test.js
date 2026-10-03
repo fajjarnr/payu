@@ -1,5 +1,3 @@
-// PayU Platform - Stress Test
-// ============================
 // Push platform to breaking point to find limits
 // Run: k6 run stress-test.js
 

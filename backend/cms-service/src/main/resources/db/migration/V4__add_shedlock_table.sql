@@ -1,4 +1,3 @@
--- V4__add_shedlock_table.sql
 -- ITER-53: ShedLock table for distributed locking of @Scheduled methods.
 
 CREATE TABLE IF NOT EXISTS shedlock (

@@ -160,10 +160,6 @@ public class FxRateService implements FxRateUseCase {
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
-
     private FxRate getCurrentRateFallback(String fromCurrency, String toCurrency, Exception ex) {
         if (ex instanceof DataIntegrityViolationException
                 || ex instanceof IllegalArgumentException

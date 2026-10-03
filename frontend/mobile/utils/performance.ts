@@ -1,35 +1,11 @@
-/**
- * Performance Monitoring Utilities (P2-C5, P2-C6)
- *
- * Provides utilities for measuring and optimizing React Native app performance:
- * - Component render time measurement
- * - List scroll performance tracking
- * - Memory usage monitoring
- * - Frame rate monitoring
- */
+/** Performance monitoring: render timing, list scroll tracking, and benchmarks (P2-C5, P2-C6). */
 
-// Performance markers for measuring operation durations
 const performanceMarks = new Map<string, number>();
 
-/**
- * Mark the start of a performance measurement
- *
- * @example
- * performanceMarkStart('transaction-list-render');
- * // ... do work ...
- * const duration = performanceMarkEnd('transaction-list-render');
- * console.log(`Render took ${duration}ms`);
- */
 export function performanceMarkStart(markName: string): void {
   performanceMarks.set(markName, Date.now());
 }
 
-/**
- * Mark the end of a performance measurement and return duration
- *
- * @param markName - The name of the mark to end
- * @returns Duration in milliseconds, or -1 if mark not found
- */
 export function performanceMarkEnd(markName: string): number {
   const startTime = performanceMarks.get(markName);
   if (startTime === undefined) {
@@ -42,14 +18,6 @@ export function performanceMarkEnd(markName: string): number {
   return duration;
 }
 
-/**
- * Measure the execution time of an async function
- *
- * @example
- * const result = await measurePerformance('fetch-transactions', async () => {
- *   return await api.getTransactions();
- * });
- */
 export async function measurePerformance<T>(
   markName: string,
   fn: () => Promise<T>
@@ -62,9 +30,6 @@ export async function measurePerformance<T>(
   }
 }
 
-/**
- * Measure synchronous function execution time
- */
 export function measureSyncPerformance<T>(
   markName: string,
   fn: () => T
@@ -77,31 +42,21 @@ export function measureSyncPerformance<T>(
   }
 }
 
-/**
- * Performance thresholds for different operations (in milliseconds)
- */
 export const PERFORMANCE_THRESHOLDS = {
-  // UI rendering thresholds
   COMPONENT_RENDER: 16, // 60fps = ~16ms per frame
   LIST_SCROLL: 16,
   ANIMATION_FRAME: 16,
 
-  // API operation thresholds
   API_CALL: 1000,
   SECURE_STORE_READ: 50,
   SECURE_STORE_WRITE: 50,
 
-  // List operation thresholds
   LIST_INITIAL_RENDER: 500,
   LIST_ITEM_RENDER: 10,
 
-  // Navigation thresholds
   NAVIGATION_TRANSITION: 300,
 } as const;
 
-/**
- * Check if a performance measurement exceeds threshold
- */
 export function isPerformanceSlow(
   markName: string,
   duration: number,
@@ -119,9 +74,6 @@ export function isPerformanceSlow(
   return isSlow;
 }
 
-/**
- * Performance report for batch operations
- */
 export interface PerformanceReport {
   markName: string;
   duration: number;
@@ -129,9 +81,6 @@ export interface PerformanceReport {
   isSlow: boolean;
 }
 
-/**
- * Generate a performance report for a measurement
- */
 export function createPerformanceReport(
   markName: string,
   duration: number,
@@ -151,16 +100,6 @@ export function createPerformanceReport(
   return report;
 }
 
-/**
- * Batch performance measurement for multiple operations
- *
- * @example
- * const reports = await measureBatchPerformance([
- *   ['load-user', () => loadUser()],
- *   ['load-wallet', () => loadWallet()],
- *   ['load-transactions', () => loadTransactions()],
- * ]);
- */
 export async function measureBatchPerformance(
   operations: Array<[string, () => Promise<any>]>
 ): Promise<PerformanceReport[]> {
@@ -175,10 +114,7 @@ export async function measureBatchPerformance(
   return reports;
 }
 
-/**
- * List scroll performance tracker
- * Use this to monitor FlashList/FlatList scroll performance
- */
+/** Tracks dropped frames during list scroll (FlashList/FlatList). */
 export class ListScrollTracker {
   private frameCount = 0;
   private lastFrameTime = 0;
@@ -232,16 +168,10 @@ export class ListScrollTracker {
   }
 }
 
-/**
- * Create a new list scroll tracker instance
- */
 export function createListScrollTracker(): ListScrollTracker {
   return new ListScrollTracker();
 }
 
-/**
- * Memoization performance utilities
- */
 export function createMemoizationCache<T extends (...args: any[]) => any>(
   fn: T,
   maxSize: number = 100
@@ -258,7 +188,6 @@ export function createMemoizationCache<T extends (...args: any[]) => any>(
     const result = fn(...args);
     cache.set(key, result);
 
-    // Enforce max cache size
     if (cache.size > maxSize) {
       const firstKey = cache.keys().next().value;
       cache.delete(firstKey);
@@ -275,10 +204,6 @@ export function createMemoizationCache<T extends (...args: any[]) => any>(
 
 import * as React from 'react';
 
-/**
- * Component render time measurement hook
- * Use this in React components to track render performance
- */
 export function useRenderTime(componentName: string): void {
   const renderCount = React.useRef(0);
   const lastRenderTime = React.useRef<number>(Date.now());
@@ -297,9 +222,6 @@ export function useRenderTime(componentName: string): void {
   });
 }
 
-/**
- * Performance benchmark result
- */
 export interface BenchmarkResult {
   name: string;
   iterations: number;
@@ -310,15 +232,6 @@ export interface BenchmarkResult {
   opsPerSecond: number;
 }
 
-/**
- * Run a performance benchmark on a function
- *
- * @example
- * const result = await benchmark('memoized-calculation', () => {
- *   return expensiveCalculation();
- * }, 100);
- * console.log(result);
- */
 export async function benchmark<T>(
   name: string,
   fn: () => T,
@@ -331,7 +244,6 @@ export async function benchmark<T>(
     fn();
   }
 
-  // Actual benchmark
   for (let i = 0; i < iterations; i++) {
     const start = Date.now();
     fn();
@@ -356,9 +268,6 @@ export async function benchmark<T>(
   };
 }
 
-/**
- * Log a benchmark result in a readable format
- */
 export function logBenchmarkResult(result: BenchmarkResult): void {
   console.log(`\n[Benchmark] ${result.name}`);
   console.log(`  Iterations: ${result.iterations}`);

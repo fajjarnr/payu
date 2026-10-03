@@ -31,8 +31,6 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
         this.executionRepository = executionRepository;
     }
 
-    // --- Rules ---
-
     @Override
     public SplitPaymentRule saveRule(SplitPaymentRule rule) {
         SplitPaymentRuleEntity entity = toRuleEntity(rule);
@@ -50,8 +48,6 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
         return ruleRepository.findByPartnerIdOrderByCreatedAtDesc(partnerId)
                 .stream().map(this::toRuleDomain).collect(Collectors.toList());
     }
-
-    // --- Executions ---
 
     @Override
     public SplitPaymentExecution saveExecution(SplitPaymentExecution execution) {
@@ -84,8 +80,6 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
         return executionRepository.findByStatusIn(entityStatuses).stream()
                 .map(this::toExecutionDomain).collect(Collectors.toList());
     }
-
-    // --- Rule Mappers ---
 
     private SplitPaymentRuleEntity toRuleEntity(SplitPaymentRule domain) {
         SplitPaymentRuleEntity entity = new SplitPaymentRuleEntity();
@@ -142,8 +136,6 @@ public class SplitPaymentPersistenceAdapter implements SplitPaymentPersistencePo
                 .updatedAt(entity.getUpdatedAt())
                 .build();
     }
-
-    // --- Execution Mappers ---
 
     private SplitPaymentExecutionEntity toExecutionEntity(SplitPaymentExecution domain) {
         SplitPaymentExecutionEntity entity = new SplitPaymentExecutionEntity();

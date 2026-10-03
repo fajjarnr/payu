@@ -2,7 +2,6 @@
 # Ref: DEVSECOPS_ARCHITECTURE.md §4.5.1
 # NOTE: Rules use only syscall-level fields (no container plugin dependency)
 # Compatible with Falco v0.37+ (no CIDR, no IP operators)
-# ============================================================
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,9 +12,7 @@ metadata:
     app.kubernetes.io/component: runtime-security
 data:
   payu-rules.yaml: |
-    # ============================================================
     # PayU Banking-Specific Falco Rules (Syscall-only)
-    # ============================================================
 
     # Detect shell execution (common for reverse shells)
     - rule: Shell Execution Detected

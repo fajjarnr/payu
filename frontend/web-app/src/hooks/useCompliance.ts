@@ -5,7 +5,7 @@ import { MutationPresets } from '@/lib/mutation-config';
 import ComplianceService from '@/services/ComplianceService';
 import type { CreateAuditReportRequest, CreateGdprAuditRequest, GdprSearchCriteria, ComplianceStandard } from '@/services/ComplianceService';
 
-// ── Audit Reports ──
+// Audit Reports
 export function useAuditReports(params?: {
   transactionId?: string;
   merchantId?: string;
@@ -34,7 +34,7 @@ export function useCreateAuditReport() {
   });
 }
 
-// ── GDPR Audits ──
+// GDPR Audits
 export function useUserGdprAudits(userId: string) {
   return useQuery({
     queryKey: ['gdpr-audits', userId],

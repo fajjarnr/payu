@@ -3,10 +3,6 @@ package id.payu.api.common.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-/**
- * Abstract base class for regex-based validators.
- * Provides common validation logic for pattern-based validation.
- */
 public abstract class AbstractRegexValidator<A extends java.lang.annotation.Annotation>
         implements ConstraintValidator<A, String> {
 

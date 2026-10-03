@@ -3,7 +3,6 @@ import { Platform } from 'react-native';
 import { apiClient } from './api';
 import { PushNotification, ApiResponse } from '@/types';
 
-// Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

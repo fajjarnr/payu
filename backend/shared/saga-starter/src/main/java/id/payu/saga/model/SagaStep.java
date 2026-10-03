@@ -77,9 +77,6 @@ public class SagaStep<T> {
                 .build();
     }
 
-    /**
-     * Creates a step with action and compensation.
-     */
     public static <T> SagaStep<T> withCompensation(String name,
                                                     Function<T, StepResult<T>> action,
                                                     Function<T, StepResult<T>> compensation) {
@@ -90,16 +87,10 @@ public class SagaStep<T> {
                 .build();
     }
 
-    /**
-     * Check if this step has a compensation defined.
-     */
     public boolean hasCompensation() {
         return compensation != null;
     }
 
-    /**
-     * Check if pre-condition is met for this step.
-     */
     public boolean canExecute(T context) {
         if (precondition == null) {
             return true;

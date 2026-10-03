@@ -1,7 +1,6 @@
 # PayU Platform - AMQ Streams Kafka Cluster (KRaft mode)
 # Event streaming with persistent storage
 # Prerequisite: amq-streams operator subscription installed
-# --------------------------------------------------------
 
 # KafkaNodePool - Controller nodes (KRaft metadata quorum)
 apiVersion: kafka.strimzi.io/v1

@@ -101,7 +101,6 @@ public class WebhookDispatcherService {
         List<WebhookSubscriptionEntity> subscriptions =
                 subscriptionRepository.findActiveByEventType(eventType);
 
-        // Build the webhook payload envelope
         Map<String, Object> envelope = buildEnvelope(eventId, eventType, payload);
         String payloadJson = toJson(envelope);
 

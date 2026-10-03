@@ -1,7 +1,6 @@
 # Network Observability FlowCollector
 # Uses DEDICATED LokiStack (netobserv-loki) in netobserv namespace
 # Separated from main logging LokiStack for performance isolation
-# ============================================================
 apiVersion: flows.netobserv.io/v1beta2
 kind: FlowCollector
 metadata:

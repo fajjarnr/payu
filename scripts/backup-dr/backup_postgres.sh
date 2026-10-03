@@ -6,7 +6,6 @@
 
 set -euo pipefail
 
-# Configuration
 CONTAINER_NAME="payu-postgres"
 POSTGRES_USER="payu"
 BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
@@ -14,12 +13,10 @@ BACKUP_DIR="${BACKUP_ROOT}/postgres"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="${BACKUP_ROOT}/logs/backup_postgres_${TIMESTAMP}.log"
 
-# Create backup directories if they don't exist
 mkdir -p "${BACKUP_DIR}/daily"
 mkdir -p "${BACKUP_DIR}/weekly"
 mkdir -p "$(dirname ${LOG_FILE})" 2>/dev/null || true
 
-# List of databases to backup
 DATABASES=(
     "payu_account"
     "payu_auth"
@@ -34,7 +31,6 @@ DATABASES=(
     "payu_qris"
 )
 
-# Logging function
 log() {
     local level="$1"
     shift
@@ -43,7 +39,6 @@ log() {
     echo "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}" >&2
 }
 
-# Check if container is running
 check_container() {
     log "INFO" "Checking if PostgreSQL container is running..."
     if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
@@ -54,7 +49,6 @@ check_container() {
     return 0
 }
 
-# Test database connectivity
 test_connection() {
     log "INFO" "Testing database connectivity..."
     if ! docker exec "${CONTAINER_NAME}" pg_isready -U "${POSTGRES_USER}" > /dev/null 2>&1; then
@@ -107,7 +101,6 @@ weekly_backup() {
     log "INFO" "Starting weekly physical backup to ${backup_dir}"
 
     if docker exec "${CONTAINER_NAME}" pg_basebackup -U "${POSTGRES_USER}" -D "/tmp/base_backup" -Ft -z -P; then
-        # Copy from container to host
         docker cp "${CONTAINER_NAME}:/tmp/base_backup.tar.gz" "${BACKUP_DIR}/weekly/base_backup_${TIMESTAMP}.tar.gz"
         docker exec "${CONTAINER_NAME}" rm -rf /tmp/base_backup
 
@@ -120,7 +113,6 @@ weekly_backup() {
     fi
 }
 
-# Clean up old backups
 cleanup_old_backups() {
     local backup_type="$1"
     local retention_days="$2"
@@ -134,7 +126,6 @@ cleanup_old_backups() {
     log "INFO" "Cleanup complete. ${remaining} backup files remaining"
 }
 
-# Verify backup integrity
 verify_backup() {
     local backup_file="$1"
 
@@ -160,7 +151,6 @@ verify_backup() {
     return 0
 }
 
-# Main backup routine
 main() {
     local backup_type="${1:-daily}"
     local retention_days="${2:-7}"
@@ -183,22 +173,18 @@ main() {
     local total_count=0
 
     if [[ "${backup_type}" == "weekly" ]]; then
-        # Weekly physical backup
         total_count=1
         if weekly_backup; then
             success_count=1
         fi
     else
-        # Daily logical backup
         total_count=$((${#DATABASES[@]} + 1))
 
-        # Backup all databases
         if backup_all_databases; then
             success_count=$((success_count + 1))
             verify_backup "${BACKUP_DIR}/daily/all_databases_${TIMESTAMP}.sql.gz"
         fi
 
-        # Backup individual databases
         for db in "${DATABASES[@]}"; do
             if backup_database "${db}"; then
                 success_count=$((success_count + 1))
@@ -207,7 +193,6 @@ main() {
         done
     fi
 
-    # Cleanup old backups
     cleanup_old_backups "${backup_type}" "${retention_days}"
 
     log "INFO" "=========================================="
@@ -223,7 +208,6 @@ main() {
     fi
 }
 
-# Parse command line arguments
 case "${1:-}" in
     daily)
         main "daily" "${2:-7}"

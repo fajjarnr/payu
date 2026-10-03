@@ -73,7 +73,6 @@ public class DisbursementService implements DisbursementUseCase {
         log.info("Creating disbursement for account: {}, amount: {}, bank: {}",
                 sourceAccountId, amount, bankCode);
 
-        // Check idempotency
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             Optional<DisbursementEntity> existing = disbursementRepository.findByIdempotencyKey(idempotencyKey);
             if (existing.isPresent()) {

@@ -55,12 +55,11 @@ class StatementControllerIntegrationTest {
         // Clean up repository before each test
         statementRepository.deleteAll();
 
-        // Mock JWT decoder
         when(jwtDecoder.decode(anyString()))
             .thenReturn(TestContainersConfig.buildTestJwt(TestContainersConfig.TEST_CUSTOMER_ID));
     }
 
-    // ─── POST /statements/generate ───────────────────────────────────
+    // POST /statements/generate
 
     @Nested
     @DisplayName("Generate StatementEntity")
@@ -164,7 +163,7 @@ class StatementControllerIntegrationTest {
         }
     }
 
-    // ─── GET /statements/{id} ────────────────────────────────────────
+    // GET /statements/{id}
 
     @Nested
     @DisplayName("Get StatementEntity by ID")
@@ -226,7 +225,7 @@ class StatementControllerIntegrationTest {
         }
     }
 
-    // ─── GET /statements ─────────────────────────────────────────────
+    // GET /statements
 
     @Nested
     @DisplayName("List Statements")
@@ -317,7 +316,7 @@ class StatementControllerIntegrationTest {
         }
     }
 
-    // ─── GET /statements/latest ──────────────────────────────────────
+    // GET /statements/latest
 
     @Nested
     @DisplayName("Get Latest StatementEntity")
@@ -370,7 +369,7 @@ class StatementControllerIntegrationTest {
         }
     }
 
-    // ─── GET /statements/{id}/download ───────────────────────────────
+    // GET /statements/{id}/download
 
     @Nested
     @DisplayName("Download StatementEntity")
@@ -411,7 +410,7 @@ class StatementControllerIntegrationTest {
         }
     }
 
-    // ─── POST /statements/{id}/regenerate ────────────────────────────
+    // POST /statements/{id}/regenerate
 
     @Nested
     @DisplayName("Regenerate StatementEntity (Admin Only)")
@@ -420,7 +419,6 @@ class StatementControllerIntegrationTest {
         @Test
         @DisplayName("Should accept regenerate request with admin role")
         void regenerateStatement_withAdminRole_shouldReturn202() {
-            // Mock admin JWT
             when(jwtDecoder.decode("admin-token"))
                 .thenReturn(TestContainersConfig.buildAdminJwt());
 

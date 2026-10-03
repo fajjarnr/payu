@@ -3,7 +3,6 @@ import { waitForPageStable, waitForAnimations } from './utils';
 
 test.describe('QRIS Payment Flow', () => {
   test.beforeEach(async ({ authPage: page }) => {
-    // Navigate to QRIS page (assumes user is logged in)
     await page.goto('/qris');
     await waitForPageStable(page);
   });
@@ -76,11 +75,9 @@ test.describe('QRIS Payment Flow', () => {
     await page.goto('/qris');
     await waitForPageStable(page);
 
-    // Check that key elements are visible
     await expect(page.getByText('Pembayaran QRIS')).toBeVisible();
     await expect(page.locator('.border-2.border-dashed')).toBeVisible();
 
-    // Take screenshot
     await page.screenshot({
       path: 'e2e/screenshots/qris-mobile.png',
       fullPage: true
@@ -91,13 +88,11 @@ test.describe('QRIS Payment Flow', () => {
     const cameraButton = page.locator('button:has-text("Buka Kamera")');
     const uploadButton = page.locator('button:has-text("Unggah Foto")');
 
-    // Check button visibility
     await expect(cameraButton).toBeVisible();
     await expect(uploadButton).toBeVisible();
   });
 
   test('should have History icon in recent transactions', async ({ authPage: page }) => {
-    // Check for History section
     await expect(page.getByText('Aktivitas Terakhir')).toBeVisible();
   });
 });
@@ -112,10 +107,8 @@ test.describe('QRIS Flow - Scanner Interaction', () => {
     // Hover on the parent scanner container (not the absolute overlay)
     const scannerContainer = page.locator('.relative.aspect-square').first();
 
-    // Hover over scanner area
     await scannerContainer.hover();
 
-    // Check that the dashed border overlay exists
     const scannerOverlay = page.locator('.border-2.border-dashed').first();
     await expect(scannerOverlay).toBeVisible({ timeout: 10000 });
   });
@@ -123,28 +116,22 @@ test.describe('QRIS Flow - Scanner Interaction', () => {
   test('should have click handler for camera button', async ({ authPage: page }) => {
     const cameraButton = page.locator('button:has-text("Buka Kamera")');
 
-    // Button should be clickable
     await expect(cameraButton).toBeEnabled();
 
-    // Click button (in real scenario would open camera)
     await cameraButton.click();
     await waitForAnimations(page);
 
-    // Verify button is still visible
     await expect(cameraButton).toBeVisible();
   });
 
   test('should have click handler for upload button', async ({ authPage: page }) => {
     const uploadButton = page.locator('button:has-text("Unggah Foto")');
 
-    // Button should be clickable
     await expect(uploadButton).toBeEnabled();
 
-    // Click button (in real scenario would open file picker)
     await uploadButton.click();
     await waitForAnimations(page);
 
-    // Verify button is still visible
     await expect(uploadButton).toBeVisible();
   });
 });
@@ -163,14 +150,11 @@ test.describe('QRIS Flow - My QR Code', () => {
   test('should have show code button with hover effect', async ({ authPage: page }) => {
     const showCodeButton = page.locator('button:has-text("Tampilkan Kode Saya")');
 
-    // Check for button
     await expect(showCodeButton).toBeVisible({ timeout: 10000 });
 
-    // Click button
     await showCodeButton.click();
     await waitForAnimations(page);
 
-    // Verify button is still visible
     await expect(showCodeButton).toBeVisible();
   });
 
@@ -236,13 +220,11 @@ test.describe('QRIS Flow - Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ authPage: page }) => {
-    // Tab to first button
     await page.keyboard.press('Tab');
     await page.waitForTimeout(100);
     await page.keyboard.press('Tab');
     await page.waitForTimeout(100);
 
-    // Check that an element is focused
     const focused = page.locator(':focus');
     await expect(focused).toBeVisible();
   });

@@ -120,7 +120,6 @@ class SnapBiV10ContractTest {
     @Test
     @DisplayName("v1.0 taxonomy: token -> payment -> status -> refund")
     void fullMoneyFlowThroughV10Taxonomy() throws Exception {
-        // --- token: POST /v1.0/access-token/b2b ---
         String tokenBody = "{\"grantType\":\"client_credentials\"}";
         String tokenTs = timestamp();
         String tokenSig = signatureService.generateSignatureWithClientKey(
@@ -138,7 +137,6 @@ class SnapBiV10ContractTest {
 
         String accessToken = objectMapper.readTree(tokenResponse).get("accessToken").asText();
 
-        // --- payment: POST /v1.0/transfer-va/payment ---
         String paymentBody = """
                 {"partnerReferenceNo":"V10-PRN-%s","amount":{"value":"250.00","currency":"IDR"},
                  "sourceAccountNo":"SRC-V10","beneficiaryAccountNo":"BEN-V10","beneficiaryBankCode":"014"}
@@ -163,7 +161,6 @@ class SnapBiV10ContractTest {
 
         verify(walletSettlementPort).settle(anyString(), anyString(), any(), anyString(), anyString());
 
-        // --- status: GET /v1.0/transfer-va/payment/{referenceNo} ---
         String statusTs = timestamp();
         String statusSig = signatureService.generateSignature(
                 clientSecret, "GET", V10_BASE + "/transfer-va/payment/" + payuRef, accessToken, "", statusTs);
@@ -176,7 +173,6 @@ class SnapBiV10ContractTest {
                 .andExpect(jsonPath("$.responseCode").value("2002500"))
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
 
-        // --- refund: POST /v1.0/transfer-va/refund (originalReferenceNo in body) ---
         String refundBody = """
                 {"originalReferenceNo":"%s","partnerReferenceNo":"V10-RFN-%s","amount":{"value":"250.00","currency":"IDR"},"reason":"v10 refund"}
                 """.formatted(payuRef, System.currentTimeMillis());

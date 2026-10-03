@@ -19,9 +19,6 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Tests for ResilienceAutoConfiguration
- */
 @SpringBootTest(classes = ResilienceAutoConfigurationTest.TestConfiguration.class)
 @ImportAutoConfiguration(ResilienceAutoConfiguration.class)
 @TestPropertySource(properties = {
@@ -62,7 +59,6 @@ class ResilienceAutoConfigurationTest {
         io.github.resilience4j.circuitbreaker.CircuitBreakerConfig config = defaultCircuitBreaker.getCircuitBreakerConfig();
         assertThat(config.getFailureRateThreshold()).isEqualTo(50f);
         // In Resilience4j 2.x, waitDuration is obtained via getWaitIntervalFunction()
-        // Just verify the circuit breaker exists and is configured
         assertThat(config.getSlidingWindowSize()).isEqualTo(100);
     }
 
@@ -98,6 +94,5 @@ class ResilienceAutoConfigurationTest {
 
     @Configuration
     static class TestConfiguration {
-        // Empty configuration class for @SpringBootTest
     }
 }

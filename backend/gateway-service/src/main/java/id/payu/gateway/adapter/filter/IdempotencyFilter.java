@@ -58,42 +58,42 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
     // Financial operation paths that require idempotency key.
     // Covers ALL write endpoints annotated with @Idempotent(required=true) across services.
     private static final Set<String> FINANCIAL_PATHS = Set.of(
-        // --- Core transfers & payments (existing) ---
+        // Core transfers & payments (existing)
         "/api/v1/transfers",
         "/api/v1/payments",
         "/api/v1/billing/payments",
         "/v1/transfers",
         "/v1/payments",
 
-        // --- Wallet service ---
+        // Wallet service
         "/api/v1/wallets",
 
-        // --- Transaction service ---
+        // Transaction service
         "/api/v1/transactions",
         "/api/v1/disbursements",
         "/api/v1/payments/va",
         "/api/v1/split-bills",
         "/api/v1/scheduled-transfers",
 
-        // --- Lending service: loans, repayments, PayLater ---
+        // Lending service: loans, repayments, PayLater
         "/api/v1/lending",
         "/api/v1/loan-origination",
 
-        // --- FX service: currency conversions ---
+        // FX service: currency conversions
         "/api/v1/fx",
 
-        // --- Dispute service: refunds & disputes ---
+        // Dispute service: refunds & disputes
         "/api/v1/disputes",
         "/api/v1/refunds",
 
-        // --- Billing service: top-up, subscriptions ---
+        // Billing service: top-up, subscriptions
         "/api/v1/topup",
         "/api/v1/subscriptions",
 
-        // --- Investment service: mutual funds, gold, deposits ---
+        // Investment service: mutual funds, gold, deposits
         "/api/v1/investments",
 
-        // --- Partner service: payment links, merchants, SNAP-BI ---
+        // Partner service: payment links, merchants, SNAP-BI
         // PARTNER-002: /auth/token is deliberately excluded — token issuance is
         // authenticated by client-key HMAC, not idempotency. Only payment/refund
         // writes (payments, payments/{id}/refund) require an idempotency key.
@@ -102,7 +102,7 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
         "/api/v1/v1/partner",
         "/v1.0",
 
-        // --- Checkout (gateway-native) ---
+        // Checkout (gateway-native)
         "/api/v1/checkout"
     );
 
@@ -132,7 +132,6 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             return;
         }
 
-        // Skip health and metrics endpoints
         String rawPath = requestContext.getUriInfo().getPath();
         if (!rawPath.startsWith("/")) {
             rawPath = "/" + rawPath;
@@ -142,13 +141,11 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             return;
         }
 
-        // Only apply to write operations
         String method = requestContext.getMethod();
         if (!IDEMPOTENT_METHODS.contains(method)) {
             return;
         }
 
-        // Get idempotency key - check standard header first, then legacy header for backward compatibility
         String idempotencyKey = requestContext.getHeaderString(STANDARD_IDEMPOTENCY_KEY_HEADER);
         String headerUsed = STANDARD_IDEMPOTENCY_KEY_HEADER;
 
@@ -158,7 +155,6 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             headerUsed = LEGACY_IDEMPOTENCY_KEY_HEADER;
         }
 
-        // Also check configured header name if different from standard/legacy
         String configuredHeader = config.idempotency().headerName();
         if ((idempotencyKey == null || idempotencyKey.isBlank())
                 && !configuredHeader.equals(STANDARD_IDEMPOTENCY_KEY_HEADER)
@@ -167,7 +163,6 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
             headerUsed = configuredHeader;
         }
 
-        // Check if this is a financial operation that requires idempotency key
         boolean isFinancialOperation = FINANCIAL_PATHS.stream()
             .anyMatch(financialPath -> path.startsWith(financialPath));
 
@@ -180,7 +175,6 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
 
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             if (isFinancialOperation) {
-                // Financial operations MUST have idempotency key
                 Log.warnf("Idempotency key required for financial operation %s %s", method, path);
                 requestContext.abortWith(
                     Response.status(Response.Status.BAD_REQUEST)
@@ -190,12 +184,10 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
                 );
                 return;
             }
-            // For non-financial write operations, idempotency key is optional
             Log.debugf("No idempotency key provided for non-financial %s %s", method, path);
             return;
         }
 
-        // Check if this key was already used
         String cacheKey = IDEMPOTENCY_PREFIX + idempotencyKey;
         try {
             String requestFingerprint = requestFingerprint(requestContext);
@@ -392,7 +384,6 @@ public class IdempotencyFilter implements ContainerRequestFilter, ContainerRespo
      */
     private CachedResponse parseCachedResponse(String json) {
         try {
-            // Parse status
             int statusStart = json.indexOf("\"status\":") + 9;
             int statusEnd = json.indexOf(",", statusStart);
             if (statusEnd == -1) statusEnd = json.indexOf("}", statusStart);

@@ -41,7 +41,6 @@ public class SplitPaymentExecutionResponse {
         return r;
     }
 
-    // Getters
     public UUID getId() { return id; }
     public UUID getSplitRuleId() { return splitRuleId; }
     public String getPayerAccountId() { return payerAccountId; }

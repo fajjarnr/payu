@@ -12,7 +12,6 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Validates PayU account number format.
  * Account number must be exactly 10 digits.
  */
 @Target({FIELD, PARAMETER})

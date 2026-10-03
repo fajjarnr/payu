@@ -12,7 +12,6 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Validates email format with PayU-specific pattern.
  * More lenient than standard email validation for Indonesian domains.
  */
 @Target({FIELD, PARAMETER})

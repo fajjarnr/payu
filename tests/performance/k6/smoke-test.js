@@ -1,5 +1,3 @@
-// PayU Platform - Smoke Test
-// ===========================
 // Minimal load test to verify platform functionality
 // Run: k6 run smoke-test.js
 

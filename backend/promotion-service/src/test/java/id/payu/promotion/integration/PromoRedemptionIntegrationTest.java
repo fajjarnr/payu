@@ -39,13 +39,11 @@ class PromoRedemptionIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Setup test data
     }
 
     @Test
     @DisplayName("should apply percentage discount promo successfully")
     void shouldApplyPercentageDiscountPromo() {
-        // Given
         PromoCode promo = PromoCode.builder()
                 .code("DISCOUNT20")
                 .discountValue(BigDecimal.valueOf(20))
@@ -59,10 +57,8 @@ class PromoRedemptionIntegrationTest {
                 "DISCOUNT20", USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID
         );
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertTrue(response.success());
         assertEquals(0, new BigDecimal("20000").compareTo(response.discountAmount()));
         assertEquals(0, new BigDecimal("80000").compareTo(response.finalAmount()));
@@ -71,7 +67,6 @@ class PromoRedemptionIntegrationTest {
     @Test
     @DisplayName("should apply fixed discount promo successfully")
     void shouldApplyFixedDiscountPromo() {
-        // Given
         PromoCode promo = PromoCode.builder()
                 .code("CASH5000")
                 .discountValue(BigDecimal.valueOf(5000))
@@ -85,10 +80,8 @@ class PromoRedemptionIntegrationTest {
                 "CASH5000", USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID
         );
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertTrue(response.success());
         assertEquals(0, new BigDecimal("5000").compareTo(response.discountAmount()));
         assertEquals(0, new BigDecimal("95000").compareTo(response.finalAmount()));
@@ -97,15 +90,12 @@ class PromoRedemptionIntegrationTest {
     @Test
     @DisplayName("should reject invalid promo code")
     void shouldRejectInvalidPromoCode() {
-        // Given
         ApplyPromoRequest request = new ApplyPromoRequest(
                 "INVALID", USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID
         );
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertFalse(response.success());
         assertEquals("PROMO_NOT_FOUND", response.errorCode());
     }
@@ -113,7 +103,6 @@ class PromoRedemptionIntegrationTest {
     @Test
     @DisplayName("should reject promo below minimum amount")
     void shouldRejectPromoBelowMinimumAmount() {
-        // Given
         PromoCode promo = PromoCode.builder()
                 .code("BIGONLY")
                 .discountValue(BigDecimal.valueOf(10))
@@ -127,10 +116,8 @@ class PromoRedemptionIntegrationTest {
                 "BIGONLY", USER_ID, TRANSACTION_ID, new BigDecimal("50000"), PARTNER_ID
         );
 
-        // When
         ApplyPromoResponse response = promoRedemptionService.applyPromo(request);
 
-        // Then
         assertFalse(response.success());
         assertEquals("MIN_AMOUNT_NOT_MET", response.errorCode());
     }
@@ -138,7 +125,6 @@ class PromoRedemptionIntegrationTest {
     @Test
     @DisplayName("should support idempotency key")
     void shouldSupportIdempotencyKey() {
-        // Given
         PromoCode promo = PromoCode.builder()
                 .code("IDEMPOTENT")
                 .discountValue(BigDecimal.valueOf(10))
@@ -152,16 +138,14 @@ class PromoRedemptionIntegrationTest {
                 "IDEMPOTENT", USER_ID, TRANSACTION_ID, new BigDecimal("100000"), PARTNER_ID, idempotencyKey
         );
 
-        // When - First call
         ApplyPromoResponse response1 = promoRedemptionService.applyPromo(request1);
 
-        // When - Second call with same idempotency key
         ApplyPromoRequest request2 = new ApplyPromoRequest(
                 "IDEMPOTENT", USER_ID, "different-txn", new BigDecimal("200000"), PARTNER_ID, idempotencyKey
         );
         ApplyPromoResponse response2 = promoRedemptionService.applyPromo(request2);
 
-        // Then - Both responses should be identical (cached result)
+        // Both responses should be identical (cached result)
         assertTrue(response1.success());
         assertTrue(response2.success());
         assertEquals(response1.discountAmount(), response2.discountAmount());

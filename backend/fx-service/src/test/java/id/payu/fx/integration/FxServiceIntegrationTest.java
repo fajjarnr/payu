@@ -47,7 +47,6 @@ class FxServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Mock the JWT decoder to accept any token and return a valid JWT
         when(jwtDecoder.decode(anyString())).thenReturn(buildTestJwt(TEST_ACCOUNT_ID));
     }
 

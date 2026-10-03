@@ -70,9 +70,6 @@ public class PayuRestClient {
                         .toEntity(responseType));
     }
 
-    /**
-     * Performs a GET request with caller-provided headers.
-     */
     public <T> ResponseEntity<T> getWithHeaders(String serviceName, String uri,
                                                  HttpHeaders headers, Class<T> responseType) {
         return executeWithResilience(serviceName, () ->
@@ -160,9 +157,6 @@ public class PayuRestClient {
                         .toEntity(responseType));
     }
 
-    /**
-     * Performs a POST request with custom headers.
-     */
     public <T> ResponseEntity<T> postWithHeaders(String serviceName, String uri, Object body,
                                                   HttpHeaders headers, Class<T> responseType) {
         return executeWithResilience(serviceName, () ->
@@ -177,7 +171,6 @@ public class PayuRestClient {
     }
 
     /**
-     * Wraps the given supplier with circuit breaker and retry from Resilience4j.
      * The circuit breaker is applied first, then retry wraps the circuit-broken call.
      */
     private <T> T executeWithResilience(String serviceName, Supplier<T> supplier) {

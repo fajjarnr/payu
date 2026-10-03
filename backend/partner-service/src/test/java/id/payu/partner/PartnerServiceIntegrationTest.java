@@ -30,7 +30,6 @@ public class PartnerServiceIntegrationTest {
 
     @BeforeEach
     public void setUp() {
-        // Clean database before each test
         partnerRepository.deleteAll();
     }
 

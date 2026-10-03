@@ -12,17 +12,14 @@ interface SearchResult {
 }
 
 const SEARCH_INDEX: SearchResult[] = [
-  // Getting Started
   { title: 'Quick Start', description: 'Panduan memulai integrasi PayU API', path: '/getting-started', category: 'Getting Started' },
   { title: 'Authentication', description: 'OAuth2, JWT token, dan autentikasi API', path: '/getting-started/auth', category: 'Getting Started' },
   { title: 'Webhooks', description: 'Konfigurasi webhook untuk event notification', path: '/getting-started/webhooks', category: 'Getting Started' },
-  // Guides
   { title: 'Partner Payments', description: 'Integrasi pembayaran mitra dan split payment', path: '/guides/partner-payments', category: 'Guides' },
   { title: 'QRIS Payments', description: 'Pembayaran via QR Code Indonesia Standard', path: '/guides/qris-payments', category: 'Guides' },
   { title: 'BI-FAST Transfers', description: 'Transfer real-time antar bank via BI-FAST', path: '/guides/bifast-transfers', category: 'Guides' },
   { title: 'Investment API', description: 'Reksa dana, deposito, SBN — beli dan jual investasi', path: '/guides/investments', category: 'Guides' },
   { title: 'Lending API', description: 'Pengajuan pinjaman, cicilan, dan repayment', path: '/guides/lending', category: 'Guides' },
-  // SDK
   { title: 'Java SDK', description: 'Library Java untuk integrasi PayU API', path: '/sdk/java', category: 'SDK' },
   { title: 'TypeScript SDK', description: 'Library TypeScript/Node.js untuk PayU API', path: '/sdk/typescript', category: 'SDK' },
   { title: 'Python SDK', description: 'Library Python untuk PayU API', path: '/sdk/python', category: 'SDK' },
@@ -87,7 +84,6 @@ export default function DocSearch() {
     return () => document.removeEventListener('keydown', handler);
   }, [isOpen, open, close]);
 
-  // Arrow key navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();

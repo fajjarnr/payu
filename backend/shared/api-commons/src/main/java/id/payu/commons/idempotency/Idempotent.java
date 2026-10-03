@@ -50,8 +50,6 @@ public @interface Idempotent {
      * <p>
      * Default is true (ARCH-IDM-001): every money mutation endpoint must
      * carry the X-Idempotency-Key header.
-     *
-     * @return true if Idempotency-Key header is mandatory
      */
     boolean required() default true;
 
@@ -67,8 +65,6 @@ public @interface Idempotent {
     /**
      * Specifies the header name for the idempotency key.
      * Platform standard (ARCH-IDM-001): "X-Idempotency-Key".
-     *
-     * @return the header name
      */
     String headerName() default "X-Idempotency-Key";
 
@@ -77,8 +73,6 @@ public @interface Idempotent {
      * <p>
      * By default, only POST, PUT, and PATCH methods are idempotent-enabled
      * as GET and DELETE should inherently be idempotent.
-     *
-     * @return array of HTTP methods to apply idempotency
      */
     String[] methods() default {"POST", "PUT", "PATCH"};
 
@@ -87,8 +81,6 @@ public @interface Idempotent {
      * <p>
      * If true, error responses (4xx, 5xx) will be cached and returned
      * for duplicate requests. If false, only successful responses are cached.
-     *
-     * @return true to cache error responses
      */
     boolean cacheErrors() default true;
 }

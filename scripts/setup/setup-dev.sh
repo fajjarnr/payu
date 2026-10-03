@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # PayU Quick Start - Development Environment
-# =========================================
 # Quick setup for developers who already have tools installed.
 # For full environment setup, run: ./scripts/setup.sh
 #
@@ -14,7 +13,6 @@
 
 set -e
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -32,13 +30,8 @@ print_success() { echo -e "${GREEN}✓ $1${NC}"; }
 print_error() { echo -e "${RED}✗ $1${NC}"; }
 print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
 
-# Get project root
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
-
-# ============================================================================
-# VERIFY FUNCTIONS
-# ============================================================================
 
 check_command() {
     if command -v "$1" >/dev/null 2>&1; then
@@ -78,7 +71,6 @@ verify_services() {
     local services_up=0
     local services_down=0
 
-    # Check core services
     for service in postgres redis kafka keycloak; do
         if podman ps --filter "name=payu-$service" --filter "status=running" --format "{{.Names}}" | grep -q "payu-$service"; then
             print_success "$service: Running"
@@ -89,7 +81,6 @@ verify_services() {
         fi
     done
 
-    # Check backend services
     for service in account-service auth-service transaction-service wallet-service; do
         if podman ps --filter "name=payu-$service" --filter "status=running" --format "{{.Names}}" | grep -q "payu-$service"; then
             print_success "$service: Running"
@@ -107,7 +98,6 @@ verify_services() {
 verify_health_endpoints() {
     print_section "Checking Health Endpoints"
 
-    # Wait for services to be ready
     echo "Waiting for services to be ready..."
     sleep 5
 
@@ -131,10 +121,6 @@ verify_health_endpoints() {
         fi
     done
 }
-
-# ============================================================================
-# BUILD FUNCTIONS
-# ============================================================================
 
 build_shared_starters() {
     print_section "Building Shared Starters"
@@ -240,7 +226,6 @@ build_simulators() {
 install_frontend_deps() {
     print_section "Installing Frontend Dependencies"
 
-    # Web App
     if [ -d "frontend/web-app" ]; then
         echo -n "Installing web-app deps... "
         (cd frontend/web-app && npm install --legacy-peer-deps --silent) && \
@@ -248,7 +233,6 @@ install_frontend_deps() {
             print_error "web-app failed"
     fi
 
-    # Developer Docs
     if [ -d "frontend/developer-docs" ]; then
         echo -n "Installing developer-docs deps... "
         (cd frontend/developer-docs && npm install --legacy-peer-deps --silent) && \
@@ -256,10 +240,6 @@ install_frontend_deps() {
             print_error "developer-docs failed"
     fi
 }
-
-# ============================================================================
-# SERVICE MANAGEMENT
-# ============================================================================
 
 start_services() {
     print_section "Starting Services with Podman Compose"
@@ -285,16 +265,12 @@ stop_services() {
 clean_build() {
     print_section "Cleaning Build Artifacts"
 
-    # Stop services first
     podman-compose down 2>/dev/null || true
 
-    # Clean Maven target directories
     find backend -type d -name "target" -exec rm -rf {} + 2>/dev/null || true
 
-    # Clean node_modules
     find frontend -type d -name "node_modules" -prune -exec rm -rf {} \; 2>/dev/null || true
 
-    # Clean Python venv
     find backend -type d -name ".venv" -prune -exec rm -rf {} \; 2>/dev/null || true
 
     print_success "Build artifacts cleaned"
@@ -307,10 +283,6 @@ rebuild_containers() {
 
     print_success "Containers rebuilt"
 }
-
-# ============================================================================
-# MAIN
-# ============================================================================
 
 show_help() {
     cat << EOF
@@ -390,7 +362,6 @@ main() {
             show_help
             ;;
         *)
-            # Quick start
             verify_prerequisites
             build_shared_starters
             build_backend_services

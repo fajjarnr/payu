@@ -1,8 +1,5 @@
 import { AxiosError } from 'axios';
 
-/**
- * Configuration for RetryInterceptor.
- */
 export interface RetryConfig {
   maxRetries: number;
   retryDelay: number;
@@ -41,7 +38,6 @@ export class RetryInterceptor {
       return Promise.reject(error);
     }
 
-    // Initialize retry count
     config.retryCount = config.retryCount || 0;
 
     if (config.retryCount >= this.config.maxRetries) {
@@ -50,25 +46,18 @@ export class RetryInterceptor {
 
     config.retryCount += 1;
 
-    // Calculate delay with exponential backoff
     const delay = this.calculateDelay(config.retryCount);
 
-    // Log retry attempt
     console.warn(
       `Retrying request (${config.retryCount}/${this.config.maxRetries}) after ${delay}ms: ` +
       `${config.method?.toUpperCase()} ${config.url}`
     );
 
-    // Wait before retrying
     await this.sleep(delay);
 
-    // Retry the request
     return config.adapter(config);
   }
 
-  /**
-   * Check if the error should not be retried.
-   */
   private shouldNotRetry(error: AxiosError): boolean {
     // Don't retry client errors (4xx) except specific statuses
     if (error.response) {
@@ -97,9 +86,6 @@ export class RetryInterceptor {
     return Math.min(exponentialDelay + jitter, 10000); // Max 10 seconds
   }
 
-  /**
-   * Sleep for the specified duration.
-   */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }

@@ -79,7 +79,6 @@ public class AccountEntity {
         this.qrCodeHash = qrCodeHash;
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -176,7 +175,6 @@ public class AccountEntity {
         this.qrCodeHash = qrCodeHash;
     }
 
-    // Builder
     public static Builder builder() {
         return new Builder();
     }

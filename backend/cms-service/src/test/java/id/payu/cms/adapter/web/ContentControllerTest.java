@@ -100,9 +100,6 @@ class ContentControllerTest {
                 .build();
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // POST /api/v1/contents - Create Content
-    // ═════════════════════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("POST /api/v1/contents")
@@ -165,9 +162,6 @@ class ContentControllerTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // PUT /api/v1/contents/{id} - Update Content
-    // ═════════════════════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("PUT /api/v1/contents/{id}")
@@ -201,9 +195,6 @@ class ContentControllerTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // GET /api/v1/contents/{id} - Get Content By ID
-    // ═════════════════════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("GET /api/v1/contents/{id}")
@@ -232,9 +223,6 @@ class ContentControllerTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // GET /api/v1/contents - Get All Content (Paginated)
-    // ═════════════════════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("GET /api/v1/contents")
@@ -279,9 +267,6 @@ class ContentControllerTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // GET /api/v1/contents/type/{type}
-    // ═════════════════════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("GET /api/v1/contents/type/{type}")
@@ -311,9 +296,6 @@ class ContentControllerTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // GET /api/v1/contents/status/{status}
-    // ═════════════════════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("GET /api/v1/contents/status/{status}")
@@ -340,9 +322,6 @@ class ContentControllerTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // PATCH /api/v1/contents/{id}/status
-    // ═════════════════════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("PATCH /api/v1/contents/{id}/status")
@@ -374,9 +353,6 @@ class ContentControllerTest {
         }
     }
 
-    // ═════════════════════════════════════════════════════════════════════
-    // DELETE /api/v1/contents/{id}
-    // ═════════════════════════════════════════════════════════════════════
 
     @Nested
     @DisplayName("DELETE /api/v1/contents/{id}")

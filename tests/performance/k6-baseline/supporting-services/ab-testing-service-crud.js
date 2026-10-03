@@ -1,5 +1,3 @@
-// PayU AB Testing Service - CRUD Baseline Performance Test
-// ===========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -84,7 +82,6 @@ export default function () {
 
   group('AB Testing Service - CRUD Operations', () => {
 
-    // ===== CREATE: Create Experiment =====
     group('CREATE: Create Experiment', () => {
       const experimentData = generateExperimentData(uniqueId);
 
@@ -100,7 +97,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Experiments =====
     group('READ: List Experiments', () => {
       const params = {
         page: 0,
@@ -116,7 +112,6 @@ export default function () {
     });
 
     if (experimentId) {
-      // ===== READ: Get Experiment Detail =====
       group('READ: Get Experiment Detail', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.abTesting}/experiments/${experimentId}`, auth.token);
@@ -125,7 +120,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Update Experiment =====
       group('UPDATE: Update Experiment', () => {
         const updateData = {
           name: `Updated Experiment ${Date.now()}`,
@@ -140,7 +134,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Start Experiment =====
       group('UPDATE: Start Experiment', () => {
         const startTime = Date.now();
         const result = update(`${SERVICE_ENDPOINTS.abTesting}/experiments/${experimentId}/start`, {}, auth.token);
@@ -149,7 +142,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== CREATE: Assign Variant =====
       group('CREATE: Assign Variant', () => {
         const assignmentData = {
           userId: `USR${Math.floor(100000 + Math.random() * 900000)}`,
@@ -163,7 +155,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== CREATE: Record Event =====
       group('CREATE: Record Event', () => {
         const eventData = generateEventData(experimentId, 'treatment');
 
@@ -174,7 +165,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== READ: Get Experiment Results =====
       group('READ: Get Results', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.abTesting}/experiments/${experimentId}/results`, auth.token);
@@ -183,7 +173,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== UPDATE: Stop Experiment =====
       group('UPDATE: Stop Experiment', () => {
         const stopData = {
           reason: 'Baseline test completion'

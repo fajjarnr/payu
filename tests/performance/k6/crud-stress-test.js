@@ -1,5 +1,3 @@
-// PayU Platform - CRUD Stress Test
-// ==================================
 // Stress profile for the verified onboarding, wallet/pocket, and card flows.
 
 import http from 'k6/http';

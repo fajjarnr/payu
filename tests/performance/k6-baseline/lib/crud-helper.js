@@ -1,5 +1,3 @@
-// CRUD Operations Helper for K6 Baseline Tests
-// =============================================
 import http from 'k6/http';
 import { check } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -24,14 +22,6 @@ const crudMetrics = {
   entitiesDeleted: new Counter('entities_deleted_total')
 };
 
-/**
- * Perform CREATE operation
- * @param {string} endpoint - API endpoint
- * @param {Object} payload - Request body
- * @param {string} token - Auth token
- * @param {Object} options - Additional options
- * @returns {Object} - Response and parsed body
- */
 export function create(endpoint, payload, token, options = {}) {
   const startTime = new Date();
 
@@ -66,13 +56,6 @@ export function create(endpoint, payload, token, options = {}) {
   return { response, body: {}, success: false };
 }
 
-/**
- * Perform READ operation (single entity)
- * @param {string} endpoint - API endpoint with ID
- * @param {string} token - Auth token
- * @param {Object} options - Additional options
- * @returns {Object} - Response and parsed body
- */
 export function read(endpoint, token, options = {}) {
   const startTime = new Date();
 
@@ -106,14 +89,6 @@ export function read(endpoint, token, options = {}) {
   return { response, body: {}, success: false };
 }
 
-/**
- * Perform READ operation (list/query)
- * @param {string} endpoint - API endpoint
- * @param {Object} queryParams - Query parameters
- * @param {string} token - Auth token
- * @param {Object} options - Additional options
- * @returns {Object} - Response and parsed body
- */
 export function list(endpoint, queryParams, token, options = {}) {
   const startTime = new Date();
 
@@ -151,14 +126,6 @@ export function list(endpoint, queryParams, token, options = {}) {
   return { response, body: {}, success: false };
 }
 
-/**
- * Perform UPDATE operation
- * @param {string} endpoint - API endpoint with ID
- * @param {Object} payload - Request body
- * @param {string} token - Auth token
- * @param {Object} options - Additional options
- * @returns {Object} - Response and parsed body
- */
 export function update(endpoint, payload, token, options = {}) {
   const startTime = new Date();
 
@@ -194,14 +161,6 @@ export function update(endpoint, payload, token, options = {}) {
   return { response, body: {}, success: false };
 }
 
-/**
- * Perform PATCH operation (partial update)
- * @param {string} endpoint - API endpoint with ID
- * @param {Object} payload - Request body
- * @param {string} token - Auth token
- * @param {Object} options - Additional options
- * @returns {Object} - Response and parsed body
- */
 export function patch(endpoint, payload, token, options = {}) {
   const startTime = new Date();
 
@@ -230,13 +189,6 @@ export function patch(endpoint, payload, token, options = {}) {
   return { response, success };
 }
 
-/**
- * Perform DELETE operation
- * @param {string} endpoint - API endpoint with ID
- * @param {string} token - Auth token
- * @param {Object} options - Additional options
- * @returns {Object} - Response
- */
 export function del(endpoint, token, options = {}) {
   const startTime = new Date();
 
@@ -265,11 +217,6 @@ export function del(endpoint, token, options = {}) {
   return { response, success };
 }
 
-/**
- * Health check for a service
- * @param {string} servicePath - Service health endpoint path
- * @returns {boolean} - True if healthy
- */
 export function healthCheck(servicePath) {
   const response = http.get(`${BASE_URLS.gateway}${servicePath}/health`);
 

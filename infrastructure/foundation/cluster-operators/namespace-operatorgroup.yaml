@@ -1,6 +1,5 @@
 # PayU Platform - Namespace & OperatorGroup for RHBK
 # RHBK operator is namespace-scoped, requires OperatorGroup in target namespace
-# ============================================================
 
 # Namespace
 apiVersion: v1
@@ -135,7 +134,7 @@ spec:
     - openshift-kube-descheduler-operator
 
 ---
-# 3. New OperatorGroups for remaining namespaces
+# New OperatorGroups for remaining namespaces
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
@@ -162,7 +161,6 @@ metadata:
 spec:
   upgradeStrategy: Default
 
-# ---
 # apiVersion: operators.coreos.com/v1
 # kind: OperatorGroup
 # metadata:
@@ -171,7 +169,6 @@ spec:
 # spec:
 #   upgradeStrategy: Default
 
-# ---
 # apiVersion: operators.coreos.com/v1
 # kind: OperatorGroup
 # metadata:
@@ -180,7 +177,6 @@ spec:
 # spec:
 #   upgradeStrategy: Default
 
-# ---
 # apiVersion: operators.coreos.com/v1
 # kind: OperatorGroup
 # metadata:
@@ -189,7 +185,6 @@ spec:
 # spec:
 #   upgradeStrategy: Default
 
-# ---
 # apiVersion: operators.coreos.com/v1
 # kind: OperatorGroup
 # metadata:

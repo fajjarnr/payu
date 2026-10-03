@@ -1,5 +1,3 @@
-// PayU Platform - k6 Load Test Configuration
-// ===========================================
 
 const gatewayUrl = __ENV.GATEWAY_URL || 'http://gateway-service:8080';
 const keycloakUrl = __ENV.KEYCLOAK_URL || 'http://payu-keycloak-service.payu-sso.svc.cluster.local:8080';

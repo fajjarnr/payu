@@ -2,7 +2,6 @@ import { cardService } from '../card.service';
 import { apiClient } from '../api';
 import { VirtualCard, ApiResponse } from '@/types';
 
-// Mock the apiClient
 jest.mock('../api', () => ({
   apiClient: {
     get: jest.fn(),

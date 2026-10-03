@@ -24,8 +24,6 @@ find "$ROOT/infrastructure" -type f \( -name "*.yaml" -o -name "*.yml" \) -exec 
   {} +
 # podman-compose uses ${PAYU_VERSION:-1.18.XX}  — handle without quotes
 sed -i -E "s|\\$\\{PAYU_VERSION:-1\.18\.[0-9]+\}|\\\${PAYU_VERSION:-$NEW}|g" "$ROOT/infrastructure/local/podman/podman-compose.yml"
-# update VERSION file itself
 echo "$NEW" > "$ROOT/VERSION"
-# also update CHANGELOG header if needed? keep manual
 echo "Done. Grep new version count:"
 grep -r "$NEW" "$ROOT/infrastructure" --include="*.yaml" --include="*.yml" | wc -l

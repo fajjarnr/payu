@@ -3,7 +3,6 @@
 #   - Flow logs have very different volume patterns vs app logs
 #   - Prevents NetObserv flow data from overwhelming application log queries
 #   - Allows independent retention & sizing tuning
-# ============================================================
 apiVersion: loki.grafana.com/v1
 kind: LokiStack
 metadata:

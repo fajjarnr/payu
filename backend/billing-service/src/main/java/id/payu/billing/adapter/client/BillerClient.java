@@ -23,23 +23,17 @@ public class BillerClient {
         this.billerServiceBaseUrl = billerServiceBaseUrl;
     }
 
-    /**
-     * Inquire about a customer's outstanding bill.
-     */
     public InquiryResponse inquiry(InquiryRequest request) {
         String url = billerServiceBaseUrl + "/api/v1/biller/inquiry";
         return restTemplate.postForObject(url, request, InquiryResponse.class);
     }
 
-    /**
-     * Submit a payment to the biller.
-     */
     public PaymentResponse pay(PaymentRequest request) {
         String url = billerServiceBaseUrl + "/api/v1/biller/pay";
         return restTemplate.postForObject(url, request, PaymentResponse.class);
     }
 
-    // ---- DTOs matching biller-simulator contract ----
+    // DTOs matching the biller-simulator contract
 
     public record InquiryRequest(String billerCode, String customerNumber) {}
 

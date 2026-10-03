@@ -78,27 +78,23 @@ public class GrpcAuthInterceptor {
                     String token = authHeader.substring(BEARER_PREFIX.length());
                     Jwt jwt = jwtDecoder.decode(token);
 
-                    // Extract claims
                     String subject = jwt.getSubject();
                     if (userId == null) {
                         userId = subject;
                     }
 
-                    // Extract roles from JWT or header
                     List<String> roles = extractRoles(jwt, rolesHeader);
 
                     Collection<? extends GrantedAuthority> authorities = roles.stream()
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
 
-                    // Create authentication token
                     authentication = new UsernamePasswordAuthenticationToken(
                             subject,
                             token,
                             authorities
                     );
 
-                    // Set tenant context if available
                     if (tenantId != null) {
                         log.debug("Setting tenant context: {}", tenantId);
                     }
@@ -209,7 +205,6 @@ public class GrpcAuthInterceptor {
                 return Arrays.asList(rolesHeader.split(","));
             }
 
-            // Try to extract from JWT claims
             Object rolesClaim = jwt.getClaim("roles");
             if (rolesClaim instanceof List) {
                 return ((List<?>) rolesClaim).stream()
@@ -242,19 +237,16 @@ public class GrpcAuthInterceptor {
 
                 @Override
                 public void start(Listener<RespT> responseListener, Metadata headers) {
-                    // Get current authentication from SecurityContext
                     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
                     if (authentication != null && authentication.getCredentials() instanceof String) {
                         String token = (String) authentication.getCredentials();
                         headers.put(AUTHORIZATION_KEY, BEARER_PREFIX + token);
 
-                        // Add user ID if available
                         if (authentication.getName() != null) {
                             headers.put(USER_ID_KEY, authentication.getName());
                         }
 
-                        // Add roles
                         String roles = authentication.getAuthorities().stream()
                                 .map(GrantedAuthority::getAuthority)
                                 .collect(Collectors.joining(","));

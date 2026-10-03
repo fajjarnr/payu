@@ -1,30 +1,24 @@
 export const Colors = {
-  // Primary Brand Colors
   bankGreen: '#10b981',
   bankEmerald: '#059669',
   bankDark: '#047857',
 
-  // Background Colors
   background: '#ffffff',
   card: '#f9fafb',
   cardDark: '#1f2937',
 
-  // Text Colors
   text: '#111827',
   textSecondary: '#6b7280',
   textLight: '#9ca3af',
 
-  // Border Colors
   border: '#e5e7eb',
   borderDark: '#374151',
 
-  // Status Colors
   success: '#10b981',
   warning: '#f59e0b',
   error: '#ef4444',
   info: '#3b82f6',
 
-  // Special Colors
   overlay: 'rgba(0, 0, 0, 0.5)',
   glass: 'rgba(255, 255, 255, 0.8)',
   glassDark: 'rgba(17, 24, 39, 0.8)',

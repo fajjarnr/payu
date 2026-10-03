@@ -43,7 +43,6 @@ public class FxTestConfig {
      * Build a fake JWT with standard claims and an {@code account_id} attribute.
      *
      * @param accountId the UUID to embed as the {@code account_id} claim
-     * @return a fully-populated {@link Jwt}
      */
     static Jwt buildTestJwt(String accountId) {
         return new Jwt(

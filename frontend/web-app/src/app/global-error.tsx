@@ -16,27 +16,22 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
     <html lang="id">
       <body className="antialiased bg-background text-foreground min-h-screen flex items-center justify-center px-6 sm:px-10 lg:px-12 font-sans">
         <div className="max-w-md w-full bg-card/80 backdrop-blur-xl rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-2xl text-center relative overflow-hidden">
-          {/* Ambient glow effects */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-destructive/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-40 h-40 bg-bank-green/5 rounded-full blur-3xl" />
 
           <div className="relative z-10">
-            {/* Critical Error Icon */}
             <div className="h-24 w-24 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-destructive/20">
               <AlertOctagon className="h-12 w-12 text-destructive" aria-hidden="true" />
             </div>
 
-            {/* Heading */}
             <h1 className="text-3xl font-bold text-foreground mb-4 font-heading">
               Kesalahan Kritis
             </h1>
 
-            {/* Description */}
             <p className="text-sm text-muted-foreground font-medium mb-8 leading-relaxed">
               Aplikasi mengalami kesalahan yang tidak dapat dipulihkan secara otomatis. Silakan muat ulang aplikasi atau hubungi dukungan jika masalah berlanjut.
             </p>
 
-            {/* Technical Details (Development Only) */}
             {process.env.NODE_ENV === 'development' && (
               <div className="bg-destructive/10 rounded-2xl p-4 mb-8 text-left border border-destructive/20">
                 <p className="text-xs font-bold text-destructive tracking-widest uppercase mb-2">
@@ -56,7 +51,6 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="space-y-3" role="group" aria-label="Tindakan pemulihan error kritis">
               <button
                 onClick={handleReload}
@@ -77,7 +71,6 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               </button>
             </div>
 
-            {/* Support Contact */}
             <div className="mt-8 pt-6 border-t border-border">
               <p className="text-xs text-muted-foreground font-bold tracking-widest mb-4">
                 Butuh bantuan?

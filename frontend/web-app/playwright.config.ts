@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * PayU Digital Banking - Playwright E2E Configuration
  *
- * IMPORTANT: This configuration assumes the web app is already running:
+ * Important: This configuration assumes the web app is already running:
  *   - npm run dev: http://localhost:3000
  *   - podman-compose: http://localhost:3001 (set PLAYWRIGHT_BASE_URL=http://localhost:3001)
  *

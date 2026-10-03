@@ -70,7 +70,6 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
         log.info("Creating batch disbursement for account: {}, name: {}",
                 sourceAccountId, name);
 
-        // Check idempotency
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             Optional<BatchDisbursementEntity> existing = batchRepository.findByIdempotencyKey(idempotencyKey);
             if (existing.isPresent()) {

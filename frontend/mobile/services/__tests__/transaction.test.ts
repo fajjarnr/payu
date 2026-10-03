@@ -2,7 +2,6 @@ import { transactionService } from '../transaction.service';
 import { apiClient } from '../api';
 import { Transaction, TransferData, ApiResponse, PaginatedResponse, QRISData } from '@/types';
 
-// Mock the apiClient
 jest.mock('../api', () => ({
   apiClient: {
     get: jest.fn(),

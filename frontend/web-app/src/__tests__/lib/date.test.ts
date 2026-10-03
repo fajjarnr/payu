@@ -133,12 +133,12 @@ describe('date.ts - relativeTime', () => {
 
   describe('Past times', () => {
     it('should show "baru saja" for very recent times', () => {
-      const date = new Date(fixedNow.getTime() - 30 * 1000); // 30 seconds ago
+      const date = new Date(fixedNow.getTime() - 30 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('baru saja');
     });
 
     it('should show minutes ago', () => {
-      const date = new Date(fixedNow.getTime() - 5 * 60 * 1000); // 5 minutes ago
+      const date = new Date(fixedNow.getTime() - 5 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('5 menit yang lalu');
 
       const short = relativeTime(date, { style: 'short', now: fixedNow });
@@ -146,7 +146,7 @@ describe('date.ts - relativeTime', () => {
     });
 
     it('should show hours ago', () => {
-      const date = new Date(fixedNow.getTime() - 3 * 60 * 60 * 1000); // 3 hours ago
+      const date = new Date(fixedNow.getTime() - 3 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('3 jam yang lalu');
 
       const short = relativeTime(date, { style: 'short', now: fixedNow });
@@ -154,49 +154,49 @@ describe('date.ts - relativeTime', () => {
     });
 
     it('should show "kemarin" for yesterday', () => {
-      const date = new Date(fixedNow.getTime() - 24 * 60 * 60 * 1000); // 1 day ago
+      const date = new Date(fixedNow.getTime() - 24 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('kemarin');
     });
 
     it('should show "lusa" for 2 days ago', () => {
-      const date = new Date(fixedNow.getTime() - 2 * 24 * 60 * 60 * 1000); // 2 days ago
+      const date = new Date(fixedNow.getTime() - 2 * 24 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('lusa');
     });
 
     it('should show days ago for < 7 days', () => {
-      const date = new Date(fixedNow.getTime() - 5 * 24 * 60 * 60 * 1000); // 5 days ago
+      const date = new Date(fixedNow.getTime() - 5 * 24 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('5 hari yang lalu');
     });
 
     it('should show weeks ago for < 30 days', () => {
-      const date = new Date(fixedNow.getTime() - 14 * 24 * 60 * 60 * 1000); // 2 weeks ago
+      const date = new Date(fixedNow.getTime() - 14 * 24 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('2 minggu yang lalu');
     });
 
     it('should show months ago for < 12 months', () => {
-      const date = new Date(fixedNow.getTime() - 60 * 24 * 60 * 60 * 1000); // ~2 months ago
+      const date = new Date(fixedNow.getTime() - 60 * 24 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('2 bulan yang lalu');
     });
 
     it('should show years ago for >= 12 months', () => {
-      const date = new Date(fixedNow.getTime() - 400 * 24 * 60 * 60 * 1000); // ~1 year ago
+      const date = new Date(fixedNow.getTime() - 400 * 24 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('1 tahun yang lalu');
     });
   });
 
   describe('Future times', () => {
     it('should show "besok" for tomorrow', () => {
-      const date = new Date(fixedNow.getTime() + 24 * 60 * 60 * 1000); // 1 day ahead
+      const date = new Date(fixedNow.getTime() + 24 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('besok');
     });
 
     it('should show "dalam X hari" for future days', () => {
-      const date = new Date(fixedNow.getTime() + 5 * 24 * 60 * 60 * 1000); // 5 days ahead
+      const date = new Date(fixedNow.getTime() + 5 * 24 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('dalam 5 hari');
     });
 
     it('should show "dalam X jam" for future hours', () => {
-      const date = new Date(fixedNow.getTime() + 3 * 60 * 60 * 1000); // 3 hours ahead
+      const date = new Date(fixedNow.getTime() + 3 * 60 * 60 * 1000);
       expect(relativeTime(date, { now: fixedNow })).toBe('dalam 3 jam');
     });
   });
@@ -247,7 +247,6 @@ describe('date.ts - Date comparison utilities', () => {
   let fixedDate: Date;
 
   beforeEach(() => {
-    // Use a fixed date for testing
     fixedDate = new Date('2024-01-15T12:00:00');
     vi.useFakeTimers();
     vi.setSystemTime(fixedDate);
@@ -491,10 +490,8 @@ describe('date.ts - getTimezoneOffset', () => {
   });
 
   it('should handle WIB (UTC+7)', () => {
-    // This test depends on the system timezone
+    // Timezone-dependent: WIB (UTC+7) gives 420 minutes, other zones differ
     const offset = getTimezoneOffset();
-    // If running in WIB timezone, offset should be 420 minutes
-    // Otherwise, it will be different
     expect(offset).toBeGreaterThanOrEqual(-720);
   });
 });

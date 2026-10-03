@@ -26,7 +26,6 @@ test.describe('Transfer Flow', () => {
     await page.click('button:has-text("BI-FAST")');
     await waitForAnimations(page);
 
-    // Check that selection is made - the button should be selected
     const selectedButton = page.locator('button:has-text("BI-FAST")');
     await expect(selectedButton).toBeVisible();
   });
@@ -50,10 +49,8 @@ test.describe('Transfer Flow', () => {
   test('should show recurring inputs when recurring transfer selected', async ({ authPage: page }) => {
     await page.click('button:has-text("Berulang")');
 
-    // Wait for the UI to update
     await page.waitForTimeout(500);
 
-    // Check for day selection grid
     const dayButtons = page.locator('button[type="button"]').filter({ hasText: /^\d+$/ });
     expect(await dayButtons.count()).toBeGreaterThan(0);
   });
@@ -172,11 +169,9 @@ test.describe('Transfer Flow - Schedule Selection', () => {
   test('should select recurring transfer', async ({ authPage: page }) => {
     await page.click('button:has-text("Berulang")');
 
-    // Wait for the UI to update
     await waitForAnimations(page);
     await page.waitForTimeout(300);
 
-    // Check for month selection buttons
     const monthButtons = page.locator('button').filter({ hasText: /^(JAN|FEB|MAR|APR|MEI|JUN|JUL|AGU|SEP|OKT|NOV|DES)$/ });
     expect(await monthButtons.count()).toBeGreaterThan(0);
   });
@@ -258,12 +253,10 @@ test.describe('Transfer Flow - Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ authPage: page }) => {
-    // Tab to first interactive element (transfer type button)
     await page.keyboard.press('Tab');
     await page.waitForTimeout(100);
     // :focus may resolve to hidden elements (e.g. nextjs-portal) — check visible focused elements
     const focused = page.locator(':focus:visible, [data-testid^="transfer-type"]:focus');
-    // Keep tabbing until we find a visible focused element
     for (let i = 0; i < 5; i++) {
       const count = await focused.count();
       if (count > 0) {

@@ -89,9 +89,7 @@ class BlindIndexAndTenantIsolationIntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-         // INTEGRATION-CTX: app binds datasource-starter prefix
-         // spring.datasource.primary.hikari.* — plain spring.datasource.url
-         // is ignored, which previously left the context without an EMF.
+        // App binds spring.datasource.primary.hikari.*; plain spring.datasource.url is ignored.
          registry.add("spring.datasource.primary.hikari.jdbc-url", postgres::getJdbcUrl);
          registry.add("spring.datasource.primary.hikari.username", postgres::getUsername);
          registry.add("spring.datasource.primary.hikari.password", postgres::getPassword);
@@ -102,9 +100,7 @@ class BlindIndexAndTenantIsolationIntegrationTest {
 
     @AfterEach
     void clearTenant() {
-        // INTEGRATION-CTX: each test uses its own unique email/phone, so no
-        // cross-test row cleanup is needed (and create-drop FK ordering makes
-        // naive DELETE cleanup fragile). Keep rows; they never collide.
+        // Unique email/phone per test means rows never collide; no cleanup needed.
         TenantContext.clear();
     }
 

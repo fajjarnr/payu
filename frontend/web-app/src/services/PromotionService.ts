@@ -273,7 +273,6 @@ export class PromotionService {
   }
 }
 
-// Gamification types
 export interface RewardsSummary {
   accountId: string;
   totalRewards: number;

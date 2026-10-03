@@ -37,7 +37,6 @@ if oc get secret -n "$NS" "$SECRET" >/dev/null 2>&1; then
 else
   echo "[schemathesis-smoke] secret $SECRET not found in $NS, fallback to 5xx-only (SX-AUTH-001 pending Vault)"
 fi
-# Run schemathesis
 IMAGE="docker.io/schemathesis/schemathesis@sha256:4ba658e6a309d51d76efb64697b695660fc565e159e5e269633521e9b486d759"
 if [[ -n "$TOKEN" ]]; then
   echo "[schemathesis-smoke] running with Bearer, checks all exclude only not_a_server_error (re-enable content_type + response_schema)"

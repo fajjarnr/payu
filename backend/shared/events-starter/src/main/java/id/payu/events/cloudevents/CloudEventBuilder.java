@@ -112,12 +112,6 @@ public class CloudEventBuilder<T> {
         return this;
     }
 
-    /**
-     * Sets the event data payload.
-     *
-     * @param data The event data
-     * @return This builder
-     */
     public CloudEventBuilder<T> data(T data) {
         this.data = data;
         return this;

@@ -37,9 +37,7 @@ test.describe('Dashboard Functional Tests', () => {
   });
 
   test('should display lazy-loaded dashboard components', async ({ authPage: page }) => {
-    // Wait for at least some dynamic components to load
     await page.waitForTimeout(2000);
-    // The main-content area should have rendered children
     const mainContent = page.locator('#main-content');
     const childCount = await mainContent.locator('> *').count();
     expect(childCount).toBeGreaterThanOrEqual(1);
@@ -56,7 +54,6 @@ publicTest.describe('Landing Page Tests', () => {
   publicTest('should display landing page with hero section', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    // Badge text
     const hasBadge = await page.getByText('Terpercaya & Aman').isVisible().catch(() => false);
     const hasHero = await page.getByText('Solusi Finansial').isVisible().catch(() => false);
     publicExpect(hasBadge || hasHero).toBeTruthy();
@@ -66,7 +63,6 @@ publicTest.describe('Landing Page Tests', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     await publicExpect(page.getByText('PayU').first()).toBeVisible({ timeout: 10000 });
-    // Nav links
     const hasFitur = await page.getByText('Fitur').isVisible().catch(() => false);
     const hasTentang = await page.getByText('Tentang').isVisible().catch(() => false);
     const hasMasuk = await page.getByText('Masuk').isVisible().catch(() => false);

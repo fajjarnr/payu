@@ -39,7 +39,6 @@ describe('TransactionItem', () => {
     it('should render relative time', () => {
       render(<TransactionItem {...defaultProps} />);
 
-      // The time text is rendered
       expect(screen.getByText(/\d+[smhd] ago|Just now/)).toBeTruthy();
     });
 
@@ -137,7 +136,6 @@ describe('TransactionItem', () => {
     it('should call onPress when item is pressed', () => {
       render(<TransactionItem {...defaultProps} />);
 
-      // Find the accessible touchable wrapper
       const touchable = screen.getAllByA11yState({})[0];
       fireEvent.press(touchable);
 
@@ -165,7 +163,6 @@ describe('TransactionItem', () => {
       };
       render(<TransactionItem {...defaultProps} transaction={incomeTransaction} />);
 
-      // Check for the + sign in the amount text
       const amountTexts = screen.getAllByText(/Rp/);
       const hasPositiveSign = amountTexts.some(el => {
         const text = el.children?.[0] as string;
@@ -226,7 +223,6 @@ describe('TransactionItem', () => {
     it('should not show badge for completed transactions', () => {
       render(<TransactionItem {...defaultProps} />);
 
-      // Completed status should not show a badge
       expect(screen.queryByText('completed')).toBeNull();
     });
 
@@ -279,7 +275,6 @@ describe('TransactionItem', () => {
       };
       render(<TransactionItem {...defaultProps} transaction={emptyDescriptionTransaction} />);
 
-      // The component should still render
       expect(screen.getByText('⬆️')).toBeTruthy();
     });
 

@@ -12,13 +12,10 @@ import com.tngtech.archunit.core.domain.JavaClass;
 public final class DomainClassPredicate {
 
     private DomainClassPredicate() {
-        // Utility class
     }
 
     /**
      * Predicate that matches domain entity classes (not JPA entities).
-     *
-     * @return predicate matching domain entities
      */
     public static DescribedPredicate<JavaClass> areDomainEntities() {
         return new DescribedPredicate<>("are domain entities") {
@@ -31,11 +28,6 @@ public final class DomainClassPredicate {
         };
     }
 
-    /**
-     * Predicate that matches domain value objects.
-     *
-     * @return predicate matching value objects
-     */
     public static DescribedPredicate<JavaClass> areValueObjects() {
         return new DescribedPredicate<>("are value objects") {
             @Override
@@ -51,11 +43,6 @@ public final class DomainClassPredicate {
         };
     }
 
-    /**
-     * Predicate that matches domain aggregate roots.
-     *
-     * @return predicate matching aggregate roots
-     */
     public static DescribedPredicate<JavaClass> areAggregateRoots() {
         return new DescribedPredicate<>("are aggregate roots") {
             @Override
@@ -68,11 +55,6 @@ public final class DomainClassPredicate {
         };
     }
 
-    /**
-     * Predicate that matches domain services.
-     *
-     * @return predicate matching domain services
-     */
     public static DescribedPredicate<JavaClass> areDomainServices() {
         return new DescribedPredicate<>("are domain services") {
             @Override
@@ -83,11 +65,6 @@ public final class DomainClassPredicate {
         };
     }
 
-    /**
-     * Predicate that matches port interfaces.
-     *
-     * @return predicate matching ports
-     */
     public static DescribedPredicate<JavaClass> arePorts() {
         return new DescribedPredicate<>("are ports") {
             @Override
@@ -100,8 +77,6 @@ public final class DomainClassPredicate {
 
     /**
      * Predicate that matches input ports (use case interfaces).
-     *
-     * @return predicate matching input ports
      */
     public static DescribedPredicate<JavaClass> areInputPorts() {
         return new DescribedPredicate<>("are input ports") {
@@ -116,8 +91,6 @@ public final class DomainClassPredicate {
 
     /**
      * Predicate that matches output ports (repository/spi interfaces).
-     *
-     * @return predicate matching output ports
      */
     public static DescribedPredicate<JavaClass> areOutputPorts() {
         return new DescribedPredicate<>("are output ports") {

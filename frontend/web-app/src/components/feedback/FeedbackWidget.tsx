@@ -1,5 +1,3 @@
-// Feedback widget component for in-app user feedback
-// Provides screenshot capture and context logging
 
 'use client';
 

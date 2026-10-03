@@ -7,12 +7,7 @@ import clsx from 'clsx';
 import { useIsAuthenticated } from '@/stores';
 import { Link } from '@/lib/navigation';
 
-/**
- * SECURITY NOTICE: Authentication Check
- * ================================
- * This component uses the auth store to check authentication status.
- * It does NOT access tokens from localStorage (security vulnerability).
- */
+/** Uses the auth store to check authentication status; never accesses tokens from localStorage. */
 export default function MobileNav() {
   const t = useTranslations('nav');
   const pathname = usePathname();

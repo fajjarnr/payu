@@ -71,7 +71,6 @@ public class ApiKeyService {
                     "PartnerEntity has reached maximum of " + MAX_KEYS_PER_PARTNER + " active keys");
         }
 
-        // Generate key
         String plainKey = generateKey(env);
         String keyHash = hashKey(plainKey);
         String keySuffix = plainKey.substring(plainKey.length() - 4);
@@ -100,11 +99,9 @@ public class ApiKeyService {
             throw new IllegalStateException("Only ACTIVE keys can be rotated");
         }
 
-        // Mark old key as rotated with grace period
         oldKey.markRotated(DEFAULT_GRACE_PERIOD_DAYS);
         apiKeyRepository.save(oldKey);
 
-        // Generate new key
         String plainKey = generateKey(oldKey.getEnvironment());
         String keyHash = hashKey(plainKey);
         String keySuffix = plainKey.substring(plainKey.length() - 4);
@@ -220,7 +217,6 @@ public class ApiKeyService {
         }
     }
 
-    // --- Internal helpers ---
 
     private PartnerEntity findActivePartner(Long partnerId) {
         PartnerEntity partner = partnerRepository.findById(partnerId)

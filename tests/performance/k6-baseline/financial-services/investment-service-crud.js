@@ -1,5 +1,3 @@
-// PayU Investment Service - CRUD Baseline Performance Test
-// =========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -72,7 +70,6 @@ export default function () {
 
   group('Investment Service - CRUD Operations', () => {
 
-    // ===== READ: Get Fund List =====
     group('READ: Get Fund List', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.investment}/funds`, { page: 0, size: 20 }, auth.token);
@@ -81,7 +78,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Create Portfolio =====
     group('CREATE: Create Portfolio', () => {
       const portfolioData = generatePortfolioData(uniqueId);
 
@@ -97,7 +93,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Portfolios =====
     group('READ: List Portfolios', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.investment}/portfolios`, { page: 0, size: 10 }, auth.token);
@@ -107,7 +102,6 @@ export default function () {
     });
 
     if (portfolioId) {
-      // ===== READ: Get Portfolio =====
       group('READ: Get Portfolio', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.investment}/portfolios/${portfolioId}`, auth.token);
@@ -116,7 +110,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== READ: Get Performance =====
       group('READ: Get Performance', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.investment}/portfolios/${portfolioId}/performance`, auth.token);
@@ -125,7 +118,6 @@ export default function () {
         sleep(0.3);
       });
 
-      // ===== CREATE: Buy Fund =====
       group('CREATE: Buy Fund', () => {
         const buyData = generateBuyFundData();
 
@@ -136,7 +128,6 @@ export default function () {
         sleep(0.5);
       });
 
-      // ===== CREATE: Sell Fund =====
       group('CREATE: Sell Fund', () => {
         const sellData = generateSellFundData();
 
@@ -147,7 +138,6 @@ export default function () {
         sleep(0.5);
       });
 
-      // ===== UPDATE: Update Portfolio =====
       group('UPDATE: Update Portfolio', () => {
         const updateData = {
           name: `Updated Portfolio ${Date.now()}`,

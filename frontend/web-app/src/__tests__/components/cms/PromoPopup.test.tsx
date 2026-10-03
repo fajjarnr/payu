@@ -5,7 +5,6 @@ import { vi } from 'vitest';
 import PromoPopup from '@/components/cms/PromoPopup';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 
-// Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, ...props }: React.HTMLAttributes<HTMLDivElement> & { children?: React.ReactNode; initial?: unknown; animate?: unknown; exit?: unknown; transition?: unknown }) => <div {...props}>{children}</div>,
@@ -13,7 +12,6 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
-// Mock useRouter
 const mockPush = vi.fn();
 vi.mock('@/lib/navigation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/navigation')>()),
@@ -22,7 +20,6 @@ vi.mock('@/lib/navigation', async (importOriginal) => ({
   }),
 }));
 
-// Mock usePopups hook
 const mockPopups = [
   {
     id: 'popup-1',
@@ -47,7 +44,6 @@ vi.mock('@/hooks', () => ({
   }),
 }));
 
-// Mock localStorage and sessionStorage
 const mockLocalStorage = {
   getItem: vi.fn((..._args: unknown[]): string | null => null),
   setItem: vi.fn(),
@@ -111,7 +107,6 @@ describe('PromoPopup', () => {
 
     expect(screen.queryByText('Special Offer')).not.toBeInTheDocument();
 
-    // Reset
     mockIsLoading = false;
     mockPopupsData = mockPopups;
   });

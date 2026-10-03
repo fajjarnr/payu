@@ -30,27 +30,22 @@ export default function Error({ error, reset }: ErrorProps) {
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-6 sm:px-10 lg:px-12 bg-background">
       <div className="max-w-md w-full bg-card/80 backdrop-blur-xl rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm text-center relative overflow-hidden">
-        {/* Subtle ambient glow */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-destructive/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-bank-green/5 rounded-full blur-3xl" />
 
         <div className="relative z-10">
-          {/* Icon */}
           <div className="h-20 w-20 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-destructive/20">
             <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
           </div>
 
-          {/* Heading */}
           <h2 className="text-2xl font-bold text-foreground mb-4 font-heading">
             Terjadi Kesalahan
           </h2>
 
-          {/* Description */}
           <p className="text-sm text-muted-foreground font-medium mb-8 leading-relaxed">
             Maaf, terjadi kesalahan yang tidak terduga saat memuat halaman ini. Silakan coba lagi atau kembali ke beranda.
           </p>
 
-          {/* Technical Details (Development Only) */}
           {process.env.NODE_ENV === 'development' && (
             <div className="bg-destructive/10 rounded-2xl p-4 mb-8 text-left border border-destructive/20">
               <div className="flex items-center gap-2 mb-2">
@@ -70,7 +65,6 @@ export default function Error({ error, reset }: ErrorProps) {
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="space-y-3" role="group" aria-label="Tindakan pemulihan error">
             <button
               onClick={handleReset}
@@ -102,7 +96,6 @@ export default function Error({ error, reset }: ErrorProps) {
             </div>
           </div>
 
-          {/* Support Info */}
           <p className="text-xs text-muted-foreground font-bold tracking-widest mt-8">
             Masalah berlanjut? Hubungi tim dukungan kami.
           </p>

@@ -88,9 +88,6 @@ public class CacheEntry<T> implements Serializable {
         return !isStale();
     }
 
-    /**
-     * Create a new cache entry with the given TTL settings.
-     */
     public static <T> CacheEntry<T> create(T value, long softTtlSeconds, long hardTtlSeconds) {
         Instant now = Instant.now();
         return new CacheEntry<>(

@@ -59,7 +59,6 @@ public class EscrowResponse {
         return response;
     }
 
-    // Getters
     public UUID getId() { return id; }
     public String getBuyerAccountId() { return buyerAccountId; }
     public String getSellerAccountId() { return sellerAccountId; }

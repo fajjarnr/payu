@@ -90,7 +90,6 @@ public class PersistentAnalyticsService {
         eventBuffer.offer(event);
         long currentSize = bufferSize.incrementAndGet();
 
-        // Flush if buffer exceeds threshold
         if (currentSize >= batchSize) {
             flushBuffer();
         }
@@ -155,7 +154,6 @@ public class PersistentAnalyticsService {
                 unused -> Log.debugf("Flushed %d analytics events", flushedCount),
                 failure -> {
                     Log.errorf(failure, "Failed to flush analytics events");
-                    // Re-queue events for retry
                     batch.forEach(eventBuffer::offer);
                     bufferSize.addAndGet(batch.size());
                 }

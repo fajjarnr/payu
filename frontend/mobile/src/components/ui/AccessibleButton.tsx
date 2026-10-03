@@ -1,16 +1,4 @@
-/**
- * AccessibleButton Component
- *
- * A button component with comprehensive accessibility support including:
- * - Proper touch target size (44x44 minimum)
- * - Screen reader support with labels and hints
- * - Focus management
- * - Visual feedback for different states
- * - WCAG 2.1 AA compliance
- *
- * @module components/ui/AccessibleButton
- * @version 1.0.0
- */
+/** Accessible button: WCAG 2.1 AA 44x44 touch target, screen-reader labels, focus and states. */
 
 import React, { useRef, useState, useCallback } from 'react';
 import {
@@ -26,11 +14,7 @@ import type { AccessibilityRole } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { generateA11yProps, PayUAccessibilityProps, validateTouchTarget } from '@/src/utils/accessibility';
 
-// Types and interfaces
 
-/**
- * Props for the AccessibleButton component
- */
 export interface AccessibleButtonProps extends Omit<TouchableOpacityProps, 'style' | 'children'> {
   /** Button label text (visible and for screen reader) */
   label: string;
@@ -68,7 +52,6 @@ export interface AccessibleButtonProps extends Omit<TouchableOpacityProps, 'styl
   onTouchTargetError?: (error: string) => void;
 }
 
-// Constants
 
 const TOUCH_TARGET_SIZE = 44;
 
@@ -93,21 +76,7 @@ const BUTTON_SIZES = {
   },
 };
 
-// Component
 
-/**
- * AccessibleButton - A fully accessible button component
- *
- * @example
- * ```tsx
- * <AccessibleButton
- *   label="Transfer"
- *   hint="Opens transfer screen"
- *   variant="primary"
- *   onPress={handleTransfer}
- * />
- * ```
- */
 export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
   label,
   hint,
@@ -156,7 +125,6 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
     [enforceTouchTarget, onLayout, onTouchTargetError]
   );
 
-  // Generate accessibility props
   const getAccessibilityProps = (): PayUAccessibilityProps => {
     const currentLabel = loading ? loadingLabel : label;
     const currentHint = loading ? undefined : hint;
@@ -172,7 +140,6 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
     });
   };
 
-  // Get variant styles
   const getVariantStyles = (): { background: string; text: string; border?: string } => {
     switch (variant) {
       case 'primary':
@@ -212,7 +179,6 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
   const variantStyles = getVariantStyles();
   const sizeStyles = BUTTON_SIZES[size];
 
-  // Build button styles
   const buttonStyles: ViewStyle = {
     backgroundColor: variantStyles.background,
     paddingVertical: sizeStyles.paddingVertical,
@@ -230,7 +196,6 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
     ...style,
   };
 
-  // Touch target wrapper style
   const wrapperStyle: ViewStyle = {
     minWidth: TOUCH_TARGET_SIZE,
     minHeight: TOUCH_TARGET_SIZE,
@@ -239,7 +204,6 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
     ...containerStyle,
   };
 
-  // Label style
   const textStyle: TextStyle = {
     fontSize: sizeStyles.fontSize,
     fontWeight: '600',
@@ -247,7 +211,6 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
     ...labelStyle,
   };
 
-  // Loading spinner (simplified)
   const renderLoading = () => (
     <View
       style={styles.loadingSpinner}
@@ -293,11 +256,7 @@ export const AccessibleButton: React.FC<AccessibleButtonProps> = ({
   );
 };
 
-// Helper functions
 
-/**
- * Generates a testID from a label string
- */
 function generateTestID(label: string): string {
   return label
     .toLowerCase()
@@ -305,7 +264,6 @@ function generateTestID(label: string): string {
     .replace(/^-|-$/g, '');
 }
 
-// Styles
 
 const styles = StyleSheet.create({
   loadingSpinner: {
@@ -322,6 +280,5 @@ const styles = StyleSheet.create({
   },
 });
 
-// Export
 
 export default AccessibleButton;

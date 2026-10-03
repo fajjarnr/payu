@@ -42,7 +42,6 @@ public class Account {
     private static final BigDecimal MAXIMUM_BALANCE = new BigDecimal("999999999999.99");
     private static final BigDecimal ZERO = BigDecimal.ZERO;
 
-    // Constructors
     public Account() {
     }
 
@@ -62,8 +61,6 @@ public class Account {
         this.version = version;
     }
 
-    // Domain behaviors
-
     /**
      * Credits (adds) funds to this account.
      *
@@ -72,7 +69,6 @@ public class Account {
      * - Amount must be positive
      * - Maximum balance limit must not be exceeded
      *
-     * @param amount the amount to credit
      * @throws IllegalArgumentException if account is not active
      * @throws IllegalArgumentException if amount is negative
      * @throws InsufficientFundsException if maximum balance would be exceeded
@@ -94,7 +90,6 @@ public class Account {
      * - Sufficient funds must be available
      * - Minimum balance requirement must be maintained
      *
-     * @param amount the amount to debit
      * @throws IllegalArgumentException if account is not active
      * @throws IllegalArgumentException if amount is negative
      * @throws InsufficientFundsException if insufficient balance
@@ -178,12 +173,8 @@ public class Account {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Query methods
-
     /**
      * Checks if this account is active and can process transactions.
-     *
-     * @return true if account is active
      */
     public boolean isActive() {
         return status == AccountStatus.ACTIVE;
@@ -191,8 +182,6 @@ public class Account {
 
     /**
      * Checks if this account is frozen.
-     *
-     * @return true if account is frozen
      */
     public boolean isFrozen() {
         return status == AccountStatus.FROZEN;
@@ -200,8 +189,6 @@ public class Account {
 
     /**
      * Checks if this account is closed.
-     *
-     * @return true if account is closed
      */
     public boolean isClosed() {
         return status == AccountStatus.CLOSED;
@@ -209,8 +196,6 @@ public class Account {
 
     /**
      * Checks if this account is pending verification.
-     *
-     * @return true if account is pending verification
      */
     public boolean isPendingVerification() {
         return status == AccountStatus.PENDING_VERIFICATION;
@@ -218,9 +203,6 @@ public class Account {
 
     /**
      * Checks if this account is owned by the specified user.
-     *
-     * @param userId the user ID to check
-     * @return true if the account belongs to the user
      */
     public boolean isOwnedBy(UUID userId) {
         return this.userId != null && this.userId.equals(userId);
@@ -228,9 +210,6 @@ public class Account {
 
     /**
      * Checks if the account has sufficient funds for a debit operation.
-     *
-     * @param amount the amount to check
-     * @return true if sufficient funds are available
      */
     public boolean hasSufficientFunds(BigDecimal amount) {
         return this.balance.compareTo(amount) >= 0;
@@ -238,17 +217,12 @@ public class Account {
 
     /**
      * Checks if the account can maintain minimum balance after a debit.
-     *
-     * @param debitAmount the amount to debit
-     * @return true if minimum balance can be maintained
      */
     public boolean canMaintainMinimumBalance(BigDecimal debitAmount) {
         BigDecimal postDebitBalance = this.balance.subtract(debitAmount);
         BigDecimal minimumRequired = getMinimumBalanceForType();
         return postDebitBalance.compareTo(minimumRequired) >= 0;
     }
-
-    // Private helpers
 
     private void assertAccountActive() {
         if (!isActive()) {
@@ -298,18 +272,11 @@ public class Account {
         }
     }
 
-    // Exceptions
-
-    /**
-     * Exception thrown when account has insufficient funds.
-     */
     public static class InsufficientFundsException extends RuntimeException {
         public InsufficientFundsException(String message) {
             super(message);
         }
     }
-
-    // Getters and setters
 
     public UUID getId() {
         return id;
@@ -399,7 +366,6 @@ public class Account {
         this.version = version;
     }
 
-    // Builder
     public static Builder builder() {
         return new Builder();
     }
@@ -478,7 +444,6 @@ public class Account {
         }
     }
 
-    // equals, hashCode, toString
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

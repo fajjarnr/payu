@@ -38,9 +38,6 @@ public class ErrorInfo {
     )
     private List<FieldError> details;
 
-    /**
-     * Creates ErrorInfo with code and message.
-     */
     public static ErrorInfo of(String code, String message) {
         return ErrorInfo.builder()
                 .code(code)
@@ -48,9 +45,6 @@ public class ErrorInfo {
                 .build();
     }
 
-    /**
-     * Creates ErrorInfo with code, message, and details.
-     */
     public static ErrorInfo of(String code, String message, List<FieldError> details) {
         return ErrorInfo.builder()
                 .code(code)

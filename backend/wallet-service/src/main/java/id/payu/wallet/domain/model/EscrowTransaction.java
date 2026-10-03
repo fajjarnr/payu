@@ -79,8 +79,6 @@ public class EscrowTransaction {
         this.updatedAt = updatedAt;
     }
 
-    // --- Domain Methods ---
-
     /**
      * Mark escrow as held after buyer funds are reserved.
      */
@@ -162,7 +160,6 @@ public class EscrowTransaction {
         return new EscrowTransactionBuilder();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public String getBuyerAccountId() { return buyerAccountId; }

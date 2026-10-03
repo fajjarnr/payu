@@ -11,33 +11,11 @@ import java.util.UUID;
  */
 public interface PayLaterPersistencePort {
 
-    /**
-     * Save a PayLater account.
-     *
-     * @param payLater the PayLater account to save
-     * @return the saved PayLater account
-     */
     PayLater save(PayLater payLater);
 
-    /**
-     * Find PayLater account by user ID.
-     *
-     * @param userId the user ID
-     * @return optional containing the PayLater account if found
-     */
     Optional<PayLater> findByUserId(UUID userId);
 
-    /**
-     * Find PayLater account by user ID with a pessimistic write lock,
-     * protecting read-modify-write of usedCredit against concurrent charges.
-     */
     Optional<PayLater> findByUserIdForUpdate(UUID userId);
 
-    /**
-     * Find PayLater account by ID.
-     *
-     * @param id the PayLater account ID
-     * @return optional containing the PayLater account if found
-     */
     Optional<PayLater> findById(UUID id);
 }

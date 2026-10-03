@@ -73,7 +73,6 @@ export default function PocketsPage() {
     const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
     const [selectedPocketForAction, setSelectedPocketForAction] = useState<Pocket | null>(null);
 
-    // Form states
     const [newPocketName, setNewPocketName] = useState('');
     const [newPocketTarget, setNewPocketTarget] = useState('');
     const [newPocketType, setNewPocketType] = useState<'SAVINGS' | 'GOAL'>('SAVINGS');

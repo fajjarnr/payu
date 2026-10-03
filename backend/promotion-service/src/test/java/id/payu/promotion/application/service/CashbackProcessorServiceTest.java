@@ -63,7 +63,6 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should process cashback on transaction complete")
     void shouldProcessCashbackOnTransactionComplete() {
-        // Given
         TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("100000"));
 
         CashbackRule rule = createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED);
@@ -77,15 +76,12 @@ class CashbackProcessorServiceTest {
         when(cashbackRecordRepository.save(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then
         assertTrue(result.isSuccess());
         assertEquals(1, result.getProcessedCount());
         assertEquals(new BigDecimal("5000"), result.getTotalCashbackAmount());
 
-        // Verify wallet was credited
         verify(walletServicePort).creditWallet(
                 eq(ACCOUNT_ID),
                 argThat(bd -> bd.compareTo(new BigDecimal("5000")) == 0),
@@ -97,7 +93,6 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should credit wallet for eligible cashback")
     void shouldCreditWalletForEligibleCashback() {
-        // Given
         TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("200000"));
 
         CashbackRule rule = createPercentageRule("RULE002", 5, new BigDecimal("10000"));
@@ -111,10 +106,9 @@ class CashbackProcessorServiceTest {
         when(cashbackRecordRepository.save(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then - 5% of 200k = 10k, but capped at 10k max
+        // 5% of 200k = 10k, capped at 10k max
         assertTrue(result.isSuccess());
         assertEquals(0, new BigDecimal("10000").compareTo(result.getTotalCashbackAmount()));
 
@@ -129,7 +123,6 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should send notification after credit")
     void shouldSendNotificationAfterCredit() {
-        // Given
         TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("100000"));
 
         CashbackRule rule = createCashbackRule("RULE003", new BigDecimal("5000"), CashbackType.FIXED);
@@ -143,10 +136,8 @@ class CashbackProcessorServiceTest {
         when(cashbackRecordRepository.save(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         cashbackProcessorService.process(event);
 
-        // Then
         ArgumentCaptor<CashbackNotification> notificationCaptor = ArgumentCaptor.forClass(CashbackNotification.class);
         verify(notificationPort).sendCashbackNotification(notificationCaptor.capture());
 
@@ -159,21 +150,17 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should skip already processed transactions")
     void shouldSkipAlreadyProcessedTransactions() {
-        // Given
         TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("100000"));
 
         when(cashbackRecordRepository.hasProcessedTransaction(TRANSACTION_ID))
                 .thenReturn(true);
 
-        // When
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then
         assertTrue(result.isSuccess());
         assertEquals(0, result.getProcessedCount());
         assertEquals(BigDecimal.ZERO, result.getTotalCashbackAmount());
 
-        // Verify no rules were evaluated or wallet credited
         verify(cashbackRuleRepository, never()).findActiveRules();
         verify(walletServicePort, never()).creditWallet(any(), any(), any(), any());
     }
@@ -181,7 +168,6 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should handle multiple matching rules")
     void shouldHandleMultipleMatchingRules() {
-        // Given
         TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("200000"));
 
         CashbackRule rule1 = createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED);
@@ -196,10 +182,9 @@ class CashbackProcessorServiceTest {
         when(cashbackRecordRepository.save(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then - Should process both rules (5000 + 4000 = 9000, but rule2 capped at 3000 = 8000)
+        // Both rules processed (5000 + 4000 = 9000, but rule2 capped at 3000 = 8000)
         assertTrue(result.isSuccess());
         assertEquals(2, result.getProcessedCount());
     }
@@ -207,7 +192,6 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should persist cashback record before crediting wallet")
     void shouldPersistRecordBeforeCreditingWallet() {
-        // Given
         TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("100000"));
         CashbackRule rule = createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED);
 
@@ -216,10 +200,9 @@ class CashbackProcessorServiceTest {
         when(walletServicePort.creditWallet(any(), any(), any(), any())).thenReturn(true);
         when(cashbackRecordRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         cashbackProcessorService.process(event);
 
-        // Then - record must be persisted BEFORE money moves (PROMO-DOUBLE-001)
+        // Record must be persisted BEFORE money moves (PROMO-DOUBLE-001)
         InOrder inOrder = inOrder(cashbackRecordRepository, walletServicePort);
         inOrder.verify(cashbackRecordRepository).save(any());
         inOrder.verify(walletServicePort).creditWallet(any(), any(), any(), any());
@@ -228,10 +211,10 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should not swallow record save failure after wallet credit (rethrow for retry/DLQ)")
     void shouldRethrowWhenRecordSaveFailsAfterCredit() {
-        // Given - wallet credit succeeds, but persisting the CREDITED record fails
         TransactionCompletedEvent event = createTransactionEvent(new BigDecimal("100000"));
         CashbackRule rule = createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED);
 
+        // Wallet credit succeeds, but persisting the CREDITED record fails
         when(cashbackRuleRepository.findActiveRules()).thenReturn(List.of(rule));
         when(cashbackRecordRepository.hasProcessedTransaction(TRANSACTION_ID)).thenReturn(false);
         when(walletServicePort.creditWallet(any(), any(), any(), any())).thenReturn(true);
@@ -239,7 +222,7 @@ class CashbackProcessorServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0))
                 .thenThrow(new RuntimeException("DB unavailable"));
 
-        // When/Then - exception must propagate so the consumer retries instead of acking
+        // Exception must propagate so the consumer retries instead of acking
         assertThrows(RuntimeException.class, () -> cashbackProcessorService.process(event));
         verify(notificationPort, never()).sendCashbackNotification(any());
     }
@@ -247,7 +230,7 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should mark record CREDITED only after wallet credit succeeds")
     void shouldMarkRecordCreditedAfterWalletCredit() {
-        // Given - record status is captured at each save invocation
+        // Record status is captured at each save invocation
         List<CashbackStatus> savedStatuses = new ArrayList<>();
         when(cashbackRuleRepository.findActiveRules()).thenReturn(List.of(
                 createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED)));
@@ -259,17 +242,16 @@ class CashbackProcessorServiceTest {
             return record;
         });
 
-        // When
+        // Intent persisted as PENDING, finalized as CREDITED
         cashbackProcessorService.process(createTransactionEvent(new BigDecimal("100000")));
 
-        // Then - intent persisted as PENDING, finalized as CREDITED
         assertEquals(List.of(CashbackStatus.PENDING, CashbackStatus.CREDITED), savedStatuses);
     }
 
     @Test
     @DisplayName("should mark record FAILED when wallet rejects the credit")
     void shouldMarkRecordFailedWhenWalletRejects() {
-        // Given - wallet rejects the credit
+        // Wallet rejects the credit
         List<CashbackStatus> savedStatuses = new ArrayList<>();
         when(cashbackRuleRepository.findActiveRules()).thenReturn(List.of(
                 createCashbackRule("RULE001", new BigDecimal("5000"), CashbackType.FIXED)));
@@ -281,10 +263,9 @@ class CashbackProcessorServiceTest {
             return record;
         });
 
-        // When
+        // No money moved, record FAILED, no notification, failure returned
         CashbackResult result = cashbackProcessorService.process(createTransactionEvent(new BigDecimal("100000")));
 
-        // Then - no money moved, record FAILED, no notification, failure returned
         assertEquals(List.of(CashbackStatus.PENDING, CashbackStatus.FAILED), savedStatuses);
         assertFalse(result.isSuccess());
         verify(notificationPort, never()).sendCashbackNotification(any());
@@ -293,7 +274,6 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should filter rules by merchant code")
     void shouldFilterRulesByMerchantCode() {
-        // Given
         TransactionCompletedEvent event = createTransactionEvent(
                 new BigDecimal("100000"), "SPECIFIC_MERCHANT", "GROCERY"
         );
@@ -316,10 +296,9 @@ class CashbackProcessorServiceTest {
         when(cashbackRecordRepository.save(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
+        // Both rules match, but specific rule only for specific merchant
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then - Both rules should match, but specific rule only for specific merchant
         assertTrue(result.isSuccess());
         assertEquals(2, result.getProcessedCount());
     }
@@ -327,7 +306,6 @@ class CashbackProcessorServiceTest {
     @Test
     @DisplayName("should filter rules by category code")
     void shouldFilterRulesByCategoryCode() {
-        // Given
         TransactionCompletedEvent event = createTransactionEvent(
                 new BigDecimal("100000"), MERCHANT_CODE, "DINING"
         );
@@ -357,10 +335,9 @@ class CashbackProcessorServiceTest {
         when(cashbackRecordRepository.save(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
+        // Only dining rule matches
         CashbackResult result = cashbackProcessorService.process(event);
 
-        // Then - Only dining rule should match
         assertTrue(result.isSuccess());
         assertEquals(1, result.getProcessedCount());
         assertEquals(new BigDecimal("3000"), result.getTotalCashbackAmount());

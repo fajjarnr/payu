@@ -74,7 +74,6 @@ public class RestClientProperties {
      */
     private Map<String, ServiceClientProperties> services = new HashMap<>();
 
-    // --- Getters and Setters ---
 
     public int getConnectTimeout() {
         return connectTimeout;

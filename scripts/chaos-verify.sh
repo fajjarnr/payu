@@ -40,7 +40,6 @@ for NS in payu-preprod payu; do
 done
 echo "[chaos-verify] 4) Dry-run ChaosEngine (no cluster mutation)"
 oc apply --dry-run=client -k infrastructure/platform/security/chaos/litmus --validate=true 2>&1 | tee "$REPORT_DIR/chaosengine-dryrun.log"
-# Also dry-run per-file for clarity
 oc create --dry-run=client -o yaml -f infrastructure/platform/security/chaos/litmus/chaosengine.yaml 2>&1 | head -40 | tee -a "$REPORT_DIR/chaosengine-dryrun.log" || \
   oc apply --dry-run=client -f infrastructure/platform/security/chaos/litmus/chaosengine.yaml 2>&1 | tee -a "$REPORT_DIR/chaosengine-dryrun.log"
 echo "[chaos-verify] 4b) Dry-run Kraken/Cerberus"
@@ -49,7 +48,6 @@ echo "[chaos-verify] 5) Pods per env (rtk oc get pods --no-headers)"
 for NS in payu-sit payu-uat payu-preprod payu payu-dev; do
   echo "--- $NS ---" | tee -a "$REPORT_DIR/pods.log"
   oc get pods -n "$NS" --no-headers 2>&1 | tee -a "$REPORT_DIR/pods-$NS.log"
-  # Count 1/1 Ready if rtk available
   if command -v rtk >/dev/null 2>&1; then
     echo "[rtk] rtk oc get pods -n $NS --no-headers" | tee -a "$REPORT_DIR/pods.log"
     rtk oc get pods -n "$NS" --no-headers 2>&1 | tail -20 | tee -a "$REPORT_DIR/pods.log" || true

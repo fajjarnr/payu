@@ -31,9 +31,6 @@ public class SoapTransformer {
     private static final String SOAP_11_NS = "http://schemas.xmlsoap.org/soap/envelope/";
     private static final String SOAP_12_NS = "http://www.w3.org/2003/05/soap-envelope";
 
-    /**
-     * Wrap payload in SOAP 1.1 envelope.
-     */
     public String wrapSoap11(String payload, String operation) {
         log.debug("Wrapping payload in SOAP 1.1 envelope for operation: {}", operation);
 
@@ -48,9 +45,6 @@ public class SoapTransformer {
                 "</soap:Envelope>";
     }
 
-    /**
-     * Wrap payload in SOAP 1.2 envelope.
-     */
     public String wrapSoap12(String payload, String operation) {
         log.debug("Wrapping payload in SOAP 1.2 envelope for operation: {}", operation);
 
@@ -65,9 +59,6 @@ public class SoapTransformer {
                 "</soap12:Envelope>";
     }
 
-    /**
-     * Unwrap SOAP envelope and extract body content.
-     */
     public String unwrapSoap(String soapResponse) {
         log.debug("Unwrapping SOAP response");
 
@@ -88,7 +79,6 @@ public class SoapTransformer {
                 throw new IllegalArgumentException("SOAP Body not found");
             }
 
-            // Extract first child of Body as response
             NodeList children = body.getChildNodes();
             for (int i = 0; i < children.getLength(); i++) {
                 Node child = children.item(i);
@@ -104,9 +94,6 @@ public class SoapTransformer {
         }
     }
 
-    /**
-     * Extract SOAP Fault details if present.
-     */
     public Map<String, String> extractFault(String soapResponse) {
         Map<String, String> fault = new HashMap<>();
 
@@ -138,9 +125,6 @@ public class SoapTransformer {
         return fault;
     }
 
-    /**
-     * Check if response contains a SOAP Fault.
-     */
     public boolean hasFault(String soapResponse) {
         return soapResponse != null && (
                 soapResponse.contains(":Fault>") ||
@@ -148,9 +132,6 @@ public class SoapTransformer {
         );
     }
 
-    /**
-     * Create a generic SOAP request for common operations.
-     */
     public String createRequest(String operation, Map<String, String> parameters) {
         StringBuilder payload = new StringBuilder();
 
@@ -168,7 +149,6 @@ public class SoapTransformer {
         if (children.getLength() > 0) {
             return (Element) children.item(0);
         }
-        // Try without namespace
         children = parent.getElementsByTagName(localName);
         if (children.getLength() > 0) {
             return (Element) children.item(0);
@@ -207,9 +187,6 @@ public class SoapTransformer {
                 .replace("'", "&apos;");
     }
 
-    /**
-     * Exception for SOAP transformation errors.
-     */
     public static class SoapTransformationException extends RuntimeException {
         public SoapTransformationException(String message, Throwable cause) {
             super(message, cause);

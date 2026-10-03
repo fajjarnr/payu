@@ -33,7 +33,6 @@ CREATE DATABASE payu_api_portal;
 CREATE DATABASE payu_sonarqube;
 GRANT ALL PRIVILEGES ON DATABASE payu_sonarqube TO payu;
 
--- =============================================================================
 -- DEV ONLY: Single shared 'payu' user for local development convenience.
 --
 -- PRODUCTION: Create per-service DB users with restricted privileges, e.g.:
@@ -47,7 +46,6 @@ GRANT ALL PRIVILEGES ON DATABASE payu_sonarqube TO payu;
 --   - transaction-service (payment processing — audit isolation)
 --   - auth-service (credentials — principle of least privilege)
 --   - compliance-service (regulatory data — access control)
--- =============================================================================
 
 -- Create Users (Simplified for dev)
 -- User 'payu' is created via POSTGRES_USER env var
@@ -84,10 +82,8 @@ GRANT ALL PRIVILEGES ON DATABASE payu_products TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_gateway TO payu;
 GRANT ALL PRIVILEGES ON DATABASE payu_api_portal TO payu;
 
--- =============================================================================
 -- Local Flyway runs as POSTGRES_USER (payu), so tables are owned by payu.
 -- Keep grants explicit for extensions or objects created by bootstrap scripts.
--- =============================================================================
 
 -- Grant on all existing tables (idempotent — runs after Flyway migrations)
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO payu;

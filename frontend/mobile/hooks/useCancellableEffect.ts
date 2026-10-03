@@ -71,11 +71,9 @@ export function useAbortController() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    // Create new AbortController on mount
     abortControllerRef.current = new AbortController();
 
     return () => {
-      // Abort on unmount
       abortControllerRef.current?.abort();
     };
   }, []);
@@ -128,10 +126,8 @@ export function useCancellablePromise<T>(
     setState({ data: null, error: null, loading: true });
     isMountedRef.current = true;
 
-    // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
 
-    // Set timeout
     const timeoutId = setTimeout(() => {
       abortControllerRef.current?.abort();
     }, timeout);
@@ -155,12 +151,10 @@ export function useCancellablePromise<T>(
     }
   }, [promiseFn, timeout]);
 
-  // Retry function
   const retry = React.useCallback(() => {
     execute();
   }, [execute]);
 
-  // Cancel function
   const cancel = React.useCallback(() => {
     abortControllerRef.current?.abort();
   }, []);

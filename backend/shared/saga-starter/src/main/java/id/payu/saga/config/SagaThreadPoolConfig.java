@@ -93,7 +93,6 @@ public class SagaThreadPoolConfig {
         executor.setTaskDecorator(new SagaTaskDecorator());
         executor.initialize();
 
-        // Register Micrometer metrics
         ExecutorServiceMetrics.monitor(
                 meterRegistry,
                 executor.getThreadPoolExecutor(),
@@ -124,7 +123,6 @@ public class SagaThreadPoolConfig {
         );
         scheduler.setRemoveOnCancelPolicy(true);
 
-        // Register Micrometer metrics
         ExecutorServiceMetrics.monitor(
                 meterRegistry,
                 scheduler,

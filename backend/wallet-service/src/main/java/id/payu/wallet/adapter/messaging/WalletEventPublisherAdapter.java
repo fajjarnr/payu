@@ -134,7 +134,7 @@ public class WalletEventPublisherAdapter implements WalletEventPublisherPort {
         log.debug("Created CloudEvent outbox event for wallet-created: accountId={}", accountId);
     }
 
-    // --- Escrow lifecycle events ---
+    // Escrow lifecycle events
 
     private static final String ESCROW_AGGREGATE_TYPE = "Escrow";
 

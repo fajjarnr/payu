@@ -1,10 +1,7 @@
-# =============================================================================
 # PayU Platform - Vault Auto-Unseal Configuration
-# =============================================================================
 # DEVSECOPS-002: Automated unseal via Kubernetes KMS / Transit auto-unseal
 #
 # Configures Vault seal stanza for auto-unsealing on pod restarts/failover.
-# =============================================================================
 
 apiVersion: v1
 kind: ConfigMap

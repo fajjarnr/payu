@@ -12,7 +12,6 @@ function Skeleton({
   )
 }
 
-// Higher-level utility components for common patterns
 const SkeletonCard = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("bg-card p-8 rounded-2xl border border-border shadow-sm space-y-6", className)} {...props}>
     <div className="flex justify-between items-start">

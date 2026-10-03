@@ -238,7 +238,6 @@ describe('currency.ts - calculatePercentageChange', () => {
 
   it('should handle negative old value', () => {
     const result = calculatePercentageChange(-100, 50);
-    // When old value is negative, going to positive is a change
     // Change from -100 to 50: (50 - (-100)) / |-100| * 100 = 150/100 * 100 = 150
     expect(result.percentage).toBe(150);
   });

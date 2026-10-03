@@ -67,7 +67,6 @@ class OnboardingIntegrationTest {
     @Test
     @DisplayName("should persist user to real database")
     void shouldPersistUserToDatabase() throws ExecutionException, InterruptedException {
-        // Given
         RegisterUserRequest request = new RegisterUserRequest(
                 UUID.randomUUID().toString(),
                 "integration-user",
@@ -95,14 +94,11 @@ class OnboardingIntegrationTest {
         given(identityProviderAdapter.provisionUser(any(), any(), any(), any()))
                 .willReturn("iam-" + request.username());
 
-        // When
         User savedUser = userApplicationService.registerUser(request).get();
 
-        // Then
         assertThat(savedUser).isNotNull();
         assertThat(savedUser.getId()).isNotNull();
 
-        // Verify direct DB persistence
         id.payu.account.adapter.persistence.entity.UserEntity userFromDb = userRepository.findById(savedUser.getId()).orElseThrow();
         assertThat(userFromDb.getUsername()).isEqualTo("integration-user");
         assertThat(userFromDb.getEmail()).isEqualTo("integration@payu.fajjjar.my.id");
@@ -111,9 +107,7 @@ class OnboardingIntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-         // INTEGRATION-CTX: the app binds datasource-starter prefix
-         // spring.datasource.primary.hikari.* — plain spring.datasource.url
-         // is ignored, which previously left the context without an EMF.
+        // App binds spring.datasource.primary.hikari.*; plain spring.datasource.url is ignored.
          registry.add("spring.datasource.primary.hikari.jdbc-url", postgres::getJdbcUrl);
          registry.add("spring.datasource.primary.hikari.username", postgres::getUsername);
          registry.add("spring.datasource.primary.hikari.password", postgres::getPassword);

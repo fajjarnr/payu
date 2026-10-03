@@ -32,7 +32,6 @@ JAVA_SERVICES=(
   product-catalog-service
 )
 
-# Python services
 PYTHON_SERVICES=(
   kyc-service
   analytics-service
@@ -42,7 +41,6 @@ echo "=== Building Java Service Images ==="
 for svc in "${JAVA_SERVICES[@]}"; do
   echo "--- Building $svc ---"
   IMG="$REGISTRY/$NS/$svc:$TAG"
-  # Check JAR exists
   JAR=$(find "$BACKEND/$svc/target" -name "*.jar" ! -name "*-sources.jar" ! -name "*original*" 2>/dev/null | head -1)
   if [ -z "$JAR" ]; then
     echo "SKIP: No JAR found for $svc"

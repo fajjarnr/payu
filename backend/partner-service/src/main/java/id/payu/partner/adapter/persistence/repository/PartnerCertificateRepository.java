@@ -29,18 +29,8 @@ public interface PartnerCertificateRepository extends JpaRepository<PartnerCerti
     @Query("SELECT pc FROM PartnerCertificateEntity pc WHERE pc.partner.id = ?1 AND pc.active = true AND pc.validTo >= ?2 AND pc.validTo <= ?3")
     List<PartnerCertificateEntity> findExpiringSoon(Long partnerId, LocalDateTime now, LocalDateTime expiryThreshold);
 
-    // Helper method to satisfy the logical contract - if partnerId is null, ignore it? Or specific call?
-    // Based on usage in RotationService: findExpiringSoon(null, days) suggests fetching ANY expiring cert.
-    // However, the original code had "partner.id = ?1" which implies partnerId MUST be provided or it fails/returns empty for null partnerId.
-    // Let's check original usage. rotateExpiringCertificates passes null partnerId.
-    // But original query: "partner.id = ?1 ..."
-    // If param 1 is null, it matches where partner_id is null? But partner_id is likely FK not null.
-    // The original Panache code might have been handling null dynamically or it was a bug?
-    // "partner.id = ?1" in HQL usually means exact match.
-    
-    // I will create a separate method for "Any partner" expiring check if needed.
-    // "request param partnerId" in controller suggests explicit partner.
-    // "rotateExpiringCertificates" service job suggests ALL partners.
+    // findExpiringSoon(null, days) fetches any expiring cert across all partners;
+    // non-null partnerId scopes to that partner only.
     
     @Query("SELECT pc FROM PartnerCertificateEntity pc WHERE pc.active = true AND pc.validTo >= ?1 AND pc.validTo <= ?2")
     List<PartnerCertificateEntity> findAllExpiringSoon(LocalDateTime now, LocalDateTime expiryThreshold);

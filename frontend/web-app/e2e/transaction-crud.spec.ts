@@ -1,14 +1,8 @@
 import { test, expect } from './fixtures';
 
 /**
- * Transaction CRUD E2E Tests
- * Tests Create, Read, Update (status), and Cancel operations for Transaction entity
- *
- * Mapped to actual UI:
- * - CREATE: /transfer (transfer form), /bills (bill payment)
- * - READ: /transactions (history table with stats)
- * - UPDATE: N/A (no favorite/note/categorize features in current UI)
- * - DELETE: /transactions (cancel via dropdown + confirmation dialog)
+ * Transaction CRUD E2E tests. Mapped to UI: CREATE /transfer + /bills, READ /transactions,
+ * DELETE /transactions (cancel via dropdown); UPDATE has no UI.
  */
 
 test.describe('Transaction CRUD Operations', () => {
@@ -17,10 +11,8 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transfer');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify transfer page heading
       await expect(authPage.locator('h2').filter({ hasText: 'Transfer Instan' })).toBeVisible();
 
-      // Verify key form elements exist using data-testid
       await expect(authPage.locator('[data-testid="recipient-account-input"]')).toBeVisible();
       await expect(authPage.locator('[data-testid="amount-input"]')).toBeVisible();
       await expect(authPage.locator('[data-testid="review-transfer-button"]')).toBeVisible();
@@ -30,19 +22,16 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transfer');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Fill transfer form using data-testid selectors
       const recipientInput = authPage.locator('[data-testid="recipient-account-input"]');
       await recipientInput.fill('acc-any123');
 
       const amountInput = authPage.locator('[data-testid="amount-input"]');
       await amountInput.fill('50000');
 
-      // Verify the description input exists
       const descriptionInput = authPage.locator('[data-testid="description-input"]');
       await expect(descriptionInput).toBeVisible();
       await descriptionInput.fill('Test transfer');
 
-      // Verify review button is available
       await expect(authPage.locator('[data-testid="review-transfer-button"]')).toBeVisible();
     });
 
@@ -65,11 +54,9 @@ test.describe('Transaction CRUD Operations', () => {
         return input && input.value.length > 0 && input.value !== '0';
       }, { timeout: 5000 });
 
-      // Click review button
       await authPage.locator('[data-testid="review-transfer-button"]').click();
       await authPage.waitForTimeout(1000);
 
-      // After clicking review, confirm button should appear
       await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible();
     });
 
@@ -77,10 +64,8 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/bills');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify bills page heading
       await expect(authPage.getByText('Tagihan & Top-up')).toBeVisible();
 
-      // Verify biller categories
       await expect(authPage.getByText('Kategori Layanan')).toBeVisible();
       await expect(authPage.getByText('Pulsa')).toBeVisible();
       await expect(authPage.getByText('Listrik (PLN)')).toBeVisible();
@@ -90,11 +75,9 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/bills');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify billers are available for selection
       await expect(authPage.getByText('Pulsa')).toBeVisible();
       await expect(authPage.getByText('Air (PDAM)')).toBeVisible();
 
-      // Verify recent activity section
       await expect(authPage.getByText('Aktivitas Terakhir')).toBeVisible();
     });
 
@@ -102,10 +85,8 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transfer');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // The transfer page should have a transfer type selector
       await expect(authPage.locator('h2').filter({ hasText: 'Transfer Instan' })).toBeVisible();
 
-      // Verify the form layout contains proper sections
       await expect(authPage.locator('[data-testid="recipient-account-input"]')).toBeVisible();
       await expect(authPage.locator('[data-testid="amount-input"]')).toBeVisible();
     });
@@ -129,7 +110,6 @@ test.describe('Transaction CRUD Operations', () => {
         return input && input.value.length > 0 && input.value !== '0';
       }, { timeout: 5000 });
 
-      // Click review button
       await authPage.locator('[data-testid="review-transfer-button"]').click();
       await authPage.waitForTimeout(1000);
 
@@ -143,7 +123,6 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify page heading
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
       await expect(authPage.getByText('Kelola dan pantau semua aktivitas transaksi Anda')).toBeVisible();
     });
@@ -152,7 +131,6 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify stats cards headings
       await expect(authPage.getByText('Total Masuk')).toBeVisible();
       await expect(authPage.getByText('Total Keluar')).toBeVisible();
       await expect(authPage.getByText('Menunggu')).toBeVisible();
@@ -163,10 +141,8 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify the table section heading
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
 
-      // Verify pagination badge shows page number
       await expect(authPage.getByText('Halaman 1')).toBeVisible();
     });
 
@@ -174,8 +150,7 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // The transactions page has dropdown filter buttons "Status" and "Tipe"
-      // rather than "Filter Tanggal" / "Filter" labels
+      // Filters are "Status"/"Tipe" dropdowns, not "Filter Tanggal" labels.
       await expect(authPage.getByRole('button', { name: /Status/ })).toBeVisible();
       await expect(authPage.getByRole('button', { name: /Tipe/ })).toBeVisible();
     });
@@ -184,14 +159,11 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Either shows transactions in a table or empty state
       const emptyState = authPage.getByText('Tidak Ada Transaksi');
       const tableHeader = authPage.getByText('Daftar Transaksi');
 
-      // The page must have at least the table section
       await expect(tableHeader).toBeVisible();
 
-      // Either there are transactions (table has rows) or empty state message
       const hasEmpty = await emptyState.isVisible().catch(() => false);
       if (hasEmpty) {
         await expect(authPage.getByText('Anda belum memiliki transaksi')).toBeVisible();
@@ -202,7 +174,6 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // The desktop table has these column headers
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
 
       // Check for the table header labels (uppercase in the actual UI)
@@ -222,9 +193,7 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // The transactions page has a cancel dialog component (Dialog)
-      // The dialog is triggered by clicking "Batalkan Transaksi" in the dropdown menu
-      // Verify the page loaded successfully with the cancel infrastructure
+      // Cancel dialog is triggered by "Batalkan Transaksi" in the row dropdown.
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
     });
@@ -233,7 +202,6 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/pockets');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify pockets page has transaction ledger section
       await expect(authPage.getByText('Buku Besar Terakhir')).toBeVisible();
     });
 
@@ -241,7 +209,6 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/pockets');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify "Lihat Rekening Koran" button exists
       await expect(authPage.getByText('Lihat Rekening Koran')).toBeVisible();
     });
   });
@@ -251,11 +218,9 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify the page loaded
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
 
-      // The page has cancel dialog ready (hidden by default)
-      // Cancel is available through the dropdown menu on PENDING/PROCESSING transactions
+      // Cancel is available via the dropdown on PENDING/PROCESSING transactions.
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
     });
 
@@ -266,7 +231,6 @@ test.describe('Transaction CRUD Operations', () => {
       // Page should load without error regardless of transaction count
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
 
-      // If no transactions, empty state should show
       const emptyState = authPage.getByText('Tidak Ada Transaksi');
       const hasEmpty = await emptyState.isVisible().catch(() => false);
       if (hasEmpty) {
@@ -278,14 +242,11 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify initial load
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
 
-      // Reload page
       await authPage.reload();
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify page still loads correctly
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
     });
@@ -296,7 +257,6 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transfer');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify the two-step process: review then confirm
       await authPage.locator('[data-testid="recipient-account-input"]').click();
       await authPage.locator('[data-testid="recipient-account-input"]').clear();
       await authPage.locator('[data-testid="recipient-account-input"]').pressSequentially('acc-any123');
@@ -321,7 +281,6 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Stats cards provide financial monitoring
       await expect(authPage.getByText('Total Masuk')).toBeVisible();
       await expect(authPage.getByText('Total Keluar')).toBeVisible();
       await expect(authPage.getByText('Menunggu')).toBeVisible();
@@ -332,11 +291,9 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Verify page loaded
       await expect(authPage.getByText('Daftar Transaksi')).toBeVisible();
 
-      // Pagination controls: "Sebelumnya" and "Selanjutnya" buttons
-      // These only appear when there are transactions
+      // Pagination controls only render when transactions exist.
       const prevButton = authPage.getByText('Sebelumnya');
       const hasTransactions = await prevButton.isVisible().catch(() => false);
 
@@ -351,14 +308,11 @@ test.describe('Transaction CRUD Operations', () => {
       await authPage.goto('/transactions');
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Capture current page state
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
 
-      // Reload
       await authPage.reload();
       await authPage.waitForLoadState('domcontentloaded');
 
-      // Same state after reload
       await expect(authPage.getByText('Riwayat Transaksi')).toBeVisible();
       await expect(authPage.getByText('Total Masuk')).toBeVisible();
       await expect(authPage.getByText('Total Keluar')).toBeVisible();

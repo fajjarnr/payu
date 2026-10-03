@@ -57,7 +57,6 @@ class TestComplianceFlow:
         """
         Get an existing audit report — verifies gateway routes to compliance-service.
         """
-        # Attempt to create a report first
         response = authenticated_api.post("/api/v1/compliance/audit-report", json={
             "transactionId": fake.uuid4(),
             "merchantId": f"MERCH_{fake.uuid4()[:8]}",
@@ -74,7 +73,6 @@ class TestComplianceFlow:
             f"Unexpected status from compliance-service POST, got {response.status_code}"
         )
 
-        # GET a report by ID
         fake_report_id = fake.uuid4()
         response = authenticated_api.get(f"/api/v1/compliance/audit-report/{fake_report_id}")
         assert response.status_code in [200, 403, 404, 429, 500, 503], (
@@ -87,7 +85,6 @@ class TestComplianceFlow:
         """
         transaction_id = fake.uuid4()
 
-        # Create report
         response = authenticated_api.post("/api/v1/compliance/audit-report", json={
             "transactionId": transaction_id,
             "merchantId": f"MERCH_{fake.uuid4()[:8]}",
@@ -98,7 +95,6 @@ class TestComplianceFlow:
             f"Unexpected status from compliance-service POST, got {response.status_code}"
         )
 
-        # Search
         response = authenticated_api.get("/api/v1/compliance/audit-report", params={
             "transactionId": transaction_id
         })
@@ -112,7 +108,6 @@ class TestComplianceFlow:
         """
         merchant_id = f"MERCH_{fake.uuid4()[:8]}"
 
-        # Create report
         response = authenticated_api.post("/api/v1/compliance/audit-report", json={
             "transactionId": fake.uuid4(),
             "merchantId": merchant_id,
@@ -123,7 +118,6 @@ class TestComplianceFlow:
             f"Unexpected status from compliance-service POST, got {response.status_code}"
         )
 
-        # Search by merchant
         response = authenticated_api.get("/api/v1/compliance/audit-report", params={
             "merchantId": merchant_id
         })
@@ -135,7 +129,6 @@ class TestComplianceFlow:
         """
         Filter audit reports by compliance standard — verifies gateway routes to compliance-service.
         """
-        # Create AML report
         response = authenticated_api.post("/api/v1/compliance/audit-report", json={
             "transactionId": fake.uuid4(),
             "merchantId": f"MERCH_{fake.uuid4()[:8]}",
@@ -146,7 +139,6 @@ class TestComplianceFlow:
             f"Unexpected status from compliance-service AML POST, got {response.status_code}"
         )
 
-        # Create CFT report
         response = authenticated_api.post("/api/v1/compliance/audit-report", json={
             "transactionId": fake.uuid4(),
             "merchantId": f"MERCH_{fake.uuid4()[:8]}",
@@ -157,7 +149,6 @@ class TestComplianceFlow:
             f"Unexpected status from compliance-service CFT POST, got {response.status_code}"
         )
 
-        # Search with filter
         response = authenticated_api.get("/api/v1/compliance/audit-report", params={
             "merchantId": f"MERCH_{fake.uuid4()[:8]}",
             "standard": "AML"

@@ -45,7 +45,6 @@ public abstract class SagaOrchestrator<T> {
     /**
      * Constructor with Spring-managed executors.
      *
-     * @param sagaRepository the saga repository
      * @param sagaTaskExecutor the Spring-managed task executor for async operations
      * @param sagaRetryScheduler the Spring-managed scheduled executor for retries
      * @param transactionManager the transaction manager for programmatic TX control
@@ -60,33 +59,17 @@ public abstract class SagaOrchestrator<T> {
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
-    /**
-     * Initialize the orchestrator with saga type and steps.
-     */
     protected void initialize(String sagaType, List<SagaStep<T>> steps) {
         this.sagaType = sagaType;
         this.steps.addAll(steps);
         log.info("Initialized saga orchestrator for type: {} with {} steps", sagaType, steps.size());
     }
 
-    /**
-     * Execute the saga with the given initial data.
-     *
-     * @param initialData The initial saga data
-     * @return The saga execution result
-     */
     public SagaResult<T> execute(T initialData) {
         String sagaId = UUID.randomUUID().toString();
         return executeWithId(sagaId, initialData);
     }
 
-    /**
-     * Execute the saga with a specific ID.
-     *
-     * @param sagaId The saga instance ID
-     * @param initialData The initial saga data
-     * @return The saga execution result
-     */
     public SagaResult<T> executeWithId(String sagaId, T initialData) {
         log.info("Starting saga execution: {} - type: {}", sagaId, sagaType);
 
@@ -100,11 +83,9 @@ public abstract class SagaOrchestrator<T> {
         List<String> executedSteps = new ArrayList<>();
 
         try {
-            // Execute each step in order
             for (SagaStep<T> step : steps) {
                 log.debug("Executing step: {} for saga: {}", step.getName(), sagaId);
 
-                // Check preconditions
                 if (!step.canExecute(currentData)) {
                     log.warn("Precondition not met for step: {} in saga: {}", step.getName(), sagaId);
                     continue;
@@ -137,11 +118,9 @@ public abstract class SagaOrchestrator<T> {
                     });
                     log.debug("Step completed successfully: {} for saga: {}", step.getName(), sagaId);
                 } else {
-                    // Step failed
                     log.error("Step failed: {} for saga: {} - {}", step.getName(), sagaId, result.getMessage());
 
                     if (step.isContinueOnFailure()) {
-                        // Non-critical failure, continue
                         log.warn("Continuing after non-critical failure in step: {}", step.getName());
                         continue;
                     }
@@ -192,16 +171,10 @@ public abstract class SagaOrchestrator<T> {
         }
     }
 
-    /**
-     * Execute saga asynchronously.
-     */
     public CompletableFuture<SagaResult<T>> executeAsync(T initialData) {
         return CompletableFuture.supplyAsync(() -> execute(initialData), sagaTaskExecutor::execute);
     }
 
-    /**
-     * Execute saga asynchronously with specific ID.
-     */
     public CompletableFuture<SagaResult<T>> executeAsyncWithId(String sagaId, T initialData) {
         return CompletableFuture.supplyAsync(() -> executeWithId(sagaId, initialData), sagaTaskExecutor::execute);
     }
@@ -224,7 +197,6 @@ public abstract class SagaOrchestrator<T> {
         instance.transitionTo(SagaState.COMPENSATING.name());
         instance = sagaRepository.save(instance);
 
-        // Reverse the executed steps for compensation
         List<String> stepsToCompensate = new ArrayList<>(executedSteps);
         Collections.reverse(stepsToCompensate);
 
@@ -298,9 +270,6 @@ public abstract class SagaOrchestrator<T> {
         }
     }
 
-    /**
-     * Execute a step with retry logic.
-     */
     protected StepResult<T> executeStepWithRetry(SagaStep<T> step, T data) {
         int attempts = 0;
         Duration delay = step.getRetryDelay();
@@ -333,9 +302,6 @@ public abstract class SagaOrchestrator<T> {
         return StepResult.failure(data, "Unexpected retry loop exit");
     }
 
-    /**
-     * Create a new saga instance.
-     */
     protected SagaInstance createSagaInstance(String sagaId, T initialData) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("initialData", initialData);
@@ -357,16 +323,10 @@ public abstract class SagaOrchestrator<T> {
         return currentData;
     }
 
-    /**
-     * Get the saga type.
-     */
     public String getSagaType() {
         return sagaType;
     }
 
-    /**
-     * Get the list of steps.
-     */
     protected List<SagaStep<T>> getSteps() {
         return Collections.unmodifiableList(steps);
     }

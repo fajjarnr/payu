@@ -1,7 +1,5 @@
 #!/bin/bash
-# =============================================================================
 # PayU E2E Blackbox Test Runner (Container Environment)
-# =============================================================================
 # Runs pytest-based API E2E tests against services running in Podman containers.
 # Usage: ./scripts/run-e2e-container.sh [test-type] [--no-infra] [--keep-up]
 #
@@ -9,13 +7,9 @@
 #   lending, backoffice, partner, promotion, support, compliance, fx, cms,
 #   statement, billing, notification, dispute, kyc, gateway, abtesting,
 #   product_catalog, integration_svc
-# =============================================================================
 
 set -euo pipefail
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 COMPOSE_DIR="$PROJECT_ROOT/infrastructure/local-podman"
@@ -27,12 +21,10 @@ GATEWAY_HEALTH="${GATEWAY_URL}/q/health"
 MAX_GATEWAY_WAIT=180   # seconds
 MAX_SERVICE_WAIT=120   # seconds
 
-# Flags
 START_INFRA=true
 KEEP_UP=false
 TEST_TYPE="${1:-all}"
 
-# Parse optional flags
 shift || true
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -43,9 +35,6 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-# ---------------------------------------------------------------------------
-# Colors
-# ---------------------------------------------------------------------------
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -59,9 +48,6 @@ log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 log_error()   { echo -e "${RED}[ERROR]${NC}   $1"; }
 log_step()    { echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 
-# ---------------------------------------------------------------------------
-# Prerequisites
-# ---------------------------------------------------------------------------
 check_prerequisites() {
     log_step "Step 0: Checking prerequisites"
     local missing=0
@@ -88,9 +74,6 @@ check_prerequisites() {
     log_success "All prerequisites found."
 }
 
-# ---------------------------------------------------------------------------
-# Install Python test dependencies
-# ---------------------------------------------------------------------------
 install_test_deps() {
     log_step "Step 1: Installing test dependencies"
     if [[ -f "$E2E_DIR/requirements.txt" ]]; then
@@ -111,27 +94,21 @@ install_test_deps() {
     fi
 }
 
-# ---------------------------------------------------------------------------
-# Start infrastructure in stages
-# ---------------------------------------------------------------------------
 start_infrastructure() {
     log_step "Step 2: Starting container infrastructure"
     cd "$COMPOSE_DIR"
 
-    # Stage 1: Core infra (DB, cache, messaging) — start first, let them init
     log_info "Stage 1/3 — Core infrastructure (postgres, redis, kafka, vault, jaeger)..."
     podman compose -f "$COMPOSE_FILE" up -d \
         postgres redis kafka vault jaeger 2>&1 | tail -5
     log_info "Waiting 20s for core infra to initialise..."
     sleep 20
 
-    # Stage 2: Identity & simulators
     log_info "Stage 2/3 — Identity & simulators (keycloak, simulators)..."
     podman compose -f "$COMPOSE_FILE" up -d \
         keycloak bi-fast-simulator qris-simulator dukcapil-simulator 2>&1 | tail -5
     sleep 10
 
-    # Stage 3: All remaining services (let compose resolve dependency graph)
     log_info "Stage 3/3 — All services (compose handles dependency order)..."
     podman compose -f "$COMPOSE_FILE" up -d 2>&1 | tail -20
     sleep 10
@@ -140,9 +117,6 @@ start_infrastructure() {
     cd "$PROJECT_ROOT"
 }
 
-# ---------------------------------------------------------------------------
-# Wait for gateway health
-# ---------------------------------------------------------------------------
 wait_for_gateway() {
     log_step "Step 3: Waiting for gateway ($GATEWAY_URL)"
     local elapsed=0
@@ -164,9 +138,6 @@ wait_for_gateway() {
     return 1
 }
 
-# ---------------------------------------------------------------------------
-# Service health check summary
-# ---------------------------------------------------------------------------
 check_service_health() {
     log_step "Step 4: Service health check"
     local services=(
@@ -230,14 +201,10 @@ check_service_health() {
     fi
 }
 
-# ---------------------------------------------------------------------------
-# Run E2E tests
-# ---------------------------------------------------------------------------
 run_e2e_tests() {
     log_step "Step 5: Running E2E tests (type=$TEST_TYPE)"
     cd "$E2E_DIR"
 
-    # Activate venv if it exists
     local venv_dir="$E2E_DIR/.venv"
     if [[ -d "$venv_dir/bin/activate" ]] || [[ -f "$venv_dir/bin/activate" ]]; then
         source "$venv_dir/bin/activate"
@@ -293,9 +260,6 @@ run_e2e_tests() {
     return "$TEST_EXIT_CODE"
 }
 
-# ---------------------------------------------------------------------------
-# Print summary
-# ---------------------------------------------------------------------------
 print_summary() {
     local result=$1
     log_step "Summary"
@@ -316,9 +280,6 @@ print_summary() {
     fi
 }
 
-# ---------------------------------------------------------------------------
-# Cleanup handler
-# ---------------------------------------------------------------------------
 cleanup() {
     if [[ "$KEEP_UP" == "false" && "$START_INFRA" == "true" ]]; then
         log_info "Stopping containers (use --keep-up to skip)..."
@@ -328,9 +289,6 @@ cleanup() {
     fi
 }
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 main() {
     echo "============================================"
     echo "  PayU E2E Blackbox Test Runner"
@@ -350,7 +308,6 @@ main() {
 
     check_service_health
 
-    # Ensure reports directory exists
     mkdir -p "$E2E_DIR/reports"
 
     run_e2e_tests
@@ -358,7 +315,6 @@ main() {
 
     print_summary $TEST_RESULT
 
-    # Cleanup on exit unless --keep-up
     if [[ "$KEEP_UP" == "false" && "$START_INFRA" == "true" ]]; then
         log_info "Use --keep-up to keep containers running after tests."
     fi

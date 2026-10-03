@@ -42,9 +42,6 @@ public class PaginationInfo {
     @Schema(description = "Navigation links for pagination")
     private PaginationLinks links;
 
-    /**
-     * Creates PaginationInfo from Spring Data Page.
-     */
     public static <T> PaginationInfo from(org.springframework.data.domain.Page<T> page, String baseUrl) {
         int currentPage = page.getNumber();
         int pageSize = page.getSize();
@@ -72,9 +69,6 @@ public class PaginationInfo {
         return String.format("%s?page=%d&size=%d", baseUrl, page, size);
     }
 
-    /**
-     * Creates PaginationInfo from Page without links.
-     */
     public static <T> PaginationInfo from(org.springframework.data.domain.Page<T> page) {
         return PaginationInfo.builder()
                 .page(page.getNumber())

@@ -69,7 +69,6 @@ public class AuthIntegrationTest {
     static class KeycloakInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
         public void initialize(ConfigurableApplicationContext ctx) {
-            // Start Keycloak container
             keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.0")
                     .withAdminUsername("admin")
                     .withAdminPassword("admin");
@@ -77,7 +76,6 @@ public class AuthIntegrationTest {
 
             String keycloakUrl = keycloak.getAuthServerUrl();
             
-            // Set properties after container is started
             TestPropertySourceUtils.addInlinedPropertiesToEnvironment(ctx,
                     "payu.keycloak.server-url=" + keycloakUrl,
                     "payu.keycloak.realm=" + REALM_NAME,
@@ -94,19 +92,14 @@ public class AuthIntegrationTest {
     void setupRealm() throws Exception {
         String keycloakUrl = keycloak.getAuthServerUrl();
         
-        // Get admin token
         String adminToken = getAdminToken(keycloakUrl);
         
-        // Check if realm exists
         if (!realmExists(keycloakUrl, adminToken)) {
-            // Create realm
             createRealm(keycloakUrl, adminToken);
             
-            // Create client
             createClient(keycloakUrl, adminToken);
         }
         
-        // Create test user if not exists
         createTestUserIfNotExists(keycloakUrl, adminToken);
     }
 
@@ -194,7 +187,6 @@ public class AuthIntegrationTest {
         List<?> users = restTemplate.exchange(searchUrl, HttpMethod.GET, searchRequest, List.class).getBody();
         
         if (users == null || users.isEmpty()) {
-            // Create user without required actions
             String createUrl = keycloakUrl + "/admin/realms/" + REALM_NAME + "/users";
             
             HttpHeaders createHeaders = new HttpHeaders();
@@ -206,7 +198,7 @@ public class AuthIntegrationTest {
             userConfig.put("email", TEST_EMAIL);
             userConfig.put("enabled", true);
             userConfig.put("emailVerified", true);
-            userConfig.put("requiredActions", List.of());  // Explicitly empty
+            userConfig.put("requiredActions", List.of());
             userConfig.put("credentials", List.of(Map.of(
                     "type", "password",
                     "value", TEST_PASSWORD,
@@ -216,13 +208,11 @@ public class AuthIntegrationTest {
             HttpEntity<Map<String, Object>> createRequest = new HttpEntity<>(userConfig, createHeaders);
             restTemplate.postForEntity(createUrl, createRequest, String.class);
             
-            // Get user ID and clear any required actions
             users = restTemplate.exchange(searchUrl, HttpMethod.GET, searchRequest, List.class).getBody();
             if (users != null && !users.isEmpty()) {
                 Map<String, Object> user = (Map<String, Object>) users.get(0);
                 String userId = (String) user.get("id");
                 
-                // Update user to remove any required actions
                 String updateUrl = keycloakUrl + "/admin/realms/" + REALM_NAME + "/users/" + userId;
                 Map<String, Object> updateConfig = new HashMap<>();
                 updateConfig.put("requiredActions", List.of());
@@ -295,7 +285,6 @@ public class AuthIntegrationTest {
     @Test
     @DisplayName("Should be able to get token directly from Keycloak")
     void shouldBeAbleToGetTokenDirectlyFromKeycloak() {
-        // This test verifies Keycloak is set up correctly by getting admin token
         String keycloakUrl = keycloak.getAuthServerUrl();
         String adminToken = getAdminToken(keycloakUrl);
         
@@ -311,7 +300,6 @@ public class AuthIntegrationTest {
         String keycloakUrl = keycloak.getAuthServerUrl();
         String adminToken = getAdminToken(keycloakUrl);
         
-        // Create a temporary user for this test
         String createUrl = keycloakUrl + "/admin/realms/" + REALM_NAME + "/users";
         
         HttpHeaders createHeaders = new HttpHeaders();

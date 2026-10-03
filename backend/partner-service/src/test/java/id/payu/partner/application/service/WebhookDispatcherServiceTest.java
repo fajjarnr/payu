@@ -153,7 +153,6 @@ class WebhookDispatcherServiceTest {
             dispatcher.dispatch("payment.completed", "evt_test001",
                     Map.of("amount", 50000, "currency", "IDR"));
 
-            // Verify delivery was saved (initial + after attempt)
             ArgumentCaptor<WebhookDeliveryEntity> captor =
                     ArgumentCaptor.forClass(WebhookDeliveryEntity.class);
             verify(deliveryRepository, atLeast(2)).save(captor.capture());

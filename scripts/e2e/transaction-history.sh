@@ -1,5 +1,4 @@
 #!/bin/bash
-# ============================================
 # PayU Transaction E2E Test
 # Read-only transaction queries + transfer attempt through
 #   3scale APIcast -> gateway-service -> transaction-service
@@ -12,7 +11,6 @@
 #      with a known account number as recipient.
 #      - If recipient not set, T5 expects 422 (business rule)
 #      - Set RECIPIENT_ACCT env var to run a real transfer
-# ============================================
 
 set -e
 
@@ -27,7 +25,6 @@ GATEWAY_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -
 JWT=$(oc exec -n payu-dev "$GATEWAY_POD" -- cat /tmp/cust1-jwt.txt 2>/dev/null)
 [ -z "$JWT" ] && { echo "ERROR: no JWT at /tmp/cust1-jwt.txt in gateway-service pod"; exit 1; }
 
-# ---- helpers ----
 
 assert_http() {
     local label="$1" expected="$2" actual="$3"
@@ -117,7 +114,6 @@ else
     BASE="http://localhost:8080"
 fi
 
-# ============================================
 echo
 echo "========== PHASE 1: Transaction History (Read-only) =========="
 
@@ -142,7 +138,6 @@ T4=$(run_test "T4: List with date range (GET /api/v1/transactions?startDate=...&
     -H "Authorization: Bearer $JWT")
 assert_http "T4 date range" "200" "$T4"
 
-# ============================================
 echo
 echo "========== PHASE 2: Transfer Initiation =========="
 
@@ -184,7 +179,6 @@ else
     echo "    RECIPIENT_ACCT should be a valid 10-20 digit account number from a second test user"
 fi
 
-# ============================================
 echo
 echo "========== PHASE 3: Error Flows =========="
 
@@ -223,7 +217,6 @@ T11=$(run_test "T11: Transfer without idempotency key (400)" \
     }")
 assert_http "T11 no idempotency" "400" "$T11"
 
-# ============================================
 echo
 if [ "$FAILED" -eq 0 ]; then
     echo "=== ALL TESTS PASSED ==="

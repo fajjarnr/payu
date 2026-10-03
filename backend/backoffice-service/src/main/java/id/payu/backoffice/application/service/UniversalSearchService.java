@@ -74,7 +74,6 @@ public class UniversalSearchService {
     private List<UniversalSearchResponse.SearchResultItem> searchFraudCases(String query) {
         List<UniversalSearchResponse.SearchResultItem> results = new ArrayList<>();
 
-        // Search by Fraud Type
         List<FraudCase> byFraudType = fraudCaseRepository.findByFraudTypeContainingIgnoreCase(query);
         for (FraudCase fraudCase : byFraudType) {
             if (results.stream().noneMatch(r -> r.id().equals(fraudCase.getId()))) {
@@ -88,7 +87,6 @@ public class UniversalSearchService {
     private List<UniversalSearchResponse.SearchResultItem> searchCustomerCases(String query) {
         List<UniversalSearchResponse.SearchResultItem> results = new ArrayList<>();
 
-        // Search by Case Number
         List<CustomerCase> byCaseNumber = customerCaseRepository.findByCaseNumberContainingIgnoreCase(query);
         for (CustomerCase customerCase : byCaseNumber) {
             if (results.stream().noneMatch(r -> r.id().equals(customerCase.getId()))) {
@@ -96,7 +94,6 @@ public class UniversalSearchService {
             }
         }
 
-        // Search by Subject
         List<CustomerCase> bySubject = customerCaseRepository.findBySubjectContainingIgnoreCase(query);
         for (CustomerCase customerCase : bySubject) {
             if (results.stream().noneMatch(r -> r.id().equals(customerCase.getId()))) {

@@ -2,7 +2,6 @@
 # Runs after initial deployment to grant permissions on tables created by Flyway.
 # Flyway migrations run as postgres → tables owned by postgres, not payu.
 # This Job grants ALL privileges to the payu app user across all databases.
-# ============================================================
 apiVersion: batch/v1
 kind: Job
 metadata:

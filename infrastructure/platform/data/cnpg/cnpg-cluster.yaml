@@ -1,6 +1,5 @@
 # PayU Platform - CloudNativePG PostgreSQL Cluster
 # Replaces: infrastructure/platform/data/base/postgres-statefulset.yaml
-# ============================================================
 # CNPG features:
 #   - Automated HA failover (<10s, no Patroni needed)
 #   - Rolling updates (zero-downtime PostgreSQL upgrades)
@@ -10,7 +9,6 @@
 #   - Read-only service: payu-database-ro.payu-dev.svc
 #   - Read service: payu-database-r.payu-dev.svc
 # Secrets are created outside Git (Vault/VSO or one-time oc create secret).
-# ============================================================
 
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster

@@ -1,16 +1,13 @@
 #!/bin/bash
 set -e
 
-# ============================================
 # PayU Test Database Cleanup Script
 # Resets test databases to clean state between test runs
-# ============================================
 
 echo "=========================================="
 echo "PayU Test Database Cleanup"
 echo "=========================================="
 
-# Color codes
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -34,7 +31,6 @@ print_info() {
     echo -e "${BLUE}ℹ${NC} $1"
 }
 
-# Confirm cleanup
 echo ""
 print_warning "This will DELETE all test data from test databases!"
 echo ""
@@ -44,7 +40,6 @@ if [ "$CONFIRM" != "yes" ]; then
     exit 0
 fi
 
-# Check if test environment is running
 echo ""
 echo "Checking test environment..."
 if ! docker ps | grep -q "payu-postgres-test"; then
@@ -57,7 +52,6 @@ POSTGRES_CMD="docker exec payu-postgres-test psql -U payu_test"
 echo ""
 echo "Step 1: Cleaning account service test data..."
 
-# Drop and recreate tables in payu_test_account
 $POSTGRES_CMD -d payu_test_account << 'EOF' > /dev/null 2>&1
 DROP TABLE IF EXISTS test_accounts CASCADE;
 DROP TABLE IF EXISTS test_pockets CASCADE;
@@ -145,7 +139,6 @@ fi
 echo ""
 echo "Step 9: Resetting sequences..."
 
-# Reset sequences for all test databases
 for db in payu_test_account payu_test_auth payu_test_transaction payu_test_wallet payu_test_billing payu_test_notification payu_test_kyc; do
     $POSTGRES_CMD -d $db << 'EOF' > /dev/null 2>&1
         DO $$
@@ -164,7 +157,6 @@ echo ""
 echo "Step 10: Cleaning Kafka test topics..."
 
 if docker ps | grep -q "payu-kafka-test"; then
-    # Delete test topics if they exist
     docker exec payu-kafka-test kafka-topics --bootstrap-server localhost:9093 --list 2>/dev/null | grep -E "test.*-topic" | while read topic; do
         docker exec payu-kafka-test kafka-topics --bootstrap-server localhost:9093 --delete --topic "$topic" > /dev/null 2>&1 || true
     done

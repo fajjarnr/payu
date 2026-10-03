@@ -62,7 +62,6 @@ class SecurityConfigTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // Mock all service dependencies of AuthController
     @MockitoBean
     private KeycloakService keycloakService;
 
@@ -77,7 +76,6 @@ class SecurityConfigTest {
 
     @MockitoBean
     private id.payu.auth.application.metrics.BusinessMetrics businessMetrics;
-    // Public endpoint tests
 
     @Test
     @DisplayName("Should allow public access to login endpoint")

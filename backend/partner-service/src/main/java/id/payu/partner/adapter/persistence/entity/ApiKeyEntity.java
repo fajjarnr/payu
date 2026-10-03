@@ -157,7 +157,6 @@ public class ApiKeyEntity {
         this.sandbox = sandbox != null ? sandbox : (environment == KeyEnvironment.SANDBOX);
     }
 
-    // --- Domain Methods ---
 
     /**
      * Check if this key is usable for authentication.
@@ -200,7 +199,6 @@ public class ApiKeyEntity {
         this.lastUsedAt = LocalDateTime.now();
     }
 
-    // --- Getters/Setters ---
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

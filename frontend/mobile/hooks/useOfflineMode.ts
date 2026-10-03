@@ -10,18 +10,12 @@ const OFFLINE_QUEUE_KEY = '@payu:offline_queue';
 const OFFLINE_CACHE_KEY = '@payu:offline_cache';
 const QUEUE_VERSION_KEY = '@payu:offline_queue_version';
 
-/**
- * Conflict resolution strategies
- */
 export enum ConflictResolution {
   LAST_WRITE_WINS = 'last-write-wins',
   VERSION_BASED = 'version-based',
   MANUAL = 'manual',
 }
 
-/**
- * Offline queue item with enhanced metadata
- */
 interface OfflineQueueItem {
   id: string;
   type: 'transfer' | 'topup' | 'qris';
@@ -37,18 +31,12 @@ interface OfflineQueueItem {
   };
 }
 
-/**
- * Offline cache item
- */
 interface OfflineCacheItem<T> {
   data: T;
   timestamp: number;
   version: number;
 }
 
-/**
- * Processing result for queue items
- */
 interface QueueProcessResult {
   success: boolean;
   itemId: string;
@@ -88,23 +76,19 @@ export const useOfflineMode = (
   const queueVersionRef = useRef(0);
 
   useEffect(() => {
-    // Subscribe to network status updates
     const unsubscribe = NetInfo.addEventListener((state) => {
       const online = state.isConnected ?? false;
       setIsOnline(online);
 
       Logger.info('OfflineMode', `Network status changed: ${online ? 'online' : 'offline'}`);
 
-      // When coming back online, process offline queue
       if (online && autoProcess && offlineQueue.length > 0 && !processingRef.current) {
         processOfflineQueue();
       }
     });
 
-    // Load existing offline queue
     loadOfflineQueue();
 
-    // Cleanup old queue items on mount
     cleanupOldQueueItems();
 
     return () => {
@@ -113,9 +97,6 @@ export const useOfflineMode = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Load offline queue from persistent storage
-   */
   const loadOfflineQueue = async () => {
     try {
       const queueJson = await AsyncStorage.getItem(OFFLINE_QUEUE_KEY);
@@ -134,9 +115,6 @@ export const useOfflineMode = (
     }
   };
 
-  /**
-   * Save offline queue to persistent storage
-   */
   const saveOfflineQueue = async (queue: OfflineQueueItem[]) => {
     try {
       await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
@@ -171,9 +149,6 @@ export const useOfflineMode = (
     }
   };
 
-  /**
-   * Add an item to the offline queue
-   */
   const addToOfflineQueue = async (
     type: OfflineQueueItem['type'],
     data: TransferData | TopUpData | QRISPaymentData,
@@ -206,9 +181,6 @@ export const useOfflineMode = (
     return newItem.id;
   };
 
-  /**
-   * Process a single queue item
-   */
   const processQueueItem = async (item: OfflineQueueItem): Promise<QueueProcessResult> => {
     const { id, type, data, idempotencyKey, retryCount } = item;
 
@@ -246,7 +218,6 @@ export const useOfflineMode = (
           throw new Error(`Unknown queue item type: ${type}`);
       }
 
-      // Remove idempotency key after successful processing
       await removeIdempotencyKey(idempotencyKey);
 
       Logger.info('OfflineMode', `Successfully processed ${type} from queue`, {
@@ -264,7 +235,6 @@ export const useOfflineMode = (
         retryCount,
       });
 
-      // Check if this is a conflict error
       const isConflict = (error as any).response?.status === 409;
 
       if (isConflict) {
@@ -284,9 +254,6 @@ export const useOfflineMode = (
     }
   };
 
-  /**
-   * Resolve a conflict in the queue
-   */
   const resolveConflict = async (
     itemId: string,
     resolution: 'local' | 'server' | 'abort'
@@ -302,7 +269,6 @@ export const useOfflineMode = (
     const item = queue[itemIndex];
 
     if (resolution === 'abort') {
-      // Remove item from queue
       queue.splice(itemIndex, 1);
       await removeIdempotencyKey(item.idempotencyKey);
     } else if (resolution === 'local') {
@@ -321,9 +287,6 @@ export const useOfflineMode = (
     Logger.info('OfflineMode', `Conflict resolved for item ${itemId}: ${resolution}`);
   };
 
-  /**
-   * Process all pending items in the offline queue
-   */
   const processOfflineQueue = async (): Promise<QueueProcessResult[]> => {
     // Prevent duplicate processing
     if (processingRef.current || isProcessing) {
@@ -346,37 +309,30 @@ export const useOfflineMode = (
     const results: QueueProcessResult[] = [];
     const updatedQueue = [...offlineQueue];
 
-    // Process items one by one
     for (const item of pendingItems) {
       const itemIndex = updatedQueue.findIndex((i) => i.id === item.id);
 
       if (itemIndex === -1) continue;
 
-      // Mark as processing
       updatedQueue[itemIndex].status = 'processing';
       await saveOfflineQueue(updatedQueue);
       setOfflineQueue([...updatedQueue]);
 
-      // Process the item
       const result = await processQueueItem(item);
 
       if (result.success) {
-        // Remove from queue
         updatedQueue.splice(itemIndex, 1);
       } else if (result.conflict) {
-        // Mark as conflicted
         updatedQueue[itemIndex].status = 'conflict';
         updatedQueue[itemIndex].conflictData = {
           localVersion: item.retryCount + 1,
           reason: result.error || 'Unknown conflict',
         };
 
-        // Check if we should auto-resolve based on strategy
         if (conflictResolution === ConflictResolution.LAST_WRITE_WINS) {
           updatedQueue[itemIndex].status = 'pending';
           updatedQueue[itemIndex].retryCount += 1;
 
-          // Check if max retries exceeded
           if (updatedQueue[itemIndex].retryCount >= maxRetries) {
             Logger.warn('OfflineMode', `Max retries exceeded for item ${item.id}`);
             // Keep as failed for manual intervention
@@ -384,11 +340,9 @@ export const useOfflineMode = (
           }
         }
       } else {
-        // Processing failed, update retry count
         updatedQueue[itemIndex].status = 'pending';
         updatedQueue[itemIndex].retryCount += 1;
 
-        // Check if max retries exceeded
         if (updatedQueue[itemIndex].retryCount >= maxRetries) {
           Logger.warn('OfflineMode', `Max retries exceeded for item ${item.id}`);
           updatedQueue[itemIndex].status = 'failed';
@@ -412,9 +366,6 @@ export const useOfflineMode = (
     return results;
   };
 
-  /**
-   * Retry a specific failed queue item
-   */
   const retryQueueItem = async (itemId: string): Promise<QueueProcessResult | null> => {
     const queue = [...offlineQueue];
     const itemIndex = queue.findIndex((item) => item.id === itemId);
@@ -431,7 +382,6 @@ export const useOfflineMode = (
     await saveOfflineQueue(queue);
     setOfflineQueue(queue);
 
-    // Process this item immediately
     const result = await processQueueItem(item);
 
     if (result.success) {
@@ -447,9 +397,6 @@ export const useOfflineMode = (
     return result;
   };
 
-  /**
-   * Cache data for offline use
-   */
   const cacheForOffline = async <T>(key: string, data: T): Promise<void> => {
     try {
       const cacheJson = await AsyncStorage.getItem(OFFLINE_CACHE_KEY);
@@ -469,9 +416,6 @@ export const useOfflineMode = (
     }
   };
 
-  /**
-   * Get cached data
-   */
   const getCachedData = async <T>(key: string): Promise<OfflineCacheItem<T> | null> => {
     try {
       const cacheJson = await AsyncStorage.getItem(OFFLINE_CACHE_KEY);
@@ -496,9 +440,6 @@ export const useOfflineMode = (
     }
   };
 
-  /**
-   * Invalidate cached data
-   */
   const invalidateCache = async (key?: string): Promise<void> => {
     try {
       if (key) {
@@ -520,23 +461,16 @@ export const useOfflineMode = (
     }
   };
 
-  /**
-   * Clear the offline queue
-   */
   const clearOfflineQueue = async (): Promise<void> => {
     setOfflineQueue([]);
     await saveOfflineQueue([]);
 
-    // Clear all idempotency keys
     const { clearAllIdempotencyKeys } = await import('@/utils/idempotency');
     await clearAllIdempotencyKeys();
 
     Logger.info('OfflineMode', 'Offline queue cleared');
   };
 
-  /**
-   * Remove a specific item from the queue
-   */
   const removeQueueItem = async (itemId: string): Promise<void> => {
     const queue = offlineQueue.filter((item) => item.id !== itemId);
     const removedItem = offlineQueue.find((item) => item.id === itemId);

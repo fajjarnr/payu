@@ -88,20 +88,16 @@ gh_release_bin() {
 
 print_section() { echo ""; echo -e "${BLUE}════════════════════════════════════════════════${NC}"; echo -e "${BLUE}  $1${NC}"; echo -e "${BLUE}════════════════════════════════════════════════${NC}"; }
 
-# ─────────────────────────────────────────────
-# DEV STACK
-# ─────────────────────────────────────────────
 install_dev() {
   print_section "Dev stack (opencode/java/node/uv/rtk/codegraph/graphify)"
 
-  # --- opencode ---
   if ! command_exists opencode; then
     curl -fsSL https://opencode.ai/install | bash
   else
     echo -e "${GREEN}opencode sudah ada: $(opencode --version 2>/dev/null | head -1)${NC}"
   fi
 
-  # --- SDKMAN + Java 25 (backend/pom.xml:23) + Maven ---
+  # SDKMAN + Java 25 (backend/pom.xml:23) + Maven
   if [ ! -d "$HOME/.sdkman" ]; then
     curl -fsSL "https://get.sdkman.io" | bash
   fi
@@ -122,7 +118,7 @@ install_dev() {
   if ! command_exists mvn; then sdk install maven 2>/dev/null || true; else echo -e "${GREEN}maven sudah ada: $(mvn -v 2>/dev/null | head -1)${NC}"; fi
   set -u
 
-  # --- Node.js 24 via nvm (frontend/web-app engines >=24) ---
+  # Node.js 24 via nvm (frontend/web-app engines >=24)
   if [ ! -d "$HOME/.nvm" ]; then
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
   fi
@@ -146,44 +142,35 @@ install_dev() {
   command_exists node && node -v || true
   command_exists npm && npm -v || true
 
-  # --- uv ---
   if ! command_exists uv; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$BIN_DIR:$HOME/.cargo/bin:$PATH"
   else echo -e "${GREEN}uv sudah ada: $(uv --version 2>/dev/null | head -1)${NC}"; fi
   ensure_path_in_shellrc
 
-  # --- rtk ---
   if ! command_exists rtk; then
     curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
   else echo -e "${GREEN}rtk sudah ada: $(rtk --version 2>/dev/null | head -1 || rtk version 2>/dev/null | head -1)${NC}"; fi
   command_exists rtk && rtk init -g --opencode 2>/dev/null || true
 
-  # --- codegraph ---
   if ! command_exists codegraph; then
     curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
   else echo -e "${GREEN}codegraph sudah ada${NC}"; codegraph upgrade 2>/dev/null || true; fi
   if command_exists codegraph; then codegraph install 2>/dev/null || true; (cd "$PROJECT_ROOT" && codegraph init 2>/dev/null || true); fi
 
-  # --- graphify (via uv) ---
   if command_exists uv; then uv tool install graphify 2>/dev/null || uv tool install graphifyy 2>/dev/null || true; fi
   if command_exists graphify; then graphify install --platform opencode 2>/dev/null || true
   elif command_exists graphifyy; then graphifyy install --platform opencode 2>/dev/null || true; fi
 
-  # --- MCP ---
   if command_exists opencode; then
     opencode mcp add context7 -- npx -y @upstash/context7-mcp 2>/dev/null || true
     opencode mcp add playwright -- npx @playwright/mcp@latest 2>/dev/null || true
   fi
 }
 
-# ─────────────────────────────────────────────
-# INFRA CLI — PayU GitOps (podman/skopeo/tkn/kustomize/dll)
-# ─────────────────────────────────────────────
 install_infra() {
   print_section "Infra CLI — PayU GitOps (podman/skopeo/tkn/kustomize/helm/oc/kubectl/yq/gh/argocd)"
 
-  # --- podman + podman-compose (rootless, untuk Testcontainers & local infra) ---
   if ! command_exists podman; then
     echo -e "${YELLOW}installing podman...${NC}"
     if command_exists apt-get; then
@@ -239,7 +226,6 @@ EOF
     fi
   fi
 
-  # --- skopeo (copy image antar registry, untuk build-push & mirror) ---
   # NOTE: containers/skopeo tidak menyediakan binary Linux di GitHub releases,
   # jadi hanya install via package manager. Jangan pakai gh_release_bin fallback.
   if ! command_exists skopeo; then
@@ -258,7 +244,6 @@ EOF
     echo -e "${GREEN}skopeo sudah ada: $(skopeo --version 2>/dev/null | head -1)${NC}"
   fi
 
-  # --- kubectl (stable) ---
   if ! command_exists kubectl; then
     echo -e "${GREEN}installing kubectl...${NC}"
     local KVER
@@ -273,10 +258,8 @@ EOF
     fi
   else echo -e "${GREEN}kubectl sudah ada: $(kubectl version --client 2>/dev/null | head -1)${NC}"; fi
 
-  # --- oc (OpenShift CLI) — untuk oc get pods / oc apply -k ---
   if ! command_exists oc; then
     echo -e "${GREEN}installing oc...${NC}"
-    # detect stable oc via mirror
     local OC_TAR
     OC_TAR="/tmp/openshift-client-linux.tar.gz"
     rm -f "$OC_TAR" 2>/dev/null || true
@@ -292,11 +275,9 @@ EOF
     else echo -e "${YELLOW}skip oc: download failed${NC}"; rm -f "$OC_TAR" 2>/dev/null || true; fi
   else echo -e "${GREEN}oc sudah ada: $(oc version --client 2>/dev/null | head -1)${NC}"; fi
 
-  # --- kustomize (standalone, oc sudah bundle tapi standalone berguna untuk local) ---
   if ! command_exists kustomize; then gh_release_bin "kubernetes-sigs/kustomize" "linux_${ARCH}" "kustomize" 2>/dev/null || true
   else echo -e "${GREEN}kustomize sudah ada: $(kustomize version --short 2>/dev/null || kustomize version 2>/dev/null | head -1)${NC}"; fi
 
-  # --- helm (chart rendering, PayU pakai kustomize primary tapi helm berguna untuk operator charts) ---
   # helm rilis tarball di get.helm.sh, bukan GitHub asset .tar.gz langsung (GitHub cuma .asc). Pakai get.helm.sh.
   if ! command_exists helm; then
     local HELM_VER HELM_TAR
@@ -316,15 +297,12 @@ EOF
     else echo -e "${YELLOW}skip helm: download failed${NC}"; rm -f "$HELM_TAR" 2>/dev/null || true; fi
   else echo -e "${GREEN}helm sudah ada: $(helm version --short 2>/dev/null | head -1 || helm version 2>/dev/null | head -1)${NC}"; fi
 
-  # --- yq (YAML processor, dipakai scripts & kustomize patching) ---
   if ! command_exists yq; then gh_release_bin "mikefarah/yq" "yq_linux_${ARCH}" "yq" 2>/dev/null || true
   else echo -e "${GREEN}yq sudah ada: $(yq --version 2>/dev/null | head -1)${NC}"; fi
 
-  # --- gh (GitHub CLI, untuk gh pr & API) ---
   if ! command_exists gh; then gh_release_bin "cli/cli" "linux_${ARCH}.tar.gz" "gh" 2>/dev/null || true
   else echo -e "${GREEN}gh sudah ada: $(gh --version 2>/dev/null | head -1)${NC}"; fi
 
-  # --- tkn (Tekton CLI, untuk tkn pipeline/pipelinerun logs) ---
   if ! command_exists tkn; then
     # tektoncd/cli asset: tkn_0.46.0_Linux_x86_64.tar.gz (amd64) / tkn_..._Linux_aarch64.tar.gz (arm64)
     # NOTE: jangan pakai fallback contains("tkn_") — itu match Darwin duluan di head -1.
@@ -334,11 +312,9 @@ EOF
     gh_release_bin "tektoncd/cli" "Linux_${TKN_ARCH}.tar.gz" "tkn" 2>/dev/null || true
   else echo -e "${GREEN}tkn sudah ada: $(tkn version 2>/dev/null | head -1)${NC}"; fi
 
-  # --- argocd (ArgoCD CLI, GitOps sync) ---
   if ! command_exists argocd; then gh_release_bin "argoproj/argo-cd" "argocd-linux-${ARCH}" "argocd" 2>/dev/null || true
   else echo -e "${GREEN}argocd sudah ada: $(argocd version --client 2>/dev/null | head -1)${NC}"; fi
 
-  # --- jq (dependency gh_release_bin, pastiin ada untuk scripts lain) ---
   if ! command_exists jq; then ensure_jq; fi
   command_exists jq && echo -e "${GREEN}jq sudah ada: $(jq --version 2>/dev/null | head -1)${NC}" || true
 }

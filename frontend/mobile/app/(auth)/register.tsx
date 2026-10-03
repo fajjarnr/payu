@@ -41,7 +41,6 @@ export default function RegisterScreen() {
   const [countdown, setCountdown] = useState(0);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  // OTP countdown timer
   React.useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (countdown > 0) {
@@ -56,7 +55,6 @@ export default function RegisterScreen() {
 
   const updateFormData = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error for this field
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -160,7 +158,6 @@ export default function RegisterScreen() {
     if (!validatePhoneStep()) return;
 
     try {
-      // Request OTP from API
       // await authService.requestOTP(formData.phoneNumber);
       setCountdown(60);
       setStep('otp');

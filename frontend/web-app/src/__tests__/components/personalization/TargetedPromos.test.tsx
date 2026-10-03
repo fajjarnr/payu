@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TargetedPromos from '@/components/personalization/TargetedPromos';
 import { QuickPromoBanner } from '@/components/personalization/TargetedPromos';
 
-// Mock the hooks
 vi.mock('@/hooks/useSegmentedOffers', () => ({
   useSegmentedOffers: () => ({
     offers: [
@@ -83,7 +82,6 @@ vi.mock('@/hooks/useSegmentedOffers', () => ({
   }),
 }));
 
-// Mock zustand store properly
 vi.mock('@/stores/authStore', () => ({
   useAuthStore: vi.fn((selector) => {
     const state = {
@@ -164,12 +162,7 @@ describe('QuickPromoBanner', () => {
   });
 
   it('should not render when no offers available', () => {
-    // Note: Changing mocks mid-test is not reliable in Vitest
-    // This test verifies the component behavior when offers are empty
-    // The component should return null when cashbackOffers is empty
-
-    // Since we can't easily change the mock mid-test, we'll skip this test
-    // The actual behavior is tested in the component integration
+    // Vitest cannot reliably change mocks mid-test, so the empty-offers case is not covered here
     expect(true).toBe(true);
   });
 });

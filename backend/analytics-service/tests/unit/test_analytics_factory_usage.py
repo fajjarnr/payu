@@ -55,7 +55,6 @@ class TestTransactionFactoryUsage:
 
     def test_transaction_factory_for_fraud_scenarios(self):
         """Test generating transactions for fraud testing"""
-        # High-value transaction (potential fraud)
         high_value = transaction_factory(
             amount=25000000.0,
             type="TRANSFER",
@@ -63,7 +62,6 @@ class TestTransactionFactoryUsage:
         )
         assert high_value["amount"] == 25000000.0
 
-        # Low-value transaction (normal)
         low_value = transaction_factory(amount=50000.0, type="PAYMENT")
         assert low_value["amount"] == 50000.0
 
@@ -219,7 +217,6 @@ class TestFactoryPatternBenefits:
 
     def test_factory_reduces_code_duplication(self):
         """Show how factories reduce test code duplication"""
-        # Without factory - verbose
         txn1 = {
             "transaction_id": "txn_001",
             "user_id": "user_001",
@@ -229,16 +226,13 @@ class TestFactoryPatternBenefits:
             "category": "FOOD",
         }
 
-        # With factory - concise
         txn2 = transaction_factory(type="TRANSFER", category="FOOD")
 
-        # Factory is simpler and generates unique data
         assert "transaction_id" in txn1
         assert "transaction_id" in txn2
 
     def test_factory_enables_batch_generation(self):
         """Test generating multiple test instances easily"""
-        # Generate 20 transactions for bulk testing
         transactions = [transaction_factory() for _ in range(20)]
 
         txn_ids = [t["transaction_id"] for t in transactions]
@@ -246,15 +240,12 @@ class TestFactoryPatternBenefits:
 
     def test_factory_simplifies_edge_case_testing(self):
         """Test that factories make edge case testing easier"""
-        # Edge case: Zero amount transaction
         zero_txn = transaction_factory(amount=0.0)
         assert zero_txn["amount"] == 0.0
 
-        # Edge case: Extremely high amount
         extreme_txn = transaction_factory(amount=999999999.0)
         assert extreme_txn["amount"] == 999999999.0
 
-        # Edge case: New user with no history
         new_user = user_history_factory(
             total_transactions=0, total_amount=0.0, num_recent=0
         )
@@ -265,10 +256,8 @@ class TestFactoryPatternBenefits:
         """Test that factories generate realistic Indonesian data"""
         user = user_metrics_factory()
 
-        # Account age should be realistic (1 month to 2 years)
         assert 30 <= user["account_age_days"] <= 730
 
-        # Transaction amounts should be realistic
         txn = transaction_factory()
         assert 1000 <= txn["amount"] <= 50000000
 
@@ -276,17 +265,14 @@ class TestFactoryPatternBenefits:
     async def test_factory_integration_with_service_tests(self):
         """Test using factory data with actual service tests"""
 
-        # Generate test transaction using factory
         test_txn = transaction_factory(
             amount=5000000.0, type="TRANSFER", metadata={"ip_address": "192.168.1.1"}
         )
 
-        # Generate test user history using factory
         test_history = user_history_factory(
             total_transactions=50, total_amount=15000000.0
         )
 
-        # Verify data structure is compatible with service
         assert "transaction_id" in test_txn
         assert "amount" in test_txn
         assert "recent_transactions" in test_history

@@ -20,8 +20,7 @@ interface RefreshResult {
 /**
  * Authentication Service for PayU Digital Banking Platform
  *
- * SECURITY NOTICE: Token Storage
- * ================================
+ * Security notice: Token storage
  * This service does NOT store JWT tokens client-side (localStorage/sessionStorage).
  * Tokens are managed exclusively via httpOnly cookies from the backend.
  *

@@ -52,7 +52,6 @@ public class ResilienceMetrics {
     // Alert state tracking to prevent duplicate alerts
     private final Map<String, CircuitBreaker.State> lastKnownStates = new ConcurrentHashMap<>();
 
-    // Metric names
     public static final String METRIC_PREFIX = "payu.resilience";
     public static final String CIRCUIT_BREAKER_STATE = METRIC_PREFIX + ".circuitbreaker.state";
     public static final String CIRCUIT_BREAKER_FAILURE_RATE = METRIC_PREFIX + ".circuitbreaker.failure.rate";
@@ -61,13 +60,9 @@ public class ResilienceMetrics {
     public static final String RETRY_ATTEMPTS = METRIC_PREFIX + ".retry.attempts";
     public static final String RETRY_SUCCESS = METRIC_PREFIX + ".retry.success";
 
-    // Alert thresholds
     private static final double DEFAULT_FAILURE_RATE_ALERT_THRESHOLD = 50.0;
     private static final double DEFAULT_SLOW_CALL_RATE_ALERT_THRESHOLD = 80.0;
 
-    /**
-     * Initialize metrics collection on startup.
-     */
     @PostConstruct
     public void initialize() {
         log.info("Initializing Resilience4j metrics collection");
@@ -79,9 +74,6 @@ public class ResilienceMetrics {
         log.info("Resilience4j metrics collection initialized successfully");
     }
 
-    /**
-     * Register circuit breaker state and metrics gauges.
-     */
     private void registerCircuitBreakerMetrics() {
         circuitBreakerRegistry.getAllCircuitBreakers().forEach(circuitBreaker -> {
             String name = circuitBreaker.getName();
@@ -103,78 +95,65 @@ public class ResilienceMetrics {
                     .tags(tags)
                     .register(meterRegistry);
 
-            // Failure rate gauge
             Gauge.builder(CIRCUIT_BREAKER_FAILURE_RATE, circuitBreaker,
                         cb -> cb.getMetrics().getFailureRate())
                     .description("Circuit breaker failure rate percentage")
                     .tags(tags)
                     .register(meterRegistry);
 
-            // Buffered calls count
             Gauge.builder(CIRCUIT_BREAKER_CALLS, circuitBreaker,
                         cb -> cb.getMetrics().getNumberOfBufferedCalls())
                     .description("Total number of buffered calls")
                     .tags(tags.and("type", "buffered"))
                     .register(meterRegistry);
 
-            // Failed calls count
             Gauge.builder(CIRCUIT_BREAKER_CALLS, circuitBreaker,
                         cb -> cb.getMetrics().getNumberOfFailedCalls())
                     .description("Number of failed calls")
                     .tags(tags.and("type", "failed"))
                     .register(meterRegistry);
 
-            // Successful calls count
             Gauge.builder(CIRCUIT_BREAKER_CALLS, circuitBreaker,
                         cb -> cb.getMetrics().getNumberOfSuccessfulCalls())
                     .description("Number of successful calls")
                     .tags(tags.and("type", "successful"))
                     .register(meterRegistry);
 
-            // Not permitted calls count (when circuit is open)
             Gauge.builder(CIRCUIT_BREAKER_CALLS, circuitBreaker,
                         cb -> cb.getMetrics().getNumberOfNotPermittedCalls())
                     .description("Number of calls not permitted due to open circuit")
                     .tags(tags.and("type", "not_permitted"))
                     .register(meterRegistry);
 
-            // Slow call rate
             Gauge.builder(CIRCUIT_BREAKER_FAILURE_RATE, circuitBreaker,
                         cb -> cb.getMetrics().getSlowCallRate())
                     .description("Slow call rate percentage")
                     .tags(tags.and("type", "slow"))
                     .register(meterRegistry);
 
-            // Initialize last known state
             lastKnownStates.put(name, circuitBreaker.getState());
 
             log.debug("Registered metrics for circuit breaker: {}", name);
         });
     }
 
-    /**
-     * Register retry metrics.
-     */
     private void registerRetryMetrics() {
         retryRegistry.getAllRetries().forEach(retry -> {
             String name = retry.getName();
             Tags tags = Tags.of("retry", name);
 
-            // Successful retry count (without retry)
             Gauge.builder(RETRY_SUCCESS, retry,
                         r -> r.getMetrics().getNumberOfSuccessfulCallsWithoutRetryAttempt())
                     .description("Number of successful calls without retry")
                     .tags(tags.and("type", "without_retry"))
                     .register(meterRegistry);
 
-            // Successful retry count (with retry)
             Gauge.builder(RETRY_SUCCESS, retry,
                         r -> r.getMetrics().getNumberOfSuccessfulCallsWithRetryAttempt())
                     .description("Number of successful calls with retry")
                     .tags(tags.and("type", "with_retry"))
                     .register(meterRegistry);
 
-            // Failed retry count
             Gauge.builder(RETRY_ATTEMPTS, retry,
                         r -> r.getMetrics().getNumberOfFailedCallsWithRetryAttempt())
                     .description("Number of failed calls after retry attempts")
@@ -185,9 +164,6 @@ public class ResilienceMetrics {
         });
     }
 
-    /**
-     * Register event listeners for state transitions and alerts.
-     */
     private void registerEventListeners() {
         circuitBreakerRegistry.getAllCircuitBreakers().forEach(circuitBreaker -> {
             circuitBreaker.getEventPublisher()
@@ -212,9 +188,6 @@ public class ResilienceMetrics {
         });
     }
 
-    /**
-     * Handle circuit breaker state transition events.
-     */
     private void handleStateTransition(CircuitBreakerOnStateTransitionEvent event) {
         String name = event.getCircuitBreakerName();
         CircuitBreaker.State fromState = event.getStateTransition().getFromState();
@@ -222,7 +195,6 @@ public class ResilienceMetrics {
 
         log.warn("Circuit breaker '{}' state transition: {} -> {}", name, fromState, toState);
 
-        // Record transition counter
         Counter.builder(CIRCUIT_BREAKER_TRANSITIONS)
                 .description("Circuit breaker state transition count")
                 .tags(Tags.of(
@@ -233,10 +205,8 @@ public class ResilienceMetrics {
                 .register(meterRegistry)
                 .increment();
 
-        // Update last known state
         lastKnownStates.put(name, toState);
 
-        // Alert on critical transitions
         if (toState == CircuitBreaker.State.OPEN) {
             publishAlert("CIRCUIT_BREAKER_OPEN",
                     String.format("Circuit breaker '%s' is now OPEN", name));
@@ -246,9 +216,6 @@ public class ResilienceMetrics {
         }
     }
 
-    /**
-     * Handle failure rate exceeded events.
-     */
     private void handleFailureRateExceeded(io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnFailureRateExceededEvent event) {
         String name = event.getCircuitBreakerName();
         float failureRate = event.getFailureRate();
@@ -262,9 +229,6 @@ public class ResilienceMetrics {
         }
     }
 
-    /**
-     * Handle slow call rate exceeded events.
-     */
     private void handleSlowCallRateExceeded(io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnSlowCallRateExceededEvent event) {
         String name = event.getCircuitBreakerName();
         float slowCallRate = event.getSlowCallRate();
@@ -278,46 +242,26 @@ public class ResilienceMetrics {
         }
     }
 
-    /**
-     * Handle call not permitted events (circuit open).
-     */
     private void handleCallNotPermitted(io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnCallNotPermittedEvent event) {
         String name = event.getCircuitBreakerName();
         log.warn("Call not permitted for circuit breaker '{}' - circuit is OPEN", name);
     }
 
     /**
-     * Publish an alert to the monitoring system.
      * In production, this would integrate with Prometheus Alertmanager,
      * PagerDuty, or other alerting systems.
-     *
-     * @param alertType the type of alert
-     * @param message   the alert message
      */
     private void publishAlert(String alertType, String message) {
-        // Increment alert counter
         Counter.builder(METRIC_PREFIX + ".alerts")
                 .description("Resilience alert counter")
                 .tags(Tags.of("type", alertType))
                 .register(meterRegistry)
                 .increment();
 
-        // Log the alert
         log.error("RESILIENCE ALERT [{}]: {}", alertType, message);
 
-        // TODO: Integrate with external alerting systems
-        // Example integrations:
-        // - Prometheus Alertmanager
-        // - PagerDuty
-        // - Slack notifications
-        // - Email alerts
     }
 
-    /**
-     * Get the current state of all circuit breakers.
-     *
-     * @return map of circuit breaker names to their states
-     */
     public Map<String, String> getCircuitBreakerStates() {
         Map<String, String> states = new HashMap<>();
         circuitBreakerRegistry.getAllCircuitBreakers().forEach(cb ->
@@ -325,21 +269,11 @@ public class ResilienceMetrics {
         return states;
     }
 
-    /**
-     * Check if any circuit breaker is currently open.
-     *
-     * @return true if any circuit breaker is open
-     */
     public boolean hasOpenCircuitBreakers() {
         return circuitBreakerRegistry.getAllCircuitBreakers().stream()
                 .anyMatch(cb -> cb.getState() == CircuitBreaker.State.OPEN);
     }
 
-    /**
-     * Get the number of circuit breakers in each state.
-     *
-     * @return map of state names to counts
-     */
     public Map<String, Integer> getCircuitBreakerStateCounts() {
         Map<String, Integer> counts = new HashMap<>();
         counts.put("CLOSED", 0);

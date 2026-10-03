@@ -1,5 +1,3 @@
-// PayU KYC Service - CRUD Baseline Performance Test
-// ====================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -74,7 +72,6 @@ export default function () {
 
   group('KYC Service - CRUD Operations', () => {
 
-    // ===== CREATE: Submit KYC =====
     group('CREATE: Submit KYC', () => {
       const kycData = generateKycData(uniqueId);
 
@@ -90,7 +87,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: Get KYC Status =====
     group('READ: Get KYC Status', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.kyc}/status`, auth.token);
@@ -100,7 +96,6 @@ export default function () {
     });
 
     if (kycId) {
-      // ===== READ: Get KYC Detail =====
       group('READ: Get KYC Detail', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.kyc}/${kycId}`, auth.token);
@@ -110,7 +105,6 @@ export default function () {
       });
     }
 
-    // ===== CREATE: Upload Document =====
     group('CREATE: Upload Document', () => {
       const docData = generateDocumentData(uniqueId);
 
@@ -121,7 +115,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List Documents =====
     group('READ: List Documents', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.kyc}/documents`, {}, auth.token);
@@ -130,7 +123,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: OCR Check =====
     group('CREATE: OCR Check', () => {
       const ocrData = {
         documentUrl: `https://cdn.payu.test/kyc/${uniqueId}_ktp.jpg`,
@@ -144,7 +136,6 @@ export default function () {
       sleep(1);
     });
 
-    // ===== CREATE: Liveness Check =====
     group('CREATE: Liveness Check', () => {
       const livenessData = {
         videoUrl: `https://cdn.payu.test/kyc/${uniqueId}_liveness.mp4`,
@@ -158,7 +149,6 @@ export default function () {
       sleep(1);
     });
 
-    // ===== CREATE: Face Match =====
     group('CREATE: Face Match', () => {
       const faceMatchData = {
         documentImageUrl: `https://cdn.payu.test/kyc/${uniqueId}_ktp.jpg`,
@@ -173,7 +163,6 @@ export default function () {
       sleep(1);
     });
 
-    // ===== CREATE: Verify Document =====
     group('CREATE: Verify Document', () => {
       const verifyData = {
         documentId: `DOC${Math.floor(100000000 + Math.random() * 900000000)}`,
@@ -188,7 +177,6 @@ export default function () {
     });
 
     if (kycId) {
-      // ===== UPDATE: Approve KYC =====
       group('UPDATE: Approve KYC', () => {
         const approveData = {
           status: 'APPROVED',

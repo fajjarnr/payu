@@ -33,7 +33,6 @@ public class GetTransactionQueryHandler implements QueryHandler<GetTransactionQu
     public TransactionEntity handle(GetTransactionQuery query) {
         log.info("Handling GetTransactionQuery for transaction: {}", query.transactionId());
 
-        // Verify user has access to this transaction
         authorizationService.verifyTransactionAccess(query.transactionId(), query.userId());
 
         return transactionPersistencePort.findById(query.transactionId())

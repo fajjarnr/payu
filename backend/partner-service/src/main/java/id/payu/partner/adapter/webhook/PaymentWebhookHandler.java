@@ -80,7 +80,6 @@ public class PaymentWebhookHandler implements WebhookHandler {
         try {
             JsonNode root = objectMapper.readTree(payload);
 
-            // Validate required fields
             if (!root.has("event")) {
                 log.warn("Missing 'event' field in webhook payload: id={}", webhookId);
                 return false;
@@ -93,7 +92,6 @@ public class PaymentWebhookHandler implements WebhookHandler {
 
             JsonNode data = root.get("data");
 
-            // Validate data fields
             if (!data.has("transactionId")) {
                 log.warn("Missing 'transactionId' in webhook data: id={}", webhookId);
                 return false;
@@ -104,7 +102,6 @@ public class PaymentWebhookHandler implements WebhookHandler {
                 return false;
             }
 
-            // Validate event type
             String eventType = root.get("event").asText();
             if (!isSupportedEventType(eventType)) {
                 log.warn("Unsupported event type '{}': id={}", eventType, webhookId);
@@ -191,41 +188,34 @@ public class PaymentWebhookHandler implements WebhookHandler {
     @Override
     public void onSuccess(String webhookId, Object result) {
         log.info("Payment webhook processed successfully: id={}", webhookId);
-        // Update metrics, send notifications, etc.
         notificationService.notifySuccess(webhookId);
     }
 
     @Override
     public void onError(String webhookId, Throwable error) {
         log.error("Payment webhook processing failed: id={}", webhookId, error);
-        // Send alert to operations team
         notificationService.notifyFailure(webhookId, error.getMessage());
     }
 
     /**
      * Handles payment.completed events.
-     *
-     * @param event the parsed payment event
      */
     private void handlePaymentCompleted(PaymentEvent event) {
         log.info("Processing payment completion: transactionId={}, amount={} {}",
                 event.getTransactionId(), event.getAmount(), event.getCurrency());
 
-        // Update transaction status
         notificationService.updateTransactionStatus(
                 event.getTransactionId(),
                 TransactionStatus.COMPLETED,
                 event.getSettlementTime()
         );
 
-        // Update wallet balance
         notificationService.creditWallet(
                 event.getDestinationAccount(),
                 event.getAmount(),
                 event.getTransactionId()
         );
 
-        // Send notification to user
         notificationService.sendUserNotification(
                 event.getDestinationAccount(),
                 "Payment Received",
@@ -235,9 +225,6 @@ public class PaymentWebhookHandler implements WebhookHandler {
 
     /**
      * Handles payment.failed events.
-     *
-     * @param event the parsed payment event
-     * @param data the raw data node for additional fields
      */
     private void handlePaymentFailed(PaymentEvent event, JsonNode data) {
         String failureReason = data.has("failureReason")
@@ -247,14 +234,12 @@ public class PaymentWebhookHandler implements WebhookHandler {
         log.warn("Processing payment failure: transactionId={}, reason={}",
                 event.getTransactionId(), failureReason);
 
-        // Update transaction status
         notificationService.updateTransactionStatus(
                 event.getTransactionId(),
                 TransactionStatus.FAILED,
                 Instant.now()
         );
 
-        // Release hold on source account if any
         if (event.getSourceAccount() != null) {
             notificationService.releaseHold(
                     event.getSourceAccount(),
@@ -262,7 +247,6 @@ public class PaymentWebhookHandler implements WebhookHandler {
             );
         }
 
-        // Send failure notification
         notificationService.sendUserNotification(
                 event.getSourceAccount(),
                 "Payment Failed",
@@ -273,20 +257,16 @@ public class PaymentWebhookHandler implements WebhookHandler {
 
     /**
      * Handles payment.pending events.
-     *
-     * @param event the parsed payment event
      */
     private void handlePaymentPending(PaymentEvent event) {
         log.info("Processing payment pending: transactionId={}", event.getTransactionId());
 
-        // Update transaction status
         notificationService.updateTransactionStatus(
                 event.getTransactionId(),
                 TransactionStatus.PENDING,
                 Instant.now()
         );
 
-        // Set timeout for pending transaction
         notificationService.schedulePendingTimeout(
                 event.getTransactionId(),
                 Instant.now().plusSeconds(300) // 5 minutes timeout
@@ -295,9 +275,6 @@ public class PaymentWebhookHandler implements WebhookHandler {
 
     /**
      * Handles payment.refunded events.
-     *
-     * @param event the parsed payment event
-     * @param data the raw data node for additional fields
      */
     private void handlePaymentRefunded(PaymentEvent event, JsonNode data) {
         BigDecimal refundAmount = data.has("refundAmount")
@@ -311,28 +288,24 @@ public class PaymentWebhookHandler implements WebhookHandler {
         log.info("Processing payment refund: transactionId={}, amount={}, reason={}",
                 event.getTransactionId(), refundAmount, refundReason);
 
-        // Create refund transaction
         String refundId = notificationService.createRefundTransaction(
                 event.getTransactionId(),
                 refundAmount,
                 refundReason
         );
 
-        // Debit wallet
         notificationService.debitWallet(
                 event.getDestinationAccount(),
                 refundAmount,
                 refundId
         );
 
-        // Credit source account
         notificationService.creditWallet(
                 event.getSourceAccount(),
                 refundAmount,
                 refundId
         );
 
-        // Send notification
         notificationService.sendUserNotification(
                 event.getSourceAccount(),
                 "Payment Refunded",
@@ -341,9 +314,6 @@ public class PaymentWebhookHandler implements WebhookHandler {
         );
     }
 
-    /**
-     * Checks if the event type is supported.
-     */
     private boolean isSupportedEventType(String eventType) {
         for (String supported : supportedEventTypes()) {
             if (supported.equals(eventType)) {

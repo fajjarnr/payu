@@ -19,9 +19,6 @@ public record VerifyNikResponse(
     String responseCode,
     String responseMessage
 ) {
-    /**
-     * Create a successful verification response.
-     */
     public static VerifyNikResponse success(
         String requestId,
         String nik,
@@ -48,9 +45,6 @@ public record VerifyNikResponse(
         );
     }
 
-    /**
-     * Create a not found response.
-     */
     public static VerifyNikResponse notFound(String requestId, String nik) {
         return new VerifyNikResponse(
             requestId,
@@ -67,9 +61,6 @@ public record VerifyNikResponse(
         );
     }
 
-    /**
-     * Create a blocked response.
-     */
     public static VerifyNikResponse blocked(String requestId, String nik) {
         return new VerifyNikResponse(
             requestId,
@@ -86,9 +77,6 @@ public record VerifyNikResponse(
         );
     }
 
-    /**
-     * Create an invalid response.
-     */
     public static VerifyNikResponse invalid(String requestId, String nik) {
         return new VerifyNikResponse(
             requestId,
@@ -105,9 +93,6 @@ public record VerifyNikResponse(
         );
     }
 
-    /**
-     * Create an error response.
-     */
     public static VerifyNikResponse error(String requestId, String message) {
         return new VerifyNikResponse(
             requestId,
@@ -124,9 +109,6 @@ public record VerifyNikResponse(
         );
     }
 
-    /**
-     * Create a service unavailable response.
-     */
     public static VerifyNikResponse serviceUnavailable(String requestId) {
         return new VerifyNikResponse(
             requestId,

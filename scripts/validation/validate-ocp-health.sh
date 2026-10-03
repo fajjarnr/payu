@@ -1,8 +1,5 @@
 #!/bin/bash
-# ============================================
-# PayU OpenShift Cluster Services Health Check
-# Validates all deployed microservices are healthy
-# ============================================
+# Validates all deployed microservices are healthy.
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -58,7 +55,6 @@ for item in "${SERVICES[@]}"; do
     IFS='|' read -r name type port path <<< "$item"
     echo -n -e "Checking ${BLUE}$name${NC} ($type)... "
     
-    # Run curl inside the gateway pod
     HTTP_CODE=$(oc exec "$GATEWAY_POD" -n payu-dev -- curl -s -o /dev/null -w "%{http_code}" "http://$name:$port$path" 2>/dev/null || echo "000")
     
     if [ "$HTTP_CODE" == "200" ] || [ "$HTTP_CODE" == "204" ]; then

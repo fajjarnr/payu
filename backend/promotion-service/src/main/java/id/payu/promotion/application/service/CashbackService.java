@@ -59,8 +59,6 @@ public class CashbackService {
      * 1. Credit wallet via wallet-service
      * 2. Create cashback record with CREDITED status (only if step 1 succeeds)
      *
-     * @param request the cashback creation request
-     * @return the created cashback
      * @throws CashbackCreationException if saga execution fails
      */
     @Transactional
@@ -71,7 +69,6 @@ public class CashbackService {
         LOG.info("Creating cashback with saga: accountId={}, transactionId={}",
             request.accountId(), request.transactionId());
 
-        // Create saga context
         var result = sagaOrchestrator.execute(new CashbackCommand(request.accountId(), request.transactionId(),
             request.transactionAmount(), request.merchantCode(), request.categoryCode(), request.cashbackCode()));
 

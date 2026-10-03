@@ -7,7 +7,6 @@ import AnalyticsService from '@/services/AnalyticsService';
 import type { UserMetrics, SpendingAnalytics, CashFlowAnalysis } from '@/services/AnalyticsService';
 import type { AnalyticsData } from '@/types';
 
-/** REST hook: fetch user metrics. */
 export function useUserMetrics(userId: string | undefined) {
   return useQuery<UserMetrics>({
     queryKey: ['user-metrics', userId],

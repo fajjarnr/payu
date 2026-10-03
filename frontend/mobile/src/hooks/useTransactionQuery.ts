@@ -8,7 +8,6 @@ import {
 import { transactionService } from '@/services/transaction.service';
 import { Transaction, TransferData, QRISData, PaginatedResponse } from '@/types';
 
-// Query keys
 export const transactionKeys = {
   all: ['transactions'] as const,
   lists: () => [...transactionKeys.all, 'list'] as const,
@@ -22,7 +21,6 @@ export const transactionKeys = {
     [...transactionKeys.summary(), params] as const,
 };
 
-// Types for mutations
 interface TopUpData {
   amount: number;
   paymentMethod: string;
@@ -88,9 +86,6 @@ export function useInfiniteTransactions(
   });
 }
 
-/**
- * Hook to fetch a specific transaction by ID
- */
 export function useTransaction(
   transactionId: string,
   options?: UseQueryOptions<Transaction, Error>
@@ -104,9 +99,6 @@ export function useTransaction(
   });
 }
 
-/**
- * Hook to fetch transaction summary
- */
 export function useTransactionSummary(
   params?: { period?: 'week' | 'month' | 'year' },
   options?: UseQueryOptions<
@@ -324,9 +316,6 @@ export function usePrefetchTransaction() {
   };
 }
 
-/**
- * Hook to refresh all transaction data
- */
 export function useRefreshTransactions() {
   const queryClient = useQueryClient();
 

@@ -45,7 +45,6 @@ class NotificationServiceTest {
         @Test
         @DisplayName("should send email notification successfully")
         void shouldSendEmailNotificationSuccessfully() {
-            // Given
             SendNotificationRequest request = new SendNotificationRequest(
                 "user-123",
                 NotificationChannel.EMAIL,
@@ -59,10 +58,8 @@ class NotificationServiceTest {
 
             when(emailSender.send(any())).thenReturn(true);
 
-            // When
             Notification notification = notificationService.send(request, null);
 
-            // Then
             assertNotNull(notification);
             assertEquals("user-123", notification.getUserId());
             assertEquals(NotificationChannel.EMAIL, notification.getChannel());
@@ -80,7 +77,6 @@ class NotificationServiceTest {
         @Test
         @DisplayName("should send SMS notification successfully")
         void shouldSendSmsNotificationSuccessfully() {
-            // Given
             SendNotificationRequest request = new SendNotificationRequest(
                 "user-123",
                 NotificationChannel.SMS,
@@ -94,10 +90,8 @@ class NotificationServiceTest {
 
             when(smsSender.send(any())).thenReturn(true);
 
-            // When
             Notification notification = notificationService.send(request, null);
 
-            // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.SMS, notification.getChannel());
             assertEquals("+6281234567890", notification.getRecipient());
@@ -111,7 +105,6 @@ class NotificationServiceTest {
         @Test
         @DisplayName("should send push notification successfully")
         void shouldSendPushNotificationSuccessfully() {
-            // Given
             SendNotificationRequest request = new SendNotificationRequest(
                 "user-123",
                 NotificationChannel.PUSH,
@@ -125,10 +118,8 @@ class NotificationServiceTest {
 
             when(pushSender.send(any())).thenReturn(true);
 
-            // When
             Notification notification = notificationService.send(request, null);
 
-            // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.PUSH, notification.getChannel());
             assertEquals("device-token-xyz", notification.getRecipient());
@@ -142,7 +133,6 @@ class NotificationServiceTest {
         @Test
         @DisplayName("should mark notification as failed when sender returns false")
         void shouldMarkNotificationAsFailedWhenSenderFails() {
-            // Given
             SendNotificationRequest request = new SendNotificationRequest(
                 "user-123",
                 NotificationChannel.EMAIL,
@@ -156,10 +146,8 @@ class NotificationServiceTest {
 
             when(emailSender.send(any())).thenReturn(false);
 
-            // When
             Notification notification = notificationService.send(request, null);
 
-            // Then
             assertNotNull(notification);
             assertEquals(NotificationStatus.FAILED, notification.getStatus());
             assertEquals("Send failed", notification.getFailureReason());
@@ -169,7 +157,6 @@ class NotificationServiceTest {
         @Test
         @DisplayName("should handle sender exception and mark as failed")
         void shouldHandleSenderExceptionAndMarkAsFailed() {
-            // Given
             SendNotificationRequest request = new SendNotificationRequest(
                 "user-123",
                 NotificationChannel.EMAIL,
@@ -183,10 +170,8 @@ class NotificationServiceTest {
 
             when(emailSender.send(any())).thenThrow(new RuntimeException("SMTP connection failed"));
 
-            // When
             Notification notification = notificationService.send(request, null);
 
-            // Then
             assertNotNull(notification);
             assertEquals(NotificationStatus.FAILED, notification.getStatus());
             assertEquals("SMTP connection failed", notification.getFailureReason());
@@ -196,7 +181,6 @@ class NotificationServiceTest {
         @Test
         @DisplayName("should send in-app notification using push sender")
         void shouldSendInAppNotificationUsingPushSender() {
-            // Given
             SendNotificationRequest request = new SendNotificationRequest(
                 "user-123",
                 NotificationChannel.IN_APP,
@@ -210,10 +194,8 @@ class NotificationServiceTest {
 
             when(pushSender.send(any())).thenReturn(true);
 
-            // When
             Notification notification = notificationService.send(request, null);
 
-            // Then
             assertNotNull(notification);
             assertEquals(NotificationChannel.IN_APP, notification.getChannel());
             assertEquals(NotificationStatus.SENT, notification.getStatus());
@@ -229,10 +211,8 @@ class NotificationServiceTest {
         @Test
         @DisplayName("should return empty list for unknown user")
         void shouldReturnEmptyListForUnknownUser() {
-            // When
             List<Notification> notifications = notificationService.getByUserId("unknown-user", 10);
 
-            // Then
             assertNotNull(notifications);
             assertTrue(notifications.isEmpty());
         }
@@ -245,10 +225,8 @@ class NotificationServiceTest {
         @Test
         @DisplayName("should send transaction notification via email")
         void shouldSendTransactionNotificationViaEmail() {
-            // Given
             when(emailSender.send(any())).thenReturn(true);
 
-            // When
             notificationService.sendTransactionNotification(
                 "user-123",
                 "user@example.com",
@@ -256,7 +234,6 @@ class NotificationServiceTest {
                 "Your transfer of Rp 100.000 was successful"
             );
 
-            // Then
             verify(emailSender).send(any());
         }
     }

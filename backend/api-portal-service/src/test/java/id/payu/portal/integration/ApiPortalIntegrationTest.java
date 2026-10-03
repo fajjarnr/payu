@@ -35,8 +35,6 @@ class ApiPortalIntegrationTest {
             .statusCode(200);
     }
 
-    // ────────── Portal Endpoints ──────────
-
     @Test
     @DisplayName("should list all services with valid structure")
     void portal_listAllServices() {
@@ -82,12 +80,9 @@ class ApiPortalIntegrationTest {
             .body("lastUpdated", notNullValue());
     }
 
-    // ────────── Sandbox Payment Lifecycle ──────────
-
     @Test
     @DisplayName("should complete full sandbox payment lifecycle end-to-end")
     void sandbox_fullPaymentLifecycle() {
-        // Verify initial state - no payments
         given()
             .get("/api/v1/sandbox/stats")
             .then()
@@ -152,7 +147,6 @@ class ApiPortalIntegrationTest {
 
         assertNotNull(refundRef);
 
-        // Verify stats reflect the operations
         given()
             .get("/api/v1/sandbox/stats")
             .then()
@@ -160,14 +154,12 @@ class ApiPortalIntegrationTest {
             .body("totalPayments", equalTo(1))
             .body("totalRefunds", equalTo(1));
 
-        // Clear all data
         given()
             .delete("/api/v1/sandbox/data")
             .then()
             .statusCode(200)
             .body("message", containsString("cleared"));
 
-        // Verify data is cleared
         given()
             .get("/api/v1/sandbox/stats")
             .then()
@@ -175,7 +167,6 @@ class ApiPortalIntegrationTest {
             .body("totalPayments", equalTo(0))
             .body("totalRefunds", equalTo(0));
 
-        // Verify payment no longer exists
         given()
             .when().get("/api/v1/sandbox/payments/" + paymentRef)
             .then()
@@ -207,8 +198,6 @@ class ApiPortalIntegrationTest {
             .statusCode(404)
             .body("error", containsString("not found"));
     }
-
-    // ────────── Health & Ops ──────────
 
     @Test
     @DisplayName("should report health status UP at aggregate endpoint")
@@ -244,8 +233,6 @@ class ApiPortalIntegrationTest {
             .body("status", equalTo("UP"));
     }
 
-    // ────────── OpenAPI & Docs ──────────
-
     @Test
     @DisplayName("should expose service OpenAPI spec in JSON format")
     void openApi_serviceSpec() {
@@ -261,8 +248,6 @@ class ApiPortalIntegrationTest {
             .body("info.version", equalTo("1.0.0"))
             .body("paths", notNullValue());
     }
-
-    // ────────── Swagger UI ──────────
 
     @Test
     @DisplayName("should render Swagger UI index page with service cards")
@@ -296,8 +281,6 @@ class ApiPortalIntegrationTest {
         assertTrue(html.contains("SwaggerUIBundle"), "Should contain Swagger UI initialization");
     }
 
-    // ────────── Mock Data ──────────
-
     @Test
     @DisplayName("should serve mock data examples for partner onboarding")
     void mockData_examples() {
@@ -316,8 +299,6 @@ class ApiPortalIntegrationTest {
             .body("refundExample.reason", equalTo("Customer request"));
     }
 
-    // ────────── Stats & Latency ──────────
-
     @Test
     @DisplayName("should report latency configuration in stats")
     void stats_latencyConfig() {
@@ -333,7 +314,6 @@ class ApiPortalIntegrationTest {
     @Test
     @DisplayName("should track stats across operations")
     void stats_tracksOperationsAccurately() {
-        // Create 2 payments and 1 refund
         String ref1 = given()
             .contentType(ContentType.JSON)
             .body("""

@@ -98,7 +98,6 @@ public class WebSecurityAutoConfiguration {
                     "/v1/public/**", "/api/v1/public/**"
                 ).permitAll();
 
-                // Apply per-service customizers
                 customizerProvider.forEach(customizer -> {
                     try {
                         customizer.customize(auth);

@@ -81,7 +81,6 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
     });
   };
 
-  // Show skeleton or empty state if no transactions
   const displayTransactions = transactions || [];
 
   return (

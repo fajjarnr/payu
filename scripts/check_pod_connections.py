@@ -41,11 +41,9 @@ def analyze_logs(pod_name):
         status["status"] = "No logs / Starting"
         return status
 
-    # Check for startup errors/crashes
     if "Exception" in logs or "Error" in logs or "FATAL" in logs or "PatternParseException" in logs:
         status["status"] = "Error / Exceptions found"
 
-    # Analyze SSO / OIDC / Keycloak
     if any(k in logs.lower() for k in ["oidc", "keycloak", "jwk", "auth-server"]):
         if any(k in logs.lower() for k in ["oidc provider initialized", "jwk set loaded", "initialized successfully", "connected to keycloak"]):
             status["sso"] = "🟢 Connected"
@@ -54,7 +52,6 @@ def analyze_logs(pod_name):
         else:
             status["sso"] = "🟡 Configured"
 
-    # Analyze Kafka
     if any(k in logs.lower() for k in ["kafka", "bootstrap-server"]):
         if any(k in logs.lower() for k in ["metadata update", "producer client", "consumer client", "subscribed to topic", "connected"]):
             status["kafka"] = "🟢 Connected"
@@ -63,7 +60,6 @@ def analyze_logs(pod_name):
         else:
             status["kafka"] = "🟡 Configured"
 
-    # Analyze Broker (Artemis / JMS)
     if any(k in logs.lower() for k in ["artemis", "activemq", "jms", "stomp"]):
         if any(k in logs.lower() for k in ["established connection", "connected", "stomp connection", "jms connection"]):
             status["broker"] = "🟢 Connected"
@@ -72,7 +68,6 @@ def analyze_logs(pod_name):
         else:
             status["broker"] = "🟡 Configured"
 
-    # Analyze Datagrid / Redis / Cache
     if any(k in logs.lower() for k in ["redis", "lettuce", "jedis", "datagrid", "cache"]):
         if any(k in logs.lower() for k in ["connected to redis", "redis connection established", "lettuce connection", "cache initialized"]):
             status["cache"] = "🟢 Connected"
@@ -93,7 +88,6 @@ def main():
     for pod in pods:
         results[pod] = analyze_logs(pod)
 
-    # Print markdown table
     print("\n\n### Pod Connection Status Report\n")
     print("| Pod Name | Pod Status | SSO / Keycloak | Kafka | AMQ Broker | Redis / Cache |")
     print("|---|---|---|---|---|---|")

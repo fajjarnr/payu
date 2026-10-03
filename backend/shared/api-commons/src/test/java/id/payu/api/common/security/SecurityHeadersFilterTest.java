@@ -218,7 +218,7 @@ class SecurityHeadersFilterTest {
             throw new RuntimeException(e);
         }
 
-        // Then - verify all critical headers are present
+        // verify all critical headers are present
         assertThat(response.getHeaderNames()).contains(
                 "Strict-Transport-Security",
                 "X-Frame-Options",
@@ -233,9 +233,9 @@ class SecurityHeadersFilterTest {
     @Test
     @DisplayName("Should handle requests without Authorization header gracefully")
     void shouldHandleRequestsWithoutAuthorizationHeader() {
-        // Given - request without Authorization header (default)
+        // request without Authorization header (default)
 
-        // When & Then - should not throw exception
+        // should not throw exception
         assertThatCode(() -> filter.doFilter(request, response, filterChain))
                 .doesNotThrowAnyException();
     }
@@ -246,7 +246,6 @@ class SecurityHeadersFilterTest {
         // Given
         filter = new SecurityHeadersFilter();
 
-        // When & Then
         // The @Order(Ordered.HIGHEST_PRECEDENCE) annotation ensures this filter
         // runs before other filters in the chain
         assertThat(filter).isNotNull();

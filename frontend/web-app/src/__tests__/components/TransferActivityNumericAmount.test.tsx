@@ -5,9 +5,7 @@ import TransferActivity from '@/components/dashboard/TransferActivity';
 import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import type { Transaction } from '@/types';
 
-// Backend DECIMAL can arrive as a JSON number on the wire even though the
-// domain type is Money (decimal string). Regression test for dashboard
-// crash "e.replace is not a function".
+// Backend DECIMAL can arrive as JSON number; regression test for dashboard crash
 vi.mock('@/hooks', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   const numericTx = {

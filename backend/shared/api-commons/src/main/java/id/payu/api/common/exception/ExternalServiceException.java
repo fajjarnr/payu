@@ -1,7 +1,6 @@
 package id.payu.api.common.exception;
 
 /**
- * Exception thrown when an external service call fails.
  * Results in HTTP 502 Bad Gateway response.
  * Used for failures in BI-FAST, QRIS, Dukcapil, etc.
  */

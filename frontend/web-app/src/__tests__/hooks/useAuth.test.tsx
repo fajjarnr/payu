@@ -6,10 +6,8 @@ import AuthService from '@/services/AuthService';
 import { NextIntlClientProvider } from 'next-intl';
 import messages from '../../../messages/id.json';
 
-// Mock AuthService
 vi.mock('@/services/AuthService');
 
-// Mock the auth store module
 const mockSetAuth = vi.fn();
 const mockLogout = vi.fn();
 const mockSetAuthenticated = vi.fn();
@@ -35,7 +33,6 @@ vi.mock('@/stores/authStore', () => ({
   })
 }));
 
-// Mock window.location
 const mockLocation = { href: '' };
 Object.defineProperty(window, 'location', {
   writable: true,
@@ -89,10 +86,8 @@ describe('useLogout hook', () => {
   it('should handle logout mutation states', async () => {
     const { result } = renderHook(() => useLogout(), { wrapper });
 
-    // Execute logout and wait for completion
     await result.current.mutateAsync();
 
-    // Verify logout was called
     expect(mockLogout).toHaveBeenCalled();
   });
 });
@@ -130,7 +125,6 @@ describe('useRefreshToken hook', () => {
     });
 
     expect(AuthService.refreshToken).toHaveBeenCalled();
-    // setAuthenticated is called with true after successful refresh
     expect(mockSetAuthenticated).toHaveBeenCalledWith(true);
   });
 
@@ -194,12 +188,10 @@ describe('useAuth integration', () => {
   });
 
   it('should handle logout', async () => {
-    // Logout
     const { result: logoutResult } = renderHook(() => useLogout(), { wrapper });
 
     await logoutResult.current.mutateAsync();
 
-    // Verify logout was called and redirect happened
     expect(mockLogout).toHaveBeenCalled();
     expect(mockLocation.href).toBe('/id/login');
   });
@@ -211,7 +203,6 @@ describe('useAuth integration', () => {
 
     await result.current.mutateAsync();
 
-    // Verify setAuthenticated was called after refresh
     expect(mockSetAuthenticated).toHaveBeenCalledWith(true);
   });
 });

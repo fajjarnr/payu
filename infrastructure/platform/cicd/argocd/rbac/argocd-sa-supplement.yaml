@@ -1,14 +1,12 @@
 # Supplemental ClusterRole + ClusterRoleBinding for ArgoCD Application Controller
 # Kubernetes resources NOT covered by the OpenShift GitOps operator's own RBAC.
 # Managed via GitOps — deployed by payu-app-of-apps bootstrap.
-# ============================================================
 #
 # The OpenShift GitOps operator manages its own ClusterRole but only grants:
 #   - get/list/watch on *
 #   - full access to openshift-operator APIs
 # This supplement adds CRUD for standard K8s resources + DevSecOps CRDs
 # needed by platform kyverno, falco, wazuh, vault Helm chart deployments.
-# ============================================================
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

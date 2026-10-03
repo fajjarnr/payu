@@ -148,7 +148,6 @@ export default function DashboardLayout({ children, username = 'Pengguna', onLog
       </aside>
 
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <header className="h-16 sm:h-20 lg:h-20 xl:h-24 border-b border-border bg-background/80 backdrop-blur-3xl sticky top-0 z-30 shrink-0">
           <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 h-full flex items-center justify-between gap-2 sm:gap-4">

@@ -1,5 +1,4 @@
 #!/bin/bash
-# ============================================
 # NEW-001 E2E: account-service NIK verification cache round-trip
 #
 # Verifies that 2 consecutive POST /api/v1/accounts/verify-nik calls
@@ -9,7 +8,6 @@
 # cast to VerifyNikResponse).
 #
 # Pre-reqs: customer1 JWT available in gateway-service pod
-# ============================================
 
 set -e
 

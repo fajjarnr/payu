@@ -40,7 +40,6 @@ public class TestContainersConfig {
         return token -> buildTestJwt(TEST_USER_ID);
     }
 
-    // ─── helpers ────────────────────────────────────────────────────
 
     /**
      * Build a fake JWT with standard claims and a {@code userId} attribute.

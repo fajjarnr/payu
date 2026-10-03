@@ -62,17 +62,14 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should create partial refund successfully")
         void shouldCreatePartialRefundSuccessfully() {
-            // Given
             Refund expectedRefund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
             TransactionDetails transactionDetails = new TransactionDetails(AMOUNT, CURRENCY, "sender", "recipient");
             when(transactionLookupPort.findById(TRANSACTION_ID))
                     .thenReturn(Optional.of(transactionDetails));
             when(refundPersistencePort.save(any(Refund.class))).thenReturn(expectedRefund);
 
-            // When
             Refund result = refundService.createPartialRefund(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
 
-            // Then
             assertThat(result).isNotNull();
             assertThat(result.getTransactionId()).isEqualTo(TRANSACTION_ID);
             assertThat(result.getAmount()).isEqualByComparingTo(AMOUNT);
@@ -87,16 +84,13 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should use the transaction amount and currency for a full refund")
         void shouldUseTransactionAmountAndCurrencyForFullRefund() {
-            // Given a transaction whose authoritative amount is 125000.00 USD
             when(transactionLookupPort.findById(TRANSACTION_ID))
                     .thenReturn(Optional.of(new TransactionDetails(new BigDecimal("125000.00"), "USD")));
             when(refundPersistencePort.save(any(Refund.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Refund result = refundService.createFullRefund(TRANSACTION_ID, REASON);
 
-            // Then
             assertThat(result.getAmount()).isEqualByComparingTo("125000.00");
             assertThat(result.getCurrency()).isEqualTo("USD");
             verify(refundPersistencePort).lockTransaction(TRANSACTION_ID);
@@ -151,16 +145,13 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should process pending refund successfully")
         void shouldProcessPendingRefundSuccessfully() {
-            // Given
             Refund refund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
             refund.setId(REFUND_ID);
             when(refundPersistencePort.findById(REFUND_ID)).thenReturn(Optional.of(refund));
             when(refundPersistencePort.save(any(Refund.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Refund result = refundService.processRefund(REFUND_ID);
 
-            // Then
             assertThat(result.getStatus()).isEqualTo(RefundStatus.PROCESSING);
             assertThat(result.getProcessedAt()).isNotNull();
             verify(refundPersistencePort).findById(REFUND_ID);
@@ -170,10 +161,8 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should throw exception when refund not found")
         void shouldThrowExceptionWhenRefundNotFound() {
-            // Given
             when(refundPersistencePort.findById(REFUND_ID)).thenReturn(Optional.empty());
 
-            // When/Then
             assertThatThrownBy(() -> refundService.processRefund(REFUND_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Refund not found");
@@ -187,17 +176,14 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should complete processing refund successfully")
         void shouldCompleteProcessingRefundSuccessfully() {
-            // Given
             Refund refund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
             refund.setId(REFUND_ID);
             refund.process();
             when(refundPersistencePort.findById(REFUND_ID)).thenReturn(Optional.of(refund));
             when(refundPersistencePort.save(any(Refund.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Refund result = refundService.completeRefund(REFUND_ID);
 
-            // Then
             assertThat(result.getStatus()).isEqualTo(RefundStatus.COMPLETED);
             assertThat(result.getCompletedAt()).isNotNull();
         }
@@ -210,17 +196,14 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should fail processing refund successfully")
         void shouldFailProcessingRefundSuccessfully() {
-            // Given
             Refund refund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
             refund.setId(REFUND_ID);
             refund.process();
             when(refundPersistencePort.findById(REFUND_ID)).thenReturn(Optional.of(refund));
             when(refundPersistencePort.save(any(Refund.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Refund result = refundService.failRefund(REFUND_ID, "Insufficient funds");
 
-            // Then
             assertThat(result.getStatus()).isEqualTo(RefundStatus.FAILED);
             assertThat(result.getFailureReason()).isEqualTo("Insufficient funds");
             assertThat(result.getFailedAt()).isNotNull();
@@ -234,16 +217,13 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should cancel pending refund successfully")
         void shouldCancelPendingRefundSuccessfully() {
-            // Given
             Refund refund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
             refund.setId(REFUND_ID);
             when(refundPersistencePort.findById(REFUND_ID)).thenReturn(Optional.of(refund));
             when(refundPersistencePort.save(any(Refund.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Refund result = refundService.cancelRefund(REFUND_ID, "Customer changed mind");
 
-            // Then
             assertThat(result.getStatus()).isEqualTo(RefundStatus.CANCELLED);
             assertThat(result.getCancelledAt()).isNotNull();
         }
@@ -256,15 +236,12 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should return refund when found")
         void shouldReturnRefundWhenFound() {
-            // Given
             Refund refund = Refund.create(TRANSACTION_ID, AMOUNT, CURRENCY, REASON);
             refund.setId(REFUND_ID);
             when(refundPersistencePort.findById(REFUND_ID)).thenReturn(Optional.of(refund));
 
-            // When
             Optional<Refund> result = refundService.getRefund(REFUND_ID);
 
-            // Then
             assertThat(result).isPresent();
             assertThat(result.get().getId()).isEqualTo(REFUND_ID);
         }
@@ -272,13 +249,10 @@ class RefundServiceTest {
         @Test
         @DisplayName("Should return empty when refund not found")
         void shouldReturnEmptyWhenRefundNotFound() {
-            // Given
             when(refundPersistencePort.findById(REFUND_ID)).thenReturn(Optional.empty());
 
-            // When
             Optional<Refund> result = refundService.getRefund(REFUND_ID);
 
-            // Then
             assertThat(result).isEmpty();
         }
     }

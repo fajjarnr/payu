@@ -75,7 +75,6 @@ public class GrpcErrorHandlingInterceptor {
                     .setMessage(e.getMessage())
                     .build();
 
-            // Attach error details to trailers
             Metadata trailers = new Metadata();
             trailers.put(Metadata.Key.of("error-code", Metadata.ASCII_STRING_MARSHALLER), status.getCode().name());
             trailers.put(Metadata.Key.of("error-message", Metadata.ASCII_STRING_MARSHALLER), e.getMessage());

@@ -70,7 +70,6 @@ public class BackofficeResourceTest {
     @Test
     @Order(3)
     public void testReviewKyc() {
-        // First get the ID of the pending review
         String id = given()
                 .queryParam("status", "PENDING")
                 .when()

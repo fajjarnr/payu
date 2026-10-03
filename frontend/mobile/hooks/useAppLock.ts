@@ -16,9 +16,7 @@ export const useAppLock = () => {
   const { authenticate, checkAvailability } = useBiometrics();
 
   const checkJailbreak = async (): Promise<boolean> => {
-    // Basic jailbreak/root detection
-    // This is a simplified check
-    // In production, use a library like react-native-jail-detect
+    // Basic jailbreak/root detection — simplified; use react-native-jail-detect in production.
     return false;
   };
 
@@ -63,7 +61,6 @@ export const useAppLock = () => {
 
   // Memoize the handlers to avoid dependency issues
   const checkSecurityRequirements = useCallback(async () => {
-    // Check if device is jailbroken/rooted
     const isJailbroken = await checkJailbreak();
 
     if (isJailbroken) {
@@ -77,11 +74,9 @@ export const useAppLock = () => {
     const previousState = appState.current;
 
     if (previousState.match(/inactive|background/) && nextAppState === 'active') {
-      // App coming to foreground
       Logger.debug('AppLock', 'App coming to foreground, checking lock status');
       await checkAndLock();
     } else if (nextAppState.match(/inactive|background/)) {
-      // App going to background
       await SecureStore.setItemAsync(LAST_ACTIVE_KEY, Date.now().toString());
       Logger.debug('AppLock', 'App going to background, saving last active time');
     }
@@ -113,7 +108,6 @@ export const useAppLock = () => {
       Logger.warn('AppLock', 'Biometric unlock failed');
       return false;
     } else {
-      // Fall back to PIN
       Logger.info('AppLock', 'App unlocked via PIN fallback');
       setIsLocked(false);
       return true;
@@ -157,18 +151,14 @@ export const useAppLock = () => {
   };
 };
 
-// Hook for screenshot prevention
 export const useScreenshotPrevention = () => {
   useEffect(() => {
-    // Screenshot prevention is platform-specific
-    // iOS: Use UITextField with secureTextEntry
-    // Android: Use FLAG_SECURE
-    // This would require native modules
+    // Screenshot prevention is platform-specific and needs native modules:
+    // iOS UITextField secureTextEntry, Android FLAG_SECURE.
     Logger.debug('AppLock', 'Screenshot prevention hook initialized');
   }, []);
 };
 
-// Hook for session timeout detection
 export const useSessionTimeout = (timeoutMinutes: number = 30) => {
   const [isSessionExpired, setIsSessionExpired] = useState(false);
 
@@ -187,7 +177,6 @@ export const useSessionTimeout = (timeoutMinutes: number = 30) => {
       }, timeoutMinutes * 60 * 1000);
     };
 
-    // Reset timer on user activity
     const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
 
     events.forEach((event) => {

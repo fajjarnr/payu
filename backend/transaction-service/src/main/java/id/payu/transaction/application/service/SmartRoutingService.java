@@ -82,12 +82,6 @@ public class SmartRoutingService implements SmartRoutingUseCase {
             return null;
         }
 
-        // Recommendation logic:
-        // 1. For small amounts (< 100K): BI-FAST (cheap and fast)
-        // 2. For medium amounts (100K - 100M): BI-FAST (best value)
-        // 3. For large amounts (> 100M): RTGS (required for high value)
-        // 4. For non-urgent: SKN (cheapest for medium amounts)
-
         TransferRoute recommended = eligibleRoutes.get(0); // Default to cheapest
         String reason;
 
@@ -151,9 +145,7 @@ public class SmartRoutingService implements SmartRoutingUseCase {
     /**
      * Gets routes eligible for the given amount and bank code.
      *
-     * @param amount the transfer amount
      * @param bankCode optional bank code
-     * @return list of eligible routes
      */
     private List<TransferRoute> getEligibleRoutes(Money amount, String bankCode) {
         List<TransferRoute> eligible = new ArrayList<>();

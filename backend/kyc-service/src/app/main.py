@@ -112,7 +112,6 @@ def create_app() -> FastAPI:
         expose_headers=["X-Request-ID", "X-Correlation-Id", "X-Idempotency-Key"],
     )
 
-    # Include routers with rate limiting
     app.include_router(kyc_router, prefix="/api/v1")
 
     if settings.enable_metrics:

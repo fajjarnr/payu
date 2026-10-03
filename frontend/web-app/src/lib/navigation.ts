@@ -8,7 +8,6 @@ export const routing = defineRouting({
   localePrefix: 'as-needed',
 });
 
-// Locale-aware navigation utilities
 export const { Link, redirect, usePathname, useRouter } = createNavigation(routing);
 
 /**
@@ -17,7 +16,6 @@ export const { Link, redirect, usePathname, useRouter } = createNavigation(routi
  * (e.g., for window.location.href or non-React contexts)
  */
 export function createLocaleHref(path: string, locale: string): string {
-  // If path already starts with locale, return as-is
   if (path.startsWith(`/${locale}/`) || path === `/${locale}`) {
     return path;
   }

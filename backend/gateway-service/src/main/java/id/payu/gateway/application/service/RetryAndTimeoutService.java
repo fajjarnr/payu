@@ -72,12 +72,10 @@ public class RetryAndTimeoutService {
         double multiplier = policy.multiplier();
         long delayMillis = (long) (baseDelay * Math.pow(multiplier, retryAttempt));
 
-        // Apply jitter
         double jitter = policy.jitter();
         long jitterAmount = (long) (delayMillis * jitter);
         long finalDelay = delayMillis + (random.nextInt(2 * (int) jitterAmount) - (int) jitterAmount);
 
-        // Cap at max interval
         long maxDelay = policy.maxInterval().toMillis();
         finalDelay = Math.min(finalDelay, maxDelay);
 
@@ -90,7 +88,6 @@ public class RetryAndTimeoutService {
     }
 
     private boolean isRetryable(Throwable throwable) {
-        // Check if the exception is retryable
         // Retry on timeout, connection errors, 5xx errors
         String message = throwable.getMessage();
         if (message == null) {

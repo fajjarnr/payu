@@ -100,8 +100,6 @@ public class WalletClearingService implements WalletClearingUseCase {
         post(j);
     }
 
-    // ---- helpers ----
-
     private Optional<String> postedJournalNumber(String referenceType, String referenceId) {
         return journalPersistencePort.findJournalsByReference(referenceType, referenceId).stream()
                 .findFirst()

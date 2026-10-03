@@ -20,33 +20,27 @@ import scala.concurrent.duration._
  */
 class TransferSimulation extends Simulation {
 
-  // Base URLs for different environments
   val baseUrl = System.getProperty("baseUrl", "http://localhost:8080")
   val authUrl = System.getProperty("authUrl", s"$baseUrl/auth")
   val transactionUrl = System.getProperty("transactionUrl", s"$baseUrl/transaction")
 
-  // HTTP Protocol Configuration
   val httpProtocol = http
     .baseUrl(baseUrl)
     .acceptHeader("application/json")
     .contentTypeHeader("application/json")
     .userAgentHeader("PayU-PerformanceTest/1.0")
 
-  // Feeders for test data
   val userFeeder = csv("data/users.csv").circular
   val accountFeeder = csv("data/accounts.csv").circular
 
-  // Random amounts for transfers
   val transferAmounts = Iterator.continually(Map(
     "amount" -> (10000 + (Math.random() * 990000).toInt).toString
   ))
 
-  // Scenario Definition
   val transferScenario = scenario("Transfer Scenario")
     .feed(userFeeder)
     .feed(accountFeeder)
     .feed(transferAmounts)
-    // Login first to get token
     .exec(
       http("Login Request")
         .post(s"$authUrl/api/v1/auth/login")
@@ -61,7 +55,6 @@ class TransferSimulation extends Simulation {
         .check(jsonPath("$.user_id").saveAs("user_id"))
     )
     .pause(1, 2)
-    // Perform transfer
     .exec(
       http("Transfer Request")
         .post(s"$transactionUrl/api/v1/transactions/transfer")
@@ -81,23 +74,18 @@ class TransferSimulation extends Simulation {
     )
     .pause(2, 5) // Think time between transfers
 
-  // Load Simulation Setup
   setUp(
     transferScenario.inject(
-      // Ramp-up from 10 to 1000 users over 5 minutes
       rampUsersPerSec(10) to 1000 during (5 minutes),
-      // Sustained load for 10 minutes
       constantUsersPerSec(1000) during (10 minutes)
     )
   ).protocols(httpProtocol)
     .assertions(
-      // Global assertions
       global.responseTime.percentile3.lte(1000), // p95 < 1s
       global.responseTime.percentile4.lte(2000), // p99 < 2s
       global.responseTime.max.lte(5000),        // max < 5s
       global.successfulRequests.percent.gte(99), // success rate > 99%
 
-      // Specific to transfer requests
       details("Transfer Scenario" / "Transfer Request").responseTime.percentile3.lte(1000),
       details("Transfer Scenario" / "Transfer Request").responseTime.percentile4.lte(2000),
       details("Transfer Scenario" / "Transfer Request").responseTime.max.lte(5000),

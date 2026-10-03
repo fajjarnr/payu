@@ -2,7 +2,6 @@ import { feedbackService } from '../feedback.service';
 import { apiClient } from '../api';
 import { FeedbackData, ApiResponse } from '@/types';
 
-// Mock the apiClient
 jest.mock('../api', () => ({
   apiClient: {
     post: jest.fn(),

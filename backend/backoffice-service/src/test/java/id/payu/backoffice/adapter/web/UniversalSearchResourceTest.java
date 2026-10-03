@@ -27,11 +27,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for BackofficeController universal search endpoints.
- * Converted from @Disabled integration test to mock-based unit test (BUG-TEST-053).
- *
- * Tests verify controller behavior by mocking UniversalSearchService.
- * No Docker or Spring context required.
+ * Unit tests for BackofficeController universal search endpoints,
+ * mock-based (BUG-TEST-053); no Docker or Spring context required.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Universal Search Resource Tests (Unit)")
@@ -303,7 +300,6 @@ class UniversalSearchResourceTest {
     void testSearchPostWithInvalidPagination() {
         // UniversalSearchRequest compact constructor normalizes: page -1 -> 0, size 200 -> 20
         var request = new UniversalSearchRequest("searchUser123", null, null, -1, 200);
-        // After normalization: page=0, size=20
         assertThat(request.page()).isZero();
         assertThat(request.size()).isEqualTo(20);
 

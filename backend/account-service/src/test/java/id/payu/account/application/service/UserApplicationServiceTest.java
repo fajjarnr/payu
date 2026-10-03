@@ -80,7 +80,6 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("should successfully register new user when all validations pass")
         void shouldRegisterUserSuccessfully() throws ExecutionException, InterruptedException {
-            // Given
             String iamUserId = UUID.randomUUID().toString();
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
@@ -105,11 +104,9 @@ class UserApplicationServiceTest {
                     .build();
             given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
 
-            // When
             CompletableFuture<User> result = userApplicationService.registerUser(validRequest);
             User registeredUser = result.get();
 
-            // Then
             assertThat(registeredUser).isNotNull();
             assertThat(registeredUser.getEmail()).isEqualTo(validRequest.email());
             assertThat(registeredUser.getFullName()).isEqualTo(validRequest.fullName());
@@ -133,10 +130,8 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("should throw exception when email already exists")
         void shouldThrowExceptionWhenEmailExists() {
-            // Given
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(true);
 
-            // When/Then
             assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Email already exists");
@@ -147,23 +142,7 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("should set status to REJECTED when KYC verification fails but still save user")
         void shouldSaveUserAsRejectedWhenKycFails() throws ExecutionException, InterruptedException {
-            // In OnboardingService, it threw exception.
-            // In UserApplicationService (refactored), logic was:
-            // User.KycStatus kycStatus = kycResponse.verified() ? APPROVED : REJECTED;
-            // So it saves user with REJECTED status instead of throwing exception!
-            // Wait, let me check UserApplicationService logic again.
-
-            // Re-checking UserApplicationService logic I wrote:
-            /*
-             * DukcapilResponse kycResponse = kycVerificationPort.verifyNik(command.nik(),
-             * command.fullName());
-             * User.KycStatus kycStatus = kycResponse.verified() ?
-             * User.KycStatus.APPROVED : User.KycStatus.REJECTED;
-             * ...
-             * User savedUser = userPersistencePort.save(user);
-             */
-            // YES, the new logic saves as REJECTED. The old logic threw exception.
-            // This is actually better (audit trail).
+            // Saves the user as REJECTED rather than throwing — keeps an audit trail.
 
             DukcapilResponse failedKycResponse = new DukcapilResponse(
                     "REQ-002",
@@ -190,11 +169,9 @@ class UserApplicationServiceTest {
                     .build();
             given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
 
-            // When
             CompletableFuture<User> result = userApplicationService.registerUser(validRequest);
             User registeredUser = result.get();
 
-            // Then
             assertThat(registeredUser.getKycStatus()).isEqualTo(KycStatus.REJECTED);
             verify(userPersistencePort).save(any(User.class));
         }
@@ -202,11 +179,9 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("should throw exception when username already exists")
         void shouldThrowExceptionWhenUsernameExists() {
-            // Given
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(true);
 
-            // When/Then
             assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Username already exists");
@@ -218,7 +193,7 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("should validate phone number format for Indonesian numbers")
         void shouldValidatePhoneNumberFormat() throws ExecutionException, InterruptedException {
-            // Given - Valid Indonesian phone formats
+            // Valid Indonesian phone formats
             String[] validPhoneNumbers = {
                 "+6281234567890",
                 "081234567890",
@@ -253,7 +228,6 @@ class UserApplicationServiceTest {
                     .build();
             given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
 
-                // When/Then - Should not throw exception for valid format
                 assertThat(userApplicationService.registerUser(request)).isNotNull();
             }
         }
@@ -261,7 +235,6 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("should publish Kafka event when user is successfully registered")
         void shouldPublishKafkaEventOnSuccessfulRegistration() throws ExecutionException, InterruptedException {
-            // Given
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
             given(identityProviderPort.provisionUser(
@@ -281,17 +254,15 @@ class UserApplicationServiceTest {
                     .build();
             given(userPersistencePort.save(any(User.class))).willReturn(savedUser);
 
-            // When
             userApplicationService.registerUser(validRequest).get();
 
-            // Then
             verify(userEventPublisherPort, times(1)).publishUserCreated(any(id.payu.account.interfaces.dto.UserCreatedEvent.class));
         }
 
         @Test
         @DisplayName("ACCOUNT-005: registration is rejected when IAM returns no user id (fail-closed)")
         void shouldFailClosedWhenIamReturnsNoUserId() {
-            // Given: IAM provisioned but the response carried no user id
+            // IAM provisioned but the response carried no user id
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
             given(identityProviderPort.provisionUser(
@@ -300,7 +271,7 @@ class UserApplicationServiceTest {
                     validRequest.password(),
                     validRequest.fullName())).willReturn(null);
 
-            // When/Then: no fallback to the client-supplied externalId — reject
+            // No fallback to the client-supplied externalId — reject
             assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("did not return a user id");
@@ -312,7 +283,7 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("ACCOUNT-005: IAM user is deleted when local persistence fails (compensation)")
         void shouldDeleteIamUserWhenLocalSaveFails() {
-            // Given: IAM provisioned, local save fails
+            // IAM provisioned, local save fails
             String iamUserId = UUID.randomUUID().toString();
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(false);
             given(userPersistencePort.existsByUsername(validRequest.username())).willReturn(false);
@@ -326,7 +297,6 @@ class UserApplicationServiceTest {
             given(userPersistencePort.save(any(User.class)))
                     .willThrow(new DataIntegrityViolationException("duplicate"));
 
-            // When/Then
             assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Registration conflict");
@@ -338,10 +308,8 @@ class UserApplicationServiceTest {
         @Test
         @DisplayName("should NOT publish Kafka event when registration fails due to duplicate email")
         void shouldNotPublishKafkaEventWhenRegistrationFails() {
-            // Given
             given(userPersistencePort.existsByEmail(validRequest.email())).willReturn(true);
 
-            // When/Then
             assertThatThrownBy(() -> userApplicationService.registerUser(validRequest))
                     .isInstanceOf(IllegalArgumentException.class);
 

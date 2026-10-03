@@ -49,14 +49,12 @@ export const FEEDBACK_CATEGORIES = [
   { id: 'other', label: 'Other', icon: '📝' },
 ] as const;
 
-// Transfer Types
 export const TRANSFER_TYPES = [
   { id: 'bifast', name: 'BI-FAST', fee: 0, minAmount: 10000, maxAmount: 25000000, processingTime: 'Real-time' },
   { id: 'skn', name: 'SKN', fee: 5000, minAmount: 10000, maxAmount: 100000000, processingTime: 'Same day' },
   { id: 'rtgs', name: 'RTGS', fee: 25000, minAmount: 10000001, maxAmount: 10000000000, processingTime: 'Real-time' },
 ] as const;
 
-// Notification Types
 export const NOTIFICATION_TYPES = {
   TRANSACTION: 'transaction',
   PROMO: 'promo',
@@ -67,7 +65,6 @@ export const NOTIFICATION_TYPES = {
 // Session Timeout Options (in minutes)
 export const SESSION_TIMEOUTS = [5, 15, 30, 60] as const;
 
-// App Lock Options
 export const APP_LOCK_OPTIONS = {
   BIOMETRIC: 'biometric',
   PIN: 'pin',

@@ -42,7 +42,6 @@ export default function RewardsPage() {
     description: cb.referenceId,
   }));
 
-  // Compute cashback summary from actual data
   const cashbackCredited = cashbackHistory.filter(cb => cb.status === 'credited').reduce((sum, cb) => addCurrency(sum, cb.amount), asMoney('0'));
   const cashbackPending = cashbackHistory.filter(cb => cb.status === 'pending').reduce((sum, cb) => addCurrency(sum, cb.amount), asMoney('0'));
   const cashbackTotal = addCurrency(cashbackCredited, cashbackPending);

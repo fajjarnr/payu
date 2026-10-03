@@ -25,7 +25,6 @@ class RouteRegistryTest {
     void setUp() {
         config = Mockito.mock(GatewayConfig.class);
 
-        // Create route configs
         GatewayConfig.RouteConfig accountRoute = mockRouteConfig(
                 "account-service", "/api/v1/accounts", List.of("GET", "POST", "PUT", "DELETE"), true);
         GatewayConfig.RouteConfig partnerRoute = mockRouteConfig(

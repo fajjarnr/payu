@@ -106,9 +106,6 @@ public class CachedFallback<T> implements FallbackProvider<T> {
         return entry != null && !entry.isExpired();
     }
 
-    /**
-     * Invalidate the current cache entry.
-     */
     public void invalidate() {
         cache.set(null);
         log.debug("Cache invalidated");
@@ -124,64 +121,30 @@ public class CachedFallback<T> implements FallbackProvider<T> {
         return entry != null ? entry.value : null;
     }
 
-    /**
-     * Create a new builder for CachedFallback.
-     *
-     * @param <T> the type of the cached value
-     * @return a new builder
-     */
     public static <T> Builder<T> builder() {
         return new Builder<>();
     }
 
-    /**
-     * Builder for CachedFallback.
-     *
-     * @param <T> the type of the cached value
-     */
     public static class Builder<T> {
         private Supplier<T> supplier;
         private Duration ttl = Duration.ofMinutes(5);
         private T defaultValue;
 
-        /**
-         * Set the supplier for refreshing the cache.
-         *
-         * @param supplier the supplier
-         * @return this builder
-         */
         public Builder<T> withSupplier(Supplier<T> supplier) {
             this.supplier = supplier;
             return this;
         }
 
-        /**
-         * Set the time-to-live for cache entries.
-         *
-         * @param ttl the TTL duration
-         * @return this builder
-         */
         public Builder<T> withTtl(Duration ttl) {
             this.ttl = ttl;
             return this;
         }
 
-        /**
-         * Set the default value to return when cache is empty.
-         *
-         * @param defaultValue the default value
-         * @return this builder
-         */
         public Builder<T> withDefault(T defaultValue) {
             this.defaultValue = defaultValue;
             return this;
         }
 
-        /**
-         * Build the CachedFallback instance.
-         *
-         * @return the configured CachedFallback
-         */
         public CachedFallback<T> build() {
             if (supplier == null && defaultValue == null) {
                 throw new IllegalStateException("Either supplier or defaultValue must be provided");

@@ -30,12 +30,6 @@ public class LendingSecurityService {
     private final LoanPreApprovalService preApprovalService;
     private final InstallmentService installmentService;
 
-    /**
-     * Verify loan belongs to authenticated user.
-     * @param loanId Loan ID to check
-     * @param userId Authenticated user ID
-     * @throws AccessDeniedException if loan doesn't belong to user
-     */
     public boolean isLoanOwner(UUID loanId, UUID userId) {
         log.debug("Checking loan ownership: loanId={}, userId={}", loanId, userId);
         return lendingApplicationService.getLoanById(loanId)
@@ -50,12 +44,6 @@ public class LendingSecurityService {
                 .orElse(false);
     }
 
-    /**
-     * Verify PayLater account belongs to authenticated user.
-     * @param paylaterUserId User ID from path
-     * @param authenticatedUserId Authenticated user ID
-     * @return true if IDs match
-     */
     public boolean isPaylaterOwner(UUID paylaterUserId, UUID authenticatedUserId) {
         boolean isOwner = paylaterUserId.equals(authenticatedUserId);
         if (!isOwner) {
@@ -65,12 +53,6 @@ public class LendingSecurityService {
         return isOwner;
     }
 
-    /**
-     * Verify credit score belongs to authenticated user.
-     * @param creditScoreUserId User ID from path
-     * @param authenticatedUserId Authenticated user ID
-     * @return true if IDs match
-     */
     public boolean isCreditScoreOwner(UUID creditScoreUserId, UUID authenticatedUserId) {
         boolean isOwner = creditScoreUserId.equals(authenticatedUserId);
         if (!isOwner) {
@@ -80,25 +62,15 @@ public class LendingSecurityService {
         return isOwner;
     }
 
-    /**
-     * BUG-SECURITY-018 FIX: Verify repayment schedule belongs to loan owned by authenticated user.
-     * @param scheduleId Schedule ID to check
-     * @param userId Authenticated user ID
-     * @return true if schedule's loan belongs to user
-     */
+    // BUG-SECURITY-018 FIX: Verify repayment schedule belongs to loan owned by authenticated user.
     public boolean isRepaymentScheduleOwner(UUID scheduleId, UUID userId) {
         log.debug("Checking repayment schedule ownership: scheduleId={}, userId={}", scheduleId, userId);
         return loanManagementService.getRepaymentSchedule(scheduleId)
                 .map(schedule -> isLoanOwner(schedule.getLoanId(), userId))
                 .orElse(false);
     }
- 
-    /**
-     * BUG-SECURITY-019 FIX: Verify pre-approval belongs to authenticated user.
-     * @param preApprovalId Pre-approval ID to check
-     * @param userId Authenticated user ID
-     * @return true if IDs match
-     */
+
+    // BUG-SECURITY-019 FIX: Verify pre-approval belongs to authenticated user.
     public boolean isPreApprovalOwnerById(UUID preApprovalId, UUID userId) {
         log.debug("Checking pre-approval ownership: preApprovalId={}, userId={}", preApprovalId, userId);
         return preApprovalService.getPreApprovalById(preApprovalId)
@@ -106,12 +78,7 @@ public class LendingSecurityService {
                 .orElse(false);
     }
 
-    /**
-     * BUG-SECURITY-021 FIX: Verify installment checkout belongs to authenticated user.
-     * @param checkoutId Checkout ID to check
-     * @param userId Authenticated user ID
-     * @return true if IDs match
-     */
+    // BUG-SECURITY-021 FIX: Verify installment checkout belongs to authenticated user.
     public boolean isInstallmentOwner(UUID checkoutId, UUID userId) {
         log.debug("Checking installment ownership: checkoutId={}, userId={}", checkoutId, userId);
         try {
@@ -122,12 +89,6 @@ public class LendingSecurityService {
         }
     }
 
-    /**
-     * Verify pre-approval belongs to authenticated user.
-     * @param preApprovalUserId User ID from path
-     * @param authenticatedUserId Authenticated user ID
-     * @return true if IDs match
-     */
     public boolean isPreApprovalOwner(UUID preApprovalUserId, UUID authenticatedUserId) {
         boolean isOwner = preApprovalUserId.equals(authenticatedUserId);
         if (!isOwner) {

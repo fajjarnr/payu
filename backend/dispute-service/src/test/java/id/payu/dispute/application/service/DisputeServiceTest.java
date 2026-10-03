@@ -61,14 +61,11 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should open dispute successfully")
         void shouldOpenDisputeSuccessfully() {
-            // Given
             Dispute expectedDispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
             when(disputePersistencePort.save(any(Dispute.class))).thenReturn(expectedDispute);
 
-            // When
             Dispute result = disputeService.openDispute(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
 
-            // Then
             assertThat(result).isNotNull();
             assertThat(result.getTransactionId()).isEqualTo(TRANSACTION_ID);
             assertThat(result.getCustomerId()).isEqualTo(CUSTOMER_ID);
@@ -88,16 +85,13 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should start investigation successfully")
         void shouldStartInvestigationSuccessfully() {
-            // Given
             Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
             dispute.setId(DISPUTE_ID);
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.of(dispute));
             when(disputePersistencePort.save(any(Dispute.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Dispute result = disputeService.startInvestigation(DISPUTE_ID, "INV-001");
 
-            // Then
             assertThat(result.getStatus()).isEqualTo(DisputeStatus.INVESTIGATING);
             assertThat(result.getInvestigationId()).isEqualTo("INV-001");
             assertThat(result.getInvestigationStartedAt()).isNotNull();
@@ -106,10 +100,8 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should throw exception when dispute not found")
         void shouldThrowExceptionWhenDisputeNotFound() {
-            // Given
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.empty());
 
-            // When/Then
             assertThatThrownBy(() -> disputeService.startInvestigation(DISPUTE_ID, "INV-001"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Dispute not found");
@@ -123,17 +115,14 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should resolve dispute in customer's favor")
         void shouldResolveDisputeInCustomerFavor() {
-            // Given
             Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
             dispute.setId(DISPUTE_ID);
             dispute.startInvestigation("INV-001");
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.of(dispute));
             when(disputePersistencePort.save(any(Dispute.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Dispute result = disputeService.resolveDispute(DISPUTE_ID, DisputeResolutionType.REFUND_CUSTOMER, "Evidence supports customer");
 
-            // Then
             assertThat(result.getStatus()).isEqualTo(DisputeStatus.RESOLVED);
             assertThat(result.getResolutionType()).isEqualTo(DisputeResolutionType.REFUND_CUSTOMER);
             assertThat(result.getResolution()).isEqualTo("Evidence supports customer");
@@ -144,17 +133,14 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should resolve dispute with partial refund")
         void shouldResolveDisputeWithPartialRefund() {
-            // Given
             Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
             dispute.setId(DISPUTE_ID);
             dispute.startInvestigation("INV-001");
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.of(dispute));
             when(disputePersistencePort.save(any(Dispute.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Dispute result = disputeService.resolveDispute(DISPUTE_ID, DisputeResolutionType.PARTIAL_REFUND, "Partial liability");
 
-            // Then
             assertThat(result.getResolutionType()).isEqualTo(DisputeResolutionType.PARTIAL_REFUND);
             verify(refundUseCase).createPartialRefund(
                     TRANSACTION_ID, DISPUTED_AMOUNT, CURRENCY, "Dispute " + DISPUTE_ID + ": Partial liability");
@@ -168,16 +154,13 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should reject open dispute")
         void shouldRejectOpenDispute() {
-            // Given
             Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
             dispute.setId(DISPUTE_ID);
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.of(dispute));
             when(disputePersistencePort.save(any(Dispute.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Dispute result = disputeService.rejectDispute(DISPUTE_ID, "Dispute filed after deadline");
 
-            // Then
             assertThat(result.getStatus()).isEqualTo(DisputeStatus.REJECTED);
             assertThat(result.getRejectionReason()).isEqualTo("Dispute filed after deadline");
             assertThat(result.getRejectedAt()).isNotNull();
@@ -191,17 +174,14 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should escalate investigating dispute")
         void shouldEscalateInvestigatingDispute() {
-            // Given
             Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
             dispute.setId(DISPUTE_ID);
             dispute.startInvestigation("INV-001");
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.of(dispute));
             when(disputePersistencePort.save(any(Dispute.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Dispute result = disputeService.escalateDispute(DISPUTE_ID, "Requires senior review");
 
-            // Then
             assertThat(result.getStatus()).isEqualTo(DisputeStatus.ESCALATED);
             assertThat(result.getEscalationReason()).isEqualTo("Requires senior review");
             assertThat(result.getEscalatedAt()).isNotNull();
@@ -215,16 +195,13 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should add evidence to open dispute")
         void shouldAddEvidenceToOpenDispute() {
-            // Given
             Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
             dispute.setId(DISPUTE_ID);
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.of(dispute));
             when(disputePersistencePort.save(any(Dispute.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            // When
             Dispute result = disputeService.addEvidence(DISPUTE_ID, "receipt.pdf", "https://storage.payu.fajjjar.my.id/evidence/receipt.pdf", "CUSTOMER");
 
-            // Then
             assertThat(result.getEvidenceList()).hasSize(1);
             assertThat(result.getEvidenceList().get(0).getFileName()).isEqualTo("receipt.pdf");
         }
@@ -237,15 +214,12 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should return dispute when found")
         void shouldReturnDisputeWhenFound() {
-            // Given
             Dispute dispute = Dispute.create(TRANSACTION_ID, CUSTOMER_ID, MERCHANT_ID, DISPUTED_AMOUNT, CURRENCY, REASON);
             dispute.setId(DISPUTE_ID);
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.of(dispute));
 
-            // When
             Optional<Dispute> result = disputeService.getDispute(DISPUTE_ID);
 
-            // Then
             assertThat(result).isPresent();
             assertThat(result.get().getId()).isEqualTo(DISPUTE_ID);
         }
@@ -253,13 +227,10 @@ class DisputeServiceTest {
         @Test
         @DisplayName("Should return empty when dispute not found")
         void shouldReturnEmptyWhenDisputeNotFound() {
-            // Given
             when(disputePersistencePort.findById(DISPUTE_ID)).thenReturn(Optional.empty());
 
-            // When
             Optional<Dispute> result = disputeService.getDispute(DISPUTE_ID);
 
-            // Then
             assertThat(result).isEmpty();
         }
 

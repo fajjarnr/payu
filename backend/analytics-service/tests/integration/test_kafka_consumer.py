@@ -23,13 +23,11 @@ def mock_session():
     session.add = Mock()
     session.execute = AsyncMock()
 
-    # Setup scalars() chain for query results
     mock_scalars = MagicMock()
     mock_scalars.all = Mock(return_value=[])
     mock_scalars.first = Mock(return_value=None)
     session.scalars = MagicMock(return_value=mock_scalars)
 
-    # Setup scalar_one_or_none for single result queries
     mock_result = AsyncMock()
     mock_result.scalar_one_or_none = AsyncMock(return_value=None)
     session.execute = AsyncMock(return_value=mock_result)
@@ -77,11 +75,9 @@ async def test_process_transaction_completed_message(kafka_consumer, mock_sessio
         "merchant_id": "merchant_101",
     }
 
-    # Setup mock for _update_user_metrics
     with patch.object(
         kafka_consumer, "_update_user_metrics", new_callable=AsyncMock
     ) as mock_update_metrics:
-        # Mock the manager module's broadcast_to_user
         with patch("app.messaging.kafka_consumer.manager") as mock_manager:
             mock_manager.broadcast_to_user = AsyncMock()
 
@@ -196,7 +192,6 @@ async def test_process_wallet_balance_changed_message(kafka_consumer, mock_sessi
         "change_type": "CREDIT",
     }
 
-    # Mock the manager module's broadcast_to_user
     with patch("app.messaging.kafka_consumer.manager") as mock_manager:
         mock_manager.broadcast_to_user = AsyncMock()
 
@@ -222,7 +217,6 @@ async def test_process_kyc_verified_message(kafka_consumer, mock_session):
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute = AsyncMock(return_value=mock_result)
 
-        # Mock the manager module's broadcast_to_user
         with patch("app.messaging.kafka_consumer.manager") as mock_manager:
             mock_manager.broadcast_to_user = AsyncMock()
 
@@ -250,7 +244,6 @@ async def test_update_user_metrics_existing_user(kafka_consumer, mock_session):
     mock_result.scalar_one_or_none.return_value = mock_metrics
     mock_session.execute = AsyncMock(return_value=mock_result)
 
-    # Mock the manager module's broadcast_to_user
     with patch("app.messaging.kafka_consumer.manager") as mock_manager:
         mock_manager.broadcast_to_user = AsyncMock()
 
@@ -270,7 +263,6 @@ async def test_update_user_metrics_new_user(kafka_consumer, mock_session):
     mock_result.scalar_one_or_none.return_value = None
     mock_session.execute = AsyncMock(return_value=mock_result)
 
-    # Mock the manager module's broadcast_to_user
     with patch("app.messaging.kafka_consumer.manager") as mock_manager:
         mock_manager.broadcast_to_user = AsyncMock()
 

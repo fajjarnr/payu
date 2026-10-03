@@ -109,7 +109,6 @@ public class ShardRouter {
     /**
      * Get partition table name for a given partition number.
      *
-     * @param partitionNumber the partition number
      * @return table name (e.g., transactions_partition_0)
      */
     public String getPartitionTableName(int partitionNumber) {

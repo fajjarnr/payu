@@ -16,19 +16,16 @@ export async function performRealLogin(page: Page, username = E2E_USERNAME, pass
   const oidcButton = page.getByRole('button', { name: /Masuk|Sign in|Log in/i });
   await expect(oidcButton).toBeVisible({ timeout: 10000 });
   await oidcButton.click();
-  // Keycloak login page
   await page.waitForURL(/\/realms\/payu\/protocol\/openid-connect\/auth/, { timeout: 15000 });
   await page.getByRole('textbox', { name: /Username or email/i }).fill(username);
   await page.getByRole('textbox', { name: /Password/i }).fill(password);
   await page.getByRole('button', { name: /Sign In|Log in|Masuk/i }).click();
-  // Should land on dashboard with httpOnly cookies
   await page.waitForURL('**/dashboard', { timeout: 20000 });
   // Verify cookies set via BFF (httpOnly, not visible to JS, but subsequent requests succeed)
   await expect(page).not.toHaveURL(/\/login\?error=/);
 }
 
 export async function gotoWithRealAuth(page: Page, path: string, username = E2E_USERNAME, password = E2E_PASSWORD) {
-  // Try direct goto, if redirected to login then perform real login
   await page.goto(path);
   if (page.url().includes('/login')) {
     await performRealLogin(page, username, password);
@@ -42,7 +39,7 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
   return cookies.some(c => c.name === 'accessToken' || c.name === 'refreshToken');
 }
 
-// Backward compat - deprecated mock helper, now delegates to real login
+// Deprecated mock helper — throws; use performRealLogin instead.
 export async function setupAuthCookies(context: BrowserContext) {
   throw new Error('setupAuthCookies mock removed - use performRealLogin with real Keycloak (customer1/P@ssw0rd12345). No mocks allowed.');
 }

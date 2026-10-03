@@ -46,7 +46,7 @@ class SplitBillServiceTest {
     @Test
     @DisplayName("isFullyPaid returns false when all participants paid their share but total collected < bill total")
     void isFullyPaidFalseWhenTotalCollectedBelowBillTotal() {
-        // Given - total bill is 1,000,000 but custom shares only add up to 600,000
+        // Total bill is 1,000,000 but custom shares only add up to 600,000
         // and every participant has paid their (too-small) share in full
         SplitBillEntity splitBill = SplitBillEntity.builder()
                 .totalAmount(new BigDecimal("1000000.0000"))
@@ -58,7 +58,7 @@ class SplitBillServiceTest {
         SplitBillParticipantEntity b = participant(new BigDecimal("300000.0000"), new BigDecimal("300000.0000"));
         splitBill.setParticipants(List.of(a, b));
 
-        // When/Then - NOT fully paid: 600k collected, 400k still missing
+        // NOT fully paid: 600k collected, 400k still missing
         assertFalse(splitBill.isFullyPaid());
         assertEquals(0, new BigDecimal("400000.0000").compareTo(splitBill.getRemainingAmount()));
     }
@@ -66,7 +66,7 @@ class SplitBillServiceTest {
     @Test
     @DisplayName("isFullyPaid returns true when sum of paid equals bill total")
     void isFullyPaidTrueWhenTotalCollectedEqualsBillTotal() {
-        // Given - bill 1,000,000, shares sum to 1,000,000, all paid
+        // Bill 1,000,000, shares sum to 1,000,000, all paid
         SplitBillEntity splitBill = SplitBillEntity.builder()
                 .totalAmount(new BigDecimal("1000000.0000"))
                 .splitType(SplitType.CUSTOM)

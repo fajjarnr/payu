@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
-/**
- * Request DTO for SOAP request.
- */
 @Data
 @Builder
 @NoArgsConstructor

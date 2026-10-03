@@ -8,9 +8,7 @@ scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
-  # ──────────────────────────────────────────────
   # Core Banking Services (Spring Boot 3.4)
-  # ──────────────────────────────────────────────
   - job_name: "account-service"
     metrics_path: "/actuator/prometheus"
     static_configs:
@@ -39,9 +37,7 @@ scrape_configs:
         labels:
           service: "wallet-service"
           tier: "core"
-  # ──────────────────────────────────────────────
   # Supporting Services (Quarkus)
-  # ──────────────────────────────────────────────
   - job_name: "billing-service"
     metrics_path: "/q/metrics"
     static_configs:
@@ -70,9 +66,7 @@ scrape_configs:
         labels:
           service: "api-portal-service"
           tier: "supporting"
-  # ──────────────────────────────────────────────
   # ML/Analytics Services (FastAPI)
-  # ──────────────────────────────────────────────
   - job_name: "kyc-service"
     metrics_path: "/metrics"
     static_configs:
@@ -87,9 +81,7 @@ scrape_configs:
         labels:
           service: "analytics-service"
           tier: "ml"
-  # ──────────────────────────────────────────────
   # Business & Operations Services (Spring Boot)
-  # ──────────────────────────────────────────────
   - job_name: "investment-service"
     metrics_path: "/actuator/prometheus"
     static_configs:
@@ -132,9 +124,7 @@ scrape_configs:
         labels:
           service: "cms-service"
           tier: "business"
-  # ──────────────────────────────────────────────
   # Operations Services
-  # ──────────────────────────────────────────────
   - job_name: "backoffice-service"
     metrics_path: "/actuator/prometheus"
     static_configs:
@@ -163,9 +153,7 @@ scrape_configs:
         labels:
           service: "support-service"
           tier: "operations"
-  # ──────────────────────────────────────────────
   # Infrastructure Components (scrape at 30s)
-  # ──────────────────────────────────────────────
   - job_name: "postgres-exporter"
     scrape_interval: 30s
     static_configs:

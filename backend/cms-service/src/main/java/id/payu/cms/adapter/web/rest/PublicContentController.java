@@ -80,12 +80,10 @@ public class PublicContentController {
     ) {
         List<ContentResponse> contents = contentService.getActiveContentByType(type);
 
-        // Apply additional filtering for targeting if parameters provided
         if (segment != null || location != null || device != null) {
             contents = contents.stream()
                 .filter(content -> {
-                    // Targeting filtering would be done here based on the targetingRules
-                    // For now, return all active content
+                    // Targeting not implemented; returns all active content
                     return true;
                 })
                 .toList();

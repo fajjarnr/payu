@@ -42,9 +42,6 @@ public class StepResult<T> {
     @Builder.Default
     private boolean retryable = false;
 
-    /**
-     * Create a successful result.
-     */
     public static <T> StepResult<T> success(T context) {
         return StepResult.<T>builder()
                 .success(true)
@@ -52,9 +49,6 @@ public class StepResult<T> {
                 .build();
     }
 
-    /**
-     * Create a successful result with message.
-     */
     public static <T> StepResult<T> success(T context, String message) {
         return StepResult.<T>builder()
                 .success(true)
@@ -63,9 +57,6 @@ public class StepResult<T> {
                 .build();
     }
 
-    /**
-     * Create a successful result with metadata.
-     */
     public static <T> StepResult<T> success(T context, Map<String, Object> metadata) {
         return StepResult.<T>builder()
                 .success(true)
@@ -74,9 +65,6 @@ public class StepResult<T> {
                 .build();
     }
 
-    /**
-     * Create a failure result.
-     */
     public static <T> StepResult<T> failure(T context, String message) {
         return StepResult.<T>builder()
                 .success(false)
@@ -86,9 +74,6 @@ public class StepResult<T> {
                 .build();
     }
 
-    /**
-     * Create a failure result with error.
-     */
     public static <T> StepResult<T> failure(T context, String message, Throwable error) {
         return StepResult.<T>builder()
                 .success(false)
@@ -99,9 +84,6 @@ public class StepResult<T> {
                 .build();
     }
 
-    /**
-     * Create a failure result that can be retried.
-     */
     public static <T> StepResult<T> retryableFailure(T context, String message, Throwable error) {
         return StepResult.<T>builder()
                 .success(false)
@@ -124,9 +106,6 @@ public class StepResult<T> {
                 .build();
     }
 
-    /**
-     * Add metadata to the result.
-     */
     public StepResult<T> withMetadata(String key, Object value) {
         if (this.metadata == null) {
             this.metadata = new HashMap<>();

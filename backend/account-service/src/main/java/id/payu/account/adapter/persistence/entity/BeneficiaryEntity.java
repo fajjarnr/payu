@@ -73,7 +73,6 @@ public class BeneficiaryEntity {
         this.updatedAt = updatedAt;
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -162,7 +161,6 @@ public class BeneficiaryEntity {
         this.updatedAt = updatedAt;
     }
 
-    // Builder
     public static Builder builder() {
         return new Builder();
     }

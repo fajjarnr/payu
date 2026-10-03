@@ -10,10 +10,6 @@ package id.payu.transaction.application.cqrs;
 public interface CommandHandler<C extends Command<R>, R> {
     /**
      * Handles the command.
-     *
-     * @param command the command to handle
-     * @return the result of command execution
-     * @throws Exception if command execution fails
      */
     R handle(C command) throws Exception;
 }

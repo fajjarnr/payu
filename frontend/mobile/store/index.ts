@@ -1,22 +1,9 @@
 /**
- * Store Index - Centralized State Management Exports
- *
- * This file provides a centralized export for all Zustand stores.
- * Each store has a specific responsibility:
- *
- * - UI State (Zustand): Theme, language, view preferences, selections
- * - Server State (TanStack Query): User data, transactions, wallets, cards
- *
- * GUIDELINES:
- * 1. Use Zustand stores for UI/client state only
- * 2. Use TanStack Query hooks for server state (API data)
- * 3. Never duplicate server state in Zustand
- * 4. Never store sensitive data (tokens) in either store
- *
- * @see @/src/hooks/index.ts for TanStack Query hooks
+ * Centralized Zustand store exports. Zustand holds UI/client state only; server state
+ * lives in TanStack Query, and no store persists sensitive data such as tokens.
+ * @see @/src/hooks/index.ts
  */
 
-// UI State Stores
 export {
   useUIStore,
   selectColorScheme,

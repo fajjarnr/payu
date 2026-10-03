@@ -9,7 +9,6 @@
 #   ./scripts/refresh-codegraph.sh            # incremental sync + status
 #   ./scripts/refresh-codegraph.sh --full     # full rebuild from scratch
 #   ./scripts/refresh-codegraph.sh --status   # just print index status
-# ==============================================================================
 
 set -euo pipefail
 

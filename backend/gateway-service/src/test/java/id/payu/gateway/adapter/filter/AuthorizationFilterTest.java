@@ -31,8 +31,6 @@ import static org.hamcrest.Matchers.*;
 @DisplayName("Authorization Filter Integration Tests")
 class AuthorizationFilterTest {
 
-    // Public endpoint tests
-
     @Test
     @DisplayName("Should bypass authorization for public health endpoint")
     void testPublicEndpointBypass_Health() {
@@ -87,8 +85,6 @@ class AuthorizationFilterTest {
             .statusCode(anyOf(is(400), is(404), is(503)));
     }
 
-    // Missing/invalid token tests
-
     @Test
     @DisplayName("Should reject request without Authorization header")
     void testMissingAuthorizationHeader() {
@@ -142,8 +138,6 @@ class AuthorizationFilterTest {
             .then()
             .statusCode(anyOf(is(401), is(503)));
     }
-
-    // JWT structure tests
 
     @Test
     @DisplayName("Should reject token with invalid JWT structure")

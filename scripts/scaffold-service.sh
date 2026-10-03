@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# ============================================
 # PayU — Service Template Scaffolder (DEVSECOPS-016)
 # Scaffolds a secure, hexagonal Spring Boot service
 # following PayU platform conventions:
@@ -10,7 +9,6 @@ set -e
 #   - Shared starters: security-starter, logging-starter, archunit-starter
 #   - UBI9 non-root Containerfile (UID 1001, read-only /deployments)
 #   - ArchUnit layered-architecture test
-# ============================================
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -37,7 +35,6 @@ usage() {
     exit 1
 }
 
-# --- Parse args ---
 SERVICE_NAME=""
 DESCRIPTION=""
 MODULE="hexagonal"
@@ -82,7 +79,6 @@ mkdir -p "$SERVICE_DIR/src/main/java/$PKG_PATH" \
          "$SERVICE_DIR/src/main/resources" \
          "$SERVICE_DIR/src/test/java/$PKG_PATH"
 
-# --- Containerfile (UBI9, non-root, read-only) ---
 cat > "$SERVICE_DIR/Containerfile" <<EOF
 FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
 
@@ -109,7 +105,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --retries=3 \\
 ENTRYPOINT ["sh", "-c", "java \$JAVA_OPTS -jar /deployments/app.jar"]
 EOF
 
-# --- pom.xml (PayU parent) ---
 cat > "$SERVICE_DIR/pom.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -208,7 +203,6 @@ cat > "$SERVICE_DIR/pom.xml" <<EOF
 </project>
 EOF
 
-# --- Main application class ---
 CLASS_NAME="$(echo "$SERVICE_NAME" | sed -E 's/(^|-)([a-z])/\U\2/g')ServiceApplication"
 cat > "$SERVICE_DIR/src/main/java/$PKG_PATH/${CLASS_NAME}.java" <<EOF
 package $PKG;
@@ -225,7 +219,6 @@ public class ${CLASS_NAME} {
 }
 EOF
 
-# --- Hexagonal skeleton ---
 if [ "$MODULE" = "hexagonal" ]; then
     for p in adapter/web interfaces/dto application/service domain/model domain/port/in domain/port/out config; do
         mkdir -p "$SERVICE_DIR/src/main/java/$PKG_PATH/$p"
@@ -253,7 +246,6 @@ public class HealthController {
 }
 EOF
 
-    # ArchUnit test
     cat > "$SERVICE_DIR/src/test/java/$PKG_PATH/ArchitectureTest.java" <<EOF
 package $PKG;
 
@@ -281,9 +273,7 @@ public class ArchitectureTest {
 }
 EOF
 
-    # Health controller test — uses @SpringBootTest + @AutoConfigureMockMvc,
-    # the proven Boot 4 pattern across PayU services (WebMvcTest moved to a
-    # separate spring-boot-webmvc-test module in Boot 4, per Context7).
+    # Boot 4 moved WebMvcTest to spring-boot-webmvc-test; use @SpringBootTest + @AutoConfigureMockMvc.
     cat > "$SERVICE_DIR/src/test/java/$PKG_PATH/HealthControllerTest.java" <<EOF
 package $PKG;
 
@@ -314,7 +304,6 @@ class HealthControllerTest {
 EOF
 fi
 
-# --- application.yml ---
 cat > "$SERVICE_DIR/src/main/resources/application.yml" <<EOF
 spring:
   application:
@@ -337,7 +326,6 @@ management:
         enabled: true
 EOF
 
-# --- test application.yml (H2, no Flyway, dummy OIDC) ---
 mkdir -p "$SERVICE_DIR/src/test/resources"
 cat > "$SERVICE_DIR/src/test/resources/application.yml" <<EOF
 spring:
@@ -365,7 +353,6 @@ logging:
     root: WARN
 EOF
 
-# --- Register module in backend parent ---
 if grep -q "<module>$SERVICE_NAME</module>" "$ROOT_DIR/backend/pom.xml"; then
     print_warning "Module already registered in backend/pom.xml"
 else

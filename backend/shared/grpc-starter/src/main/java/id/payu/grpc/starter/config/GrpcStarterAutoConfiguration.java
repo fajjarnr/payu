@@ -127,15 +127,12 @@ public class GrpcStarterAutoConfiguration {
         NettyServerBuilder serverBuilder = NettyServerBuilder.forPort(properties.getServer().getPort())
                 .maxInboundMessageSize(properties.getServer().getMaxMessageSize());
 
-        // Configure security if enabled
         if (properties.getServer().getSecurity().isEnabled()) {
-            // TLS configuration would go here
             log.info("gRPC server TLS enabled");
         } else {
             log.info("gRPC server running without TLS (Istio handles TLS termination)");
         }
 
-        // Add reflection service if enabled
         if (properties.getServer().isReflectionEnabled()) {
             serverBuilder.addService(ProtoReflectionService.newInstance());
             log.info("gRPC reflection service enabled");

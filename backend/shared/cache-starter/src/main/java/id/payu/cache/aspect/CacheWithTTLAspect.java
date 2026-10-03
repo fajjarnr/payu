@@ -64,7 +64,6 @@ public class CacheWithTTLAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
 
-        // Check condition
         if (StringUtils.isNotBlank(cacheWithTTL.condition())) {
             if (!evaluateCondition(cacheWithTTL.condition(), method, joinPoint.getArgs(), joinPoint.getTarget())) {
                 log.debug("Cache condition false, bypassing cache for method: {}", method.getName());
@@ -72,10 +71,8 @@ public class CacheWithTTLAspect {
             }
         }
 
-        // Generate cache key
         String cacheKey = generateCacheKey(cacheWithTTL.cacheName(), cacheWithTTL.key(), method, joinPoint.getArgs());
 
-        // Calculate TTLs
         long ttlSeconds = cacheWithTTL.timeUnit().toSeconds(cacheWithTTL.ttl());
         long softTtlSeconds = (long) (ttlSeconds * cacheWithTTL.softTtlMultiplier());
         long hardTtlSeconds = ttlSeconds;
@@ -168,7 +165,6 @@ public class CacheWithTTLAspect {
             try {
                 Object result = joinPoint.proceed();
 
-                // Check unless condition
                 if (StringUtils.isNotBlank(cacheWithTTL.unless())) {
                     MethodSignature signature = (MethodSignature) joinPoint.getSignature();
                     Method method = signature.getMethod();
@@ -236,7 +232,6 @@ public class CacheWithTTLAspect {
         java.time.Duration softTtl = java.time.Duration.ofSeconds(softTtlSeconds);
         java.time.Duration hardTtl = java.time.Duration.ofSeconds(hardTtlSeconds);
 
-        // Try to get from cache with stale-while-revalidate
         @SuppressWarnings("unchecked")
         Object result = cacheService.getWithStaleWhileRevalidate(
                 cacheKey,
@@ -252,7 +247,6 @@ public class CacheWithTTLAspect {
                 hardTtl
         );
 
-        // Check if we need to trigger async refresh
         CacheEntry<?> entry = cacheService.getDistributedCache().getEntry(cacheKey, Object.class);
         if (entry != null && entry.isStale() && !entry.isExpired()) {
             triggerAsyncRefresh(joinPoint, cacheWithTTL, cacheKey, softTtlSeconds, hardTtlSeconds);
@@ -291,7 +285,6 @@ public class CacheWithTTLAspect {
 
     private String generateCacheKey(String cacheName, String keyExpression, Method method, Object[] args) {
         if (StringUtils.isNotBlank(keyExpression)) {
-            // Use custom SpEL expression
             EvaluationContext context = createEvaluationContext(method, args, null);
             Expression expression = parser.parseExpression(keyExpression);
             String key = expression.getValue(context, String.class);

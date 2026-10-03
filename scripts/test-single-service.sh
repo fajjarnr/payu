@@ -1,12 +1,9 @@
 #!/bin/bash
 set -e
 
-# ============================================
 # PayU - Test Single Service Script
 # Run tests for a specific service
-# ============================================
 
-# Color codes
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -29,7 +26,6 @@ print_warning() {
     echo -e "${YELLOW}⚠${NC} $1"
 }
 
-# Check service name argument
 if [ -z "$1" ]; then
     echo "Usage: $0 <service-name>"
     echo ""
@@ -51,14 +47,12 @@ fi
 SERVICE_NAME=$1
 SERVICE_PATH=""
 
-# Determine service path
 if [[ "$SERVICE_NAME" == *"web-app"* ]] || [[ "$SERVICE_NAME" == "frontend" ]]; then
     SERVICE_PATH="frontend/web-app"
 else
     SERVICE_PATH="backend/$SERVICE_NAME"
 fi
 
-# Check if service exists
 if [ ! -d "$SERVICE_PATH" ]; then
     echo -e "${RED}Error:${NC} Service '$SERVICE_NAME' not found at $SERVICE_PATH"
     exit 1
@@ -77,7 +71,6 @@ echo ""
 cd "$(dirname "$0")/.."
 PROJECT_ROOT=$(pwd)
 
-# Detect service type and run appropriate tests
 if [ -f "$SERVICE_PATH/pom.xml" ]; then
     # Java/Maven service
     print_info "Detected Maven service"

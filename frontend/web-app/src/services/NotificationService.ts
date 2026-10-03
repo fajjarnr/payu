@@ -51,26 +51,22 @@ class NotificationService {
     return NotificationService.instance;
   }
 
-  /** POST /notifications — Send a notification */
   async sendNotification(request: SendNotificationRequest): Promise<Notification> {
     const response = await api.post('/notifications', request);
     return response.data;
   }
 
-  /** GET /notifications/{id} — Get a specific notification */
   async getNotification(id: string): Promise<Notification> {
     const response = await api.get(`/notifications/${id}`);
     return response.data;
   }
 
   // BUG-CROSS-057: Backend getByUser returns flat List<NotificationResponse> with @QueryParam("limit"), not paged
-  /** GET /notifications/user/{userId} — Get user notifications */
   async getUserNotifications(userId: string, limit = 20): Promise<Notification[]> {
     const response = await api.get(`/notifications/user/${userId}`, { params: { limit } });
     return response.data;
   }
 
-  /** POST /notifications/{id}/read — Mark notification as read */
   async markAsRead(notificationId: string): Promise<void> {
     await api.post(`/notifications/${notificationId}/read`);
   }

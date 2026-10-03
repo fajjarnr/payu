@@ -52,9 +52,7 @@ public class SubscriptionService implements SubscriptionUseCase {
     private final SubscriptionEventPort eventPort;
     private final id.payu.billing.domain.port.out.WalletPort walletPort;
 
-    // ═══════════════════════════════════════════════════════
-    //  Plan Management
-    // ═══════════════════════════════════════════════════════
+    // Plan management
 
     @Override
     @CircuitBreaker(name = "billing", fallbackMethod = "createPlanFallback")
@@ -117,9 +115,7 @@ public class SubscriptionService implements SubscriptionUseCase {
         log.info("Subscription plan deactivated: id={}", planId);
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Subscription Lifecycle
-    // ═══════════════════════════════════════════════════════
+    // Subscription lifecycle
 
     @Override
     @CircuitBreaker(name = "billing", fallbackMethod = "subscribeFallback")
@@ -145,12 +141,10 @@ public class SubscriptionService implements SubscriptionUseCase {
         LocalDateTime now = LocalDateTime.now();
 
         if (plan.getTrialDays() > 0) {
-            // Start with trial
             sub.setStatus(SubscriptionStatus.TRIAL);
             sub.setTrialEndAt(now.plusDays(plan.getTrialDays()));
             sub.setNextBillingAt(now.plusDays(plan.getTrialDays()));
         } else {
-            // No trial — immediately active, schedule first charge
             sub.setStatus(SubscriptionStatus.ACTIVE);
             sub.setCurrentPeriodStart(now);
             sub.setCurrentPeriodEnd(advanceByInterval(now, plan.getBillingInterval()));
@@ -211,9 +205,7 @@ public class SubscriptionService implements SubscriptionUseCase {
         return saved;
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Scheduled Billing & Dunning
-    // ═══════════════════════════════════════════════════════
+    // Scheduled billing & dunning
 
     @Override
     @CircuitBreaker(name = "billing", fallbackMethod = "processDueSubscriptionsFallback")
@@ -261,11 +253,9 @@ public class SubscriptionService implements SubscriptionUseCase {
         int processed = 0;
         for (Subscription sub : expired) {
             log.info("Trial expired, activating subscription: id={}", sub.getId());
-            // Transition from TRIAL to ACTIVE and schedule first charge
             sub.setStatus(SubscriptionStatus.ACTIVE);
             sub.setCurrentPeriodStart(now);
 
-            // Look up plan for interval
             SubscriptionPlan plan = findPlan(sub.getPlanId());
             LocalDateTime periodEnd = advanceByInterval(now, plan.getBillingInterval());
             sub.setCurrentPeriodEnd(periodEnd);
@@ -309,10 +299,6 @@ public class SubscriptionService implements SubscriptionUseCase {
             throw new AccessDeniedException("Account access denied");
         }
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  Resilience Fallback Methods
-    // ═══════════════════════════════════════════════════════
 
     private SubscriptionPlan createPlanFallback(SubscriptionActor actor, String partnerId, String planName, String description,
                                                 BillingInterval interval, BigDecimal price, String currency,
@@ -362,10 +348,6 @@ public class SubscriptionService implements SubscriptionUseCase {
         return 0;
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  Internal Helpers
-    // ═══════════════════════════════════════════════════════
-
     private void processCharge(Subscription sub) {
         // BUG-BE-187 FIX: Skip charging subscriptions that are still in trial period
         if (sub.getStatus() == SubscriptionStatus.TRIAL) {
@@ -376,7 +358,6 @@ public class SubscriptionService implements SubscriptionUseCase {
 
         String idempotencyKey = "sub-" + sub.getId() + "-" + sub.getNextBillingAt();
 
-        // Idempotency check
         if (persistencePort.findChargeByIdempotencyKey(idempotencyKey).isPresent()) {
             log.debug("Charge already processed for idempotency key: {}", idempotencyKey);
             return;
@@ -394,9 +375,8 @@ public class SubscriptionService implements SubscriptionUseCase {
         charge.setBillingPeriodEnd(sub.getCurrentPeriodEnd());
 
         try {
-            // SUB-001: mark succeeded ONLY after the wallet debit is committed.
-            // Reserve-then-commit keeps the charge idempotent via the charge's
-            // own idempotency key as the wallet reference.
+            // SUB-001: mark succeeded only after the wallet debit is committed.
+            // Reserve-then-commit keeps the charge idempotent via the charge's own idempotency key.
             id.payu.billing.domain.port.out.WalletPort.ReserveResult reservation =
                     walletPort.reserveBalance(sub.getAccountId(), charge.getAmount(), idempotencyKey);
             if (reservation == null || !"RESERVED".equals(reservation.status()) || reservation.reservationId() == null) {
@@ -416,7 +396,6 @@ public class SubscriptionService implements SubscriptionUseCase {
             charge.markSucceeded();
             persistencePort.saveCharge(charge);
 
-            // Advance billing cycle
             SubscriptionPlan plan = findPlan(sub.getPlanId());
             LocalDateTime nextStart = sub.getCurrentPeriodEnd() != null
                     ? sub.getCurrentPeriodEnd()
@@ -431,7 +410,6 @@ public class SubscriptionService implements SubscriptionUseCase {
             // Schedule next recurring charge via outbox (ARCH-BILL-001)
             scheduleSubscriptionDue(sub);
 
-            // Publish webhook event for successful charge
             try {
                 eventPort.publishChargeSucceeded(sub, charge);
             } catch (Exception ex) {
@@ -459,7 +437,6 @@ public class SubscriptionService implements SubscriptionUseCase {
                 }
             }
 
-            // Publish webhook event for failed charge (dunning)
             try {
                 eventPort.publishChargeFailed(sub, charge);
             } catch (Exception ex) {
@@ -469,9 +446,8 @@ public class SubscriptionService implements SubscriptionUseCase {
     }
 
     /**
-     * Helper to schedule subscription billing command via the outbox
-     * (ARCH-BILL-001). The consumer re-checks due-ness before charging, so
-     * an early event is a no-op rather than an early debit.
+     * Schedules the billing command via the outbox (ARCH-BILL-001); the consumer
+     * re-checks due-ness, so an early event is a no-op rather than an early debit.
      */
     private void scheduleSubscriptionDue(Subscription sub) {
         if (sub.getStatus() == SubscriptionStatus.CANCELLED || sub.getStatus() == SubscriptionStatus.SUSPENDED) {

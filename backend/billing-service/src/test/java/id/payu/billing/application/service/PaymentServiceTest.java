@@ -153,7 +153,6 @@ class PaymentServiceTest {
         @Test
         @DisplayName("should create payment successfully when wallet reserves balance")
         void shouldCreatePaymentSuccessfully() {
-            // Given
             CreatePaymentRequest request = new CreatePaymentRequest(
                 "account-123",
                 "PLN",
@@ -164,10 +163,8 @@ class PaymentServiceTest {
             when(walletPort.reserveBalance(eq("account-123"), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
-            // When
             BillPayment payment = paymentService.createPayment(request);
 
-            // Then
             assertNotNull(payment);
             assertEquals("account-123", payment.getAccountId());
             assertEquals(BillerType.PLN, payment.getBillerType());
@@ -182,7 +179,6 @@ class PaymentServiceTest {
         @Test
         @DisplayName("should fail payment when wallet fails to reserve balance")
         void shouldFailPaymentWhenWalletFailsToReserve() {
-            // Given
             CreatePaymentRequest request = new CreatePaymentRequest(
                 "account-123",
                 "PLN",
@@ -193,10 +189,8 @@ class PaymentServiceTest {
             when(walletPort.reserveBalance(eq("account-123"), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult(null, "FAILED"));
 
-            // When
             BillPayment payment = paymentService.createPayment(request);
 
-            // Then
             assertNotNull(payment);
             assertEquals(PaymentStatus.FAILED, payment.getStatus());
             assertEquals("Failed to reserve balance", payment.getFailureReason());
@@ -205,7 +199,6 @@ class PaymentServiceTest {
         @Test
         @DisplayName("should retain payment checkpoint when wallet service is unavailable")
         void shouldFailPaymentWhenWalletServiceUnavailable() {
-            // Given
             CreatePaymentRequest request = new CreatePaymentRequest(
                 "account-123",
                 "PLN",
@@ -216,10 +209,8 @@ class PaymentServiceTest {
             when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenThrow(new RuntimeException("Connection refused"));
 
-            // When
             BillPayment payment = paymentService.createPayment(request);
 
-            // Then
             assertNotNull(payment);
             assertEquals(PaymentStatus.PROCESSING, payment.getStatus());
             assertTrue(payment.getFailureReason().startsWith("Reconciliation required:"));
@@ -228,7 +219,6 @@ class PaymentServiceTest {
         @Test
         @DisplayName("should throw exception for unknown biller code")
         void shouldThrowExceptionForUnknownBiller() {
-            // Given
             CreatePaymentRequest request = new CreatePaymentRequest(
                 "account-123",
                 "UNKNOWN_BILLER",
@@ -236,7 +226,6 @@ class PaymentServiceTest {
                 new BigDecimal("100000")
             );
 
-            // When & Then
             IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> paymentService.createPayment(request)
@@ -253,7 +242,6 @@ class PaymentServiceTest {
         @Test
         @DisplayName("should calculate correct admin fee for electricity (PLN)")
         void shouldCalculateAdminFeeForElectricity() {
-            // Given
             CreatePaymentRequest request = new CreatePaymentRequest(
                 "account-123",
                 "PLN",
@@ -264,10 +252,8 @@ class PaymentServiceTest {
             when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
-            // When
             BillPayment payment = paymentService.createPayment(request);
 
-            // Then
             assertEquals(new BigDecimal("2500"), payment.getAdminFee());
             assertEquals(new BigDecimal("102500"), payment.getTotalAmount());
         }
@@ -275,7 +261,6 @@ class PaymentServiceTest {
         @Test
         @DisplayName("should have zero admin fee for mobile top-up")
         void shouldHaveZeroAdminFeeForMobileTopUp() {
-            // Given
             CreatePaymentRequest request = new CreatePaymentRequest(
                 "account-123",
                 "TELKOMSEL",
@@ -286,10 +271,8 @@ class PaymentServiceTest {
             when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
-            // When
             BillPayment payment = paymentService.createPayment(request);
 
-            // Then
             assertEquals(BigDecimal.ZERO, payment.getAdminFee());
             assertEquals(new BigDecimal("50000"), payment.getTotalAmount());
         }
@@ -297,7 +280,6 @@ class PaymentServiceTest {
         @Test
         @DisplayName("should calculate correct admin fee for water (PDAM)")
         void shouldCalculateAdminFeeForWater() {
-            // Given
             CreatePaymentRequest request = new CreatePaymentRequest(
                 "account-123",
                 "PDAM",
@@ -308,10 +290,8 @@ class PaymentServiceTest {
             when(walletPort.reserveBalance(any(), any(BigDecimal.class), any(String.class)))
                 .thenReturn(new WalletPort.ReserveResult("res-123", "RESERVED"));
 
-            // When
             BillPayment payment = paymentService.createPayment(request);
 
-            // Then
             assertEquals(new BigDecimal("2000"), payment.getAdminFee());
             assertEquals(new BigDecimal("77000"), payment.getTotalAmount());
         }

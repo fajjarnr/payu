@@ -33,7 +33,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background font-inter text-foreground">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-[1080px] items-center justify-between px-4 sm:px-6">
           <Link href={'/'} className="flex items-center gap-1.5 cursor-pointer" aria-label="PayU Home">
@@ -354,7 +353,6 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-muted/40">
         <div className="mx-auto max-w-[1080px] px-6 py-12">
           <div className="flex flex-col justify-between gap-8 sm:flex-row">

@@ -58,17 +58,11 @@ public class CacheService {
     private final CacheProperties properties;
     private final Executor cacheRefreshExecutor;
 
-    // Metrics
     private final Counter localFallbackCounter;
     private final Counter localWriteCounter;
 
     /**
      * Constructor with Spring-managed executor.
-     *
-     * @param distributedCache the distributed cache service
-     * @param localCache the local cache service
-     * @param properties the cache properties
-     * @param cacheRefreshExecutor the Spring-managed executor for cache refresh operations
      */
     public CacheService(
             DistributedCacheService distributedCache,
@@ -80,7 +74,6 @@ public class CacheService {
         this.properties = properties;
         this.cacheRefreshExecutor = cacheRefreshExecutor;
 
-        // Initialize metrics
         this.localFallbackCounter = Metrics.counter("cache.local.fallback");
         this.localWriteCounter = Metrics.counter("cache.local.writes");
 
@@ -90,12 +83,6 @@ public class CacheService {
 
     /**
      * Get value from cache with automatic fallback to local cache and supplier.
-     *
-     * @param key      Cache key
-     * @param type     Expected type
-     * @param fallback Fallback supplier when cache miss
-     * @param <T>      Return type
-     * @return Cached or fresh value
      */
     public <T> T get(String key, Class<T> type, Supplier<T> fallback) {
         // Try local cache first (fastest)
@@ -107,11 +94,9 @@ public class CacheService {
             }
         }
 
-        // Try distributed cache
         try {
             T value = distributedCache.get(key, type);
             if (value != null) {
-                // Update local cache
                 if (localCache.isEnabled()) {
                     localCache.put(key, value);
                 }
@@ -122,7 +107,6 @@ public class CacheService {
             localFallbackCounter.increment();
         }
 
-        // Fallback to supplier
         T value = fallback.get();
         if (value != null) {
             put(key, value);
@@ -130,9 +114,6 @@ public class CacheService {
         return value;
     }
 
-    /**
-     * Get value from cache without fallback.
-     */
     public <T> T get(String key, Class<T> type) {
         return get(key, type, () -> null);
     }
@@ -141,13 +122,9 @@ public class CacheService {
      * Get value with stale-while-revalidate pattern.
      * Returns stale data immediately if available and triggers async refresh.
      *
-     * @param key             Cache key
-     * @param type            Expected type
      * @param fallback        Fallback supplier when cache miss
      * @param softTtl         Soft TTL - after this, data is stale but served
      * @param hardTtl         Hard TTL - after this, data must be refreshed
-     * @param <T>             Return type
-     * @return Cached or fresh value
      */
     public <T> T getWithStaleWhileRevalidate(
             String key,
@@ -156,7 +133,6 @@ public class CacheService {
             Duration softTtl,
             Duration hardTtl) {
 
-        // Try local cache first
         if (localCache.isEnabled()) {
             T localValue = localCache.get(key, type);
             if (localValue != null) {
@@ -164,18 +140,15 @@ public class CacheService {
             }
         }
 
-        // Try distributed cache with stale-while-revalidate
         try {
             CacheEntry<T> entry = distributedCache.getEntry(key, type);
             if (entry != null) {
                 if (entry.isExpired()) {
-                    // Data expired, need refresh
                     T value = fallback.get();
                     put(key, value, softTtl, hardTtl);
                     return value;
                 }
 
-                // Update local cache
                 if (localCache.isEnabled()) {
                     localCache.put(key, entry.getValue());
                 }
@@ -204,7 +177,6 @@ public class CacheService {
             localFallbackCounter.increment();
         }
 
-        // Cache miss - get fresh value
         T value = fallback.get();
         if (value != null) {
             put(key, value, softTtl, hardTtl);
@@ -226,7 +198,6 @@ public class CacheService {
         try {
             CacheEntry<T> entry = distributedCache.getEntry(key, type);
             if (entry != null && !entry.isExpired()) {
-                // Entry exists and not expired, refresh it
                 T newValue = refresher.get();
                 put(key, newValue, softTtl, hardTtl);
                 return newValue;
@@ -235,7 +206,6 @@ public class CacheService {
             log.warn("Error in getAndRefresh: {}", e.getMessage());
         }
 
-        // No entry or expired, get fresh value
         T value = refresher.get();
         if (value != null) {
             put(key, value, softTtl, hardTtl);
@@ -243,9 +213,6 @@ public class CacheService {
         return value;
     }
 
-    /**
-     * Put value in cache with default TTL.
-     */
     public void put(String key, Object value) {
         try {
             distributedCache.put(key, value);
@@ -254,7 +221,6 @@ public class CacheService {
             }
         } catch (Exception e) {
             log.error("Error putting to cache for key {}: {}", key, e.getMessage());
-            // Try to put in local cache at least
             if (localCache.isEnabled()) {
                 localCache.put(key, value);
                 localWriteCounter.increment();
@@ -287,9 +253,6 @@ public class CacheService {
         }
     }
 
-    /**
-     * Evict entry from cache.
-     */
     public void invalidate(String key) {
         try {
             distributedCache.evict(key);
@@ -301,9 +264,6 @@ public class CacheService {
         }
     }
 
-    /**
-     * Check if key exists in cache.
-     */
     public boolean exists(String key) {
         try {
             return distributedCache.exists(key);
@@ -327,9 +287,6 @@ public class CacheService {
         return localCache;
     }
 
-    /**
-     * Get cache properties.
-     */
     public CacheProperties getProperties() {
         return properties;
     }

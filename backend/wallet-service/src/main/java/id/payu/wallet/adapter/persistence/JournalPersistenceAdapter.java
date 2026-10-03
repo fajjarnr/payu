@@ -178,8 +178,6 @@ public class JournalPersistenceAdapter implements JournalPersistencePort {
                 seq);
     }
 
-    // ---- Mappers ----
-
     private JournalEntryEntity toJournalEntity(JournalEntry domain) {
         return JournalEntryEntity.builder()
                 .id(domain.getId())

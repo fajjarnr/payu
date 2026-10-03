@@ -1,5 +1,3 @@
-// PayU Compliance Service - CRUD Baseline Performance Test
-// ===========================================================
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
@@ -85,7 +83,6 @@ export default function () {
 
   group('Compliance Service - CRUD Operations', () => {
 
-    // ===== CREATE: AML Check =====
     group('CREATE: AML Check', () => {
       const amlData = generateAmlCheckData(uniqueId);
 
@@ -101,7 +98,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: List AML Checks =====
     group('READ: List AML Checks', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.compliance}/aml-checks`, { status: 'PENDING' }, auth.token);
@@ -111,7 +107,6 @@ export default function () {
     });
 
     if (amlCheckId) {
-      // ===== READ: Get AML Check Detail =====
       group('READ: Get AML Detail', () => {
         const startTime = Date.now();
         const result = read(`${SERVICE_ENDPOINTS.compliance}/aml-checks/${amlCheckId}`, auth.token);
@@ -121,7 +116,6 @@ export default function () {
       });
     }
 
-    // ===== CREATE: Submit Compliance Report =====
     group('CREATE: Submit Report', () => {
       const reportData = generateReportData(uniqueId);
 
@@ -132,7 +126,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: Get Reports =====
     group('READ: Get Reports', () => {
       const startTime = Date.now();
       const result = list(`${SERVICE_ENDPOINTS.compliance}/reports`, { period: '30d' }, auth.token);
@@ -141,7 +134,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== READ: Get Risk Profile =====
     group('READ: Get Risk Profile', () => {
       const startTime = Date.now();
       const result = read(`${SERVICE_ENDPOINTS.compliance}/risk-profile`, auth.token);
@@ -150,7 +142,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== UPDATE: Update Risk Profile =====
     group('UPDATE: Update Risk Profile', () => {
       const riskData = generateRiskProfileData();
 
@@ -161,7 +152,6 @@ export default function () {
       sleep(0.3);
     });
 
-    // ===== CREATE: Validate Transaction =====
     group('CREATE: Validate Transaction', () => {
       const validationData = {
         transactionId: `TXN${Math.floor(1000000 + Math.random() * 9000000)}`,
@@ -179,7 +169,6 @@ export default function () {
       sleep(0.5);
     });
 
-    // ===== READ: Query Audit Logs =====
     group('READ: Query Audit Logs', () => {
       const startTime = Date.now();
       const result = list(

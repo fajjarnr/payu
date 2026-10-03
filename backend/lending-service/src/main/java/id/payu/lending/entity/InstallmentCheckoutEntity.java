@@ -81,7 +81,6 @@ public class InstallmentCheckoutEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
     public UUID getUserId() { return userId; }

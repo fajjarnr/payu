@@ -118,9 +118,6 @@ public class OpenApiConfiguration {
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
     }
 
-    /**
-     * Customizer to add common parameters to all operations.
-     */
     @Bean
     public OpenApiCustomizer payUOpenApiCustomizer() {
         return openApi -> {
@@ -146,9 +143,6 @@ public class OpenApiConfiguration {
         };
     }
 
-    /**
-     * Money schema for monetary amounts.
-     */
     private Schema<?> moneySchema() {
         return new Schema<>()
                 .type("object")
@@ -166,9 +160,6 @@ public class OpenApiConfiguration {
                 .required(List.of("amount", "currency"));
     }
 
-    /**
-     * Page schema for pagination.
-     */
     private Schema<?> pageSchema() {
         return new Schema<>()
                 .type("object")
@@ -194,9 +185,6 @@ public class OpenApiConfiguration {
                         .description("Whether there is a previous page"));
     }
 
-    /**
-     * Error schema for error responses.
-     */
     private Schema<?> errorSchema() {
         return new Schema<>()
                 .type("object")

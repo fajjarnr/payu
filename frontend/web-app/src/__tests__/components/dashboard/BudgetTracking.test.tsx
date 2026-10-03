@@ -39,7 +39,7 @@ describe('BudgetTracking', () => {
   it('should calculate total budget summary correctly', () => {
     renderWithIntl(<BudgetTracking budgets={mockBudgets} />);
 
-    expect(screen.getByText(/Rp\s*3\.800\.000/)).toBeInTheDocument(); // Total budget
+    expect(screen.getByText(/Rp\s*3\.800\.000/)).toBeInTheDocument();
   });
 
   it('should show alert for exceeded budgets', () => {
@@ -104,7 +104,6 @@ describe('BudgetTracking', () => {
   it('should announce budget status to screen readers', () => {
     renderWithIntl(<BudgetTracking budgets={mockBudgets} />);
 
-    // Look for the progress bar specifically by role
     const progressBars = screen.getAllByRole('progressbar');
     const exceededProgressBar = progressBars.find(bar =>
       bar.getAttribute('aria-label')?.includes('112.5%')
@@ -129,7 +128,6 @@ describe('BudgetTracking', () => {
   it('should have accessible action buttons', () => {
     renderWithIntl(<BudgetTracking budgets={mockBudgets} />);
 
-    // Click to expand
     const budgetButton = screen.getByText('Makanan & Minuman').closest('button');
     fireEvent.click(budgetButton!);
 

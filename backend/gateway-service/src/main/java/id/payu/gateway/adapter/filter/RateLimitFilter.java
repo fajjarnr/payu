@@ -109,7 +109,6 @@ public class RateLimitFilter implements ContainerRequestFilter {
             return;
         }
 
-        // Skip health and metrics endpoints
         if (path.startsWith("/q/") || path.equals("/health") || path.equals("/status")
                 || path.equals("/version")) {
             return;
@@ -159,7 +158,6 @@ public class RateLimitFilter implements ContainerRequestFilter {
             String key = RATE_LIMIT_PREFIX + category + ":" + clientId;
             SlidingWindowResult result = checkSlidingWindow(key, rule.requestsPerMinute(), windowSeconds);
 
-            // Add RFC-compliant rate limit headers
             int remaining = Math.max(0, rule.requestsPerMinute() - (int) result.count());
             requestContext.getHeaders().add("X-RateLimit-Limit", String.valueOf(rule.requestsPerMinute()));
             requestContext.getHeaders().add("X-RateLimit-Remaining", String.valueOf(remaining));

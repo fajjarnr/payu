@@ -23,7 +23,7 @@ public interface WalletEventPublisherPort {
     
     void publishReservationReleased(String accountId, String reservationId, BigDecimal amount);
 
-    // --- Escrow lifecycle events ---
+    // Escrow lifecycle events
 
     void publishEscrowHeld(UUID escrowId, String buyerAccountId, String sellerAccountId,
                            String partnerId, BigDecimal amount, String currency,

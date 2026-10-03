@@ -181,7 +181,6 @@ class LoanAmortizationCalculationTest {
         }
     }
 
-    // Zero interest-rate edge case
     @Nested
     @DisplayName("Zero interest rate")
     class ZeroInterest {
@@ -228,7 +227,6 @@ class LoanAmortizationCalculationTest {
         }
     }
 
-    // Single-month tenure
     @Nested
     @DisplayName("1-month tenure")
     class SingleMonth {

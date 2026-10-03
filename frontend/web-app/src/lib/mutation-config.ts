@@ -53,9 +53,6 @@ export const readOnlyMutationConfig = {
   retryDelay: defaultRetryDelay,
 } as const;
 
-/**
- * Pre-configured mutation options for common use cases
- */
 export const MutationPresets = {
   /**
    * Use for: Transfers, payments, wallet operations, reservations

@@ -23,10 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-/**
- * Unit tests for KeycloakService
- * Tests authentication, password validation, account lockout logic, and MFA integration
- */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("KeycloakService")
 class KeycloakServiceTest {
@@ -48,7 +44,6 @@ class KeycloakServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Set default values via reflection
         ReflectionTestUtils.setField(keycloakService, "passwordMinLength", 12);
         ReflectionTestUtils.setField(keycloakService, "requireUppercase", true);
         ReflectionTestUtils.setField(keycloakService, "requireLowercase", true);
@@ -192,10 +187,9 @@ class KeycloakServiceTest {
         @Test
         @DisplayName("should accept valid password with all requirements")
         void shouldAcceptValidPassword() {
-            // Given
             String validPassword = "SecurePass123!";
 
-            // When/Then - no exception thrown
+            // No exception thrown
             // We need to call createUser as validatePassword is private
             // Instead, test through reflection
             java.lang.reflect.Method method;
@@ -203,7 +197,6 @@ class KeycloakServiceTest {
                 method = KeycloakService.class.getDeclaredMethod("validatePassword", String.class);
                 method.setAccessible(true);
                 method.invoke(keycloakService, validPassword);
-                // If no exception, test passes
             } catch (Exception e) {
                 if (e.getCause() instanceof IllegalArgumentException) {
                     throw new AssertionError("Valid password should not throw exception", e);
@@ -290,15 +283,12 @@ class KeycloakServiceTest {
         @Test
         @DisplayName("should remove the user from Keycloak")
         void shouldDeleteUser() {
-            // Given
             org.keycloak.admin.client.resource.UserResource userResource =
                     mock(org.keycloak.admin.client.resource.UserResource.class);
             given(usersResource.get("user-1")).willReturn(userResource);
 
-            // When
             keycloakService.deleteUser("user-1");
 
-            // Then
             verify(userResource).remove();
         }
 
@@ -314,14 +304,12 @@ class KeycloakServiceTest {
         @Test
         @DisplayName("should propagate Keycloak errors (orphan alert upstream)")
         void shouldPropagateKeycloakError() {
-            // Given
             org.keycloak.admin.client.resource.UserResource userResource =
                     mock(org.keycloak.admin.client.resource.UserResource.class);
             doThrow(new RuntimeException("Keycloak unreachable"))
                     .when(userResource).remove();
             given(usersResource.get("user-1")).willReturn(userResource);
 
-            // When/Then
             assertThatThrownBy(() -> keycloakService.deleteUser("user-1"))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Keycloak unreachable");

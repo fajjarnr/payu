@@ -12,7 +12,6 @@ vi.mock('@/lib/navigation', async (importOriginal) => ({
   usePathname: () => mockPathname,
 }));
 
-// Mock auth store with mutable state
 let mockIsAuthenticated = true;
 vi.mock('@/stores', () => ({
   useIsAuthenticated: () => mockIsAuthenticated,
@@ -20,19 +19,12 @@ vi.mock('@/stores', () => ({
 
 expect.extend(toHaveNoViolations);
 
-/**
- * SECURITY NOTICE: Test Updates
- * ================================
- * These tests have been updated to reflect the security fix:
- * - MobileNav now uses auth store (Zustand) instead of localStorage
- * - Token is NO LONGER accessed from localStorage
- * - Authentication state comes from the auth store
- */
+// Security: MobileNav uses auth store (Zustand), not localStorage for token
 describe('MobileNav', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockPathname = '/';
-    mockIsAuthenticated = true; // Default to authenticated for most tests
+    mockIsAuthenticated = true;
   });
 
   it('should render mobile navigation with all items', () => {
@@ -127,11 +119,10 @@ describe('MobileNav', () => {
     mockPathname = '/transfer';
     const { container } = renderWithIntl(<MobileNav />);
 
-    // Active item should have visible label (opacity-100)
     const activeLabels = container.querySelectorAll('.opacity-100');
     expect(activeLabels.length).toBeGreaterThan(0);
 
-    // Inactive items should have dimmed labels (opacity-70) - responsive keeps labels visible
+    // Responsive keeps inactive labels visible
     const dimmedLabels = container.querySelectorAll('.opacity-70');
     expect(dimmedLabels.length).toBeGreaterThan(0);
   });
@@ -139,7 +130,7 @@ describe('MobileNav', () => {
     const { container } = renderWithIntl(<MobileNav />);
 
     const icons = container.querySelectorAll('svg');
-    expect(icons.length).toBe(4); // 4 nav items
+    expect(icons.length).toBe(4);
   });
 
   it('should apply hover effects to navigation items', () => {
@@ -175,7 +166,6 @@ describe('MobileNav', () => {
     mockPathname = '/bills';
     const { container: _container } = renderWithIntl(<MobileNav />);
 
-    // Active item should have primary color and highlighted background
     const activeLink = screen.getByText('Tagihan').closest('a');
     expect(activeLink).toHaveClass('text-primary');
     const activeIconBg = activeLink?.querySelector('.bg-primary\\/10');
@@ -186,7 +176,6 @@ describe('MobileNav', () => {
     mockPathname = '/dashboard';
     const { container: _container } = renderWithIntl(<MobileNav />);
 
-    // Check that the active icon has the stroke-[2.5px] class
     const activeLink = screen.getByText('Dasbor').closest('a');
     const activeIcon = activeLink?.querySelector('.stroke-\\[2\\.5px\\]');
     expect(activeIcon).toBeInTheDocument();

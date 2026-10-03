@@ -131,7 +131,6 @@ public class ShardingConfig {
     /**
      * Calculate the partition number for a given account ID using hash partitioning.
      *
-     * @param accountId the account ID to partition
      * @return partition number (0 to partitionCount-1)
      */
     public int calculatePartition(UUID accountId) {
@@ -147,7 +146,6 @@ public class ShardingConfig {
     /**
      * Get the partition table name for a given account ID.
      *
-     * @param accountId the account ID
      * @return partition table name (e.g., transactions_partition_0)
      */
     public String getPartitionTableName(UUID accountId) {
@@ -157,7 +155,6 @@ public class ShardingConfig {
     /**
      * Get the partition table name for a given partition number.
      *
-     * @param partitionNumber the partition number
      * @return partition table name (e.g., transactions_partition_0)
      */
     public String getPartitionTableName(int partitionNumber) {
