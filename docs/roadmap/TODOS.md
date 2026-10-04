@@ -14,7 +14,7 @@
 ---
 | **Last Release** | `1.18.103` (2026-09-10) |
 | **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.77` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso-uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | **4 OPEN + 2 DEFERRED** — OPEN: `IDN-002` (SIT master admin password drift), `KAFKA-UAT-001` (broker UAT CrashLoop), `PLAT-DRIFT-001` (env convergence), `KAFKA-QUORUM-001` (git-closed, live verification pending); DEFERRED: `CICD-PERF-004`, `CICD-FUZZ-001` |
+| **Backlog Aktif** | **5 OPEN + 2 DEFERRED** — OPEN: `IDN-002` (SIT master admin password drift), `KAFKA-UAT-001` (broker UAT CrashLoop), `PLAT-DRIFT-001` (env convergence), `KAFKA-QUORUM-001` (git-closed, live verification pending), `REL-TAG-001` (32 released versions missing git tags); DEFERRED: `CICD-PERF-004`, `CICD-FUZZ-001` |
 | **Last Updated** | 2026-10-04 — E2E-FULL-06 closure + local compose tooling repair + web-app lint regression repair (see `CHANGELOG.md` `[Unreleased]`) |
 ## 🎯 Grill FLOWS.md — Global Bank/E-Wallet Best Practice (2026-08-28)
 
@@ -74,6 +74,7 @@ No open gate — PARTNER-PROD-007..011 ✅ Selesai 1.18.9–1.18.21 → `CHANGEL
 | SEC-020 | — | Remediate CIS platform failures | `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md#Current Known Gates` |
 | PROMO-2026-08 | — | Complete UAT final rerun and preprod Kraken evidence | `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md#Current Known Gates` |
 | PROD-READINESS | — | Argo Rollouts, production storage, Vault HA/DR, approvals, and signed-image admission evidence | `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md#Current Known Gates` |
+| REL-TAG-001 | — | Released CHANGELOG versions `1.18.65`..`1.18.103` (32 versions) have no matching git tag while `AGENTS.md` #13 requires image tag == git tag; newest tag `v1.18.64` | `git tag --sort=-creatordate | head -20` → newest `v1.18.64`; `grep -n "^## \[" CHANGELOG.md | head -20` → newest `1.18.103`; backfill requires approved version→commit mapping (not done here) |
 
 ---
 
