@@ -7,11 +7,6 @@ vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="dashboard-layout">{children}</div>,
 }));
 
-vi.mock('@/components/ui/Motion', () => ({
-  PageTransition: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  StaggerContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  StaggerItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
 
 describe('TermsPage', () => {
   beforeEach(() => {

@@ -33,12 +33,6 @@ vi.mock('@/components/DashboardLayout', () => ({
   ),
 }));
 
-vi.mock('@/components/ui/Motion', () => ({
-  PageTransition: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  StaggerContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  StaggerItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ButtonMotion: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
 
 const { metricsMock, cashFlowMock, trendsMock } = vi.hoisted(() => ({
   metricsMock: vi.fn((..._args: unknown[]) => ({ isLoading: false })),

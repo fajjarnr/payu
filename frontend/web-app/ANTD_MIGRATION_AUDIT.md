@@ -1,5 +1,16 @@
 # Ant Design Migration Audit Report
 
+> **STATUS: PRE-MIGRATION AUDIT (2026-10-03)** — Executed by commit `dd1c0dc00` (see `CHANGELOG.md`). Facts below describe the **pre-migration** state. The 102 phase checkboxes were never maintained. The `ui/*` shims listed under "Files to Delete" are now deleted.
+
+### Post-migration deltas
+- antd `^6.6.5` installed (not 6.6.1); `@ant-design/cssinjs`, `@ant-design/icons`, `@ant-design/plots` added
+- Removed: `radix-ui/*`, `framer-motion`, `lucide-react`, `recharts`, `sonner`, `class-variance-authority`, `@dnd-kit/*`, `react-hook-form`, `@hookform/resolvers`
+- `src/components/icons.ts` is a single file aliasing `@ant-design/icons` (not a directory)
+- `src/components/ui/Logo.tsx` + `src/components/ui/Motion.tsx` deleted; `src/components/ui/` removed
+- Charts use `@ant-design/plots` (Column, Pie, RadialBar); Recharts gone
+- `clsx` + `tailwind-merge` remain (still in use)
+
+
 **Project:** PayU Digital Banking Web App  
 **Date:** 2026-10-03  
 **Auditor:** antd-audit agent  
