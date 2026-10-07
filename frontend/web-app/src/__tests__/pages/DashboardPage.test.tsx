@@ -130,8 +130,21 @@ describe('DashboardPage', () => {
     expect(screen.getByTestId('quick-actions')).toBeInTheDocument();
   });
 
-  it('should render investment CTA section', () => {
+  it('shows recent activity for the anomaly check', () => {
     render(<Home />, { wrapper: createWrapper() });
-    expect(screen.getByText('Start Investing')).toBeInTheDocument();
+    // next/dynamic is mocked — the lazy activity slot renders the stub.
+    expect(screen.getByTestId('dynamic-component')).toBeInTheDocument();
+  });
+
+  it('keeps the promo popup out of the first paint', () => {
+    render(<Home />, { wrapper: createWrapper() });
+    expect(screen.queryByTestId('promo-popup')).not.toBeInTheDocument();
+  });
+
+  it('keeps secondary sections off home', () => {
+    render(<Home />, { wrapper: createWrapper() });
+    expect(screen.queryByText('Start Investing')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('banner-carousel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('segmented-offers')).not.toBeInTheDocument();
   });
 });

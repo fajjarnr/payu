@@ -111,9 +111,10 @@ export interface ReviewContact {
 }
 
 /**
- * Resolve the review-screen recipient. Favorites/beneficiaries win; a
- * manually typed account id falls back to itself so the review never
- * renders a nameless recipient.
+ * Resolve the review-screen recipient. Only a saved favorite/beneficiary
+ * carries a verified name — a manually typed account id without a match
+ * MUST NOT render as a name, or a mistyped digit produces a confident
+ * review screen with no beneficiary verification.
  */
 export function resolveReviewContact(
   contacts: ReviewContact[],
@@ -121,17 +122,14 @@ export function resolveReviewContact(
   typedAccountId: string | null | undefined,
 ): ReviewContact | undefined {
   const accountId = selected ?? typedAccountId ?? "";
-  return (
-    contacts.find((c) => c.accountId === accountId) ??
-    (accountId
-      ? {
-          name: accountId,
-          initial: accountId.charAt(0).toUpperCase(),
-          color: "bg-muted text-muted-foreground",
-          accountId,
-        }
-      : undefined)
-  );
+  return contacts.find((c) => c.accountId === accountId);
+}
+
+/** Authorize is allowed only when the recipient resolved to a saved contact. */
+export function isVerifiedReviewContact(
+  contact: ReviewContact | undefined,
+): contact is ReviewContact {
+  return contact !== undefined;
 }
 
 export default function TransferPage() {
@@ -300,6 +298,7 @@ export default function TransferPage() {
       selectedContact,
       formValues.toAccountId,
     );
+    const isRecipientVerified = isVerifiedReviewContact(selectedContactData);
     const selectedScheduleType = SCHEDULE_TYPES.find(
       (s) => s.type === scheduleType,
     );
@@ -328,21 +327,41 @@ export default function TransferPage() {
                   <div
                     className={clsx(
                       "w-20 h-20 rounded-2xl flex items-center justify-center font-bold text-3xl shadow-lg",
-                      selectedContactData?.color,
+                      selectedContactData?.color ?? "bg-muted text-muted-foreground",
                     )}
+                    aria-hidden={!isRecipientVerified}
                   >
-                    {selectedContactData?.initial}
+                    {selectedContactData?.initial ?? "?"}
                   </div>
                   <div>
                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">
                       Kepada Penerima
                     </p>
-                    <h3 className="text-2xl font-bold text-foreground">
-                      {selectedContactData?.name}
-                    </h3>
-                    <p className="text-xs font-bold text-primary tracking-tight">
-                      ID Akun: {reviewAccountId}
-                    </p>
+                    {isRecipientVerified ? (
+                      <>
+                        <h3 className="text-2xl font-bold text-foreground">
+                          {selectedContactData.name}
+                        </h3>
+                        <p className="text-xs font-bold text-primary tracking-tight">
+                          ID Akun: {reviewAccountId}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="text-2xl font-bold text-foreground">
+                          Penerima belum terverifikasi
+                        </h3>
+                        <p
+                          id="recipient-verification-alert"
+                          role="alert"
+                          className="text-sm font-bold text-error tracking-tight mt-1"
+                        >
+                          ID Akun {reviewAccountId || "-"} tidak cocok dengan
+                          penerima tersimpan. Cek kembali nomornya atau
+                          tambahkan sebagai penerima favorit.
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="text-left md:text-right">
@@ -436,7 +455,12 @@ export default function TransferPage() {
               type="primary"
               onClick={() => form.submit()}
               data-testid="confirm-transfer-button"
-              disabled={transferMutation.isPending}
+              disabled={transferMutation.isPending || !isRecipientVerified}
+              aria-describedby={
+                isRecipientVerified
+                  ? undefined
+                  : "recipient-verification-alert"
+              }
               className="w-full h-16 rounded-2xl shadow-2xl shadow-primary/20"
             >
               {transferMutation.isPending

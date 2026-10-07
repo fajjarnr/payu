@@ -1,7 +1,5 @@
 "use client";
 
-import { Link } from "@/lib/navigation";
-import { ChevronRight } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import {
@@ -10,114 +8,21 @@ import {
   useUserMetrics,
   useSpendingTrends,
   useCashFlow,
-  useInvestmentAccount,
 } from "@/hooks";
-import { useBudgets } from "@/hooks/useBudgets";
 import { useAuthStore } from "@/stores";
 import DashboardLayout from "@/components/DashboardLayout";
 import BalanceCard from "@/components/dashboard/BalanceCard";
 import QuickActions from "@/components/dashboard/QuickActions";
 import { Skeleton } from "antd";
 import { cn } from "@/lib/utils";
-import BannerCarousel from "@/components/cms/BannerCarousel";
-import PromoPopup from "@/components/cms/PromoPopup";
 import { SkipLink } from "@/lib/a11y";
 
-// Lazy load below-the-fold components
-const StatsCharts = dynamic(
-  () => import("@/components/dashboard/StatsCharts"),
-  {
-    loading: () => (
-      <Skeleton
-        title={false}
-        paragraph={false}
-        className={cn(
-          "block animate-pulse rounded-xl bg-muted/50",
-          "h-[300px] w-full rounded-2xl",
-        )}
-      />
-    ),
-    ssr: false,
-  },
-);
+// Below-the-fold activity stays lazy; everything else (carousel, health,
+// insights, charts, investments, budget, offers, invest CTA, promo popup)
+// lives on its own route — home answers "saldo + ada yang aneh?" and
+// nothing else.
 const TransferActivity = dynamic(
   () => import("@/components/dashboard/TransferActivity"),
-  {
-    loading: () => (
-      <Skeleton
-        title={false}
-        paragraph={false}
-        className={cn(
-          "block animate-pulse rounded-xl bg-muted/50",
-          "h-[200px] w-full rounded-2xl",
-        )}
-      />
-    ),
-  },
-);
-const FinancialHealthScore = dynamic(
-  () => import("@/components/dashboard/FinancialHealthScore"),
-  {
-    loading: () => (
-      <Skeleton
-        title={false}
-        paragraph={false}
-        className={cn(
-          "block animate-pulse rounded-xl bg-muted/50",
-          "h-[150px] w-full rounded-2xl",
-        )}
-      />
-    ),
-  },
-);
-const SpendingInsights = dynamic(
-  () => import("@/components/dashboard/SpendingInsights"),
-  {
-    loading: () => (
-      <Skeleton
-        title={false}
-        paragraph={false}
-        className={cn(
-          "block animate-pulse rounded-xl bg-muted/50",
-          "h-[200px] w-full rounded-2xl",
-        )}
-      />
-    ),
-  },
-);
-const BudgetTracking = dynamic(
-  () => import("@/components/dashboard/BudgetTracking"),
-  {
-    loading: () => (
-      <Skeleton
-        title={false}
-        paragraph={false}
-        className={cn(
-          "block animate-pulse rounded-xl bg-muted/50",
-          "h-[150px] w-full rounded-2xl",
-        )}
-      />
-    ),
-  },
-);
-const InvestmentPerformance = dynamic(
-  () => import("@/components/dashboard/InvestmentPerformance"),
-  {
-    loading: () => (
-      <Skeleton
-        title={false}
-        paragraph={false}
-        className={cn(
-          "block animate-pulse rounded-xl bg-muted/50",
-          "h-[250px] w-full rounded-2xl",
-        )}
-      />
-    ),
-    ssr: false,
-  },
-);
-const SegmentedOffers = dynamic(
-  () => import("@/components/personalization/SegmentedOffers"),
   {
     loading: () => (
       <Skeleton
@@ -153,34 +58,26 @@ function Dashboard({
   username: string;
   handleLogout: () => void;
 }) {
-  const t = useTranslations("dashboard");
   const accountId = useAuthStore((state) => state.accountId);
   // FE-AUDIT-006: analytics events are keyed by account_id (backend BUG-AUTH-013),
   // so queries must use accountId — Keycloak sub returns zero rows.
   const { data: balance, isLoading: balanceLoading } = useBalance(
     accountId || undefined,
   );
-  const { isLoading: metricsLoading } = useUserMetrics(accountId || undefined);
+  // Mounted, not rendered: FE-AUDIT-006 pins these queries to accountId;
+  // dropping them would silently regress the event key.
+  useUserMetrics(accountId || undefined);
   const { data: cashFlow } = useCashFlow(accountId || undefined);
-  const { isLoading: spendingLoading } = useSpendingTrends(
-    accountId || undefined,
-  );
-  const { isLoading: investmentLoading } = useInvestmentAccount();
-  const { data: budgets, isLoading: budgetsLoading } = useBudgets(
-    accountId || undefined,
-  );
+  useSpendingTrends(accountId || undefined);
 
   return (
     <DashboardLayout username={username} onLogout={handleLogout}>
       {/* Accessibility Skip Link */}
       <SkipLink href="#main-content" />
 
-      {/* Promo Popup */}
-      <PromoPopup delay={3000} />
-
       <main id="main-content" className="overflow-x-hidden">
         <div className="space-y-6 lg:space-y-8">
-          {/* Balance Card - LCP Element 1 (Priority Content) */}
+          {/* Saldo — the one job of this screen */}
           <div>
             {balanceLoading ? (
               <Skeleton
@@ -200,85 +97,11 @@ function Dashboard({
             )}
           </div>
 
-          {/* Banner Carousel - LCP Element 2 */}
-          <BannerCarousel autoPlayInterval={6000} />
+          {/* Next actions — the three money moves, nothing else */}
+          <QuickActions maxActions={3} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            {/* High Priority Actions & Health - 4/8 Split (Aligned with Balance) */}
-            <div className="lg:col-span-4">
-              <FinancialHealthScore
-                isLoading={metricsLoading}
-                className="h-full"
-              />
-            </div>
-
-            <div className="lg:col-span-8">
-              <QuickActions maxActions={8} className="h-full" />
-            </div>
-
-            {/* Activity & Insights - 4/8 Split (Consistent Sidebar) */}
-            <div className="lg:col-span-4">
-              <SpendingInsights
-                isLoading={spendingLoading}
-                className="h-full"
-              />
-            </div>
-
-            <div className="lg:col-span-8">
-              <TransferActivity className="h-full" />
-            </div>
-
-            {/* Charts & Investment - 4/8 Split (Consistent Sidebar) */}
-            <div className="lg:col-span-4">
-              <InvestmentPerformance
-                isLoading={investmentLoading}
-                className="h-full"
-              />
-            </div>
-
-            <div className="lg:col-span-8">
-              <StatsCharts isLoading={spendingLoading} className="h-full" />
-            </div>
-
-            {/* Budget & Offers - 4/8 Split */}
-            <div className="lg:col-span-4">
-              <BudgetTracking
-                budgets={budgets}
-                isLoading={budgetsLoading}
-                className="h-full"
-              />
-            </div>
-
-            <div className="lg:col-span-8">
-              <SegmentedOffers maxOffers={3} />
-            </div>
-
-            {/* Investment CTA - Full Width */}
-            <div className="lg:col-span-12">
-              <div className="card-gradient rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 text-primary-foreground relative overflow-hidden group shadow-card border border-surface/10">
-                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
-                  <div className="space-y-6 text-center lg:text-left">
-                    <h3 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold uppercase tracking-tight leading-none">
-                      {t("futureTitle")}
-                    </h3>
-                    <p className="text-base sm:text-xl font-medium opacity-90 max-w-2xl leading-relaxed">
-                      {t("futureDesc")}
-                    </p>
-                  </div>
-                  <div className="shrink-0 transition-transform hover:scale-105 active:scale-95">
-                    <Link
-                      href="/investments"
-                      className="bg-surface text-primary-dark px-10 py-5 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all shadow-2xl flex items-center gap-3 hover:bg-primary-light focus:outline-none focus:ring-4 focus:ring-white/30"
-                    >
-                      {t("startInvesting")} <ChevronRight className="h-6 w-6" />
-                    </Link>
-                  </div>
-                </div>
-                <div className="absolute top-0 right-0 w-96 h-96 bg-surface/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition-transform duration-1000" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
-              </div>
-            </div>
-          </div>
+          {/* Ada yang aneh? — recent activity is the fraud check */}
+          <TransferActivity />
         </div>
       </main>
     </DashboardLayout>
