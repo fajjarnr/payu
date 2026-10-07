@@ -14,8 +14,8 @@
 ---
 | **Last Release** | `1.18.103` (2026-09-10) |
 | **Core Banking MVP** | 🟢 MVP workloads live di 5 environment; CNPG **payu-dev 3/3 2/2 Healthy** `barman-cloud 1/1` `ObjectStore 5/5` `S3 WAL archiving True` `RPO=0`, Tekton **31/31 Succeeded** (cnpg storage 20Gi wal 10Gi 1.18.42, fx-service 1.18.41 FX 0 WARN, transaction 1.18.40 Topics+KEDA, partner SLO 1.18.21, HPA/PDB 1.18.20, Cache Plain 1.18.19, WORM 1.18.27), workloads `49/49 1/1` `1.18.77` `coraza 2/2` `KEDA RH-CMA 5 ScaledObjects` `Litmus 6 pods + Kraken/Cerberus` `SSO sso-dev/sso-sit/sso-uat/preprod/prod 5 env` `CNPG/Kafka/EFS/3scale/RHACS` verified. |
-| **Backlog Aktif** | **5 OPEN + 2 DEFERRED** — OPEN: `IDN-002` (SIT master admin password drift), `KAFKA-UAT-001` (broker UAT CrashLoop), `PLAT-DRIFT-001` (env convergence), `KAFKA-QUORUM-001` (git-closed, live verification pending), `REL-TAG-001` (32 released versions missing git tags); DEFERRED: `CICD-PERF-004`, `CICD-FUZZ-001` |
-| **Last Updated** | 2026-10-04 — E2E-FULL-06 closure + local compose tooling repair + web-app lint regression repair (see `CHANGELOG.md` `[Unreleased]`) |
+| **Backlog Aktif** | **4 OPEN + 2 DEFERRED** — OPEN: `IDN-002` (SIT master admin password drift), `KAFKA-UAT-001` (broker UAT CrashLoop), `PLAT-DRIFT-001` (env convergence), `KAFKA-QUORUM-001` (git-closed, live verification pending), `WEB-OS-008` (WebSocket server — product decision); DEFERRED: `CICD-PERF-004`, `CICD-FUZZ-001`. `REL-TAG-001` CLOSED (32 tags backfilled). |
+| **Last Updated** | 2026-10-07 — dev auth outage repaired (SSO-DEV-KC-001) + notification ownership fixed (NOTIF-PRINCIPAL-001) + REL-TAG-001 tag backfill; live e2e 20/20, vitest 1173/1174 (see `CHANGELOG.md` `[Unreleased]`) |
 ## 🎯 Grill FLOWS.md — Global Bank/E-Wallet Best Practice (2026-08-28)
 
 > **Sumber grill**: `docs/product/FLOWS.md` (41 flow aktual + 10 IMP) vs **industri global** — Stripe/Adyen idempotency & HMAC (Context7 `/stripe/stripe-node` `StripeIdempotencyError` + `/websites/adyen` `idempotency-key` ≤64 UUID + HMAC SHA256), Plaid webhook JWT ES256 `request_body_sha256` (Context7 `/websites/plaid_api`), PSD2 RTS Art 5 Dynamic Linking + FAPI 2.0 WYSIWYS, POJK 11/POJK.03/2022 MFA, PADG BI 24/7 & PBI 23/6 BI-FAST, ISO 20022 `pacs.008→pacs.002→camt.053`, FATF R10/R16 risk-based, PCI-DSS 4.0, UU PDP 27/2022 + Next.js BFF `httpOnly+secure+sameSite` (Context7 `/vercel/next.js`). Verifikasi **internet**: web_search diblok provider DC-IP — fallback Context7 terverifikasi (Stripe 64k snippets, Adyen 74k, Plaid 6.3k). Verifikasi **code**: CodeGraph `WalletGrpcAdapter.transferBalance` atomic 1-hop, `JournalEntry.isBalanced()`, `StatementService` `balance_after`, `NotificationService` fallback, `VelocityGuard`+`RiskEvaluationPort`, `Argon2PasswordEncoder(16,32,1,4096,3)` — bandingkan gap `FLOWS.md:1938` IMP-1,2,5 DONE 1.10.53 vs IMP-3,4,6,7,8,9,10 masih **TARGET**.
@@ -74,7 +74,7 @@ No open gate — PARTNER-PROD-007..011 ✅ Selesai 1.18.9–1.18.21 → `CHANGEL
 | SEC-020 | — | Remediate CIS platform failures | `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md#Current Known Gates` |
 | PROMO-2026-08 | — | Complete UAT final rerun and preprod Kraken evidence | `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md#Current Known Gates` |
 | PROD-READINESS | — | Argo Rollouts, production storage, Vault HA/DR, approvals, and signed-image admission evidence | `docs/operations/INFRASTRUCTURE_DEPLOYMENT.md#Current Known Gates` |
-| REL-TAG-001 | — | Released CHANGELOG versions `1.18.65`..`1.18.103` (32 versions) have no matching git tag while `AGENTS.md` #13 requires image tag == git tag; newest tag `v1.18.64` | `git tag --sort=-creatordate | head -20` → newest `v1.18.64`; `grep -n "^## \[" CHANGELOG.md | head -20` → newest `1.18.103`; backfill requires approved version→commit mapping (not done here) |
+| REL-TAG-001 | — | **CLOSED 2026-10-07** — backfilled 32 annotated tags `v1.18.65`..`v1.18.103`; commit derived from each version's `## [x]` CHANGELOG heading commit (`git log -S'## [x]' -- CHANGELOG.md`), method validated against all 164 existing tags (153 exact matches; older mismatches are pre-existing and out of scope). 133 older versions (≤`1.18.47`) still untagged — separate follow-up. | `git tag -l 'v1.18.*' | wc -l` 165; `v1.18.103` resolves to `b29dfee4a0` |
 
 ---
 
@@ -243,3 +243,94 @@ Semua ADR backlog sudah dibuat & terindeks — ADR-0067 **Deferred** (NO-GO B4.6
 ### 4. ⚠️ Kesenjangan Best Practice & Anti-Pattern yang Memerlukan Remediasi
 
 No open gap — remediasi best-practice tuntas via harden items **CLOSED 1.18.19–1.18.40** → `CHANGELOG.md`.
+
+### Audit 2026-10-07 — Web-App OpenShift E2E (payu-dev live + local vitest)
+
+> Run: `npx tsc --noEmit` (0 error) + `npx vitest run` (1170/1174 pass, 3 fail TransferPage intl) + Playwright live `https://payu-dev.apps.fajjjar.my.id` (login-flow 13/14 pass, transfer-flow timeout). SSL self-signed cert (expected dev).
+
+| Key | Pri | Temuan | Bukti | Status |
+|---|---|---|---|---|
+| WEB-OS-001 | P2 | **TransferPage.test.tsx intl context** — 3 test gagal `No intl context found` karena `TransferPage` pakai `useRouter` dari next-intl tapi test tidak wrap `NextIntlClientProvider` | `vitest run` 3 fail → setelah wrap `NextIntlClientProvider` 3/3 pass | CLOSED — `src/__tests__/pages/TransferPage.test.tsx` di-wrap `NextIntlClientProvider` |
+| WEB-OS-002 | P3 | **login-flow SameSite expectation** — test expect `Strict` tapi cookie `Lax` (fix 1.18.87 L-420) | `playwright login-flow` 1 fail → setelah update expectation `Lax` 14/14 pass | CLOSED — `e2e/login-flow.spec.ts:130` updated `Strict`→`Lax` |
+| WEB-OS-003 | P2 | **E2E fixture password salah** — `E2E_PASSWORD='P@ssw0rd123'` gagal login (`Invalid username or password`), password benar `P@ssw0rd12345` | `transfer-flow` timeout → `error-context.md` shows `Invalid username or password` → setelah ganti password login berhasil | CLOSED — root cause: password env var salah, bukan fixture bug. Fixture update-password handler sudah benar |
+| WEB-OS-004 | P3 | **Live SSL self-signed** — `curl` gagal verify cert chain (self-signed) | `curl -k` → 200 OK | CLOSED — expected untuk dev cluster, `ignoreHTTPSErrors: true` di playwright config |
+| WEB-OS-005 | P3 | **Live endpoint health** — root + `/api/health` + `/login` semua 200 OK | `curl -k` 3/3 200 | CLOSED — web-app live dan reachable |
+| WEB-OS-006 | P2 | **`/api/notifications` → 404** — BFF has no such route; frontend uses `/api/v1/notifications/*` (`ALLOWED_PATH_PREFIXES`). Not a defect. | `curl -k /api/notifications` → 404 vs `/api/v1/notifications` routed | CLOSED — wrong path in ticket; `api.ts baseURL='/api/v1'` |
+| WEB-OS-007 | P2 | **`/api/v1/notifications` → 401** — misread as "route not registered"; 401 `MISSING_TOKEN` is emitted *after* routing (`RouteRegistry` has `notifications`; unknown prefix gives 400 `Invalid path`, no route gives 404 `No route found`). | `curl /api/v1/bogus-xyz` → 400, `/api/v1/health` → 404, `/api/v1/notifications` → 401 | CLOSED — route present; see `SSO-DEV-KC-001` for the real 401/500 cause |
+| WEB-OS-008 | P3 | **WebSocket endpoints → 404** — no WS server exists; frontend degrades to REST (`analytics/page.tsx:40` "enhancement-only"), `useWebSocket` tests 10/10. | `curl -k /ws/analytics` → 404; vitest hook 10/10 | OPEN — product decision (build WS server or drop the hooks); not a defect |
+| WEB-OS-009 | P2 | **Notification service unreachable from web-app** — false; reachable end-to-end once auth fixed (200 with rows). | live: page `/notifications` 200 + `GET notifications/user/{sub}?limit=20` 200 | CLOSED — see `SSO-DEV-KC-001` + `NOTIF-PRINCIPAL-001` |
+| WEB-OS-010 | P3 | **`/transfer` redirect ke `/login` saat unauthenticated** — expected behavior, bukan bug | `curl -k /transfer` → 302 `/login?callbackUrl=%2Ftransfer` | CLOSED — by design, middleware redirect unauthenticated users ke login |
+
+### Audit 2026-10-07 — Dev Auth Outage & Notification Ownership (live payu-dev)
+
+> Root cause: `a76b949b1` reverted the identity overlay to `payu-sso` (Keycloak home) but left dev *workload* overlays at `payu-keycloak-service.payu-dev` (from `f111c336f`). No such Service exists → every downstream JWKS fetch failed → all authenticated calls 401/500. Fixed in git (10 overlay files) + applied surgically to 20 live Deployments (preserving root-only env).
+
+| Key | Pri | Temuan | Bukti | Status |
+|---|---|---|---|---|
+| SSO-DEV-KC-001 | P0 | **Dev JWKS blackholed fleet-wide** — 20 Deployments pointed `OIDC_JWK_SET_URI`/`AUTH_SERVER_URL` at `payu-keycloak-service.payu-dev` (nonexistent); Keycloak lives in `payu-sso`. Gateway OK (`payu-sso`); every downstream 401/500. | `wallet-service` log `I/O error ... payu-keycloak-service.payu-dev ... certs`; `getent` per-pod matrix: payu-dev FAILS / payu-sso OK | CLOSED — 56 refs → `payu-sso` in `infrastructure/workloads/overlays/payu-dev/*`; live `oc set env` 20 deploys; 44/44 pods Ready; `/api/v1/wallets` 200 |
+| NOTIF-PRINCIPAL-001 | P2 | **Notification ownership key mismatch** — `callerSubject()` = Quarkus principal = `preferred_username`, but frontend BFF + account-service key users by Keycloak `sub` → `GET /notifications/user/{sub}` 403 (list empty). | live: `user/customer1` → 200, `user/ed532e6b…` → 403; after `QUARKUS_OIDC_TOKEN_PRINCIPAL_CLAIM=sub`: `user/ed532e6b…` → 200 | CLOSED — base deployment `QUARKUS_OIDC_TOKEN_PRINCIPAL_CLAIM=sub` + live env; page `/notifications` 200, list 200 |
+
+### Deep Dive: Queue, Message Broker, Notification (2026-10-07)
+
+#### Kafka Topics & Consumers
+
+| Topic | Producer | Consumer Group | Purpose |
+|---|---|---|---|
+| `payu.account.user-created.v1` | `KafkaUserEventPublisherAdapter` (account-service) | `wallet-service-group` | User registration → wallet provisioning |
+| `payu.account.user-updated.v1` | `KafkaUserEventPublisherAdapter` (account-service) | — | User profile update |
+| `payu.dispute.refund-requested.v1` | dispute-service | `wallet-service-refund-reversal` | Refund reversal execution |
+| `payu.promotion.notification.v1` | `KafkaNotificationAdapter` (promotion-service) | — | Cashback notification |
+
+**Outbox Pattern**: Semua event publish via `OutboxService.createEvent()` — atomic business + event. `MdcKafkaConsumerInterceptor` untuk correlation ID propagation.
+
+#### Notification Service Architecture
+
+```
+NotificationResource (REST API)
+  ├── GET /user/{userId} — list notifications
+  ├── GET /{id} — get by ID
+  ├── POST /{id}/read — mark as read
+  └── POST /send — send notification
+
+NotificationService
+  ├── Idempotency check (IDEMP-003)
+  ├── attemptSendWithFallback()
+  │   ├── SmsSender (fail-closed default)
+  │   ├── PushSender (fail-closed default)
+  │   └── EmailSender (Quarkus Mailer)
+  └── handleFailedNotification()
+      ├── Exponential backoff retry (2, 4, 8 min)
+      └── Max retry → FAILED
+```
+
+**Sender Chain**: SMS → Push → Email. Fail-closed default (provider `NONE` → return false). Recipient masking via `RecipientMasker`.
+
+#### WebSocket & Real-Time
+
+| Component | Status | Catatan |
+|---|---|---|
+| `useWebSocket` hook (frontend) | ✅ Ada | Exponential backoff, reconnect max 10 |
+| `useAnalyticsWebSocket` (frontend) | ✅ Ada | Listen `BALANCE_UPDATE` events |
+| WebSocket server | ❌ Tidak ada | `/ws/analytics` → 404, `/ws/notifications` → 404 |
+| Analytics broadcast | ❌ Tidak ada | Consumer simpan ke DB saja |
+
+#### Redis & Queue
+
+| Usage | Service | Catatan |
+|---|---|---|
+| Velocity check | `VelocityGuard` (transaction-service) | Redis INCR + EXPIRE |
+| Session cache | `authStore` | Zustand in-memory (no persist) |
+| API rate limiting | `gateway-service` | Bucket4j |
+| Scheduled transfers | `ScheduledTransferService` | DB scheduler (bukan Redis queue) |
+
+#### Gateway Route Gaps
+
+| Route | Status | Impact |
+|---|---|---|
+| `/api/v1/notifications` | ✅ Registered | Notification API reachable (verified 200) |
+| `/ws/analytics` | ❌ No WS server | Real-time analytics unavailable (REST fallback) |
+| `/ws/notifications` | ❌ No WS server | Real-time notifications unavailable |
+| `/api/v1/transactions` | ✅ Registered | Transfer works |
+| `/api/v1/wallets` | ✅ Registered | Wallet works |
+
+**Summary**: Dev auth restored (SSO-DEV-KC-001, NOTIF-PRINCIPAL-001 closed) — 44/44 pods Ready, live e2e login-flow 14/14 + notifications 6/6, web-app vitest 1173/1174. The "notification API not exposed via gateway" claim (WEB-OS-006/007/009) was wrong: routing was always present; 401/403/500 traced to the Keycloak-host drift and the principal-claim mismatch. Only WEB-OS-008 (WebSocket server) remains, as a product decision.

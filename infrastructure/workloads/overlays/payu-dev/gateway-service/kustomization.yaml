@@ -52,4 +52,4 @@ patches:
                   - name: QUARKUS_OIDC_TOKEN_ISSUER
                     value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
                   - name: QUARKUS_OIDC_AUTH_SERVER_URL
-                    value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
+                    value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"

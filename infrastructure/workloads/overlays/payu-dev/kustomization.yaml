@@ -139,7 +139,7 @@ images:
   newTag: "1.18.103"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-  newTag: "1.18.102"
+  newTag: "1.18.105"
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newTag: "1.18.74"
@@ -222,8 +222,8 @@ patches:
     metadata:
       name: service-endpoints
     data:
-      KEYCLOAK_SERVER_URL: http://payu-keycloak-service.payu-dev.svc.cluster.local:8080
-      KEYCLOAK_URL: http://payu-keycloak-service.payu-dev.svc.cluster.local:8080
+      KEYCLOAK_SERVER_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
+      KEYCLOAK_URL: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080
 # Web app route uses shared ingress domain (apps.fajjjar.my.id)
 - target:
     kind: Route
@@ -376,13 +376,13 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: PAYU_KEYCLOAK_SERVER_URL
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
 - target:
     kind: Deployment
     name: backoffice-service
@@ -400,11 +400,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: billing-service
@@ -422,11 +422,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: cms-service
@@ -444,11 +444,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: compliance-service
@@ -466,11 +466,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: dispute-service
@@ -488,11 +488,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: fx-service
@@ -510,11 +510,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: integration-service
@@ -532,11 +532,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             # ponytail: dev has no OJK network path; keep report generation off to avoid daily DNS errors
             - name: PAYU_INTEGRATION_OJK_DAILY_REPORT_ENABLED
               value: "false"
@@ -559,11 +559,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: lending-service
@@ -584,11 +584,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: partner-service
@@ -606,13 +606,13 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: PAYU_KEYCLOAK_SERVER_URL
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
             # PARTNER-PROD-005: run SNAP reconciliation every 5 minutes in dev so
             # unmatched cases surface quickly; production keeps the hourly default.
             - name: PAYU_RECONCILIATION_SNAP_INTERVAL_MS
@@ -634,11 +634,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: promotion-service
@@ -656,11 +656,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: statement-service
@@ -678,11 +678,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: support-service
@@ -700,11 +700,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: transaction-service
@@ -722,11 +722,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 - target:
     kind: Deployment
     name: wallet-service
@@ -744,11 +744,11 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 
 # OIDC Issuer patches - Quarkus services
 # Note: Quarkus reads QUARKUS_OIDC_TOKEN_ISSUER, not OIDC_ISSUER.
@@ -776,7 +776,7 @@ patches:
             - name: QUARKUS_OIDC_JWKS_PATH
               value: "/protocol/openid-connect/certs"
             - name: QUARKUS_OIDC_AUTH_SERVER_URL
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
 - target:
     kind: Deployment
     name: gateway-service
@@ -799,7 +799,7 @@ patches:
             - name: QUARKUS_TLS_TRUST_ALL
               value: "true"
             - name: QUARKUS_OIDC_AUTH_SERVER_URL
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
 - target:
     kind: Deployment
     name: notification-service
@@ -821,17 +821,17 @@ patches:
             - name: OIDC_ISSUER
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
             - name: QUARKUS_OIDC_DISCOVERY_ENABLED
               value: "false"
             - name: QUARKUS_OIDC_JWKS_PATH
               value: "/protocol/openid-connect/certs"
             - name: QUARKUS_OIDC_AUTH_SERVER_URL
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
             # loan-origination-process inherits base IdP env (in-cluster shape,
             # preserved as-is — only the namespace segment moves to payu-dev).
 - target:
@@ -849,9 +849,9 @@ patches:
           - name: app
             env:
             - name: OIDC_ISSUER
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
             - name: OIDC_JWK_SET_URI
-              value: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+              value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
 
 # Dev simulators use the profile's local OTLP endpoint; no collector is required.
 - target:
@@ -893,7 +893,7 @@ patches:
       name: frontend-config
     data:
       OIDC_ISSUER: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
-      OIDC_JWK_SET_URI: "http://payu-keycloak-service.payu-dev.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+      OIDC_JWK_SET_URI: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
       KEYCLOAK_URL: "https://sso-dev.apps.fajjjar.my.id"
       NEXT_PUBLIC_BASE_URL: "https://payu-dev.apps.fajjjar.my.id"
 

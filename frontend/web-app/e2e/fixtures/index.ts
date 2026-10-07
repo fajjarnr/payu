@@ -23,6 +23,16 @@ async function performRealLogin(page: Page, username = E2E_USERNAME, password = 
   await page.getByRole('textbox', { name: /Username or email/i }).fill(username);
   await page.getByRole('textbox', { name: /Password/i }).fill(password);
   await page.getByRole('button', { name: /Sign In|Log in|Masuk/i }).click();
+
+  // Handle Keycloak "Update Password" page (temporary password on first login)
+  const updatePassword = page.getByText(/Update Password|Perbarui Password/i);
+  if (await updatePassword.isVisible().catch(() => false)) {
+    const newPassword = process.env.E2E_NEW_PASSWORD ?? 'Dev-customer1-new-2026';
+    await page.locator('#new-password').fill(newPassword);
+    await page.locator('#confirm-password').fill(newPassword);
+    await page.getByRole('button', { name: /Submit|Kirim/i }).click();
+  }
+
   await page.waitForURL('**/dashboard', { timeout: 20000 });
   await expect(page).not.toHaveURL(/\/login\?error=/);
 }

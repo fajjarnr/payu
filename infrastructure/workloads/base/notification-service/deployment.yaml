@@ -169,6 +169,11 @@ spec:
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu
         - name: OIDC_JWK_SET_URI
           value: http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs
+        # Frontend + account-service key users by Keycloak sub; Quarkus would
+        # otherwise name the principal preferred_username and every
+        # /notifications/user/{sub} ownership check 403s.
+        - name: QUARKUS_OIDC_TOKEN_PRINCIPAL_CLAIM
+          value: sub
         - name: OTEL_SDK_DISABLED
           value: "true"
         - name: JAVA_TOOL_OPTIONS

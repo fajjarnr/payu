@@ -127,7 +127,7 @@ test.describe('Login Flow - OIDC PKCE journey (LOGIN-003)', () => {
     const accessCookie = cookies.find((c) => c.name === 'accessToken');
     expect(accessCookie).toBeDefined();
     expect(accessCookie?.httpOnly).toBe(true);
-    expect(accessCookie?.sameSite).toBe('Strict');
+    expect(accessCookie?.sameSite).toBe('Lax');
     const refreshCookie = cookies.find((c) => c.name === 'refreshToken');
     expect(refreshCookie?.httpOnly).toBe(true);
     // The PKCE verifier must be consumed (deleted)

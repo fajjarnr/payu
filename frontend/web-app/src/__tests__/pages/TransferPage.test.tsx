@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
 import TransferPage from '@/app/[locale]/transfer/page';
+import messages from '../../../messages/id.json';
 
 vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dashboard-layout">{children}</div>
   ),
 }));
-
 
 vi.mock('@/stores/authStore', () => ({
   useAuthStore: (selector?: (s: Record<string, unknown>) => unknown) => {
@@ -38,25 +39,33 @@ vi.mock('@/hooks/useTransactions', () => ({
   }),
 }));
 
+function renderWithIntl(ui: React.ReactNode) {
+  return render(
+    <NextIntlClientProvider locale="id" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>
+  );
+}
+
 describe('TransferPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should render within DashboardLayout', () => {
-    render(<TransferPage />);
+    renderWithIntl(<TransferPage />);
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
   it('should render transfer type options', () => {
-    render(<TransferPage />);
+    renderWithIntl(<TransferPage />);
     const transferOptions = screen.getAllByText('Transfer Instan');
     expect(transferOptions.length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('BI-FAST').length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render scheduling options', () => {
-    render(<TransferPage />);
+    renderWithIntl(<TransferPage />);
     expect(screen.getByText('Sekarang')).toBeInTheDocument();
     expect(screen.getByText('Terjadwal')).toBeInTheDocument();
     expect(screen.getByText('Berulang')).toBeInTheDocument();

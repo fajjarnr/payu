@@ -70,18 +70,14 @@ for d in yaml.safe_load_all(sys.stdin):
   done
 done <<<"$root_tags"
 
-REGISTRY="$(oc get route default-route -n openshift-image-registry -o jsonpath='{.spec.host}' 2>/dev/null || true)"
-if [ -n "$REGISTRY" ]; then
-  while IFS= read -r img; do
-    repo="${img#*/}"; repo="${repo%%:*}"; tag="${img##*:}"
-    ns="${repo%%/*}"; name="${repo#*/}"
-    out="$(curl -sk -u "$(oc whoami | tr -d ':'):$(oc whoami -t)" \
-      "https://$REGISTRY/v2/$ns/$name/tags/list" 2>/dev/null || true)"
-    echo "$out" | grep -q "\"$tag\"" || flag "registry tag missing: $img"
-  done < <(oc kustomize "$OVERLAY" 2>/dev/null | grep -E '^[[:space:]]*image: ' | awk '{print $2}' | sort -u | grep -v '^docker.io\|quay.io\|registry.access\|ghcr.io')
-else
-  say "registry route missing — skipping tag check"
-fi
+# ponytail: istag lookup instead of registry v2 API — `oc whoami -t` is empty
+# for system:admin sessions, which made every tag look missing (L-433 guard
+# cried wolf). istag is the same source the deployment actually pulls from.
+while IFS= read -r img; do
+  repo="${img#*/}"; repo="${repo%%:*}"; tag="${img##*:}"
+  name="${repo#*/}"
+  oc get istag "$name:$tag" -n "$NS" -o name >/dev/null 2>&1 || flag "registry tag missing: $img"
+done < <(oc kustomize "$OVERLAY" 2>/dev/null | grep -E '^[[:space:]]*image: ' | awk '{print $2}' | sort -u | grep -v '^docker.io\|quay.io\|registry.access\|ghcr.io')
 
 [ "$FAIL" -eq 0 ] && say "OK: no overlay drift in $NS" || say "FAIL: drift found above"
 exit "$FAIL"
