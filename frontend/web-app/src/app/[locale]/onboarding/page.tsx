@@ -186,6 +186,7 @@ export default function OnboardingPage() {
                             accept="image/*"
                             ref={fileInputRef}
                             className="hidden"
+                            aria-label="Unggah file"
                             onChange={(e) => {
                                 if (e.target.files?.[0]) {
                                     setKtpFile(e.target.files[0]);

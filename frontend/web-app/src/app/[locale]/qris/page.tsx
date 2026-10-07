@@ -54,6 +54,7 @@ export default function QRISPage() {
           ref={fileInputRef}
           onChange={handleFileChange}
           accept="image/*"
+          aria-label="Unggah file"
           className="hidden"
         />
 

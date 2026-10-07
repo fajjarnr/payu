@@ -55,13 +55,13 @@ export default function LandingPage() {
           <div className="flex items-center gap-2.5">
             <Link
               href={'/login'}
-              className="hidden sm:inline-flex min-h-[40px] items-center rounded-full border border-border bg-card px-5 text-sm font-medium transition-colors hover:bg-accent/10 cursor-pointer"
+              className="hidden sm:inline-flex min-h-[44px] items-center rounded-full border border-border bg-card px-5 text-sm font-medium transition-colors hover:bg-accent/10 cursor-pointer"
             >
               {t('nav.login')}
             </Link>
             <Link
               href={'/onboarding'}
-              className="hidden sm:inline-flex min-h-[40px] items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
+              className="hidden sm:inline-flex min-h-[44px] items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
             >
               {t('getStarted')}
             </Link>

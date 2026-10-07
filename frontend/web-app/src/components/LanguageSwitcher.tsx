@@ -79,7 +79,7 @@ export default function LanguageSwitcher() {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         className={clsx(
-          'flex items-center gap-2 px-4 py-2.5 rounded-xl',
+          'flex items-center gap-2 px-4 py-2.5 rounded-xl min-h-[44px] min-w-[44px]',
           'text-xs font-bold tracking-widest border border-primary/10 bg-card shadow-md',
           'hover:bg-primary/5 hover:border-primary/30 text-foreground',
           'focus:outline-none focus:ring-4 focus:ring-primary/10',

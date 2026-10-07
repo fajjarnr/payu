@@ -261,6 +261,7 @@ function QuickActionItem({ action, isEditMode, isFirst, isLast, onMoveUp, onMove
             disabled={isFirst}
             onClick={onMoveUp}
             aria-label={`Pindahkan ${action.label} ke atas`}
+            className="min-h-[44px] min-w-[44px]"
           >
             Naik
           </Button>
@@ -269,6 +270,7 @@ function QuickActionItem({ action, isEditMode, isFirst, isLast, onMoveUp, onMove
             disabled={isLast}
             onClick={onMoveDown}
             aria-label={`Pindahkan ${action.label} ke bawah`}
+            className="min-h-[44px] min-w-[44px]"
           >
             Turun
           </Button>

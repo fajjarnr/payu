@@ -25,7 +25,7 @@ export default function MobileHeader({
             onClick={() => router.back()}
             aria-label="Kembali"
             icon={<ArrowLeft className="h-5 w-5" />}
-            className="-ml-2 rounded-full hover:bg-muted transition-colors"
+            className="-ml-2 rounded-full hover:bg-muted transition-colors min-h-[44px] min-w-[44px]"
           />
         )}
         <Typography.Title
