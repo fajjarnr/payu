@@ -211,10 +211,10 @@ export default function CardsPage() {
                         <h3 className="text-lg font-bold">Limit Harian</h3>
                         <Button shape="circle" className="min-h-[44px] min-w-[44px] bg-white/5 border-white/10 hover:bg-white/10"
                           onClick={handleOpenLimitModal}
+                          aria-label="Pengaturan kartu"
                         >
                           <Sliders className="h-4 w-4 text-emerald-400" />
                         </Button>
-                      </div>
 
                       <div className="space-y-6">
                         <div>

@@ -246,6 +246,7 @@ export default function ScheduledTransfersPage() {
                             size="small"
                             onClick={() => handlePause(transfer)}
                             disabled={pauseTransfer.isPending}
+                            aria-label="Jeda transfer terjadwal"
                           >
                             {pauseTransfer.isPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -257,6 +258,7 @@ export default function ScheduledTransfersPage() {
                             size="small"
                             onClick={() => handleOpenEditModal(transfer)}
                             disabled={updateTransfer.isPending}
+                            aria-label="Edit transfer terjadwal"
                           >
                             <Edit3 className="h-4 w-4" />
                           </Button>
@@ -268,6 +270,7 @@ export default function ScheduledTransfersPage() {
                           size="small"
                           onClick={() => handleResume(transfer)}
                           disabled={resumeTransfer.isPending}
+                          aria-label="Lanjutkan transfer terjadwal"
                         >
                           {resumeTransfer.isPending ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -284,6 +287,7 @@ export default function ScheduledTransfersPage() {
                           className="text-error hover:bg-error/10"
                           onClick={() => handleOpenCancelModal(transfer)}
                           disabled={cancelTransfer.isPending}
+                          aria-label="Hapus transfer terjadwal"
                         >
                           {cancelTransfer.isPending ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

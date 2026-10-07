@@ -127,6 +127,7 @@ export default function BackofficeLayout({
                 className="min-h-[44px] min-w-[44px] p-0 lg:hidden"
                 onClick={() => setIsSidebarOpen(true)}
                 icon={<Menu className="h-6 w-6" />}
+                aria-label="Buka menu navigasi"
               />
               <div className="hidden md:flex flex-col">
                 <h2 className="text-xl font-bold text-foreground">
@@ -153,6 +154,7 @@ export default function BackofficeLayout({
                 type="text"
                 className="relative h-12 w-12 rounded-xl bg-muted/30 border border-border"
                 icon={<Bell className="h-5 w-5 text-muted-foreground" />}
+                aria-label="Notifikasi"
               >
                 <span className="absolute top-3 right-3 h-2 w-2 bg-primary rounded-full border-2 border-background" />
               </Button>

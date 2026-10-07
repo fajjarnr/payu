@@ -235,10 +235,10 @@ export default function TransferPage() {
                     data-testid="back-from-review-button"
                     onClick={() => setShowReview(false)}
                     className="w-14 h-14 bg-card rounded-xl border border-border shadow-sm"
+                    aria-label="Kembali"
                   >
                     <ChevronRight className="h-6 w-6 rotate-180" />
                   </Button>
-                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Tinjau Transfer</h2>
                 </div>
 
                 <div className="bg-card rounded-xl p-5 sm:p-6 shadow-card border border-border relative overflow-hidden group">

@@ -139,10 +139,10 @@ export default function CMSPage() {
       align: 'right',
       render: () => (
         <div className="flex items-center justify-end gap-2">
-          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Eye className="h-4 w-4" />} />
-          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Edit className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Eye className="h-4 w-4" />} aria-label="Lihat detail" />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Edit className="h-4 w-4" />} aria-label="Edit konten" />
           <Dropdown trigger={['click']} placement="bottomRight" menu={{ items: contentMenuItems }}>
-            <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} />
+            <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} aria-label="Aksi lainnya" />
           </Dropdown>
         </div>
       ),
@@ -224,13 +224,13 @@ export default function CMSPage() {
                 Showing <span className="text-foreground">{filteredContent.length}</span> results
               </p>
               <div className="flex items-center gap-2">
-                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronLeft className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronLeft className="h-4 w-4" />} aria-label="Halaman sebelumnya" />
                 <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
                   1
                 </div>
                 <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center">2</Button>
                 <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center">3</Button>
-                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronRight className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronRight className="h-4 w-4" />} aria-label="Halaman berikutnya" />
               </div>
             </div>
           </div>

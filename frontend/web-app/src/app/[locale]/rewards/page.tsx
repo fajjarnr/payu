@@ -330,7 +330,7 @@ export default function RewardsPage() {
                         <div className="bg-surface/10 rounded-xl p-6 mb-6 border border-surface/10">
                           <div className="flex items-center justify-between">
                             <span className="text-4xl font-bold tracking-widest">{referralStats.code}</span>
-                              <Button shape="circle" type="text" className="h-12 w-12 bg-surface/10 rounded-lg border border-surface/10 hover:bg-surface/30 transition-all text-surface">
+                              <Button shape="circle" type="text" className="h-12 w-12 bg-surface/10 rounded-lg border border-surface/10 hover:bg-surface/30 transition-all text-surface" aria-label="Salin kode">
                                 <Copy className="h-6 w-6" />
                               </Button>
                           </div>

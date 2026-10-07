@@ -130,7 +130,7 @@ export default function KycReviewsPage() {
         <Button
           onClick={() => setPage(p => Math.max(0, p - 1))}
           disabled={page === 0}
-          className="h-10 px-6 gap-2 font-bold uppercase tracking-widest"
+          className="h-11 px-6 gap-2 font-bold uppercase tracking-widest"
         >
           <ChevronLeft className="h-4 w-4" /> Sebelumnya
         </Button>
@@ -138,7 +138,7 @@ export default function KycReviewsPage() {
         <Button
           onClick={() => setPage(p => p + 1)}
           disabled={reviews.length < 20}
-          className="h-10 px-6 gap-2 font-bold uppercase tracking-widest"
+          className="h-11 px-6 gap-2 font-bold uppercase tracking-widest"
         >
           Selanjutnya <ChevronRight className="h-4 w-4" />
         </Button>

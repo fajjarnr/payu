@@ -107,9 +107,10 @@ export default function MerchantDashboard() {
          <div>
           <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">{t('publicKey')}</p>
           <Input.TextArea
-           readOnly
-           className="w-full bg-muted/30 p-3 rounded-lg mt-1 h-24 font-mono text-sm resize-none border-0"
-           value={partner.publicKey || t('noPublicKey')}
+            aria-label="Public key"
+            readOnly
+            className="w-full bg-muted/30 p-3 rounded-lg mt-1 h-24 font-mono text-sm resize-none border-0"
+            value={partner.publicKey || t('noPublicKey')}
           />
          </div>
         </div>

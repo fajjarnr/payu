@@ -88,10 +88,10 @@ export default function BillsPage() {
       <Button type="default"
        onClick={() => setSelectedBiller(null)}
        className="h-12 w-12 rounded-xl"
+       aria-label="Kembali"
       >
        <ChevronRight className="h-6 w-6 rotate-180" />
       </Button>
-      <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Bayar {selectedBiller.name}</h2>
      </div>
 
      <div className="bg-card rounded-2xl p-6 sm:p-10 border border-border relative overflow-hidden group shadow-sm">

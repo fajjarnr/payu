@@ -68,11 +68,10 @@ export default function SpendingInsights({
         <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
           <Button
             type="default"
-            size="small"
             onClick={() => setViewMode('category')}
             aria-label="Tampilan per kategori"
             className={clsx(
-              'px-3 py-1.5 h-auto text-xs font-extrabold transition-all',
+              'px-3 py-1.5 min-h-[44px] min-w-[44px] text-xs font-extrabold transition-all',
               viewMode === 'category' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
             )}
             aria-pressed={viewMode === 'category'}
@@ -81,11 +80,10 @@ export default function SpendingInsights({
           </Button>
           <Button
             type="default"
-            size="small"
             onClick={() => setViewMode('monthly')}
             aria-label="Tampilan bulanan"
             className={clsx(
-              'px-3 py-1.5 h-auto text-xs font-extrabold transition-all',
+              'px-3 py-1.5 min-h-[44px] min-w-[44px] text-xs font-extrabold transition-all',
               viewMode === 'monthly' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
             )}
             aria-pressed={viewMode === 'monthly'}

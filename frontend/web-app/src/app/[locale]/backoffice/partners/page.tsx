@@ -116,9 +116,9 @@ export default function PartnersPage() {
       align: 'right',
       render: () => (
         <div className="flex items-center justify-end gap-2">
-          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<ExternalLink className="h-4 w-4" />} />
-          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Settings className="h-4 w-4" />} />
-          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<ExternalLink className="h-4 w-4" />} aria-label="Buka tautan eksternal" />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Settings className="h-4 w-4" />} aria-label="Pengaturan partner" />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} aria-label="Aksi lainnya" />
         </div>
       ),
     },
@@ -192,11 +192,11 @@ export default function PartnersPage() {
                 Partner Portal & SNAP BI Registry Syncing
               </p>
               <div className="flex items-center gap-2">
-                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} aria-label="Halaman sebelumnya" />
                 <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
                   1
                 </div>
-                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} aria-label="Halaman berikutnya" />
               </div>
             </div>
           </div>

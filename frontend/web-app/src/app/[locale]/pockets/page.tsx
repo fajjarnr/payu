@@ -275,7 +275,7 @@ export default function PocketsPage() {
                                     </div>
 
                                     <div className="absolute bottom-6 right-6">
-                                        <Button type="text" icon={<ArrowUpRight className="h-6 w-6" />} className="p-4 bg-primary-dark/10 text-primary rounded-xl shadow-sm border border-primary/20 hover:bg-primary-dark hover:text-surface transition-all active:scale-95" />
+                                        <Button type="text" icon={<ArrowUpRight className="h-6 w-6" />} className="p-4 bg-primary-dark/10 text-primary rounded-xl shadow-sm border border-primary/20 hover:bg-primary-dark hover:text-surface transition-all active:scale-95" aria-label="Buka detail" />
                                     </div>
                                 </div>
                             </div>
@@ -589,7 +589,7 @@ export default function PocketsPage() {
                                                                     )}>
                                                                         {member.role}
                                                                     </span>
-                                                                    <Button type="text" icon={<MoreVertical className="h-3 w-3 text-muted-foreground" />} className="min-h-[44px] min-w-[44px] hover:bg-muted rounded transition-colors" />
+                                                                    <Button type="text" icon={<MoreVertical className="h-3 w-3 text-muted-foreground" />} className="min-h-[44px] min-w-[44px] hover:bg-muted rounded transition-colors" aria-label="Aksi lainnya" />
                                                                 </div>
                                                             </div>
                                                         ))}

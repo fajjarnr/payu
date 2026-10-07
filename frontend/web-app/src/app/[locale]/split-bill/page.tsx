@@ -213,18 +213,21 @@ export default function SplitBillPage() {
               {participants.map((p, i) => (
                 <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.4fr_auto] gap-3 items-center">
                   <Input id={`splitbill-participant-accountId-${i}`}
+                    aria-label={`ID akun peserta ${i + 1}`}
                     placeholder="Account ID"
                     value={p.accountId}
                     onChange={(e) => updateParticipant(i, 'accountId', e.target.value)}
                     className="h-11"
                   />
                   <Input id={`splitbill-participant-accountNumber-${i}`}
+                    aria-label={`Nomor rekening peserta ${i + 1}`}
                     placeholder="No. Rekening"
                     value={p.accountNumber}
                     onChange={(e) => updateParticipant(i, 'accountNumber', e.target.value)}
                     className="h-11"
                   />
                   <Input id={`splitbill-participant-accountName-${i}`}
+                    aria-label={`Nama peserta ${i + 1}`}
                     placeholder="Nama"
                     value={p.accountName}
                     onChange={(e) => updateParticipant(i, 'accountName', e.target.value)}

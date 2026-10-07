@@ -143,10 +143,10 @@ function OfferCard({ offer }: OfferCardProps) {
                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
+            aria-label="Lihat selengkapnya"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
-        </div>
 
         {offer.minTransaction && (
           <p className="text-xs text-muted-foreground mt-3 font-medium">
