@@ -212,6 +212,32 @@
     transform: translateY(0);
   }
 }
+@keyframes checkmark-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@layer utilities {
+  .animate-checkmark {
+    animation: checkmark-pop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-checkmark {
+      animation: none;
+    }
+  }
+}
 
 @keyframes float-3d {
   0%,
