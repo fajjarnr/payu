@@ -63,7 +63,7 @@ export default function AnalyticsPage() {
   // ponytail: Money string HALF_EVEN 4 preferred, number legacy — chart coerces via Number()
   const trajectoryData: { day: string; masuk: number | string; keluar: number | string }[] = (analytics?.trajectoryData ?? []) as { day: string; masuk: number | string; keluar: number | string }[]
 
-  const PIE_PALETTE = ['#0a6b48', '#34d399', '#f59e0b', '#8b5cf6', '#f43f5e', '#64748b'];
+  const PIE_PALETTE = ['#00D09C', '#34d399', '#f59e0b', '#8b5cf6', '#f43f5e', '#64748b'];
   const breakdownData = analyticsData.spendingBreakdown.map((cat, i) => ({
     name: cat.label,
     value: cat.amount,
@@ -71,8 +71,8 @@ export default function AnalyticsPage() {
   }))
 
   // Canvas-rendered charts cannot resolve CSS var() colors, so use literals.
-  // Primary matches the antd colorPrimary token (#0a6b48).
-  const PRIMARY = '#0a6b48';
+  // Primary matches the DESIGN.md primary token (#00D09C).
+  const PRIMARY = '#00D09C';
   const TRACK = '#9ca3af';
 
   return (

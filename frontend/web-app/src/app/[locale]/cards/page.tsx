@@ -131,12 +131,12 @@ export default function CardsPage() {
               {/* Left: Digital Card & Primary Actions (8 units) */}
           <div className="md:col-span-12 lg:col-span-8">
             <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 lg:p-8 h-full relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] -z-0" />
+                    <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-0" />
 
                     <div className="relative z-10 flex flex-col items-center justify-center gap-6 h-full">
                       {/* Digital Card Visualization */}
                       <div className="w-full max-w-[440px] aspect-[1.586/1] rounded-2xl relative overflow-hidden shadow-2xl group-hover:scale-[1.01] transition-all duration-700 border border-white/10">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-400" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-dark" />
                         <div className="absolute inset-0 bg-white/5" />
                         <div className="absolute -top-8 -right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
 
@@ -172,7 +172,7 @@ export default function CardsPage() {
                         <Button
                           type="primary"
                           onClick={() => setShowFullDetails(!showFullDetails)}
-                          className="bg-gray-950 hover:bg-emerald-600 shadow-lg text-white"
+                          className="bg-secondary hover:bg-primary-dark shadow-lg text-white"
                         >
                           {showFullDetails ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
                           Detail Kartu
@@ -185,7 +185,7 @@ export default function CardsPage() {
                         <Button onClick={handleOpenLimitModal}>
                           <Settings className="h-4 w-4 mr-2" /> Ubah Limit
                         </Button>
-                        <Button danger className="text-red-500 hover:bg-red-500/10 hover:text-red-500"
+                        <Button danger className="text-error hover:bg-error/10 hover:text-error"
                           onClick={handleOpenDeleteModal}
                           disabled={deleteCard.isPending}
                         >
@@ -203,8 +203,8 @@ export default function CardsPage() {
 
               {/* Right: Daily Limit (4 units) Styled after Profil Risiko */}
           <div className="md:col-span-12 lg:col-span-4">
-            <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 lg:p-8 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[320px]">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[60px]" />
+            <div className="bg-secondary rounded-2xl p-5 sm:p-6 lg:p-8 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[320px]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
 
                     <div className="relative z-10">
                       <div className="flex justify-between items-center mb-6">
@@ -213,7 +213,7 @@ export default function CardsPage() {
                           onClick={handleOpenLimitModal}
                           aria-label="Pengaturan kartu"
                         >
-                          <Sliders className="h-4 w-4 text-emerald-400" />
+                          <Sliders className="h-4 w-4 text-primary" />
                         </Button>
 
                       <div className="space-y-6">
@@ -223,11 +223,11 @@ export default function CardsPage() {
                         </div>
 
                         <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-center gap-3">
-                          <div className="h-8 w-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                          <div className="h-8 w-8 bg-primary/20 rounded-lg flex items-center justify-center">
+                            <ShieldCheck className="h-4 w-4 text-primary" />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-emerald-400">Status Aktif</p>
+                            <p className="text-xs font-bold text-primary">Status Aktif</p>
                             <p className="text-xs text-white/40 font-medium tracking-tight">Terlindungi Protokol Keamanan</p>
                           </div>
                         </div>
@@ -236,10 +236,10 @@ export default function CardsPage() {
 
                     <div className="relative z-10 space-y-4">
                         <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.5)]" style={{ width: `${limitForm.dailyLimit > 0 ? Math.min(100, (((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}%` }} />
+                        <div className="h-full bg-primary rounded-full shadow-[0_0_15px_rgba(0,208,156,0.5)]" style={{ width: `${limitForm.dailyLimit > 0 ? Math.min(100, (((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}%` }} />
                       </div>
                       <div className="flex justify-between items-end">
-                        <p className="text-xs font-bold text-emerald-400">{limitForm.dailyLimit > 0 ? Math.round((((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}% Terpakai</p>
+                        <p className="text-xs font-bold text-primary">{limitForm.dailyLimit > 0 ? Math.round((((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}% Terpakai</p>
                         <p className="text-xs font-bold text-white/40 tabular-nums">Limit: Rp {(limitForm.dailyLimit / 1000000).toFixed(1)}jt</p>
                       </div>
                       <Button
@@ -267,13 +267,13 @@ export default function CardsPage() {
                     <div className="flex justify-between items-start mb-6">
                       <div className={clsx(
                         "h-10 w-10 rounded-xl flex items-center justify-center border transition-all",
-                        item.status ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600" : "bg-muted/50 border-border text-muted-foreground"
+                        item.status ? "bg-primary/10 border-primary/20 text-primary" : "bg-muted/50 border-border text-muted-foreground"
                       )}>
                         <item.icon className="h-5 w-5" />
                       </div>
                       <span className={clsx(
                         "text-xs font-bold px-2 py-0.5 rounded-full tracking-widest",
-                        item.status ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground/60"
+                        item.status ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground/60"
                       )}>{item.tag}</span>
                     </div>
                     <div>
@@ -282,7 +282,7 @@ export default function CardsPage() {
                       <p className="text-xs text-muted-foreground font-medium opacity-60 leading-tight">{item.desc}</p>
                     </div>
                     <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
-                      <span className="text-xs font-bold text-emerald-600 tracking-widest uppercase">Atur Izin</span>
+                      <span className="text-xs font-bold text-primary tracking-widest uppercase">Atur Izin</span>
                       <Switch defaultChecked={item.status} aria-label={`Atur Izin ${item.label}`} />
                     </div>
                   </div>
@@ -291,11 +291,11 @@ export default function CardsPage() {
             </div>
 
             {/* Bottom Banner Area (Full Width) Styled after Target Portofolio Banner */}
-            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-5 sm:p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px]" />
+            <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 sm:p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
               <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
-                <div className="h-14 w-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
-                  <SecurityIcon className="h-7 w-7 text-emerald-500" />
+                <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-inner">
+                  <SecurityIcon className="h-7 w-7 text-primary" />
                 </div>
                 <div className="space-y-1">
                   <h4 className="text-lg font-bold text-foreground">Protokol Keamanan Aktif.</h4>
@@ -304,7 +304,7 @@ export default function CardsPage() {
                   </p>
                 </div>
               </div>
-              <Button type="primary" className="shadow-xl shadow-emerald-500/10 whitespace-nowrap relative z-10 h-14">
+              <Button type="primary" className="shadow-xl shadow-primary/10 whitespace-nowrap relative z-10 h-14">
                 Upgrade Sekarang
               </Button>
             </div>
@@ -319,8 +319,8 @@ export default function CardsPage() {
           {updateCard.isError && (
             <Alert
               type="error"
-              className="bg-red-500/10 border-red-500/20 p-4"
-              description={<span className="text-red-500">Gagal mengubah limit. Silakan coba lagi.</span>}
+              className="bg-error/10 border-error/20 p-4"
+              description={<span className="text-error">Gagal mengubah limit. Silakan coba lagi.</span>}
             />
           )}
 
@@ -374,8 +374,8 @@ export default function CardsPage() {
           {deleteCard.isError && (
             <Alert
               type="error"
-              className="bg-red-500/10 border-red-500/20 p-4"
-              description={<span className="text-red-500">Gagal menghapus kartu. Silakan coba lagi.</span>}
+              className="bg-error/10 border-error/20 p-4"
+              description={<span className="text-error">Gagal menghapus kartu. Silakan coba lagi.</span>}
             />
           )}
 

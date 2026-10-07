@@ -180,12 +180,12 @@ export default function FinancialHealthScore({
                 cy="60"
                 r="54"
                 fill="none"
-                stroke={score >= 70 ? 'hsl(var(--primary))' : score >= 50 ? 'hsl(45, 93%, 47%)' : 'hsl(var(--destructive))'}
+                stroke={score >= 70 ? 'hsl(var(--primary))' : score >= 50 ? 'hsl(var(--warning))' : 'hsl(var(--destructive))'}
                 strokeWidth="10"
                 strokeLinecap="round"
                 strokeDasharray={strokeDasharray}
                 strokeDashoffset={strokeDashoffset}
-                className="filter drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                className="filter drop-shadow-[0_0_8px_rgba(0,208,156,0.3)]"
               />
             </svg>
 

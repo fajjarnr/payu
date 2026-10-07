@@ -11,8 +11,8 @@ import { cn } from '@/lib/utils';
 export const description = 'Statistik performa investasi dalam format radial';
 
 // Canvas-rendered charts cannot resolve CSS var() colors, so use literals.
-// Primary matches the antd colorPrimary token (#0a6b48).
-const PRIMARY = '#0a6b48';
+// Primary matches the DESIGN.md primary token (#00D09C).
+const PRIMARY = '#00D09C';
 
 interface InvestmentPerformanceProps {
   className?: string;

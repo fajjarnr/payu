@@ -19,12 +19,12 @@ export interface VIPStatus {
 }
 
 const TIER_CONFIG: Record<SegmentTier, { label: string; color: string }> = {
-  BRONZE: { label: 'Bronze', color: '#cd7f32' },
-  SILVER: { label: 'Silver', color: '#c0c0c0' },
-  GOLD: { label: 'Gold', color: '#ffd700' },
-  PLATINUM: { label: 'Platinum', color: '#e5e4e2' },
-  DIAMOND: { label: 'Diamond', color: '#b9f2ff' },
-  VIP: { label: 'VIP', color: '#10b981' },
+  BRONZE: { label: 'Bronze', color: '#cd7f32' }, // No DESIGN.md match — metallic brown
+  SILVER: { label: 'Silver', color: '#c0c0c0' }, // No DESIGN.md match — metallic gray
+  GOLD: { label: 'Gold', color: 'var(--color-warning)' }, // Maps to DESIGN.md warning #FFB800
+  PLATINUM: { label: 'Platinum', color: '#e5e4e2' }, // No DESIGN.md match — metallic silver-white
+  DIAMOND: { label: 'Diamond', color: '#b9f2ff' }, // No DESIGN.md match — ice blue
+  VIP: { label: 'VIP', color: 'var(--color-primary)' }, // Maps to DESIGN.md primary #00D09C
 };
 
 const VIP_BENEFITS = {

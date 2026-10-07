@@ -440,7 +440,7 @@ export default function TransferPage() {
                                   key={d}
                                   onClick={() => form.setFieldsValue({ recurringDay: d })}
                                   className={clsx(
-                                    "aspect-square rounded-xl flex items-center justify-center font-bold text-sm transition-all active:scale-90",
+                                    "aspect-square min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center font-bold text-sm transition-all active:scale-90",
                                     recurringDay === d
                                       ? "bg-primary text-surface shadow-lg shadow-primary/30 scale-105"
                                       : "bg-card text-foreground/60 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20"

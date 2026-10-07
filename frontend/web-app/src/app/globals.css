@@ -126,7 +126,14 @@
   /* Accessible Success Colors for Dark Mode */
   --success: 160 84% 55%;
   --success-foreground: 160 20% 3%;
-}
+
+  /* Dark mode primary and semantic colors */
+  --primary: 160 84% 55%;
+  --primary-foreground: 160 20% 3%;
+  --destructive: 0 84% 60%;
+  --ring: 160 84% 55%;
+  --warning: 45 93% 47%;
+  --info: 199 89% 48%;
 
 /* High Contrast Mode Support */
 @media (prefers-contrast: high) {

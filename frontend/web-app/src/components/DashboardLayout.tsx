@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Calendar,
   History,
+  Search,
 } from '@/components/icons';
 import { useTranslations, useLocale } from 'next-intl';
 import { useUIStore } from '@/stores';
@@ -55,6 +56,7 @@ export default function DashboardLayout({
   const { token } = theme.useToken();
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const mainMenu = [
     { href: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
@@ -225,6 +227,18 @@ export default function DashboardLayout({
               className="hidden w-80 xl:flex"
             />
 
+            {/* Below xl the inline search collapses; keyboard users reach it
+                through this 44px trigger and the drawer it opens. */}
+            <Button
+              type="text"
+              className="xl:hidden"
+              data-testid="search-trigger"
+              icon={<Search className="h-5 w-5" aria-hidden="true" />}
+              aria-label="Buka pencarian"
+              onClick={() => setSearchOpen(true)}
+              style={{ width: 44, height: 44 }}
+            />
+
             <Badge dot color={token.colorPrimary} offset={[-4, 4]}>
               <Button
                 type="text"
@@ -282,6 +296,24 @@ export default function DashboardLayout({
         }}
       >
         {sidebarMenu}
+      </Drawer>
+
+      <Drawer
+        placement="top"
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        height="auto"
+        title="Pencarian cerdas"
+        styles={{ body: { padding: 16 } }}
+      >
+        <Input.Search
+          aria-label="Pencarian cerdas"
+          data-testid="search-input-mobile"
+          placeholder="Pencarian cerdas..."
+          allowClear
+          autoFocus
+          className="w-full"
+        />
       </Drawer>
 
       <MobileNav />
