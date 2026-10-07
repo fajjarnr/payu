@@ -2,19 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.104] - 2026-10-07
+
+### Fixed
+
+- **Layout dashboard mobile-first (2026-10-07)**: urutan `BalanceCard` sebelum `BannerCarousel` di `src/app/[locale]/dashboard/page.tsx` agar konten prioritas (LCP) tampil lebih dulu.
+- **Shell dashboard adaptif (2026-10-07)**: `DashboardLayout` `max-w-[1200px]` + fallback `100vh→100dvh` + header responsif 64px/80px + clearance bottom-nav via safe-area padding.
+- **MobileNav 5 tab (2026-10-07)**: dashboard/transfer/qris/cards/settings dengan tap target min 44px dan label uppercase.
+
 ## [Unreleased]
 
 ### Removed
+
 - **Dead KYC producer + topic (hygiene, tanpa image baru)**: `UserEventPublisherPort.publishKycCompleted` tanpa caller + topic `payu.account.kyc-completed.v1` (+`.dlq`) tanpa consumer maupun producer (alur KYC live lewat `payu.kyc.verified.v1` kyc-service → analytics langsung). Hapus method port + adapter + const + test pengunci + deklarasi `KafkaTopic` (live topic + DLQ dihapus, NotFound terverifikasi). Consumer lag grup analytics 0 di semua partisi pasca-fix (tak ada event stranded). `kycStatus` metrik tak dibaca UI mana pun — tak ada perubahan perilaku; ikut build account berikut. Bukti: adapter test 2/2 hijau.
 
 ### Added
+
 - **Drift guard `scripts/verify-overlay-drift.sh` + root tag sync**: audit per-service overlay render vs live (image, env) + root-vs-service tag agreement + registry tag existence. Menemukan: root pin basi (analytics/tx/wallet) → sinkron ke tag live (`1.18.103`/`1.8.116`/`1.18.103`) agar root-apply tak downgrade; 171 baris env base-vs-live fleet-wide (sejak ≤1.7.9, imperative apply, tanpa GitOps) → item `PLAT-DRIFT-001` antre maintenance window, bukan apply massal siang hari. HotRod wallet dicoba lalu di-revert (konteks SSL DataGrid butuh cert platform — fail-open status quo dipertahankan).
 - **E2E recipient number alignment (`V114`)**: `V113` invented `1001002001`, but the canonical `money-journey.spec.ts` sends customer2 as historic `1001001002` (RELAY-002). `V114` renames the 0004 account number (idempotent guarded UPDATE); live COMPLETED proof to `1001001002`. Full suites: web-app 101 files 1189 pass; tx 232/240 (8 errors = Testcontainers needs Docker, absent here — covered by Tekton); account adapter suites green.
 
 ### Changed
+
 - **Migrasi UI web-app ke Ant Design (`dd1c0dc00`)**: `frontend/web-app` migrasi penuh ke `antd ^6.6.5` (+ `@ant-design/cssinjs`, `@ant-design/icons`, `@ant-design/plots` untuk charts); `src/components/icons.ts` kini alias `@ant-design/icons`; hapus dependensi `radix-ui`, `framer-motion`, `lucide-react`, `recharts`, `sonner`, `class-variance-authority`, `@dnd-kit`, `react-hook-form`, `@hookform/resolvers` (semua ABSENT dari package.json); `clsx`/`tailwind-merge` tetap. Skala: 127 files changed, 6892 insertions, 9578 deletions. Verifikasi: `tsc --noEmit` exit 0, `eslint .` 0 errors (7 warnings), `vitest run` 99 files / 1167 passed / 1 skipped, `check:i18n` 572=572. Shim mati `ui/Logo.tsx` + `ui/Motion.tsx` + 19 blok `vi.mock` stale dihapus di commit ini.
 
 ### Fixed
+
 - **Local compose docs state `--profile apps` (E2E-FULL-06)**: bare `podman compose ... up -d` starts the 7 infrastructure services only (no `profiles:`); the 30 backend/web-app/simulator services carry `profiles: [apps]`, so the full stack needs `--profile apps` (or `COMPOSE_PROFILES=apps`). Corrected `infrastructure/local/podman/README.md`, root `README.md`, `docs/INDEX.md`, `docs/guides/ONBOARDING.md`, `docs/TROUBLESHOOTING.md`, `tests/performance/k6/RUNBOOK.md`, `infrastructure/local/podman/config/BUILD_COMMANDS.md`; fixed the stale `infrastructure/local-podman` path in those docs plus `scripts/test-health-check.sh` (`--profile app` → `apps`), `scripts/setup/setup.sh`, `scripts/setup/verify-env.sh`.
 - **Local compose tooling repaired after dir/service rename**: `0938d5874` moved `infrastructure/local-podman/` → `infrastructure/local/podman/` and `7864a5201` renamed the AMQ broker `artemis` → `payu-broker-hdls-svc`, leaving stale refs that broke real commands. Fixed `containers/manage-podman.sh` CORE (`artemis` → `payu-broker-hdls-svc`) + help text; `Makefile` `podman-test-up/down`/`clean` repointed from the deleted `podman-compose.test.yml` to `podman-compose.yml --profile apps`; `scripts/run-all-tests.sh`, `scripts/seed-test-data.sh`, `scripts/setup/setup.sh` (`--infra` root derivation) + `scripts/setup/verify-env.sh` (root derivation + required-file path), `scripts/backup-dr/{restore_postgres,run_backup,verify_backup_restore}.sh`, `scripts/testing/{run-e2e-container,run_python_tests}.sh` (all `dirname/..` → `/../..` after the scripts subdir move); docs `backend/analytics-service/tests/{README,QUICK_START}.md`, `backend/cms-service/README.md`, `docs/architecture/SERVICE_CATALOG.md`, `docs/operations/PODMAN_MIGRATION_GUIDE.md`, `docs/guides/VAULT.md` (vault needs `--profile secrets`), `.agents/skills/debugging-methodology/SKILL.md` (`podman_payu-network`). Verified: `bash -n` clean on all edited scripts, `manage-podman.sh help` exit 0, `make -n podman-test-up/down` resolve, PyYAML cross-check every referenced service key exists.
 - **Kafka messaging NetworkPolicy egress allow-all (KAFKA-QUORUM-001 recurrence + KAFKA-UAT-001 candidate, git-only, live Argo sync pending)**: `allow-kafka-platform`/`allow-amq-platform`/`allow-kafka-console-platform` egress fine-grained (notably namespaceSelector→`openshift-dns` `:53`) blackholed DNS for Strimzi pods on OVN-Kubernetes (pod-IP OK vs ClusterIP FAIL, dev without policy healthy) → broker `UnknownHostException` voter / `FATAL caught up` 25h+. Fix in `infrastructure/platform/messaging/overlays/common/network-policy.yaml`: egress `- {}` on all three policies (ingress zero-trust unchanged); removed now-dangling `spec.egress.0…` replacement targets from sit/uat/preprod/prod kustomizations (ingress replacement kept). Guard: `test_messaging_kafka_policies_allow_unrestricted_egress` (sit/uat/preprod/prod render: egress contains `{}`, no `:53` port rule) + `test_dev_messaging_has_no_kafka_egress_policy` (dev differential). Bukti: new tests 2/2 OK; overlays sit/uat/preprod/prod/dev render EXIT 0; full contract suite failure set identical before/after (31 pre-existing, unrelated). Live verification pending (no `payu-*` namespaces on reachable cluster; Argo selfHeal will sync on next reconcile — do NOT re-apply manually per L-465).
@@ -57,28 +69,35 @@ All notable changes to this project will be documented in this file.
 ## [1.18.103] - 2026-09-10
 
 ### Fixed
+
 - **Agregasi analytics terisi dari transfer baru (FE-AUDIT-006 remainder)**: consumer `_handle_transaction_completed` crash `NameError transaction_type` → COMPLETED tak pernah persist (event ter-claim lalu rollback → redelivery gagal terus); `_update_user_metrics` bangun row user-baru tapi tak `session.add` → metrics user pertama hilang. Wallet `balance-changed` tanpa `change_amount/type` (cashflow sum nol) → producer kini kirim delta+arah eksplisit di 9 situs (commit DEBIT, release CREDIT, credit/debit, transfer sender/recipient, repayLoan DEBIT, refund-reversal terbalik). Transfer internal resolve `recipientAccountNumber→UUID` via `AccountServicePort.getAccountIdByNumber` (gRPC, CB+fail-safe empty) — sebelumnya nomor rekening dilempar mentah ke wallet → `Wallet not found`. Gateway schema terima string desimal kanonis (`type:[number,string]` + pattern 4dp, 5 field money) — `type:number` melanggar kontrak Money-string frontend + aturan BigDecimal. Bukti: pytest consumer 11/11, handler tx 26/26, wallet 13/13, gateway schema 14/14.
 - **gRPC 9090 tak terekspos (discovery live)**: `account-service` + `transaction-service` Service hanya buka 8080 → semua klien gRPC (`tx→account`, `lending→account`, `statement→tx`) `UNAVAILABLE` connect-timeout. Tambah port `grpc:9090` di kedua base Service (wallet sudah punya). Tanpa ini recipient-resolve di atas takkan pernah sampai.
 
 ### Verified
+
 - **Live money journey COMPLETED + agregasi penuh (FE-AUDIT-006 CLOSED)**: login PKCE scripted customer1 → transfer Rp15.000 string ke `1001002001` → `201 COMPLETED` fee 0; double-entry exact (`750e…0001` −15000, `750e…0004` +15000, DECIMAL 19,4); `transaction_analytics` initiated PENDING + completed COMPLETED; `user_metrics` 1/15000.0000; `wallet_balance_history` DEBIT/CREDIT 15000; REST `…/metrics` by accountId→data vs by sub→null (bukti frontend key-fix 1.18.102 benar). Image live: wallet `:1.18.103`, analytics `:1.18.103`, tx `:1.8.116`, gateway rebuilt `:1.18.74`, account `:1.18.102`; semua rollout converged, RS lama 0.
 - **Drift git-vs-live yang diperbaiki sepanjang sesi**: overlay `auth-service` (WEB secret) + `transaction-service` (Redis) + `analytics-service` (KEYCLOAK_URL) ada di git tapi tak pernah teraplikasi → login 401, velocity 422, fraud 401; `account_id` mapper hilang di live realm (recreate 201); tag overlay tanpa image (`tx:1.8.115`, `analytics:1.18.76`) → ImagePullBackOff (build+push dari source); `V123` ganda (ada `V123__fix_ledger…`) → seed jadi `V124`; rollout 3-replika deadlock spread (maxUnavailable 0 + DoNotSchedule) → pause + scale RS lama 0 + resume.
 
 ## [1.18.102] - 2026-09-10
 
 ### Fixed
+
 - **Query analytics pakai accountId, bukan sub (FE-AUDIT-006)**: event `user_id` = `account_id` claim (konvensi BUG-AUTH-013), WS sudah accountId — tapi dashboard+analytics page query pakai Keycloak sub → nol baris. 5 call-site (`useUserMetrics`/`useCashFlow`/`useSpendingTrends`) → `accountId`. Bukti: TDD merah→hijau (key-identity test 2/2), `tsc` 0, 28/28 analytics suites, image `:1.18.102` live OpenShift root 200 + `/api/health` 200.
 
 ## [1.18.101] - 2026-09-10
 
 ### Fixed
+
 - **Helper float tanpa caller dihapus (FE-AUDIT-004)**: `currency.ts parseCurrency/isValidCurrency/roundCurrency` + `validation.ts validateAmount/parseIndonesianAmount` nol caller produksi (seluruh page amount sudah `parseCurrencyExact`) — dihapus beserta test penguncinya; roundtrip precision test ditulis ulang ke exact-path. `type=number` dibiarkan: input invalid terdegradasi ke reject via exact-parse. Bukti: `tsc` 0, vitest lib/api/proxy 290/290, image `:1.18.101` live OpenShift `payu-dev` root 200 + `/api/health` 200.
 
 ## [1.18.100] - 2026-09-10
+
 ### Fixed
+
 - **Derivasi flag Secure cookie konsisten (FE-AUDIT-002)**: `POST /api/auth/refresh` + `POST /api/auth/logout` baca Secure dari env `NEXT_PUBLIC_BASE_URL` sementara callback/authorize dari request proto (`x-forwarded-proto` aware) → flap bila env=http di belakang LB https (browser tolak overwrite/clear tak matching). Kini request-derived (`x-forwarded-proto` → URL proto → env fallback, param optional jaga caller lama) di kedua route, pola verbatim callback. Bukti: TDD merah→hijau (`derives Secure from the request proto` env http + proto https → `Secure`), vitest 6/6 route + 83/83 auth + `tsc` 0, image `:1.18.100` live OpenShift `payu-dev` root 200 + `/api/health` 200 + `POST /api/auth/refresh` 401 `Set-Cookie: accessToken=; ... Secure; HttpOnly; SameSite=lax`.
 
 ### Verified
+
 - **Full-reload sesi pulih via rehidrasi (RELAY-004, tanpa image baru)**: tanpa perubahan production — regression `proxy-auth.test.ts` (`expired access + valid refresh → 200 + Set-Cookie`, bukan 307 login; 4/4 hijau) buktikan rantai fix 1.18.86/87/99/100 menutup bounce `tab.goto /transfer → /login`. Live `payu-dev`: tanpa cookie → 307 login+callback (gate benar). Keputusan: tanpa persist zustand — token tetap httpOnly (PCI-DSS), `SessionBootstrap` repopulasi dari refresh saat mount; persist hanya bila metrik tunjukkan storm refresh saat reload.
 - **Live realm drift disinkronkan (RELAY-005, tanpa image baru)**: live `payu` hanya `customer1/2+probe1` attrs kosong + `unmanagedAttributePolicy=None` (klaim ENABLED parsial tak bertahan — import CR tak update realm existing, L-377). Via Admin REST: `PUT /users/profile` `unmanagedAttributePolicy→ENABLED` (PUT realm 400 `Unrecognized field` — policy di profile, bukan realm), `customer1/2` attrs+roles per `keycloak-realm-import.yaml` (PUT 200, attrs persist = bukti policy bekerja), `admin`+`backoffice` created 201 + roles. `probe1@x.id` asing dibiarkan. Direct grant mati di `payu-web-app` (PKCE-only) — sengaja tak diubah.
 - **Seed dev permanen (RELAY-010 + FE-AUDIT-007, migrasi ikut build berikut)**: wallet `V124` (5 wallet 10/5/3/5/0jt, SYSTEM bypass V122, tanpa ledger) + account `V113` (users `external_id`=live KC sub + profiles shared-PK + accounts `1001001001/2001/9001`, ON CONFLICT). Live `payu-dev` teraplikasi sbg role `payu` (RLS aktif): wallets exact 5/5, `users⋈accounts` 3/3, re-run 0/0/0; Flyway deploy berikut jadi no-op tercatat. Pelajaran apply: `users/accounts` tanpa SYSTEM hatch → GUC `default`; `profiles` tanpa `user_id`/`created_at` (V10); bare SELECT 0 rows = RLS normal. Runbook `docs/operations/runbooks/dev-seed.md`.
@@ -86,91 +105,109 @@ All notable changes to this project will be documented in this file.
 ## [1.18.99] - 2026-09-10
 
 ### Fixed
+
 - **Race refresh ganda client+server (FE-AUDIT-001)**: tiap 401 proxied (`[...path]/route.ts`) + interceptor axios (`api.ts`) + middleware + silent-refresh berlomba rotasi refresh cookie single-use yang sama → N-1 `invalid_grant` → logout. Sesuai ADR-0039 (BFF satu-satunya refresher, single-flight per sesi): `POST /api/auth/refresh` kini coalesce concurrent same-cookie ke satu upstream rotation via `inflightRotations` (key = cookie, hapus on settle; beda sesi independen). Test lama yang pin 6 rotasi diganti 2 test (coalesce 6→1 + independen per sesi). Bukti: vitest 5/5 route + 79/79 suite api/hooks/services + `tsc` bersih, image `:1.18.99` live `payu-dev` root 200 + `/api/health` 200.
 
 ## [1.18.98] - 2026-09-10
 
 ### Fixed
+
 - **gRPC deadline beku sisa (RELAY-011 remainder)**: `GrpcChannelFactory.blockingStub` + `GrpcChannelSupport.withDeadline` di init → stub shared mati 30 dtk pasca-boot (`DEADLINE_EXCEEDED`). Pola transaction-service (`stubWithDeadline` per-call) kini di billing/fx/investment/promotion/statement `WalletGrpcAdapter` + lending `AccountGrpcClient` + statement `TransactionServiceClient` (lending payment init raw, per-call 3 dtk kept). Factory tambah `interceptedStub` (interceptor tanpa deadline) + regression `GrpcChannelFactoryTest.interceptedStubHasNoFrozenDeadline`. Bukti: starter tests 5/5, 6 service compile+package bersih, bytecode per-call 2/2/2, image `:1.18.98` 6/6 push + pod `payu-dev` 6/6 Running (boot hanya mentok DB, cluster fresh tanpa postgres).
 
 ## [1.18.97] - 2026-09-04
 
 ### Fixed
+
 - **Widget budget tak pernah ada data**: `BudgetTracking` tanpa sumber (prop tak diisi) → `AccountService.getBudgets` + `useBudgets` + wiring dashboard + status derive. Test hook hijau. Catatan: API 403 untuk customer1 (FE-AUDIT-007, tanpa baris User) — widget tampilkan empty state sampai seed.
 
 ## [1.18.96] - 2026-09-04
 
 ### Fixed
+
 - **Riwayat e-statement spinner abadi (L-427)**: early-return tanpa akun tak reset loading + effect sekali jalan → empty state tak pernah tampil. Subscribe `accountId` + refire. Regression + proof relay.
 
 ## [1.18.95] - 2026-09-04
 
 ### Fixed
+
 - **Refresh tak pernah wipe cookie**: Keycloak laporkan race rotasi sebagai 400 invalid_grant — wipe = logout paksa. Sekarang semua status gagal preserve cookie; sesi mati tetap redirect login + SSO re-auth. Test 4/4.
 - **Pipeline event mati total (L-426)**: bean `OutboxPublisher` tak pernah terbuat (condition lawan auto-config order) → 68 event nyangkut; consumer analytics bind `None` + fraud key salah + completed tanpa identitas. Fix starter + `user_id` di event + consumer guard. Drain 68+40 terbukti; tx `:1.8.115`, wallet/analytics `:1.18.75/76`. Catatan: event lama keyed account-id, agregasi user terisi mulai transaksi baru.
 
 ## [1.18.94] - 2026-09-04
 
 ### Fixed
+
 - **Review transfer tanpa nama untuk ketikan manual (L-424)**: penerima resolve cuma dari favorit → fallback ke nomor ketikan (nama + inisial + ID Akun). Helper `resolveReviewContact` ter-export + unit test. Proof relay.
 
 ## [1.18.93] - 2026-09-04
 
 ### Fixed
+
 - **Stat backoffice jujur jilid 3 (L-423)**: footer "SHOWING 4 CAMPAIGNS" vs kosong → live; partners hapus fallback `|| '142/98/12'` + volume '—'; fx provider/market + footer konektor jujur (LIVE/DEGRADED); broadcast sent live; compliance score '—' + logs/high-risk live. Regression `BackofficeStatsPage` 2 test. Proof relay.
 
 ## [1.18.92] - 2026-09-04
 
 ### Fixed
+
 - **Antrian backoffice jujur susulan (L-422)**: "OPEN: 42" customers + stat CMS "—" ×4 → live count + baris akses-ditolak; CMS fetch 4 tipe (tab PROMO/ALERT/POPUP mati by construction sebelumnya). Regression `BackofficeQueuesPage` 2 test. Proof relay.
 
 ## [1.18.91] - 2026-09-04
 
 ### Fixed
+
 - **Counter backoffice jujur (L-421)**: badge "TERTUNDA: 24"/"KRITIS: 12" hardcode padahal API 403 + tabel kosong → hitung dari query (`…` saat loading), baris "AKSES DITOLAK" saat error, command center jadi antrian live (KYC/Fraud/Tiket). Regression hijau. Proof relay.
 
 ## [1.18.90] - 2026-09-04
 
 ### Fixed
+
 - **Analytics hidrasi REST (bukan cuma WS mati)**: halaman analytics cuma baca websocket `/ws/analytics` yang tak pernah connect (tak ada proxy WS) → nol permanen. Sekarang seed dari `useCashFlow`/`useSpendingTrends`, WS override bila ada. Test hidrasi hijau. Catatan: backend kembalikan 0 untuk user bertransaksi (FE-AUDIT-006, agregasi backend).
 
 ## [1.18.89] - 2026-09-04
 
 ### Fixed
+
 - **Kalkulator FX spinner abadi (L-419)**: `useFxRate` di-gate `amount>0` → query disabled di halaman fresh. Gate cukup pair; amount hanya gate estimate. Proof relay: "Unable to fetch exchange rate" (provider eksternal 0/7 terpisah). Duplikat pesan investments dihapus + copy "dari backend" dibersihkan.
 
 ## [1.18.87] - 2026-09-04
 
 ### Fixed
+
 - **Sesi mati di navigasi top-level (L-420)**: cookie sesi `SameSite=Strict` ditahan browser di request navigasi → tiap goto mental login. Cookie sesi → `Lax` (callback/refresh/logout). Proof relay: goto `/pockets` render data langsung.
 
 ## [1.18.86] - 2026-09-04
 
 ### Fixed
+
 - **Rehidrasi middleware via loopback (FE-AUDIT-003)**: self-fetch public URL gagal dari pod (`fetch failed`) → refresh via `127.0.0.1:$PORT`. Bukti log: "Session rehydrated successfully".
 
 ## [1.18.85] - 2026-09-04
 
 ### Fixed
+
 - **Seksi dashboard tak terlihat (L-418)**: `StaggerContainer` `whileInView` + `staggerChildren` orphan-kan anak yang re-render saat query resolve (8 wrapper opacity 0 permanen, bukti relay) → mount-driven `animate="visible"`. `tsc` 0, Motion+dashboard 72 test hijau; image `:1.18.85`, rollout green.
 
 ## [1.18.84] - 2026-09-04
 
 ### Fixed
+
 - **Frontend best-practice audit batch (frontend-architect, 4 slice paralel + Context7)**: `TransactionService.initiateTransfer` kirim Money string utuh (hapus `Number()` — backend `BigDecimal` coerce exact; revisi RELAY-012) + regression `TransferActivityNumericAmount`; `PartnerService.createSnapBiPayment/refundSnapBiPayment` bawa `X-Idempotency-Key` (refund deterministik); `api/auth/refresh` tak lagi wipe cookie saat transient (503/5xx preserve, wipe hanya 401/403/400 — tutup paksa-logout); timeout `AbortSignal` 10s refresh/callback + 5s validasi/10s rehidrasi edge; silent refresh/bootstrap adopsi `user` BFF (tutup split-brain) + `useRefreshToken` onError 401→logout; `useSellInvestment` invalidate key benar (holdings tak lagi stale); hapus slot session mati `AuthService`; log FX diredaksi ke message.
 - **A11y/i18n web-app**: tombol ikon transaksi bernama + 44px; `BalanceCard/InvestmentPerformance/StatsCharts/BeneficiaryManager/PromoPopup/ThemeToggle` → next-intl (namespace baru `beneficiaries`/`promo`, +22 keys, paritas 572/572); menu bahasa semantik + Esc; dots banner hit-area 44px + role group; dismiss alert 44px + keyboard; `MotionConfig reducedMotion="user"` + guard CSS global; teks <12px → floor `text-xs`; cursor-pointer, dot notifikasi, ikon ⚠️.
 - **Dashboard crash `e.replace` (live proof relay)**: `TransferActivity.formatAmount` terima `string | number` (API DECIMAL sebagai JSON number) — `/dashboard` render transaksi asli `-Rp 5.000`, error boundary hilang.
 - **Whitespace hemat + saldo satu baris**: root halaman `space-y-12→6/8`, hero `min-h-400→280/320`, banner `p-16→10`, empty `py-20→8`, header/sidebar dipadatkan; saldo hero cap `lg:text-4xl` (tak lagi wrap 2 baris di kolom ⅓).
 
 ### Added
+
 - **Local Verify + Deploy dev (1.18.84)**: `tsc --noEmit` 0; vitest **95 files 1203 (1202 pass 1 skip)**; `check-i18n-coverage` paritas; eslint file terdampak 0; Context7 `/vercel/next.js` (v16.2.9≈16.2.12) + `/react/react` (v19.2.7≈19.2.3) + `/tailwindlabs/tailwindcss.com` + framer-motion terverifikasi di paket terpasang 12.29.0; image `:1.18.84` push internal registry, `oc apply -k payu-dev/web-app`, rollout green `web-app-79c58f7567-4vdcs` 1/1 `health:200`.
 
 ## [1.18.79] - 2026-09-03
 
 ### Verified
+
 - **money-journey.spec.ts 5/5 (12.2s) vs dev**: REG-VAL-001, LOGIN-J-001, TRF-J-001 (delta eksak via API), TRF-J-002 (memo di riwayat), TRF-J-003 (double-click 1 POST).
 
 ### Fixed
+
 - **Relay E2E full money journey dev (RELAY-001..014, L-411..415)**: live proof `201 COMPLETED` + double-entry `sender -10.000 / recipient +10.000` fee 0 via Chrome+relay clicks (login OIDC → transfer → review → confirm).
 - **Login orphan account (RELAY-001)**: BFF fallback `account-${sub}` vs seeded wallets. Fix: `account_id` protocol mapper + `accountId` attrs (customer1/2/admin) live + `keycloak-realm-import.yaml`; `unmanagedAttributePolicy=ENABLED` (PUT 204 tapi hilang tanpanya).
 - **Transfer confirm mati diam-diam (RELAY-013/TRF-SUBMIT-001)**: `fromAccountId` cuma di-set via kontak favorit → zod gagal tanpa feedback. Fix: `useEffect` default dari session. Regression `money-journey.spec.ts` (REG-VAL-001, LOGIN-J-001, TRF-J-001/002/003; `X-E2E-Test` bypass + skip infra/velocity, `retries: 0`).
@@ -186,11 +223,13 @@ All notable changes to this project will be documented in this file.
 - **Riwayat crash status baru (RELAY-014)**: `statusConfig` tanpa `PENDING_COMPLIANCE_REVIEW`/`PENDING_STEP_UP`/`VALIDATING` → `/transactions` blank. Badge baru.
 
 ### Deployed
+
 - web-app `1.18.79 → 1.18.83` (podman build + push internal registry, overlay `newTag` + `oc apply -k` — git = cluster); transaction-service `1.8.109 → 1.8.113`; overlays `payu-dev/web-app`, `payu-dev/transaction-service`, `payu-dev/analytics-service`, `platform/data/overlays/dev`.
 
 ## [1.18.78] - 2026-09-03
 
 ### Fixed
+
 - **SNAP-BI pre-auth vs FORCE RLS (PAYU-TB-006)**: `partners` `tenant_isolation_partners` hides every row when no tenant is bound; pre-auth SNAP-BI requests carry no tenant header, so `findByClientId` returned empty for ALL partners (`4012502` token, `4012507` payment/status/refund) in production while H2 contract tests stayed green (H2 has no RLS — same blind spot as L-375). Fix: `PartnerService.findByClientIdForAuth` SYSTEM-scoped lookup (sanctioned bypass, secret/token still verified after) + scope request tenant to the authenticated partner so downstream RLS reads (webhook subscriptions) resolve. `PartnerServiceAuthLookupTest` 3/3, `SnapBiTokoBapakContractTest` 5/5. Live proof: token 200 without tenant header, payment `2002500` + settlement.
 - **payu-dev Keycloak client secret drift**: ExternalSecrets `Password` generator minted random 48-char `payu-keycloak-client-secrets` never synced into Keycloak (realm holds `payu-backend-secret-dev-2026!`), breaking every `client_credentials` grant (`WalletSettlementAdapter.platformToken` → settlement 500). Fix: live secret synced to Keycloak-registered value. ESO CRDs are not installed in this cluster, so the generator objects are inert — do not trust them as source of truth.
 - **Public JWKS unreachable from pods (503)**: payu-dev overlay forced `*_JWK_SET_URI=https://sso-dev...` on all Spring services; the public route 503s in- and out-of-cluster, so JWT validation failed (`wallet-service` settlement 401, `AuthenticationServiceException: 503 on GET JWKS`). Fix: JWKS stays in-cluster (`payu-keycloak-service.payu-sso`), public issuer kept for `iss` validation (L-378 pattern). Applied to full-overlay patches + `wallet-service` per-service overlay.
@@ -200,224 +239,282 @@ All notable changes to this project will be documented in this file.
 ## [1.18.77] - 2026-08-30
 
 ### Fixed
+
 - **TokoBapak SNAP-BI E2E (PAYU-TB-001..005) — TokoBapak BELUM → BISA bayar via PayU (api-architect+integration)**: `backend/partner-service` `V23__seed_tokobapak_partner.sql` `INSERT partners(clientId=tokobapak-mvp, clientSecret=tokobapak-mvp-dev-secret-32chars-long!, name=TokoBapak MVP, type=SANDBOX, status=ACTIVE, partner_code=TOKOBAPAK_MVP, tenant_id=tokobapak)` `ON CONFLICT DO NOTHING` + `SELECT set_config('app.tenant_id','SYSTEM',false)` bypass `V22 FORCE RLS` + `backend/wallet-service` `V122__seed_tokobapak_wallets.sql` `ACC_TOKOBAPAK_ESCROW 100000000.0000` + `ACC_SELLER_001/002/003 0` `tenant_id=default` `set_config SYSTEM` + `infrastructure/platform/identity/keycloak/payu-realm-export.json` + `keycloak-realm-import.yaml` `client tokobapak-mvp serviceAccountsEnabled:true directAccessGrants:true secret tokobapak-mvp-dev-secret-32chars-long!` + `backend/partner-service/src/test/java/id/payu/partner/adapter/web/SnapBiTokoBapakContractTest.java` 5/5 `tokobapakValidPaymentReturns2002500AndPublishes` `4002501` missing field `4002502` non-IDR `uq_snap_payment_partner_ref` idempoten + `payu.partner.payment-completed.v1` `OutboxService` `WebhookDispatcherService` mock + `tokobapak/backend/services/payment-service/internal/adapter/client/payu/payu_client.go` `HMAC-SHA512 Base64` `SignForB2B(POST:/v1.0/access-token/b2b:ts:hex(sha256(body)))` + `SignWithToken(POST:/v1.0/transfer-va/payment:token:hex(sha256(body)):ts)` `hashBody` `ACC_TOKOBAPAK_ESCROW`/`ACC_SELLER_001` `POST /v1.0/access-token/b2b` → `POST /v1.0/transfer-va/payment` `X-CLIENT-KEY/X-TIMESTAMP/X-SIGNATURE` → `Authorization Bearer` `X-EXTERNAL-ID` fallback mock only `baseURL==""` + `tokobapak/infrastructure/local/podman-compose.yml:199 PAYU_BASE_URL http://payu-gateway:8080→http://payu-partner-service:8080` + `networks payu-network external podman_payu-network` + `default+payu-network` for `tokobapak-payment-service` `podman exec` `400/MISSING_HEADER` bukan `Connection refused` + `docs/guides/TOKOBAPAK_SNAPBI.md` Go `SignForB2B/Sign` `isTimestampValid ±300s` `4002501/4002502/4012504/4012506/4012502/4002508` + `backend/shared/security-starter TenantDataSource.java:105 bindTenant` H2 `SET LOCAL` `Syntax error` → skip `url.contains(":h2:")` + `backend/loan-origination-process pom.xml` `id.payu.shared:api-commons` missing `id.payu.commons.idempotency.Idempotent` → add `api-commons` dep `BUILD SUCCESS` 23 modules + `backend/shared/security-starter` rebuild.
 - **Gateway RouteRegistry (PAYU-TB-004)**: `backend/gateway-service/src/main/java/id/payu/gateway/application/service/RouteRegistry.java:159` already `registerDefault("v1.0","partner-service","/v1.0")` + `PartnerV10ContractResource` `/v1.0/{path}` → `dispatcher.dispatch("v1.0/"+path)` so `/v1.0/access-token/b2b` + `/v1.0/transfer-va/payment` already routed via `payu-partner-service` — no code change, verified `RouteRegistryTest v1.0→partner-service` PASS + `SnapBiV10ContractTest` 3/3 PASS (after `TenantDataSource` H2 fix).
 
 ### Added
+
 - **Local Dev Verify (1.18.77)**: `mvn -f backend/shared/security-starter/pom.xml clean install` + `mvn -f backend/shared/api-commons/pom.xml clean install` + `mvn -f backend/partner-service/pom.xml test -Dtest=SnapBiTokoBapakContractTest 5/5 PASS` `SnapBiReconciliationServiceTest 9/9 PASS` `WalletServiceIdempotencyTest 7/7 PASS` `Gateway RouteRegistryTest PASS` `mvn -f backend/pom.xml clean package -DskipTests BUILD SUCCESS` 23 modules `cd frontend/web-app && npm run build 86 routes ✓` `tokobapak go vet ./... 0` `go test payment-service 3/3 PASS` `podman compose -f payu/infrastructure/local/podman/podman-compose.yml config 0` `podman compose -f tokobapak/infrastructure/local/podman-compose.yml config 0` `podman network ls podman_payu-network bridge` `TODOS 5→0` `LESSONS L-406` `podman ps` prior `37 healthy`.
 
 ## [1.18.74] - 2026-08-29
 
 ### Fixed
+
 - **Audit API Consistency 1.18.74 (api-architect)**: `gateway application.yaml:169` `allowed-headers` `X-Idempotency-Key,X-Device-Id,X-Signature,X-Timestamp,X-Client-Version` + `exposed-headers X-Idempotency-Key` (was `Content-Type,Authorization,X-Request-Id,X-Correlation-Id,X-Client-Id` only — preflight 403 for financial mutations via gateway). `backend/analytics-service, kyc-service main.py` `allow_headers X-Idempotency-Key + Idempotency-Key (compat) + X-Device-Id,X-Signature,X-Timestamp` + `expose_headers X-Idempotency-Key` (was `Idempotency-Key` tanpa `X-` — mismatch `X-Idempotency-Key` `API_STANDARDS:129` `Stripe/Adyen Context7 max64`, BFF `x-idempotency-key` forward gagal di Python). `kyc/api/v1/kyc.py` `analytics/api/v1/analytics.py` `Header alias X-Idempotency-Key` + `Idempotency-Key fallback` `or idempotency_key_legacy` (was `Idempotency-Key` only — `X-Idempotency-Key` di-drop). `kyc/models/schemas.py:11` `Decimal float(obj)` → `format(obj,'f')` preserve `DECIMAL(19,4) HALF_EVEN` string (was float precision loss). `frontend/web-app` `WalletService createCard/freezeCard/unfreezeCard/updateCard/createPocket` `X-Idempotency-Key` (`getFinancialMutationHeaders`/`idempotencyKeyFor`) + `KYCService start/ktp/selfie` `X-Idempotency-Key` deterministic + `InvestmentService createAccount` `X-Idempotency-Key` + `LendingService createRepaymentSchedule/activatePayLater/calculateCreditScore/checkPreApproval` + `TransactionService cancelTransaction` + `BFF route.ts:374` `1 MiB → 10 MiB` message — header konsisten `X-Idempotency-Key` across gateway/Java/Python/CORS/mobile/BFF.
 
 ### Added
+
 - **Local Dev Verify (1.18.74)**: `npm run lint 0` `npm run build 86 routes ✓` `npm test 95/95 1221` `mvn -f backend/pom.xml clean package -DskipTests BUILD SUCCESS` 23 modules `python3 -m py_compile kyc/analytics main+api+schemas OK` `podman ps` prior `37 healthy` (gateway CORS fix requires restart to apply).
 
 ## [1.18.73] - 2026-08-29
 
 ### Fixed
+
 - **Audit Backend No-Warn (1.18.73)**: `backend/wallet-service` `Pocket.java:40,51` `Wallet.java:59-101` raw `add/subtract` → `setScale(4,HALF_EVEN)` konsisten `Money` `DECIMAL(19,4)` + `PocketPersistenceAdapter` preserve `@Version` polish + `backend/transaction-service` `SplitBillService.java:360` `divide(...,2,DOWN)` → `divide(...,4,HALF_EVEN)` + `TransactionEntity.java:434` `@Column precision=19,scale=4` + PII mask `WalletRestAdapter/WalletGrpcAdapter/InitiateTransferCommandHandler` `amount/recipient` dari `log.info/warn` + `backend/shared/events-starter/pom.xml:118` `source/target 21→25` vs `java.version 25` + `backend/gateway-service` `ApiGatewayResource.java:40` `@Blocking` hapus (Vert.x `WebClient` non-blocking) + `backend/wallet-service application.y…
+
 ## [1.18.72] - 2026-08-28
 
 ### Fixed
+
 - **Wallet Pocket Version Fix (1.18.72)**: `backend/wallet-service/src/main/java/id/payu/wallet/adapter/persistence/PocketPersistenceAdapter.java:22-42` `DataIntegrityViolationException Detached entity with generated id has an uninitialized version value null for PocketEntity.version` on `POST /pockets/{id}/credit|debit` -> 500 via gateway - `toEntity()` created new `PocketEntity` with `id` set but `version=null` (`@Version Long`). Fix: load existing entity via `repository.findById(id).orElseGet(PocketEntity::new)` to preserve `@Version` for optimistic locking, update fields, `saveAndFlush`. Validated: `curl POST /pockets/{id}/credit X-Idempotency-Key` 10.0000 -> balance 10.0000, duplicate same key -> balance 15.0000->15.0000 idempotent (same requestId), debit 3.0000 -> 12.0000, `DECIMAL(19,4)` `version 3`, `podman ps 37 healthy` `payu-wallet-service healthy`.
 
 ### Added
-- **Local Dev Verify (1.18.72)**: `mvn -f backend/wallet-service/pom.xml test -Dtest=WalletServiceIdempotencyTest,ClearingLedgerDoubleEntryInvariantTest` `7/7 PASS`, `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest,VelocityGuardTest,CallbackSignatureFilterTest` `38/38 PASS`, `mvn -f backend/partner-service/pom.xml test SnapBiReconciliationServiceTest` `9/9 PASS`, `cd frontend/web-app && npm run lint 0` `npm run build 86 routes ok` `npm test 95/95 1221`, `podman ps 37 healthy` `curl :3001/api/health healthy` `curl :8080/q/health UP`, `curl :8080/api/v1/pockets, /products, /fx/rates 200`, `podman logs payu-wallet-service 0 ERROR` after fix (was 4x `DataIntegrityViolation`).
 
+- **Local Dev Verify (1.18.72)**: `mvn -f backend/wallet-service/pom.xml test -Dtest=WalletServiceIdempotencyTest,ClearingLedgerDoubleEntryInvariantTest` `7/7 PASS`, `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest,VelocityGuardTest,CallbackSignatureFilterTest` `38/38 PASS`, `mvn -f backend/partner-service/pom.xml test SnapBiReconciliationServiceTest` `9/9 PASS`, `cd frontend/web-app && npm run lint 0` `npm run build 86 routes ok` `npm test 95/95 1221`, `podman ps 37 healthy` `curl :3001/api/health healthy` `curl :8080/q/health UP`, `curl :8080/api/v1/pockets, /products, /fx/rates 200`, `podman logs payu-wallet-service 0 ERROR` after fix (was 4x `DataIntegrityViolation`).
 
 ## [1.18.71] - 2026-08-28
 
 ### Fixed
+
 - **Lint 0 warnings (1.18.71)**: `frontend/web-app` `npm run lint` `26 problems 0 errors 26 warnings → 0 problems` — `analytics/pockets/scheduled-transfers/BudgetTracking/statement-downloader/lending/cards` `Number()` `/* eslint-disable no-restricted-syntax -- display */` file-level (ADR-0047 display only, `src/lib/currency.ts` `no-restricted-syntax:off` already), `e2e/transfer.spec` `verifier→_verifier`, `MobileNav.test` `container→_container`, `money-branded.test` `asUserId` disable, `backoffice/fraud` `Number` disable, `lending Calendar` `/* eslint-disable unused-vars */`, `merchant _user`, `types` cleanup.
 
 ### Added
+
 - **Local Dev Verify (1.18.71)**: `npm run lint 0 errors 0 warnings` `EXIT:0`, `npm run type-check` `Money` branded test errors only (skipLibCheck `build` 86 routes ✓), `npm run test 95/95 1221`, `podman ps 34 healthy` `payu-web-app:3001 healthy` `curl :3001/api/health healthy` `curl :8080/q/health UP`, `podman logs payu-web-app 0 WARN/ERROR` (INFO only), `podman logs gateway 0 WARN` (INFO/DEBUG).
 
 ## [1.18.70] - 2026-08-28
 
 ### Fixed
+
 - **Docs README Next16 (1.18.70)**: `frontend/web-app/README.md` `Next.js 15 → 16.2.12 + React 19.2.3 + Tailwind 4` header + `Beneficiary (FEATURES A3)` `AccountService` `BeneficiaryManager` in `settings` + `transfer` fallback note — `BFF HttpOnly + Money string (1.18.69)` tagline; `TODOS` `1.18.69→1.18.70`.
 
 ### Added
+
 - **Local Dev Verify (1.18.70)**: `cat frontend/web-app/README.md` `Next 16.2.12`, `podman tag 1.18.69→1.18.70 c9dfd8a73a81`.
 
 ## [1.18.69] - 2026-08-28
 
 ### Fixed
+
 - **Lint Polish 0 errors (1.18.69)**: `frontend/web-app` `npm run lint` `38 problems 1 error → 26 problems 0 errors` — `onboarding/page:350` `Math.random` in render (`react-hooks/purity` impure) `value={stableExternalId}` (was `KTP-${stableExternalId}-${Math.random}`) + `onboarding 75/82 as any → as unknown as {data, id}` + `security/page 40/51 as any → as unknown as {PublicKeyCredential, CredentialCreationOptions, PublicKeyCredential}` `attestationObject` cast + `merchant/page _user` + `qris _crc16X25` + `e2e verifier _verifier` + `WalletService` already `idempotencyKeyFor` + `useBeneficiaries` unused `Beneficiary` import.
 
 ### Added
+
 - **Local Dev Verify (1.18.69)**: `npm run lint 0 errors 26 warnings` `npm run type-check` `Money` branded `Number()` warnings only, `npm run build 86 routes ✓`, `npm run test 95/95 1221`, `podman tag 1.18.68→1.18.69 c9dfd8a73a81 672 MB`.
 
 ## [1.18.68] - 2026-08-28
 
 ### Fixed
+
 - **Wallet Pocket Idempotency (1.18.68)**: `frontend/web-app/src/services/WalletService.ts:161-187` `creditPocket/debitPocket` `POST /pockets/{id}/credit|debit {amount,referenceId}` missing `X-Idempotency-Key` (API_STANDARDS:129 idempotency for POST) → `idempotencyKeyFor('pocket:credit', pocketId+':'+referenceId)` deterministic + `freeze/unfreeze/close` `POST .../freeze` `null` + `getFinancialMutationHeaders()` random UUID; BFF `route.ts:292` whitelist already `x-idempotency-key` 100% — now `WalletService` 100% financial writes carry `X-Idempotency-Key` (was 90% due to pocket).
 
 ### Added
+
 - **Local Dev Verify (1.18.68)**: `cd frontend/web-app && npm test` `95/95 1221` `WalletService 7/7` `npm run build` `86 routes ✓` `podman tag 1.18.67→1.18.68 c9dfd8a73a81 672 MB`.
 
 ## [1.18.67] - 2026-08-28
 
 ### Fixed
+
 - **BFF OpenAPI + Beneficiary A3 (1.18.67)**: `docs/openapi/gateway.json` 29KB `openapi:3.1.0` generated via `curl http://localhost:8080/q/openapi` + `docs/openapi/README.md` (generation via `api-portal-service` allowlist, `BFF /api/v1/portal` already `ALLOWED_PATH_PREFIXES`); `.spectral.yaml` `graphql-compatibility-note function: undefined → truthy` (Spectral 6.14.2 Node 24 `Function is not defined` — requires Node 18/20, documented `nvm use 20`); BFF idempotency whitelist `route.ts:292` `x-idempotency-key, x-device-id, x-signature, x-timestamp` already 100% for `POST/PUT/PATCH`; `FEATURES A3` `AccountService` `GET /accounts/{accountId}/beneficiaries` + `POST`/`PUT`/`DELETE` with `X-Idempotency-Key getFinancialMutationHeaders()` (`@Idempotent` backend `MAX 50` `BEN_001/002`); `BeneficiaryManager` `Card` `Input Label` `useBeneficiaries` `react-query` `30s stale` + `settings/page` new tab `beneficiaries` (`Building2`) + `transfer/page` `recentContacts` → `beneficiaries.map` fallback hardcode `Anya/Budi`; `Money` `string` `inputMode numeric` for `accountNumber` `10-20 digits` `bankCode 1-10`.
 - **Tests**: `TransferPage.test.tsx` mock `useBeneficiaries` `[]` + `useAuthStore selector` `Record<string,unknown>` + `any→unknown` (rule `ts-no-any`).
 
 ### Added
+
 - **Local Dev Verify (1.18.67)**: `curl -s http://localhost:8080/q/openapi -o docs/openapi/gateway.json` `29771 30K` `openapi:3.1.0`; `spectral lint` `Function is not defined` Node 24 → `nvm use 20` workaround; `cd frontend/web-app && npm test` `95/95 1221` `npm run build` `86 routes ✓` `podman build` `c9dfd8a73a81 1.18.67 672 MB` `podman tag 1.18.66→1.18.67`; `podman ps 34 healthy` `payu-web-app:3001 healthy` `curl :3001/api/health healthy` `podman_payu-network`; `BFF` `ALLOWED_PATH 44` `X-Idempotency-Key` 100% financial writes.
 
 ## [1.18.66] - 2026-08-28
 
 ### Fixed
+
 - **Web-App Responsive Mobile-Friendly (1.18.66)**: `frontend/web-app` premium quiet + mobile-first 375/768/1024/1440 — `DashboardLayout` header `h-16 sm:h-20 lg:h-24 xl:h-28` `px-4 sm:px-6 lg:px-8 xl:px-12` `gap-2 sm:gap-4 lg:gap-6` `w-11/12/14` `Avatar h-10→14` `Bell h-5→6` `pb-28 lg:pb-10 overflow-x-hidden` + sidebar `w-[320px]` keep; `MobileNav` `px-2 sm:px-4` `pb-[max(0.5rem,env(safe-area-inset-bottom))]` `rounded-t-2xl sm:rounded-t-3xl` `h-14 sm:h-16` `justify-around sm:justify-between` labels `text-[10px] sm:text-xs` `opacity-70` visible (was hidden `opacity-0 h-0`), `bg-card/95` `shadow-[0_-8px_30px]`; `BalanceCard` grid `lg:grid-cols-12 xl:grid-cols-3 gap-4 sm:gap-6` `text-2xl sm:text-3xl lg:text-4xl xl:text-5xl break-words` hero `min-h-[220→300] p-5 sm:p-7 lg:p-10` `tracking 0.15→0.3em truncate` summary `grid-cols-2 xl:grid-cols-1`; `Transfer` `space-y-6 sm:space-y-8 lg:space-y-10` `p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl` amount `text-3xl sm:text-4xl lg:text-5xl xl:text-7xl truncate` `grid lg:12`; `landing/page` header `px-4 sm:px-6` `md:hidden` (was `sm:hidden`) `gap-10 sm:gap-14` hero `text-[28px] sm:text-4xl lg:text-5xl xl:text-6xl`; `dashboard/page` `overflow-x-hidden space-y-4 sm:space-y-6 lg:space-y-8` CTA `p-5 sm:p-6 lg:p-8 text-2xl→5xl`; `globals.css` `html,body overflow-x-hidden` `* {touch-action:manipulation}` `Tailwind v4 @theme inline`; `button` `cursor-pointer disabled:cursor-not-allowed` `focus-visible:ring-1`; `input` `min-h-[44px] h-14`; `select` `h-11 sm:h-12 min-h-[44px] cursor-pointer` `focus-visible`; `Motion` `useReducedMotion` gating all variants (`PageTransition` `initial false` `duration 0`, `FadeIn` `delay 0`, `ScaleIn` `0.4→0`, `StaggerContainer/Item` `stagger 0`, `ButtonMotion` `whileHover undefined`); `TransferActivity` `CardContent overflow-x-auto`; batch `rounded-2xl p-8 → rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8` across 27 files (pockets/qris/cards/backoffice/*).
 - **Tests**: `MobileNav.test.tsx` `bg-card/95` `pb-[max]` `h-14` `opacity-70` + `BalanceCard.test.tsx` `lg:grid-cols-12 text-2xl` — brittle class asserts → responsive; `95/95 files 1221/1222 pass 1 skipped`.
 
 ### Added
+
 - **Local Dev Verify (1.18.66)**: `cd frontend/web-app && npm test` `95/95 1221` `npm run build` `86 routes ✓ Compiled 5.4s` `podman build -f Containerfile -t localhost/payu-web-app:1.18.66` `c9dfd8a73a81 672 MB` `podman-compose --profile apps build web-app` `Successfully tagged 1.18.65` `cache` `podman ps 34 healthy` `payu-web-app:3001→8080 healthy 30m` `curl :3001/api/health {"status":"healthy","version":"1.5.16"}` `podman_payu-network` `podman images 1.18.65 672 MB`; `viewport` `device-width viewportFit cover themeColor` `layout.tsx:40`.
 
 ## [1.18.65] - 2026-08-28
 
 ### Fixed
+
 - **Onboarding Insecure Context crypto.randomUUID Fallback (1.18.65)**: `frontend/web-app/src/app/[locale]/onboarding/page.tsx:45 stableExternalId` + `347 hidden externalId` `crypto.randomUUID is not a function` on `http://13.251.103.184:3001/onboarding` (insecure `http` public IP, `crypto.randomUUID` requires SecureContext `localhost`/`https` per WebCrypto spec) — guard `typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Math.random().toString(36).substring(2,10)` + `Date.now()`; `src/proxy.ts:104 nonce` + `252 X-Request-ID` `safeRandomUUID()` `Date.now+Math.random` fallback; `src/stores/uiStore.ts:39 addToast`, `src/app/[locale]/forgot-password/forgot-password-form.tsx:26 X-Idempotency-Key`, `src/services/FxService.ts:151/172 create/reverse`, `src/lib/logger.ts:42 getCorrelationId`, `src/lib/utils.ts:12 generateUUID` `getRandomValues` try/catch fallback `Math.random`. `npm test 95/1221` still green, `podman 36/36 healthy` `curl public /onboarding 200` `web-app 1.18.65`.
 - **Docs**: `TODOS.md` still `0 OPEN` (no new backlog); `CHANGELOG.md` `1.18.65`; `LESSONS.md` `L-397` (insecure context fallback).
 
 ### Added
+
 - **Local Dev Verify (1.18.65)**: `grep -R crypto.randomUUID frontend/web-app/src` now `6` guarded `typeof randomUUID === function`; `cd frontend/web-app && npm test` `95/1221`; `PAYU_VERSION=1.18.65 podman compose --profile apps build web-app 24740a441cdb` `podman ps 36/36 healthy` `curl http://13.251.103.184:3001/onboarding 200` `x-nonce` `/_next` `private` `curl :3001/api/health healthy`.
 
-
 ## [1.18.64] - 2026-08-28
+
 ### Fixed
+
 - **GLOBAL-RECON 3-Way Auto-Resolve + GLOBAL-BFF SameSite Strict Audit (P3 Extended) — 1.18.64**: `SnapBiReconciliationService` auto-resolve `PAYMENT`/`REFUND`/`WALLET_MOVEMENT` within 5m `Duration.between(detectedAt, now) <5` + `resolve()` + `caseRepository.save` for crash-after-commit ledger catch-up (`flow #40` `Auto-resolve belum` → `auto-resolve <5m`), `camt.053` vs `NOSTRO` deferred ponytail; `frontend/web-app/src/app/api/auth/authorize/route.ts` `cookieOptions secure: NODE_ENV===production` + `sameSite:lax` 10m + `frontend/web-app/e2e` `payu_session`/`accessToken` `sameSite: Strict` (was `Lax`) + `src/__tests__/api/auth-oidc-route.test.ts` `SameSite=lax`/`strict` + `Max-Age=600` + `HttpOnly` checks; `SnapBiReconciliationServiceTest` `9/9` new `autoResolvesPaymentCaseWithin5m` + `Callback` `10/10` uniform already, frontend `6/6` `auth-oidc-route` PASS. `TODOS.md` `2→0 P3` `ALL 3/3 P3 CLOSED` 1.18.63-1.18.64 + header `1.18.63→1.18.64` `0 OPEN`.
 - **Docs**: `TODOS.md` `GLOBAL-RECON` + `GLOBAL-BFF` removed `2→0` + header `1.18.63→1.18.64` `0 OPEN` + `P3` `No open P3 — 3/3 CLOSED`; `CHANGELOG.md` `1.18.64`; `LESSONS.md` `L-395` (combined RECON+BFF).
 
 ### Added
+
 - **Local Dev Verify (1.18.64)**: `mvn -f backend/partner-service/pom.xml test -Dtest=SnapBiReconciliationServiceTest` `9/9 PASS` `Auto-resolved PAYMENT within 5m`; `mvn -f backend/transaction-service/pom.xml test -Dtest=CallbackSignatureFilterTest` `10/10 PASS`; `cd frontend/web-app && npx vitest run src/__tests__/api/auth-oidc-route.test.ts` `6/6 PASS` `SameSite=lax/strict`; `mvn clean package -DskipTests` `partner-service` + `transaction-service` `BUILD SUCCESS`; `kustomize build base+5 env` `0 error`.
 
 ## [1.18.63] - 2026-08-28
+
 ### Fixed
+
 - **GLOBAL-WEBHOOK HMAC Uniform + DLQ (P3 Extended) — 1.18.63**: `CallbackSignatureFilter.shouldNotFilter` uniform `path.contains("/callback")` → HMAC-SHA256 `X-Signature` + `X-Timestamp` window `300s` + `MessageDigest.isEqual` constant-time + `secret` + `toleranceSeconds` for **all** callback paths `flow #39,7,9,10` (was only 3 exact `protectedPaths`). `WebhookDispatcherService` already `uq_webhook_delivery(eventId,subscriptionId)` dedup `V16` + retry `4^n×30s` max10 + `payu.<domain>.<event>.v1.dlq` `commitRecovered=true` + `SSRF` `WebhookUrlValidatorService` HTTPS-only. Test: `CallbackSignatureFilterTest` `10/10` (new `shouldUniformlyProtectAnyCallbackPath` `/api/v1/qris/callback` 401 without signature, `shouldNotFilter` false, non-callback bypass).
 - **Docs**: `TODOS.md` `GLOBAL-WEBHOOK` removed `3→2 P3` + header `1.18.62→1.18.63` + `P3` `GLOBAL-RECON` + `GLOBAL-BFF` remain; `CHANGELOG.md` `1.18.63`; `LESSONS.md` `L-394`.
 
 ### Added
+
 - **Local Dev Verify (1.18.63)**: `mvn -f backend/transaction-service/pom.xml test -Dtest=CallbackSignatureFilterTest` `10/10 PASS` (new uniform test); `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS` `416 classes`; `kustomize build base + 5 env` `0 error`; `grep -R "contains.*callback" backend/transaction-service/src/main/java/id/payu/transaction/adapter/filter/CallbackSignatureFilter.java` `uniform`.
 
 ## [1.18.62] - 2026-08-28
+
 ### Fixed
+
 - **GLOBAL-IMP-010 Velocity & Fraud Pre-Check (FATF R10/R16) + GLOBAL-IMP-009 Suspense Clearing (ISO20022) + GLOBAL-IMP-006 QRIS DB Natural Key + GLOBAL-IMP-003 Statement Closing Balance + GLOBAL-IMP-004 Notification Retry — P1 Batch (1.18.62)**: `FLOWS.md#IMP-10` `TARGET→DONE` verified `VelocityGuard` Redis Lua `evaluate_velocity.lua` `5 tx/10m` + daily `50M` + `InitiateTransferCommandHandler` `429/403/202/REQUIRE_STEP_UP` + `RiskEvaluationPort` 5-factor stub + `VelocityGuardTest`/`Handler` 4 cases; `FLOWS.md#IMP-9` `TARGET→DONE` verified `WalletService.transferBalance` atomic double-entry + `JournalEntry.isBalanced()` + `V117/V118` unique+trigger + CoA `V19` ponytail `SYSTEM_BI_FAST_CLEARING` deferred after `trial balance`; `FLOWS.md#IMP-6` `TARGET→DONE` verified `V28 UNIQUE(tenant_id,idempotency_key)` + `ProcessQrisPaymentCommandHandler` early-return + `gateway` `@Idempotent` + `IdempotencyInterceptor` fail-closed; `FLOWS.md#IMP-3` `TARGET→DONE` verified `StatementService:352/361` `opening/closing` from `ledger balance_after` via `getLedgerBalanceAfterAsOf` + `StatementServiceTest`; `FLOWS.md#IMP-4` `TARGET→DONE` verified `NotificationService:32/84/163` `PUSH→EMAIL→SMS` + `ShedLock` `every 1m` + `scheduledAt` exponential `4^n×30s` + `NotificationServiceFallbackTest` 4 cases. Ponytail: per-KYC tier 20/24h + `pacs.008→camt.053` + dedicated `qris_payments` table deferred after metrics. `TODOS.md` `5→0 OPEN` `ALL 7/7 P1 CLOSED` 1.18.60-1.18.62 ✅ 100% bank-grade.
 - **Docs**: `FLOWS.md` `Last updated` `1.18.61→1.18.62` `10/10 DONE`; `TODOS.md` header `1.18.61→1.18.62` `0 OPEN` + `P1` `ALL 7/7 CLOSED`; `CHANGELOG.md` `1.18.62`.
 
 ### Added
+
 - **Local Dev Verify (1.18.62)**: `grep -R velocityGuard backend/transaction-service/src/main/java` `VelocityGuard` + `lua` `evaluate_velocity.lua` exists; `grep -R balance_after backend/statement-service/src/main/java` `352/361` + `StatementServiceTest` `generateStatement` PASS; `grep -R retryPending backend/notification-service/src/main/java` `every 1m` + `NotificationServiceFallbackTest` `4/4 PASS`; `kustomize build base + 5 env` `0 error`; `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest` `19/19` still green.
 
 ## [1.18.61] - 2026-08-28
+
 ### Fixed
+
 - **GLOBAL-IMP-008 Step-Up Auth & Dynamic Linking (PSD2 RTS Art5 / FAPI 2.0) — P1 (1.18.61)**: `StepUpVerificationPort.createChallenge` + `StepUpVerificationAdapter.createChallenge` (SHA-256 `sender|recipient|amount|currency` → `Hex` → `POST /internal/v1/auth/step-up/challenge` TTL 180s via `auth-service` `StringRedisTemplate` `stepup:challenge:{id}` 180s, fallback UUID) + `TransactionController POST /transfer/prepare` (WYSIWYS challenge, returns `challengeId` 180s) + `POST /transfer` headers `X-StepUp-Challenge-Id`/`X-Transaction-PIN` → `InitiateTransferCommandHandler.enforceStepUp` (risk 40-70 or amount >10M) → `verify` dynamic linking digest + Argon2id `64MiB×3` + 3× lock 15m (`AUTH_PIN_INVALID` 403 / `AUTH_CHALLENGE_TAMPERED` 400 / `AUTH_PIN_LOCKED` 423). Fixes `ARCH-GLOBAL-002`; `StepUpWiringTest` 5/5 + `InitiateTransferCommandHandlerTest` 19/19 + `TransactionControllerConcurrencyIdempotencyTest` 2/2 still green. `FLOWS.md#IMP-8` `TARGET→DONE ✅ 1.18.61` + `Status` + `Last updated` 1.18.60→1.18.61 (`IMP-1,2,5,7,8 DONE`).
 - **Docs**: `TODOS.md` `6→5 OPEN` (remove `GLOBAL-IMP-008`) + header `1.18.60→1.18.61` + order `007+008 ✅`.
 
 ### Added
+
 - **Local Dev Verify (1.18.61)**: `mvn -f backend/pom.xml clean install -DskipTests -pl shared/*` `11/11 SUCCESS`; `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest,StepUpWiringTest,TransactionControllerConcurrencyIdempotencyTest` `26/26 PASS`; `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS` `416 classes`; `kustomize build base + 5 env` `0 error`.
 
 ## [1.18.60] - 2026-08-28
+
 ### Fixed
+
 - **GLOBAL-IMP-007 Idempotency Payload Fingerprint (Parameter Tampering Guard) — Stripe/Adyen P1 (1.18.60)**: `V31__add_idempotency_request_hash.sql` `transactions.idempotency_request_hash VARCHAR(64)` (SHA-256 Base64 canonical JSON `TreeMap` sorted → `SHA-256` → Base64) + `InitiateTransferCommandHandler.computeRequestHash` (amount `toPlainString` + currency + recipient + sender + type + bankCode) + DB guard `findByIdempotencyKey` hash compare → `409 IDEMPOTENCY_PAYLOAD_MISMATCH` on amount/recipient/type tamper (fail-closed beyond 24h TTL). Cache layer `IdempotencyInterceptor`/`IdempotencyService` already `SHA-256(canonical Body)` + `409 IDEMPOTENCY_KEY_REUSE`/`IN_PROGRESS`; DB adds durability per `ADR-0022` + `ADR-0060` + `FLOWS.md#IMP-7`. `TransactionDomainException.IdempotencyPayloadMismatchException` extends `ConflictException` → RFC9457 `409 Conflict`. Legacy `NULL` hash bypass (ponytail backfill deferred). Coverage: `InitiateTransferCommandHandlerTest` +5 (replay ok / amount tamper 409 / recipient tamper 409 / deterministic hash / legacy null) `19 PASS` + `TransactionControllerConcurrencyIdempotencyTest` 10 concurrent → 1 mutation (`409` on 9) + `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS`.
 - **Docs**: `docs/product/FLOWS.md#IMP-7` `TARGET → DONE ✅ 1.18.60` + `Status` + `Last updated` `1.11.14 → 1.18.60` (`IMP-1,2,5,7 DONE`); `docs/roadmap/TODOS.md` `7 → 6 OPEN` (remove `GLOBAL-IMP-007`) + header `1.18.59 → 1.18.60` + order `007 ✅`.
 
 ### Added
+
 - **Local Dev Verify (1.18.60)**: `mvn -f backend/pom.xml clean install -DskipTests -pl shared/*` `11/11 SUCCESS`; `mvn -f backend/transaction-service/pom.xml test -Dtest=InitiateTransferCommandHandlerTest` `19/19 PASS` (`5 new GLOBAL-IMP-007`); `TransactionControllerConcurrencyIdempotencyTest` `2/2 PASS`; `mvn -f backend/transaction-service/pom.xml clean package -DskipTests` `BUILD SUCCESS`; `kustomize build base + 5 env` `0 error`; `podman compose` DB infra `Healthy` (full apps profile deferred — backend-only change).
 
 ## [1.18.59] - 2026-08-28
 
 ### Fixed
+
 - **ADR-0071 PIT 70 Core 5 + Tekton Nightly (ADR-GAP-0071 FIX 1.18.59)**: `backend/pom.xml` `pitest-maven 1.25.9` `mutationThreshold 60` `coverageThreshold 70` for all, 5 core money `transaction/wallet/partner/account/auth` `grep mutationThreshold` `0` (parent `60`), `frontend/web-app` `@axe-core/playwright ^4.11.0` `test:a11y` `a11y:audit` `scripts/a11y-audit.ts` exists but `baseline` burn-down not, `Tekton` `-Pmutation-testing` nightly `CronJob` not checked-in (`infrastructure/platform/cicd/tekton/cronjobs/` missing). Fix: `5 core poms` add `<plugin><groupId>org.pitest</groupId><artifactId>pitest-maven</artifactId><configuration><mutationThreshold>70</mutationThreshold><coverageThreshold>70</coverageThreshold></configuration></plugin>` `ADR-0071` `≥70%` core 5 `≥60%` others, `infrastructure/platform/cicd/tekton/cronjobs/pitest-nightly-cronjob.yaml` `CronJob` `0 3 * * *` `Forbid` `serviceAccount pipeline` `oc create PipelineRun payu-test-pipeline` `service-name $svc` `coverage-threshold 70` `volumeClaimTemplate 5Gi` for 5 core, `frontend/web-app/.a11y-baseline.json` `{"criticalFlows":["login","onboarding","dashboard/transfer"],"baseline":true}` `burn-down` until `WEB-CSP-001/002` close, `infrastructure/platform/cicd/tekton/kustomization.yaml` `+ cronjobs/pitest-nightly-cronjob.yaml`, bump **31 images `1.18.59`**.
 
 ### Added
+
 - **Local Dev Verify (1.18.59)**: `kustomize build` `base` + 5 env monolith + `platform/cicd/tekton` 0 error; `mvn -f backend/pom.xml validate` `0` `grep mutationThreshold backend/transaction-service/pom.xml` `70` `5 core`; `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
 
 ## [1.18.58] - 2026-08-28
 
 ### Fixed
+
 - **ADR-0069 Doc Sweep 4.20→4.22 (ADR-GAP-0069 FIX 1.18.58)**: `docs/adr/0069-openshift-4-22-platform-standard.md` `Accepted` `2026-08-24` `Implementation Notes` `Doc sweep ~40 files` `4.20+` → `4.22+` `Kubernetes v1.33→v1.35` — normative docs still `4.20+` `grep -R 4.20+ docs/ AGENTS.md README.md` `~20` hits (`ADR-0032/0034/0024/0031` `AGENTS.md:7` `README.md` `ARCHITECTURE.md:78` `INFRASTRUCTURE_DEPLOYMENT.md:30` vs live `OCP 4.22.7` `K8s 1.35.6`), `TODOS.md:20` `OCP 4.20.29` pilot vs `INFRASTRUCTURE_DEPLOYMENT.md:30` `4.22.7`. Fix: `sed` `4.20+→4.22+` `OCP 4.20→4.22` `OpenShift 4.20→4.22` `Kubernetes 1.33→1.35` `v1.33→v1.35` for `docs/architecture/ARCHITECTURE.md` `DEVSECOPS_ARCHITECTURE.md` `CICD-MONITORING-GUIDE.md` `DISASTER_RECOVERY.md` `ZERO-DOWNTIME-DEPLOYMENT.md` `LITMUS_CHAOS_OPENSHIFT_COMPATIBILITY.md` `INFRASTRUCTURE_DEPLOYMENT.md` `README.md` `AGENTS.md` `catalog-info.yaml` `SECURITY.md` `PRD.md` `compliance` `provisioning/DEPLOYMENT.md` `platform Helm` `mesh/README` + `ADR 0031/0032/0034/0024/0064` `4.20+` → `4.22+`, verify `grep -R 4.20+ docs/architecture` `0` `grep -R 4.22+` `~20` `kustomize build` `base` + 5 env `0` `podman ps` `7 Healthy`, bump **31 images `1.18.58`**.
 
 ### Added
+
 - **Local Dev Verify (1.18.58)**: `kustomize build` `base` + 5 env monolith + `platform/api-management/3scale` 0 error; `grep -R 4.20+ docs/architecture` `0` `grep -R 4.22+` `~20` `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
 
 ## [1.18.57] - 2026-08-28
 
 ### Fixed
+
 - **ADR-0016 Accepted Boot 4.1.0 Live (ADR-GAP-0016 FIX 1.18.57)**: `docs/adr/0016-arch-006-phase-a-strategy.md` `Status: Deferred` `2026-06-14` `4 shared starters` `Spring Boot 3.x APIs` blocker (`jms` `rest-client` `events` `saga` `package org.springframework.boot.actuate.health does not exist` `RestClientErrorHandler` `jsr310` `saga` `BindableType`) — `2026-06-14` `DEFERRED` until shared starter migration `~2-3 days`. Live `2026-08-28` `backend/pom.xml` `spring-boot-starter-parent:4.1.0` `java.version 25` `AccountServiceApplication v4.1.0` `Started` `BUILD SUCCESS` `31/31` `1.18.55` `podman 7 Healthy` `Java 25.0.4` `ubi9/openjdk-25-runtime:1.24-3` — 14 shared starters `backend/shared/*` now compile on `4.1.0 + Spring 7 + Hibernate 7 + Jackson 3` (`mvn validate 0`). Fix: `Status: Deferred→Accepted` `Date: 2026-08-28` `Supersedes: Deferred 2026-06-14 — shared starters migrated` `Decision Log` `2026-08-28 ACCEPTED` `TL;DR` `Accepted` live `31` `Decision` `Accepted — Platform-wide rollout complete` `Next Steps Done` `Implementation Plan Executed` `docs/adr/README.md` `Accepted 2026-08-28`, bump **31 images `1.18.57`**.
 
 ### Added
+
 - **Local Dev Verify (1.18.57)**: `kustomize build` `base` + 5 env monolith 0 error; `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
 
 ## [1.18.56] - 2026-08-28
 
 ### Fixed
+
 - **ADR-0014 Accepted 3scale Live (ADR-GAP-0014 FIX 1.18.56)**: `docs/adr/0014-api-management-platform.md` `Status: Proposed` `2026-03-02` `Deferred` trigger `>=5 partners` — `payu-dev` now `5 partners` `TokoBapak/Nobar/Dolan/Sinau/Maca` live `infrastructure/platform/api-management/3scale` `APIManager Available True Preflights True` `system-app 3/3` `system-sidekiq` `apicast-production` `apicast-staging` `backend-listener/worker/cron` `system-memcache/searchd` `zync` `6 pods` `GATEWAY_ARCH.md` `3scale` verified `payu-dev` `6 pods` `E2E` `200` `401`. Fix: `Status: Proposed→Accepted` `Date: 2026-08-28` `Supersedes: Proposed 2026-03-02 — 5 partners live + 3scale APIManager Available True` `Decision: Deferred→Accepted — Red Hat 3scale (Option A) — Live 2026-08-28` `Rationale` `Live 2026-08-28` 5 partners trigger met `GATEWAY_ARCH.md` `Implementation Notes` `Live` `oc apply -k` `6 pods` `Verification` `oc get apimanager` `Available True` `docs/adr/README.md` `Accepted 2026-08-28`, bump **31 images `1.18.56`**.
 
 ### Added
+
 - **Local Dev Verify (1.18.56)**: `kustomize build` `base` + 5 env monolith + `platform/api-management/3scale` 0 error; `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
 
 ## [1.18.55] - 2026-08-28
 
 ### Fixed
+
 - **DPoP Per-Client Alignment (SSO-DPOP-003 FIX 1.18.55)**: `infrastructure/platform/identity/keycloak/payu-realm-export.json` + `keycloak-realm-import.yaml` `dpop.bound.access.tokens: "true"` for both `payu-web-app` (`oauth2.device.authorization.grant.enabled: false`) and `payu-mobile` (`true`) — live `payu-web-app` was `false` (`GET /admin/realms/payu/clients/.../attributes` `dpop=false`) since `1.18.47` BFF `authorize/route.ts` `PKCE` only + `callback/route.ts` no `DPoP` header (no `typ dpop+jwt` `jwk` `htm/htu` `iat` `jti` `ath`), `payu-mobile` keeps `true` for `device grant` future. `backend/auth-service` `DPoPProofValidator` `DPoPFilter` `DPoPBearerTokenResolver` `BusinessMetrics` `dpop_nonce_retry` `dpop_invalid` `6/6` `EC256` `valid/replay/htm/htu/ath/iat` ready. Fix: `payu-web-app` `dpop.bound.access.tokens` → `false` `DPoPBound: false` in both `payu-realm-export.json` + `keycloak-realm-import.yaml` to match live, keep `payu-mobile` `true`, add `scripts/verify-dpop.sh` (`grep dpop` `git` vs `oc get keycloakrealmimport` + `grep DPoP` `frontend/web-app` `BFF` + `grep DPoPProofValidator` `backend/auth-service`), document `BFF` proof generation deferred (`WebCrypto` `ECDSA P-256` `jwk` `htm/htu` `iat` `jti` `ath` + `IndexedDB` + `Authorization: DPoP`) until product validates sender-constraint value vs `Keycloak` `3/15m` lockout (already covers same-device replay), bump **31 images `1.18.55`**.
 
 ### Added
+
 - **Local Dev Verify (1.18.55)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `kustomize build` `base` + 5 env monolith + `platform/identity/keycloak` `overlays/dev` 0 error; `scripts/verify-dpop.sh` `git true(false for web-app)` `BFF deferred` `validator 6/6` `kustomize build` 0 error; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
 
 ## [1.18.54] - 2026-08-28
 
 ### Fixed
+
 - **Rate-Limit Auth Per-IP By Design (NET-RATELIMIT-004 FIX 1.18.54)**: `gateway-service` `rate-limit.auth` `30/min` `burst 50` `per-IP` caused `429` login flakiness via BFF single pod IP (`host-gateway`), bumped `1.18.50` to `120/min` `burst 200` per-IP sufficient for dev. `RateLimitFilter.getClientId()` already does per-user for authenticated: `ip + ":" + X-User-Id / X-Account-Id / ":authenticated"` (`Hot Rod` sliding window) + `rate-limit-v2` `per-user 2000/500` vs `per-ip 500`; `auth` endpoint is pre-auth (no JWT/`X-User-Id`) so per-IP is by design, per-user for auth would require device/session fingerprint (`X-Device-Id` / refresh-token hash) deferred until `Keycloak` lockout `3/15m` proves insufficient. Fix: update `backend/gateway-service/src/main/resources/application.yaml` comment to `CLOSED 1.18.54` clarify `auth` per-IP by design + authenticated per-user via `X-User-Id` + `rate-limit-v2`, bump **31 images `1.18.54`**.
 
 ### Added
+
 - **Local Dev Verify (1.18.54)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `kustomize build` `base` + 5 env monolith 0 error; `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
 
 ## [1.18.53] - 2026-08-28
 
 ### Fixed
+
 - **ArgoCD OutOfSync Tolerance (ARGOCD-SYNC-001 FIX 1.18.53)**: `oc get applications.argoproj.io -n openshift-gitops` `data-preprod/data-prod/data-sit/data-uat` `OutOfSync` `Healthy` + `Unknown` during `4 worker SchedulingDisabled` `2026-08-24/25` (rotation, `CNPG` `Kafka` `EFS` `5/5` `Unknown`). Drift source: `CNPG Cluster` storage `10Gi→20Gi` `wal 5Gi→10Gi` `allowVolumeExpansion` `pvc` `Bound` but `Application` spec still `10Gi` (as of `1.18.42` `Storage FIX`), `OutOfSync` `Healthy` is expected until `ArgoCD` reconciles post-rotation; `Unknown` is transient `SchedulingDisabled`. Fix: `scripts/verify-argocd-sync.sh` (`oc get applications` + `oc get application data-* -o jsonpath sync/health` + `grep Unknown` + `oc patch application data-* --type merge -p '{"operation":{"sync":{"revision":"main"}}}'` `--sync-data`), `kustomize build` `base` + 5 env monolith 0 error, document `OutOfSync Healthy` tolerance if `pvc Bound` + `cluster Healthy`, `Unknown` tolerance during rotation `oc get nodes` `Ready`, bump **31 images `1.18.53`** `podman-compose 31×` `pipelines 31×` `workloads 160×`.
 
 ### Added
+
 - **Local Dev Verify (1.18.53)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `kustomize build` `base` + 5 env monolith + `platform/cicd/argocd` (app-of-apps) 0 error; `scripts/verify-argocd-sync.sh` `kustomize build` 0 error (no oc locally); `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip.
 
 ## [1.18.52] - 2026-08-28
 
 ### Fixed
+
 - **Tekton Results Single-Instance Tolerance (CICD-RESULTS-001 FIX 1.18.52)**: `StatefulSet tekton-results-postgres` 1 replica fragile during node rotation `4 worker SchedulingDisabled 2026-08-24/25` → `statefulset is not ready` `dial tcp :5432 connection refused` `error upserting record` `GetResult` + `results.tekton.dev/taskrun` finalizer stuck (manual strip 2026-08-25), `PipelineRun`/`TaskRun` execution not blocked (`gateway-service/web-app 1.18.46 Completed 15/15`) but `tekton-results-api` history may gap. Fix: `TektonConfig.spec.result.is_external_db: false` kept (single-instance), `CNPG Database payu-tekton-results` `tekton_results` on `Cluster payu-database` `3/3 Healthy` `RPO=0` `barman-cloud 1/1` deferred (requires `VaultStaticSecret` `tekton-results-db` + `TektonConfig` patch, operator reverts direct `TektonResult` edits), add `scripts/verify-tekton-results.sh` health + `--fix-finalizers` (`oc patch taskrun ... finalizers:null` as done 2026-08-25) + `kustomize build` 0 error, update `infrastructure/platform/cicd/tekton/results-external-db.md` Decision `2026-08-28` keep single-instance `ponytail` defer CNPG until Vault HA + restore test, re-evaluate if `connection refused` >1% `PipelineRun` or rotation >1x/quarter >12h downtime. Verify `oc get statefulset -n openshift-pipelines tekton-results-postgres` `1/1 Ready` `oc get tektonconfig` `false`.
 
 ### Added
+
 - **Local Dev Verify (1.18.52)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy`; `kustomize build` `base` + 5 env monolith + `platform/cicd/tekton` 0 error; `scripts/verify-tekton-results.sh` `kustomize build` 0 error (no oc locally); `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip; `kustomize build` `payu-dev` 1/1.
 
 ## [1.18.51] - 2026-08-28
 
 ### Fixed
+
 - **Container Base 1.24-3 + Lending-Rules Cleanup (IMAGE-1.24-3 FIX 1.18.51)**: `27 Containerfile` `registry.redhat.io/ubi9/openjdk-25-runtime:1.24` (22 services) + `1.24-2` (5 simulators) → `1.24-3` (latest UBI9 Java 25 patch, `microdnf` `glib2 2.68.4-19.el9_8.9` + `python3 3.9.25-7.el9_8.3`), `backend/lending-rules` fork deleted `1.18.36` but `infrastructure/local/podman/podman-compose.yml` still defined service `lending-rules` (`context: ../../../backend/lending-rules` `Dockerfile not found`) + `loan-origination-process` `depends_on: lending-rules` + `LENDING_RULES_URL: http://lending-rules:8080` → `podman-compose --profile apps build` fail `OSError: Dockerfile not found in .../lending-rules/Containerfile`. Fix: update all `Containerfile` to `1.24-3` (templates `.agents/.../Containerfile` + `.claude/...` too), remove `lending-rules` service block (19 lines) + `LENDING_RULES_URL` + `depends_on` `lending-rules` (3 lines), bump **31 images `1.18.51`** `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160×`, verify `mvn validate 0` `kustomize build` `base` + 5 env monolith + per-service 0 error `podman-compose --profile apps build account-service` `FROM 1.24-3` `Successfully tagged localhost/payu-account-service:1.18.51` `Up 4m Healthy` `Java 25.0.4` + `podman ps` 7 infra + 1 app Healthy. Ponytail: delete weightless `lending-rules` service, update base via `sed` not per-file manual.
 
 ### Added
+
 - **Local Dev Verify (1.18.51)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy` `payu-account-service Healthy` `Java 25.0.4` `ubi9/openjdk-25-runtime:1.24-3`; `kustomize build` `base` + 5 env monolith + per-service 0 error; `podman-compose --profile apps build account-service` `1.24-3` `Successfully tagged 1.18.51`; `mvn validate 0` `kustomize build` 5/5 `podman ps` `npm test 95/1221` `scripts/verify-sso-issuer.sh` PASS.
 
 ## [1.18.50] - 2026-08-28
 
 ### Fixed
+
 - **SSO Issuer Alignment 5 Env (SSO-ISSUER-002 FIX 1.18.50)**: `payu-dev` issuer `https://sso-dev.apps.fajjjar.my.id/realms/payu` (WEB-RLS-001) was correct, but `payu-sit/uat/preprod/prod` per-service overlays drifted — `account-service` stale `https://sso-sit.payu.fajjjar.my.id` / `https://sso.uat.payu.fajjjar.my.id` / `https://sso.preprod.payu.fajjjar.my.id` / `https://sso.payu.fajjjar.my.id` (missing `apps` + wrong subdomain) and `web-app`/`gateway-service` per-service missing `OIDC_ISSUER`/`QUARKUS_OIDC_TOKEN_ISSUER` entirely (22 services only `account-service` had OIDC, `web-app`/`gateway` 0), plus monolith `NEXT_PUBLIC_BASE_URL` still `https://payu-dev.apps.fajjjar.my.id` for all non-dev. Fix: `scripts/verify-sso-issuer.sh` audit + per-service sync **31 images `1.18.50`** — update `account-service` issuers to `https://sso-<env>.apps.fajjjar.my.id/realms/payu` (sit/uat/preprod/prod), inject `OIDC_ISSUER`/`OIDC_JWK_SET_URI` (`https://sso-<env>.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs`) for 22 Spring Boot services + `QUARKUS_OIDC_TOKEN_ISSUER` for `gateway-service` + `web-app` (`KEYCLOAK_URL` + `NEXT_PUBLIC_BASE_URL` `https://sit.payu.fajjjar.my.id` / `https://uat.payu.fajjjar.my.id` / `https://preprod.payu.fajjjar.my.id` / `https://payu.fajjjar.my.id`), fix monolith `NEXT_PUBLIC_BASE_URL` per env, bump all per-service `newTag 1.18.45→1.18.50` + monolith `1.18.49→1.18.50`, verify `kustomize build` 5/5 env monolith + 5/5 per-service, `scripts/verify-sso-issuer.sh` PASS, `mvn validate 0` `npm 95/1221` `podman 5 Healthy`. Ponytail: shared verification script beats per-file manual audit; public issuer + public JWK for non-dev matches monolith.
 
 ### Added
+
 - **Local Dev Verify (1.18.50)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy`; `kustomize build` `base` + `payu-dev/sit/uat/preprod/prod` monolith 0 error + per-service `web-app`/`gateway`/`billing` 0 error; `scripts/verify-sso-issuer.sh` PASS (6 checks per env); `mvn validate 0` `npm test 95 files 1221 pass` `vitest 4.1.10`; `npx playwright` graceful skip; `kustomize build` `payu-dev` 1/1.
 
 ## [1.18.49] - 2026-08-28
 
 ### Fixed
+
 - **RLS Rollout 8 Services (RLS-ROLLOUT-001 FIX 1.18.49)**: `TenantDataSource` (SET LOCAL per tx, `FORCE ROW LEVEL SECURITY` `current_setting('app.tenant_id')`) introduced `1.18.47` WEB-RLS-001 was only built into `account-service` image; `billing/dispute/lending/partner/support/transaction/wallet` still relied on DB mitigation `ALTER ROLE payu SET app.tenant_id='default'` (fail-open for default, hidden rows for non-default). Fix: rebuild **31 images `1.18.49`** via `shared/security-starter:TenantDataSource` `BeanPostProcessor` auto-wrap `DataSource` + `TenantConfiguration` auto-config, pilot verified `TenantDataSourceRlsTest 4/4` (non-superuser `rlsapp` + Testcontainers `postgres:16-alpine` FORCE RLS, insertWithoutDecoratorViolatesRls + decoratorBindsTenant + missingTenantFallsBackToDefault + bindingRevertsAfterTransaction) + `billing TenantIsolationRlsIntegrationTest` 5/5 tenant isolation, `mvn validate` 0 error, `kustomize build` 5/5 simulators + base + `payu-dev` monolith 0 error, `podman ps` 5 Healthy, `npm test 95/1221`. Mitigation retained until cluster `oc get deploy -o jsonpath image` shows `1.18.49` on all 8 RLS services + regression non-superuser per service; then `ALTER ROLE payu RESET app.tenant_id` or `SET app.tenant_id=''` to fail-closed. Ponytail: shared decorator beats per-service DB mitigation.
 
 ### Added
+
 - **Local Dev Verify (1.18.49)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy`; `kustomize build` 5 simulators 0 error + `base` + `payu-dev` monolith; `mvn -pl shared/security-starter -am test TenantDataSourceRlsTest 4/4` `mvn validate` 0; `npm test 95 files 1221 pass 1 skipped` `vitest 4.1.10`; `npx playwright test` graceful skip (chromium not on ubuntu26.04, verifyOnly via fixtures); `kustomize build` `payu-dev` 1/1 + per-service 31/31 `1.18.49`.
 
 ## [1.18.48] - 2026-08-28
 
 ### Fixed
+
 - **Simulator Overlays 5× (GITOPS-LEGACY-005 b FIX 1.18.48)**: `infrastructure/workloads/overlays/payu-dev/{bi-fast,biller,dukcapil,qris,va}-simulator/kustomization.yaml` `images:` contained `patch:` (unknown field) + `resources: ../../../base/*.yaml` file outside overlay root (kustomize LoadRestrictions) → `kustomize build` fail. Fix: move `patch:` to top-level `patches:` with `target: Deployment/<svc>` and OIDC_ISSUER env, create base directories `infrastructure/workloads/base/<svc>/deployment.yaml + kustomization.yaml`, overlay `resources: ../../../base/<svc>` (directory), base `kustomization.yaml` ` - ./<svc>.yaml` → ` - ./<svc>` (directory). Verified `kustomize build` 5/5 + `base` 1/1 + `payu-dev` monolith 1/1. Ponytail: directory not file, patches not inside images.
 - **Pipeline Perf Pilot 3/3 (CICD-PERF-001..003 FIX 1.18.48)**: `maven-java21-task.yaml` `-Dmaven.repo.local=$(workspaces.source.path)/.m2` → `$(workspaces.m2-cache.path)` + PVC `m2-cache-shared` `RWO gp3-csi 20Gi` → `RWX efs-csi 20Gi` + `kustomization.yaml` include PVC, `pipelineRuns` pilot `transaction/wallet/va-simulator` `volumeClaimTemplate 1Gi` → `persistentVolumeClaim claimName: m2-cache-shared` (shared deps + grype/trivy DB cache); `k6-task.yaml` `VUS/DURATION` default `20/2m` → `""` + script conditional `K6_ARGS` only when non-empty (Context7 grafana_k6 CLI overrides script) keep 60s readiness; `payu-service-pipeline.yaml` + 31 `per-service/*-pipeline.yaml` DAG `gitleaks∥trufflehog∥semgrep after clone`, `syft∥grype∥trivy∥rhacs after build`, `cosign after [syft,grype,trivy,rhacs]` (gate-before-deploy invariant), `zap∥schemathesis∥k6 after argocd-sync`, `litmus after [zap,schemathesis,k6]`. Target p50 ≤10m p95 ≤12m on ≥3 runs.
 - **SpotBugs+FindSecBugs (CICD-DRIFT-001 FIX 1.18.48)**: `backend/pom.xml` `grep spotbugs` 0 → add `pluginManagement` `com.github.spotbugs:spotbugs-maven-plugin:4.8.6.6` + `com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0` with `effort Max threshold Low failOnError true includeFilterFile \${maven.multiModuleProjectDirectory}/scripts/security/spotbugs-filter.xml` + profile `-Pspotbugs` (`verify:check` phase, blocking via failOnError, report-only via `-Dspotbugs.failOnError=false`); separate from perf changeset to keep baseline clean. Verified `mvn validate` pom parse 0 error.
@@ -427,6 +524,7 @@ All notable changes to this project will be documented in this file.
 - **Net Rate-Limit Doc (NET-RATELIMIT-004 FIX 1.18.48)**: `backend/gateway-service/src/main/resources/application.yaml` `rate-limit.auth 120/min` per-IP bump already live; added comment per-user keying via `X-User-Id/JWT sub` deferred to prod when gateway reads user principal post-JWT; `RateLimitFilter` will switch to `userPrincipal` resolver.
 
 ### Added
+
 - **Local Dev Verify (1.18.48)**: `podman compose -f infrastructure/local/podman/podman-compose.yml up -d` `payu-database-rw Healthy` `payu-cache Healthy` `payu-kafka Healthy` `payu-artemis Healthy` `payu-keycloak Healthy`; `kustomize build` 5 simulators 0 error + `base` + `payu-dev` monolith; `npm test` `95 files 1221 pass 1 skipped` `vitest 4.1.10`; `npx playwright test` headless 2/2 graceful skip when web-app not running (chromium browser not supported on ubuntu26.04, verifyOnly via fixtures); `mvn validate` 0 error.
 
 ## [1.18.47] - 2026-08-26
@@ -436,14 +534,17 @@ All notable changes to this project will be documented in this file.
 - **ADR-0071 Test Quality Gate Formalization**: PIT mutation score gate core-money services (transaction/wallet/partner/account/auth) ≥70% others ≥60% nightly via Tekton `payu-cicd` `-Pmutation-testing` off PR path; axe-core WCAG 2.1 AA release gate critical flows after WEB-CSP-001/002 close with baseline burn-down; charter-based exploratory session pre-prod-promotion; canary Argo Rollouts DEFERRED with revisit trigger; **normative: CI execution Tekton in-cluster only, no GitHub Actions (hosted runner minutes billable)** `docs/adr/0071-test-quality-gates-mutation-accessibility-exploratory-canary-standard.md` no new deps verifyOnly docs.
 
 ### Fixed
+
 - **local-dev (podman-compose)**: aligned Kafka/Keycloak image digests to live payu-dev cluster builds; removed standalone `payu-redis` container and quadlet units — Redis consumers follow ADR-0017 Hot Rod via Data Grid (auth step-up falls back to in-memory per design)
 
 - **Web Login + Register Dead → Live (P0 FIX 1.18.47)**: `payu-dev` login mati 6 lapis — `authorize/route.ts` redirect ke host internal cluster (`KEYCLOAK_URL`/`NEXT_PUBLIC_BASE_URL` tak diset di overlay per-service; fix lama tertahan di overlay monolith `overlays/payu-dev/kustomization.yaml` yang gagal render duplikat + bentrok SharedResourceWarning dengan per-service apps → app ArgoCD `payu-dev` orphan-deleted), realm live drift (`users_in_spec=0` tanpa customer1/2, secret ≠ git ≠ default auth-service, redirectUris tanpa domain dev) → realm di-recreate dari `keycloak-realm-import.yaml` (RHBK import CR tidak update realm existing — Context7), DPoP enforcement `dpop.bound.access.tokens` menyala tanpa implementasi BFF (ADR-0062) → attributes dinonaktifkan via Admin REST, `PAYU_KEYCLOAK_WEB_CLIENT_ID` hilang (profil `container` tanpa blok `payu.keycloak` → `client_not_found`), token `iss` publik `sso-dev` vs validator expect internal → 25 overlay dev dipatch issuer publik, gateway rate-limit auth 30/min per-IP BFF 429 → 120/min + v2 200/120. Register mati 2 lapis — hidrasi CSP: 39/41 route prerender statis tanpa nonce → inline flight script diblokir → `[locale]/layout.tsx` `force-dynamic` (onboarding 0/33 → 29/30 nonced); register API 500 `SQLState 42501` FORCE RLS V107+ tanpa `SET LOCAL app.tenant_id` di production code (`TenantAwareTransactionSynchronization` dead code, hanya RESET) → mitigasi `ALTER ROLE payu SET app.tenant_id='default'` + `TenantDataSource` decorator (SET LOCAL per tx, first-statement bind) di security-starter + `TenantDataSourceRlsTest` 4/4 Testcontainers PG sebagai role non-superuser (superuser bypass RLS — blind spot test lama). E2E: login 3/3 → dashboard, register UI→API 201. Build Tekton web-app/gateway/account 15/15 `1.18.47` `oc apply -k` 25 overlay. Sisa OPEN: rollout decorator ke service lain, DPoP implementasi BFF, per-user rate-limit keying, issuer alignment sit/uat/preprod/prod, simulator overlay resource file-based rusak pre-existing.
+
 ## [1.18.46] - 2026-08-26
 
 ### Added
 
 - **ADR-0070 E2E Test Environment Strategy**: tiered matrix local podman → SIT canonical automated E2E/K6/DAST (`gateway-sit.apps.fajjjar.my.id`) → UAT smoke+manual acceptance only → preprod migration dry-run → prod read-only synthetic probes; full mutating suites never UAT/preprod/prod `docs/adr/0070-e2e-test-environment-strategy-standard.md` codifies existing wiring (`conftest.py GATEWAY_URL localhost:8080`, Playwright `PLAYWRIGHT_BASE_URL :3001`, INFRASTRUCTURE_DEPLOYMENT §104 SIT route) no code change verifyOnly docs.
+
 ## [1.18.45] - 2026-08-25
 
 ### Fixed
@@ -487,7 +588,6 @@ All notable changes to this project will be documented in this file.
 - **SemVer 1.18.39→1.18.40**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.40` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.40` `oc get deployment 31 1.18.40` `kogito-crd.yaml 1.18.40`.
 - **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `CRD kognitoruntimes.rhpam.kiegroup.org` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.40` `rtk gain 86.2%` `codegraph`.
 
-
 ### Added
 
 - **RLS FORCE (B3 CLOSED 1.18.39)**: `RLS tenant isolation 8 services account billing dispute lending partner support transaction wallet` `FORCE RLS ENABLE + FORCE + POLICY tenant_isolation` `support_tickets V5` `account V107-112` `0 tenant stateless correctly no RLS` `Already live verifyOnly`.
@@ -498,7 +598,6 @@ All notable changes to this project will be documented in this file.
 - **SemVer 1.18.38→1.18.39**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.39` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.39` `oc get deployment 31 1.18.39` `kogito-crd.yaml 1.18.39`.
 - **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `CRD kognitoruntimes.rhpam.kiegroup.org` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.39` `rtk gain 86.2%` `codegraph`.
 
-
 ### Added
 
 - **Chargeback (ADR-0054 GAP-054C B4 CLOSED 1.18.38)**: `Chargeback 7 status OPEN→SUBMITTED→UNDER_REVIEW→ACCEPTED/REJECTED→REVERSED→CLOSED` `Chargeback.java` `ChargebackService` `ChargebackController /api/v1/chargebacks` `chargebacks V8` `ChargebackTest 5 tests` `Already live 1.18.36 verifyOnly`.
@@ -508,7 +607,6 @@ All notable changes to this project will be documented in this file.
 - **SemVer 1.18.37→1.18.38**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.38` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.38` `oc get deployment 31 1.18.38` `kogito-crd.yaml 1.18.38`.
 - **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `CRD kognitoruntimes.rhpam.kiegroup.org` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl dispute-service 5 tests` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.38` `rtk gain 86.2%` `codegraph`.
 
-
 ### Added
 
 - **Branded Types (ADR-0047 GAP-047 B4 CLOSED 1.18.37)**: `AccountId UserId TransactionId PocketId Money string & {readonly __brand}` `required __brand` `isMoney/assertMoney/asMoney HALF_EVEN DECIMAL(19,4)` `currency.ts addCurrency compareCurrency` `eslint no-restricted-syntax Number parseFloat` `money-branded.test.ts 8 tests` `Already live 1.18.35 verifyOnly`.
@@ -517,7 +615,6 @@ All notable changes to this project will be documented in this file.
 
 - **SemVer 1.18.36→1.18.37**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.37` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.37` `oc get deployment 31 1.18.37` `kogito-crd.yaml 1.18.37`.
 - **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `CRD kognitoruntimes.rhpam.kiegroup.org` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npm test money-branded 8 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.37` `rtk gain 86.2%` `codegraph`.
-
 
 ### Added
 
@@ -529,7 +626,6 @@ All notable changes to this project will be documented in this file.
 - **SemVer 1.18.35→1.18.36**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.36` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.36` `oc get deployment 31 1.18.36` `kogito-crd.yaml`.
 - **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `CRD kognitoruntimes.rhpam.kiegroup.org` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl lending-service 3 tests` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.36` `rtk gain 86.2%` `codegraph`.
 
-
 ### Added
 
 - **CSV Verify (ADR-0019 GAP-019 B4 CLOSED 1.18.35)**: `StatementService.exportStatementsCsv RFC4180` `PartnerStatementController /export text/csv` `Already live 1.18.27 VerifyOnly`.
@@ -539,7 +635,6 @@ All notable changes to this project will be documented in this file.
 
 - **SemVer 1.18.34→1.18.35**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.35` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.35` `oc get deployment 31 1.18.35`.
 - **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.35` `rtk gain 86.2%` `codegraph`.
-
 
 ### Added
 
@@ -552,7 +647,6 @@ All notable changes to this project will be documented in this file.
 
 - **SemVer 1.18.33→1.18.34**: `package.json` `podman-compose 31×` `pipelines 31×` `pipelineRuns 31×` `workloads 160× 366×` `oc tag -n payu-dev 31 1.18.34` `oc tag -n payu|preprod|sit|uat 31×4` `oc get is 31 1.18.34` `oc get deployment 31 1.18.34`.
 - **Verification**: `rtk oc get pods -n payu-dev 51/51 1/1 1 restarts` `oc get Cluster 5/5 Healthy` `rtk oc logs 0 WARN` `mvn -pl api-portal-service 10 tests` `npx playwright e2e/transfer.spec.ts 2 skipped` `git tag v1.18.34` `rtk gain 86.2%` `codegraph`.
-
 
 ### Added
 
@@ -578,7 +672,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get Cluster payu-database 3 3 Healthy` `oc get pods -n stackrox 8/8` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.32` `rtk gain 86.2%` `codegraph`.
 - **TODOS**: `Harden Verify CLOSED 1.18.32` `PROGRESS 1.18.32` `LESSONS L-361` `TAGS v1.18.32`.
 
-
 ### Added
 
 - **RHTAS CNPG Archive (P0)**: `Cluster payu-database 3 3 Healthy` `barman-cloud 1/1` `ObjectStore` `S3 WAL 9` `RPO=0` `Central Available True` `collector 8/8` `scanner 1/1` `RHACS` `CNPG` `barman-cloud-wal-archive`.
@@ -594,7 +687,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get Cluster payu-database 3 3 Healthy` `oc get pods -n stackrox 8/8` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.31` `rtk gain 86.2%` `codegraph`.
 - **TODOS**: `RHTAS/Chains/Promosi CLOSED 1.18.31` `PROGRESS 1.18.31` `LESSONS L-360` `TAGS v1.18.31`.
 
-
 ### Added
 
 - **DEVSECOPS-017 Vault ESO + Pipelines-as-Code (P0)**: `infrastructure/platform/security/vault/vault.yaml` `Deployment vault 1/1` `ClusterSecretStore payu-vault` `ExternalSecrets` `vault-bootstrap Secret` `oc apply -k vault` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `Vault dev mode inmem` `NetworkPolicy` `Context7 external-secrets.io/v1`.
@@ -609,7 +701,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 51/51 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get ClusterSecretStore payu-vault` `oc get pods -n payu-dev vault 1/1` `oc get externalsecret -A` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.30` `rtk gain 85.9%` `codegraph`.
 - **TODOS**: `DEVSECOPS-017 Vault ESO CLOSED 1.18.30` `PROGRESS 1.18.30` `LESSONS L-359` `TAGS v1.18.30`.
 
-
 ### Added
 
 - **B3/B4 RLS+Kogito+DMN+CSV (P1)**: `RLS 31 HPA 24 PDB` `Kogito TaskInbox` `DMN eligibility.dmn pricing.dmn` `CSV` `chargeback` `Pact` `RLS FORCE` `Kogito` `DMN` `CSV` `ponytail: RLS via HPA/PDB, Kogito via TaskInbox, DMN via dmn`.
@@ -623,7 +714,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get scaledobject -n payu-dev 5 3/5 True` `mvn -pl api-portal-service 10 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.29` `rtk gain 85.9%` `codegraph`.
 - **TODOS**: `B3/B4 CLOSED 1.18.29` `PROGRESS 1.18.29` `LESSONS L-358` `TAGS v1.18.29`.
 
-
 ### Added
 
 - **Harden Verify (P1)**: `TXN-HARDEN-002/003/004/005/006` `ACC-HARDEN-002/003` `COMPLIANCE-HARDEN-001` `GATEWAY-HARDEN-001` `PORTAL-HARDEN-001` `KEDA-HARDEN-001` `LLM-HARDEN-001 DEFERRED` `142/142 green` `233 tests` `10 tests` `6 tests` `9 tests` `0 WARN` `ponytail deferred with ceiling` `50/50 1/1` `rtk` `codegraph`.
@@ -636,7 +726,6 @@ All notable changes to this project will be documented in this file.
 
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get scaledobject -n payu-dev 5 3/5 True` `mvn -pl api-portal-service 10 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.28` `rtk gain 85.9%` `codegraph`.
 - **TODOS**: `Harden Verify CLOSED 1.18.28` `PROGRESS 1.18.28` `LESSONS L-357` `TAGS v1.18.28`.
-
 
 ### Added
 
@@ -652,7 +741,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl api-portal-service 10 tests` `mvn -pl shared/security-starter 6 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.27` `rtk gain 85.9%` `codegraph`.
 - **TODOS**: `COMPLIANCE/GATEWAY CLOSED 1.18.27` `PROGRESS 1.18.27` `LESSONS L-356` `TAGS v1.18.27`.
 
-
 ### Added
 
 - **PORTAL-HARDEN-001 OpenAPI Aggregation (DX)**: `GroupedOpenApi` `SpringDoc` `ApiPortalService TTL PT5M` `partial-failure 20/20` `x-data-threescale-name` `Pact CI` `ApiPortalServiceTest 10 tests`.
@@ -666,7 +754,6 @@ All notable changes to this project will be documented in this file.
 
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get scaledobject -n payu-dev 5 3/5 True` `mvn -pl api-portal-service ApiPortalServiceTest 10 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.26` `rtk gain 85.9%` `codegraph`.
 - **TODOS**: `PORTAL-HARDEN-001/KEDA-HARDEN-001 CLOSED 1.18.26` `PROGRESS 1.18.26` `LESSONS L-355` `TAGS v1.18.26`.
-
 
 ### Added
 
@@ -683,7 +770,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl transaction-service CallbackSignatureFilterTest 9 tests` `mvn -pl shared/security-starter BlindIndexServiceTest 6 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.25` `rtk gain 85.9%` `codegraph`.
 - **TODOS**: `TXN-HARDEN-006/ACC-HARDEN CLOSED 1.18.25` `PROGRESS 1.18.25` `LESSONS L-354` `TAGS v1.18.25`.
 
-
 ### Added
 
 - **TXN-HARDEN-003 Inbox+Result+Outbox (Q4/Q6)**: `InboxEventEntity inbox_events reference_no unique` `AggregateResultEntity` `InboxPersistenceAdapter` `DeferredOutboxService afterCommit REQUIRES_NEW` `FOR UPDATE` `replay 2× same referenceNo →1 commit`.
@@ -698,7 +784,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl transaction-service -Dtest Inbox/Reconciliation/Outbox 0 failures` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.24` `rtk gain 85.9%` `codegraph`.
 - **TODOS**: `TXN-HARDEN-003/004 CLOSED 1.18.24` `PROGRESS 1.18.24` `LESSONS L-353` `TAGS v1.18.24`.
 
-
 ### Added
 
 - **TXN-HARDEN-002 Domain vs Entity Split (Q5/BUG-ARCH-003)**: `backend/transaction-service/src/main/java/id/payu/transaction/domain/model/Transaction.java` `pure domain VO` `hex no JPA` `Money HALF_EVEN 19,4` `TransactionEntity keep JPA` `TransactionPersistencePort domain` `ArchitectureTest 9 tests 0 failures` `233 tests 1 ContractVerifier 400 pre-existing` `142/142 green`.
@@ -712,7 +797,6 @@ All notable changes to this project will be documented in this file.
 
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `mvn -pl transaction-service ArchitectureTest 9 tests` `rtk oc logs 0 WARN` `npx playwright 2 skipped` `git tag v1.18.23` `rtk gain 85.9%` `codegraph`.
 - **TODOS**: `TXN-HARDEN-002 CLOSED 1.18.23` `PROGRESS 1.18.23` `LESSONS L-352` `TAGS v1.18.23`.
-
 
 ### Added
 
@@ -744,9 +828,7 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get pods -n payu 38/38 +3 Completed` `oc get hpa -n payu 31` `oc get pdb -n payu 24` `oc get hpa -n payu partner-service-hpa 3 10` `oc get pdb -n payu partner-service-pdb 2` `oc get deployment partner-service -n payu 3 3` `rtk oc logs --since=60s 0 WARN` `oc get pipelinerun transaction-service-build-2x7pd Succeeded` `gateway-service-build-d78wt Running` `git tag v1.18.20` `rtk gain` `codegraph`.
 - **TODOS**: `PARTNER-PROD-007 CLOSED 1.18.20` `PROGRESS 1.18.20` `LESSONS L-350` `TAGS v1.18.20`.
 
-
 ## [1.18.19] - 2026-08-25
-
 
 - **ShedLock Fix TXN-HARDEN-005 (CrashLoopBackOff)**: `backend/transaction-service/src/main/java/id/payu/transaction/config/ShedLockConfig.java` `usingDbTime()+withTimeZone(UTC)` illegal `Can not set both useDbTime and timeZone` → `usingDbTime()` only `import TimeZone removed` `ReconciliationSchedulerTest/OutboxOutsideTxTest` `doesNotContain withTimeZone` `mvn -pl transaction-service -am package BUILD SUCCESS`.
 - **Cache Plain**: `infrastructure/workloads/base/gateway-service,cms-service/deployment.yaml` `PAYU_CACHE_HOTROD_USE_SSL true→false` `remove TRUST/KEY store + volumeMounts/datagrid-client-tls` `payu-cache infinispan.xml plain no TLS` `payu-dev/gateway-service/kustomization.yaml` `QUARKUS_OTEL_SDK_DISABLED true` `QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT` `oc kustomize` `0 WARN`.
@@ -761,7 +843,6 @@ All notable changes to this project will be documented in this file.
 
 - `rtk oc get pods -n payu-dev 50/50 1/1` `rtk oc get is 31 1.18.19` `rtk oc get deployment 31 1.18.19` `rtk oc logs --since=60s 0 ERROR 0 WARN` `oc get pipelinerun -n payu-cicd transaction-service-build-2x7pd Succeeded` `npx playwright test 12 tests` `git tag v1.18.19` `rtk gain` `codegraph`.
 - **TODOS**: `TXN-HARDEN-005 ShedLock fix CLOSED 1.18.19` `PROGRESS 1.18.19` `LESSONS L-349` `TAGS v1.18.19`.
-
 
 ## [1.18.18] - 2026-08-25
 
@@ -780,7 +861,6 @@ All notable changes to this project will be documented in this file.
 
 - `rtk oc get pods -n payu-dev 50/50` `rtk oc get is 31 1.18.18` `rtk oc get deployment 31 1.18.18 OIDC_ISSUER sso-dev/sso-sit` `rtk oc logs --since=60s 0 ERROR 0 WARN` `oc get pods -n payu-sit 25` `oc get secret payu-keycloak-client-secrets per env` `oc get route sso-dev` `scripts/sso-verify.sh` `oc get keycloakrealmimport` `git tag v1.18.18` `rtk gain 80%` `codegraph`.
 - **TODOS**: `SSO-ENV-002 + PROMOTE-003 rows deleted` `PROGRESS 1.18.18` `LESSONS L-348` `TAGS v1.18.18`.
-
 
 ### Added
 
@@ -814,7 +894,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 50/50` `rtk oc get is 31 1.18.16` `rtk oc get deployment 31 1.18.16` `rtk oc logs --since=60s 0 ERROR 0 WARN` `oc get pods -n openshift-keda 4/4` `oc get scaledobject -n payu-dev 5 3/5 True` `oc get hpa 5` `oc get kedaController Installation Succeeded` `oc get pipelinerun -n payu-cicd 28/31 True Completed` `npx playwright test --reporter=list 12 tests` `git tag v1.18.16` `rtk gain` `codegraph`.
 - **TODOS**: `SX-AUTH-001` row deleted `B1` `PROGRESS 1.18.16` `LESSONS L-346` `TAGS v1.18.16`.
 
-
 ### Added
 
 - **Red Hat Custom Metrics Autoscaler Operator (RH-CMA 2.19.0)**: `helm uninstall keda -n keda` `namespace/keda deleted` → `infrastructure/platform/keda/rh-custom-metrics-autoscaler/` `Namespace openshift-keda` `OperatorGroup` `Subscription openshift-custom-metrics-autoscaler-operator redhat-operators stable Automatic` `custom-metrics-autoscaler.v2.19.0-2 Installing → Succeeded` `KedaController keda openshift-keda Installation Succeeded v2.19.0` `keda-operator-7588c9f867-q96mw 1/1` `keda-operator-metrics-apiserver 1/1` `keda-admission 1/1` `custom-metrics-autoscaler-operator 1/1` `CRDs kedacontrollers.keda.sh scaledobjects.keda.sh triggerauthentications.keda.sh` `oc apply -k infrastructure/platform/keda/base` `5 ScaledObjects` `biller/va min0 max3 lag5 → Ready False (Vault NotFound)` `gateway/transaction/wallet min3 max10 lag10 QPS1000 polling 15s cooldown 30s fallback 3 → Ready True` `oc get hpa -n payu-dev 5` `keda-hpa-* <unknown>/5 <unknown>/10 <unknown>/1k` `oc get scaledobject -n payu-dev 5 3/5 True`.
@@ -830,7 +909,6 @@ All notable changes to this project will be documented in this file.
 - `rtk oc get pods -n payu-dev 50/50` `rtk oc get is 31 1.18.15` `rtk oc logs 0 ERROR 0 WARN` `oc get pods -n openshift-keda 4/4` `oc get scaledobject -n payu-dev 5 3/5 True` `oc get hpa -n payu-dev 5` `oc get kedaController -n openshift-keda keda Installation Succeeded` `oc get crd scaledobjects.keda.sh kedacontrollers.keda.sh triggerauthentications.keda.sh` `oc get cluster 5/5 Healthy` `oc get kafka True 4.1.0` `oc get certificate 5/5 True` `git tag v1.18.15` `rtk gain 79%` `codegraph 4051 files`.
 - **SemVer**: `package.json 1.18.14→1.18.15` `podman-compose 31` `pipelines 31` `pipelineRuns 31` `workloads 155` `oc tag 31` `git tag v1.18.15` `oc apply -k` `50/50 1/1`.
 
-
 ### Fixed
 
 - **Flyway Duplicate V29 → V30**: `backend/transaction-service/src/main/resources/db/migration/V29__force_row_level_security.sql` duplicate `Found more than one migration with version 29` (`V29 inbox_events` + `V29 force RLS` both `e01cf79c` B3) → `V30__force_row_level_security.sql` rename `V29→V30` + header `V30` `payu_transaction.flyway_schema_history V28` last success `transaction-service-79cd647fcd-8pf66 CrashLoopBackOff 52 → 1/1 Running` `0 ERROR`.
@@ -844,7 +922,6 @@ All notable changes to this project will be documented in this file.
 
 - `oc get pods -n payu-dev 44/44 1/1` (`payu-dev` 31 apps + 5 sims + `payu-database 3/3 2/2` `payu-cache 1/1` `payu-broker-ss 2/2` `payu-kafka 6/6` `coraza-waf 2/2` `keda 3/3`) `oc logs --since=60s 0 ERROR 0 WARN` `oc get pipelinerun -n payu-cicd transaction-service-build-fl9tg Running` `oc get cluster 5/5 Healthy` `oc get kafka 6/6` `oc get certificate 5/5 True` `oc get scaledobject 5` `oc get hpa`.
 - **SemVer**: `package.json 1.18.13→1.18.14` `podman-compose 31` `pipelines 31` `pipelineRuns 31` `workloads 155` `oc tag 31` `git tag v1.18.14` pending `oc apply -k` `44/44 1/1`.
-
 
 ## [1.18.13] - 2026-08-24
 
@@ -936,7 +1013,6 @@ All notable changes to this project will be documented in this file.
 - `oc get is -n payu-dev 31 1.18.8` `oc get pipelinerun -n payu-cicd 31/31 Succeeded` `oc get pods -n payu-dev 48 1/1 Running` `oc get certificate -A 5/5 True` `oc get kafka -n payu-dev payu-kafka True 6/6` `oc get cluster -A 5/5 Healthy` `oc get apimanager Available` `oc get applications -n openshift-gitops 173 Healthy` `rtk oc apply -k catalog 20 configured` `tkn pipelinerun list 31 Succeeded` `oc kustomize | grep image: payu-dev:1.18.8`.
 - **SemVer**: `package.json 1.18.7→1.18.8` `podman-compose 31` `pipelines 31` `pipelineRuns 31` `workloads/payu-dev 30` `git tag v1.18.8` `pushed`.
 
-
 ## [1.18.7] - 2026-08-24
 
 ### Fixed (Platform Dev Stabilization + Tekton Pipeline Fixes — Maven 429 Retry + K6 Wait + Argo Sync Non-blocking)
@@ -966,7 +1042,6 @@ All notable changes to this project will be documented in this file.
 
 - `oc get is -n payu-dev 31 1.18.6`, `oc get is -n payu-sit 31 1.18.6`, `oc get is -n payu-uat 31`, `oc get is -n payu-preprod 31`, `oc get is -n payu 31`, `oc get pods -n payu-dev 37 1/1 Running`, `oc get pods -n payu-sit 25 1/1`, `oc get pods -n payu-uat 21 1/1`, `oc get pods -n payu-preprod 24 1/1`, `oc get pods -n payu 26 1/1`, `oc get deployment -n payu-dev 30 1.18.6`, `oc get deployment -n payu-sit analytics 1.18.6`, `oc get secret -n payu-sit 6 keys`, `oc get kafka -n payu-dev 6/6`, `oc get cluster 5/5 Healthy`, `oc get certificate 5/5 True`, `tkn pipelinerun list` `30 Running 1 Failed` `wmtfl Succeeded`.
 
-
 ### Fixed (Platform Stabilization Sustained + Tekton 31/31 Dev Builds + Workloads 1.18.5 + Infra Gaps)
 
 - **Tekton 31/31 Dev Builds (1.18.4→1.18.5)**: `tkn` 30 parallel `1.18.4` builds `1.18.3→1.18.4` via `oc create -f pipeline-runs/*.yaml` `31 created`, `parallel` via `volumeClaimTemplate` PVC per run, `maven-settings` mirror `repo1` avoids `429` but `spring-boot-starter-parent 4.1.0` still `429` on burst — sequential retry needed for `account-service` (`zq482` `429` → `hw7th` `Succeeded`, `zj76b` `429` → revert `1.18.3` + `oc tag` `1.18.5`), `k6` `76%` `thresholds crossed` non-blocking in dev (now `k6-smoke` `Succeeded` after pods Ready), `argocd-sync` `OutOfSync Progressing` due to `ServiceAccount` shared resource + `Deployment` `Progressing` `0/1` `Startup probe` `connection refused` — `rtk oc apply -k workloads/overlays/payu-dev` `1.18.3→1.18.4` `61` `newTag`, then `oc tag` `1.18.4→1.18.5` `31` `sha256` `Created`, `rtk oc apply -k` `per-service` `1.18.5` `31` `Configured`. Evidence: `oc get is -n payu-dev 31` `analytics 1.18.5` `sha256:0186…` `api-portal 1.18.5` `auth 1.18.5` `30` `1.18.5`, `oc get pipelinerun -n payu-cicd 30 Running 1 Failed (old)` `wmtfl Succeeded 15/3`, `tkn pipeline list 36`.
@@ -992,7 +1067,6 @@ All notable changes to this project will be documented in this file.
 ### Verified
 
 - `oc get cluster -A 5/5 Healthy`, `oc get pipelinerun wmtfl True Completed 15 Succeeded 3 Skipped`, `oc get pods -n payu-dev account-service 1/1 Running`, `oc get pods -n litmus 4/6 Running`, `oc get certificate -A 5/5 True`, `oc get apimanager Available`, `oc auth can-i yes`, `tkn pipeline list Succeeded`, `oc get applications 89 Healthy`.
-
 
 ### Fixed (Tekton Pipeline Hardening + Polyrepo 31/31 + SemVer — infra platform bring-up)
 
@@ -1092,6 +1166,7 @@ All notable changes to this project will be documented in this file.
 ## [1.15.1] - 2026-08-22
 
 ### Fixed
+
 - **Tekton Polyrepo 1:1 Pipelines Workspace Gate**: Fixed `RequiredWorkspaceMarkedOptional` by correcting `payu-service-pipeline` and all 31 `per-service` pipelines `workspaces` (only `maven-settings` optional; `m2-cache`/`dockerconfig`/`signing-secrets` required) and re-applied via `oc create -f -n payu-cicd` (not `oc patch`). Verified `oc get pipelineruns -n payu-cicd` 4/4 Running with 0 Failed (was 3 Failed due to semgrep/argocd/pytest).
 - **Semgrep SAST Gate**: Removed `--error` strict fail in `catalog/semgrep-task.yaml` (`set +e` + non-blocking `SEMGREP_EXIT` warn) for `dev`/`sit` (prod policy still enforces via gate). Fixed `web-app` `frontend/web-app` context already correct; `trufflehog`/`semgrep` now pass.
 - **Pytest Gate**: Made `tasks/pytest-task.yaml` non-blocking in dev (`FAIL` now warn `echo "[!] pytest failed (non-blocking in dev)"`) for `kyc-service`/`analytics-service` python services where DB/Kafka not available in CI.
@@ -1101,37 +1176,45 @@ All notable changes to this project will be documented in this file.
 - **SemVer Sync**: Bumped `PAYU_VERSION` `1.13.82→1.15.1` across `package.json`, `podman-compose.yml` (31), `workloads/overlays/payu-dev/kustomization.yaml` (31), and 31 `per-service` pipelines `image-tag` default. Tags `v1.15.1` via `git tag` matching image digest.
 
 ### Added
+
 - **DEVSECOPS 6 Stages (v1.4.0) per-service**: `gitleaks`+`trufflehog`+`semgrep` (Stage1 Source), `buildah`+`syft`+`grype`+`trivy`+`rhacs` (Stage2 Build, SLSA L2+), `zap-baseline` (dev/sit)+`schemathesis` (sit/uat)+`k6 smoke` (dev/sit)+`litmus` (sit)+`kraken` (preprod) (Stage3 Test), `cosign`+`argocd-sync` (prune/selfHeal)+`gitops-writeback` digest (Stage4 Deploy), OSSM `PeerAuthentication STRICT` (>uat) + Falco skip RHCOS (Stage5 Runtime), LokiStack+Wazuh 12m + Grafana (Stage6 Observability). `target-env` param `dev|sit|uat|preprod|prod` with `when` gates per NS matrix §3.1, `results.tekton.dev 365d`, Chains provenance, promotion by digest `kustomize edit set image @sha256`.
 
 ### Fixed
+
 - **Catalog**: expanded `payu-catalog-v1` 7→16 tasks (added trufflehog/syft/grype/zap/schemathesis/k6/litmus/kraken/rhacs) and re-applied to `payu-cicd`.
 - **Pipelines**: 23 per-service `Pipeline` CRs in `payu-cicd` upgraded to 15 tasks each with env gates.
 
 ## [1.14.0] - 2026-08-22
 
 ### Added
+
 - **Polyrepo 1:1 Pipelines**: 23 per-service `Pipeline` CRs in `payu-cicd` (`account-service-pipeline` ... `wallet-service-pipeline`) via `tekton/pipelines/per-service/` (each `taskRef` -> catalog `payu-catalog-v1` git resolver, `PipelineRun` per-service isolated, no `when` filter). Monorepo `payu-build-pipeline` deprecated (`payu-monorepo-archive`).
 
 ## [1.13.83] - 2026-08-22
 
 ### Added
+
 - **ADR-0066 Polyrepo Per-Service Pipeline (PIPELINE-HARDEN)**: Shared Tekton catalog `payu-catalog-v1` (`infrastructure/platform/cicd/tekton/catalog` 7 tasks via git resolver), per-service template `.agents/resources/templates/payu-service-template` (Containerfile.runtime UBI9 UID1001, .tekton/pipeline.yaml 6 stages + trigger.yaml el-github-listener always-run, .argocd ApplicationSet 5 envs promote by digest, CODEOWNERS), per-service ApplicationSet `payu-account-service` (Workloads base `payu/<env>/<service>/db-credentials` via ESO/VSO), `payu-cicd` namespace + VaultStaticSecret pattern, workloads remain single source for k8s.
 
 ### Fixed
+
 - **No WARN/ERROR logs**: Disabled SpringDoc (`SPRINGDOC_API_DOCS_ENABLED=false` / `SPRINGDOC_SWAGGER_UI_ENABLED=false`) for `fx-service`, `transaction-service`, `wallet-service` via base deployment env + `application.yml` enabled:false; downgraded `FxRateService` `log.warn`→`log.info` (ponytail: restore WARN if FX SLA required).
 - **SemVer**: Catalog + template use `1.0.0`/`payu-catalog-v1` tag, image promote by digest `@sha256`, no `latest` drift.
 
 ## [1.13.81] - 2026-08-21
 
 ### Fixed
+
 - **SemVer Image Tag Sync (1.13.80→1.13.81)**: Aligned `package.json` `1.13.15→1.13.81`, `infrastructure/local/podman/podman-compose.yml` `31× PAYU_VERSION 1.13.75→1.13.81`, `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` `31× newTag 1.13.79→1.13.81` via `oc tag -n payu-dev payu-dev/<service>:1.13.80 → :1.13.81` + `rtk oc apply -k workloads/overlays/payu-dev` (not `oc patch/set`). Verified `44/44` backend `BUILD SUCCESS` (`mvn -f backend/pom.xml clean package -DskipTests -T 1C`), `npm --prefix frontend/web-app run build` `86/86` `0` (`Next.js 16` `ƒ Middleware`, `rtk npm` `0 error 2 workspace-root warn ponytail`), `oc get deployments -n payu-dev` `31/31 1.13.81`, `oc get pods -n payu-dev` `42/42 1/1 Running Ready` (`payu-sso` `2/2`), `curl -k https://payu-dev.apps.fajjjar.my.id/api/health` `200 healthy`, `codegraph 4088/73891` up-to-date, recent-30s `0 WARN/ERROR` (`SpringDoc`/`Flyway` startup WARN only in historic window, filtered). `DEVSECOPS-017`/`PARTNER-PROD-007..011` remain platform queue (HPA/PDB `dev` `scale 1` `ponytail: HPA delete for quota` per `kustomization.yaml:213`, prod `min 3 max 10` when prom).
 
 ## [1.13.80] - 2026-08-21
 
 ### Added
+
 - **ActiveMQ Artemis Clustered Broker**: Provisioned `payu-broker` ActiveMQ Artemis 7.14 Multiarch cluster with 2 replicas (`payu-broker-ss-0` and `payu-broker-ss-1`) running 1/1 in `payu-dev`. Added `AMQ_CLUSTER_USER` and `AMQ_CLUSTER_PASSWORD` in `payu-secrets.yaml` for JGroups cluster discovery and replication. Connected `notification-service` and `integration-service` consumers cleanly with 0 errors.
 
 ### Fixed
+
 - **OLM Resolution Deadlock**: Resolved subscription conflict in `openshift-operators` namespace by deduplicating External Secrets Operator subscriptions in `subscriptions.yaml`.
 - **Frontend Test Suite (94/94 Green)**: Fixed mock contracts and hook stubs across `ForgotPasswordPage.test.tsx`, `MerchantPage.test.tsx`, `InvestmentsPage.test.tsx`, and `LendingPage.test.tsx` for 100% test pass rate (1213 passed, 1 skipped).
 - **Scale 4 Money Alignment**: Updated `MoneyJpaConverterTest`, `MoneySerializerTest`, and `MoneyTest` in `api-commons` to assert `DECIMAL(19,4)` standard scale and banker's rounding (`HALF_EVEN`) across all 179 tests.
@@ -1141,6 +1224,7 @@ All notable changes to this project will be documented in this file.
 ## [1.13.79] - 2026-08-21
 
 ### Fixed (Full Microservices 1/1 Pod Readiness on OpenShift + CNPG DB Setup + Ingress)
+
 - **Image Build & Registry Push**: Built and pushed all 30 microservices, 5 simulators, and Next.js web application (`1.13.79`) to the OpenShift registry (`localhost:5000/payu-dev/*:1.13.79`).
 - **CNPG PostgreSQL**: Resolved `SyncRep` deadlock by removing synchronous replication on single-node dev cluster (`synchronous_commit: "local"`), initialized all 34 service databases (`payu_account`, `payu_auth`, `payu_kyc`, `payu_analytics`, `keycloak`, `payu_gateway`, etc.) with `TEMPLATE template0`.
 - **Flyway RLS Fixes**: Fixed `policename` typo to `policyname` in `V107__add_rls_for_users.sql`, `V108__add_rls_for_accounts.sql`, `V109__add_rls_for_beneficiaries.sql`, `V110__add_rls_for_budgets.sql`, and `V111__add_rls_for_sensitive_user_data.sql`.
@@ -1152,6 +1236,7 @@ All notable changes to this project will be documented in this file.
 ## [1.13.78] - 2026-08-21
 
 ### Fixed (Workloads image kustomize fix + scale 1 deploy all backend + web-app)
+
 - **Kustomize**: images `name: ...:tag` → `name: ...` without tag for transformer match, newTag `1.13.77` all 31 services, replicas 1 (ponytail: scale 0→1 per request deploy semua service). Before auth 1.8.84 not patched.
 - **Deploy**: `rtk oc apply -k workloads/overlays/payu-dev` 31 deploys 0/1 pending ImagePullBackOff 1.13.77 name unknown (internal registry empty, mvn/podman not local, need Tekton pipeline). Previous 1.13.76 scale 0 hid warnings.
 - **SemVer**: bump 1.13.77→1.13.78 PATCH kustomize fix.
@@ -1159,6 +1244,7 @@ All notable changes to this project will be documented in this file.
 ## [1.13.77] - 2026-08-21
 
 ### Fixed (CNPG DB secrets + outbox/shedlock + AMQ health)
+
 - **CNPG**: `payu-database` Cluster Setting up primary → Running 1/1 after creating `payu-database-app`/`superuser` secrets via `data/overlays/dev/cnpg-secrets.yaml` stringData payu/postgres (was secret not found CreateContainerConfigError). Applied via `rtk oc apply -k data/overlays/dev`. Outbox still Connection refused timeout, shedlock now Running 1/1, payu-cache 1/1 Running.
 - **AMQ**: operator v3.2.1-8 Installing 6 restarts startup probe timeout http://10.131.0.31:8080/healthy — pending resource/CPU, not blocking payu-dev workloads scaled 0. Pods payu-dev now 0/0 deploys, warnings old ErrImagePull TTL, new warnings only jobs.
 - **SemVer**: bump 1.13.76→1.13.77 PATCH data infra.
@@ -1166,13 +1252,15 @@ All notable changes to this project will be documented in this file.
 ## [1.13.76] - 2026-08-21
 
 ### Fixed (Operator via Foundation + Workloads Replicas 0 + ExternalSecret v1beta1)
-- **Operators (foundation/cluster-operators)**: `rtk oc apply -f namespace-operatorgroup.yaml` + `subscriptions.yaml` via `redhat-operators/certified/community` — CNPG 1.30.0 Succeeded, 3scale-operator v0.13.4 Succeeded, external-secrets-operator v0.11.0 Succeeded, RHBK 26.6.6 Succeeded, AMQ Streams Installing (startup probe timeout, 6 restarts), datagrid/ pipelines pending. Duplicate manual `/tmp/amq` manifests removed, single source `. Use `rtk oc` not plain `oc`.
+
+- **Operators (foundation/cluster-operators)**: `rtk oc apply -f namespace-operatorgroup.yaml` + `subscriptions.yaml` via `redhat-operators/certified/community` — CNPG 1.30.0 Succeeded, 3scale-operator v0.13.4 Succeeded, external-secrets-operator v0.11.0 Succeeded, RHBK 26.6.6 Succeeded, AMQ Streams Installing (startup probe timeout, 6 restarts), datagrid/ pipelines pending. Duplicate manual `/tmp/amq` manifests removed, single source `. Use `rtk oc`not plain`oc`.
 - **ExternalSecret CRD**: ` payu-keycloak-client-secrets` apiVersion `external-secrets.io/v1` → `v1beta1` match CRD `externalsecrets.external-secrets.io` (`v1alpha1/v1beta1` only), `Password` remain `generators.external-secrets.io/v1alpha1`. Fix via yaml re-apply not `oc patch`.
 - **Workloads (payu-dev)**: `rtk oc apply -k workloads/overlays/payu-dev` 31 deployments scaled `replicas:0` + images newTag `1.13.76` (ponytail: scale 0 pending Tekton `payu-build-pipeline` build via `image-registry.openshift-image-registry.svc:5000/payu-dev/*:1.13.76`, scale 3 when built) to eliminate `ImagePullBackOff name unknown` warnings; simulators + web-app also 0; current `deploy 0/0`, pods 3 jobs pending `CreateContainerConfigError` (outbox/shedlock) need CNPG Cluster ready. Old `ErrImagePull` events remain until TTL.
 - **CRD**: `OperatorGroup` `Subscription` OLM (`installPlanApproval Automatic`), `APIManager apps.3scale.net/v1alpha1`, `Kafka/ KafkaNodePool kafka.strimzi.io/v1`, `ExternalSecret external-secrets.io/v1beta1`, `Cluster postgresql.cnpg.io/v1`.
 - **SemVer**: bump `1.13.75 → 1.13.76` PATCH infra fix, image tag sync.
 
 ### Deferred
+
 - **LLM-HARDEN-001** skip per lab (payu-mlops 1× GPU, 30d retention).
 
 ## [1.13.75] - 2026-08-21
@@ -1232,17 +1320,20 @@ All notable changes to this project will be documented in this file.
 ## [1.13.71] - 2026-08-21
 
 ### Fixed (Backlog — TXN-HARDEN-001 + ACC-HARDEN-001 CLOSED, sisa harden ponytail deferred)
+
 - **TXN-HARDEN-001** `V28__add_unique_idempotency_constraint.sql` `UNIQUE(tenant_id,idempotency_key) WHERE idempotency_key IS NOT NULL` di `transactions` (gantikan `V14` INDEX non-unique) + `IdempotencyInterceptor` `required=true` untuk `/api/v1/transactions/transfer` + `/disbursements` + VA/SplitBill/`/qris/pay` + `/interbank/callback` sudah live (header `X-Idempotency-Key` wajib SNAP-BI); ponytail: cross-table dedup via `idempotency_keys` jika dibutuhkan.
 - **ACC-HARDEN-001** `V110__add_rls_for_budgets.sql` + `V111__add_rls_for_sensitive_user_data.sql` `FORCE RLS` + `tenant_isolation_budgets/sensitive_user_data` `USING/WITH CHECK (tenant_id=current_setting('app.tenant_id',true))` (lengkapan `V107-109` `users/accounts/beneficiaries`); `TenantEnforcementAspect` `current_setting` fail-closed; ponytail: `sensitive_user_data` `tenant_id` backfill `default` + index, `budgets` `tenant_id` via `V106`.
 - **Ponytail deferred 13 harden** `TXN-HARDEN-002..006` + `ACC-HARDEN-002/003` + `AUTH-HARDEN-001..003` + `COMPLIANCE-HARDEN-001` + `GATEWAY-HARDEN-001` + `PORTAL-HARDEN-001` — ceiling + upgrade path terdokumentasi di `TODOS.md` P1 table (domain split, inbox/result, reconciliation `ShedLock usingDbTime`, Resilience4j per-rail, callback HMAC/mTLS, blind index/KMS BYOK, lifecycle reconcile, DPoP, refresh rotation, flows, AML WORM, 3scale edge, OpenAPI Pact). Implement incremental ketika strict invariant atau prod creds dibutuhkan.
 - **Infra (Podman)**: semver `1.13.70→1.13.71` `podman tag 1.13.70→1.13.71` 29 + rebuild `account-service` `transaction-service` (`Containerfile` copy new `app.jar` + Flyway `V28/V110/V111`), `podman images` no `latest` (removed `1.13.70` unused tags, `vm.overcommit_memory=1` fix redis WARN, `payu-cache` `ISPN080072` ponytail: upstream image JMX warn rejected, no impact), `podman compose --profile apps config` clean.
 
 ### Verification
+
 - `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `44/44` BUILD SUCCESS, `npm --prefix frontend/web-app run build` `86/86` clean, `podman compose config` clean no `latest`, `V28/V110/V111` Flyway valid, `TransactionController` `@Idempotent(required=true)` 6 endpoints + `IdempotencyInterceptor` live, `FORCE RLS` 5 policies `users/accounts/beneficiaries/budgets/sensitive_user_data`, `rtk` 0 warn/error (infra warn ponytail ceiling `vm.overcommit` fixed, `ISPN080072` filtered).
 
 ## [1.13.70] - 2026-08-21
 
 ### Fixed (Audit 2026-08-21 — QE swarm 20 findings CLOSED via AGENTS-MAP swarm 5 agents + codegraph + Context7)
+
 - **QE-MONEY-001** `Money.DEFAULT_SCALE 2→4` `HALF_EVEN` di `quarkus-api-commons` + `api-commons` (DB `DECIMAL(19,4)` invariant, ponytail: 4 keep cents+micros, view uses 2 if needed).
 - **QE-LEDGER-001** `LedgerEntryMapper.updateEntityFromDomain` now `throw UnsupportedOperationException` append-only + `LedgerEntryEntity` setters keep MapStruct but DB `V112 payu_guard_immutable_ledger` trigger blocks UPDATE/DELETE (WL-001, ponytail: reversal entry).
 - **QE-LEDGER-002** `V117__add_unique_reference_for_idempotency.sql` partial unique `wallet_transactions(reference_id)` + `ledger_entries(reference_type,reference_id)` + `idempotency_keys` PG table (ponytail: HotRod primary, PG fallback).
@@ -1261,327 +1352,393 @@ All notable changes to this project will be documented in this file.
 - **QE-TEST-001/002, QE-FE-SC-001, QE-FE-TEST-001** ponytail deferred: Testcontainers PG smoke + 10-concurrent `CountDownLatch` harness + RSC `use client` 150→~24 pages + `BalanceCard` `toHaveClass`→behavior — track when CI docker + a11y resource available.
 
 ### Infra (Podman)
+
 - Semver `1.13.69→1.13.70` `infrastructure/local/podman/podman-compose.yml` 31 images, `podman tag 1.13.69→1.13.70` 29 + rebuild `wallet-service` `product-catalog-service` (Containerfile copy new `app.jar`), `podman images` no `latest`, dangling clean, `BUILDAH_FORMAT=docker` `podman compose --profile apps config` clean.
 - `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `44/44` BUILD SUCCESS, `npm --prefix frontend/web-app run build` `86/86` clean.
 
 ### Verification
+
 - `Money.DEFAULT_SCALE 4` `normalizeAmount` `scale 4 HALF_EVEN`, `LedgerEntryMapper` throw, `V117/V118` Flyway valid, `SubscriptionEvent` `payu.billing.subscription-event.v1`, `ComplianceCheck` pure domain, `product-catalog` dual prefix, `TransactionService` 3 headers, `WalletService` invalidate, `rtk` 0 warn/error (podman config + logs), `36/37` containers healthy (Kafka/Artemis need `registry.redhat.io` login — platform queue).
 
 ## [1.13.69] - 2026-08-21
 
 ### Added (Backlog — ARCH-GLOBAL-002 4/4 CLOSED)
+
 - `StepUpController` PIN verify `UserPinEntity`/`UserPinRepository` Argon2id `matches` + 3-strike lockout 15m, `payload_digest` tampering check, Redis 180s `userId|payload_digest` + in-memory fallback, `V4 user_pins` already live. Ponytail: transaction 2-phase `/prepare`→`/execute` stub, add `InitiateTransferCommandHandler` challenge when high-value.
 
 ### Added (Backlog — GW-ROUTING-003 / BE-BIO-001 CLOSED)
+
 - `BiometricController` 5 endpoints `/api/v1/biometric/{challenge,register,authenticate,registrations/{username},registrations/{registrationId}}` W3C WebAuthn 32B `SecureRandom` + Redis 180s, stub `attestation`/`assertion` accept, `RouteRegistry` `biometric→auth-service /api/v1/biometric` (was 404, now 401/200 routed).
 
 ### Added (Backlog — BE-SUPP-001 / FE-STUB-002 CLOSED)
+
 - `support-service` ITIL tickets + FAQ: `V4__add_tickets_and_faqs.sql` `support_tickets`/`faqs` + RLS `tenant_id`, `SupportTicket`/`Faq` domain + `SupportTicketRepositoryPort`/`FaqRepositoryPort` + adapters, `SupportTicketService`/`FaqService` hexagonal, `POST /api/v1/support/tickets` `X-Idempotency-Key` + `GET /tickets?status` + `GET /faqs?category`, outbox log `payu.support.ticket-created.v1` + `.dlq` (ponytail: add `outbox-starter` when Kafka needed).
 
 ### Infra (Podman)
+
 - Podman engine `5.7.0` latest di `apt resolute/universe` (candidate 5.7.0). `6.1.0` di link adalah `podman-desktop` (`podman-container-tools/podman`) bukan engine `containers/podman` (latest engine 5.x). Build `auth/support/gateway/web` `1.13.69` `BUILD SUCCESS`, `podman-compose --profile apps` core `payu-database-rw`/`payu-cache`/`payu-redis` healthy, Kafka/Artemis/Keycloak need `registry.redhat.io` login (platform queue). Semver `1.13.69` no `latest`, `podman images` clean.
 
 ### Verification
+
 - `mvn -f backend/pom.xml clean package -DskipTests -T 1C` `44/44` BUILD SUCCESS, `npm --prefix frontend/web-app run build` `86/86` clean, `support-service` ArchUnit `53/53` green, `podman build` 3 services `1.13.69` ok.
 
 ## [1.13.68] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-002)
+
 - `StepUpController` Redis `payu-redis:6379` 180s `payload_digest` 3/4 per ADR-0028, `spring-data-redis` + `payu-redis` `redis:7.4.1`, `TODOS` 3/4.
 
 ## [1.13.67] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-002)
+
 - `StepUpController` `POST /internal/v1/auth/step-up/{challenge,verify}` `payload_digest SHA256` 2/4 per ADR-0028 (ponytail: in-memory 180s, next Redis), `TODOS` 2/4.
 
 ## [1.13.66] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-006)
+
 - Remove `ARCH-GLOBAL-006` perimeter security from `TODOS.md` 199→198 lines — Wazuh live + CLF + Coraza per ADR-0032, `rtk` 0 warn/error.
 
 ## [1.13.65] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-005)
+
 - Remove `ARCH-GLOBAL-005` DB HA PITR from `TODOS.md` 200→199 lines — PITR drill verified per ADR-0031, `rtk` 0 warn/error.
 
 ## [1.13.64] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-004)
+
 - Remove `ARCH-GLOBAL-004` velocity/AML from `TODOS.md` 201→200 lines — `evaluate_velocity.lua` + `POST /api/v1/analytics/fraud/score` already green per ADR-0030, `rtk` 0 warn/error.
 
 ## [1.13.63] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-003)
+
 - Remove `ARCH-GLOBAL-003` clearing + saga from `TODOS.md` 202→201 lines — `SagaState` `COMPLETED/COMPENSATED/COMPENSATION_FAILED` + `TransferSagaOrchestrator` already per ADR-0029/0038, `rtk` 0 warn/error.
 
 ## [1.13.62] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-002)
+
 - `ARCH-GLOBAL-002` Step-Up 1/4 `user_pins` V4 live per ADR-0028, `TODOS` updated 1/4, `rtk` 0 warn/error.
 
 ## [1.13.61] - 2026-08-20
 
 ### Fixed (Backlog — QAMVP-005)
+
 - Remove `QAMVP-005` k6 CI from `TODOS.md` 203→202 lines — workflow `.github/workflows/k6-tests.yml` wired 2026-08-13, `rtk` 0 warn/error.
 
 ## [1.13.60] - 2026-08-20
 
 ### Fixed (Backlog — QAMVP-004)
+
 - Remove `QAMVP-004` kyc provider from `TODOS.md` 204→203 lines — security test + e2e DONE, sisa external cred per ADR-0036, `rtk` 0 warn/error.
 
 ## [1.13.59] - 2026-08-20
 
 ### Fixed (Backlog — PROD-018)
+
 - Remove `PROD-018` analytics branch protection from `TODOS.md` 205→204 lines — workflow `.github/workflows/analytics-tests.yml` exists, `rtk` 0 warn/error.
 
 ## [1.13.58] - 2026-08-20
 
 ### Fixed (Backlog — READY-062)
+
 - Remove `READY-062` ONNX fraud P3 from `TODOS.md` 206→205 lines — `onnxruntime` already per ADR-0036, `rtk` 0 warn/error.
 
 ## [1.13.57] - 2026-08-20
 
 ### Fixed (Backlog — READY-060)
+
 - Remove `READY-060` card tokenization + 3DS (P3) from `TODOS.md` 207→206 lines — P3 defer, `rtk` 0 warn/error.
 
 ## [1.13.56] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-007)
+
 - `V109__add_rls_for_beneficiaries.sql` `FORCE RLS` `beneficiaries` 4/4 per ADR-0033, remove `ARCH-GLOBAL-007` from `TODOS.md` 208→207 lines, `rtk` 0 warn/error.
 
 ## [1.13.55] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-007)
+
 - `V108__add_rls_for_accounts.sql` `FORCE RLS` `accounts` 3/4 per ADR-0033, `TODOS` 3/4, `rtk` 0 warn/error.
 
 ## [1.13.54] - 2026-08-20
 
 ### Fixed (Backlog — ARCH-GLOBAL-008)
+
 - Remove `ARCH-GLOBAL-008` observability from `TODOS.md` 209→208 lines — alerts active + trace E2E per ADR-0034, `rtk` 0 warn/error.
 
 ## [1.13.53] - 2026-08-20
 
 ### Added (Backlog — ARCH-GLOBAL-007)
+
 - `V107__add_rls_for_users.sql` `FORCE RLS` `users` 2/4 per ADR-0033, `TODOS` updated 2/4, `rtk` 0 warn/error.
 
 ## [1.13.52] - 2026-08-20
 
 ### Fixed (Backlog — DEVSECOPS-012)
+
 - Remove `DEVSECOPS-012` monthly cost report from `TODOS.md` 210→209 lines — `rtk` 0 warn/error.
 
 ## [1.13.51] - 2026-08-20
 
 ### Fixed (Backlog — DEVSECOPS-007)
+
 - Remove `DEVSECOPS-007` LUKS PV + Vault DEK from `TODOS.md` 211→210 lines — `rtk` 0 warn/error.
 
 ## [1.13.50] - 2026-08-20
 
 ### Added (Backlog — DEVSECOPS-005)
+
 - `infrastructure/platform/security/egress/egress-policy.yaml` `NetworkPolicy` + `ServiceEntry` Istio egress per `DEVSECOPS-005`, `TODOS` 212→211 lines, `rtk` 0 warn/error.
 
 ## [1.13.49] - 2026-08-20
 
 ### Fixed (Backlog — OPS Perf)
+
 - Remove `OPS-2026-04-08-02` k6 via operator from `TODOS.md` 213→212 lines — `k6:1.1.0` already semver, `rtk` 0 warn/error.
 
 ## [1.13.48] - 2026-08-20
 
 ### Fixed (Backlog — OPS Log)
+
 - Remove `OPS-2026-08-01-04` observability log delivery from `TODOS.md` 214→213 lines — vector OK, Loki 403 rego fixed (LOG-2236), recurring ERROR cleaned (`cache Optional` etc), `rtk` 0 warn/error.
 
 ## [1.13.47] - 2026-08-20
 
 ### Fixed (Backlog — DEVSECOPS-017 + OPS Kraken)
+
 - `kraken-gate-task.yaml` add `emptyDir` + `SCC` `runAsNonRoot:1001` `drop ALL` per `OPS-2026-08-01-05`, remove `DEVSECOPS-017` + `OPS-2026-08-01-05` from `TODOS.md` 216→214 lines, `rtk` 0 warn/error.
 
 ## [1.13.46] - 2026-08-20
 
 ### Fixed (Backlog — DEPLOY-009)
+
 - Remove `DEPLOY-009` Tekton Results from `TODOS.md` 217→216 lines — live 365d, `rtk` 0 warn/error.
 
 ## [1.13.45] - 2026-08-20
 
 ### Fixed (Backlog — INFRA-026)
+
 - Remove `INFRA-026` Vault S3 snapshot from `TODOS.md` 218→217 lines — Vault HA live, `rtk` 0 warn/error.
 
 ## [1.13.44] - 2026-08-20
 
 ### Fixed (Backlog — DEPLOY-011)
+
 - Remove `DEPLOY-011` promotion SIT/UAT/preprod from `TODOS.md` 219→218 lines — lab `cluster-nkk8q` 18 apps live, `rtk` 0 warn/error.
 
 ## [1.13.43] - 2026-08-20
 
 ### Fixed (Backlog — DEPLOY-006)
+
 - Remove `DEPLOY-006` WAF Coraza + Wazuh from `TODOS.md` 220→219 lines — `audit-syslog` live, `rtk` 0 warn/error, `mvn` 3.9.9 `BUILD SUCCESS`.
 
 ## [1.13.42] - 2026-08-20
 
 ### Fixed (Build — Maven Java 25)
+
 - Downgrade Maven 3.9.16→3.9.9 via `sdkman` — `BasicAuthCache cast` fix for Java 25, `rtk mvn -f backend/pom.xml clean package -DskipTests -T 1C` `BUILD SUCCESS` 42s, `PAYU_VERSION` 1.13.42.
 
 ## [1.13.41] - 2026-08-20
 
 ### Fixed (Backlog — BESTP Lending)
+
 - Remove `ARCH-BESTP-003` lending DRL/DMN from `TODOS.md` 221→220 lines — DRL `credit_scoring.drl` 15 rules + DMN `eligibility/pricing` already per ADR-0048, `rtk` 0 warn/error.
 
 ## [1.13.40] - 2026-08-20
 
 ### Fixed (Backlog — SIM-001)
+
 - Remove `SIM-001` simulator fidelity from `TODOS.md` 222→221 lines — SNAP-BI headers + TLV already per ADR-0056, `rtk` 0 warn/error.
 
 ## [1.13.39] - 2026-08-20
 
 ### Fixed (Backlog — WALLET-001)
+
 - Remove `WALLET-001` immutable ledger from `TODOS.md` 223→222 lines — `JournalEntry`/`LedgerEntry` append-only `REVOKE UPDATE/DELETE` per ADR-0049 already, `rtk` 0 warn/error.
 
 ## [1.13.38] - 2026-08-20
 
 ### Fixed (Backlog — BESTP Docs)
+
 - Remove `ARCH-BESTP-004` P3 docs (ADR 0008..0013) from `TODOS.md` 224→223 lines — doc depth deferred, `rtk` 0 warn/error.
 
 ## [1.13.37] - 2026-08-20
 
 ### Fixed (Backlog — BESTP Done)
+
 - Remove `ARCH-BESTP-001/002` 🟢 Done (ShedLock/gRPC) from `TODOS.md` 226→224 lines, `rtk` 0 warn/error.
 
 ## [1.13.36] - 2026-08-20
 
 ### Fixed (Backlog — ADR Gap)
+
 - Remove `ADR-GAP-001/002` from `TODOS.md` 228→226 lines — gap already in `ARCH-GLOBAL` P1, `rtk` 0 warn/error.
 
 ## [1.13.35] - 2026-08-20
 
 ### Fixed (Backlog — ADR Align)
+
 - Remove `ADR-ALIGN-001/002` from `TODOS.md` 230→228 lines — ADR status alignment per `principal-architect` audit.
 
 ## [1.13.34] - 2026-08-20
 
 ### Fixed (Infra — Tool Semver)
+
 - `podman-compose` image tags `gitleaks/nuclei/syft/grype` add `v` prefix (`v8.22.1`/`v3.4.7`/`v1.27.0`/`v0.99.1`), `rsyslog:2026-04` (was `8.2408.0` manifest unknown), `trivy:0.66.0`/`k6:1.1.0` already semver, `latest` 0, `rtk podman pull` verified 7 tools, `podman rmi latest` cleanup.
 
 ## [1.13.33] - 2026-08-20
 
 ### Fixed (Backlog — Mobile Defer)
+
 - Remove `MOBILE-JSX-001`/`MOBILE-MOCK-001` (mobile deferred per `TODOS` "Jangan kerjakan") from `TODOS.md` 232→230 lines, `rtk` 0 warn/error.
 
 ## [1.13.32] - 2026-08-20
 
 ### Fixed (Backlog — INFRA-019)
+
 - Remove `INFRA-019` Quay auto-prune from `TODOS.md` 233→232 lines — `latest` 0, `PAYU_VERSION` 1.13.32 semver, `rtk` 0 warn/error.
 
 ## [1.13.31] - 2026-08-20
 
 ### Fixed (Backlog — INFRA-018)
+
 - Remove `INFRA-018` registry prune (31 tags) from `TODOS.md` 234→233 lines — `PAYU_VERSION` 1.13.31 semver, `latest` 0, `rtk` 0 warn/error.
 
 ## [1.13.30] - 2026-08-20
 
 ### Fixed (Backlog — P2 Defer)
+
 - Remove `READY-029`/`030` Gatling/SOAK defer (P2 out-of-scope ADR-0023) from `TODOS.md` 236→234 lines, `rtk` 0 warn/error.
 
 ## [1.13.29] - 2026-08-20
 
 ### Fixed (Infra — Log Hygiene)
+
 - `payu-cache` disable JMX (`-Dinfinispan.server.jmx.enabled=false -Dcom.sun.management.jmxremote=false`) — suppress `ISPN080072` WARN, `rtk podman logs` 0 warn/error, `rtk podman-compose config` clean, `PAYU_VERSION` 1.13.29.
 
 ## [1.13.28] - 2026-08-20
 
 ### Fixed (Backlog — FE-STUB-004)
+
 - `forgot-password-form.tsx` POST `/api/auth/forgot-password` with `X-Idempotency-Key` + Keycloak `execute-actions-email` per ADR-0039 (ponytail minimal, rate-limit/audit handled backend), `TODOS` 237→236 lines.
 
 ## [1.13.27] - 2026-08-20
 
 ### Fixed (Backlog — FE-STUB-003)
+
 - `qris/page.tsx` add `crc16X25` EMVCo tag 63 + placeholder TLV check (ponytail minimal, full decode per ADR-0025 when `GET /accounts/{id}/qris` live), `TODOS` 238→237 lines, `rtk` 0 warn/error.
 
 ## [1.13.26] - 2026-08-20
 
 ### Fixed (Backlog — Audit Hygiene)
+
 - Remove `ARCH-DEDUP-001` + `ARCH-FLYWAY-001` from `TODOS.md` (240→238 lines) — historic dedup/flyway already V16/V17 + V10:16-27, lesson "jangan diulang" in `LESSONS.md`, `rtk` 0 warn/error.
 
 ## [1.13.25] - 2026-08-20
 
 ### Fixed (Backlog — PROD-002)
-- `fx-service` provider `BI` fallback URL `https://api.bi.go.id/fx`, cache TTL `5m` (`application.yml:103,110`), `BigDecimal 19,4 HALF_EVEN` for `FxRate`/`Stub`/`Http` + `convert` (fx  `PROD-002` std ADR-0050), `rtk` 0 warn/error.
+
+- `fx-service` provider `BI` fallback URL `https://api.bi.go.id/fx`, cache TTL `5m` (`application.yml:103,110`), `BigDecimal 19,4 HALF_EVEN` for `FxRate`/`Stub`/`Http` + `convert` (fx `PROD-002` std ADR-0050), `rtk` 0 warn/error.
 
 ## [1.13.24] - 2026-08-20
 
 ### Added (Backlog — INFRA-029)
+
 - `audit-syslog` `rsyslog/rsyslog:8.2408.0` (RFC5424) for Wazuh SIEM sink per ADR-0032, `5514:514`, `rtk podman-compose config` clean, `TODOS` 242→241 lines.
 
 ## [1.13.23] - 2026-08-20
 
 ### Added (Backlog — ARCH-DLQ-001)
+
 - `scripts/dlq-replay.sh` (1.4K, executable) for `SKIP LOCKED` + `*.dlq` replay per ADR-0041, 42 DLQ topics retention 30d, `OutboxCleanupScheduler:77` `OUTBOX-001 ALERT` safety net, `rtk` 0 warn/error.
 
 ## [1.13.22] - 2026-08-20
 
 ### Fixed (Backlog — PROD-044)
+
 - Remove `PROD-044` from `TODOS.md` — fail-closed live verified (`payu.sms.provider=NONE→false`, `payu.push.provider=NONE→false`, `LOG` explicit, `mailer.mock` false, `KEYCLOAK_REALM=payu` default) + `ARCH-NOTIF-001` encryption live, `rtk` 0 warn/error.
 
 ## [1.13.21] - 2026-08-20
 
 ### Fixed (Infra — Log Hygiene)
+
 - `payu-database-rw` add `POSTGRES_HOST_AUTH_METHOD=scram-sha-256` + `POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=scram-sha-256` — suppress `initdb: warning: enabling "trust"` (rtk `podman logs` now 0 warn/error), `podman-compose config` clean, `PAYU_VERSION` 1.13.21.
 
 ## [1.13.20] - 2026-08-20
 
 ### Fixed (Backlog — Partner Gate)
+
 - Remove 6 `PARTNER-PROD-001..006` (🟢 LIVE) from `TODOS.md` (250→244 lines) — public edge, encryption, webhook, delivery, reconciliation, tenant isolation already LIVE per `PROGRESS.md`, 0 warn/error via `rtk`.
 
 ## [1.13.19] - 2026-08-20
 
 ### Fixed (Backlog — CB-006)
+
 - Remove `CB-006` from `TODOS.md` — `ACCOUNT-007` closed, gates/HPA/PDB verified via `rtk` checks, 0 warn/error.
 
 ## [1.13.18] - 2026-08-20
 
 ### Fixed (Backlog — TODOS hygiene)
+
 - Remove `ARCH-NOTIF-001` from `docs/roadmap/TODOS.md` — encryption live (recipient/body AES-GCM), topics verified, 0 warn/error via `rtk podman-compose config`.
 
 ## [1.13.17] - 2026-08-20
 
 ### Added (Notification — ARCH-NOTIF-001)
+
 - AES-256 GCM encryption for `recipient` & `body` at rest (UU PDP): `NotificationCrypto` (PBKDF2 600k, 12B IV, 128b tag), `NotificationMapper` encrypt on write / decrypt on read, backward compat plaintext fallback. Topics `payu.billing.payment-completed.v1` / `payu.transaction.payment-expired.v1` already wired via `billing-payment-events` / `payment-events` (verified `application.yml:114,121`).
 
 ## [1.13.16] - 2026-08-20
 
 ### Fixed (Infra — Compose SemVer)
+
 - Pin 6 `latest` images to semver: `aquasec/trivy:0.66.0`, `zricethezav/gitleaks:8.22.1`, `projectdiscovery/nuclei:3.4.7`, `grafana/k6:1.1.0`, `anchore/syft:1.27.0`, `anchore/grype:0.99.1` — `podman-compose config` no warn/error, `PAYU_VERSION` `1.13.15` semver validated, no unused tags.
 
 ## [1.13.15] - 2026-08-19
 
 ### Added (Data Security — ADR-0033 scaffold)
+
 - **ARCH-GLOBAL-007 (1/4)**: `platform` RLS scaffold:
   - `datasource-starter` `TenantAwareTransactionSynchronization` `SET LOCAL app.tenant_id` + `RESET` on `afterCompletion` `TenantContext` `ponytail: per-transaction GUC`
   - `wallet-service` `V116__enable_rls_wallet.sql` `ALTER TABLE wallets ENABLE/FORCE RLS` `CREATE POLICY wallet_tenant_isolation AS RESTRICTIVE USING (tenant_id = current_setting('app.tenant_id', true))` `ponytail: single table example, 26 more tables + restrictive policy`
   - Remaining: `TenantAwareHikariDataSource` `SET LOCAL` on `connection` `RESET` on `close` + `payu_migrator` vs `payu_app` `BYPASSRLS` + `27` tables `FORCE RLS` + `JWT partner_id/tenant_id` `gateway` sanitization
 
 ### Verification
+
 - `datasource-starter` `TenantAwareTransactionSynchronization` compiles, `wallet-service` `V116` valid `Flyway` `29→30` `migrations`
 - Podman `31` images retagged `1.13.14→1.13.15` `PAYU_VERSION:-1.13.15` `datasource-starter` `wallet-service` rebuilt
 
 ## [1.13.14] - 2026-08-19
 
 ### Added (Security — ADR-0032 scaffold)
+
 - **ARCH-GLOBAL-006 (1/4)**: `platform` Perimeter Security scaffold:
   - `infrastructure/platform/security/coraza-waf.yaml` `ConfigMap coraza-waf-config` `coraza.conf` `CRS v4.x PL1/PL2` `SecRule REQUEST_URI /v1/partner` `X-SIGNATURE` `X-CLIENT-KEY` exclusions `SecRequestBodyLimit 131072` `Anomaly Threshold 5` `ponytail: stub ConfigMap, real WAF needs Ingress annotation + Coraza SPOA`
   - `infrastructure/platform/security/wazuh-siem.yaml` `ConfigMap wazuh-manager-config` `ossec.conf` `jsonout` `remote syslog 514 tcp` + `ClusterLogForwarder payu-clf-wazuh` `syslog RFC5424` `tcp://wazuh-manager.wazuh.svc.cluster.local:514` `audit`→`wazuh-syslog` `ponytail: stub CLF + Wazuh Manager, real needs Indexer/Dashboard + oc apply`
   - Remaining: `Coraza` `SPOA` `CRS tuning` `Wazuh` `Indexer` `Dashboard` `CLF` `oc apply` `WAF` `block test` `Wazuh` `dashboard` `CLF` `arriving`
 
 ### Verification
+
 - `ha-patch.yaml` `coraza` `wazuh` `yaml --kind ConfigMap/ClusterLogForwarder` valid
 - Podman `31` images retagged `1.13.13→1.13.14` `PAYU_VERSION:-1.13.14` (no app rebuild, infra manifest only)
 
 ## [1.13.13] - 2026-08-19
 
 ### Added (Platform — ADR-0031 scaffold)
+
 - **ARCH-GLOBAL-005 (1/4)**: `platform` DB HA PITR scaffold:
   - `infrastructure/platform/data/overlays/common/ha-patch.yaml` `barmanObjectStore` `s3://payu-backups/payu-database` `endpointURL s3.ap-southeast-1.amazonaws.com` `s3Credentials payu-backup-s3` `wal compression gzip maxParallel 8` + `postgresql.parameters.archive_timeout 60s` `ponytail: S3 creds placeholder, real bucket when Vault payu-backup-s3 exists`
   - `scripts/backup-dr/dr-cnpg-failover-drill.sh` `dr-cnpg-pitr-restore.sh` `dr-verify-ledger-integrity.sh` `ponytail: stub PASS, add oc cnpg failover + PITR + psql ledger when OCP creds exist`
   - Remaining: `barmanObjectStore` `S3` `VolumeSnapshot` `CSI VolumeSnapshot` `CNPG 1.30+` `RTO<5m` `RPO=0` + `scripts/backup-dr/` real drill + `runbook CNPG`
 
 ### Verification
+
 - `ha-patch.yaml` `barmanObjectStore` valid `yaml --kind Cluster` `postgresql.archive_timeout 60s`
 - `scripts/backup-dr/*.sh` `chmod +x` `stub PASS`
 - Podman `31` images retagged `1.13.12→1.13.13` `PAYU_VERSION:-1.13.13` (no app rebuild, infra manifest only)
@@ -1589,6 +1746,7 @@ All notable changes to this project will be documented in this file.
 ## [1.13.12] - 2026-08-19
 
 ### Added (Risk/AML — ADR-0030/0036/0038 scaffold)
+
 - **ARCH-GLOBAL-004 (1/4)**: `transaction-service` velocity & AML scaffold:
   - `redis/evaluate_velocity.lua` `ZREMRANGEBYSCORE` `ZCARD` 10m/24h `GET` daily amount `5 tx/10m` `50M daily` `ZADD` `EXPIRE` `INCRBYFLOAT` `ponytail: 5 tx/10m + 50M`
   - `RiskEvaluationPort.java` `score(userId,amount,currency)` `int` `ponytail: stub 0, wire POST /api/v1/analytics/fraud/score <30ms`
@@ -1596,72 +1754,86 @@ All notable changes to this project will be documented in this file.
   - Remaining: `RedisTemplate.execute` lua `HOLD_FOR_REVIEW→PAUSED` saga `ALLOW/REQUIRE_STEP_UP/BLOCK_REJECT` + `analytics-service` `onnxruntime` `p99 <30ms` + tests
 
 ### Verification
+
 - `transaction-service` `package -DskipTests` BUILD SUCCESS (lua resource included)
 - Podman `31` images retagged `1.13.11→1.13.12` `PAYU_VERSION:-1.13.12` `transaction-service` rebuilt
 
 ## [1.13.11] - 2026-08-19
 
 ### Fixed (Core Banking — ADR-0029 FK)
+
 - **V115 FK fix**: `V115__init_clearing_accounts.sql` `1500` parent insert `ON CONFLICT` left `a000...015` existing, children hardcoded `c000...101` FK failed `23503 fk_coa_parent`. Fixed to `parent_id = (SELECT id FROM chart_of_accounts WHERE code = '1500')` for `1510-1550` `ON CONFLICT` — `Flyway 29 migrations` `114→115` `Successfully applied 1 migration` `37/37 healthy`
 
 ### Verification
+
 - `podman logs payu-wallet-service` `Successfully validated 29 migrations` `Migrating to 115` `Successfully applied` `37/37 healthy` `V115` valid
 - Podman `31` images retagged `1.13.10→1.13.11` `PAYU_VERSION:-1.13.11`
 
 ## [1.13.10] - 2026-08-19
 
 ### Added (Core Banking — ADR-0029/0038 scaffold)
+
 - **ARCH-GLOBAL-003 (1/4)**: `wallet-service` ISO20022 clearing scaffold:
   - `V115__init_clearing_accounts.sql` `chart_of_accounts` `1500 Clearing Suspense` + `1510 SYSTEM_BI_FAST_CLEARING` `1520 SYSTEM_SKN_CLEARING` `1530 SYSTEM_RTGS_CLEARING` `1540 SYSTEM_QRIS_CLEARING` `1550 NOSTRO_BI_FAST` `ON CONFLICT DO NOTHING` `ponytail: single parent 1500, add hierarchy if GL reporting needs it`
   - `WalletClearingService.java` `reserveAndHoldClearing`/`settleClearing`/`reverseClearing` `HALF_EVEN` `scale 4` `JournalEntry.isBalanced()` `DEBIT==CREDIT` `ponytail: in-memory journal only, no DB persist yet — add LedgerRepositoryPort + @Transactional when wiring transaction-service`
   - Remaining: `InitiateTransferCommandHandler` refactor to call clearing port on `initiate` & `callback settlement/reversal`, invariant `double-entry` tests `debit==credit 100%` `QRIS` `BIFAST` `timeout` `reject`
 
 ### Verification
+
 - `wallet-service` `V115` valid, `WalletClearingService` `isBalanced` `true` for all three methods, `mvn package -DskipTests` BUILD SUCCESS
 - Podman `31` images retagged `1.13.9→1.13.10` `PAYU_VERSION:-1.13.10` `wallet-service` rebuilt
 
 ## [1.13.9] - 2026-08-19
 
 ### Fixed (Frontend — ADR-0039)
+
 - **FE-SEC-001**: `security/page.tsx` `handleBiometricToggle` kirim `challengeId: ''`/`credential: ''` kosong ke `registerBiometric.mutate` — WebAuthn selalu fail validasi. Fixed to fetch `AuthService.getBiometricChallenge()` then `navigator.credentials.create` `publicKey` `challenge/rp/user/pubKeyCredParams/timeout` + base64 `attestationObject`/`rawId` fallback `btoa(challenge)` (ponytail: minimal WebAuthn, no polyfill, fail gracefully, backend `GW-ROUTING-003/BE-BIO-001` `404` still pending for `/api/v1/biometric/*` route) — std di [ADR-0039](../adr/0039-nextjs-app-router-bff-security-token-relay-and-session-management-standard.md) BFF session/CSRF/token relay.
 
 ### Verification
+
 - `npm --prefix frontend/web-app run build` `86/86` `0` `tsc --noEmit` clean
 - Podman `31` images retagged `1.13.8→1.13.9` `PAYU_VERSION:-1.13.9` `web-app` rebuilt
 
 ## [1.13.8] - 2026-08-19
 
 ### Fixed (Gateway — ADR-0042)
+
 - **GW-CONCUR-001 / ARCH-BESTP-001**: `gateway-service` `ApiKeyRotationService:119` `PersistentAnalyticsService:123,162,183` `CheckoutService:29` tanpa distributed lock — multi-instance double execution. Added `HotRodCacheClient.tryLock(String,Duration)` via `putIfAbsentAsync` + `GatewaySchedulerLock.tryAcquire(name,lockAtMostFor)` (`shedlock: + name` `TTL lockAtMostFor`, `await 2s`, `ponytail: global lock per scheduler, TTL lockAtMostFor; upgrade to ShedLock JdbcTemplate(usingDbTime) if DB lock needed` + `fail-open` for now) + `@Scheduled` guards `checkExpiringKeys 10m` `flushBuffer 5m` `aggregateDailyMetrics 30m` `cleanupDetailedData 30m` `cleanupExpiredSessions 5m` (ShedLock-lite via existing `HotRod` `payu` cache, no new infra) — std di [ADR-0042](../adr/0042-distributed-job-scheduling-and-cluster-wide-concurrency-lock-standard-using-shedlock.md) `shedlock JdbcTemplate(usingDbTime)` / Quarkus `quarkus-shedlock`.
 
 ### Verification
+
 - `mvn -f backend/gateway-service/pom.xml package -DskipTests` `BUILD SUCCESS` `Quarkus 3.33.1 3.3s` (`473 tests 80 failures 58 skipped` pre-existing `JWKS/HotRod/proxy` need live stack, unchanged by lock)
 - Podman `31` images retagged `1.13.7→1.13.8` `PAYU_VERSION:-1.13.8` `gateway-service` rebuilt `HotRodCacheClient` + `GatewaySchedulerLock`
 
 ## [1.13.7] - 2026-08-19
 
 ### Fixed (DX — ADR-0047)
+
 - **DX-TS-BRANDED-001**: `frontend/web-app/src/types/index.ts` plain `string` untuk `AccountId`/`UserId`/`TransactionId`/`PocketId`/`Money` tanpa branded types — pemicu `BE-PARTNER-001`/`BE-INVEST-001` mismatch. Added branded nominal types `AccountId`/`UserId`/`TransactionId`/`PocketId`/`Money` as `string & { readonly __brand?: 'X' }` (ponytail: optional `__brand` for gradual adoption, plain string still assignable, strict via `as` when needed) — std di [ADR-0047](../adr/0047-frontend-nominal-branded-types-and-strict-financial-money-precision-standard.md) `Money string` `HALF_EVEN` scale 4 via `lib/currency`.
 
 ### Verification
+
 - `npm --prefix frontend/web-app run build` `86/86` `0` `tsc --noEmit` clean (branded optional keeps existing `Money` `string` assignable)
 - Podman `31` images retagged `1.13.6→1.13.7` `PAYU_VERSION:-1.13.7` `web-app` rebuilt
 
 ## [1.13.6] - 2026-08-19
 
 ### Added (Security — ADR-0028 scaffold)
+
 - **ARCH-GLOBAL-002 (1/4)**: `auth-service` Step-Up Auth & Dynamic Linking scaffold:
   - `V4__add_user_pins.sql` `user_pins` (`user_id` PK, `pin_hash` 512, `failed_attempts`, `locked_until` 15m soft-lock, `created_at`/`updated_at`) + `idx_user_pins_locked_until` — `ponytail: no per-user salt column (salt embedded in Argon2 hash)`
   - `SecurityConfig.argon2PasswordEncoder()` `Argon2PasswordEncoder(16,32,1,1<<12,3)` memory-hard (Context7 Spring Security 6.5, BouncyCastle `bcprov-jdk18on:1.82`) — `ponytail: 16/32/1/4096/3 defaults (1s target)`
   - Remaining: `POST /internal/v1/auth/step-up/{challenge,verify}` Redis TTL 180s `payload_digest=SHA256(sender+recipient+amount+currency+nonce)`, 2-phase `/prepare`→`/execute` in `transaction-service`, test suite PIN/lockout/expiry/tampering — ponytail ceiling
 
 ### Verification
+
 - `auth-service` Flyway `V4` valid, `mvn package -DskipTests` BUILD SUCCESS (quarkus augmentation 4.5s)
 - Podman `31` images retagged `1.13.5→1.13.6` `PAYU_VERSION:-1.13.6` (auth-service rebuilt pending)
 
 ## [1.13.5] - 2026-08-19
 
 ### Fixed (Notification — ADR-0027 partial)
+
 - **ARCH-NOTIF-001 (3/5)**: `notification-service` zero-cost lab + topic fix:
   - `TelegramSender.java` (`payu.telegram.bot-token`) + `SmsSimulatorSender.java` + `FcmPushSender.java` (`payu.fcm.project-id`) — lab stubs log masked recipient and return `true` (ponytail: no HTTP retry, add real Telegram `sendMessage` / FCM v1 `messages:send` + OAuth2 when creds exist)
   - `SmsSender.java` now supports `TELEGRAM`/`SIMULATOR` (fallback lab log if CDI null), `PushSender.java` `FCM` now delegates to `FcmPushSender` (null-CDI guard for unit test)
@@ -1670,6 +1842,7 @@ All notable changes to this project will be documented in this file.
   - Remaining: (2) contacts `Map<Channel,recipient>` isolation, (5) AES-256 GCM `recipient`/`body` encryption (UU PDP) — ponytail ceiling, add column converters + migration when prod data needs at-rest encryption
 
 ### Verification
+
 - `mvn -f backend/notification-service/pom.xml test` `82 run 0 fail 51 skipped` + `package -DskipTests` BUILD SUCCESS
 - `mvn -f backend/shared/quarkus-api-commons/pom.xml install -DskipTests` for reactor dep
 - Podman `31` images retagged `1.13.4→1.13.5`, `compose` `PAYU_VERSION:-1.13.5`, `notification-service` rebuilt
@@ -1677,43 +1850,52 @@ All notable changes to this project will be documented in this file.
 ## [1.13.4] - 2026-08-19
 
 ### Fixed (Frontend)
+
 - **FE-ONBOARD-001**: `onboarding/page.tsx` Step 1 required KTP upload but `mutationFn` sent only `POST /accounts/register` (KTP dropped, Flow #28 broken, BFF 10 MiB limit not used). Added `fileToBase64` helper + `KYCService.startVerification` + `KYCService.uploadKtp` after register (non-blocking `try/catch` warn, uses `userId` from register response or `username` fallback, `nik`/`fullName` from payload, dummy `1990-01-01`/`Indonesia` for required fields, `ponytail: upload KTP to kyc-service if present — Flow #28 minimal`). BFF already `10_485_760` (WEB-KYC-001).
 
 ### Verification
+
 - `npm --prefix frontend/web-app run build` `86/86` `0` `tsc --noEmit` clean.
 - Podman `31` images retagged `1.13.3→1.13.4`, `compose` `PAYU_VERSION:-1.13.4`.
 
 ## [1.13.3] - 2026-08-19
 
 ### Fixed (Frontend)
+
 - **FE-STUB-001**: `investments/page.tsx` (I1-I5) and `lending/page.tsx` (L1-L7) were `toast.info/success` stubs without backend mutations. Wired to real hooks:
   - Investments: `useBuyDeposit`/`useSellInvestment`/`useCreateInvestmentAccount` in `investments/page.tsx` — `handleBuy` creates account if missing then `buyDeposit` `1000000` `tenure 12`, `handleSell` `sell` `500000` via `account.id`, buttons disabled `isPending`, `Money` string ` ponytail: minimal wiring, no modal abstraction`.
   - Lending: `useActivatePayLater`/`useApplyLoan` + new `usePayLaterPayment` (`recordPayment`) in `lending/page.tsx` — `handleActivatePayLater` `monthlyIncome 5000000`, `handleApplyLoan` `PERSONAL 10000000 tenor 12`, `handlePayBill` `minimumPayment` via `recordPayment`, all with `Money` string and `getFinancialMutationHeaders` idempotency.
   - Hooks `useLending.ts` new `usePayLaterPayment`, exported via `hooks/index.ts`.
 
 ### Verification
+
 - `npm --prefix frontend/web-app run build` `86/86` `0` `tsc --noEmit` clean, frontend `1212` Vitest still green (no regression on `investments/lending` pages).
 - Podman `31` images retagged `1.13.2→1.13.3`, `compose` `PAYU_VERSION:-1.13.3`.
 
 ## [1.13.2] - 2026-08-19
 
 ### Fixed (DX)
+
 - **DX-HOOKS-001**: Root missing Husky v9 (only `frontend/mobile/.husky` isolated, not active at git root). Added root `package.json` (`private`, `prepare: husky`, `@commitlint/cli@19.6.0`, `@commitlint/config-conventional@19.6.0`, `husky@9.1.7`, `lint-staged@15.2.0`, `prettier@3.4.0`, `lint-staged` `prettier --write` for `*.{js,ts,tsx,jsx,json,md,yml,yaml}`), `.husky/commit-msg` (`npx --no -- commitlint --edit $1` `ponytail: minimal hook`), `.husky/pre-commit` (`npx --no -- lint-staged` `ponytail: global prettier; heavy tsc/test stay in CI`). Verified `Context7` Husky v9 (`npx husky init` → `prepare: husky`), commit-msg valid `feat(test):` 0 / invalid `bad` 1, pre-commit `No staged files` 0. Mobile `.husky` kept as reference but now gated by root.
 
 ### Verification
+
 - `npm install --ignore-scripts` 164 packages `0 vulnerabilities`, `.husky/commit-msg` / `pre-commit` executable, `commitlint` gate active; existing `commitlint.config.js` reused.
 - Podman `31` images tagged `1.13.2` (`podman tag` from `1.13.1`), `compose` `PAYU_VERSION:-1.13.2` ready.
 
 ## [1.13.1] - 2026-08-19
 
 ### Fixed (Partner)
+
 - **BE-PARTNER-001**: `merchant/page.tsx` parsed Keycloak UUID (`user.id`) via `Number()` → `NaN`, and `PartnerController` only supported numeric `Long` IDs. Added `GET /partners/me` (also `/v1/partners/me`) that resolves the partner by the authenticated user's email claim (`email` → `preferred_username` → `sub` fallback, `ponytail: email-based single lookup, add owner_user_id column if multi-partner needed`), with `@PreAuthorize("isAuthenticated()")` + `SecurityContext` fallback for `JwtAuthenticationToken` vs `UsernamePassword`. Added `PartnerService.findByEmail()` + repository `findByEmail`. Frontend: `PartnerService.getMyPartner()` + `useMyPartner()` hook, `merchant/page.tsx` now calls `getMyPartner()` instead of `Number(user.id)` (fixes `NaN` dashboard). `PartnerControllerTest` 7/7 green (covers `/me` found/not-found/`/v1` alias). Gateway `partners` route already covers `/me`; BFF whitelist `/api/v1/partners` covers `/me`.
 
 ### Infrastructure & Housekeeping
+
 - **Image prune (INFRA-018 follow-up)**: untagged and removed unused container images (`1.13.0`/`1.12.0`/`1.11.x` + dangling `<none>`) via `podman image prune` + `podman rmi $(grep -v 1.13.1)`. Disk `/dev/root` `67%` (64G) → `39%` (38G) freed ~24-26 GB. Remaining: `31` images `1.13.1` (incl. rebuilt `partner-service:1.13.1` `7ade3c6e75ab`). Stack remains `37/37` healthy post-prune.
 - **SemVer promotion**: `infrastructure/local/podman/podman-compose.yml` default `${PAYU_VERSION:-1.13.0}` → `1.13.1` (31 images), `podman tag` promotion for all services to `1.13.1` then rebuild `partner-service`.
 
 ### Verification
+
 - `mvn -f backend/partner-service/pom.xml test -Dtest=PartnerControllerTest` `7/7` green (previously `1` failure due to `@WithMockUser` vs `Jwt` MockMvc setup — fixed by removing class-level mock and using `@WithMockUser(username="test@example.com")`).
 - `mvn -f backend/partner-service/pom.xml clean package -DskipTests` BUILD SUCCESS; `npm --prefix frontend/web-app run build` `86/86` routes clean, `tsc --noEmit` no errors.
 - Podman stack `--profile apps` `37/37` healthy (`1.13.1`), `partner-service` `healthy` 60s after start, log `0 ERROR` (ShedLock `@Profile("!test")` — no error in `container` profile), only transient Kafka `UNKNOWN_TOPIC_OR_PARTITION` at startup.
@@ -1721,11 +1903,13 @@ All notable changes to this project will be documented in this file.
 ## [1.13.0] - 2026-08-18
 
 ### Fixed (Gateway / BFF routing)
+
 - **GW-ROUTING-001/002/004**: registered missing gateway routes for `kyc-service` (`/api/v1/kyc`), `compliance-service` (`/api/v1/gdpr-audit`), and `dispute-service` (`/api/v1/disputes`, `/api/v1/refunds`) in `application.yaml` and `RouteRegistry` defaults. These previously returned `404 No Route Found`; now they reach the backend (verified live, `401` until authenticated).
 - **BFF-ROUTING-001**: fixed SNAP-BI payment via web-app by registering the singular `/api/v1/partner` gateway route and adding `/api/v1/partner` to the BFF SSRF whitelist (previously `400 Bad Request`).
 - **BFF-ROUTING-002**: removed the dead `/v1/partner` whitelist entry (could never match a `/api/v1/`-prefixed path) and added a regression test for `/api/v1/partner/payments`.
 
 ### Fixed (Backend)
+
 - **BE-BILL-001**: `GET /api/v1/payments` now returns paginated bill-payment history for the authenticated account instead of a static health map (aligns with `BillingService.getPaymentHistory`).
 - **BE-BILL-002**: `extractIdempotencyKey` no longer mints a random UUID fallback — missing `X-Idempotency-Key` now fails with 400 instead of silently hiding the contract violation.
 - **SEC-AUTH-001**: fixed `ROLE_` prefix mismatch — `backoffice`, `cms`, and `integration` controllers used `hasAnyAuthority('admin'...)` while the Keycloak converter emits `ROLE_`-prefixed authorities. Migrated to `hasRole('ADMIN')`/`hasAnyRole('ADMIN', ...)`, restoring admin/operator access (was 403).
@@ -1736,6 +1920,7 @@ All notable changes to this project will be documented in this file.
 - **LEND-SCHED-001**: added `@EnableSchedulerLock`, ShedLock config, and `V11__add_shedlock_table.sql` so repayment reconciliation runs exactly once across replicas.
 
 ### Frontend & BFF
+
 - **FE-IDM-002**: replaced per-invocation `crypto.randomUUID()` idempotency keys with deterministic keys (`idempotencyKeyFor(operation, resourceId)`) for scheduled-transfer and split-bill mutations so safe retries reuse the same key.
 - **FE-IDM-003**: bills page now derives a deterministic `X-Idempotency-Key` per bill payment and drops the unused client `referenceNumber`, so safe retries reuse the same key (no duplicate mutation on timeout/retry).
 - **FE-MONEY-002/003**: converted money fields to `Money` (string decimal) across `TransactionService` (`makeParticipantPayment`, scheduled-transfer `amount`), `StatementService` (opening/closing/credits/debits), and `WalletService` (card `dailyLimit`); removed `parseFloat`/`parseInt` from `scheduled-transfers` and `cards` pages.
@@ -1745,6 +1930,7 @@ All notable changes to this project will be documented in this file.
 - **FE-SPLIT-001**: split-bill create modal now collects at least one participant (account ID, account number, name) instead of always sending `participants: []`, and auto-computes the per-head `amountOwed` for an equal split — previously every create always failed backend `@NotEmpty participants` validation with 400. Added regression test.
 
 ### Developer Experience & CI
+
 - **DX-CI-FE-001**: added `.github/workflows/frontend-tests.yml` — automatic lint, `tsc --noEmit` type-check, i18n coverage, and Vitest unit/component tests for `frontend/web-app` on push/PR (previously web-app tests were never CI-gated).
 - **DX-CI-COMMITS-001**: added `commitlint.config.js` + `.github/workflows/commitlint.yml` using `wagoid/commitlint-github-action` to enforce Conventional Commits on PR commits/titles, protecting automated semver + changelog generation. Config validated locally (valid commit passes, invalid fails exit 1).
 - **DX-CODEGRAPH-001**: added `scripts/refresh-codegraph.sh` + `make codegraph-refresh` (sync/full/status modes) to re-index/validate the CodeGraph index after large refactors; verified against the live index (4051 files, 73,375 nodes).
@@ -1754,6 +1940,7 @@ All notable changes to this project will be documented in this file.
 - **DX-RTK-ENV-001**: the `rtk` CLI is now installed (`/home/ubuntu/.local/bin/rtk`, v0.45.0) and available on PATH, resolving the missing-tool gap noted in the backlog.
 
 ### Verification
+
 - Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
 - Next.js production build clean; `tsc --noEmit` no errors; ESLint clean; Vitest `1212 passed`.
 - Billing, promotion, lending, backoffice, integration, gateway, wallet test suites green (only Docker-gated Testcontainers tests excluded — no Docker in this env).
@@ -1762,6 +1949,7 @@ All notable changes to this project will be documented in this file.
 ## [1.12.0] - 2026-08-18
 
 ### Security & Financial Remediation
+
 - **SEC-WALLET-001 & SEC-WALLET-002**: Restricted `/wallets/{accountId}/credit` to trusted internal callers and tightened `isTrustedServiceRequest` to prevent unauthorized credit mutations.
 - **SEC-AUTH-001 & SEC-ACCOUNT-001**: Added `@PreAuthorize("hasRole('ADMIN')")` for user deletion, enforced account ownership on user profiles, and masked NIK in responses.
 - **SEC-NOTIF-002**: Bound notification queries and mark-read operations to caller `SecurityIdentity` in Quarkus notification-service.
@@ -1773,12 +1961,14 @@ All notable changes to this project will be documented in this file.
 - **SPLITBILL-SEC-001 & PAY-LINK-001 & PAY-LINK-002**: Enforced creator account authorization, validated payment methods, and fixed stale entity status before webhook dispatch.
 
 ### Frontend & BFF
+
 - **WEB-BILL-001 & WEB-TRANSFER-001 & WEB-QRIS-001**: Aligned payments endpoint with idempotency keys, fixed recipient account fallback, and added interactive scanner state and file upload handlers.
 - **WEB-KYC-001 & WEB-IDM-001 & WEB-AUTH-001 & WEB-LOG-001**: Increased BFF body size limit to 10MB, guarded 429 auto-retry on mutations, preserved `accountId` on profile updates, and sanitized console error logs.
 - **WEB-INVEST-001 & WEB-LEND-001 & WEB-DEP-001**: Added interactive Buy/Sell actions, converted loan transaction IDs to string, and upgraded nanoid to patch high-severity vulnerability.
 - **WEB-STATEMENT-002 & WEB-NOTIF-001 & WEB-MONEY-001 & WEB-WALLET-001 & WEB-TXN-001 & WEB-QA-001**: Added statement pagination, wired notification handlers, preserved decimal precision, calculated dynamic reserve balance %, fixed credit/debit calculation, and enabled standard headless Chromium in Playwright config.
 
 ### Verification & Infrastructure
+
 - Full Maven reactor build (`44/44` modules) BUILD SUCCESS.
 - Next.js production build (`86/86` routes) BUILD SUCCESS with zero errors.
 - Advanced local app image tags in `podman-compose.yml` to SemVer `1.12.0`.
@@ -2113,7 +2303,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - **GRPC-005 (statement, partial)**: `TransactionServiceClient` + `WalletServiceClient` dipindah dari `application.service` ke `adapter.client`; `TransactionRecord`/`TransactionType` diekstrak ke `statement.dto` (dulu nested di `StatementService`) — adapter client tidak lagi bergantung ke application layer; ArchUnit layered green (56/56). Migrasi gRPC penuh menunggu GRPC-002.
-
 
 ### Changed
 
@@ -3145,7 +3334,6 @@ All notable changes to this project will be documented in this file.
 - `rtk mvn -f backend/api-portal-service/pom.xml test` passed with `BUILD SUCCESS` (76/76 tests).
 - `rtk mvn -f backend/pom.xml test -Djacoco.skip=true` passed with 0 failures, 0 errors across all 44/44 backend reactor modules.
 
-
 ## [1.9.6] - 2026-07-17
 
 ### Changed
@@ -3428,7 +3616,6 @@ All notable changes to this project will be documented in this file.
 
 - **KogitoInfra** CR can't resolve Strimzi `Kafka` CR for bootstrap URI — operator reconciliation requires specific API version negotiation. Bypassed for now (lending-rules deployed as standard Deployment).
 
-
 ## [1.8.82] - 2026-07-03
 
 ### Fixed
@@ -3450,7 +3637,6 @@ All notable changes to this project will be documented in this file.
 - **Cluster status**: 45/45 pods 1/1 Ready in payu-dev namespace. SSO, Kafka, PostgreSQL, Infinispan, Artemis all connected.
 - **service-endpoints ConfigMap**: ARTEMIS_URL updated to match deployed Artemis broker headless service.
 - **AMQ broker**: Artemis 2-pod active/passive cluster deployed in payu-dev namespace.
-
 
 ## [1.8.79] - 2026-07-02
 
@@ -3731,7 +3917,6 @@ All notable changes to this project will be documented in this file.
 
 ## [1.8.69] - 2026-07-01
 
-
 ### Added
 
 - **AUDIT-042: Decimal Precision Migration** (Rule #1). Migrated monetary/decimal columns from `DECIMAL/NUMERIC(19,2)` to `DECIMAL(19,4)` in 9 microservices: `dispute`, `backoffice`, `fx`, `partner`, `billing`, `transaction`, `wallet`, `lending`, and `account` services.
@@ -3740,7 +3925,6 @@ All notable changes to this project will be documented in this file.
 - **AUDIT-035: Container Hardening (Non-Root User UID 1001)**. Patched total 35 Containerfiles, Containerfile.runtime, and skeleton templates across all 26 backend microservices and simulators to migrate runtime user from `USER 185` to non-root `USER 1001` (AGENTS.md rule #10).
 - **AUDIT-036: Manifest Runtime Hardening**. Enabled `readOnlyRootFilesystem: true` in deployment manifests for `bi-fast-simulator`, `dukcapil-simulator`, `qris-simulator`, and `biller-simulator`. Provisioned and mounted `emptyDir` `/tmp` volumes for each to prevent read-only root FS errors during startup.
 - **AUDIT-037: Idempotency Filter Path Hardening**. Fixed path mismatch and leading slash mismatch in `IdempotencyFilter.java` (`gateway-service`) that was bypassing idempotency key verification. Added `IdempotencyFilterEnforcedTest.java` to verify mandatory header enforcement on disbursements, SNAP-BI, and other financial endpoints.
-
 
 ### Fixed
 
@@ -3787,6 +3971,7 @@ All notable changes to this project will be documented in this file.
 Closed 6 BLOCKER gaps from the 2026-07-01 architecture audit (GAP-8 mTLS and GAP-7/11/12 deferred to infra tickets):
 
 **fix(security)**: GAP-34 — Unsafe class deserialization RCE in `TypedJsonRedisSerializer`
+
 - Whitelisted class names to `id.payu.*` + minimal JDK packages (`java.util.*`, `java.lang.*`, `java.time.*`, `java.math.*`)
 - Reject any payload whose type header is outside the whitelist, >256 chars, or contains `[` (array descriptor)
 - `Class.forName(name, true, cl)` no longer triggers static initializers for arbitrary classes
@@ -3794,12 +3979,14 @@ Closed 6 BLOCKER gaps from the 2026-07-01 architecture audit (GAP-8 mTLS and GAP
 - Commit: `7b344cf`
 
 **fix(security)**: GAP-21 — Inactive log masking (PII → LokiStack)
+
 - Wired `id.payu.security.masking.LogbackMaskingFilter` around both `JSON_CONSOLE` and `TEXT_CONSOLE` appenders in `logback-payu-base.xml`
 - NIK, email, phone, card numbers, passwords, tokens, API keys now masked before reaching LokiStack
 - 2 new tests in `LogbackPiiMaskingIntegrationTest`: 2/2 PASS
 - Commit: `d05372f`
 
 **fix(security)**: GAP-23 — Insecure OIDC TLS verification (`none` → `required`)
+
 - `quarkus.oidc.tls.verification: required` in both `main/resources/application.yaml` and `test/resources/application.yaml`
 - Keycloak CA cert mounted in local quadlet via `Volume=/etc/payu/tls/keycloak-ca.pem`
 - Production OCP deployment yaml (when cluster restored) MUST include equivalent volume + volumeMount
@@ -3808,6 +3995,7 @@ Closed 6 BLOCKER gaps from the 2026-07-01 architecture audit (GAP-8 mTLS and GAP
 - F3 deferred: 7 pre-existing baseline test errors in unrelated gateway filters (ApiVersionFilter, AuthorizationFilter, etc.) — orthogonal to GAP-23
 
 **fix(security)**: GAP-30 + GAP-28 — Fail-fast on missing encryption password + enable in 16 container profiles
+
 - `SecurityAutoConfiguration.encryptionService()` now throws `IllegalStateException` in `container`/`prod`/`staging` profiles when `payu.security.encryption.password` (env `ENCRYPTION_KEY`) is unset
 - Dev profile keeps dev-fallback behaviour (warning log + default key) for local development
 - Flipped `encryption-enabled: false` → `true` and added `encryption.password: ${ENCRYPTION_KEY}` mapping in 16× `application-container.yml`
@@ -3815,6 +4003,7 @@ Closed 6 BLOCKER gaps from the 2026-07-01 architecture audit (GAP-8 mTLS and GAP
 - Commit: `7392b63`
 
 **fix(security)**: GAP-19 — Broken multitenancy (cross-tenant data leakage)
+
 - Wired `@EntityListeners(TenantEntityListener.class)` on 6 wallet-service entities (the only service where the listener was missing); 31 other entities were already wired at baseline
 - Deleted local `id.payu.account.config.TenantInterceptor` (shadowed shared `id.payu.security.multitenancy.TenantInterceptor`); grep confirmed 0 callers
 - security-starter full suite: 42/42 PASS + BUILD SUCCESS
@@ -3822,6 +4011,7 @@ Closed 6 BLOCKER gaps from the 2026-07-01 architecture audit (GAP-8 mTLS and GAP
 - F3 deferred: GAP-20 (yml/yaml dedupe in account-service + auth-service) tracked as separate ticket
 
 **fix(security)**: GAP-1 — pgcrypto extension for PII column-level encryption
+
 - Added `V102__add_pgcrypto_extension.sql` to `account-service/db/migration/`: `CREATE EXTENSION IF NOT EXISTS pgcrypto`
 - Extension is now available for future migrations to use `pgp_sym_encrypt()` / `pgp_sym_decrypt()` on NIK columns with Vault-injected key
 - account-service V6 already expanded `users.email` + `users.phone_number` to VARCHAR(512) for AES-256-GCM ciphertext
@@ -3829,6 +4019,7 @@ Closed 6 BLOCKER gaps from the 2026-07-01 architecture audit (GAP-8 mTLS and GAP
 - F3 deferred: Full column-level encryption migration (pgp_sym_encrypt on NIK + remaining PII columns across kyc/lending/partner/cms) tracked as follow-up ticket
 
 **Deferred (infra-blocked, not in this sprint):**
+
 - GAP-8 mTLS strict enforcement — requires Istio/ServiceMesh (OCP-007, suspended per TODOS)
 - GAP-7 SIEM (INFRA-011) — separate infra sprint
 - GAP-11 CI/CD security (READY-044/045/046, INFRA-013/014) — separate infra sprint
@@ -3875,6 +4066,7 @@ Closed 6 BLOCKER gaps from the 2026-07-01 architecture audit (GAP-8 mTLS and GAP
 - Production invariants enforced at schema level (`NOT NULL` + `CHECK amount > 0` + `DECIMAL(19,4)`) + application layer (append-only `LedgerEntryMapper`)
 - Wallet test count: 9/9 (was 2/2 + 7 new)
 - Deployed: wallet-service:1.8.66
+
 ### iter-58 — 2026-06-20
 
 **feat(test/arch)**: READY-047 + READY-034 + READY-049 5/5 ArchUnit rules re-enabled
@@ -3900,6 +4092,7 @@ Closed READY-076. payu-postgres StatefulSet now runs 2 replicas (1 master + 1 re
 **Approach**: Native streaming replication (not Crunchy) because Crunchy image tags unavailable in payu-dev registry. Used the existing `registry.redhat.io/rhel9/postgresql-16:latest` image + `run-postgresql-slave` entrypoint.
 
 **Changes (postgres-statefulset.yaml)**:
+
 - StatefulSet replicas: 1 → 2
 - serviceName: payu-postgres (kept, headless-like DNS)
 - New init container `replica-setup` (configmap `payu-postgres-replica-scripts`):
@@ -3910,22 +4103,24 @@ Closed READY-076. payu-postgres StatefulSet now runs 2 replicas (1 master + 1 re
 - `POSTGRESQL_MASTER_IP` env var via downward API (used by run-postgresql-slave)
 
 **Pre-conditions on master (pod-0)**:
+
 - `CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD 'payu-replicator-password'`
 - `ALTER SYSTEM SET wal_level = 'hot_standby' + max_wal_senders = 10`
 
 **Verification**:
+
 - `pg_stat_replication` on master: `application_name=walreceiver state=streaming sync_state=async` (1 replica connected at 10.130.2.60)
 - `pg_is_in_recovery()` on pod-1: `t`
 - 30 DBs replicated successfully
 - Cluster 48/48 Running
 
 **Notes**:
+
 - Replica is async (sync_state=async). For synchronous, would need `synchronous_standby_names` config.
 - pg_basebackup wipes data dir first (required because the image's initdb runs on first start).
 - openshift-custom-postgresql.conf created with `max_connections=500` (matching master) — required by PostgreSQL to start as replica.
 
 **Lesson captured (L-085)**: PostgreSQL native streaming replication on OpenShift. See docs/guides/LESSONS.md for full 7-part pattern (init container quirks, /etc/hostname trick, max_connections matching, slave entrypoint, etc).
-
 
 ### iter-60 — 2026-06-20
 
@@ -3995,32 +4190,38 @@ Closed READY-076. payu-postgres StatefulSet now runs 2 replicas (1 master + 1 re
 Closed bulk of WEBAPP-LINT-002 via 124 `// eslint-disable-line @typescript-eslint/no-unused-vars` comments across 55 files. Safer than prefix-with-_ (broke type-only imports + React Query hooks + property access) and safer than delete-from-imports (broke multi-line import syntax).
 
 Method:
+
 1. Parse ESLint output for unused-var warnings (file:line:var)
 2. For each warning, append `// eslint-disable-line @typescript-eslint/no-unused-vars` to that line
 3. Iterate until convergence (10 iterations)
 
 Result:
+
 - 134 → 10 warnings (-92%)
 - 0 new type errors (baseline 9)
 - Remaining 10 (real code issues): 4 `<img>` → `<Image>`, 2 img `alt`, 3 `useCallback` deps
 - See L-086 for full pattern + why prefix/delete are dangerous
+
 ## Iteration 49: BUG-CMS-NPE-002 — ContentEntity.matchesTargeting Null-Safety (2026-06-19)
 
 Closed latent NPE bug in `cms-service` content targeting logic. `ContentEntity.matchesTargeting()` used `targetingRules.get(key).equals(userValue)` which throws NPE when:
+
 - Map has key with null value (e.g., `{"segment": null}` from JSON parse)
 - User input is null (anonymous user, no segment/location/device context)
 
 **Fix**: Extracted private `matchesRule(key, userValue)` helper. Treats both null rule value and null user value as wildcards (no constraint). If both are null, match. If both non-null, require equality.
 
 **TDD**: Wrote 3 failing tests first:
+
 1. `shouldNotThrowNpeWhenTargetingRuleValueIsNull` — map `{"segment": null}` + user `"PREMIUM"` → expect match
 2. `shouldNotThrowNpeWhenUserInputIsNull` — rule `{"segment":"PREMIUM","location":"JAKARTA","device":"MOBILE"}` + user all null → expect match
 3. `shouldHandleMixedNullValues` — mixed null rule + mismatching user → expect non-match
 
 All 3 failed with NPE/assertion fail. Fix applied → all 6 matchesTargeting tests green. Full cms-service suite: 82 run, 0 fail, 25 skip (testcontainer, known).
 
-**Deployment**: 
-- `cms-service:1.8.64` built via `mvn package -DskipTests` + `podman build` 
+**Deployment**:
+
+- `cms-service:1.8.64` built via `mvn package -DskipTests` + `podman build`
 - Bumped BOTH `infrastructure/workloads/base/cms-service/deployment.yaml` AND `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` newTag (overlay overrides base)
 - Applied via `oc apply -k infrastructure/workloads/overlays/payu-dev/` (NOT `oc apply -f base/` — overlay's image override would rewrite tag)
 - Verified `/actuator/health` + `/liveness` + `/readiness` all UP via port-forward
@@ -4042,41 +4243,46 @@ Backlog of bug fixes shipped in same day, not yet entered in CHANGELOG:
 **Background**: ITER-51D started adding `@Version` to critical financial entities. Audit showed 61 of 71 JPA entities lacked `@Version` — concurrent updates could silently overwrite each other (lost update). Iter 52 finishes the job: 100% coverage across all 17 services (84 of 84 @Entity files).
 
 **Coverage by service**:
-| Service | Entities | Migrations | Image |
-|---|---|---|---|
-| transaction | 5 (added 2) | V19 + V20 | 1.8.66 |
-| wallet | 18 (added 17) | V102 | 1.8.64 |
-| billing | 4 (added 4) | V5 | 1.8.63 |
-| lending | 7 (added 7) | V7 | 1.8.63 |
-| investment | 5 (added 5) | V3 | 1.8.62 |
-| auth | 3 (added 3) | V2 | 1.8.63 |
-| backoffice | 4 (added 4) | V5 | 1.8.62 |
-| partner | 10 (added 10) | V11 | 1.8.64 |
-| promotion | 6 (added 6) | V9 | 1.8.61 |
-| cms | 1 (added 1) | V3 | 1.8.65 |
-| support | 3 (added 3) | V2 | 1.8.62 |
-| dispute | 1 (added 1) | V3 | 1.8.62 |
-| compliance | 2 (added 2) | V2 | 1.8.62 |
-| notification | 1 (added 1) | V3 | 1.8.24 |
-| statement | 2 (added 2) | V4 | 1.8.66 |
-| account | 1 (added 1) | V100 | 1.8.64 |
-| fx | 1 (added 1) | V3 | 1.8.62 |
+
+| Service      | Entities      | Migrations | Image  |
+| ------------ | ------------- | ---------- | ------ |
+| transaction  | 5 (added 2)   | V19 + V20  | 1.8.66 |
+| wallet       | 18 (added 17) | V102       | 1.8.64 |
+| billing      | 4 (added 4)   | V5         | 1.8.63 |
+| lending      | 7 (added 7)   | V7         | 1.8.63 |
+| investment   | 5 (added 5)   | V3         | 1.8.62 |
+| auth         | 3 (added 3)   | V2         | 1.8.63 |
+| backoffice   | 4 (added 4)   | V5         | 1.8.62 |
+| partner      | 10 (added 10) | V11        | 1.8.64 |
+| promotion    | 6 (added 6)   | V9         | 1.8.61 |
+| cms          | 1 (added 1)   | V3         | 1.8.65 |
+| support      | 3 (added 3)   | V2         | 1.8.62 |
+| dispute      | 1 (added 1)   | V3         | 1.8.62 |
+| compliance   | 2 (added 2)   | V2         | 1.8.62 |
+| notification | 1 (added 1)   | V3         | 1.8.24 |
+| statement    | 2 (added 2)   | V4         | 1.8.66 |
+| account      | 1 (added 1)   | V100       | 1.8.64 |
+| fx           | 1 (added 1)   | V3         | 1.8.62 |
 
 **Total**: 84 entities with @Version, 79 newly added in iter 52 (5 already had it from iter 51d + pre-existing).
 
 **Per-entity change**:
+
 ```java
 @Version
 private Long version;
 ```
-+ corresponding Flyway migration adding `version BIGINT NOT NULL DEFAULT 0` to the table.
+
+- corresponding Flyway migration adding `version BIGINT NOT NULL DEFAULT 0` to the table.
 
 **Production hiccup + manual fix**:
+
 - For services where `flyway_schema_history` table did NOT pre-exist (lending, investment, support — tables were created by ddl-auto=create-drop in earlier dev iterations, not by Flyway), the new Flyway migrations didn't run automatically. Hibernate's `ddl-auto=validate` then failed at startup with "missing column [version] in table [X]".
 - **Workaround**: ran migrations manually via `psql` for affected services, then restarted pods.
 - Affected: lending, investment, support, dispute, fx, statement, account, wallet, billing, partner, auth, promotion, backoffice, transaction. All now healthy.
 
 **Test impact**:
+
 - All 16 services with @Version additions tested locally before deploy: 100% pass rate across 1330+ tests
 - cms-service: 4 test files needed `.version(1)` → `.version(1L)` (Integer → Long type change for `ContentResponse.version`)
 - partner-service: needed `jakarta.persistence.Version` import addition in `PartnerCertificateEntity`
@@ -4090,18 +4296,21 @@ private Long version;
 Closed two latent bugs where `@Transactional` was paired with `@Async`, making `@Transactional` a silent no-op (per BUG-BE-049 lesson — Spring's `@Transactional` proxy is only applied at the call site, not on the async thread, so transaction context is not propagated). Each `repository.save()` runs in its own implicit transaction; multi-write methods can leave partial state on failure.
 
 **Bugs fixed**:
+
 1. **`partner-service.WebhookDispatcherService.dispatch(eventType, eventId, payload)`** — had `@Async + @Transactional`. The for-loop iterates over `WebhookSubscriptionEntity` list and saves `WebhookDeliveryEntity` for each. If a save fails mid-loop, earlier deliveries are NOT rolled back (inconsistent partial state).
 2. **`statement-service.StatementService.regenerateStatement(UUID)`** — same pattern. (Note: `generateStatement` was already fixed per BUG-BE-049; this is the matching `regenerateStatement` admin method.)
 
 **Fix**: Removed `@Transactional` from both methods. Each `repository.save()` now runs in its own implicit transaction (auto-commit), matching Spring's default behavior. The 2-3 ops per call are independent and don't need cross-write atomicity at the SQL level (compensation can be added if cross-call atomicity is required later).
 
 **TDD approach** (per ArchUnit Java 25 limitation):
+
 - Wrote failing test using **Java reflection** (ArchUnit 1.2.1 can't parse Java 25 bytecode — `importPackages()` returns empty due to ASM incompatibility)
 - Test scans declared methods of `WebhookDispatcherService` / `StatementService`, fails if any method has both `@Async` and `@Transactional`
 - Initially the test failed (Red), confirming both bugs; after removing `@Transactional`, test passes (Green)
 - Test placed in each service's `ArchitectureTest` for regression guard
 
 **Deployed**:
+
 - `partner-service:1.8.63` (was 1.8.62)
 - `statement-service:1.8.64` (was 1.8.63)
 - Bumped BOTH `infrastructure/workloads/base/<svc>/deployment.yaml` AND `infrastructure/workloads/overlays/payu-dev/kustomization.yaml` newTag (L-078 lesson)
@@ -4109,7 +4318,6 @@ Closed two latent bugs where `@Transactional` was paired with `@Async`, making `
 - Verified `/actuator/health` returns `UP` for both via port-forward
 
 **Lesson captured (L-079)**: ArchUnit 1.2.1 + Java 25 = silent empty import. `importPackages()` and `@AnalyzeClasses` return empty collections (118 partner-service .class files all fail import). Workaround: use `Class.forName()` + `getDeclaredMethods()` + `isAnnotationPresent()` for annotation-based rules. Mark with `// CALIBRATION` comment for future ArchUnit upgrade.
-
 
 ### Iteration 54: BUG-READY-052 — account-service Hexagonal Cleanup (2026-06-19)
 
@@ -4147,32 +4355,36 @@ Closed READY-052 (account-service Hexagonal layered architecture cleanup, 0% →
 **Deployed**: `account-service:1.8.66`. Cluster 46/46 Running.
 
 **Hexagonal trilogy status (all 3 main services)**:
+
 - ✅ READY-050: integration-service (iter 46)
-- ✅ READY-051: cms-service partial (iter 45)  
+- ✅ READY-051: cms-service partial (iter 45)
 - ✅ READY-052: account-service (iter 54) — this iter
 - ⏳ READY-049: transaction-service (87+ violations, 1-2 dev days)
 
 ### Iteration 53: ShedLock Distributed Lock for 16 `@Scheduled` Methods Across 7 Services (2026-06-19)
+
 ### Iteration 53: ShedLock Distributed Lock for 16 `@Scheduled` Methods Across 7 Services (2026-06-19)
 
 **Background**: Closed ShedLock ticket. 20 `@Scheduled` methods across the platform could double-execute on multi-replica deployment (financial impact: duplicate charges, duplicate disbursements, duplicate FX rate updates). Currently most services run 1 replica, but ShedLock enables safe HA scaling.
 
 **Coverage by service** (16 schedulers locked):
-| Service | Schedulers | Image | Schedules |
-|---|---|---|---|
-| transaction | 3 | 1.8.67 | PaymentExpiry (5m), ScheduledTransfer (1m), Archival (cron 2am) |
-| billing | 2 | 1.8.64 | Subscription charge (5m), Trial expiry (10m) |
-| wallet | 2 | 1.8.65 | Escrow expiry (5m), Daily settlement (cron 2am) |
-| partner | 5 | 1.8.65 | Webhook retry (30s), Webhook cleanup (cron 3am), Merchant QR expiry (2m), SnapBi token cleanup (1m), ApiKey rotation (1h) |
-| cms | 2 | 1.8.66 | Content activate (cron top of hour), Content archive (cron :30) |
-| fx | 2 | 1.8.63 | Rate update (cron every 15m), Rate publish (1m) |
-| account | 1 | 1.8.65 | Budget reset (cron midnight) |
+
+| Service     | Schedulers | Image  | Schedules                                                                                                                 |
+| ----------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| transaction | 3          | 1.8.67 | PaymentExpiry (5m), ScheduledTransfer (1m), Archival (cron 2am)                                                           |
+| billing     | 2          | 1.8.64 | Subscription charge (5m), Trial expiry (10m)                                                                              |
+| wallet      | 2          | 1.8.65 | Escrow expiry (5m), Daily settlement (cron 2am)                                                                           |
+| partner     | 5          | 1.8.65 | Webhook retry (30s), Webhook cleanup (cron 3am), Merchant QR expiry (2m), SnapBi token cleanup (1m), ApiKey rotation (1h) |
+| cms         | 2          | 1.8.66 | Content activate (cron top of hour), Content archive (cron :30)                                                           |
+| fx          | 2          | 1.8.63 | Rate update (cron every 15m), Rate publish (1m)                                                                           |
+| account     | 1          | 1.8.65 | Budget reset (cron midnight)                                                                                              |
 
 **Bonus fix**: `account-service` was missing `@EnableScheduling` — its BudgetService.resetBudgets was not running at all. Fixed in iter 53.
 
 **Cleanup**: `ScheduledTransferScheduler` replaced manual Redis-based lock with ShedLock (removed `StringRedisTemplate` dependency). Cleaner code, no Redis dependency for locking.
 
 **Per-method annotation**:
+
 ```java
 @SchedulerLock(name = "ClassName_methodName", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
 @Scheduled(fixedRate = 60000)
@@ -4182,6 +4394,7 @@ public void processDueScheduledTransfers() { ... }
 **Configuration**: `@EnableSchedulerLock(defaultLockAtMostFor = "PT5M", defaultLockAtLeastFor = "PT1S")` on each main class. `ShedLockConfig` provides `LockProvider` bean using JdbcTemplate against the service's own DB.
 
 **Per-service migration**: New `V_NN__add_shedlock_table.sql` Flyway migration creates the `shedlock` table:
+
 ```sql
 CREATE TABLE IF NOT EXISTS shedlock (
     name       VARCHAR(64)  NOT NULL,
@@ -4193,6 +4406,7 @@ CREATE TABLE IF NOT EXISTS shedlock (
 ```
 
 **Production hiccup (L-080 again)**: Services with orphaned DBs (no `flyway_schema_history` table) needed manual `psql` migration. All 7 services now have `shedlock` table. Manual psql:
+
 ```bash
 oc port-forward svc/payu-postgres 5432:5432 -n payu-dev &
 podman run --rm -i --network host docker.io/library/postgres:16-alpine \
@@ -4201,11 +4415,13 @@ podman run --rm -i --network host docker.io/library/postgres:16-alpine \
 ```
 
 **Live cluster verification** (after deploy):
+
 - `payu_partner.shedlock`: `ApiKeyService_expireRotatedKeys` row present (lock acquired, scheduler ran)
 - `payu_transaction.shedlock`: `ScheduledTransferScheduler_processDueScheduledTransfers` row present
 - Other 5 services: empty (schedulers not yet at their fire time)
 
 **Tests**: All 7 services pass tests locally. Test summary:
+
 - transaction: 121/121 (unchanged)
 - billing: 88/88 (1 skip)
 - wallet: 2/2
@@ -4221,11 +4437,13 @@ podman run --rm -i --network host docker.io/library/postgres:16-alpine \
 Four-bug batch: 1 NPE fix + 2 callback security fixes + 3 entity optimistic-locking additions.
 
 **1. BUG-STMT-PATH-001** (statement-service)
+
 - `StatementService.getStatementPdf()` called `Paths.get(statement.getStoragePath())` without null check. If `storagePath` is null (data migration edge case, statement marked COMPLETED but path not yet persisted), `Paths.get(null)` throws NPE that leaks through to the user.
 - TDD: 1 failing test (`shouldThrowExceptionWhenStoragePathIsNull`) → fix (explicit null check + new `STATEMENT_005` error code) → test green.
 - Deployed: `statement-service:1.8.64 → 1.8.65`
 
 **2. BUG-TRANS-CALLBACK-001 + BUG-VA-CALLBACK-001** (transaction-service)
+
 - `DisbursementController.handleCallback()` (POST `/api/v1/disbursements/callback`) and `VirtualAccountController.bankCallback()` (POST `/api/v1/virtual-accounts/callback`) were protected only by SecurityConfig's `.anyRequest().authenticated()`. ANY valid JWT (including regular user tokens) could:
   - Mark a disbursement as COMPLETED with arbitrary `bankReference`
   - Mark a VA payment as received with arbitrary amount
@@ -4242,6 +4460,7 @@ Four-bug batch: 1 NPE fix + 2 callback security fixes + 3 entity optimistic-lock
 - Deployed: `transaction-service:1.8.64 → 1.8.65`
 
 **3. ITER-51D: @Version Optimistic Locking** (transaction-service)
+
 - 3 critical JPA entities lacked `@Version` field, allowing lost-update on concurrent writes (e.g., async disbursement + admin status change overwrite each other silently).
 - Added `@Version private Long version` to: `TransactionEntity`, `ScheduledTransferEntity`, `BatchDisbursementEntity`. (Pre-existing: `DisbursementEntity`, `SplitBillEntity`.)
 - New Flyway migration `V19__add_version_to_critical_entities.sql` adds `version BIGINT NOT NULL DEFAULT 0` to the 3 tables + backfills existing rows.
@@ -4251,11 +4470,13 @@ Four-bug batch: 1 NPE fix + 2 callback security fixes + 3 entity optimistic-lock
 - **Deferred** (out of scope for this iter): 58 other JPA entities across 14 services still lack @Version. Prioritized financial entities first.
 
 **Skipped** (per scope triage):
+
 - BUG-AUTH-LOCKOUT-001: `KeycloakService.LoginAttempt.increment()` non-atomic `count++` — investigated, found wrapped in `synchronized (key.intern())` per-user lock. NOT a bug (false positive).
 - BUG-GATEWAY-ANALYTICS-001: `ApiMetrics.record()` non-atomic `count++` — investigated, found inside `ConcurrentHashMap.compute()` lambda. NOT a bug (atomic per-key, false positive).
 - ShedLock for 20 `@Scheduled` methods — deferred. Most services run with 1 replica, so no concurrent execution risk today. Add when scaling to >1 replica.
 
 **Net deployed in iter 51**:
+
 - `transaction-service:1.8.64 → 1.8.65` (HMAC + @Version)
 - `statement-service:1.8.64 → 1.8.65` (BUG-STMT-PATH-001)
 
@@ -4272,35 +4493,43 @@ Four-bug batch: 1 NPE fix + 2 callback security fixes + 3 entity optimistic-lock
 Closed WEBAPP-014, WEBAPP-LINT-003, and stabilized full backend test suite.
 
 ### Code changes
+
 1. **cms-service ContentRepositoryIntegrationTest**: Added `@Disabled` with documented root cause. Testcontainers 2.0.5 can't find Docker (podman socket substitute fails per L-062 retry). Re-enable when Docker available locally.
 2. **wallet/auth/transaction-service pom.xml**: Added surefire `<excludes>**/ContractVerifierTest.java</exclude>` to 3 services. Per L-066/L-067, RestAssured `MockMvcRequestSenderImpl` hits `NoSuchMethodError: org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder.header(String, Object[])` (Spring 7 ABI mismatch).
 
 ### Tooling
+
 3. **frontend/web-app/scripts/check-i18n-coverage.mjs**: i18n key parity check. Reads `messages/en.json` + `messages/id.json`, flattens to dot-path sets, exits 0 if match / 1 if mismatch / 2 on JSON parse error. Added `npm run check:i18n` script. Prevents L-057 (MISSING_MESSAGE) recurrence. Current state: 515 keys × 2 locales, parity OK.
 
 ### Test cleanups
+
 4. **frontend/web-app keyboard-navigation.test.tsx**: Removed `console.log('Form submitted')` (no-console lint rule).
 5. **frontend/web-app useAnalytics.test.tsx**: Replaced 7 instances of `let capturedOptions: any = null` → `let capturedOptions: unknown = null` (no-explicit-any rule).
 6. **frontend/web-app 5 personalization tests + BalanceCard.test.tsx**: Added `// eslint-disable-next-line react/display-name` before `Wrapper.displayName = 'QueryClientWrapper'` (React 19 display-name rule).
 
 ### TODOS updates
+
 - Closed READY-037 (Profile entity migration was already done iter 32)
 - Closed READY-038 (spring-grpc 1.0.3 migration was already done iter 28)
 - Closed READY-044 (promotion Quarkus tests were already passing iter 28)
 
 ### Verification
+
 - **Full backend suite: 1472 tests, 0 failures, 0 errors, 169 skipped (intentional @Disabled)**
 - BUILD SUCCESS across 30 modules
 - i18n check: 515 keys × 2 locales parity confirmed
 
 ### L-074 captured (test maintenance)
+
 **When to delete @Disabled tests vs re-enable**:
+
 - Bogus assertion (tests nonexistent behavior) → DELETE
 - Duplicate E2E coverage → DELETE
 - Real behavior only unit testable → RE-ENABLE (cost vs value judgment)
 - Hypothetical behavior → DELETE
 
 ### Files changed (12)
+
 - 1 test class: `cms-service/ContentRepositoryIntegrationTest.java` (+ @Disabled)
 - 3 pom.xml (surefire excludes)
 - 3 test files (frontend lint fixes)
@@ -4309,6 +4538,7 @@ Closed WEBAPP-014, WEBAPP-LINT-003, and stabilized full backend test suite.
 - `docs/roadmap/TODOS.md` (3 closed)
 
 ### Cluster state (after iter 41 — unchanged in iter 42)
+
 - 46/46 Running
 - 20/21 services `/actuator/health` 200
 - account-service:1.8.62 deployed
@@ -4322,14 +4552,17 @@ Final cleanup iter — removed 11 stale TODO comments + 422-line orphan Python f
 ### Code cleanups (3 categories)
 
 **1. Stale TODO comments removed (11 instances)**:
+
 - `BUG-ARCH-001: Extract to top-level enum` (5× in `SubscriptionPlanEntity`, `MerchantEntity`, `TransactionEntity`) — ARCH-009 already extracted enums to `domain/model/*`. Comment was a "TODO ghost".
 - `BUG-BE-043: Use DB-level pagination` (6× in backoffice-service services + repos) — Repository already has `Pageable findByStatus(...)` + service uses `PageRequest.of(page, size)`.
 
 **2. Orphan code file deleted (422 lines)**:
+
 - `analytics-service/src/main/resources/db/migration/V2__create_segments_table.sql` — Misnamed Python file in Java/Maven directory convention. `file` command returns `"Python script"` not `"SQL script"`. 0 imports across repo. Added in commit `3585ee6f` (iter 21 docs sync bulk). Containerfile copies `src/` not `src/main/`, so file was never executed.
 - 4 empty parent directories removed: `migration`, `db`, `resources`, `main`
 
 **3. Architecture documentation (3scale)**:
+
 - Added Section 7.3 to `ARCHITECTURE.md` (136 lines):
   - 2-Tier partner gateway architecture (Partner → 3scale/APIcast → gateway-service → backend)
   - Tier responsibility split table (3scale vs gateway-service)
@@ -4343,17 +4576,20 @@ Final cleanup iter — removed 11 stale TODO comments + 422-line orphan Python f
 - Cross-references: ADR-0014, `infrastructure/platform/api-management/3scale/`, READY-074
 
 ### Lessons captured (3)
+
 - **L-075**: Stale TODO Comment Cleanup pattern (refactor evidence erasure)
 - **L-076**: Orphan Code Detection pattern (file extension mismatch)
 - **L-077**: Architecture Documentation Gap pattern (3scale was undocumented)
 
 ### Files changed (12)
+
 - 6 entity/repo files (TODO comments removed)
 - 1 deleted Python file + 4 empty dirs
 - 1 ARCHITECTURE.md (+136 lines, Section 7.3)
 - 3 new LESSONS.md sections (+L-075, L-076, L-077)
 
 ### Cluster state (unchanged)
+
 - 46/46 Running
 - 20/21 services health 200
 - 1472 backend tests still pass
@@ -4374,7 +4610,8 @@ Closed READY-045 (account-service web-slice tests). Removed 3 @Disabled tests th
 
 21 Spring Boot services had `REDIS_HOST=payu-datagrid:11222` (Data Grid HTTP port) but Spring Data Redis expected Redis RESP. Lettuce handshake timed out (3s) → `/actuator/health` returned 503. **Silent in production**: Spring Boot local cache fallback (per L-070) masked the issue — pods ran healthy, Redis ops silently failed.
 
-**Fix**: 
+**Fix**:
+
 - Changed `payu-datagrid.payu-dev.svc.cluster.local:11222` → `payu-cache.payu-dev.svc.cluster.local:6379` (real Redis) in 21 deployment yamls
 - Cleared `PAYU_CACHE_REDIS_USERNAME` to empty (Redis simple AUTH, no user concept)
 - Removed `redis://developer:user@host` Quarkus URL prefix → `redis://:pass@host`
@@ -4382,46 +4619,55 @@ Closed READY-045 (account-service web-slice tests). Removed 3 @Disabled tests th
 - Added explicit `ARTEMIS_PORT=61616`, `ARTEMIS_HOST=artemis`, `ARTEMIS_USERNAME=admin`, `ARTEMIS_PASSWORD=admin` to 3 services (billing/integration/notification) — K8s auto-injects `ARTEMIS_PORT=tcp://...` URL which broke JMS URL parsing (`port out of range:-1`)
 
 ### Files changed
+
 - 22 `infrastructure/workloads/base/*/deployment.yaml` (Redis host/port + memory + AMQ env)
 - 2 `backend/account-service/src/test/java/id/payu/account/adapter/web/OnboardingControllerTest.java` + `NikVerificationControllerTest.java` (3 @Disabled removed, -36 lines)
 - `docs/roadmap/TODOS.md`, `docs/guides/LESSONS.md`, `CHANGELOG.md`
 
 ### Cluster state after iter 41
+
 - **46/46 Running, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff**
 - **20/21 services `/actuator/health` 200** (1 Quarkus service requires `/q/health`)
 - account-service:1.8.62 deployed with 120 tests passing, 0 @Disabled
 - account/billing/integration/wallet/notification all 200
 
 ---
+
 ### Iteration 40: Kafka HA — 3 → 5 Brokers (2026-06-18)
 
 Closed READY-077. Bumped broker KafkaNodePool from 3→5 replicas. Strimzi auto-assigned new node IDs 6 + 7 (since 4/5 already taken by controllers). New StatefulSets `payu-kafka-broker-6` + `payu-kafka-broker-7` came up in ~30s. Cluster 46/46 Running.
 
 ### Steps
+
 1. Edit `kafka-amqstreams.yaml`: `replicas: 3` → `replicas: 5` on broker pool
 2. `oc apply -f infrastructure/platform/data/base/kafka-amqstreams.yaml -n payu-dev`
 3. Wait 30s for Strimzi to provision new StatefulSets
 4. Verify: 5 brokers (node IDs 0/2/3/6/7) + 3 controllers (1/4/5) Running
 
 ### Caveats
+
 - New brokers 6/7 start EMPTY. Topic data remains on 0/2/3. For full data rebalance, run `kafka-reassign-partitions` (deferred — RF=3 already provides HA).
 - Controllers unchanged at 3 (KRaft quorum: 3 odd number, majority 2).
 - Topics remain `replicas: 3` so 2 broker failures still tolerated.
 
 ### Files changed (1)
+
 - `infrastructure/platform/data/base/kafka-amqstreams.yaml` (broker replicas 3→5)
 
 ### Cluster state after iter 40
+
 - **46/46 Running** (was 44, +2 new broker pods)
 - Kafka CR Ready, observedGeneration 3
 - 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff
 
 ---
+
 ### Iteration 39: 1.8.61 Bulk Deploy — Kafka Hostname Fallback Hardening (16 services) (2026-06-18)
 
 Closed READY-078 (preventive). After iter 37/38 fixed yml kafka hostname fallback but didn't rebuild 16 services, iter 39 bulk-rebuilt 16 Spring Boot services at tag 1.8.61 to bake the corrected `payu-kafka-kafka-bootstrap:9092` fallback into the binaries.
 
 ### Pipeline
+
 1. `mvn -f backend/pom.xml clean package -DskipTests -pl <16 svcs> -am -T 1C` → 19s total
 2. 16 parallel `podman build --tls-verify=false` + `podman push` to `default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id`
 3. 16 deployment.yaml tag bumps (1.8.21/1.8.22/1.8.23/1.8.54/1.8.55/1.8.59 → 1.8.61)
@@ -4430,17 +4676,21 @@ Closed READY-078 (preventive). After iter 37/38 fixed yml kafka hostname fallbac
 6. Cluster: **44/44 Ready, 0 Not-Ready, 0 CrashLoop, 0 ImagePullBackOff**
 
 ### Services (16)
+
 account, auth, backoffice, billing, cms, compliance, dispute, fx, integration, investment, lending, product-catalog, statement, support, transaction, wallet. partner+promotion already at 1.8.60 from iter 37 — skipped.
 
 ### Pre-existing 503 health (NOT caused by this iter)
+
 `account/wallet /actuator/health` returns 503 (Lettuce 3s timeout on Data Grid RESP handshake). Cluster pods still Running (liveness probe passes). Git diff shows 0 source code changes in this iter. Tracked separately.
 
 ### Files changed (16)
+
 - `infrastructure/workloads/base/{account,auth,backoffice,billing,cms,compliance,dispute,fx,integration,investment,lending,product-catalog,statement,support,transaction,wallet}-service/deployment.yaml` (tag + registry)
 - 16 container images pushed to default-route registry
 - 0 source code changes
 
 ---
+
 ### Iteration 38: payu-dev Naming Consistency + Postgres NetworkPolicy + HA Disabled + L-058 CI Guard (2026-06-18)
 
 **Recursive dev loop continued**: from iter 37's 38 Ready/0 Not-Ready → **44 Ready/0 Not-Ready/0 CrashLoop/0 ImagePullBackOff (100% healthy)**.
@@ -4466,6 +4716,7 @@ User request: "infra pod naming should have `payu-` prefix consistently (payu-ka
 ### Preventive: L-058 CI Guard wired to GitHub Actions
 
 Added `.github/workflows/drift-detection.yml` that runs `scripts/diff-base-vs-live.py` on:
+
 - push to main/develop when `infrastructure/**` changes
 - manual `workflow_dispatch`
 
@@ -4502,6 +4753,7 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 - `docs/guides/LESSONS.md` (+L-071)
 
 ### L-071 captured (cluster operations + CI)
+
 - Pod naming follows K8s resource name prefix chain. Strimzi CR name + NodePool name = pod name. To get clean `payu-kafka-broker-N` naming, keep CR name `payu-kafka` and pool name SHORT.
 - NetworkPolicy labels matter: different pod sources have different labels (StatefulSet vs Crunchy operator). Match against live pod labels, not operator CRD fields.
 - Crunchy HA migration requires image registry access. For dev, single-instance StatefulSet is simpler.
@@ -4533,6 +4785,7 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 **Phase 2 - Image Tag Sync (revisited L-058)**: After deploying with `oc apply -k infrastructure/workloads/base/`, the deployment spec image tags were reverted from live tags (1.8.59) to base yaml tags (1.8.21) for 9 services (backoffice, billing, cms, compliance, dispute, fx, integration, statement, support). New pods pulled old tags that don't exist in imagestream → ImagePullBackOff. Per L-058 fix: synced base yaml tags back to live values via `oc get is -o jsonpath='{.status.tags[0].tag}'` per service.
 
 ### Fixes applied (3 file changes + 1 cluster apply)
+
 1. **18 deployment yamls** — `PAYU_CACHE_REDIS_USERNAME: default` → `developer`, `redis://default:` → `redis://developer:`
 2. **3 deployment yamls** — memory limits bumped (partner 512Mi→1Gi, promotion 768Mi→1.5Gi, wallet 512Mi→1Gi, investment 512Mi→1Gi)
 3. **18 application-container.yml** — `payu-kafka-kafka-bootstrap` → `kafka-kafka-bootstrap` (preventive bug fix)
@@ -4541,12 +4794,14 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 6. **2 images built+push** — partner-service:1.8.59 + promotion-service:1.8.59 (with kafka fix)
 
 ### Cluster state after fix
+
 - 38 Running / 0 Not-Ready / 0 CrashLoop / 0 ImagePullBackOff
 - HTTP smoke: 16/16 services respond 200 or 401 (auth required) ✓
 - gateway-service health: 200 ✓ (Redis fix worked)
 - notification-service health: 200 ✓ (AMQ broker deployed)
 
 ### L-070 captured (cluster operations)
+
 - **Data Grid user mismatch**: `datagrid-credentials` Secret has `developer` user only, but 19 deployments reference `default` user. WRONGPASS errors invisible in Spring Boot services because they fall back to local cache (still "Running ready=True" but Redis silently fails). Only Quarkus gateway health check exposes the issue.
 - **Spring Kafka fallback race**: `${KAFKA_BROKERS:default-value}` in application.yml is used when env var is empty. During rapid restarts (e.g. configmap update), pods may start with empty env. Default must point to a REAL hostname, not a typo'd `payu-` prefixed version.
 - **OOM threshold = 512Mi is too low for Spring Boot 4.1.0 + Java 25 + 8 shared starters**. Java 25 JVM metaspace alone is ~150Mi. Add Hikari, Hibernate, Kafka clients, Outbox polling → 400-600Mi baseline, can spike to 700+Mi. Set baseline limits to 1Gi for Spring Boot services.
@@ -4561,6 +4816,7 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 ### Root causes (3 independent issues found via debugging methodology)
 
 **Phase 1 - Root Cause Investigation (Iron Law)**:
+
 1. **Postgres user `payu` password drift**: K8s `db-secrets.DB_PASSWORD=payu-dev-password` (patched in iter 3/22) but Postgres user `payu` was created with old `>3Se{I@_4JVvvo[-z:uOO2jh` password. Result: pods crashloopped with `FATAL: password authentication failed for user "payu"` (SQLSTATE 28P01).
 2. **Stale URL strings in `db-secrets.yaml`**: `ANALYTICS_DATABASE_URL` and `KYC_DATABASE_URL` still contained URL-encoded old password (`%3E3Se%7BI%40_4JVvvo%5B-z%3AuOO2jh`). Iter 22 fix only updated `DB_PASSWORD` field, not the embedded asyncpg URL strings.
 3. **Fresh PostgreSQL with 23/27 empty DBs**: Crunchy Postgres cluster wiped or freshly provisioned. Flyway migrations never ran because pods couldn't reach Postgres at startup. Hibernate `ddl-auto: validate` only validates entity-declared tables, NOT outbox/saga tables from shared starters — so pods reported "Running ready=True" but crashed on first outbox query (`relation "outbox_events" does not exist`).
@@ -4568,6 +4824,7 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 ### Fixes applied
 
 **Phase 2 - Fix**:
+
 1. `ALTER USER payu PASSWORD 'payu-dev-password'` in Crunchy Postgres. Verified via direct psql TCP connection (`SELECT 1` returns).
 2. Updated `infrastructure/workloads/base/db-secrets.yaml` to use `payu-dev-password` in `ANALYTICS_DATABASE_URL` and `KYC_DATABASE_URL`. Applied via `oc apply`.
 3. Built + pushed 9 missing images (JDK 25 + JAVA_HOME=/opt/jdk25 + Maven 3.8.7 toolchain):
@@ -4590,11 +4847,13 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 **Phase 5 - Deploy**: 33 pods Ready, 9 Not-Ready (pre-existing Redis auth + AMQ broker health checks DOWN — out of scope).
 
 **Phase 6 - Verify**:
+
 - HTTP smoke test: `curl http://account-service.payu-dev.svc.cluster.local:8080/api/v1/users` → HTTP 401 (OAuth2 enforced correctly).
 - All 27 `payu_*` DBs have schema (0 empty remaining).
 - 0 CrashLoop, 0 ImagePullBackOff.
 
 ### L-069 captured (platform-wide)
+
 - Always verify Postgres user password matches K8s secret BEFORE patching config
 - `db-secrets.yaml` URL strings can embed passwords separate from `DB_PASSWORD` field
 - Hibernate `ddl-auto: validate` only validates entity-declared tables (not outbox/saga)
@@ -4604,11 +4863,13 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 - Quarkus Containerfile requires `mvn package -DskipTests` BEFORE `podman build`
 
 ### Files changed (3)
+
 - `infrastructure/workloads/base/db-secrets.yaml` (URL passwords fixed)
 - `docs/guides/LESSONS.md` (+L-069)
 - Postgres user password reset (in-cluster ALTER USER)
 
 ### Scripts used (in /tmp/)
+
 - `apply-migrations-v2.sh` — Apply Flyway migrations with Python natural sort
 - `build-missing.sh` / `build-remaining.sh` — Build+push 9 missing images with JDK 25
 
@@ -4617,6 +4878,7 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 **Cluster admin context**: All work in management cluster. JDK 25 + Maven 3.8.7 toolchain (installed iter 32).
 
 ### READY-046 sweep continuation (3 commits)
+
 - **iter 35a (273369f8)**: billing-service 25 tests re-enabled via RestAssured → MockMvc migration (L-066 pattern). Subagent converted 3 test classes (BillerResourceTest, TopUpResourceTest, PaymentResourceTest — 651 lines total). 25 tests now run end-to-end. Fixed 1 production bug (billing GlobalExceptionHandler now handles ResourceNotFoundException → 404) + 1 test path bug (`$.error.message` → `$.message`).
 - **iter 35b (1e2da870)**: integration-service 2 more WireMock tests re-enabled. 2 production bugs in SoapRouteBuilder:
   1. `testSoapRouteCreatesMessageRecord`: route built local IntegrationMessage with UUID-A, then `createMessage()` generated UUID-B, then set header to UUID-A (never persisted). `markSent(UUID-A)` failed with "Message not found". Fix: use return value of `createMessage()` which returns the persisted entity with actual messageId.
@@ -4624,16 +4886,18 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 - **iter 35c (241c94f2)**: investment-service DepositIntegrationTest converted to MockMvc. 2 tests compile but stay @Disabled because test profile uses Testcontainers + PostgreSQL which needs Docker (no podman installed in env). MockMvc conversion done and ready when Docker available.
 
 ### Recursive development loop progress (iters 32-35)
-| Iter | Commit | Tests re-enabled | Prod bugs fixed |
-|------|--------|------------------|------------------|
-| 32 | c67c8209 | 4 (support) | 2 (HttpMessageNotReadable + Resilience4j fallback rethrow) |
-| 33 | 18391680 | 0 (L-068 sweep — 14 services) | 0 (L-068 = bulk rethrow pattern, not tests) |
-| 34 | d079f934 | 1 (integration) | 2 (GlobalExceptionHandler + Accept-Encoding) |
-| 35 | 273369f8 + 1e2da870 + 241c94f2 | 27 (billing 25 + integration 2) | 3 (billing 404 + integration UUID + integration throwExceptionOnFailure) |
+
+| Iter | Commit                         | Tests re-enabled                | Prod bugs fixed                                                          |
+| ---- | ------------------------------ | ------------------------------- | ------------------------------------------------------------------------ |
+| 32   | c67c8209                       | 4 (support)                     | 2 (HttpMessageNotReadable + Resilience4j fallback rethrow)               |
+| 33   | 18391680                       | 0 (L-068 sweep — 14 services)   | 0 (L-068 = bulk rethrow pattern, not tests)                              |
+| 34   | d079f934                       | 1 (integration)                 | 2 (GlobalExceptionHandler + Accept-Encoding)                             |
+| 35   | 273369f8 + 1e2da870 + 241c94f2 | 27 (billing 25 + integration 2) | 3 (billing 404 + integration UUID + integration throwExceptionOnFailure) |
 
 **Cumulative**: 4 commits, 32 @Disabled tests re-enabled, 7 production bugs fixed, 1 new lesson pattern (L-068).
 
 ### Platform test state
+
 - 29/30 backend modules SUCCESS (excl. transaction-service with pre-existing H2/JSONB issue from iter 29)
 - 1640+ tests runtime-green across shared starters + 16 services + 5 simulators
 - 6 actual @Disabled tests remaining (down from 13):
@@ -4642,9 +4906,11 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 - 0 P0, 10 P1 follow-ups open
 
 ### L-068 captured + applied platform-wide
+
 **Resilience4j @CircuitBreaker fallback methods MUST rethrow business exceptions** instead of wrapping as RuntimeException. Otherwise the original exception type is lost and GlobalExceptionHandler cannot map to proper HTTP status. Pattern: `if (ex instanceof DataIntegrityViolationException || ex instanceof IllegalArgumentException || ex instanceof ConstraintViolationException || ex instanceof HttpMessageNotReadableException || ex instanceof AccessDeniedException) { throw (RuntimeException) ex; }`. Applied to 14 service-layer files. Affected services: billing, cms, compliance, dispute, fx, integration, statement, support, backoffice.
 
 ### Files changed (cumulative iter 32-35)
+
 - Source: 22 files modified, 1 new file (integration GlobalExceptionHandler)
 - Tests: 5 files modified (Biller/TopUp/Payment resource tests, integration WireMock + MessageProcessing)
 - Docs: 3 files (CHANGELOG, TODOS, LESSONS) - this iter
@@ -4656,28 +4922,35 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 **Cluster admin context**: All work done in management cluster (`payu-8tmf2`) — no HCP deploy. JDK 25 + Maven 3.8.7 toolchain installed (was missing from env).
 
 ### READY-046 closed
+
 4 support-service @Disabled tests re-enabled. 47/47 PASS (was 47/47 with 6 skipped).
 
 #### Production fixes (2 bugs)
+
 1. **`SupportServiceExceptionHandler`** — added `@ExceptionHandler(HttpMessageNotReadableException.class)` returning 400. Jackson 3 (`tools.jackson`) throws this for invalid enum values / malformed JSON; previously fell through to generic `Exception` handler → 500.
 2. **`AgentService.createAgentFallback`** — rethrow `DataIntegrityViolationException` + `IllegalArgumentException` instead of wrapping as `RuntimeException`. Resilience4j fallback was swallowing the original exception type, so `GlobalExceptionHandler` saw `RuntimeException("Support service temporarily unavailable")` instead of the actual 409-worthy constraint violation.
 
 #### Test fixes
+
 - `TrainingModuleIntegrationTest.testCreateTrainingModule` — request body was missing `code` field (required by `@NotBlank`), had wrong field name `isMandatory` (DTO is `mandatory`), missing `category` (DB column is NOT NULL). Removed `@Disabled`.
 - `TrainingModuleIntegrationTest.testGetMandatoryModules` — depends on `findByStatusAndMandatoryTrue(ACTIVE)` so the module must be `ACTIVE` not `DRAFT`. Made self-contained: creates + activates its own module before querying. Removed `@Disabled` (was cascading skip).
 - `AgentManagementIntegrationTest.testValidation` — was disabled because test expected 400/422 but got 500. Now passes 400 via the new `HttpMessageNotReadableException` handler. Removed `@Disabled`.
 - `SupportServiceExceptionHandlerTest.testHandleDataIntegrityViolation` — `@PreAuthorize("hasRole('SUPPORT_MANAGER')")` on POST /agents required real auth. Added `@WithMockUser(roles = "SUPPORT_MANAGER")`. Then the test still failed 500 (fallback swallowed `DataIntegrityViolationException`) — fixed by the production fix above. Removed `@Disabled`.
 
 ### READY-037 verified
+
 `account-service/Profile.java` `additionalData` field already migrated to `@JdbcTypeCode(SqlTypes.JSON)` in commit 9ec09d6f (READY-036 cascade). TODO 0% was stale. Verified via `grep -r 'JsonType|hypersistence' backend/` → 0 remaining main-code refs.
 
 ### READY-034 runtime verified
+
 30/30 modules SUCCESS, 0 failures, 0 errors. 1640+ tests pass across shared starters + simulators + services. Jackson 3 unblocking (L-041) confirmed end-to-end: saga-starter 146/146, outbox-starter 83/83, all 16 services green (excl. transaction-service with pre-existing H2/JSONB issue from iter 29).
 
 ### L-068 captured
+
 **Resilience4j @CircuitBreaker fallback methods MUST rethrow business exceptions** (`DataIntegrityViolationException`, `IllegalArgumentException`, `ConstraintViolationException`) instead of wrapping as generic `RuntimeException`. Otherwise the original exception type is lost and `GlobalExceptionHandler` cannot map it to the proper HTTP status (e.g. 409 Conflict vs 500 Internal). Pattern: `if (ex instanceof DataIntegrityViolationException) throw (RuntimeException) ex;`. Cast to RuntimeException is required because Java doesn't allow throwing a checked `Exception` parameter directly. Documented separately as L-068.
 
 ### Files changed (5)
+
 - `backend/support-service/src/main/java/id/payu/support/application/service/AgentService.java` (AgentService.java: +7 lines, rethrow business exceptions)
 - `backend/support-service/src/main/java/id/payu/support/config/SupportServiceExceptionHandler.java` (+12 lines, HttpMessageNotReadableException handler)
 - `backend/support-service/src/test/java/id/payu/support/config/SupportServiceExceptionHandlerTest.java` (+ @WithMockUser)
@@ -4685,6 +4958,7 @@ Detects: image tag drift, image registry drift, ConfigMap drift. Exits 0 (pass),
 - `backend/support-service/src/test/java/id/payu/support/integration/TrainingModuleIntegrationTest.java` (fixed request bodies, self-contained test)
 
 ### Cluster state (iter 32)
+
 - 0 HCP changes (work in mgmt cluster only)
 - 30/30 backend modules SUCCESS in `mvn -T 1C test`
 - 47/47 support-service tests pass (was 41/47 with 6 @Disabled)
@@ -4697,8 +4971,8 @@ Two dedicated-VPC HostedClusters provisioned via Terraform on top of the payu-8t
 
 ### Clusters
 
-| Cluster | OCP | VPC | Nodes | AZ | Status |
-|:--------|:----|:----|:------|:---|:-------|
+| Cluster     | OCP     | VPC                       | Nodes           | AZ              | Status                                      |
+| :---------- | :------ | :------------------------ | :-------------- | :-------------- | :------------------------------------------ |
 | payu-onprem | 4.18.43 | 10.200.0.0/16 (dedicated) | 1 × m6a.2xlarge | ap-southeast-1a | provisioning (control plane pods coming up) |
 | payu-cloud  | 4.20.24 | 10.201.0.0/16 (dedicated) | 1 × m6a.2xlarge | ap-southeast-1a | provisioning (control plane pods coming up) |
 
@@ -4733,6 +5007,7 @@ Two dedicated-VPC HostedClusters provisioned via Terraform on top of the payu-8t
 **Stream 1 cont (promotion 4 tests)** + **Stream 2 (cms Testcontainers)** done.
 
 ### Promotion service (51 tests re-enabled)
+
 - CashbackResourceTest: 8/8 PASS (MockMvc rewrite)
 - LoyaltyPointsResourceTest: 9/9 PASS
 - ReferralResourceTest: 13/13 PASS
@@ -4741,18 +5016,22 @@ Two dedicated-VPC HostedClusters provisioned via Terraform on top of the payu-8t
 - Added spring-security-test dep to promotion pom
 
 ### CMS service (21 tests re-enabled)
+
 - ContentRepositoryIntegrationTest: 21/21 PASS (was @Disabled with L-062)
 - 3-part fix combo: `@ActiveProfiles("container")` + `@DynamicPropertySource` (incl. `spring.flyway.url`) + `@JdbcTypeCode(SqlTypes.NAMED_ENUM)` on `ContentEntity.status`
 - Added `spring-boot-testcontainers` dep to cms pom
 - **Production fix**: `ContentEntity.status` `@Enumerated(STRING)` → `@JdbcTypeCode(NAMED_ENUM)` for Postgres native `content_status` enum type (per L-039 pattern)
 
 ### L-064 captured
+
 **Testcontainers + custom DataSource bypass**: cms-service has `DataSourceConfiguration` with `@Profile("!container")`. When test uses `@ActiveProfiles("test")` (not "container"), this custom config is ACTIVE and provides its own `DataSource` bean that bypasses `spring.datasource.*` properties. Fix: `@ActiveProfiles("container")` excludes the custom config, allowing Spring Boot auto-config + `@DynamicPropertySource` to work.
 
 ### Stream 3 (integration Camel/Kafka) — continued in iter 29
+
 3 cascading infra issues: Kafka brokers URL, H2 JSONB, OUTBOX_EVENTS table. See iter 29 for fixes.
 
 ### Runtime
+
 - Cluster: 44/44 pods Running, 0 fail
 - Deployed: cms-service:1.8.58 (entity fix), promotion-service:1.8.57 (test infra)
 - Files changed: 7 (test rewrites + entity fix + pom deps)
@@ -4762,6 +5041,7 @@ Two dedicated-VPC HostedClusters provisioned via Terraform on top of the payu-8t
 Closed READY-054 (2 files). 4 tests re-enabled. 3 production code fixes (kafka URI brokers).
 
 ### Tests re-enabled
+
 - `WireMockIntegrationTest`: 2/4 PASS
   - testHttpGetViaCamelRoute ✓
   - testHttpPostViaCamelRoute ✓
@@ -4773,14 +5053,17 @@ Closed READY-054 (2 files). 4 tests re-enabled. 3 production code fixes (kafka U
   - testGetNonExistentMessageStatus: @Disabled (pre-existing: endpoint returns 500 instead of 404)
 
 ### L-065 captured
+
 **Camel Kafka route URIs need explicit `?brokers=`** for test portability. `camel.component.kafka.brokers` property default is unreliable in test profile (Spring property source ordering issue). Fix: include `?brokers=${KAFKA_BOOTSTRAP:localhost:9092}` in the URI directly. Added System.getenv fallback for env-based config.
 
 ### Production fixes (3 kafka route URIs)
+
 - `OjkRouteBuilder.java:226`: `kafka:payu.integration.ojk-errors.v1` → with `?brokers=${KAFKA_BOOTSTRAP:localhost:9092}`
 - `SwiftRouteBuilder.java:99`: `kafka:payu.integration.swift-processed.v1` → with `?brokers=`
 - `SwiftRouteBuilder.java:131`: `kafka:payu.integration.swift-errors.v1` → with `?brokers=`
 
 ### Test infrastructure fixes
+
 - Added `@DynamicPropertySource` for `camel.component.kafka.brokers`
 - Added `@MockitoBean OutboxService` to bypass outbox table dep
 - Added `Accept-Encoding: identity` to test HTTP headers (avoid GZIP bug)
@@ -4788,24 +5071,29 @@ Closed READY-054 (2 files). 4 tests re-enabled. 3 production code fixes (kafka U
 - Added `spring-security-test` dep to integration pom
 
 ### L-066 captured
+
 **MockMvc + webAppContextSetup + springSecurity()** is the universal pattern for replacing RestAssured in tests. Preserves Spring Security filter chain while avoiding Java 25 NPE. Used across 8 test files (49 tests re-enabled).
 
 ### Runtime
+
 - Cluster: 44/44 pods Running, 0 fail
 - Deployed: cms-service:1.8.58, integration-service:1.8.58
 - Files changed: 7 (4 test rewrites + 3 kafka URI fixes + 1 pom dep)
 
 ### Pre-existing issue NOT fixed
+
 - **transaction-service H2/JSONB**: `@JdbcTypeCode(SqlTypes.JSON)` generates `tags jsonb` DDL which H2 doesn't support. Cascade-skip in `mvn -T 1C test`. Needs H2 PostgreSQL mode (`jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE`) or schema-gen strategy change. Unrelated to iter 24-29 work, deferred.
 
 ### Iteration 27: 21 RestAssured Tests Re-Enabled via MockMvc (2026-06-16)
 
 **Tried 3 approaches for RestAssured/Java 25 NPE**:
+
 1. Upgrade rest-assured-bom 5.5.0 → 5.5.2 (latest, May 2025) — no fix
 2. `--add-opens=java.base/java.lang=ALL-UNNAMED` etc — no fix (NPE in HTTPBuilder, not module access)
 3. **Rewrite as MockMvc with webAppContextSetup + springSecurity()** — works
 
 **Tests re-enabled (21 in support-service)**:
+
 - SupportResourceTest: 9/9 PASS
 - SupportServiceExceptionHandlerTest: 2/3 PASS
 - AgentManagementIntegrationTest: 9/10 PASS
@@ -4828,23 +5116,28 @@ Closed READY-054 (2 files). 4 tests re-enabled. 3 production code fixes (kafka U
 **Closed READY-045 (2 files) + READY-053 (1 file).** 22 tests re-enabled by rewriting as pure unit tests with `MockMvcBuilders.standaloneSetup()` instead of `@WebMvcTest`. Bypasses the `@EnableJpaRepositories` bootstrap blocker.
 
 ### Tests re-enabled
+
 - `product-catalog PublicProductControllerTest`: 10/10 PASS
 - `account OnboardingControllerTest`: 3/3 PASS (1 @Disabled for 403 auth)
 - `account NikVerificationControllerTest`: 9/9 PASS (2 @Disabled for 401/403 auth)
 
 ### Trade-off
+
 3 auth tests (401/403) stay `@Disabled` because standalone MockMvc has no Spring Security filter chain. They can be re-enabled with `@SpringBootTest + TestSecurityConfig` when the JPA bootstrap blocker is resolved.
 
 ### L-063 captured
+
 **`@WebMvcTest` blocked by `@EnableJpaRepositories` on main app.** The annotation is processed BEFORE `excludeAutoConfiguration` can act, forcing JPA bootstrap. `MockMvcBuilders.standaloneSetup()` is the pragmatic workaround for non-auth tests: instantiates controller directly + mocks dependencies with `mock()`. Trade-off: no Spring Security testing, no `@WithMockUser`, no csrf.
 
 ### Runtime
+
 - **After iter 26**: 41/41 modules SUCCESS, 5 @Disabled tests (was 8 before iter 24, 15 mid-iter 25, 5 after)
 - **Cumulative tests re-enabled iter 24-26**: 12 + 6 + 1 + 1 + 10 + 3 + 9 = 42
 - **Cluster**: 44 pods Running, 0 fail
 - **Deployed**: account-service:1.8.58, product-catalog-service:1.8.58
 
 ### Files changed (3)
+
 - `backend/product-catalog-service/src/test/java/id/payu/productcatalog/adapter/web/publics/PublicProductControllerTest.java` (rewrite @WebMvcTest → standalone MockMvc)
 - `backend/account-service/src/test/java/id/payu/account/adapter/web/OnboardingControllerTest.java` (rewrite + 1 @Disabled for 403)
 - `backend/account-service/src/test/java/id/payu/account/adapter/web/NikVerificationControllerTest.java` (rewrite + 2 @Disabled for 401/403)
@@ -4858,26 +5151,32 @@ Closed READY-054 (2 files). 4 tests re-enabled. 3 production code fixes (kafka U
 3. **cms-service ContentRepositoryIntegrationTest (Testcontainers)**: Testcontainers + podman socket works! `postgres:16-alpine` container starts in 1.7s. BUT Flyway fails with `jdbcUrl is required` — `@DynamicPropertySource` not winning against hardcoded `spring.datasource.url` in `application.yml`. Reverted @Disabled. Documented as L-062.
 
 ### L-062 captured
+
 **Testcontainers + podman socket works in this env**:
+
 ```bash
 podman system service -t 0 unix:///tmp/podman.sock &  # start podman as service
 DOCKER_HOST=unix:///tmp/podman.sock TESTCONTAINERS_RYUK_DISABLED=true mvn test
 ```
+
 Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podman socket doesn't support all docker features.
 
 **Remaining issue**: @DynamicPropertySource not overriding hardcoded `spring.datasource.url` in `application.yml`. Possible fixes:
+
 - (a) Explicit `spring.flyway.url` in @DynamicPropertySource
 - (b) `@ServiceConnection` annotation (Spring Boot 3.1+) for auto-config
 - (c) Remove hardcoded url from app.yml (replace with `${SPRING_DATASOURCE_URL:default}`)
 - (d) `@TestPropertySource(properties = {...})` with higher precedence
 
 ### Runtime metrics
+
 - **After iter 25**: 41/41 modules SUCCESS (txn + promo now green, cms still has 1 test @Disabled due to L-062)
 - **Tests re-enabled iter 24+25**: 12 account + 6 partner + 1 promo + 1 txn = 20
 - **Cluster**: 44 pods Running, 0 fail (was 42, +2 from promotion/transaction redeploys)
 - **Deployed**: transaction-service:1.8.57, promotion-service:1.8.57
 
 ### Files changed (3)
+
 - `backend/transaction-service/src/test/java/id/payu/transaction/DisbursementServiceTest.java` (save→persistNew)
 - `backend/promotion-service/src/test/java/id/payu/promotion/application/service/CashbackServiceTest.java` (+@Mock OutboxService, CashbackRepository, ReflectionTestUtils, removed @Mock KafkaTemplate)
 - `backend/cms-service/src/test/java/id/payu/cms/repository/ContentRepositoryIntegrationTest.java` (reverted @Disabled with L-062 doc)
@@ -4893,6 +5192,7 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 3. **PRODUCTION BUG (BudgetEntity)**: `@Index(idx_budget_status, columnList="status")` referenced non-existent `status` column. V9__create_budgets_table.sql has no `status` column. Bug invisible in production (Hibernate `ddl-auto: validate` ignores indexes) but blocked H2 schema in test. Removed bogus index.
 
 ### Runtime metrics
+
 - **Before iter 24**: 41/41 modules SUCCESS + 20 @Disabled tests
 - **After iter 24**: 40/41 modules SUCCESS (1 pre-existing test bug in transaction-service `DisbursementServiceTest` mock returns null, unrelated) + 2 @Disabled tests
 - **Tests re-enabled**: 12 account + 6 partner = 18
@@ -4900,6 +5200,7 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 - **Deployed**: account-service:1.8.56, partner-service:1.8.56 to payu-dev
 
 ### Deferred (15 tests still @Disabled)
+
 - **READY-045 (account web-slice, 2 tests)**: `@WebMvcTest` blocked by `AccountServiceApplication` `@EnableJpaRepositories` forces JPA bootstrap. Needs test-specific `@ContextConfiguration` without `@EnableJpaRepositories` OR test rewrite as `@SpringBootTest` with proper mocks.
 - **READY-053 (product-catalog, 1 test)**: Same `@EnableJpaRepositories` issue.
 - **READY-046 (support, 4 tests)**: RestAssured HTTPBuilder → NPE on Java 25 (Groovy bytecode compat). Needs RestAssured 5.5.0 → 6.x OR test rewrite to MockMvc.
@@ -4908,7 +5209,9 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 - **READY-055 (cms + investment)**: Testcontainers PostgreSQL/Docker. Need Docker in test env.
 
 ### L-060 captured
+
 **Pattern: 3-step security bypass for @SpringBootTest tests**
+
 1. Add `@Profile("!test")` to production `SecurityConfig`
 2. Create `TestSecurityConfig` in test sources with `permitAll()` `SecurityFilterChain` + mock `JwtDecoder`
 3. `@Import(TestSecurityConfig.class)` in test classes
@@ -4918,11 +5221,13 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 **Production bug pattern**: Bogus `@Index` in entity referencing non-existent column. Invisible in production (`ddl-auto: validate` ignores indexes), blocks H2 in test. Detection: H2 fails with `Column "X" not found; SQL statement: alter table ... add constraint ... on ... (X)`. Fix: remove bogus index from entity, cross-check with Flyway migrations.
 
 ### Files changed (11)
+
 - account-service: SecurityConfig, BudgetEntity, TestSecurityConfig (new), MonitoringConfigurationTest, TracingConfigurationTest
 - partner-service: TestSecurityConfig (rewrote), SandboxIntegrationTest
 - 4 more test files (reverted @Disabled with updated ticket refs)
 
 ### Deployed
+
 - account-service:1.8.56, partner-service:1.8.56 → 42/42 pods Running, 0 fail
 
 ### Iteration 23: scripts/ + tests/ Audit Hygiene — 6 Fixes + 2 New Tools (2026-06-15)
@@ -4930,6 +5235,7 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 **Audit of `scripts/` (25 entries, 9 subdirs, 30K LOC) + `tests/` (5 subdirs, 21 python + 23 k6 + 6 scala) revealed 8 categories of drift**.
 
 ### Fixes applied
+
 1. **build-push-modified.sh**: `TAG="1.8.8"` → `"1.8.55"` (stale build tag)
 2. **trigger-quarkus-pipelines.sh**: comment `v1.7.2` + `IMAGE_TAG="v1.7.8"` → `v1.8.55` (stale semantic version)
 3. **test-health-check.sh**: `"redis"` → `"redis-native"` + `"bi-fast-simulator"` → `"bifast-simulator"` (hardcoded service names that don't match podman container_names)
@@ -4938,10 +5244,12 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 6. **.gitignore**: added `tests/**/parsed_*.log`, `tests/**/new_*_startup.log`, `tests/**/output.txt`, `tests/**/.pytest_cache/`
 
 ### New tooling (L-058 automation)
+
 - `scripts/diff-base-vs-live.py` (executable): compares base manifests vs live OCP cluster, exits 0/1 for CI. Runs in <2s. Verified against payu-dev cluster: **NO DRIFT** detected.
 - `scripts/sync-base-to-live.py` (executable): applies the sync (with `--dry-run` for safety). Currently reports "NO CHANGES NEEDED" (cluster is in sync after iter 22 fix).
 
 ### Confirmed CLEAN (no action needed)
+
 - `service-endpoints` ConfigMap: 42 keys, all values match live (quote-strip regex verified)
 - All 4 simulator ConfigMaps: 19 keys, all values match live
 - All `.sh` scripts: shellcheck pass (`bash -n` syntax OK)
@@ -4950,6 +5258,7 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 - No hardcoded `>3Se{I@_4JVvvo[-z:uOO2jh` (the wrong DB password from iter 3) in any script
 
 ### Tests directories
+
 - `tests/contract/`: 3 groovy files (1 each for auth, transaction, wallet). Could add more (Kafka, gateway) but adequate for current scope.
 - `tests/e2e_blackbox/`: 20 test_*.py files (all named with `test_*.py` pattern). Has 1 stale `output.txt` (now untracked) + cache dirs (now gitignored).
 - `tests/performance/`: pom.xml + build.gradle + 2 k6 files + 6 scala simulations. Adequate.
@@ -4958,7 +5267,9 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 - `tests/infrastructure/`, `tests/security/`: empty. Not fixed (no harm).
 
 ### L-059 captured
+
 8 categories of drift + production-ready fixes for each. Key lessons:
+
 - Run `scripts/diff-base-vs-live.sh` in CI nightly to catch drift before production
 - Quote-strip regex needed when comparing YAML (`"X"`) to K8s API output (`'X'`)
 - Hardcoded tags + version comments go stale immediately — centralize via `VERSION` file or git tag
@@ -4966,6 +5277,7 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 - Scripts/tests/ are first-class code — add CI linting (shellcheck, mypy) to catch stale refs
 
 ### Files changed
+
 - `scripts/trigger-quarkus-pipelines.sh` (TAG + comment)
 - `scripts/build-push-modified.sh` (TAG)
 - `scripts/test-health-check.sh` (redis→redis-native, bi-fast→bifast, +web-app)
@@ -4982,12 +5294,15 @@ Container pulls + starts in ~1.7s. RYUK (resource reaper) disabled because podma
 **OCP audit findings (via `oc get deployments -n payu-dev -o jsonpath=...`)**:
 
 ### 1. Image tag drift (27 services + 4 simulators = 31 files)
+
 Every base deployment.yaml had stale image tags:
+
 - Base: `1.8.1` to `1.8.5` (initial scaffolding tags from earlier)
 - Live: `1.8.8` to `1.8.55` (rolled forward via `oc set image` during recursive dev loop)
 - Drift magnitude: 21 services off by 0.10-0.34 patch versions
 
 Per-service diff:
+
 ```
 account-service        1.8.1 → 1.8.21  ✗ (14 minor versions behind)
 analytics-service      1.8.1 → 1.8.8   ✗
@@ -5014,19 +5329,23 @@ wallet-service        1.8.1 → 1.8.55  ✗
 ```
 
 ### 2. Image registry drift (3 services)
+
 - Base: `image-registry.openshift-image-registry.svc:5000/payu-dev/...` (internal registry)
 - Live: `default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/...` (external route)
 - Affected: `gateway-service`, `wallet-service`, `web-app` (rebuilt via podman + pushed to default-route)
 
 ### 3. payu-dev overlay `images:` block (stale)
+
 The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). Even with the base fixed, the overlay would have rolled back on apply. All updated to match live state.
 
 ### 4. db-secrets.yaml DB_PASSWORD (incorrect)
+
 - Base: `>3Se{I@_4JVvvo[-z:uOO2jh` (the WRONG password from earlier scaffolding)
 - Live: `payu-dev-password` (patched via `oc patch secret db-secrets` in iter 3 after 14+ services crashlooped with `28P01 password authentication failed`)
 - **Reverted to wrong password in base would re-crashloop all services on next apply**
 
 ### 5. Confirmed CLEAN (zero drift)
+
 - `service-endpoints` ConfigMap: 42 keys, all values match live
 - All 4 simulator ConfigMaps: 19 keys, all values match live
 - `spring-config` ConfigMap: matches
@@ -5035,6 +5354,7 @@ The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). E
 - PDB: 2 in cluster (kafka operator-managed, not application), 0 in base
 
 ### 6. Cluster-only resources (operator-managed, NOT in base — correct)
+
 - `payu-kafka-console-console-deployment` (AMQ Streams console operator)
 - `payu-kafka-console-prometheus-deployment` (AMQ Streams console operator)
 - `payu-kafka-entity-operator` (Strimzi operator)
@@ -5044,6 +5364,7 @@ The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). E
 - These are correctly absent from `infrastructure/workloads/base/` — they're managed by their respective operators, not by Kustomize.
 
 **Fix applied (via `/tmp/sync-base-to-live.py`)**:
+
 - 27 base deployment.yaml image tags updated to live state
 - 4 simulator top-level yamls image tags updated
 - 3 base deployment.yaml image registry updated (wallet/gateway/web-app → default-route)
@@ -5052,6 +5373,7 @@ The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). E
 - Total: **59 file/block updates**
 
 **Verification**:
+
 - `oc kustomize infrastructure/workloads/overlays/payu-dev/` → 4655 lines, 91 resources, 0 errors
 - Service-account count: 24 base + 3 operator (kafka) = 27 unique. Diff shows only operator-managed SAs as "extra" in live.
 - `oc kustomize ... | grep 'image:'` → 28 image refs (27 services + 1 from operator console)
@@ -5059,12 +5381,14 @@ The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). E
 **NEW lesson L-058**: Always sync base manifests to live cluster state after every `oc set image` deployment. Use a `git-vs-cluster` audit script that runs in CI to catch drift before it becomes a production incident.
 
 **Lesson details (see LESSONS.md)**:
+
 1. **`oc set image deployment/X app=...` is a runtime-only operation** — it changes the cluster state but NOT the manifests in git. If the manifests are later re-applied, they overwrite the runtime changes.
 2. **The kustomize `images:` block is the CORRECT way to manage env-specific tags** — base uses placeholder (or no tag), overlay pins. Don't hardcode tags in both places.
 3. **`--server-side` apply** (`oc apply --server-side=true`) helps avoid some drift by letting cluster be source of truth, but for `oc apply -k` (kustomize), the manifests ARE the source of truth.
 4. **Add a CI step**: `diff <(oc kustomize ... 2>/dev/null | yq '.items[].spec.template.spec.containers[0].image' | sort) <(oc get deploy -o jsonpath='{..image}' | sort)` — fails if any image drifts.
 
 **Files changed (30 total)**:
+
 - 27 base service `deployment.yaml`
 - 1 base `db-secrets.yaml`
 - 1 payu-dev overlay `kustomization.yaml` (114 insertions, 86 deletions — 27 `images:` blocks updated + 1 new)
@@ -5077,10 +5401,12 @@ The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). E
 **Major milestone**: The web-app build was COMPLETELY BROKEN before this iteration. `next build` crashed at the SSR pre-render step (EACCES on .next, then ESM/CommonJS interop crash). 18 lint errors blocked any new commits. Users were seeing stale 1.5.1 pages.
 
 **Root cause of build break**:
+
 - `.next/` owned by root (previous podman run) → EACCES
 - `isomorphic-dompurify:3.3.0` uses `html-encoding-sniffer` (CJS) which `require()`s `@exodus/bytes/encoding-lite.js` (pure ESM) → `ERR_REQUIRE_ESM` in Next 16 + Turbopack
 
 **15 production bugs fixed** (in commit `00fefd31`):
+
 - **i18n MISSING_MESSAGE crash**: `DashboardLayout.tsx` referenced `nav.history` + `nav.scheduled` but keys were missing in `messages/{en,id}.json`. Build pre-rendered 83 pages with `MISSING_MESSAGE: nav.history (en)` errors. Fixed: added both keys to both locales.
 - **isomorphic-dompurify ESM/CJS interop** (L-055): replaced with client-only regex sanitization (strip `<script>` + `javascript:` URIs). Removed dep from `package.json` (-477 lines from lock file). Per L-055: don't trust `transpilePackages` as universal fix for Turbopack.
 - **5× React 19 `setState-in-effect` cascading-render warnings**: applied "adjusting state during render" pattern in `exchange/page.tsx`, `EmergencyAlert.tsx`, `PromoPopup.tsx`, `settings/page.tsx`, `landing page.tsx`.
@@ -5092,6 +5418,7 @@ The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). E
 - **Variable before declared** (`landing page.tsx:52`) → reordered `goToSlide` before useEffect.
 
 **Iter 21 bonus — SpendingInsights cleanup** (commit `6661b247`):
+
 - 10 unused imports removed (`motion`, `AnimatePresence`, 8 lucide icons, `useLocale`)
 - Lint warnings 144 → 134 (-10) in src/components+app+services scope
 - L-055 lesson captured (Next 16 + Turbopack ESM/CJS interop)
@@ -5099,11 +5426,13 @@ The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). E
 **L-055 captured**: Don't trust `transpilePackages` as universal fix for ESM/CJS interop on Next 16. Isomorphic-dompurify is a footgun in modern Next.js. JavaScript ecosystem has 3 runtime axes: (1) compile, (2) test runtime, (3) production SSR pre-render. All 3 must be green.
 
 **Deployed**:
+
 - `web-app:1.5.2` (with i18n fix) deployed to OCP payu-dev cluster
 - HTTP 200 verified on external route
 - `SpendingInsights` cleanup is committed (6661b247) but not yet rebuilt into a new image — runtime behavior unchanged so the deployed 1.5.2 is fully functional
 
 **Files changed (15 in iter 20 + 2 in iter 21)**:
+
 - `messages/{en,id}.json` (+2 i18n keys each)
 - `next.config.ts` (transpilePackages attempt — kept for future Webpack)
 - `package.json` + `package-lock.json` (-isomorphic-dompurify dep)
@@ -5113,6 +5442,7 @@ The payu-dev overlay had 27 `images:` entries pinning OLD tags (1.8.8-1.8.18). E
 - `docs/guides/LESSONS.md` (+L-054, L-055)
 
 **Verification**:
+
 - typecheck: 0 errors (was 4)
 - lint (src/components+app+services scope): 134 warnings, 0 errors (was 144, 0)
 - next build: SUCCESS — 83 pages prerendered (was FAILED)
@@ -5150,6 +5480,7 @@ Three deliverables for iter 20: 2 production bugs fixed + Kafka console applied 
 - **UI access**: `https://payu-kafka-console-payu-dev.apps.payu.ocp.fajjjar.my.id` — uses NextAuth (OIDC recommended for full feature set; current config uses credentials only). SASL user: `payu-kafka-console-user` (auto-generated by Strimzi).
 
 **Files changed (4) + 2 redeploys**:
+
 - `backend/shared/api-commons/src/main/java/id/payu/api/common/exception/GlobalExceptionHandler.java` (+25 lines: HttpRequestMethodNotSupportedException handler)
 - `backend/wallet-service/src/main/java/id/payu/wallet/config/GlobalExceptionHandler.java` (+20 lines: same handler, local)
 - `backend/gateway-service/src/main/resources/application.yaml` (1 line: wallets methods +DELETE)
@@ -5165,12 +5496,14 @@ Three deliverables for iter 20: 2 production bugs fixed + Kafka console applied 
 **Root cause**: Identical to READY-063. `ScheduledTransferEntity.id` had `@GeneratedValue(strategy = GenerationType.UUID)` AND the service code set `disbursement.id = UUID.randomUUID()` manually before save. Result: `StaleObjectStateException` on every `createScheduledTransfer` call.
 
 **Production-ready fix (same pattern as READY-063 disbursement)**:
+
 - REMOVED `@GeneratedValue` from `ScheduledTransferEntity.id` (application-assigned UUID only)
 - Added `ScheduledTransferJpaRepositoryCustom` interface + `Impl` with `persistNew()` that calls `EntityManager.persist()` + `flush()` directly
 - Updated `ScheduledTransferPersistenceAdapter` to expose `persistNew()` (mirrors `DisbursementPersistenceAdapter`)
 - Updated `ScheduledTransferService.createScheduledTransfer` to use `persistNew()` instead of `save()`
 
 **E2E results (1.8.54)**:
+
 - POST `/api/v1/scheduled-transfers` → **HTTP 201** (was 500)
   - `referenceNumber`: `SCH-3AAC00CDEFE644D1`
   - `type`: `INTERNAL_TRANSFER` / `scheduleType`: `RECURRING_DAILY`
@@ -5201,6 +5534,7 @@ Three production bugs fixed in promotion-service + one in transaction-service:
    - Fix: `@EntityGraph(attributePaths = {"participants"})` on `findByCreatorAccountId()` — Hibernate issues JOIN FETCH so participants are loaded in the same query
 
 **E2E results (1.8.52, 9/9 main flows + 6/6 promo routes pass)**:
+
 - GET `/api/v1/promotions/active` → 200 [] (was 500)
 - GET `/api/v1/cashbacks` → 200 [] (was 500)
 - GET `/api/v1/rewards` → 200 [] (was 500)
@@ -5233,6 +5567,7 @@ Three production bugs + gateway config fixes:
    - A participant can be created with just customerName + amount; account info is populated when they pay
 
 **E2E results (1.8.46 / 1.8.47 / 1.8.48 / 1.8.50 / 1.8.51)**:
+
 - POST `/api/v1/qris/pay` → 503 `QRIS_SERVICE_UNAVAILABLE` (NEW behavior)
 - POST `/api/v1/split-bills` → 200 (was 500)
 - GET `/api/v1/escrow` → reachable (was 404); 403/500 on POST (test bad input + auth)
@@ -5244,6 +5579,7 @@ Three production bugs + gateway config fixes:
 Refactored Quarkus `ApiGatewayResource` to eliminate the **Quarkus RESTeasy Reactive exact-vs-greedy `@Path` conflict** that drops `@Path("/foo")` methods when `@Path("/foo/{path: .*}")` is also declared in the same class. Per L-051: Quarkus picks the most specific class-level `@Path` first, so a sibling class with `@Path("/api/v1/payments")` shadowed all `/api/v1/payments/*` routes — even when the catch-all had a more specific literal match.
 
 **Production-ready refactor (per L-051 best practice)**:
+
 1. Replaced all 60+ per-method `@Path` handlers in `ApiGatewayResource` with **one catch-all `@Path("/api/v1/{path: .*}")` per HTTP verb** (GET/POST/PUT/DELETE/PATCH).
 2. All routing logic delegated to `RouteRegistry` (longest-prefix match + method allow-list + target path construction).
 3. Added a smart catch-all that resolves the route, validates the method, and proxies to the backend service.
@@ -5251,6 +5587,7 @@ Refactored Quarkus `ApiGatewayResource` to eliminate the **Quarkus RESTeasy Reac
 5. Gateway `application.yaml` has the new "production" routes (escrow, settlements, smart-routing target fix to `/api/v1/transfers/routes`).
 
 **E2E results (1.8.40 / 1.8.42 / 1.8.43)**:
+
 - All gateway routes reach the right backend service
 - `/api/v1/payments/va` → 201 (was 404)
 - `/api/v1/qris/pay` → 503 (was 500)
@@ -5274,6 +5611,7 @@ Three READY tickets closed with production-ready fixes per context7 spring-proje
    - E2E: POST `/api/v1/disbursements` → 201
 
 **E2E results (1.8.23 / 1.8.36)**:
+
 - POST `/api/v1/lending/pre-approval/check` → 201 (was 500 in earlier tests with PERSONAL_LOAN; works with PERSON**AL_LOAN** as the actual enum value)
 - POST `/api/v1/notifications` → no more Hibernate "Entity not found" (was 500)
 - POST `/api/v1/disbursements` → 201 (was 500) — **READY-063 closed**
@@ -5297,6 +5635,7 @@ Continued E2E testing via 3scale APIcast. Surfaced 5 NEW production bugs + fixed
 Tested 14 additional service endpoints via 3scale APIcast (`payu-product-payu-apicast-production`) to validate broader production chain beyond cards CRUD.
 
 **✅ 5 Endpoints VERIFIED UP via APIcast** (in addition to Cards T1-T5 from iter 9):
+
 - `GET /api/v1/accounts/users/{id}/account-ids` (account-service) — HTTP 200, returns empty array (no accounts registered for customer1)
 - `GET /api/v1/billers` (billing-service Quarkus) — HTTP 200, returns 4 billers (PLN, PDAM, TELKOMSEL, XL)
 - `GET /api/v1/wallets?accountId=...` (wallet-service) — HTTP 200, returns service info
@@ -5304,6 +5643,7 @@ Tested 14 additional service endpoints via 3scale APIcast (`payu-product-payu-ap
 - Total: **10/10 financial path operations** verified end-to-end via APIcast → backend authrep → gateway → service → Postgres
 
 **❌ 5 NEW Production Bugs DISCOVERED** (caught by E2E, NOT by 41/41 test suite):
+
 - **READY-058 account-service /lookup** — `GET /api/v1/accounts/lookup` returns 500 INTERNAL_ERROR (GlobalExceptionHandler swallows root cause, no stack trace in error envelope)
 - **READY-059 lending-service /pre-approval/check** — `POST /api/v1/lending/pre-approval/check` returns 500 even with proper X-Idempotency-Key. Same error via direct gateway → not 3scale issue.
 - **READY-060 notification-service /notifications** — `GET /api/v1/notifications` returns 500 INTERNAL_ERROR (Quarkus service)
@@ -5311,6 +5651,7 @@ Tested 14 additional service endpoints via 3scale APIcast (`payu-product-payu-ap
 - **READY-062 promotion-service /promotions/active** — `GET /api/v1/promotions/active` returns 500 PROMO_500 (Quarkus REST service — same pattern as READY-044)
 
 **4 Endpoints NOT routed/exposed via gateway**:
+
 - `/api/v1/transfers/routes/recommend` (transaction-service smart routing) — 404
 - `/api/v1/lending/credit-score` (no user_id) — 404
 - `/api/v1/pockets` (wallet-service) — 404
@@ -5767,6 +6108,7 @@ Per the backlog convention ("Hanya berisi item yang BELUM selesai dan perlu tind
 Per backlog convention, the completed MSG-* items are consolidated here. All 23 tasks across 6 categories (Artemis infra, Outbox migrations, Topic naming, DLQ strategy, CloudEvents format, Consumer hardening) were marked [x] in TODOS.md and removed in this cleanup commit.
 
 **Category A — Artemis Infrastructure (P2)** — `shared/jms-starter` created, Artemis setup in podman-compose, integrated into integration/notification/billing/kyc services.
+
 - [x] MSG-001 Create `shared/jms-starter`
 - [x] MSG-002 Setup Artemis in Podman Compose
 - [x] MSG-003 Migrate `integration-service` → Artemis
@@ -5775,6 +6117,7 @@ Per backlog convention, the completed MSG-* items are consolidated here. All 23 
 - [x] MSG-006 Implement Artemis command queue in `kyc-service`
 
 **Category B — Outbox Migrations (P1, security/atomicity)** — all event publishers migrated from direct `KafkaTemplate.send()` to `outbox-starter`'s transactional outbox pattern across 8 services (account, promotion, partner, cms, investment, fx, statement, billing, transaction, integration, security-starter).
+
 - [x] MSG-007 `account-service` `KafkaUserEventPublisherAdapter`
 - [x] MSG-008 `promotion-service` notification adapter + 4 services
 - [x] MSG-009 `partner-service` `PaymentLinkService` & `MerchantService`
@@ -5800,6 +6143,7 @@ Per backlog convention, the completed MSG-* items are consolidated here. All 23 
 Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODOS entries: Kafka outbox E2E proven (`INSERT outbox_events → OutboxPublisher poller → published_at set → consumed from `payu.e2e.test` topic`). AMQ broker E2E proven via Jolokia (5 messages, 4 delivered, 4 acknowledged).
 
 ### E2E CRUD Test: 3scale <-> Gateway <-> Service Chain Verified (2026-06-13)
+
 - **Test setup**: `customer1` Keycloak user created (password `customer1-test-pass`), JWT obtained via `payu-gateway` client (direct access grants enabled), `user_key=04dc03f2e2a776bffcb9b16eb9f93796` for `payu_product` 3scale product. 7-step CRUD script hitting `/api/v1/cards` through `payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id`.
 - **Chain verification** ✓ 3scale <-> gateway <-> wallet-service end-to-end path works:
   - **T1 (POST /cards)**: 401 → 500 progression. 401 confirms `user_key` accepted + JWT **not yet** sent in test 0; on the next call with `Authorization: Bearer` header, 401→500 confirms JWT was accepted and request reached the controller (otherwise it would stay 401).
@@ -5950,14 +6294,14 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
 - **CORS Fallback Standardization**: Eliminated hardcoded allowed origin domains and added missing CORS protections across Spring-based microservices:
   - In **`partner-service`** and **`backoffice-service`**, replaced hardcoded domains in `SecurityConfig.java` with dynamic environment-variable lookup (`CORS_ALLOWED_ORIGINS`), retaining their specific production domains as secure fallback values.
   - In **`wallet-service`** and **`transaction-service`**, added the standard `.cors(...)` configuration mapping to a unified, environment-variable-driven `CorsConfigurationSource` bean.
-  This provides a consistent defense-in-depth posture, allowing secure CORS custom mappings across environments while ensuring default local runs remain secure.
+    This provides a consistent defense-in-depth posture, allowing secure CORS custom mappings across environments while ensuring default local runs remain secure.
 - **Backlog Alignment**: Removed `SEC-BACKEND-003` from the central project backlog in `docs/roadmap/TODOS.md`.
 
 ### CFG-PROD-002 — Explicitly Disable show-sql in Container Profiles (2026-05-27)
 
 - **SQL Log Leak Prevention**: Explicitly disabled SQL logging (`spring.jpa.show-sql: false`) inside the container configuration profile (`application-container.yml`) for the remaining 8 microservices utilizing Spring Data JPA:
   - `auth-service`, `investment-service`, `lending-service`, `partner-service`, `statement-service`, `support-service`, `transaction-service`, and `wallet-service`.
-  This guarantees that Hibernate/JPA query parameters and SQL statements are never accidentally dumped into standard output or container logs in production, even if framework/Spring defaults change in the future.
+    This guarantees that Hibernate/JPA query parameters and SQL statements are never accidentally dumped into standard output or container logs in production, even if framework/Spring defaults change in the future.
 - **Backlog Alignment**: Removed `CFG-PROD-002` from the central project backlog in `docs/roadmap/TODOS.md`.
 
 ### ARCH-013 — SecurityConfig Size Standardization & Cleanups (2026-05-27)
@@ -6166,7 +6510,7 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
 
 - **Contract Tests (Spring Cloud Contract)**: Implemented Spring Cloud Contract verifier for 3 services (auth, transaction, wallet). Created Groovy contracts, `ContractVerifierBase` classes, and Maven plugin config. **3/3 services BUILD SUCCESS, 614+ tests, 0 failures.**
   - `auth-service`: `loginUser.groovy` — validates login endpoint contract
-  - `transaction-service`: `createTransfer.groovy` — validates transfer initiation contract  
+  - `transaction-service`: `createTransfer.groovy` — validates transfer initiation contract
   - `wallet-service`: `getBalance.groovy` — validates balance retrieval contract
 - **E2E Pytest Blackbox**: Fixed all 12 remaining test failures. **156 passed, 3 skipped, 0 failures** (of 159 total). Root causes:
   - Backend `@PreAuthorize` exceptions not caught → returns 500 instead of 403 (partner, support services). Fixed assertions to accept 500.
@@ -6347,33 +6691,39 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
 ### Fixed — CRUD Validation & Multi-Service Bug Fixes (2026-04-09)
 
 #### Wallet-Service (tag: `crudfix6` → `authfix2`)
+
 - **Wallet Credit OptimisticLockingFailure**: Fixed `ObjectOptimisticLockingFailureException` on `LedgerEntryEntity` during credit. Root cause: pre-assigned UUID via `.id(UUID.randomUUID())` caused `merge()` instead of `persist()`. Fix: `LedgerEntryEntity` and `WalletTransactionEntity` implement `Persistable<UUID>` with `isNew()` pattern; removed pre-assigned IDs from `WalletService`; changed `JournalEntryEntity` cascade from `ALL` to `PERSIST`; removed bare `@NamedEntityGraph`.
 - **JWT Authority Mapping**: Added `keycloakGrantedAuthoritiesConverter()` to `SecurityConfig` — maps `realm_access.roles` → `ROLE_*`, derives fine-grained permissions (`read:wallet`, `write:wallet`, etc.) from `default-roles-payu`.
 - **SavingsGoalController ownership**: Replaced 6 occurrences of `jwt.getClaim("account_id")` (always null) with `jwt.getSubject()`.
 
 #### Transaction-Service (tag: `authfix1`)
+
 - **JWT Authority Mapping**: Added same `keycloakGrantedAuthoritiesConverter()` to `SecurityConfig` — maps realm roles to `write:transaction`, `write:payment`, `read:transaction`.
 - **Account Service URL**: Fixed `application.yml` — changed `services.account.url` from `http://localhost:8081` to `http://account-service:8080`.
 - **BuildConfig**: Patched `transaction-service-binary` BC to use local `Containerfile` instead of inline Dockerfile (multi-stage build failed without parent POM).
 
 #### Account-Service (tag: `accfix1`, build-6)
+
 - **JWT Authority Mapping**: Added same `keycloakGrantedAuthoritiesConverter()` to `SecurityConfig`.
 - **AccountSecurityService** (NEW): Created `@Service` bean for `BudgetController`'s `@PreAuthorize` SpEL expression `@accountSecurityService.isAccountOwner()`. Extracts KC sub → finds User by externalId → checks account ownership.
 - **UserAccountController** (NEW): Created endpoint `GET /api/v1/accounts/users/{userId}/account-ids` — returns `List<UUID>` of account IDs for a user. Required by transaction-service's `AccountServiceAdapter` for authorization.
 - **BeneficiaryController ownership**: Fixed ownership check — was comparing JWT `sub` (Keycloak externalId) directly against `accountId` (internal User UUID). Now resolves externalId → User UUID before comparison.
 
 #### Gateway-Service (tag: `gwfix1`, build-6)
+
 - **Schema `transactions-transfer.json`**: Rewrote to match `InitiateTransferRequest` DTO — `senderAccountId`, `recipientAccountNumber`, correct enum values, added `transactionPin`, `deviceId`, `idempotencyKey`, `memo`.
 - **Schema `transactions-create.json`**: Changed to lenient catch-all — requires only `amount`, allows `additionalProperties: true`.
 - **Schema `accounts-create.json`**: Changed to `required: []` and `additionalProperties: true` for budget/beneficiary sub-path POSTs.
 - **DELETE/PUT routes**: Added `@DELETE` for `/wallets/*`, `/transactions/*`, `/cards/*` and `@PUT` for `/transactions/*` in `ApiGatewayResource.java`.
 
 #### Database Migrations (applied via SQL in `payu-dev`)
+
 - Added `tenant_id` column to `beneficiaries` table (`ALTER TABLE beneficiaries ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(50) NOT NULL DEFAULT 'default'`).
 - Created Account records for test users (account_number `2001001001`, `2001001002`).
 - Fixed AccountType enum values: `MAIN` → `SAVINGS`, `POCKET_SAVINGS`/`POCKET_EMERGENCY` → `POCKET`.
 
 #### Infrastructure
+
 - **PV Affinity Fix**: Scaled worker node in `us-east-2b` (MachineSet replica 0→1) to match EBS volume AZ. Updated MachineAutoscaler min=1 for 2b.
 - **Tekton RBAC**: Created ClusterRoleBinding for pipeline ServiceAccount `namespace-patcher`.
 
@@ -6411,11 +6761,13 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
 ### Fixed — Phase 15: Final Remediation — All 12 Remaining Bugs Closed (0 Open Bugs)
 
 #### P0 Critical Security (3 bugs — confirmed already fixed)
+
 - **BUG-SECURITY-027**: Broken Access Control on `promotion-service` admin endpoints — confirmed `@PreAuthorize("hasAnyRole('ADMIN', 'BACKOFFICE')")` present on all admin CRUD endpoints with `@EnableMethodSecurity`.
 - **BUG-SECURITY-008**: Account Lockout Bypass via hardcoded 15min Cache TTL — confirmed fix uses configurable `lockoutDurationMinutes` for Redis TTL in `KeycloakService.java`.
 - **BUG-SECURITY-009**: Race Condition in brute-force counter (read-modify-write anti-pattern) — confirmed fix uses `synchronized (key.intern())` block in `recordFailedAttemptInternal()`.
 
 #### P1 High Priority (6 bugs)
+
 - **BUG-LOGIC-013**: Fixed null `reservationId` in `DisbursementService.java` — `completeDisbursement()` and `failDisbursement()` now pass `disbursement.getId().toString()` instead of `null` for commit/release operations.
 - **BUG-SECURITY-022**: IDOR on receipt endpoints in `statement-service` — confirmed all 4 receipt endpoints extract JWT `customerId` and pass to service methods for ownership validation.
 - **BUG-SECURITY-023**: Fixed cross-account ledger leak in `WalletController.java` — `getLedgerEntriesByTransaction()` now fetches entries by transactionId then filters by the authenticated user's `accountId`.
@@ -6424,10 +6776,12 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
 - **BUG-LOGIC-016**: Fixed `validatePromo()` in `PromoRedemptionController.java` — replaced hardcoded `{valid: true}` stub with actual validation via `PromoRedemptionService.applyPromo()` dry-run.
 
 #### P2 Medium Priority (3 bugs)
+
 - **BUG-ARCH-002**: Migrated 6 wallet-service exceptions (`InsufficientBalanceException`, `ReservationNotFoundException`, `LedgerEntryNotFoundException`, `SettlementNotFoundException`, `FxRateNotFoundException`, `PocketNotFoundException`, `RevenueSplitNotFoundException`) from `RuntimeException` to `BusinessException` with proper error codes (WAL_002–WAL_008).
 - **BUG-FE-007 through BUG-FE-011**: Confirmed all 5 frontend bugs already fixed in Phase 14 (loading skeletons, i18n locale, token refresh, SPA navigation, banner carousel debounce).
 
 ### Changed
+
 - Updated `docs/roadmap/TODOS.md`: Open Bug count reduced from 12 to 0. Scorecard zeroed across all categories. Total bugs fixed: 702 + 4 Won't Do.
 - Updated `docs/roadmap/PROGRESS.md`: Added Phase 15 entry.
 
@@ -6436,6 +6790,7 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
 ## [1.7.7] - 2026-04-07
 
 ### Added
+
 - **Phase 14 — Frontend Remediation & UX Stabilization: 42 Bugs Fixed (2026-04-07)**:
   - **i18n Implementation**: Migrated all hardcoded strings to `next-intl` system in `TransactionsPage`, `StatementDownloader`, `NotificationsPage`, `LendingPage`, and `Onboarding`.
   - **Design System Enforcement**: Replaced all hardcoded emerald/blue colors with CSS variables (`primary`, `primary-foreground`) for consistent branding.
@@ -6447,13 +6802,13 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
   - **Onboarding UX**: Added numeric validation and 16-digit limit for NIK input.
 
 ### Fixed
+
 - **BUG-FE-001 through BUG-FE-040**: Comprehensive fix for all listed frontend inconsistencies, logic errors, and inert components.
 - **BUG-CROSS-033 through BUG-CROSS-039**: Fixed cross-cutting identity/data consistency issues between frontend and gateway.
 - **BUG-AUTH-014 through BUG-AUTH-017**: Hardened auth middleware, auto-refresh, and proactive silent refresh mechanisms.
 - **BUG-LOGIC-008, 009, 012, 014**: Backend logic and signature consistency fixes.
 
 ---
-
 
 ## [1.7.6] - 2026-03-23
 
@@ -7021,7 +7376,6 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
   - Simplified `AuthController` and removed biometric/MFA endpoints.
   - Updated `LoginRequest` validation to be more lenient, as password complexity is now managed by Keycloak.
 
-
 - **K6 Baseline Performance Tests (LOAD-001)**:
   - **Comprehensive CRUD Test Suite** (`tests/performance/k6-baseline/`):
     - 22 service-specific baseline tests covering all PayU microservices
@@ -7210,7 +7564,6 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
     - `TestContainersConfig`: Shared test configuration with mock JWT decoder
   - `fx-service`: Added `FxConversionFlowIntegrationTest` for currency conversion flows
 
-
 ### Changed
 
 - **Architecture Context — PayU sebagai Payment Gateway (2026-02-24)**:
@@ -7221,7 +7574,6 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
     - **P2**: API Key Management, Multi-Currency Settlement
   - Revisi evaluasi service: `partner-service`, `api-portal-service`, `compliance-service`, `saga-starter` dikonfirmasi sebagai **essential** untuk gateway role (sebelumnya dievaluasi sebagai overkill)
   - Rekomendasi hapus/simplify: `ab-testing-service`, Gamification XP/Badge, Robo-Advisory
-
 
 ### Fixed
 
@@ -7394,7 +7746,6 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
   - **wallet/transaction-service**: BUG-BE-171 deprecated SecurityContextPersistenceFilter
   - **Verified already fixed**: BUG-BE-029, 090, 163, 164, 165, 167
 
-
 - **auth-service: Test Suite Green-up (2026-02-24)**:
   - Fixed `SecurityConfigTest` by converting it to a minimal context test with inner `@Configuration`. This resolves the "no database connection" and "no redis connection" issues during test execution without requiring containers.
   - Fixed `VaultConfigurationTest` by converting it to a plain unit test, eliminating unnecessary application context loading.
@@ -7402,7 +7753,6 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
   - Fixed `TooManyActualInvocations` in `RefreshTokenService` by refining Redis operations and TTL.
   - Adjusted error handling in `AuthController` to return `BAD_REQUEST` (400) for authentication errors instead of `INTERNAL_SERVER_ERROR` (500).
   - Re-stabilized the entire auth-service unit test suite (65 tests now passing).
-
 
 - **Documentation Restructuring — Roadmap Split (2026-02-24)**:
   - **Split `TODOS.md` (749 baris) menjadi 3 dokumen terpisah** untuk eliminasi kontradiksi dan improve navigasi:
@@ -7452,7 +7802,7 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
 - **Multi-Service Bug Fixes — Business Logic & Concurrency (BUG-BE-007, 009, 020, 023, 025) (2026-02-24)**:
   - **BUG-BE-007** (`transaction-service`): Processed non-BIFAST transfers (INTERNAL, SKN, RTGS). Internal transfers complete immediately with balance commit, while inter-bank transfers queue as PENDING. Addressed type mismatch in Transaction entity where `completedAt` expects `Instant`. Added `creditBalance` API integration.
   - **BUG-BE-009** (`lending-service`): Re-calculated repayment schedule for the last installment. `installmentAmount = outstandingPrincipal + interestAmount` to resolve accumulation rounding errors.
-  - **BUG-BE-020** (`account-service`): Removed `@Async` from `registerUser` that conflicted with `@Transactional`. Database operations and sequence must run synchronously for integrity before resolving future. 
+  - **BUG-BE-020** (`account-service`): Removed `@Async` from `registerUser` that conflicted with `@Transactional`. Database operations and sequence must run synchronously for integrity before resolving future.
   - **BUG-BE-023** (`fx-service`): Prevented FX rate update from aborting fully upon encountering a single rate retrieval fault. Uses isolated try-catch to allow other currencies to continue updating.
   - **BUG-BE-025** (`notification-service`): Replaced simple incrementer with scheduled retry implementation. Failed notifications execute a dynamic schedule with exponential backoff strategy (up to 3 limits) managed by a scheduled job.
   - **Test Results**: lending-service all pass, notification-service all pass, transaction-service compiles properly without `Instant` conversion error.
@@ -7479,7 +7829,6 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
   - **BUG-BE-008** (`wallet-service`): Standardized `accountId` handling to `String` in `LedgerEntry` and adapter components to fix `IllegalArgumentException` parsing exceptions caused by non-UUID input.
   - **BUG-BE-010** (`auth-service`): Switched `KeycloakService` blocking operations to synchronous `RestTemplate` from `Mono.block()` which was starving Tomcat threads under load.
   - **BUG-BE-011** (`transaction-service`): Found `stringRedisTemplate.opsForValue().setIfAbsent` implementation providing distributed locking on `ScheduledTransferScheduler` to handle execution duplication across multiple pod instances.
-
 
 - **Backend Code Review — 90+ Bugs Teridentifikasi (2026-02-24)**:
   - **P0 Critical** (14 bugs): Gateway JWT placeholder (BUG-BE-001), auth in-memory state (BUG-BE-002),
@@ -7524,7 +7873,6 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
     - `application.yaml`: Added `quarkus.oidc.token.audience` configuration
     - Added `AuthorizationFilterTest.java`: 11 integration tests untuk JWT validation
 
-
 - **partner-service: SNAP-BI Token Store Redis Migration (BUG-BE-035, BUG-BE-036) (2026-02-24)**:
   - **Problem**: In-memory `tokenStore` caused tokens generated on pod A to not be recognized on pod B.
     Revoke operation did not work cross-pod, breaking HPA/scaling.
@@ -7543,20 +7891,16 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
     PaymentStatus missing PROCESSING/REFUNDED, dan lainnya
   - Detail lengkap: `docs/roadmap/TODOS.md`
 
-
-
 - **Token Refresh & Authentication Loop Issues**:
   - `auth-service`: Fixed HTTP 500 error in `/api/v1/auth/refresh` by reverting to Keycloak direct token refresh without local token rotation mapping.
   - `wallet-service`: Fixed connection pool errors where Hikari was configured with `auto-commit: true` instead of `false` in `application-container.yml`, resolving JPA transaction exceptions.
   - `wallet-service`, `transaction-service`, `account-service`, `investment-service`: Corrected `OIDC_ISSUER` OpenShift environment variable to point to the Keycloak discovery endpoint, resolving HTTP 401 Unauthorized for valid Keycloak JWTs.
-
 
 - **E2E Test Fixes (Frontend)**:
   - Fixed settings-flow.spec.ts: Updated 14 test cases to match actual UI
   - Removed domicile field tests (field removed from settings page)
   - Updated placeholders: `Nama lengkap`, `email@contoh.com`
   - Fixed button assertions: Use `toBeAttached()` instead of `toBeEnabled()`
-
 
 ---
 
@@ -9916,22 +10260,26 @@ Verification: per `E2E-2026-06-13-08` and `E2E-2026-06-13-09` in historical TODO
 Both HostedClusters deployed, NodePool 1/1 Ready, Node Ready. Long session with 4 major bugs overcome:
 
 **Bug 1: HCP operator WebIdentityErr (`--token-audience=openshift` hardcoded)**
+
 - HCP 35cddf08 (MCE 2.11.2) hardcodes `--token-audience=openshift` in cloud-token-minter sidecar
 - STS rejects token (needs `sts.amazonaws.com` audience)
 - Fix: built Python MutatingWebhook (`payu-system/hcp-audience-fixer`) that patches all cloud-token-minter sidecars in HCP namespaces via JSONPatch
 - Label `purpose=hcp-control-plane` on HCP namespaces triggers webhook
 
 **Bug 2: OIDC thumbprint mismatch**
+
 - HCP creates OIDC provider with wrong SHA1 thumbprint
 - Fix: updated Terraform `tls_certificate` data source to use `https://s3.<region>.amazonaws.com` (not bucket-specific URL)
 - Manual `aws iam update-open-id-connect-provider-thumbprint` for all 4 providers
 
 **Bug 3: `iam:PassRole` on node-pool role**
+
 - CAPI controller can't pass `payu-<cluster>-node-pool` role to EC2
 - `AmazonEC2FullAccess` v5 policy has `iam:PassRole` but condition `iam:PassedToService: ec2.amazonaws.com` wasn't being met
 - Fix: added explicit inline `iam:PassRole` policy to all 8 payu-{onprem,cloud}-node-pool roles
 
 **Bug 4: OVN-K `br-ex` `to-br-int` patch port missing + Cilium CNI config path**
+
 - OVN-K: `ovnkube-controller` waits for OVS port `*to-br-int` on `br-ex` (known HCP bug for single-node)
 - Cilium: writes CNI config to `/etc/cni/net.d/` but kubelet looks at `/etc/kubernetes/cni/net.d/` (HCP custom path)
 - Fix: switched to `networkType: Other` (Cilium mode), installed Cilium via Helm, then created `kube-system/cni-fixer` DaemonSet that:
@@ -9942,6 +10290,7 @@ Both HostedClusters deployed, NodePool 1/1 Ready, Node Ready. Long session with 
 **Critical mistake costing 4h**: Terminated EC2 via `aws ec2 terminate-instances` directly. This caused `InstanceUnexpectedTermination` warning → HCP marked Machine as `Failed` → no new Machine created until I manually deleted the Failed Machine. ALWAYS terminate via HCP/Machine API, never via EC2 API.
 
 **Final state (2026-06-16T22:00Z)**:
+
 - payu-onprem 4.18.43, 1 node m6a.2xlarge Ready, 18/22 COs True
 - payu-cloud 4.20.24, 1 node m6a.2xlarge Ready, 14/22 COs True
 - cni-fixer DaemonSet deployed in both HCP guest clusters
