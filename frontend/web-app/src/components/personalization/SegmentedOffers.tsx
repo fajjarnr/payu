@@ -1,15 +1,21 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Progress } from 'antd';
+import React from "react";
+import { Progress } from "antd";
 import {
-Gift, Percent, Coins, Zap, Ticket, ChevronRight } from '@/components/icons';
-import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
-import { useAuthStore } from '@/stores';
-import { Skeleton } from 'antd';
-import clsx from 'clsx';
-import { cn } from '@/lib/utils';
-import type { SegmentedOffer } from '@/services/SegmentationService';
+  Gift,
+  Percent,
+  Coins,
+  Zap,
+  Ticket,
+  ChevronRight,
+} from "@/components/icons";
+import { useSegmentedOffers } from "@/hooks/useSegmentedOffers";
+import { useAuthStore } from "@/stores";
+import { Skeleton } from "antd";
+import clsx from "clsx";
+import { cn } from "@/lib/utils";
+import type { SegmentedOffer } from "@/services/SegmentationService";
 
 interface SegmentedOffersProps {
   className?: string;
@@ -25,21 +31,35 @@ const OFFER_ICONS = {
 };
 
 const OFFER_STYLES = {
-  CASHBACK: 'from-warning to-accent',
-  DISCOUNT: 'from-primary to-secondary',
-  REWARD_POINTS: 'from-accent to-accent',
-  FREE_TRANSFER: 'from-success to-primary-dark',
-  BONUS_INTEREST: 'from-primary to-primary-dark',
+  CASHBACK: "from-warning to-accent",
+  DISCOUNT: "from-primary to-secondary",
+  REWARD_POINTS: "from-accent to-accent",
+  FREE_TRANSFER: "from-success to-primary-dark",
+  BONUS_INTEREST: "from-primary to-primary-dark",
 };
 
-export default function SegmentedOffers({ className, maxOffers = 3 }: SegmentedOffersProps) {
+export default function SegmentedOffers({
+  className,
+  maxOffers = 3,
+}: SegmentedOffersProps) {
   const user = useAuthStore((state) => state.user);
-  const { offers, isLoading, error } = useSegmentedOffers(user?.id, 0, maxOffers);
+  const { offers, isLoading, error } = useSegmentedOffers(
+    user?.id,
+    0,
+    maxOffers,
+  );
 
   if (isLoading) {
     return (
-      <div className={clsx('space-y-4', className)}>
-        <Skeleton title={false} paragraph={false} className={cn('block animate-pulse rounded-xl bg-muted/50', 'h-48 rounded-xl')} />
+      <div className={clsx("space-y-4", className)}>
+        <Skeleton
+          title={false}
+          paragraph={false}
+          className={cn(
+            "block animate-pulse rounded-xl bg-muted/50",
+            "h-48 rounded-xl",
+          )}
+        />
       </div>
     );
   }
@@ -49,10 +69,12 @@ export default function SegmentedOffers({ className, maxOffers = 3 }: SegmentedO
   }
 
   return (
-    <div className={clsx('space-y-4', className)}>
+    <div className={clsx("space-y-4", className)}>
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-foreground">Penawaran Spesial Untuk Anda</h3>
+          <h3 className="text-lg font-bold text-foreground">
+            Penawaran Spesial Untuk Anda
+          </h3>
           <p className="text-xs text-muted-foreground font-medium tracking-wider">
             Berdasarkan status akun Anda
           </p>
@@ -84,29 +106,33 @@ function OfferCard({ offer }: OfferCardProps) {
       return `${offer.percentage}%`;
     }
     if (offer.currency && offer.value) {
-      return `${offer.currency} ${offer.value.toLocaleString('id-ID')}`;
+      return `${offer.currency} ${offer.value.toLocaleString("id-ID")}`;
     }
     if (offer.value) {
-      return offer.value.toLocaleString('id-ID');
+      return offer.value.toLocaleString("id-ID");
     }
-    return 'Special';
+    return "Special";
   };
 
   const isValid = new Date(offer.validUntil) > new Date();
 
   return (
     <div className="group relative">
-      <div className={clsx(
-        'absolute inset-0 bg-gradient-to-br rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300',
-        gradientStyle
-      )} />
+      <div
+        className={clsx(
+          "absolute inset-0 bg-gradient-to-br rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+          gradientStyle,
+        )}
+      />
 
       <div className="relative bg-card border border-border rounded-2xl p-6 h-full group-hover:shadow-xl transition-all duration-300">
         <div className="flex items-start justify-between mb-4">
-          <div className={clsx(
-            'h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg',
-            gradientStyle
-          )}>
+          <div
+            className={clsx(
+              "h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
+              gradientStyle,
+            )}
+          >
             <Icon className="h-6 w-6 text-surface" />
           </div>
 
@@ -128,49 +154,68 @@ function OfferCard({ offer }: OfferCardProps) {
         <div className="flex items-center justify-between pt-4 border-t border-border">
           <div>
             <p className="text-xs text-muted-foreground font-medium tracking-wider">
-              {offer.offerType.replace('_', ' ')}
+              {offer.offerType.replace("_", " ")}
             </p>
-            <p className="text-lg font-bold text-primary">
-              {formatValue()}
-            </p>
+            <p className="text-lg font-bold text-primary">{formatValue()}</p>
           </div>
+        </div>
 
-          <button
-            disabled={!isValid}
-            className={clsx(
-              'min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95',
-              isValid
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                : 'bg-muted text-muted-foreground cursor-not-allowed'
-            )}
-            aria-label="Lihat selengkapnya"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+        <button
+          disabled={!isValid}
+          className={clsx(
+            "min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95",
+            isValid
+              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+              : "bg-muted text-muted-foreground cursor-not-allowed",
+          )}
+          aria-label="Lihat selengkapnya"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
 
         {offer.minTransaction && (
           <p className="text-xs text-muted-foreground mt-3 font-medium">
-            Min. transaksi: Rp {offer.minTransaction.toLocaleString('id-ID')}
+            Min. transaksi: Rp {offer.minTransaction.toLocaleString("id-ID")}
           </p>
         )}
 
         <div className="mt-3 flex items-center gap-1.5">
           <Progress
-            percent={Math.max(0, Math.min(100, (
-              (new Date(offer.validUntil).getTime() - new Date().getTime()) /
-              (new Date(offer.validUntil).getTime() - new Date(offer.validFrom).getTime())
-            ) * 100))}
+            percent={Math.max(
+              0,
+              Math.min(
+                100,
+                ((new Date(offer.validUntil).getTime() - new Date().getTime()) /
+                  (new Date(offer.validUntil).getTime() -
+                    new Date(offer.validFrom).getTime())) *
+                  100,
+              ),
+            )}
             showInfo={false}
             railColor="transparent"
-            className={cn('relative h-2 w-full overflow-hidden rounded-full bg-muted/50', 'h-1.5 flex-1')}
-            classNames={{ track: cn('bg-primary transition-all duration-500 ease-in-out', clsx('bg-gradient-to-r', gradientStyle)) }}
-            styles={{ body: { height: '100%' }, rail: { height: '100%' }, track: { height: '100%' } }}
+            className={cn(
+              "relative h-2 w-full overflow-hidden rounded-full bg-muted/50",
+              "h-1.5 flex-1",
+            )}
+            classNames={{
+              track: cn(
+                "bg-primary transition-all duration-500 ease-in-out",
+                clsx("bg-gradient-to-r", gradientStyle),
+              ),
+            }}
+            styles={{
+              body: { height: "100%" },
+              rail: { height: "100%" },
+              track: { height: "100%" },
+            }}
           />
-          <span className={clsx(
-            'text-xs font-bold',
-            isValid ? 'text-primary' : 'text-destructive'
-          )}>
-            {isValid ? 'Berlaku' : 'Kedaluwarsa'}
+          <span
+            className={clsx(
+              "text-xs font-bold",
+              isValid ? "text-primary" : "text-destructive",
+            )}
+          >
+            {isValid ? "Berlaku" : "Kedaluwarsa"}
           </span>
         </div>
       </div>
