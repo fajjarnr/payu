@@ -53,34 +53,56 @@ describe('DashboardLayout', () => {
     expect(screen.getByTestId('language-switcher')).toBeInTheDocument();
   });
 
-  it('should render desktop sidebar with main menu items', () => {
+  it('should render desktop sidebar with overview menu items', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
     const desktopSidebar = screen.getByRole('menu');
-    const { getByText } = within(desktopSidebar);
+    const { getAllByText } = within(desktopSidebar);
 
-    expect(getByText('Utama')).toBeInTheDocument();
+    expect(getAllByText('Dasbor').length).toBeGreaterThan(0);
+    expect(getAllByText('Analitik').length).toBeGreaterThan(0);
+  });
 
-    expect(getByText('Dasbor')).toBeInTheDocument();
-    expect(getByText('Akun')).toBeInTheDocument();
-    expect(getByText('Transfer')).toBeInTheDocument();
-    expect(getByText('Bayar QRIS')).toBeInTheDocument();
-    expect(getByText('Tagihan')).toBeInTheDocument();
-    expect(getByText('Kartu')).toBeInTheDocument();
-    expect(getByText('Investasi')).toBeInTheDocument();
-    expect(getByText('Analitik')).toBeInTheDocument();
+  it('should render desktop sidebar with transaction menu items', () => {
+    renderWithIntl(<DashboardLayout {...defaultProps} />);
+
+    const desktopSidebar = screen.getByRole('menu');
+    const { getAllByText } = within(desktopSidebar);
+
+    expect(getAllByText('Transfer').length).toBeGreaterThan(0);
+    expect(getAllByText('Riwayat Transaksi').length).toBeGreaterThan(0);
+    expect(getAllByText('Transfer Terjadwal').length).toBeGreaterThan(0);
+    expect(getAllByText('Bayar QRIS').length).toBeGreaterThan(0);
+    expect(getAllByText('Tagihan').length).toBeGreaterThan(0);
+    expect(getAllByText('Split Bill').length).toBeGreaterThan(0);
+  });
+
+  it('should render desktop sidebar with finance menu items', () => {
+    renderWithIntl(<DashboardLayout {...defaultProps} />);
+
+    const desktopSidebar = screen.getByRole('menu');
+    const { getAllByText } = within(desktopSidebar);
+
+    expect(getAllByText('Akun').length).toBeGreaterThan(0);
+    expect(getAllByText('Kartu').length).toBeGreaterThan(0);
+    expect(getAllByText('Investasi').length).toBeGreaterThan(0);
+    expect(getAllByText('Valas').length).toBeGreaterThan(0);
+    expect(getAllByText('Lending').length).toBeGreaterThan(0);
+    expect(getAllByText('Hadiah').length).toBeGreaterThan(0);
   });
 
   it('should render desktop sidebar with other menu items', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
     const desktopSidebar = screen.getByRole('menu');
-    const { getByText } = within(desktopSidebar);
+    const { getAllByText } = within(desktopSidebar);
 
-    expect(getByText('Lainnya')).toBeInTheDocument();
-    expect(getByText('Keamanan')).toBeInTheDocument();
-    expect(getByText('Pengaturan')).toBeInTheDocument();
-    expect(getByText('Bantuan')).toBeInTheDocument();
+    expect(getAllByText('Lainnya').length).toBeGreaterThan(0);
+    expect(getAllByText('Keamanan').length).toBeGreaterThan(0);
+    expect(getAllByText('Pengaturan').length).toBeGreaterThan(0);
+    expect(getAllByText('Notifikasi').length).toBeGreaterThan(0);
+    expect(getAllByText('Laporan').length).toBeGreaterThan(0);
+    expect(getAllByText('Bantuan').length).toBeGreaterThan(0);
   });
 
   it('should render header with search input', () => {

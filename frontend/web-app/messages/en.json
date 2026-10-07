@@ -43,7 +43,15 @@
     "main": "Main",
     "others": "Others",
     "history": "Transaction History",
-    "scheduled": "Scheduled Transfers"
+    "scheduled": "Scheduled Transfers",
+    "overview": "Overview",
+    "transactions": "Transactions",
+    "finance": "Finance",
+    "splitBill": "Split Bill",
+    "lending": "Lending",
+    "notifications": "Notifications",
+    "statements": "Statements",
+    "exchange": "Foreign Exchange"
   },
   "dashboard": {
     "welcome_morning": "Good Morning",

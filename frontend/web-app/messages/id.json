@@ -43,7 +43,15 @@
     "main": "Utama",
     "others": "Lainnya",
     "history": "Riwayat Transaksi",
-    "scheduled": "Transfer Terjadwal"
+    "scheduled": "Transfer Terjadwal",
+    "overview": "Dasbor",
+    "transactions": "Transaksi",
+    "finance": "Keuangan",
+    "splitBill": "Split Bill",
+    "lending": "Lending",
+    "notifications": "Notifikasi",
+    "statements": "Laporan",
+    "exchange": "Valas"
   },
   "dashboard": {
     "welcome_morning": "Selamat Pagi",

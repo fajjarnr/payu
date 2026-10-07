@@ -20,6 +20,9 @@ import {
   TrendingUp,
   Calendar,
   History,
+  Gift,
+  Landmark,
+  FileText,
   Search,
 } from "@/components/icons";
 import { useTranslations, useLocale } from "next-intl";
@@ -72,29 +75,38 @@ export default function DashboardLayout({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const mainMenu = [
+  const overviewMenu = [
     { href: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
-    { href: "/pockets", icon: Wallet, label: t("accounts") },
+    { href: "/analytics", icon: BarChart3, label: t("analytics") },
+  ];
+
+  const transactionMenu = [
     { href: "/transfer", icon: ArrowRightLeft, label: t("transfers") },
-    { href: "/transactions", icon: History, label: t("history") || "Riwayat" },
-    {
-      href: "/scheduled-transfers",
-      icon: Calendar,
-      label: t("scheduled") || "Terjadwal",
-    },
-    { href: "/exchange", icon: TrendingUp, label: t("exchange") },
+    { href: "/transactions", icon: History, label: t("history") },
+    { href: "/scheduled-transfers", icon: Calendar, label: t("scheduled") },
     { href: "/qris", icon: QrCode, label: t("qrPayment") },
     { href: "/bills", icon: Receipt, label: t("bills") },
+    { href: "/split-bill", icon: Gift, label: t("splitBill") },
+  ];
+
+  const financeMenu = [
+    { href: "/pockets", icon: Wallet, label: t("accounts") },
     { href: "/cards", icon: CreditCard, label: t("cards") },
     { href: "/investments", icon: TrendingUp, label: t("investments") },
-    { href: "/analytics", icon: BarChart3, label: t("analytics") },
+    { href: "/exchange", icon: Landmark, label: t("exchange") },
+    { href: "/lending", icon: FileText, label: t("lending") },
+    { href: "/rewards", icon: Gift, label: t("rewards") },
   ];
 
   const otherMenu = [
     { href: "/security", icon: ShieldCheck, label: t("security") },
     { href: "/settings", icon: Settings, label: t("settings") },
+    { href: "/notifications", icon: Bell, label: t("notifications") },
+    { href: "/statements", icon: FileText, label: t("statements") },
     { href: "/support", icon: LifeBuoy, label: t("support") },
   ];
+
+  const allMenus = [...overviewMenu, ...transactionMenu, ...financeMenu, ...otherMenu];
 
   // next-intl `as-needed` keeps `/id` unprefixed: strip a leading locale
   // segment before comparing, so active state works in both locales.
@@ -106,25 +118,38 @@ export default function DashboardLayout({
       ? pathname.replace(/^\/(id|en)(?=\/|$)/, "") || "/"
       : pathname;
 
-  const selectedKeys = [
-    ...mainMenu
-      .filter(
-        (item) =>
-          barePathname === item.href ||
-          (item.href.endsWith("/dashboard") &&
-            barePathname.endsWith("/dashboard")),
-      )
-      .map((item) => item.href),
-    ...otherMenu
-      .filter((item) => barePathname.includes(item.href))
-      .map((item) => item.href),
-  ];
+  const selectedKeys = allMenus
+    .filter(
+      (item) =>
+        barePathname === item.href ||
+        (item.href.endsWith("/dashboard") &&
+          barePathname.endsWith("/dashboard")),
+    )
+    .map((item) => item.href);
 
   const menuItems: MenuProps["items"] = [
     {
       type: "group",
-      label: t("main"),
-      children: mainMenu.map(({ href, icon: Icon, label }) => ({
+      label: t("overview"),
+      children: overviewMenu.map(({ href, icon: Icon, label }) => ({
+        key: href,
+        icon: <Icon className="h-5 w-5" aria-hidden="true" />,
+        label,
+      })),
+    },
+    {
+      type: "group",
+      label: t("transactions"),
+      children: transactionMenu.map(({ href, icon: Icon, label }) => ({
+        key: href,
+        icon: <Icon className="h-5 w-5" aria-hidden="true" />,
+        label,
+      })),
+    },
+    {
+      type: "group",
+      label: t("finance"),
+      children: financeMenu.map(({ href, icon: Icon, label }) => ({
         key: href,
         icon: <Icon className="h-5 w-5" aria-hidden="true" />,
         label,
