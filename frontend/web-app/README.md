@@ -50,7 +50,6 @@ web-app/
 │   ├── cards/               # Card management
 │   └── settings/            # User settings
 ├── components/              # React components
-│   ├── ui/                  # shadcn/ui components
 │   ├── dashboard/           # Dashboard widgets
 │   ├── forms/               # Form components
 │   └── layouts/             # Layout wrappers
@@ -88,9 +87,9 @@ web-app/
 
 ### Components
 
-Built with **shadcn/ui** + **Radix UI** primitives:
-- Tabs, Switch, Slider, Stepper
-- Dialog, Dropdown, Select
+Built with **antd v6** components:
+- Tabs, Switch, Slider, Steps
+- Modal, Dropdown, Select
 - Form inputs with validation
 - Accessible by default (A11y compliant)
 

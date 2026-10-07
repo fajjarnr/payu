@@ -103,10 +103,6 @@ vi.mock('next/dynamic', () => ({
   default: () => () => <div data-testid="dynamic-component">Dynamic</div>,
 }));
 
-vi.mock('@/components/ui/skeleton', () => ({
-  Skeleton: () => <div>Loading...</div>,
-}));
-
 describe('DashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();

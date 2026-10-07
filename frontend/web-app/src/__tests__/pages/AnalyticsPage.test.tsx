@@ -43,14 +43,6 @@ vi.mock('@ant-design/plots', () => ({
   Pie: ({ data }: { data: unknown[] }) => <div data-testid="breakdown-pie">{data.length}</div>,
 }));
 
-vi.mock('@/components/ui/card', () => ({
-  Card: ({ children, ...props }: { children: React.ReactNode }) => <div {...props}>{children}</div>,
-  CardContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CardHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CardTitle: ({ children }: { children: React.ReactNode }) => <h3>{children}</h3>,
-  CardDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
-}));
-
 describe('AnalyticsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();

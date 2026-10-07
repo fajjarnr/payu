@@ -10,12 +10,6 @@ vi.mock('@/components/DashboardLayout', () => ({
 }));
 
 
-vi.mock('@/components/ui/skeleton', () => ({
-  Skeleton: () => <div>Loading...</div>,
-  SkeletonBalance: () => <div>Loading balance...</div>,
-  SkeletonTransaction: () => <div>Loading transaction...</div>,
-}));
-
 vi.mock('@/stores/authStore', () => ({
   useAuthStore: () => ({
     user: { id: 'user_1' },

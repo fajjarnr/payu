@@ -9,13 +9,6 @@ vi.mock('@/components/DashboardLayout', () => ({
 }));
 
 
-vi.mock('@/components/ui/tabs', () => ({
-  Tabs: ({ children, ...props }: { children: React.ReactNode }) => <div {...props}>{children}</div>,
-  TabsList: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TabsTrigger: ({ children, ...props }: { children: React.ReactNode; value: string }) => <button {...props}>{children}</button>,
-  TabsContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
 vi.mock('@/stores/authStore', () => ({
   useAuthStore: () => ({
     user: { id: 'user_1' },
