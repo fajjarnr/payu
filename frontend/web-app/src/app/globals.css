@@ -249,3 +249,83 @@
     transform: rotateY(7deg) rotateX(-2deg) translateY(-14px);
   }
 }
+
+/* Motion tokens — DESIGN.md durations + confident arrival easing. */
+:root {
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-focal: 600ms;
+  --ease-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes seal-lock {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes receipt-unfold {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes amount-settle {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .animate-seal-lock {
+    animation: seal-lock var(--duration-focal) var(--ease-arrive) forwards;
+  }
+
+  .animate-receipt-unfold {
+    animation: receipt-unfold var(--duration-slow) var(--ease-arrive) forwards;
+  }
+
+  .animate-amount-settle {
+    animation: amount-settle var(--duration-normal) var(--ease-arrive) forwards;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-seal-lock,
+  .animate-receipt-unfold,
+  .animate-amount-settle,
+  .animate-fade-in,
+  .animate-checkmark,
+  .animate-float-3d {
+    animation: none;
+    opacity: 1 !important;
+    clip-path: none !important;
+    transform: none !important;
+  }
+}

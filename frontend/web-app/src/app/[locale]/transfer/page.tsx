@@ -319,14 +319,12 @@ export default function TransferPage() {
             </Button>
           </div>
 
-          <div className="bg-card rounded-xl p-5 sm:p-6 shadow-card border border-border relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-
+          <div className="bg-card rounded-xl p-5 sm:p-6 shadow-card border border-border relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-border">
               <div className="flex items-center gap-6">
                 <div
                   className={clsx(
-                    "w-20 h-20 rounded-2xl flex items-center justify-center font-bold text-3xl shadow-lg transition-transform group-hover:rotate-3",
+                    "w-20 h-20 rounded-2xl flex items-center justify-center font-bold text-3xl shadow-lg",
                     selectedContactData?.color,
                   )}
                 >
@@ -348,7 +346,7 @@ export default function TransferPage() {
                 <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">
                   Jumlah Transfer
                 </p>
-                <p className="text-4xl sm:text-4xl lg:text-5xl font-bold text-foreground">
+                <p className="text-4xl sm:text-4xl lg:text-5xl font-bold text-foreground animate-amount-settle">
                   Rp {formatCurrencyWithoutSymbol(amount)}
                 </p>
                 <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mt-2">
@@ -464,13 +462,16 @@ export default function TransferPage() {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-12">
-          <div className="animate-checkmark mb-8">
+          <div className="animate-seal-lock will-change-transform mb-8">
             <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
               <CheckCircle className="w-14 h-14 text-primary" />
             </div>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 text-center">
+          <h2
+            aria-live="polite"
+            className="text-2xl sm:text-3xl font-bold text-foreground mb-2 text-center"
+          >
             Transfer Berhasil!
           </h2>
           <p className="text-sm text-muted-foreground mb-8 text-center">
@@ -481,7 +482,7 @@ export default function TransferPage() {
                 : "Transfer berulang telah diatur"}
           </p>
 
-          <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-card p-6 sm:p-8 space-y-6">
+          <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-card p-6 sm:p-8 space-y-6 animate-receipt-unfold">
             <div className="flex items-center gap-4 pb-6 border-b border-border">
               <div
                 className={clsx(
@@ -508,7 +509,7 @@ export default function TransferPage() {
               <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">
                 Jumlah Transfer
               </p>
-              <p className="text-4xl sm:text-5xl font-bold text-foreground">
+              <p className="text-4xl sm:text-5xl font-bold text-foreground animate-amount-settle">
                 Rp {formatCurrencyWithoutSymbol(amount)}
               </p>
             </div>
