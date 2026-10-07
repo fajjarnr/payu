@@ -62,7 +62,6 @@ describe("MobileHeader", () => {
       "top-0",
       "z-40",
       "bg-card/80",
-      "backdrop-blur-md",
       "border-b",
       "border-border",
     );

@@ -10,11 +10,11 @@ import { getAntdLocale } from '@/lib/antd-locale';
 const FONT_FAMILY = 'Inter, system-ui, sans-serif';
 
 const baseTokens: ThemeConfig['token'] = {
-  colorPrimary: '#0a6b48',
-  colorSuccess: '#10b981',
-  colorError: '#ef4444',
-  colorWarning: '#f59e0b',
-  colorInfo: '#3b82f6',
+  colorPrimary: '#00D09C',
+  colorSuccess: '#00D09C',
+  colorError: '#FF4757',
+  colorWarning: '#FFB800',
+  colorInfo: '#00D09C',
   borderRadius: 12,
   borderRadiusLG: 16,
   // antd v6 dropped the `borderRadiusXL` alias token; set 24px per-component
@@ -27,7 +27,7 @@ const componentTokens: ThemeConfig['components'] = {
   Button: {
     controlHeight: 48,
     controlHeightLG: 56,
-    controlHeightSM: 36,
+    controlHeightSM: 44,
     fontWeight: 700,
   },
   Card: {

@@ -46,9 +46,9 @@ export default function CustomerCasesPage() {
           showZero
           className={clsx(
             "font-bold uppercase tracking-widest",
-            c.priority === CustomerCasePriority.HIGH && "[&_sup]:border-orange-500 [&_sup]:text-orange-500 [&_sup]:bg-orange-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.priority === CustomerCasePriority.MEDIUM && "[&_sup]:border-blue-500 [&_sup]:text-blue-500 [&_sup]:bg-blue-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.priority === CustomerCasePriority.LOW && "[&_sup]:border-slate-500 [&_sup]:text-slate-500 [&_sup]:bg-slate-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.priority === CustomerCasePriority.HIGH && "[&_sup]:border-accent [&_sup]:text-accent [&_sup]:bg-accent/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.priority === CustomerCasePriority.MEDIUM && "[&_sup]:border-primary [&_sup]:text-primary [&_sup]:bg-primary/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.priority === CustomerCasePriority.LOW && "[&_sup]:border-text-secondary [&_sup]:text-text-secondary [&_sup]:bg-text-secondary/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
           )}
         />
       ),
@@ -62,8 +62,8 @@ export default function CustomerCasesPage() {
           showZero
           className={clsx(
             "font-bold uppercase tracking-widest",
-            c.status === CustomerCaseStatus.OPEN && "[&_sup]:text-blue-600 [&_sup]:bg-blue-600/5 [&_sup]:border-blue-600/10 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.status === CustomerCaseStatus.RESOLVED && "[&_sup]:text-emerald-600 [&_sup]:bg-emerald-600/5 [&_sup]:border-emerald-600/10 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.status === CustomerCaseStatus.OPEN && "[&_sup]:text-secondary [&_sup]:bg-secondary/5 [&_sup]:border-secondary/10 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.status === CustomerCaseStatus.RESOLVED && "[&_sup]:text-primary-dark [&_sup]:bg-primary-dark/5 [&_sup]:border-primary-dark/10 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
           )}
         />
       ),
@@ -74,7 +74,7 @@ export default function CustomerCasesPage() {
       align: 'right',
       render: (_, c) => (
         <Link href={`/backoffice/customers/${c.id}`}>
-          <Button type="text" size="small" className="h-9 gap-2 font-bold uppercase tracking-widest">
+          <Button type="text" size="small" className="min-h-[44px] gap-2 font-bold uppercase tracking-widest">
             <MessageSquare className="h-4 w-4" /> Buka
           </Button>
         </Link>
@@ -99,10 +99,11 @@ export default function CustomerCasesPage() {
       <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
         <div className="relative flex-1 flex items-center">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-          <Input placeholder="Cari tiket atau ID nasabah..." className="pl-12 h-12 w-full" />
+          <Input aria-label="Cari tiket atau ID nasabah" placeholder="Cari tiket atau ID nasabah..." className="pl-12 h-12 w-full" />
         </div>
         <div className="flex gap-4">
           <Select
+            aria-label="Filter prioritas"
             value={priority || undefined}
             placeholder="Semua Prioritas"
             onChange={(value: string) => setPriority(value ?? '')}
@@ -110,6 +111,7 @@ export default function CustomerCasesPage() {
             options={[{ value: '', label: 'Semua Prioritas' }, ...Object.values(CustomerCasePriority).map((s) => ({ value: s, label: s }))]}
           />
           <Select
+            aria-label="Filter status"
             value={status || undefined}
             placeholder="Semua Status"
             onChange={(value: string) => setStatus(value ?? '')}

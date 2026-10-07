@@ -144,9 +144,9 @@ export default function SettingsPage() {
                       <Alert
                         type="success"
                         showIcon
-                        icon={<CheckCircle className="h-4 w-4 text-green-500" />}
-                        className="bg-green-500/10 border-green-500/20 relative z-10 p-4"
-                        description={<span className="text-green-500">{t('profileUpdateSuccess')}</span>}
+                        icon={<CheckCircle className="h-4 w-4 text-success" />}
+                        className="bg-success/10 border-success/20 relative z-10 p-4"
+                        description={<span className="text-success">{t('profileUpdateSuccess')}</span>}
                       />
                     )}
 
@@ -154,8 +154,8 @@ export default function SettingsPage() {
                     {updateUser.isError && (
                       <Alert
                         type="error"
-                        className="bg-red-500/10 border-red-500/20 relative z-10 p-4"
-                        description={<span className="text-red-500">{t('profileUpdateError')}</span>}
+                        className="bg-error/10 border-error/20 relative z-10 p-4"
+                        description={<span className="text-error">{t('profileUpdateError')}</span>}
                       />
                     )}
 
@@ -170,10 +170,10 @@ export default function SettingsPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
-                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                          <label htmlFor="settings-fullname" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
                             {t('form.fullName')}
                           </label>
-                          <Input
+                          <Input id="settings-fullname"
                             type="text"
                             value={formData.fullName}
                             onChange={(e) => handleInputChange('fullName', e.target.value)}
@@ -183,10 +183,10 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-3">
-                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                          <label htmlFor="settings-email" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
                             {t('form.contactEmail')}
                           </label>
-                          <Input
+                          <Input id="settings-email"
                             type="email"
                             value={formData.email}
                             onChange={(e) => handleInputChange('email', e.target.value)}
@@ -196,10 +196,10 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="space-y-3">
-                          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                          <label htmlFor="settings-phone" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
                             {t('form.phone')}
                           </label>
-                          <Input
+                          <Input id="settings-phone"
                             type="text"
                             value={formData.phoneNumber}
                             onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
@@ -229,7 +229,7 @@ export default function SettingsPage() {
                               <p className="font-bold text-foreground text-sm">{pref.label}</p>
                               <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-0.5">{pref.desc}</p>
                             </div>
-                            <Switch defaultChecked={pref.active} />
+                            <Switch defaultChecked={pref.active} aria-label={pref.label} />
                           </div>
                         ))}
                       </div>
@@ -252,7 +252,7 @@ export default function SettingsPage() {
                       </Button>
                       <Button
                         danger
-                        className="text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20"
+                        className="text-error hover:bg-error/10 hover:text-error hover:border-error/20"
                         onClick={handleClearSession}
                       >
                         <Trash2 className="h-5 w-5 mr-1" />

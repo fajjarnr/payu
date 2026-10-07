@@ -213,8 +213,8 @@ export default function PromoPopup({
           type="text"
           shape="circle"
           onClick={() => handleClose(false)}
-          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-all"
-          style={{ width: 36, height: 36 }}
+          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-secondary/20 hover:bg-secondary/40 text-surface transition-all"
+          style={{ width: 44, height: 44 }}
           aria-label="Close popup"
           icon={<X className="h-4 w-4" />}
         />
@@ -227,6 +227,7 @@ export default function PromoPopup({
               alt={currentPopup.title}
               fill
               className="object-cover"
+              loading="lazy"
               sizes="(max-width: 640px) 100vw, 512px"
             />
             {/* Gradient Overlay */}
@@ -242,7 +243,7 @@ export default function PromoPopup({
           )}
         >
           <div className="mb-8">
-            <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-xs font-bold tracking-[0.2em] rounded-full mb-4 uppercase border border-white/20 backdrop-blur-md">
+            <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-surface text-xs font-bold tracking-[0.2em] rounded-full mb-4 uppercase border border-surface/20">
               {t('specialOffer')}
             </span>
             <h3 className="text-2xl sm:text-4xl font-bold text-foreground mb-4 leading-tight uppercase">
@@ -261,7 +262,7 @@ export default function PromoPopup({
               type="primary"
               size="large"
               onClick={handleAction}
-              className="flex-1 h-14 bg-bank-green hover:bg-bank-emerald text-white font-bold uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-bank-green/20"
+              className="flex-1 h-14 bg-bank-green hover:bg-bank-emerald text-surface font-bold uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-bank-green/20"
             >
               {t('claimNow')}
             </Button>

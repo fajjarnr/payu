@@ -85,7 +85,7 @@ export default function MerchantDashboard() {
          </div>
          <div>
           <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">{t('status')}</p>
-          <Tag bordered={false} color={partner.active ? 'green' : 'red'} className={partner.active ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : ''}>
+          <Tag bordered={false} color={partner.active ? 'green' : 'red'} className={partner.active ? 'bg-primary/10 text-primary border-primary/20' : ''}>
            {partner.active ? t('active') : t('inactive')}
           </Tag>
          </div>

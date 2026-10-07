@@ -137,7 +137,7 @@ export default function DashboardLayout({
   ];
 
   const logoMark = (
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-white shadow-lg">
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-surface shadow-lg">
       U
     </div>
   );
@@ -218,6 +218,7 @@ export default function DashboardLayout({
             <LanguageSwitcher />
 
             <Input.Search
+              aria-label="Pencarian cerdas"
               data-testid="search-input"
               placeholder="Pencarian cerdas..."
               allowClear

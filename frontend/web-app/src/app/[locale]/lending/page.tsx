@@ -74,8 +74,8 @@ export default function LendingPage() {
       tenure: '6 - 36 bulan',
       processingTime: '1-2 hari kerja',
       icon: FileText,
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10'
+      color: 'text-primary',
+      bg: 'bg-primary/10'
     },
     {
       name: 'Pinjaman Multiguna',
@@ -144,13 +144,13 @@ export default function LendingPage() {
                 <div className="mt-0 space-y-6 lg:space-y-8">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
                       <div className="relative z-10 flex items-start justify-between mb-8">
                         <div>
-                          <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">Skor Kredit Anda</p>
+                          <p className="text-xs font-bold text-text-disabled tracking-widest uppercase mb-2">Skor Kredit Anda</p>
                           <div className="flex items-baseline gap-3">
                             <h3 className="text-5xl font-bold">
-                              {isLoadingScore ? <Skeleton className="h-12 w-20 bg-white/20" /> : creditScore.score}
+                              {isLoadingScore ? <Skeleton className="h-12 w-20 bg-surface/20" /> : creditScore.score}
                             </h3>
                             <div className="flex items-center gap-2 bg-success-light/20 px-3 py-1 rounded-full border border-success-light/20">
                               <span className="text-lg font-bold text-success-light">
@@ -158,18 +158,18 @@ export default function LendingPage() {
                               </span>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mt-3">
+                          <p className="text-xs text-text-disabled font-bold tracking-widest uppercase mt-3">
                             Terakhir diperbarui: {isLoadingScore ? "..." : creditScore.lastUpdated}
                           </p>
                         </div>
-                        <div className="h-16 w-16 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                        <div className="h-16 w-16 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
                           <ShieldCheck className="h-8 w-8 text-bank-green" />
                         </div>
                       </div>
 
                       <div className="space-y-3 mb-6">
                         {isLoadingScore 
-                          ? [1,2].map(i => <Skeleton key={i} className="h-5 w-48 bg-white/10" />)
+                          ? [1,2].map(i => <Skeleton key={i} className="h-5 w-48 bg-surface/10" />)
                           : creditScore.factors.map((factor, i) => (
                             <div key={i} className="flex items-center gap-3">
                                 <div className="h-6 w-6 rounded-full bg-success-light/20 flex items-center justify-center">
@@ -180,7 +180,7 @@ export default function LendingPage() {
                           ))}
                       </div>
 
-                      <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-surface/10 h-2 rounded-full overflow-hidden">
                         <div className="bg-gradient-to-r from-success-light to-primary h-full rounded-full" style={{ width: `${(creditScore.score / creditScore.maxScore) * 100}%` }} />
                       </div>
                     </div>
@@ -256,51 +256,48 @@ export default function LendingPage() {
                 <div className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
                       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
                         <div>
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/10">
+                            <div className="h-12 w-12 bg-surface/20 rounded-xl flex items-center justify-center border border-surface/10">
                               <CreditCard className="h-6 w-6" />
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-white/80 tracking-widest uppercase">PayLater Limit</p>
+                              <p className="text-xs font-bold text-surface/80 tracking-widest uppercase">PayLater Limit</p>
                               <h3 className="text-3xl font-bold tracking-tight mt-1">{formatCurrency(payLaterStats.creditLimit)}</h3>
                             </div>
                           </div>
-                          <div className="flex gap-4 text-xs font-bold text-white/80">
+                          <div className="flex gap-4 text-xs font-bold text-surface/80">
                             <span>Terpakai: {formatCurrency(payLaterStats.usedLimit)}</span>
                             <span>•</span>
                             <span>Tersedia: {formatCurrency(payLaterStats.availableLimit)}</span>
                           </div>
                         </div>
 
-                        <div className="text-left md:text-right bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
-                          <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Jatuh Tempo</p>
-                          <p className="font-bold">{payLaterStats.dueDate}</p>
-                        </div>
+                        <div className="text-left md:text-right bg-surface/10 p-4 rounded-xl border border-surface/10">
                       </div>
 
                       <div className="relative z-10 space-y-2">
-                        <div className="flex justify-between text-xs font-bold tracking-widest uppercase text-white/80">
+                        <div className="flex justify-between text-xs font-bold tracking-widest uppercase text-surface/80">
                           <span>Penggunaan Limit</span>
                           <span>{creditUtilization.toFixed(0)}%</span>
                         </div>
-                        <div className="w-full bg-black/20 h-3 rounded-full overflow-hidden p-0.5 border border-white/10">
-                          <div className="bg-white h-full rounded-full transition-all duration-500" style={{ width: `${creditUtilization}%` }} />
+                        <div className="w-full bg-secondary/20 h-3 rounded-full overflow-hidden p-0.5 border border-surface/10">
+                          <div className="bg-surface h-full rounded-full transition-all duration-500" style={{ width: `${creditUtilization}%` }} />
                         </div>
                       </div>
 
-                      <div className="relative z-10 mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div className="relative z-10 mt-8 pt-6 border-t border-surface/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                          <p className="text-xs font-bold text-white/60 tracking-widest uppercase">Pembayaran Minimum</p>
+                          <p className="text-xs font-bold text-surface/60 tracking-widest uppercase">Pembayaran Minimum</p>
                           <p className="text-xl font-bold">{formatCurrency(payLaterStats.minimumPayment)}</p>
                         </div>
                           <Button
                             onClick={handlePayBill}
                             disabled={payLaterPayment.isPending}
                             data-testid="pay-bill-button" 
-                            className="px-8 h-12 rounded-xl bg-white text-primary hover:bg-white/90 shadow-lg disabled:opacity-50">
+                            className="px-8 h-12 rounded-xl bg-surface text-primary hover:bg-surface/90 shadow-lg disabled:opacity-50">
                             {payLaterPayment.isPending ? 'Memproses...' : 'Bayar Tagihan'}
                           </Button>
                       </div>

@@ -24,12 +24,12 @@ export default function LoginPage() {
 function LoginSkeleton() {
   return (
     <div className="min-h-screen w-full flex bg-background animate-pulse">
-      <div className="hidden lg:flex w-1/2 bg-zinc-900" />
+      <div className="hidden lg:flex w-1/2 bg-text-primary" />
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-[420px] space-y-8">
           <div className="h-10 w-48 bg-muted rounded-xl" />
           <div className="h-5 w-64 bg-muted/60 rounded-xl" />
-          <div className="h-12 bg-emerald-800/50 rounded-lg" />
+          <div className="h-12 bg-primary-dark/50 rounded-lg" />
         </div>
       </div>
     </div>
@@ -53,9 +53,9 @@ function LoginForm() {
   return (
     <div className="min-h-screen w-full flex bg-background font-inter">
       {/* Left Panel - Branding (Hidden on mobile) */}
-      <aside className="hidden lg:flex flex-col justify-between w-1/2 bg-zinc-900 border-r border-border/10 p-5 sm:p-6 lg:p-8 relative overflow-hidden text-white" aria-label="Branding">
+      <aside className="hidden lg:flex flex-col justify-between w-1/2 bg-text-primary border-r border-border/10 p-5 sm:p-6 lg:p-8 relative overflow-hidden text-surface" aria-label="Branding">
         {/* Background Effects */}
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-bank-green/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
 
         {/* Pattern Overlay */}
@@ -63,22 +63,22 @@ function LoginForm() {
 
         <div className="relative z-10 text-center">
             <Link href="/" className="flex items-center gap-3 w-fit mx-auto lg:mx-0">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-emerald-500/20">
-                    <Image src="/logo.svg" alt="PayU Brand Logo" width={40} height={40} />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-primary/20">
+                    <Image src="/logo.svg" alt="PayU Brand Logo" width={40} height={40} priority />
                 </div>
-                <span className="text-2xl font-bold tracking-tight text-white">PayU</span>
+                <span className="text-2xl font-bold tracking-tight text-surface">PayU</span>
             </Link>
         </div>
 
         <div className="relative z-10 max-w-lg space-y-6 mx-auto lg:mx-0 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/30 border border-emerald-400/30 text-emerald-300 text-xs font-bold tracking-widest uppercase mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-dark/30 border border-primary/30 text-primary-light text-xs font-bold tracking-widest uppercase mb-4">
                 <ShieldCheck className="w-4 h-4" />
                 <span>{t('branding.tag')}</span>
             </div>
             <h1 className="text-5xl font-bold leading-tight tracking-tight">
                {t('branding.title')}
             </h1>
-            <p className="text-lg text-zinc-200 leading-relaxed">
+            <p className="text-lg text-border leading-relaxed">
                 {t('branding.desc')}
             </p>
 
@@ -88,15 +88,15 @@ function LoginForm() {
                     t('branding.features.monitoring'),
                     t('branding.features.qris')
                 ].map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3 text-zinc-100">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    <div key={i} className="flex items-center gap-3 text-surface-dim">
+                        <CheckCircle2 className="w-5 h-5 text-primary" />
                         <span className="font-medium">{feature}</span>
                     </div>
                 ))}
             </div>
         </div>
 
-        <div className="relative z-10 text-zinc-300 text-xs font-mono text-center lg:text-left">
+        <div className="relative z-10 text-border text-xs font-mono text-center lg:text-left">
             {t('branding.footer')}
         </div>
       </aside>
@@ -120,7 +120,7 @@ function LoginForm() {
                     type="primary"
                     htmlType="button"
                     data-testid="login-submit-button"
-                    className="w-full h-12 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-base shadow-lg shadow-emerald-800/20 transition-all active:scale-[0.98]"
+                    className="w-full h-12 bg-primary-dark hover:bg-primary-dark text-surface font-bold text-base shadow-lg shadow-primary-dark/20 transition-all active:scale-[0.98]"
                     onClick={() => { window.location.href = '/api/auth/authorize'; }}
                 >
                     <Lock className="mr-2 h-4 w-4" />
@@ -142,7 +142,7 @@ function LoginForm() {
 
             <div className="text-center text-sm">
                 <span className="text-muted-foreground">{t('noAccount')}</span>{" "}
-                <Link href="/onboarding" data-testid="register-link" className="font-bold text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center">
+                <Link href="/onboarding" data-testid="register-link" className="font-bold text-primary-dark hover:text-primary-dark hover:underline inline-flex items-center">
                     {t('registerLink')} <ArrowRight className="ml-1 w-3 h-3" />
                 </Link>
             </div>

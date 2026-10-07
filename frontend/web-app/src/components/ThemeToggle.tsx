@@ -20,7 +20,7 @@ export default function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="w-12 h-12 rounded-full border border-border bg-white/[0.03] animate-pulse" />
+      <div className="w-12 h-12 rounded-full border border-border bg-surface/[0.03] animate-pulse" />
     );
   }
 
@@ -42,9 +42,9 @@ export default function ThemeToggle() {
       }
       style={{ width: 48, height: 48 }}
       className={clsx(
-        'flex items-center justify-center rounded-full transition-all cursor-pointer shadow-md border border-emerald-500/10 bg-card',
-        'hover:bg-emerald-500/5 hover:border-emerald-500/30 active:scale-95',
-        isDark ? 'text-amber-400' : 'text-emerald-600',
+        'flex items-center justify-center rounded-full transition-all cursor-pointer shadow-md border border-primary/10 bg-card',
+        'hover:bg-primary/5 hover:border-primary/30 active:scale-95',
+        isDark ? 'text-warning' : 'text-primary-dark',
       )}
     />
   );

@@ -44,7 +44,7 @@ describe('FeedbackWidget', () => {
 
     const floatingButton = screen.getByLabelText('Kirim Feedback');
     expect(floatingButton).toBeInTheDocument();
-    expect(floatingButton).toHaveClass('bg-bank-green', 'text-white');
+    expect(floatingButton).toHaveClass('bg-bank-green', 'text-surface');
   });
 
   it('should open modal when floating button is clicked', async () => {
@@ -99,7 +99,7 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    const backdrop = container.querySelector('.bg-black\\/50');
+    const backdrop = container.querySelector('.bg-secondary\\/50');
     if (backdrop) {
       await act(async () => {
         fireEvent.click(backdrop);

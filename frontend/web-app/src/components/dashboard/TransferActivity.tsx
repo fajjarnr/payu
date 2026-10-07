@@ -17,12 +17,12 @@ import { formatCurrency } from '@/lib/currency';
 import type { Transaction } from '@/services/TransactionService';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' },
-  VALIDATING: { label: 'Validasi', color: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
-  PROCESSING: { label: 'Diproses', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-  COMPLETED: { label: 'Selesai', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-  FAILED: { label: 'Gagal', color: 'bg-red-500/10 text-red-600 border-red-500/20' },
-  CANCELLED: { label: 'Batal', color: 'bg-gray-500/10 text-gray-600 border-gray-500/20' },
+  PENDING: { label: 'Menunggu', color: 'bg-warning/10 text-warning border-warning/20' },
+  VALIDATING: { label: 'Validasi', color: 'bg-accent/10 text-accent border-accent/20' },
+  PROCESSING: { label: 'Diproses', color: 'bg-primary/10 text-secondary border-primary/20' },
+  COMPLETED: { label: 'Selesai', color: 'bg-primary/10 text-primary-dark border-primary/20' },
+  FAILED: { label: 'Gagal', color: 'bg-error/10 text-error border-error/20' },
+  CANCELLED: { label: 'Batal', color: 'bg-text-secondary/10 text-text-secondary border-text-secondary/20' },
 };
 
 // Helper to check if transaction type is a credit (income)
@@ -113,7 +113,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
       render: (_, item) => (
         <p className={cn(
           "text-sm sm:text-base font-bold tabular-nums tracking-tight",
-          isCreditType(item.type) ? "text-emerald-600" : "text-foreground"
+          isCreditType(item.type) ? "text-primary-dark" : "text-foreground"
         )}>
           {isCreditType(item.type) ? '+' : '-'}{formatAmount(item.amount)}
         </p>
@@ -125,7 +125,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
       align: 'right',
       render: (_, item) => (
         <Dropdown
-          menu={{ items: [{ key: 'detail', label: (<span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground cursor-pointer">Lihat Detail</span>) }, ...(canCancel(item.status) ? [{ key: 'cancel', danger: true, label: (<span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground cursor-pointer text-red-600 focus:text-red-600"><X className="h-4 w-4 mr-2" />Batalkan</span>), onClick: () => handleCancel(item.id) }] : [])] }}
+          menu={{ items: [{ key: 'detail', label: (<span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground cursor-pointer">Lihat Detail</span>) }, ...(canCancel(item.status) ? [{ key: 'cancel', danger: true, label: (<span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground cursor-pointer text-error focus:text-error"><X className="h-4 w-4 mr-2" />Batalkan</span>), onClick: () => handleCancel(item.id) }] : [])] }}
           trigger={["click"]}
           placement="bottomRight"
         >
@@ -162,8 +162,8 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                 { icon: MoreIcon, label: 'Lain' },
               ].map((item, i) => (
                 <Button key={i} data-testid={`quick-transfer-category-${item.label.toLowerCase()}`} type="default" className="flex flex-col items-center gap-4 group/btn h-auto p-0 hover:bg-transparent border-transparent bg-transparent hover:bg-muted hover:text-foreground hover:border-transparent active:bg-transparent active:border-transparent">
-                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-emerald-500/[0.03] flex items-center justify-center group-hover/btn:bg-emerald-500/10 group-hover/btn:scale-105 transition-all border border-emerald-500/10 group-hover/btn:border-emerald-500/30 shadow-sm overflow-hidden">
-                    <item.icon className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-500" />
+                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-primary/[0.03] flex items-center justify-center group-hover/btn:bg-primary/10 group-hover/btn:scale-105 transition-all border border-primary/10 group-hover/btn:border-primary/30 shadow-sm overflow-hidden">
+                    <item.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                   </div>
                   <span className="text-xs sm:text-xs font-bold text-muted-foreground group-hover/btn:text-primary uppercase tracking-tighter">{item.label}</span>
                 </Button>
@@ -236,7 +236,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                       </div>
                       <p className={cn(
                         "text-sm font-bold tabular-nums",
-                        isCreditType(item.type) ? "text-emerald-600" : "text-foreground"
+                        isCreditType(item.type) ? "text-primary-dark" : "text-foreground"
                       )}>
                         {isCreditType(item.type) ? '+' : '-'}{formatAmount(item.amount)}
                       </p>
@@ -249,7 +249,7 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
                           <Button
                             type="default"
                             aria-label="Batalkan transaksi"
-                            className="h-11 w-11 text-red-500 hover:text-red-600 hover:bg-red-50 border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent"
+                            className="h-11 w-11 text-error hover:text-white hover:bg-error border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent"
                             icon={<X className="h-4 w-4" />}
                             onClick={() => handleCancel(item.id)}
                           />
@@ -273,10 +273,10 @@ export default function TransferActivity({ className = '' }: TransferActivityPro
               )}
 
               <div className="mt-6 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-6">
-                <Button type="default" size="small" data-testid="repeat-last-transfer-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:text-primary/80 tracking-widest transition-colors uppercase h-auto p-0 hover:bg-transparent border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent" icon={<RotateCcw className="h-4 w-4" />}>Ulangi Transfer Terakhir
+                <Button type="default" size="small" data-testid="repeat-last-transfer-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:text-primary/80 tracking-widest transition-colors uppercase min-h-[44px] h-auto p-0 hover:bg-transparent border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent" icon={<RotateCcw className="h-4 w-4" />}>Ulangi Transfer Terakhir
                 </Button>
                 <Link href="/transactions">
-                  <Button type="default" size="small" data-testid="view-full-history-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:underline tracking-widest transition-all uppercase h-auto p-0 hover:bg-transparent border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent" icon={<ArrowRight className="h-4 w-4" />}>Riwayat Lengkap
+                  <Button type="default" size="small" data-testid="view-full-history-button" className="flex items-center gap-3 text-xs font-bold text-primary hover:underline tracking-widest transition-all uppercase min-h-[44px] h-auto p-0 hover:bg-transparent border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent" icon={<ArrowRight className="h-4 w-4" />}>Riwayat Lengkap
                   </Button>
                 </Link>
               </div>

@@ -76,13 +76,13 @@ export default function SplitBillPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return <Tag bordered={false} color="green" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 text-xs uppercase tracking-widest">Aktif</Tag>;
+        return <Tag bordered={false} color="green" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs uppercase tracking-widest">Aktif</Tag>;
       case 'SETTLED':
-        return <Tag bordered={false} color="blue" className="bg-blue-500/10 text-blue-500 border-blue-500/20 px-3 py-1 text-xs uppercase tracking-widest">Lunas</Tag>;
+        return <Tag bordered={false} color="blue" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs uppercase tracking-widest">Lunas</Tag>;
       case 'PENDING':
-        return <Tag bordered={false} color="orange" className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-3 py-1 text-xs uppercase tracking-widest">Menunggu</Tag>;
+        return <Tag bordered={false} color="orange" className="bg-warning/10 text-warning border-warning/20 px-3 py-1 text-xs uppercase tracking-widest">Menunggu</Tag>;
       case 'CANCELLED':
-        return <Tag bordered={false} color="red" className="bg-rose-500/10 text-rose-500 border-rose-500/20 px-3 py-1 text-xs uppercase tracking-widest">Dibatalkan</Tag>;
+        return <Tag bordered={false} color="red" className="bg-error/10 text-error border-error/20 px-3 py-1 text-xs uppercase tracking-widest">Dibatalkan</Tag>;
       default:
         return <Tag bordered>{status}</Tag>;
     }
@@ -142,7 +142,7 @@ export default function SplitBillPage() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-            <div className="bg-emerald-500 h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg">
+            <div className="bg-primary h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg">
               <Receipt className="h-6 w-6" />
             </div>
             <div>
@@ -151,7 +151,7 @@ export default function SplitBillPage() {
             </div>
           </div>
           <div className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-            <div className="bg-blue-500 h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg">
+            <div className="bg-primary h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg">
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <div>
@@ -160,7 +160,7 @@ export default function SplitBillPage() {
             </div>
           </div>
           <div className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-            <div className="bg-indigo-500 h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg">
+            <div className="bg-secondary h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg">
               <DollarSign className="h-6 w-6" />
             </div>
             <div>
@@ -178,10 +178,10 @@ export default function SplitBillPage() {
             <h3 className="text-xl font-bold text-foreground">Buat Split Bill Baru</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+                <label htmlFor="splitbill-description" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
                   Deskripsi
                 </label>
-                <Input
+                <Input id="splitbill-description"
                   placeholder="Makan siang, nonton bareng..."
                   value={newBillName}
                   onChange={(e) => setNewBillName(e.target.value)}
@@ -189,10 +189,10 @@ export default function SplitBillPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+                <label htmlFor="splitbill-amount" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
                   Total Tagihan
                 </label>
-                <Input
+                <Input id="splitbill-amount"
                   type="number"
                   placeholder="150000"
                   value={newBillAmount}
@@ -203,28 +203,28 @@ export default function SplitBillPage() {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                <label htmlFor="splitbill-participant-accountId-0" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                   Peserta (min. 1)
                 </label>
-                <Button htmlType="button" size="small" onClick={addParticipantRow} className="h-9 gap-1 text-xs font-bold uppercase tracking-widest">
+                <Button htmlType="button" size="small" onClick={addParticipantRow} className="min-h-[44px] gap-1 text-xs font-bold uppercase tracking-widest">
                   <UserPlus className="h-3 w-3" /> Tambah Peserta
                 </Button>
               </div>
               {participants.map((p, i) => (
                 <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.4fr_auto] gap-3 items-center">
-                  <Input
+                  <Input id={`splitbill-participant-accountId-${i}`}
                     placeholder="Account ID"
                     value={p.accountId}
                     onChange={(e) => updateParticipant(i, 'accountId', e.target.value)}
                     className="h-11"
                   />
-                  <Input
+                  <Input id={`splitbill-participant-accountNumber-${i}`}
                     placeholder="No. Rekening"
                     value={p.accountNumber}
                     onChange={(e) => updateParticipant(i, 'accountNumber', e.target.value)}
                     className="h-11"
                   />
-                  <Input
+                  <Input id={`splitbill-participant-accountName-${i}`}
                     placeholder="Nama"
                     value={p.accountName}
                     onChange={(e) => updateParticipant(i, 'accountName', e.target.value)}
@@ -235,7 +235,7 @@ export default function SplitBillPage() {
                     size="small"
                     disabled={participants.length === 1}
                     onClick={() => removeParticipantRow(i)}
-                    className="h-11 text-rose-500"
+                    className="h-11 text-error"
                   >
                     Hapus
                   </Button>
@@ -300,11 +300,11 @@ export default function SplitBillPage() {
                               {formatCurrency(p.amount)}
                             </span>
                             {p.status === 'PAID' ? (
-                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              <CheckCircle2 className="h-4 w-4 text-primary" />
                             ) : p.status === 'DECLINED' ? (
-                              <XCircle className="h-4 w-4 text-rose-500" />
+                              <XCircle className="h-4 w-4 text-error" />
                             ) : (
-                              <Clock className="h-4 w-4 text-amber-500" />
+                              <Clock className="h-4 w-4 text-warning" />
                             )}
                           </div>
                         </div>
@@ -339,7 +339,7 @@ export default function SplitBillPage() {
                     <Button
                       size="small"
                       onClick={() => settleBill.mutate(bill.id)}
-                      className="text-xs font-bold tracking-widest uppercase text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/5"
+                      className="text-xs font-bold tracking-widest uppercase text-primary-dark border-primary/20 hover:bg-primary/5"
                     >
                       Selesaikan
                     </Button>

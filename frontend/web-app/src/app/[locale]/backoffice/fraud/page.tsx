@@ -33,9 +33,9 @@ import clsx from 'clsx';
           showZero
           className={clsx(
             "font-bold uppercase tracking-widest",
-            c.riskLevel === FraudRiskLevel.HIGH && "[&_sup]:border-orange-500 [&_sup]:text-orange-500 [&_sup]:bg-orange-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.riskLevel === FraudRiskLevel.MEDIUM && "[&_sup]:border-amber-500 [&_sup]:text-amber-500 [&_sup]:bg-amber-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.riskLevel === FraudRiskLevel.LOW && "[&_sup]:border-emerald-500 [&_sup]:text-emerald-500 [&_sup]:bg-emerald-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.riskLevel === FraudRiskLevel.HIGH && "[&_sup]:border-accent [&_sup]:text-accent [&_sup]:bg-accent/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.riskLevel === FraudRiskLevel.MEDIUM && "[&_sup]:border-warning [&_sup]:text-warning [&_sup]:bg-warning/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            c.riskLevel === FraudRiskLevel.LOW && "[&_sup]:border-primary [&_sup]:text-primary [&_sup]:bg-primary/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
           )}
         />
       ),
@@ -62,7 +62,7 @@ import clsx from 'clsx';
       align: 'right',
       render: (_, c) => (
         <Link href={`/backoffice/fraud/${c.id}`}>
-          <Button type="text" size="small" className="h-9 gap-2 font-bold uppercase tracking-widest">
+          <Button type="text" size="small" className="min-h-[44px] gap-2 font-bold uppercase tracking-widest">
             <Eye className="h-4 w-4" /> Detail
           </Button>
         </Link>
@@ -78,8 +78,8 @@ import clsx from 'clsx';
         <p className="text-sm text-muted-foreground font-medium mt-1">Sistem deteksi risiko dan investigasi kecurangan transaksi.</p>
       </div>
       <div className="flex items-center gap-3">
-        <div className="bg-rose-500/10 px-4 py-2 rounded-lg border border-rose-500/20">
-          <span className="text-xs font-bold text-rose-500 tracking-widest uppercase">Kritis: {isLoading ? '…' : criticalCount}</span>
+        <div className="bg-error/10 px-4 py-2 rounded-lg border border-error/20">
+          <span className="text-xs font-bold text-error tracking-widest uppercase">Kritis: {isLoading ? '…' : criticalCount}</span>
         </div>
       </div>
     </div>
@@ -87,10 +87,11 @@ import clsx from 'clsx';
     <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
       <div className="relative flex-1 flex items-center">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-        <Input placeholder="Cari kasus..." className="pl-12 h-12 w-full" />
+        <Input aria-label="Cari kasus" placeholder="Cari kasus..." className="pl-12 h-12 w-full" />
       </div>
       <div className="flex gap-4">
         <Select
+          aria-label="Filter tingkat risiko"
           value={riskLevel || undefined}
           placeholder="Semua Risiko"
           onChange={(value: string) => setRiskLevel(value ?? '')}
@@ -98,6 +99,7 @@ import clsx from 'clsx';
           options={[{ value: '', label: 'Semua Risiko' }, ...Object.values(FraudRiskLevel).map((s) => ({ value: s, label: s }))]}
         />
         <Select
+          aria-label="Filter status"
           value={status || undefined}
           placeholder="Semua Status"
           onChange={(value: string) => setStatus(value ?? '')}

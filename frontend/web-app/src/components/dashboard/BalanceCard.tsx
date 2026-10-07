@@ -44,7 +44,7 @@ export default function BalanceCard({
         <Card data-testid="primary-balance-card" className="flex flex-col justify-between flex-1 relative overflow-hidden group min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]" styles={{ body: { display: 'contents' } }}>
           <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-start justify-between space-y-0 pb-6">
             <div>
-              <h3 className="text-2xl font-bold leading-none tracking-tight text-xs sm:text-sm font-bold text-emerald-500 tracking-[0.2em] uppercase">
+              <h3 className="text-2xl font-bold leading-none tracking-tight text-xs sm:text-sm font-bold text-primary tracking-[0.2em] uppercase">
                 {t('primaryBalance')}
               </h3>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] mt-2 text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60">
@@ -64,7 +64,7 @@ export default function BalanceCard({
               </h2>
               <div className="flex items-center gap-3">
                 {percentage != null ? (
-                  <span className="text-xs px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 font-bold flex items-center gap-1 uppercase tracking-tighter border border-emerald-500/10">
+                  <span className="text-xs px-3 py-1.5 rounded-xl bg-primary/10 text-primary font-bold flex items-center gap-1 uppercase tracking-tighter border border-primary/10">
                     <ArrowUpRight className="h-4 w-4" />
                     +{percentage}%
                   </span>
@@ -84,7 +84,7 @@ export default function BalanceCard({
             <h3 className="text-2xl font-bold leading-none tracking-tight text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
               {t('netWorth')}
             </h3>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-emerald-500/10">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-primary/10">
               <ArrowUpRight className="h-6 w-6" />
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function BalanceCard({
               </h3>
               <div className="flex items-center gap-2">
                 {netWorthChange != null ? (
-                  <span className="text-xs font-bold text-emerald-500 uppercase tracking-tighter flex items-center gap-1">
+                  <span className="text-xs font-bold text-primary uppercase tracking-tighter flex items-center gap-1">
                     <ArrowUpRight className="h-4 w-4" />
                     +{netWorthChange}%
                   </span>
@@ -114,23 +114,23 @@ export default function BalanceCard({
 
       {/* Col 2: Visual Card Representation (Hero) */}
       <div className="lg:col-span-12 xl:col-span-1">
-        <div className="relative aspect-[1.6/1] lg:aspect-auto lg:h-full min-h-[220px] sm:min-h-[260px] lg:min-h-[300px] xl:min-h-0 rounded-2xl overflow-hidden shadow-glass group border border-white/10">
+        <div className="relative aspect-[1.6/1] lg:aspect-auto lg:h-full min-h-[220px] sm:min-h-[260px] lg:min-h-[300px] xl:min-h-0 rounded-2xl overflow-hidden shadow-glass group border border-surface/10">
           <div className="absolute inset-0 card-gradient" />
 
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-md" />
+          <div className="absolute inset-0 bg-surface/5" />
 
-          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/20 blur-xl transition-transform group-hover:scale-110 pointer-events-none" />
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-surface/20 blur-xl transition-transform group-hover:scale-110 pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-surface/10 blur-2xl pointer-events-none" />
 
-          <div className="relative z-10 p-5 sm:p-6 lg:p-8 h-full flex flex-col justify-between text-white">
+          <div className="relative z-10 p-5 sm:p-6 lg:p-8 h-full flex flex-col justify-between text-surface">
             <div className="flex justify-between items-start gap-3">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/20 font-bold text-xl sm:text-2xl shadow-lg shrink-0">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-surface/20 rounded-xl sm:rounded-2xl flex items-center justify-center border border-surface/20 font-bold text-xl sm:text-2xl shadow-lg shrink-0">
                   U
                 </div>
                 <span className="text-xl sm:text-2xl lg:text-3xl font-bold uppercase tracking-tighter truncate">PayU</span>
               </div>
-              <div className="text-xs font-bold tracking-widest opacity-80 bg-white/10 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-white/10 shrink-0">07/28</div>
+              <div className="text-xs font-bold tracking-widest opacity-80 bg-surface/10 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-surface/10 shrink-0">07/28</div>
             </div>
 
             <div className="space-y-4 sm:space-y-6">
@@ -139,12 +139,12 @@ export default function BalanceCard({
               </div>
               <div className="flex justify-between items-end gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-white/60 font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1 sm:mb-2">{t('cardHolder')}</p>
+                  <p className="text-xs text-surface/60 font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1 sm:mb-2">{t('cardHolder')}</p>
                   <p className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold uppercase tracking-widest truncate">PENGGUNA PAYU</p>
                 </div>
                 <div className="flex -space-x-2 sm:-space-x-3 shrink-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-500/80 backdrop-blur-sm border border-white/20 shadow-lg" />
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-yellow-400/60 backdrop-blur-sm border border-white/20 shadow-lg" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-accent/80 border border-surface/20 shadow-lg" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-warning/60 border border-surface/20 shadow-lg" />
                 </div>
               </div>
             </div>
@@ -195,8 +195,8 @@ function SummaryItem({ label, amount, change, isPositive, currency, bcp47Locale,
           {label}
         </h3>
         <div className={cn(
-          "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-white/5 shrink-0",
-          isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
+          "w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-surface/5 shrink-0",
+          isPositive ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
         )}>
           {isPositive ? <ArrowUpRight className="h-5 w-5 sm:h-6 sm:w-6" /> : <ArrowDownRight className="h-5 w-5 sm:h-6 sm:w-6" />}
         </div>
@@ -210,7 +210,7 @@ function SummaryItem({ label, amount, change, isPositive, currency, bcp47Locale,
           <div className="flex items-center gap-2 flex-wrap">
             <span className={cn(
               "text-xs font-bold px-2 py-0.5 rounded-lg",
-              isPositive ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"
+              isPositive ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
             )}>
               {isPositive ? '+' : ''}{change}%
             </span>

@@ -1,9 +1,9 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { RadialBar } from '@ant-design/plots';
-import { TrendingUp, ArrowUpRight, Target } from '@/components/icons';
+const RadialBar = dynamic(() => import('@ant-design/plots').then(m => m.RadialBar), { ssr: false });
 
 import { Card } from 'antd';
 import { cn } from '@/lib/utils';

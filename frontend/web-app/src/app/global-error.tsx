@@ -15,7 +15,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
   return (
     <html lang="id">
       <body className="antialiased bg-background text-foreground min-h-screen flex items-center justify-center px-6 sm:px-10 lg:px-12 font-sans">
-        <div className="max-w-md w-full bg-card/80 backdrop-blur-xl rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-2xl text-center relative overflow-hidden">
+        <div className="max-w-md w-full bg-card/80 rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-2xl text-center relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-destructive/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-40 h-40 bg-bank-green/5 rounded-full blur-3xl" />
 
@@ -54,7 +54,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             <div className="space-y-3" role="group" aria-label="Tindakan pemulihan error kritis">
               <button
                 onClick={handleReload}
-                className="w-full bg-foreground text-background py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-bank-green hover:text-white transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full bg-foreground text-background py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-bank-green hover:text-surface transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Muat ulang seluruh aplikasi"
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -63,7 +63,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
               <button
                 onClick={() => reset()}
-                className="w-full bg-white/10 backdrop-blur-md border border-border text-foreground py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full bg-surface/10 border border-border text-foreground py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-surface/20 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Coba pulihkan aplikasi"
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />

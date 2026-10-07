@@ -65,8 +65,8 @@ export default function KycReviewsPage() {
           showZero
           className={clsx(
             "font-bold uppercase tracking-widest",
-            review.status === BackofficeKycStatus.APPROVED && "[&_sup]:border-emerald-500 [&_sup]:text-emerald-500 [&_sup]:bg-emerald-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            review.status === BackofficeKycStatus.PENDING && "[&_sup]:border-amber-500 [&_sup]:text-amber-500 [&_sup]:bg-amber-500/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            review.status === BackofficeKycStatus.APPROVED && "[&_sup]:border-primary [&_sup]:text-primary [&_sup]:bg-primary/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
+            review.status === BackofficeKycStatus.PENDING && "[&_sup]:border-warning [&_sup]:text-warning [&_sup]:bg-warning/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
           )}
         />
       ),
@@ -77,7 +77,7 @@ export default function KycReviewsPage() {
       align: 'right',
       render: (_, review) => (
         <Link href={`/backoffice/kyc/${review.id}`}>
-          <Button type="text" size="small" className="h-9 gap-2 font-bold uppercase tracking-widest group-hover:bg-primary group-hover:text-white">
+          <Button type="text" size="small" className="min-h-[44px] gap-2 font-bold uppercase tracking-widest group-hover:bg-primary group-hover:text-surface">
             Review <ChevronRight className="h-4 w-4" />
           </Button>
         </Link>
@@ -93,8 +93,8 @@ export default function KycReviewsPage() {
         <p className="text-sm text-muted-foreground font-medium mt-1">Review verifikasi identitas dan dokumen nasabah.</p>
       </div>
       <div className="flex items-center gap-3">
-        <div className="bg-amber-500/10 px-4 py-2 rounded-lg border border-amber-500/20">
-          <span className="text-xs font-bold text-amber-500 tracking-widest uppercase">Tertunda: {isLoading ? '…' : pendingCount}</span>
+        <div className="bg-warning/10 px-4 py-2 rounded-lg border border-warning/20">
+          <span className="text-xs font-bold text-warning tracking-widest uppercase">Tertunda: {isLoading ? '…' : pendingCount}</span>
         </div>
       </div>
     </div>
@@ -102,10 +102,11 @@ export default function KycReviewsPage() {
     <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
       <div className="relative flex-1 flex items-center">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-        <Input placeholder="Cari nasabah atau nomor dokumen..." className="pl-12 h-12 w-full" />
+        <Input aria-label="Cari nasabah atau nomor dokumen" placeholder="Cari nasabah atau nomor dokumen..." className="pl-12 h-12 w-full" />
       </div>
       <div className="flex gap-4">
         <Select
+          aria-label="Filter status"
           value={status || undefined}
           placeholder="Semua Status"
           onChange={(value: string) => setStatus(value ?? '')}

@@ -58,10 +58,10 @@ export default function NotificationsPage() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'PROMO': return <Gift className="h-5 w-5 text-emerald-500" />;
-      case 'ALERT': return <ShieldAlert className="h-5 w-5 text-rose-500" />;
-      case 'SECURITY': return <Clock className="h-5 w-5 text-amber-500" />;
-      default: return <MessageSquare className="h-5 w-5 text-blue-500" />;
+      case 'PROMO': return <Gift className="h-5 w-5 text-primary" />;
+      case 'ALERT': return <ShieldAlert className="h-5 w-5 text-error" />;
+      case 'SECURITY': return <Clock className="h-5 w-5 text-warning" />;
+      default: return <MessageSquare className="h-5 w-5 text-primary" />;
     }
   };
 
@@ -78,14 +78,14 @@ export default function NotificationsPage() {
                   <Button
                     type="text"
                     onClick={handleMarkAllRead}
-                    className="text-xs font-bold tracking-widest uppercase hover:text-emerald-500">
+                    className="text-xs font-bold tracking-widest uppercase hover:text-primary">
                     Tandai Semua Dibaca
                   </Button>
                   <Button
                     type="text"
                     danger
                     onClick={handleClearAll}
-                    className="text-xs font-bold tracking-widest uppercase hover:bg-rose-500/5">
+                    className="text-xs font-bold tracking-widest uppercase hover:bg-error/5">
                     Hapus Semua
                   </Button>
                 </div>
@@ -95,8 +95,9 @@ export default function NotificationsPage() {
               <div className="flex flex-col md:flex-row gap-4 bg-card border border-border p-3 rounded-2xl shadow-sm">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Cari notifikasi..." 
+                  <Input
+                    aria-label="Cari notifikasi"
+                    placeholder="Cari notifikasi..."
                     className="pl-12 bg-transparent border-none focus-visible:ring-0 h-12 text-sm font-bold uppercase tracking-widest"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -111,7 +112,7 @@ export default function NotificationsPage() {
                       className={clsx(
                         "px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase transition-all",
                         filter === f
-                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                          ? "bg-primary text-surface shadow-lg shadow-primary/20"
                           : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                       )}
                     >
@@ -133,13 +134,13 @@ export default function NotificationsPage() {
                     <div 
                       key={n.id} 
                       className={clsx(
-                        "group bg-card border border-border p-6 rounded-2xl shadow-sm transition-all hover:shadow-md hover:border-emerald-500/30 flex items-start gap-6 relative overflow-hidden",
-                        !n.read && "border-l-4 border-l-emerald-500"
+                        "group bg-card border border-border p-6 rounded-2xl shadow-sm transition-all hover:shadow-md hover:border-primary/30 flex items-start gap-6 relative overflow-hidden",
+                        !n.read && "border-l-4 border-l-primary"
                       )}
                     >
                       {!n.read && (
                         <div className="absolute top-0 right-0 p-2">
-                          <div className="h-2 w-2 bg-emerald-500 rounded-full" />
+                          <div className="h-2 w-2 bg-primary rounded-full" />
                         </div>
                       )}
                       
@@ -149,14 +150,14 @@ export default function NotificationsPage() {
 
                       <div className="flex-1 space-y-2">
                         <div className="flex justify-between items-start">
-                          <Tag bordered={false} color="green" className="text-xs font-bold uppercase tracking-widest px-2 py-0 border-emerald-500/20 text-emerald-500">
+                          <Tag bordered={false} color="green" className="text-xs font-bold uppercase tracking-widest px-2 py-0 border-primary/20 text-primary">
                             {n.type}
                           </Tag>
                           <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                             {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <h3 className={clsx("text-lg font-bold text-foreground", !n.read && "text-emerald-600")}>
+                        <h3 className={clsx("text-lg font-bold text-foreground", !n.read && "text-primary-dark")}>
                           {n.title}
                         </h3>
                         <p className="text-sm text-muted-foreground leading-relaxed">
@@ -171,14 +172,14 @@ export default function NotificationsPage() {
                               }
                               router.push(`/notifications/${n.id}`);
                             }}
-                            className="text-xs font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-2 group/btn"
+                            className="text-xs font-bold text-primary-dark uppercase tracking-widest flex items-center gap-2 group/btn"
                           >
                             Lihat Detail
                             <ArrowRight className="h-3 w-3 transition-transform group-hover/btn:translate-x-1" />
                           </Button>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button type="text" shape="circle" size="small" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/5" icon={<Trash2 className="h-4 w-4" />} aria-label="Hapus notifikasi" />
-                            <Button type="text" shape="circle" size="small" className="h-8 w-8 rounded-lg text-muted-foreground" icon={<MoreVertical className="h-4 w-4" />} aria-label="Opsi notifikasi" />
+                            <Button type="text" shape="circle" size="small" className="min-h-[44px] min-w-[44px] rounded-lg text-muted-foreground hover:text-error hover:bg-error/5" icon={<Trash2 className="h-4 w-4" />} aria-label="Hapus notifikasi" />
+                            <Button type="text" shape="circle" size="small" className="min-h-[44px] min-w-[44px] rounded-lg text-muted-foreground" icon={<MoreVertical className="h-4 w-4" />} aria-label="Opsi notifikasi" />
                           </div>
                         </div>
                       </div>

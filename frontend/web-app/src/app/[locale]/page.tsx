@@ -33,7 +33,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background font-inter text-foreground">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-border bg-background/80">
         <div className="mx-auto flex h-16 max-w-[1080px] items-center justify-between px-4 sm:px-6">
           <Link href={'/'} className="flex items-center gap-1.5 cursor-pointer" aria-label="PayU Home">
             <span className="font-heading text-xl font-bold tracking-tight">PayU</span>
@@ -41,13 +41,13 @@ export default function LandingPage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground" aria-label="Main">
-            <a href="#features" onClick={(e) => handleNavClick(e, 'features')} className="transition-colors hover:text-foreground cursor-pointer">
+            <a href="#features" onClick={(e) => handleNavClick(e, 'features')} className="inline-flex items-center min-h-[44px] transition-colors hover:text-foreground cursor-pointer">
               {t('nav.features')}
             </a>
-            <a href="#how" onClick={(e) => handleNavClick(e, 'how')} className="transition-colors hover:text-foreground cursor-pointer">
+            <a href="#how" onClick={(e) => handleNavClick(e, 'how')} className="inline-flex items-center min-h-[44px] transition-colors hover:text-foreground cursor-pointer">
               {t('how.title')}
             </a>
-            <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className="transition-colors hover:text-foreground cursor-pointer">
+            <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className="inline-flex items-center min-h-[44px] transition-colors hover:text-foreground cursor-pointer">
               {t('nav.about')}
             </a>
           </nav>
@@ -66,7 +66,7 @@ export default function LandingPage() {
               {t('getStarted')}
             </Link>
             <button
-              className="flex size-10 items-center justify-center rounded-full border border-border bg-card cursor-pointer md:hidden shrink-0"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-border bg-card cursor-pointer md:hidden shrink-0"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
@@ -312,7 +312,7 @@ export default function LandingPage() {
                     { icon: Fingerprint, label: t('secure.item2') },
                     { icon: BadgeCheck, label: t('secure.item3') },
                   ].map(({ icon: Icon, label }) => (
-                    <li key={label} className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4 backdrop-blur-sm">
+                    <li key={label} className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4">
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15">
                         <Icon style={{ fontSize: 18 }} aria-hidden="true" />
                       </span>

@@ -94,7 +94,6 @@ describe('MobileNav', () => {
     const navContainer = container.querySelector('.fixed.bottom-0.left-0.right-0');
     expect(navContainer).toHaveClass(
       'bg-card/95',
-      'backdrop-blur-2xl',
       'border-t',
       'border-border',
       'z-50'

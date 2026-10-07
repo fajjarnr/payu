@@ -160,16 +160,16 @@ export default function StatementDownloader() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
         {/* Period Type Selector */}
         <div className="space-y-3">
-          <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+          <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
             {t('generator.periodType')}
-          </label>
+          </span>
           <div className="grid grid-cols-3 gap-2">
             {(['monthly', 'quarterly', 'annually'] as PeriodType[]).map((period) => (
               <button
                 key={period}
                 onClick={() => setSelectedPeriod(period)}
                 className={clsx(
-                  'px-3 py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition-all border',
+                  'min-h-[44px] px-3 py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition-all border',
                   selectedPeriod === period
                     ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
                     : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground'
@@ -230,7 +230,7 @@ export default function StatementDownloader() {
                     key={quarter}
                     onClick={() => setSelectedMonth(quarter * 3)}
                     className={clsx(
-                      'px-3 py-3 rounded-xl text-xs font-bold transition-all border',
+                      'min-h-[44px] px-3 py-3 rounded-xl text-xs font-bold transition-all border',
                       selectedMonth === quarter * 3
                         ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
                         : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground'

@@ -106,9 +106,9 @@ export default function ScheduledTransfersPage() {
 
   const STATUS_TAG: Record<string, { color: 'green' | 'orange' | 'red' | 'default'; className: string }> = {
     ACTIVE: { color: 'green', className: 'bg-primary/10 text-primary border-primary/20' },
-    PAUSED: { color: 'orange', className: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-    CANCELLED: { color: 'red', className: 'bg-red-500/10 text-red-500 border-red-500/20' },
-    COMPLETED: { color: 'default', className: 'bg-gray-500/10 text-gray-500 border-gray-500/20' },
+    PAUSED: { color: 'orange', className: 'bg-warning/10 text-warning border-warning/20' },
+    CANCELLED: { color: 'red', className: 'bg-error/10 text-error border-error/20' },
+    COMPLETED: { color: 'default', className: 'bg-text-secondary/10 text-text-secondary border-text-secondary/20' },
   };
 
   const getStatusBadge = (status: string) => {
@@ -154,7 +154,7 @@ export default function ScheduledTransfersPage() {
               label: 'Total Transfer',
               value: transfers?.length || 0,
               icon: ArrowRightLeft,
-              color: 'bg-blue-500/10 text-blue-500',
+              color: 'bg-primary/10 text-primary',
             },
             {
               label: 'Aktif',
@@ -166,13 +166,13 @@ export default function ScheduledTransfersPage() {
               label: 'Dijeda',
               value: transfers?.filter((t) => t.status === 'PAUSED').length || 0,
               icon: Pause,
-              color: 'bg-amber-500/10 text-amber-500',
+              color: 'bg-warning/10 text-warning',
             },
             {
               label: 'Selesai',
               value: transfers?.filter((t) => t.status === 'COMPLETED').length || 0,
               icon: Calendar,
-              color: 'bg-gray-500/10 text-gray-500',
+              color: 'bg-text-secondary/10 text-text-secondary',
             },
           ].map((stat, i) => (
             <div key={i} className="bg-card rounded-xl p-6 border border-border shadow-sm">
@@ -281,7 +281,7 @@ export default function ScheduledTransfersPage() {
                         <Button
                           danger
                           size="small"
-                          className="text-red-500 hover:bg-red-500/10"
+                          className="text-error hover:bg-error/10"
                           onClick={() => handleOpenCancelModal(transfer)}
                           disabled={cancelTransfer.isPending}
                         >
@@ -312,16 +312,16 @@ export default function ScheduledTransfersPage() {
             <Alert
               type="error"
               showIcon
-              icon={<AlertCircle className="h-4 w-4 text-red-500" />}
-              className="bg-red-500/10 border-red-500/20 p-4"
-              description={<span className="text-red-500">Gagal memperbarui transfer. Silakan coba lagi.</span>}
+              icon={<AlertCircle className="h-4 w-4 text-error" />}
+              className="bg-error/10 border-error/20 p-4"
+              description={<span className="text-error">Gagal memperbarui transfer. Silakan coba lagi.</span>}
             />
           )}
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Jumlah (IDR)</label>
-              <Input
+              <label htmlFor="scheduled-amount" className="text-sm font-medium">Jumlah (IDR)</label>
+              <Input id="scheduled-amount"
                 type="number"
                 step="any"
                 value={editForm.amount}
@@ -331,8 +331,8 @@ export default function ScheduledTransfersPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Deskripsi</label>
-              <Input
+              <label htmlFor="scheduled-description" className="text-sm font-medium">Deskripsi</label>
+              <Input id="scheduled-description"
                 type="text"
                 value={editForm.description}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
@@ -341,8 +341,8 @@ export default function ScheduledTransfersPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tipe Jadwal</label>
-              <Select
+              <label htmlFor="scheduled-type" className="text-sm font-medium">Tipe Jadwal</label>
+              <Select id="scheduled-type"
                 className="w-full"
                 value={editForm.scheduleType}
                 onChange={(value: string) => setEditForm((prev) => ({ ...prev, scheduleType: value as typeof prev.scheduleType }))}
@@ -381,9 +381,9 @@ export default function ScheduledTransfersPage() {
             <Alert
               type="error"
               showIcon
-              icon={<AlertCircle className="h-4 w-4 text-red-500" />}
-              className="bg-red-500/10 border-red-500/20 p-4"
-              description={<span className="text-red-500">Gagal membatalkan transfer. Silakan coba lagi.</span>}
+              icon={<AlertCircle className="h-4 w-4 text-error" />}
+              className="bg-error/10 border-error/20 p-4"
+              description={<span className="text-error">Gagal membatalkan transfer. Silakan coba lagi.</span>}
             />
           )}
 

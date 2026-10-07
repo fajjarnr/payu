@@ -108,7 +108,7 @@ export default function SpendingInsights({
         <>
         {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <Card className="bg-muted/50 border-white/5 shadow-sm" styles={{ body: { display: 'contents' } }}>
+          <Card className="bg-muted/50 border-surface/5 shadow-sm" styles={{ body: { display: 'contents' } }}>
             <div className="p-6 pt-0 p-4">
               <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
                 Total Pengeluaran
@@ -118,7 +118,7 @@ export default function SpendingInsights({
               </p>
             </div>
           </Card>
-          <Card className="bg-muted/50 border-white/5 shadow-sm" styles={{ body: { display: 'contents' } }}>
+          <Card className="bg-muted/50 border-surface/5 shadow-sm" styles={{ body: { display: 'contents' } }}>
             <div className="p-6 pt-0 p-4">
               <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
                 Kategori Terbesar
@@ -163,7 +163,7 @@ export default function SpendingInsights({
                         category.color
                       )}
                     >
-                      <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+                      <Icon className="h-5 w-5 text-surface" aria-hidden="true" />
                     </div>
                     <div className="flex-1 min-w-0 pr-4">
                       <div className="flex items-center justify-between mb-2">
@@ -218,10 +218,10 @@ export default function SpendingInsights({
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button aria-label={`Lihat transaksi ${category.name}`} size="small" type="primary" className="flex-1 text-xs font-bold uppercase tracking-widest h-10">
+                      <Button aria-label={`Lihat transaksi ${category.name}`} size="small" type="primary" className="flex-1 text-xs font-bold uppercase tracking-widest min-h-[44px]">
                         Lihat Transaksi
                       </Button>
-                      <Button aria-label={`Set anggaran ${category.name}`} type="default" size="small" className="flex-1 text-xs font-bold uppercase tracking-widest h-10 bg-muted/30">
+                      <Button aria-label={`Set anggaran ${category.name}`} type="default" size="small" className="flex-1 text-xs font-bold uppercase tracking-widest min-h-[44px] bg-muted/30">
                         Set Anggaran
                       </Button>
                     </div>

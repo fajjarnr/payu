@@ -171,7 +171,7 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
         type="primary"
         shape="circle"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-40 shadow-2xl bg-bank-green hover:bg-bank-emerald text-white animate-in slide-in-from-bottom-10"
+        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-40 shadow-2xl bg-bank-green hover:bg-bank-emerald text-surface animate-in slide-in-from-bottom-10"
         style={{ width: 56, height: 56 }}
         aria-label="Kirim Feedback"
         icon={<Camera className="w-6 h-6" />}
@@ -188,7 +188,7 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
         aria-modal="true"
       >
         <div ref={modalRef} className="relative z-50 mx-auto grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg max-w-lg bg-card rounded-3xl p-0 overflow-hidden border-border/10 shadow-3xl">
-          <button type="button" onClick={() => setIsOpen(false)} aria-label="Close" className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+          <button type="button" onClick={() => setIsOpen(false)} aria-label="Close" className="absolute right-4 top-4 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
             <span className="sr-only">Close</span>
           </button>
           <div className="flex flex-col space-y-1.5 text-center sm:text-left p-8 pb-4 border-b border-border/5">
@@ -212,7 +212,7 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
             ) : (
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div>
-                  <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-[0.2em] mb-4 block opacity-70">
+                  <label htmlFor="feedback-category" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-[0.2em] mb-4 block opacity-70">
                     Kategori Feedback
                   </label>
                   <div className="grid grid-cols-3 gap-3">
@@ -301,7 +301,7 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                   type="primary"
                   size="large"
                   disabled={isSubmitting || !subject.trim() || !message.trim()}
-                  className="w-full h-16 bg-bank-green hover:bg-bank-emerald text-white font-bold uppercase tracking-[0.25em] text-xs rounded-2xl shadow-xl shadow-bank-green/20"
+                  className="w-full h-16 bg-bank-green hover:bg-bank-emerald text-surface font-bold uppercase tracking-[0.25em] text-xs rounded-2xl shadow-xl shadow-bank-green/20"
                 >
                   {isSubmitting ? 'Mengirim Data...' : 'Kirim Sekarang'}
                 </Button>

@@ -55,7 +55,7 @@ export default function PersonalizedGreeting({
       >
         {showTimeBased && (
           <>
-            <TimeIcon className="h-4 w-4 text-emerald-500" />
+            <TimeIcon className="h-4 w-4 text-primary" />
             <Typography.Text className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               {timeGreeting.text}
             </Typography.Text>
@@ -76,10 +76,10 @@ export default function PersonalizedGreeting({
 
         {showSegment && isVIP && (
           <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-warning to-accent shadow-lg shadow-warning/20"
           >
-            <Crown className="h-3.5 w-3.5 text-white" />
-            <span className="text-xs font-bold tracking-[0.15em] text-white uppercase">
+            <Crown className="h-3.5 w-3.5 text-surface" />
+            <span className="text-xs font-bold tracking-[0.15em] text-surface uppercase">
               {segmentGreeting}
             </span>
           </span>
@@ -102,14 +102,14 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
       return {
         title: `Welcome back, ${user?.fullName?.split(' ')[0] || 'VIP Member'}!`,
         subtitle: 'Enjoy your exclusive benefits and premium services',
-        gradient: 'from-amber-500 to-orange-600',
+        gradient: 'from-warning to-accent',
       };
     }
     if (currentTier === 'GOLD') {
       return {
         title: `Hello, ${user?.fullName?.split(' ')[0] || 'Gold Member'}!`,
         subtitle: 'You are enjoying premium benefits',
-        gradient: 'from-yellow-500 to-amber-600',
+        gradient: 'from-warning to-warning',
       };
     }
     return {
@@ -117,7 +117,7 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
       subtitle: progressToNext && nextTier
         ? `You're ${progressToNext.toFixed(0)}% away from ${nextTier} status!`
         : 'Discover personalized offers for you',
-      gradient: 'from-primary to-emerald-600',
+      gradient: 'from-primary to-primary-dark',
     };
   };
 
@@ -126,33 +126,33 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
   return (
     <div
       className={clsx(
-        'bg-gradient-to-br rounded-2xl p-6 text-white relative overflow-hidden',
+        'bg-gradient-to-br rounded-2xl p-6 text-surface relative overflow-hidden',
         welcome.gradient,
         className
       )}
     >
       {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-surface/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-surface/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
 
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4" />
-          <Typography.Text className="text-xs font-bold tracking-widest opacity-80 text-white">
+          <Typography.Text className="text-xs font-bold tracking-widest opacity-80 text-surface">
             PERSONALIZED EXPERIENCE
           </Typography.Text>
         </div>
 
         <Typography.Title
           level={2}
-          className="text-xl sm:text-2xl font-bold text-white"
+          className="text-xl sm:text-2xl font-bold text-surface"
           style={{ margin: '0 0 8px' }}
         >
           {welcome.title}
         </Typography.Title>
 
         <Typography.Paragraph
-          className="text-sm opacity-90 max-w-xl text-white"
+          className="text-sm opacity-90 max-w-xl text-surface"
           style={{ marginBottom: 16 }}
         >
           {welcome.subtitle}
@@ -161,10 +161,10 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         {progressToNext && nextTier && !isVIP && (
           <div className="max-w-md">
             <div className="flex items-center justify-between mb-2">
-              <Typography.Text className="text-xs font-bold opacity-80 text-white">
+              <Typography.Text className="text-xs font-bold opacity-80 text-surface">
                 Progress to {nextTier}
               </Typography.Text>
-              <Typography.Text className="text-xs font-bold text-white">
+              <Typography.Text className="text-xs font-bold text-surface">
                 {progressToNext.toFixed(0)}%
               </Typography.Text>
             </div>

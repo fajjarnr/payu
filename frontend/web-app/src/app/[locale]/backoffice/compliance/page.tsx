@@ -66,21 +66,21 @@ export default function CompliancePage() {
   const getRiskBadge = (risk: string) => {
     switch (risk) {
       case 'LOW':
-        return <Badge count="Low Risk" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-emerald-500/10 [&_sup]:text-emerald-500 [&_sup]:border [&_sup]:border-emerald-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Low Risk" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-primary/10 [&_sup]:text-primary [&_sup]:border [&_sup]:border-primary/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'MEDIUM':
-        return <Badge count="Medium Risk" color="gold" className="uppercase tracking-widest text-xs [&_sup]:bg-amber-500/10 [&_sup]:text-amber-500 [&_sup]:border [&_sup]:border-amber-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Medium Risk" color="gold" className="uppercase tracking-widest text-xs [&_sup]:bg-warning/10 [&_sup]:text-warning [&_sup]:border [&_sup]:border-warning/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'HIGH':
-        return <Badge count="High Risk" color="red" className="uppercase tracking-widest text-xs [&_sup]:bg-rose-500/10 [&_sup]:text-rose-500 [&_sup]:border [&_sup]:border-rose-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="High Risk" color="red" className="uppercase tracking-widest text-xs [&_sup]:bg-error/10 [&_sup]:text-error [&_sup]:border [&_sup]:border-error/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       default:
         return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">{risk}</span>;
     }
   };
 
   const getEventIcon = (event: string) => {
-    if (event.includes('ACCESS')) return <Lock className="h-4 w-4 text-blue-500" />;
-    if (event.includes('PII')) return <UserCheck className="h-4 w-4 text-rose-500" />;
-    if (event.includes('CHANGE')) return <Settings className="h-4 w-4 text-amber-500" />;
-    return <FileText className="h-4 w-4 text-emerald-500" />;
+    if (event.includes('ACCESS')) return <Lock className="h-4 w-4 text-primary" />;
+    if (event.includes('PII')) return <UserCheck className="h-4 w-4 text-error" />;
+    if (event.includes('CHANGE')) return <Settings className="h-4 w-4 text-warning" />;
+    return <FileText className="h-4 w-4 text-primary" />;
   };
   const columns: TableColumnsType<ComplianceAuditRow> = [
     {
@@ -108,7 +108,7 @@ export default function CompliancePage() {
       title: 'User / Actor',
       render: (_, log) => (
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold px-2 py-0 border-emerald-500/20 text-emerald-500 font-bold uppercase tracking-widest">Admin</span>
+          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold px-2 py-0 border-primary/20 text-primary font-bold uppercase tracking-widest">Admin</span>
           <span className="text-xs font-bold text-foreground">{log.user}</span>
         </div>
       ),
@@ -139,13 +139,13 @@ export default function CompliancePage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Security Score', value: '—', color: 'bg-emerald-500', icon: Shield },
-              { label: 'Audit Logs (24h)', value: isLoading ? '...' : String(auditLogs.length), color: 'bg-blue-500', icon: History },
-              { label: 'High Risk Events', value: String(Array.isArray(failedAccessData) ? failedAccessData.length : 0), color: 'bg-rose-500', icon: AlertTriangle },
-              { label: 'Regulatory Status', value: 'Compliant', color: 'bg-indigo-500', icon: ClipboardCheck },
+              { label: 'Security Score', value: '—', color: 'bg-primary', icon: Shield },
+              { label: 'Audit Logs (24h)', value: isLoading ? '...' : String(auditLogs.length), color: 'bg-primary', icon: History },
+              { label: 'High Risk Events', value: String(Array.isArray(failedAccessData) ? failedAccessData.length : 0), color: 'bg-error', icon: AlertTriangle },
+              { label: 'Regulatory Status', value: 'Compliant', color: 'bg-secondary', icon: ClipboardCheck },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
                 <div>
@@ -164,6 +164,7 @@ export default function CompliancePage() {
               <div className="relative flex-1 lg:w-96 flex items-center">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                 <Input
+                  aria-label="Filter berdasarkan User, IP, atau Resource"
                   placeholder="Filter by User, IP, or Resource..."
                   className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
                   value={searchTerm}
@@ -181,7 +182,7 @@ export default function CompliancePage() {
                 <Calendar className="h-4 w-4" />
                 Last 24 Hours
               </Button>
-              <Button type="primary" className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
+              <Button type="primary" className="h-12 px-6 rounded-xl bg-primary-dark hover:bg-primary text-surface font-bold text-xs tracking-widest uppercase gap-2">
                 <Download className="h-4 w-4" />
                 Export Audit Report
               </Button>
@@ -206,11 +207,11 @@ export default function CompliancePage() {
                 Real-time Audit Stream Active
               </p>
               <div className="flex items-center gap-2">
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronLeft className="h-4 w-4" />} />
-                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronLeft className="h-4 w-4" />} />
+                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
                   1
                 </div>
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronRight className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronRight className="h-4 w-4" />} />
               </div>
             </div>
           </div>

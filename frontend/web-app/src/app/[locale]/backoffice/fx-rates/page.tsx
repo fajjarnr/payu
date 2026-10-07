@@ -28,8 +28,8 @@ export default function FxRatesAdminPage() {
       title: 'Currency Pair',
       render: (_, fx) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-            <ArrowRightLeft className="h-5 w-5 text-emerald-600" />
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+            <ArrowRightLeft className="h-5 w-5 text-primary-dark" />
           </div>
           <span className="font-bold text-foreground text-sm tracking-widest">{fx.fromCurrency}/{fx.toCurrency}</span>
         </div>
@@ -53,7 +53,7 @@ export default function FxRatesAdminPage() {
     {
       key: 'mode',
       title: 'Sync Mode',
-      render: () => <Badge count="Auto" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-emerald-500/10 [&_sup]:text-emerald-500 [&_sup]:border [&_sup]:border-emerald-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />,
+      render: () => <Badge count="Auto" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-primary/10 [&_sup]:text-primary [&_sup]:border [&_sup]:border-primary/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />,
     },
     {
       key: 'updated',
@@ -71,8 +71,8 @@ export default function FxRatesAdminPage() {
       align: 'right',
       render: () => (
         <div className="flex items-center justify-end gap-2">
-          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<Edit className="h-4 w-4" />} />
-          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<Lock className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Edit className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Lock className="h-4 w-4" />} />
         </div>
       ),
     },
@@ -83,13 +83,13 @@ export default function FxRatesAdminPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Active Currencies', value: isLoading ? '…' : String(fxRates?.length ?? 0), color: 'bg-emerald-500', icon: TrendingUp },
-              { label: 'Auto-Sync Provider', value: isLoading ? '…' : (error ? 'DOWN' : 'LIVE'), color: 'bg-blue-500', icon: RefreshCw },
-              { label: 'Manual Overrides', value: '—', color: 'bg-amber-500', icon: Lock },
-              { label: 'Market Status', value: isLoading ? '…' : (error || (fxRates?.length ?? 0) === 0 ? 'DEGRADED' : 'LIVE'), color: 'bg-indigo-500', icon: CheckCircle2 },
+              { label: 'Active Currencies', value: isLoading ? '…' : String(fxRates?.length ?? 0), color: 'bg-primary', icon: TrendingUp },
+              { label: 'Auto-Sync Provider', value: isLoading ? '…' : (error ? 'DOWN' : 'LIVE'), color: 'bg-primary', icon: RefreshCw },
+              { label: 'Manual Overrides', value: '—', color: 'bg-warning', icon: Lock },
+              { label: 'Market Status', value: isLoading ? '…' : (error || (fxRates?.length ?? 0) === 0 ? 'DEGRADED' : 'LIVE'), color: 'bg-secondary', icon: CheckCircle2 },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
                 <div>
@@ -106,6 +106,7 @@ export default function FxRatesAdminPage() {
               <div className="relative flex-1 lg:w-96 flex items-center">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                 <Input
+                  aria-label="Cari pasangan mata uang"
                   placeholder="Search currency pairs..."
                   className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
                   value={searchTerm}
@@ -118,7 +119,7 @@ export default function FxRatesAdminPage() {
                 <History className="h-4 w-4" />
                 Rate History
               </Button>
-              <Button type="primary" className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
+              <Button type="primary" className="h-12 px-6 rounded-xl bg-primary-dark hover:bg-primary text-surface font-bold text-xs tracking-widest uppercase gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Sync All Rates
               </Button>
@@ -138,14 +139,14 @@ export default function FxRatesAdminPage() {
             
             <div className="p-6 border-t border-border flex items-center justify-between">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                Market Connector Status: {isLoading ? <span className="text-muted-foreground">…</span> : error || (fxRates?.length ?? 0) === 0 ? <span className="text-rose-500">Degraded</span> : <span className="text-emerald-500">Connected</span>}
+                Market Connector Status: {isLoading ? <span className="text-muted-foreground">…</span> : error || (fxRates?.length ?? 0) === 0 ? <span className="text-error">Degraded</span> : <span className="text-primary">Connected</span>}
               </p>
               <div className="flex items-center gap-2">
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
-                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
+                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
                   1
                 </div>
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
               </div>
             </div>
           </div>

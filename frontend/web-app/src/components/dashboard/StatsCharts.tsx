@@ -1,9 +1,10 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { Column, RadialBar } from '@ant-design/plots';
-import { ChevronDown } from '@/components/icons';
+const Column = dynamic(() => import('@ant-design/plots').then(m => m.Column), { ssr: false });
+const RadialBar = dynamic(() => import('@ant-design/plots').then(m => m.RadialBar), { ssr: false });
 import { cn } from '@/lib/utils';
 import { Card } from 'antd';
 
@@ -44,9 +45,9 @@ export default function StatsCharts({
   const invData = investmentChartData ?? [];
   const spdData = spendingChartData ?? [];
   const legend = investmentLegend ?? [
-    { color: 'bg-emerald-500', label: t('legendStocks'), percentage: '--' },
-    { color: 'bg-emerald-400', label: t('legendBonds'), percentage: '--' },
-    { color: 'bg-emerald-300', label: t('legendGold'), percentage: '--' },
+    { color: 'bg-primary', label: t('legendStocks'), percentage: '--' },
+    { color: 'bg-primary', label: t('legendBonds'), percentage: '--' },
+    { color: 'bg-primary-light', label: t('legendGold'), percentage: '--' },
   ];
   const displayTotal = totalValue ?? '--';
 

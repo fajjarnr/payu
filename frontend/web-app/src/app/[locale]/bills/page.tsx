@@ -21,14 +21,14 @@ export default function BillsPage() {
  const [amount, setAmount] = useState('');
 
  const billers = [
-  { name: 'Pulsa', icon: Smartphone, color: 'bg-blue-100 text-blue-600', code: 'PULSA' },
-  { name: 'Listrik (PLN)', icon: Zap, color: 'bg-yellow-100 text-yellow-600', code: 'PLN' },
-  { name: 'Air (PDAM)', icon: Droplets, color: 'bg-cyan-100 text-cyan-600', code: 'PDAM' },
-  { name: 'Internet/TV', icon: Wifi, color: 'bg-indigo-100 text-indigo-600', code: 'INTERNET' },
-  { name: 'Saldo Kartu', icon: CreditCard, color: 'bg-purple-100 text-purple-600', code: 'CARDS' },
-  { name: 'BPJS', icon: Heart, color: 'bg-green-100 text-green-600', code: 'BPJS' },
-  { name: 'TV Kabel', icon: Tv, color: 'bg-pink-100 text-pink-600', code: 'TV' },
-  { name: 'Game Voucher', icon: Gamepad2, color: 'bg-orange-100 text-orange-600', code: 'VOUCHER' },
+  { name: 'Pulsa', icon: Smartphone, color: 'bg-primary-light text-secondary', code: 'PULSA' },
+  { name: 'Listrik (PLN)', icon: Zap, color: 'bg-warning text-secondary', code: 'PLN' },
+  { name: 'Air (PDAM)', icon: Droplets, color: 'bg-primary-light text-primary-dark', code: 'PDAM' },
+  { name: 'Internet/TV', icon: Wifi, color: 'bg-secondary text-white', code: 'INTERNET' },
+  { name: 'Saldo Kartu', icon: CreditCard, color: 'bg-accent text-white', code: 'CARDS' },
+  { name: 'BPJS', icon: Heart, color: 'bg-success text-white', code: 'BPJS' },
+  { name: 'TV Kabel', icon: Tv, color: 'bg-accent text-white', code: 'TV' },
+  { name: 'Game Voucher', icon: Gamepad2, color: 'bg-accent text-white', code: 'VOUCHER' },
  ];
 
  const accountId = authAccountId;
@@ -102,7 +102,7 @@ export default function BillsPage() {
         <selectedBiller.icon className="h-8 w-8 sm:h-10 sm:w-10" />
        </div>
        <div>
-        <p className="text-xs text-gray-400 font-bold tracking-widest mb-1">Penyedia Layanan</p>
+        <p className="text-xs text-text-disabled font-bold tracking-widest mb-1">Penyedia Layanan</p>
         <h3 className="text-xl sm:text-2xl font-bold text-foreground ">{selectedBiller.name}</h3>
         <p className="text-xs font-bold text-bank-green tracking-widest">Mitra Pembayaran Resmi</p>
        </div>
@@ -110,8 +110,9 @@ export default function BillsPage() {
 
       <div className="space-y-6 lg:space-y-8 relative z-10">
        <div className="group">
-        <label className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block mb-4 group-focus-within:text-primary transition-colors">ID Pelanggan / Nomor Rekening</label>
+        <label htmlFor="bills-customer-id" className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block mb-4 group-focus-within:text-primary transition-colors">ID Pelanggan / Nomor Rekening</label>
         <Input
+         id="bills-customer-id"
          type="text"
          value={customerId}
          onChange={(e) => setCustomerId(e.target.value)}
@@ -121,10 +122,11 @@ export default function BillsPage() {
        </div>
 
        <div className="group">
-        <label className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block mb-4 group-focus-within:text-primary transition-colors">Jumlah Pembayaran (IDR)</label>
+        <label htmlFor="bills-amount" className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block mb-4 group-focus-within:text-primary transition-colors">Jumlah Pembayaran (IDR)</label>
         <div className="relative">
          <div className="absolute left-6 top-1/2 -translate-y-1/2 text-xl sm:text-2xl font-bold text-muted-foreground/30 pointer-events-none">Rp</div>
          <Input
+          id="bills-amount"
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
@@ -140,7 +142,7 @@ export default function BillsPage() {
       <Button type="primary"
        onClick={handlePay}
        disabled={paymentMutation.isPending}
-       className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20"
+       className="w-full h-16 rounded-2xl shadow-xl shadow-primary/20"
       >
        {paymentMutation.isPending ? 'Sedang Memproses...' : 'Konfirmasi & Bayar Sekarang'}
       </Button>

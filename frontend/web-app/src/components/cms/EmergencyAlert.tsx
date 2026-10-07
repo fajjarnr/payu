@@ -104,8 +104,8 @@ export default function EmergencyAlert({
 
   const getAlertClasses = (alert: Content) => {
     const type = alert.metadata?.alertType as string;
-    if (type === 'WARNING') return 'bg-amber-50 dark:bg-amber-950/30 border-amber-300';
-    if (type === 'INFO') return 'bg-blue-50 dark:bg-blue-950/30 border-blue-300';
+    if (type === 'WARNING') return 'bg-warning dark:bg-warning/30 border-warning';
+    if (type === 'INFO') return 'bg-primary-light dark:bg-secondary/30 border-primary';
     return '';
   };
 
@@ -145,7 +145,7 @@ export default function EmergencyAlert({
                 <Button
                   type="text"
                   shape="circle"
-                  className="absolute top-2 right-2 hover:bg-black/5 dark:hover:bg-white/5"
+                  className="absolute top-2 right-2 hover:bg-secondary/5 dark:hover:bg-surface/5"
                   style={{ width: 44, height: 44 }}
                   onClick={(e) => handleDismiss(alert.id, e)}
                   aria-label="Dismiss alert"
@@ -153,7 +153,7 @@ export default function EmergencyAlert({
                 />
               }
               className={clsx(
-                "relative p-4 pr-12 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 bg-background/50 backdrop-blur-md border-b-2",
+                "relative p-4 pr-12 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 bg-background/50 border-b-2",
                 getAlertClasses(alert),
                 alertType === 'default' && "border-primary/20"
               )}

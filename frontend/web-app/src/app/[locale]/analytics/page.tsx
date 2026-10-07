@@ -2,14 +2,15 @@
 
 /* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
 
+import dynamic from 'next/dynamic';
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { TrendingUp, TrendingDown, Calendar, ArrowUpRight, Activity, Wifi, WifiOff } from '@/components/icons';
 import clsx from 'clsx';
 import { useAnalyticsWebSocket, useCashFlow, useSpendingTrends } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { Column, Pie } from '@ant-design/plots';
-import { Button, Card } from 'antd';
+const Column = dynamic(() => import('@ant-design/plots').then(m => m.Column), { ssr: false });
+const Pie = dynamic(() => import('@ant-design/plots').then(m => m.Pie), { ssr: false });
 import { cn } from '@/lib/utils';
 
 export default function AnalyticsPage() {
@@ -24,8 +25,8 @@ export default function AnalyticsPage() {
   // no WS proxy exists in this environment), so seed the page from REST.
   // Live WS data takes precedence when present.
   const CATEGORY_COLORS = [
-    'bg-emerald-500', 'bg-blue-500', 'bg-amber-500',
-    'bg-violet-500', 'bg-rose-500', 'bg-slate-500',
+    'bg-primary', 'bg-primary', 'bg-warning',
+    'bg-accent', 'bg-error', 'bg-text-secondary',
   ];
   const restData =
     cashFlow || trends
@@ -80,7 +81,7 @@ export default function AnalyticsPage() {
           <div className="flex justify-between items-end">
             <div>
               <h2 className="text-3xl font-bold text-foreground tracking-tight">Intelijen Keuangan</h2>
-              <p className="text-sm text-gray-500 font-medium">Wawasan mendalam tentang kebiasaan pengeluaran dan pertumbuhan kekayaan Anda.</p>
+              <p className="text-sm text-text-secondary font-medium">Wawasan mendalam tentang kebiasaan pengeluaran dan pertumbuhan kekayaan Anda.</p>
             </div>
             <div className="flex items-center gap-4">
               <div className={clsx("flex items-center gap-2 px-4 py-2 rounded-xl border transition-all", isConnected ? "bg-success-light text-primary border-primary/10" : "bg-muted text-muted-foreground border-border")}>
@@ -89,7 +90,7 @@ export default function AnalyticsPage() {
                   {isConnected ? 'Live Update' : 'Offline'}
                 </span>
               </div>
-              <Button type="default" className="bg-gray-50 dark:bg-gray-900 border border-border px-6 py-3 rounded-xl font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-gray-100 transition-all shadow-sm">
+              <Button type="default" className="bg-surface-dim dark:bg-text-primary border border-border px-6 py-3 rounded-xl font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-surface-dim transition-all shadow-sm">
                 <Calendar className="h-4 w-4" /> Januari 2026
               </Button>
             </div>
@@ -104,17 +105,17 @@ export default function AnalyticsPage() {
             ].map((stat, i) => (
               <div key={i} className="bg-card p-5 sm:p-6 lg:p-8 rounded-xl border border-border shadow-sm group hover:shadow-xl hover:shadow-bank-green/5 transition-all duration-500">
                 <div className="flex justify-between items-start mb-6">
-                  <div className="h-12 w-12 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center border border-border group-hover:border-bank-green/20 transition-all">
-                    <stat.icon className={clsx("h-6 w-6", stat.isPos ? "text-bank-green" : "text-red-500")} />
+                  <div className="h-12 w-12 bg-surface-dim dark:bg-text-primary rounded-xl flex items-center justify-center border border-border group-hover:border-bank-green/20 transition-all">
+                    <stat.icon className={clsx("h-6 w-6", stat.isPos ? "text-bank-green" : "text-error")} />
                   </div>
                   <span className={clsx(
                     "text-xs font-bold px-3 py-1 rounded-full leading-none tracking-widest",
-                    stat.isPos ? "bg-bank-green/10 text-bank-green" : "bg-red-50 text-red-500"
+                    stat.isPos ? "bg-bank-green/10 text-bank-green" : "bg-error text-white"
                   )}>
                     {stat.change > 0 ? '+' : ''}{stat.change}%
                   </span>
                 </div>
-                <p className="text-xs font-bold text-gray-400 tracking-[0.2em] mb-2">{stat.label}</p>
+                <p className="text-xs font-bold text-text-disabled tracking-[0.2em] mb-2">{stat.label}</p>
                 <h3 className="text-2xl font-bold text-foreground">Rp {Number(stat.amount).toLocaleString('id-ID')}</h3>
               </div>
             ))}
@@ -127,16 +128,16 @@ export default function AnalyticsPage() {
                 <div className={cn("flex flex-col space-y-1.5 p-6", "flex flex-row items-center justify-between pb-6 relative z-10 p-6 sm:p-6 lg:p-8")}>
                   <div>
                     <h3 className={cn("text-2xl font-bold leading-none tracking-tight", "text-xl font-bold text-foreground")}>Trajektori Pengeluaran</h3>
-                    <p className={cn("text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]", "text-xs text-gray-400 font-bold tracking-widest mt-1 lowercase")}>Analisis arus kas harian periode ini</p>
+                    <p className={cn("text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]", "text-xs text-text-disabled font-bold tracking-widest mt-1 lowercase")}>Analisis arus kas harian periode ini</p>
                   </div>
                   <div className="flex gap-4">
                     <div className="flex items-center gap-2 px-4 py-2 bg-bank-green/10 rounded-xl border border-bank-green/10">
                       <div className="h-2 w-2 bg-bank-green rounded-full animate-pulse" />
                       <span className="text-xs font-bold text-bank-green tracking-widest uppercase">Masuk</span>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-border">
-                      <div className="h-2 w-2 bg-gray-400 rounded-full" />
-                      <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">Keluar</span>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-surface-dim dark:bg-text-primary rounded-xl border border-border">
+                      <div className="h-2 w-2 bg-text-disabled rounded-full" />
+                      <span className="text-xs font-bold text-text-disabled tracking-widest uppercase">Keluar</span>
                     </div>
                   </div>
                 </div>
@@ -186,7 +187,7 @@ export default function AnalyticsPage() {
                       />
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-                      <p className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-1">Total Keluar</p>
+                      <p className="text-xs font-bold text-text-disabled tracking-widest uppercase mb-1">Total Keluar</p>
                       <p className="text-2xl font-bold text-foreground">Rp {Number(analyticsData.totalExpenses).toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</p>
                     </div>
                   </div>
@@ -199,7 +200,7 @@ export default function AnalyticsPage() {
                           <span className="text-xs font-bold text-foreground tracking-widest uppercase">{cat.label}</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs font-bold text-gray-400 tracking-[0.1em]">Rp {Number(cat.amount).toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</span>
+                          <span className="text-xs font-bold text-text-disabled tracking-[0.1em]">Rp {Number(cat.amount).toLocaleString('id-ID', { notation: 'compact', compactDisplay: 'short' })}</span>
                           <span className="text-xs font-bold text-muted-foreground ml-1">({cat.percentage}%)</span>
                         </div>
                       </div>
@@ -211,15 +212,15 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 lg:p-8 relative overflow-hidden group shadow-2xl">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-surface/5 rounded-full blur-3xl -z-0" />
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="space-y-4 max-w-xl text-center md:text-left">
-                <h3 className="text-3xl font-bold text-white">Siap untuk menabung otomatis?</h3>
-                <p className="text-sm font-medium text-gray-400 leading-relaxed tracking-wide">
+                <h3 className="text-3xl font-bold text-surface">Siap untuk menabung otomatis?</h3>
+                <p className="text-sm font-medium text-text-disabled leading-relaxed tracking-wide">
                   Sistem AI kami mendeteksi Anda dapat menabung tambahan <span className="text-bank-green font-bold">Rp 2.500.000</span> setiap bulan dengan mengoptimalkan tagihan utilitas dan langganan berulang Anda.
                 </p>
               </div>
-              <Button type="primary" className="whitespace-nowrap bg-bank-green text-white px-8 py-4 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20">
+              <Button type="primary" className="whitespace-nowrap bg-bank-green text-surface px-8 py-4 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20">
                 Terapkan Optimasi
               </Button>
             </div>

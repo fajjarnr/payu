@@ -137,13 +137,13 @@ export default function CardsPage() {
                       {/* Digital Card Visualization */}
                       <div className="w-full max-w-[440px] aspect-[1.586/1] rounded-2xl relative overflow-hidden shadow-2xl group-hover:scale-[1.01] transition-all duration-700 border border-white/10">
                         <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-400" />
-                        <div className="absolute inset-0 bg-white/5 backdrop-blur-md" />
+                        <div className="absolute inset-0 bg-white/5" />
                         <div className="absolute -top-8 -right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
 
                         <div className="relative z-10 h-full p-5 sm:p-6 lg:p-8 flex flex-col justify-between text-white">
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-bold text-xl border border-white/20">U</div>
+                              <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold text-xl border border-white/20">U</div>
                               <span className="text-xl font-bold tracking-tighter">PayU</span>
                             </div>
                             <div className="h-2 w-2 bg-white rounded-full animate-pulse shadow-[0_0_15px_rgba(255,255,255,1)]" />
@@ -209,7 +209,7 @@ export default function CardsPage() {
                     <div className="relative z-10">
                       <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold">Limit Harian</h3>
-                        <Button shape="circle" className="h-10 w-10 bg-white/5 border-white/10 hover:bg-white/10"
+                        <Button shape="circle" className="min-h-[44px] min-w-[44px] bg-white/5 border-white/10 hover:bg-white/10"
                           onClick={handleOpenLimitModal}
                         >
                           <Sliders className="h-4 w-4 text-emerald-400" />
@@ -283,7 +283,7 @@ export default function CardsPage() {
                     </div>
                     <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
                       <span className="text-xs font-bold text-emerald-600 tracking-widest uppercase">Atur Izin</span>
-                      <Switch defaultChecked={item.status} />
+                      <Switch defaultChecked={item.status} aria-label={`Atur Izin ${item.label}`} />
                     </div>
                   </div>
                 ))}
@@ -326,8 +326,8 @@ export default function CardsPage() {
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Limit Harian (IDR)</label>
-              <Input
+              <label htmlFor="card-daily-limit" className="text-sm font-medium">Limit Harian (IDR)</label>
+              <Input id="card-daily-limit"
                 type="number"
                 value={limitForm.dailyLimit}
                 onChange={(e) => setLimitForm(prev => ({ ...prev, dailyLimit: parseInt(e.target.value) || 0 }))}
@@ -336,8 +336,8 @@ export default function CardsPage() {
               <p className="text-xs text-muted-foreground">Maksimum transaksi per hari</p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Limit Bulanan (IDR)</label>
-              <Input
+              <label htmlFor="card-monthly-limit" className="text-sm font-medium">Limit Bulanan (IDR)</label>
+              <Input id="card-monthly-limit"
                 type="number"
                 value={limitForm.monthlyLimit}
                 onChange={(e) => setLimitForm(prev => ({ ...prev, monthlyLimit: parseInt(e.target.value) || 0 }))}

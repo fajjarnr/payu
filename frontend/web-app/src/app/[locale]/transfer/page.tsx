@@ -110,7 +110,7 @@ export default function TransferPage() {
   const recentContacts: Array<{ name: string; initial: string; color: string; accountId: string }> = (beneficiaries ?? []).map((b) => ({
         name: b.nickname || b.accountName || b.accountNumber.slice(-4),
         initial: (b.nickname || b.accountName || 'B').charAt(0).toUpperCase(),
-        color: 'bg-emerald-100 text-emerald-600',
+        color: 'bg-primary-light text-primary-dark',
         accountId: b.accountNumber,
       }));
 
@@ -312,7 +312,7 @@ export default function TransferPage() {
                     onClick={() => form.submit()}
                     data-testid="confirm-transfer-button"
                     disabled={transferMutation.isPending}
-                    className="w-full h-16 rounded-2xl shadow-2xl shadow-emerald-500/20"
+                    className="w-full h-16 rounded-2xl shadow-2xl shadow-primary/20"
                   >
                     {transferMutation.isPending ? 'Memvalidasi Transaksi...' : 'Otorisasi Transfer Sekarang'}
                   </Button>
@@ -415,8 +415,8 @@ export default function TransferPage() {
 
                   {scheduleType === 'SCHEDULED' && (
                     <div className="mt-6 bg-muted/50 p-6 rounded-xl border border-border">
-                      <Form.Item name="scheduledAt" rules={[rule('scheduledAt')]} className="mb-0" label={<label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">Tanggal Transfer</label>}>
-                        <DatePicker
+                      <Form.Item name="scheduledAt" rules={[rule('scheduledAt')]} className="mb-0" label={<label htmlFor="transfer-scheduled-at" className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">Tanggal Transfer</label>}>
+                        <DatePicker id="transfer-scheduled-at"
                           className="w-full h-16 rounded-xl font-bold"
                           placeholder="Pilih Tanggal Transfer"
                           format="DD MMM YYYY"
@@ -430,11 +430,11 @@ export default function TransferPage() {
                   {scheduleType === 'RECURRING' && (
                     <div className="mt-8 space-y-6 lg:space-y-8 animate-fade-in">
                       <div className="space-y-4">
-                        <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2">Pilih Tanggal Tagihan / Transfer</label>
+                        <span id="recurring-day-label" className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2">Pilih Tanggal Tagihan / Transfer</span>
                         <Form.Item name="recurringDay" rules={[rule('recurringDay')]} className="mb-0" noStyle>
                           <Input type="hidden" />
                         </Form.Item>
-                            <div className="grid grid-cols-7 gap-2 bg-muted/30 p-4 rounded-xl border border-border">
+                            <div className="grid grid-cols-7 gap-2 bg-muted/30 p-4 rounded-xl border border-border" aria-labelledby="recurring-day-label">
                               {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
                                 <Button type="text" htmlType="button"
                                   key={d}
@@ -442,8 +442,8 @@ export default function TransferPage() {
                                   className={clsx(
                                     "aspect-square rounded-xl flex items-center justify-center font-bold text-sm transition-all active:scale-90",
                                     recurringDay === d
-                                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105"
-                                      : "bg-card text-foreground/60 hover:bg-emerald-500/10 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20"
+                                      ? "bg-primary text-surface shadow-lg shadow-primary/30 scale-105"
+                                      : "bg-card text-foreground/60 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20"
                                   )}
                                 >
                                   {d}
@@ -454,10 +454,10 @@ export default function TransferPage() {
 
                       <div className="space-y-4">
                         <div className="flex items-center justify-between ml-2">
-                          <label className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase">Pilih Bulan (Opsional)</label>
+                          <span id="recurring-month-label" className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase">Pilih Bulan (Opsional)</span>
                           <Button type="link" htmlType="button"
                             onClick={() => form.setFieldsValue({ recurringMonth: undefined })}
-                            className="text-xs font-bold text-emerald-600 tracking-widest uppercase hover:underline"
+                            className="text-xs font-bold text-primary-dark tracking-widest uppercase hover:underline"
                           >
                             Reset ke Setiap Bulan
                           </Button>
@@ -465,7 +465,7 @@ export default function TransferPage() {
                         <Form.Item name="recurringMonth" rules={[rule('recurringMonth')]} className="mb-0" noStyle>
                           <Input type="hidden" />
                         </Form.Item>
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 bg-muted/30 p-4 rounded-2xl border border-border">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 bg-muted/30 p-4 rounded-2xl border border-border" aria-labelledby="recurring-month-label">
                               {['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'].map((m, idx) => {
                                 const val = idx + 1;
                                 return (
@@ -475,8 +475,8 @@ export default function TransferPage() {
                                     className={clsx(
                                       "py-4 rounded-xl flex items-center justify-center font-bold text-xs tracking-widest transition-all active:scale-95",
                                       recurringMonth === val
-                                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
-                                        : "bg-card text-foreground/60 hover:bg-emerald-500/10 hover:text-emerald-500 border border-transparent hover:border-emerald-500/20"
+                                        ? "bg-primary text-surface shadow-lg shadow-primary/30"
+                                        : "bg-card text-foreground/60 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20"
                                     )}
                                   >
                                     {m}
@@ -491,7 +491,7 @@ export default function TransferPage() {
 
                 <div className="relative group">
                   <Form.Item name="toAccountId" rules={[rule('toAccountId')]} className="mb-0" noStyle>
-                    <Input data-testid="recipient-account-input" type="text" placeholder="Masukkan ID Akun atau Nomor Rekening" className="pl-16 h-16 text-lg" />
+                    <Input data-testid="recipient-account-input" type="text" placeholder="Masukkan ID Akun atau Nomor Rekening" className="pl-16 h-16 text-lg" aria-label="Nomor Rekening Penerima" />
                   </Form.Item>
                   <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors z-10 pointer-events-none" />
                 </div>
@@ -519,7 +519,7 @@ export default function TransferPage() {
                   <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-xl border border-border relative z-10">
                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3">Memo Transaksi</p>
                     <Form.Item name="description" rules={[rule('description')]} className="mb-0" noStyle>
-                      <Input data-testid="description-input" type="text" placeholder="Apa tujuan transfer ini?" className="w-full text-base font-bold bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/40 outline-none" />
+                      <Input data-testid="description-input" type="text" placeholder="Apa tujuan transfer ini?" className="w-full text-base font-bold bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/40 outline-none" aria-label="Memo Transaksi" />
                     </Form.Item>
                   </div>
                 </div>
@@ -529,7 +529,7 @@ export default function TransferPage() {
                     htmlType="button"
                     onClick={handleReview}
                     data-testid="review-transfer-button"
-                    className="w-full h-16 rounded-2xl shadow-xl shadow-emerald-500/20 group"
+                    className="w-full h-16 rounded-2xl shadow-xl shadow-primary/20 group"
                   >
                     Tinjau Ringkasan Transfer
                     <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-2 transition-transform" />
@@ -571,13 +571,13 @@ export default function TransferPage() {
                   </div>
 
                   <div className="mt-auto pt-10">
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl group">
+                    <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl group">
                       <div className="relative z-10">
                         <h4 className="font-bold text-xl mb-2">Bantuan?</h4>
-                        <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mb-8 leading-relaxed">Proteksi & panduan transaksi aman.</p>
-                        <Button type="default" htmlType="button" className="text-xs font-bold tracking-widest uppercase bg-white/10 px-6 py-3 rounded-xl border border-white/10 hover:bg-white/20 transition-all">Hubungi Kami</Button>
+                        <p className="text-xs text-text-disabled font-bold tracking-widest uppercase mb-8 leading-relaxed">Proteksi & panduan transaksi aman.</p>
+                        <Button type="default" htmlType="button" className="text-xs font-bold tracking-widest uppercase bg-surface/10 px-6 py-3 rounded-xl border border-surface/10 hover:bg-surface/20 transition-all">Hubungi Kami</Button>
                       </div>
-                      <LifeBuoy className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 rotate-12" />
+                      <LifeBuoy className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-surface/5 rotate-12" />
                     </div>
                   </div>
                 </div>

@@ -87,7 +87,7 @@ export default function MerchantRegisterPage() {
       <Building2 className="h-10 w-10 text-bank-green" />
      </div>
      <h1 className="text-4xl font-bold text-foreground ">Daftar Merchant Baru</h1>
-     <p className="text-sm text-gray-500 font-medium max-w-xl mx-auto">
+     <p className="text-sm text-gray-500 dark:text-text-secondary font-medium max-w-xl mx-auto">
       Bergabunglah dengan ekosistem pembayaran PayU dan terima pembayaran instan dari jutaan pengguna.
      </p>
     </div>
@@ -98,12 +98,12 @@ export default function MerchantRegisterPage() {
 
       <div className="relative z-10 space-y-8">
        <div>
-        <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
+        <label htmlFor="merchant-name" className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
          Nama Merchant
         </label>
         <div className="relative">
          <User className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-         <input
+         <input id="merchant-name"
           type="text"
           value={formData.name}
           onChange={(e) => handleChange('name', e.target.value)}
@@ -119,12 +119,12 @@ export default function MerchantRegisterPage() {
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-         <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
+         <label htmlFor="merchant-email" className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
           Email Bisnis
          </label>
          <div className="relative">
           <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
+          <input id="merchant-email"
            type="email"
            value={formData.email}
            onChange={(e) => handleChange('email', e.target.value)}
@@ -139,12 +139,12 @@ export default function MerchantRegisterPage() {
         </div>
 
         <div>
-         <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
+         <label htmlFor="merchant-phone" className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
           Nomor Telepon
          </label>
          <div className="relative">
           <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
+          <input id="merchant-phone"
            type="tel"
            value={formData.phone}
            onChange={(e) => handleChange('phone', e.target.value)}
@@ -200,12 +200,12 @@ export default function MerchantRegisterPage() {
       <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
       <div className="relative z-10 space-y-8">
        <div>
-        <label className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
+        <label htmlFor="merchant-public-key" className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
          Public Key (Opsional)
         </label>
         <div className="relative">
          <FileText className="absolute left-6 top-6 h-5 w-5 text-gray-400" />
-         <textarea
+         <textarea id="merchant-public-key"
           value={formData.publicKey}
           onChange={(e) => handleChange('publicKey', e.target.value)}
           placeholder="-----BEGIN PUBLIC KEY-----"
@@ -254,7 +254,7 @@ export default function MerchantRegisterPage() {
     <div className="text-center">
      <button
       onClick={() => router.push('/merchant')}
-      className="text-xs font-bold text-gray-400 tracking-widest hover:text-foreground transition-colors"
+      className="inline-flex items-center min-h-[44px] text-xs font-bold text-gray-400 tracking-widest hover:text-foreground transition-colors"
      >
       Kembali ke Dashboard Merchant
      </button>

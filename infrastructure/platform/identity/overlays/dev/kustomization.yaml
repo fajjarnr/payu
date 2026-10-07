@@ -13,7 +13,7 @@ resources:
   - identity-dev-secrets.yaml
   - ../../operator
 
-namespace: payu-dev
+namespace: payu-sso
 
 # Dev-specific patches
 patches:

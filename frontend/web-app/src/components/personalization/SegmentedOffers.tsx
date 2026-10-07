@@ -25,11 +25,11 @@ const OFFER_ICONS = {
 };
 
 const OFFER_STYLES = {
-  CASHBACK: 'from-amber-500 to-orange-600',
-  DISCOUNT: 'from-blue-500 to-indigo-600',
-  REWARD_POINTS: 'from-purple-500 to-pink-600',
-  FREE_TRANSFER: 'from-green-500 to-emerald-600',
-  BONUS_INTEREST: 'from-cyan-500 to-teal-600',
+  CASHBACK: 'from-warning to-accent',
+  DISCOUNT: 'from-primary to-secondary',
+  REWARD_POINTS: 'from-accent to-accent',
+  FREE_TRANSFER: 'from-success to-primary-dark',
+  BONUS_INTEREST: 'from-primary to-primary-dark',
 };
 
 export default function SegmentedOffers({ className, maxOffers = 3 }: SegmentedOffersProps) {
@@ -107,7 +107,7 @@ function OfferCard({ offer }: OfferCardProps) {
             'h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg',
             gradientStyle
           )}>
-            <Icon className="h-6 w-6 text-white" />
+            <Icon className="h-6 w-6 text-surface" />
           </div>
 
           {offer.promoCode && (
@@ -138,7 +138,7 @@ function OfferCard({ offer }: OfferCardProps) {
           <button
             disabled={!isValid}
             className={clsx(
-              'h-10 w-10 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95',
+              'min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95',
               isValid
                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
                 : 'bg-muted text-muted-foreground cursor-not-allowed'

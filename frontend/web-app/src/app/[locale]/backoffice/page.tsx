@@ -20,17 +20,17 @@ export default function BackofficeDashboard() {
   });
   const count = (list: unknown) => (Array.isArray(list) ? list.length : 0);
   const stats = [
-    { label: 'KYC Tertunda', value: String(count(kyc)), change: 'ANTRIAN', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Fraud Terbuka', value: String(count(fraud)), change: 'ANTRIAN', icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-    { label: 'Tiket Terbuka', value: String(count(tickets)), change: 'ANTRIAN', icon: Headphones, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'KYC Tertunda', value: String(count(kyc)), change: 'ANTRIAN', icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'Fraud Terbuka', value: String(count(fraud)), change: 'ANTRIAN', icon: AlertTriangle, color: 'text-error', bg: 'bg-error/10' },
+    { label: 'Tiket Terbuka', value: String(count(tickets)), change: 'ANTRIAN', icon: Headphones, color: 'text-primary', bg: 'bg-primary/10' },
   ];
 
   const quickLinks = [
-    { name: 'KYC Reviews', description: 'Review pending customer verifications', href: '/backoffice/kyc', icon: Users, color: 'bg-indigo-500' },
-    { name: 'Fraud Monitoring', description: 'Investigate suspicious activities', href: '/backoffice/fraud', icon: AlertTriangle, color: 'bg-rose-500' },
-    { name: 'Customer Ops', description: 'Manage support cases and inquiries', href: '/backoffice/customers', icon: Headphones, color: 'bg-blue-500' },
-    { name: 'CMS Content', description: 'Manage banners and dynamic content', href: '/backoffice/cms', icon: FileText, color: 'bg-emerald-500' },
-    { name: 'Audit Logs', description: 'Review system changes and audits', href: '/backoffice/compliance', icon: ClipboardCheck, color: 'bg-slate-500' },
+    { name: 'KYC Reviews', description: 'Review pending customer verifications', href: '/backoffice/kyc', icon: Users, color: 'bg-secondary' },
+    { name: 'Fraud Monitoring', description: 'Investigate suspicious activities', href: '/backoffice/fraud', icon: AlertTriangle, color: 'bg-error' },
+    { name: 'Customer Ops', description: 'Manage support cases and inquiries', href: '/backoffice/customers', icon: Headphones, color: 'bg-primary' },
+    { name: 'CMS Content', description: 'Manage banners and dynamic content', href: '/backoffice/cms', icon: FileText, color: 'bg-primary' },
+    { name: 'Audit Logs', description: 'Review system changes and audits', href: '/backoffice/compliance', icon: ClipboardCheck, color: 'bg-text-secondary' },
   ];
 
   return (
@@ -52,7 +52,7 @@ export default function BackofficeDashboard() {
                     <div className={`h-12 w-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
                       <stat.icon className="h-6 w-6" />
                     </div>
-                    <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">
                       {stat.change}
                     </span>
                   </div>
@@ -71,7 +71,7 @@ export default function BackofficeDashboard() {
                 <Link key={i} href={link.href} className="group">
                   <div className="bg-card p-5 sm:p-6 lg:p-8 rounded-2xl border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all h-full flex flex-col">
                     <div className="flex justify-between items-start mb-8">
-                      <div className={`h-14 w-14 rounded-xl ${link.color} text-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
+                      <div className={`h-14 w-14 rounded-xl ${link.color} text-surface flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
                         <link.icon className="h-7 w-7" />
                       </div>
                       <div className="h-10 w-10 bg-muted/50 rounded-lg flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">

@@ -80,9 +80,9 @@ export default function LanguageSwitcher() {
         aria-expanded={isOpen}
         className={clsx(
           'flex items-center gap-2 px-4 py-2.5 rounded-xl',
-          'text-xs font-bold tracking-widest border border-emerald-500/10 bg-card shadow-md',
-          'hover:bg-emerald-500/5 hover:border-emerald-500/30 text-foreground',
-          'focus:outline-none focus:ring-4 focus:ring-emerald-500/10',
+          'text-xs font-bold tracking-widest border border-primary/10 bg-card shadow-md',
+          'hover:bg-primary/5 hover:border-primary/30 text-foreground',
+          'focus:outline-none focus:ring-4 focus:ring-primary/10',
         )}
       >
         <Languages className="h-4 w-4" />

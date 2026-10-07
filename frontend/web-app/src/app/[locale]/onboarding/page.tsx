@@ -104,7 +104,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen w-full flex bg-background font-inter">
       {/* Left Panel - Branding */}
-      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-zinc-900 border-r border-border/10 p-5 sm:p-6 lg:p-8 relative overflow-hidden text-white" aria-label="Branding">
+      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-text-primary border-r border-border/10 p-5 sm:p-6 lg:p-8 relative overflow-hidden text-surface" aria-label="Branding">
         {/* Background Effects */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
@@ -112,8 +112,8 @@ export default function OnboardingPage() {
 
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-3 w-fit hover:opacity-80 transition-opacity" aria-label={t('back')}>
-            <ArrowLeft className="w-5 h-5 text-white/80" />
-            <span className="font-medium text-white">{t('back')}</span>
+            <ArrowLeft className="w-5 h-5 text-surface/80" />
+            <span className="font-medium text-surface">{t('back')}</span>
           </Link>
         </div>
 
@@ -125,30 +125,30 @@ export default function OnboardingPage() {
                 <h1 className="text-4xl font-bold leading-tight tracking-tight">
                     {t('branding.title')}
                 </h1>
-                <p className="text-zinc-200 leading-relaxed text-lg">
+                <p className="text-border leading-relaxed text-lg">
                     {t('branding.desc')}
                 </p>
             </div>
 
             <div className="space-y-6 pt-4">
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                    <Fingerprint className="w-6 h-6 text-primary/80 shrink-0 mt-1" aria-hidden="true" />
-                    <div>
-                        <h3 className="font-bold text-white mb-1">{t('branding.features.ekyc.title')}</h3>
-                        <p className="text-sm text-zinc-200">{t('branding.features.ekyc.desc')}</p>
-                    </div>
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-surface/5 border border-surface/10">
+                  <Fingerprint className="w-6 h-6 text-primary/80 shrink-0 mt-1" aria-hidden="true" />
+                  <div>
+                    <h3 className="font-bold text-surface mb-1">{t('branding.features.ekyc.title')}</h3>
+                    <p className="text-sm text-border">{t('branding.features.ekyc.desc')}</p>
+                  </div>
                 </div>
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                    <ShieldCheck className="w-6 h-6 text-primary/80 shrink-0 mt-1" aria-hidden="true" />
-                    <div>
-                        <h3 className="font-bold text-white mb-1">{t('branding.features.data.title')}</h3>
-                        <p className="text-sm text-zinc-300">{t('branding.features.data.desc')}</p>
-                    </div>
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-surface/5 border border-surface/10">
+                  <ShieldCheck className="w-6 h-6 text-primary/80 shrink-0 mt-1" aria-hidden="true" />
+                  <div>
+                    <h3 className="font-bold text-surface mb-1">{t('branding.features.data.title')}</h3>
+                    <p className="text-sm text-border">{t('branding.features.data.desc')}</p>
+                  </div>
                 </div>
             </div>
         </div>
 
-        <div className="relative z-10 flex items-center gap-2 text-zinc-300 text-xs font-mono">
+        <div className="relative z-10 flex items-center gap-2 text-border text-xs font-mono">
            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" aria-hidden="true" />
            {t('branding.system')} • v2.4.0
         </div>
@@ -196,7 +196,7 @@ export default function OnboardingPage() {
                         <div 
                             className={`border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4 ${
                                 !ktpFile 
-                                    ? 'border-red-400/40 hover:border-primary/50 bg-red-50/30 dark:border-red-400/30 dark:bg-red-950/20 dark:hover:bg-primary/10' 
+                                    ? 'border-error/40 hover:border-primary/50 bg-error/30 dark:border-error/30 dark:bg-error/20 dark:hover:bg-primary/10' 
                                     : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10'
                             }`}
                             tabIndex={0} 
@@ -217,7 +217,7 @@ export default function OnboardingPage() {
                                 <p className="font-bold text-foreground">{t('step1.clickToUpload')}</p>
                                 <p className="text-xs text-muted-foreground">{t('step1.formats')}</p>
                                 {ktpFile && (
-                                    <p className="text-xs text-emerald-600 font-medium">{ktpFile.name}</p>
+                                    <p className="text-xs text-primary-dark font-medium">{ktpFile.name}</p>
                                 )}
                             </div>
                         </div>
@@ -232,7 +232,7 @@ export default function OnboardingPage() {
                         </Button>
                         {!ktpFile && (
                             <p
-                                className="flex items-center gap-2 text-sm text-red-500 dark:text-red-400 font-medium"
+                                className="flex items-center gap-2 text-sm text-error dark:text-error font-medium"
                                 role="alert"
                             >
                                 <AlertCircle className="w-4 h-4 shrink-0" />

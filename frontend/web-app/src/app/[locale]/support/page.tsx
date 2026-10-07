@@ -12,8 +12,8 @@ export default function SupportPage() {
 
   const supportChannels = [
     { label: t('liveChat'), desc: t('liveChatDesc'), icon: MessageCircle, action: t('contactUs'), color: 'primary' },
-    { label: t('email'), desc: t('emailDesc'), icon: Mail, action: t('sendMessage'), color: 'blue-600' },
-    { label: t('phone'), desc: t('phoneDesc'), icon: Phone, action: t('callUs'), color: 'gray-900' },
+    { label: t('email'), desc: t('emailDesc'), icon: Mail, action: t('sendMessage'), color: 'secondary' },
+    { label: t('phone'), desc: t('phoneDesc'), icon: Phone, action: t('callUs'), color: 'text-primary' },
   ];
 
   const faqs = [
@@ -38,9 +38,9 @@ export default function SupportPage() {
                 <div key={i}>
                   <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
                     <div className={clsx(
-                      "h-20 w-20 mb-6 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110",
+                      "h-20 w-20 mb-6 rounded-2xl flex items-center justify-center text-surface shadow-lg transition-transform group-hover:scale-110",
                       channel.color === 'primary' ? "bg-primary shadow-primary/20" :
-                        channel.color === 'blue-600' ? "bg-emerald-600 shadow-emerald-600/20" : "bg-foreground shadow-foreground/10"
+                        channel.color === 'secondary' ? "bg-primary-dark shadow-primary-dark/20" : "bg-foreground shadow-foreground/10"
                     )}>
                       <channel.icon className="h-10 w-10" />
                     </div>
@@ -78,24 +78,22 @@ export default function SupportPage() {
             </div>
 
             <div className="mt-4">
-              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl group">
+              <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl group">
                 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-left">
                   <div className="space-y-6 max-w-2xl">
                     <h3 className="text-3xl font-bold">Integritas Sistem Aktif.</h3>
                     <div className="flex flex-wrap justify-center lg:justify-start gap-3">
                       {['Gateway', 'Backend', 'Database', 'Streaming'].map((svc, i) => (
-                        <div key={i} className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/10 shadow-sm backdrop-blur-md">
-                          <span className="text-xs font-bold tracking-widest uppercase">{svc}: —</span>
-                        </div>
+                        <div key={i} className="flex items-center gap-2 bg-surface/10 px-4 py-2 rounded-xl border border-surface/10 shadow-sm">
                       ))}
                     </div>
-                    <p className="text-sm text-gray-400 font-medium pt-2 leading-relaxed">Status infrastruktur belum tersedia. Hubungi tim operasional untuk informasi real-time.</p>
+                    <p className="text-sm text-text-disabled font-medium pt-2 leading-relaxed">Status infrastruktur belum tersedia. Hubungi tim operasional untuk informasi real-time.</p>
                   </div>
                   <Button type="primary" className="w-full lg:w-auto h-16 px-10 shadow-2xl shadow-bank-green/20">
                       Cek Detail Infrastruktur
                     </Button>
                 </div>
-                <LifeBuoy className="absolute bottom-[-60px] right-[-60px] h-72 w-72 text-white/5 -rotate-12 group-hover:rotate-12 transition-transform duration-[3000ms]" />
+                <LifeBuoy className="absolute bottom-[-60px] right-[-60px] h-72 w-72 text-surface/5 -rotate-12 group-hover:rotate-12 transition-transform duration-[3000ms]" />
               </div>
             </div>
         </div>

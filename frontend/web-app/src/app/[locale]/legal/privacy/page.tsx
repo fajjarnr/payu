@@ -11,7 +11,7 @@ export default function PrivacyPage() {
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <Shield className="h-7 w-7 text-white" />
+              <Shield className="h-7 w-7 text-surface" />
             </div>
             <div>
               <h2 className="text-3xl font-bold text-foreground tracking-tight">Kebijakan Privasi</h2>

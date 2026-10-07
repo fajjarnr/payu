@@ -60,7 +60,7 @@ export default function QRISPage() {
         <div className="flex justify-between items-end">
           <div>
             <h2 className="text-3xl font-bold text-foreground ">Pembayaran QRIS</h2>
-            <p className="text-sm text-gray-500 font-medium">Pindai kode QRIS merchant atau P2P untuk membayar secara instan.</p>
+            <p className="text-sm text-gray-500 dark:text-text-secondary font-medium">Pindai kode QRIS merchant atau P2P untuk membayar secara instan.</p>
           </div>
         </div>
 
@@ -178,7 +178,7 @@ export default function QRISPage() {
                     <QrCode className="h-7 w-7 text-emerald-500/40" />
                 </div>
                 
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 mb-6 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
+                <div className="bg-white/5 rounded-2xl p-5 sm:p-6 lg:p-8 mb-6 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
                    <QrCode className={`h-32 w-32 transition-all ${showMyQr ? 'text-emerald-400 scale-105' : 'text-white/20'}`} />
                    {!showMyQr && (
                      <div className="absolute inset-0 flex items-center justify-center">

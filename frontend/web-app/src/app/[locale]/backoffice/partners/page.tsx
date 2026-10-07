@@ -59,11 +59,11 @@ export default function PartnersPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return <Badge count="Active" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-emerald-500/10 [&_sup]:text-emerald-500 [&_sup]:border [&_sup]:border-emerald-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Active" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-primary/10 [&_sup]:text-primary [&_sup]:border [&_sup]:border-primary/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'UNDER_REVIEW':
-        return <Badge count="Reviewing" color="gold" className="uppercase tracking-widest text-xs [&_sup]:bg-amber-500/10 [&_sup]:text-amber-500 [&_sup]:border [&_sup]:border-amber-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Reviewing" color="gold" className="uppercase tracking-widest text-xs [&_sup]:bg-warning/10 [&_sup]:text-warning [&_sup]:border [&_sup]:border-warning/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'SUSPENDED':
-        return <Badge count="Suspended" color="red" className="uppercase tracking-widest text-xs [&_sup]:bg-rose-500/10 [&_sup]:text-rose-500 [&_sup]:border [&_sup]:border-rose-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Suspended" color="red" className="uppercase tracking-widest text-xs [&_sup]:bg-error/10 [&_sup]:text-error [&_sup]:border [&_sup]:border-error/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       default:
         return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">{status}</span>;
     }
@@ -94,7 +94,7 @@ export default function PartnersPage() {
       key: 'api',
       title: 'API Integration',
       render: (_, partner) => (
-        <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold border-blue-500/20 text-blue-500 font-bold uppercase tracking-widest gap-1.5">
+        <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold border-primary/20 text-primary font-bold uppercase tracking-widest gap-1.5">
           <ShieldCheck className="h-3 w-3" />
           {partner.apiLevel}
         </span>
@@ -116,9 +116,9 @@ export default function PartnersPage() {
       align: 'right',
       render: () => (
         <div className="flex items-center justify-end gap-2">
-          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<ExternalLink className="h-4 w-4" />} />
-          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<Settings className="h-4 w-4" />} />
-          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<ExternalLink className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Settings className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} />
         </div>
       ),
     },
@@ -130,13 +130,13 @@ export default function PartnersPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Total Partners', value: isLoading ? '…' : String(partners.length), color: 'bg-emerald-500', icon: Store },
-              { label: 'Active Merchants', value: isLoading ? '…' : String(activeCount), color: 'bg-blue-500', icon: CheckCircle2 },
-              { label: 'Pending Apps', value: isLoading ? '…' : String(pendingCount), color: 'bg-amber-500', icon: AlertCircle },
-              { label: 'SNAP BI Volume', value: '—', color: 'bg-indigo-500', icon: Globe },
+              { label: 'Total Partners', value: isLoading ? '…' : String(partners.length), color: 'bg-primary', icon: Store },
+              { label: 'Active Merchants', value: isLoading ? '…' : String(activeCount), color: 'bg-primary', icon: CheckCircle2 },
+              { label: 'Pending Apps', value: isLoading ? '…' : String(pendingCount), color: 'bg-warning', icon: AlertCircle },
+              { label: 'SNAP BI Volume', value: '—', color: 'bg-secondary', icon: Globe },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
                 <div>
@@ -154,6 +154,7 @@ export default function PartnersPage() {
               <div className="relative flex-1 lg:w-96 flex items-center">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                 <Input
+                  aria-label="Cari mitra berdasarkan nama atau ID"
                   placeholder="Search partners by name or ID..."
                   className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
                   value={searchTerm}
@@ -167,7 +168,7 @@ export default function PartnersPage() {
                 <Key className="h-4 w-4" />
                 Manage API Keys
               </Button>
-              <Button type="primary" className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
+              <Button type="primary" className="h-12 px-6 rounded-xl bg-primary-dark hover:bg-primary text-surface font-bold text-xs tracking-widest uppercase gap-2">
                 <Plus className="h-4 w-4" />
                 Register New Partner
               </Button>
@@ -191,11 +192,11 @@ export default function PartnersPage() {
                 Partner Portal & SNAP BI Registry Syncing
               </p>
               <div className="flex items-center gap-2">
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
-                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
+                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
                   1
                 </div>
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
               </div>
             </div>
           </div>

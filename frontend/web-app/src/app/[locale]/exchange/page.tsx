@@ -157,8 +157,8 @@ export default function ExchangePage() {
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6">
                       {/* From Currency */}
                       <div className="flex-1">
-                        <Form.Item name="fromCurrency" rules={[rule('fromCurrency')]} className="mb-0" label={<label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">From Currency</label>}>
-                          <Select
+                        <Form.Item name="fromCurrency" rules={[rule('fromCurrency')]} className="mb-0" label={<label htmlFor="exchange-from-currency" className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">From Currency</label>}>
+                          <Select id="exchange-from-currency"
                             value={fromCurrency}
                             onChange={(v) => form.setFieldsValue({ fromCurrency: v as ExchangeRequest['fromCurrency'] })}
                             className="w-full"
@@ -182,8 +182,8 @@ export default function ExchangePage() {
 
                       {/* To Currency */}
                       <div className="flex-1">
-                        <Form.Item name="toCurrency" rules={[rule('toCurrency')]} className="mb-0" label={<label className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">To Currency</label>}>
-                          <Select
+                        <Form.Item name="toCurrency" rules={[rule('toCurrency')]} className="mb-0" label={<label htmlFor="exchange-to-currency" className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">To Currency</label>}>
+                          <Select id="exchange-to-currency"
                             value={toCurrency}
                             onChange={(v) => form.setFieldsValue({ toCurrency: v as ExchangeRequest['toCurrency'] })}
                             className="w-full"
@@ -197,7 +197,7 @@ export default function ExchangePage() {
                     {/* Amount Input */}
                     <div className="space-y-4 mb-6">
                       <div className="flex justify-between items-center">
-                        <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
+                        <label htmlFor="exchange-amount" className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
                           Amount
                         </label>
                         {isLoadingRate && fromCurrency !== toCurrency && (
@@ -209,7 +209,7 @@ export default function ExchangePage() {
                       </div>
                       <Form.Item name="amount" rules={[rule('amount')]} className="mb-0">
                       <div className="relative group">
-                        <Input
+                        <Input id="exchange-amount"
                           type="number"
                           step="any"
                           min="0"
@@ -353,8 +353,8 @@ export default function ExchangePage() {
                       Market Status
                     </h3>
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
-                      <span className="text-xs font-bold text-emerald-600 tracking-widest uppercase">Live</span>
+                      <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
+                      <span className="text-xs font-bold text-primary-dark tracking-widest uppercase">Live</span>
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -402,8 +402,8 @@ export default function ExchangePage() {
                       {recentConversions.map((conversion) => {
                         const fromInfo = SUPPORTED_CURRENCIES[conversion.fromCurrency];
                         const toInfo = SUPPORTED_CURRENCIES[conversion.toCurrency];
-                        const statusColor = conversion.status === 'COMPLETED' ? 'text-emerald-500' :
-                                           conversion.status === 'PENDING' ? 'text-amber-500' :
+                        const statusColor = conversion.status === 'COMPLETED' ? 'text-primary' :
+                                           conversion.status === 'PENDING' ? 'text-warning' :
                                            conversion.status === 'FAILED' ? 'text-destructive' : 'text-muted-foreground';
 
                         return (
@@ -441,16 +441,16 @@ export default function ExchangePage() {
                 </div>
 
                 {/* Help Card */}
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
+                <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-2xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
                   <div className="absolute bottom-[-20px] right-[-20px] opacity-10">
                     <TrendingUp className="h-32 w-32" />
                   </div>
                   <div className="relative z-10">
                     <h3 className="font-bold text-lg mb-2">Need Help?</h3>
-                    <p className="text-xs text-gray-400 font-bold tracking-widest uppercase mb-6">
+                    <p className="text-xs text-text-disabled font-bold tracking-widest uppercase mb-6">
                       Currency exchange support
                     </p>
-                    <Button type="default" className="text-xs font-bold tracking-widest uppercase bg-white/10 px-6 py-3 rounded-xl border border-white/10 hover:bg-white/20 transition-all">
+                    <Button type="default" className="text-xs font-bold tracking-widest uppercase bg-surface/10 px-6 py-3 rounded-xl border border-surface/10 hover:bg-surface/20 transition-all">
                       Contact Support
                     </Button>
                   </div>

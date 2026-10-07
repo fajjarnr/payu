@@ -58,9 +58,9 @@ export default function BudgetTracking({
       case 'safe':
         return 'bg-success-light text-primary';
       case 'warning':
-        return 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-600';
+        return 'bg-warning dark:bg-warning/30 text-secondary';
       case 'danger':
-        return 'bg-orange-50 dark:bg-orange-950/30 text-orange-600';
+        return 'bg-accent dark:bg-accent/30 text-white';
       case 'exceeded':
         return 'bg-destructive/10 text-destructive';
       default:
@@ -73,9 +73,9 @@ export default function BudgetTracking({
       case 'safe':
         return 'bg-primary';
       case 'warning':
-        return 'bg-yellow-500';
+        return 'bg-warning';
       case 'danger':
-        return 'bg-orange-500';
+        return 'bg-accent';
       case 'exceeded':
         return 'bg-destructive';
       default:
@@ -242,10 +242,10 @@ export default function BudgetTracking({
                       <DetailItem label="Persentase" value={`${budget.percentage.toFixed(1)}%`} currency="" locale={locale} isPercentage />
                     </div>
                     <div className="flex gap-2">
-                      <Button aria-label={`Edit anggaran ${budget.category}`} type="default" size="small" className="flex-1 h-10 text-xs font-bold uppercase tracking-widest bg-muted/30">
+                      <Button aria-label={`Edit anggaran ${budget.category}`} type="default" size="small" className="flex-1 min-h-[44px] text-xs font-bold uppercase tracking-widest bg-muted/30">
                         <Edit className="h-3.5 w-3.5 mr-2" />Edit
                       </Button>
-                      <Button aria-label={`Hapus anggaran ${budget.category}`} type="default" size="small" danger className="flex-1 h-10 text-xs font-bold uppercase tracking-widest text-destructive hover:text-white hover:bg-destructive">
+                      <Button aria-label={`Hapus anggaran ${budget.category}`} type="default" size="small" danger className="flex-1 min-h-[44px] text-xs font-bold uppercase tracking-widest text-destructive hover:text-surface hover:bg-destructive">
                         <Trash2 className="h-3.5 w-3.5 mr-2" />Hapus
                       </Button>
                     </div>
@@ -279,7 +279,7 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, currency, locale, color, textColor }: SummaryCardProps) {
   return (
-    <div className={clsx('p-4 rounded-2xl border border-white/5 shadow-sm', color)}>
+    <div className={clsx('p-4 rounded-2xl border border-surface/5 shadow-sm', color)}>
       <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">{label}</p>
       <p className={clsx('text-base sm:text-lg font-bold tabular-nums tracking-tight', textColor)}>
         {currency} {value.toLocaleString(locale)}

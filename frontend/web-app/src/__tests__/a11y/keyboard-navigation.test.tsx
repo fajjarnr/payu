@@ -154,7 +154,7 @@ describe('Keyboard Navigation - WCAG 2.1 AA Compliance', () => {
     it('should have visible focus indicators on interactive elements', async () => {
       const { container } = render(
         <>
-          <button className="focus:ring-2 focus:ring-emerald-500">Button 1</button>
+          <button className="focus:ring-2 focus:ring-primary">Button 1</button>
           <button className="focus:outline-none focus:ring-2">Button 2</button>
           <a href="#" className="focus:underline focus:ring-2">Link</a>
         </>

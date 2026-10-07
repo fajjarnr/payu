@@ -38,52 +38,52 @@ export default function CustomerCaseDetailPage() {
 
  return (
   <div className="space-y-6">
-   <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+   <div className="bg-surface shadow overflow-hidden sm:rounded-lg">
     <div className="px-4 py-5 sm:px-6">
-     <h3 className="text-lg leading-6 font-medium text-gray-900">Customer Case: {customerCase.caseNumber}</h3>
-     <p className="mt-1 max-w-2xl text-sm text-gray-500">
+     <h3 className="text-lg leading-6 font-medium text-text-primary">Customer Case: {customerCase.caseNumber}</h3>
+     <p className="mt-1 max-w-2xl text-sm text-text-secondary">
       {customerCase.subject}
      </p>
     </div>
-    <div className="border-t border-gray-200">
+    <div className="border-t border-border">
      <dl>
-      <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500">User ID</dt>
-       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{customerCase.userId}</dd>
+      <div className="bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+       <dt className="text-sm font-medium text-text-secondary">User ID</dt>
+       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.userId}</dd>
       </div>
-       <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500">Case Type</dt>
-       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{customerCase.caseType}</dd>
+       <div className="bg-surface px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+       <dt className="text-sm font-medium text-text-secondary">Case Type</dt>
+       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.caseType}</dd>
       </div>
-       <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500">Priority</dt>
-       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{customerCase.priority}</dd>
+       <div className="bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+       <dt className="text-sm font-medium text-text-secondary">Priority</dt>
+       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.priority}</dd>
       </div>
-       <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500">Description</dt>
-       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-wrap">{customerCase.description}</dd>
+       <div className="bg-surface px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+       <dt className="text-sm font-medium text-text-secondary">Description</dt>
+       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2 whitespace-pre-wrap">{customerCase.description}</dd>
       </div>
-      <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500">Current Status</dt>
-       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{customerCase.status}</dd>
+      <div className="bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+       <dt className="text-sm font-medium text-text-secondary">Current Status</dt>
+       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.status}</dd>
       </div>
-       <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500">Latest Notes</dt>
-       <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{customerCase.notes}</dd>
+       <div className="bg-surface px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+       <dt className="text-sm font-medium text-text-secondary">Latest Notes</dt>
+       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.notes}</dd>
       </div>
      </dl>
     </div>
    </div>
 
-   <div className="bg-white shadow sm:rounded-lg p-6">
-    <h4 className="text-lg font-medium text-gray-900 mb-4">Update Case</h4>
+   <div className="bg-surface shadow sm:rounded-lg p-6">
+    <h4 className="text-lg font-medium text-text-primary mb-4">Update Case</h4>
      <div className="mb-4">
-      <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+      <label htmlFor="status" className="block text-sm font-medium text-text-primary">
        New Status
       </label>
       <select
        id="status"
-       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+       className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
        value={newStatus}
        onChange={(e) => setNewStatus(e.target.value as CustomerCaseStatus)}
       >
@@ -96,13 +96,13 @@ export default function CustomerCaseDetailPage() {
       </select>
      </div>
     <div className="mb-4">
-     <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+     <label htmlFor="notes" className="block text-sm font-medium text-text-primary">
       Notes
      </label>
      <textarea
       id="notes"
       rows={3}
-      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
+      className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
       value={updateNotes}
       onChange={(e) => setUpdateNotes(e.target.value)}
      />
@@ -114,7 +114,7 @@ export default function CustomerCaseDetailPage() {
       }
      }}
      disabled={mutation.isPending || !newStatus}
-     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-emerald-300"
+     className="inline-flex items-center min-h-[44px] px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-surface bg-primary-dark hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-primary-light"
     >
      Update Case
     </button>

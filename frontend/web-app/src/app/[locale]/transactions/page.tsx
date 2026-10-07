@@ -26,16 +26,16 @@ import { addCurrency, formatCurrency } from '@/lib/currency';
 import type { Transaction, TransactionFilters, TransactionStatus, TransactionType } from '@/types';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  PENDING: { label: 'Menunggu', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
-  VALIDATING: { label: 'Divalidasi', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Clock },
-  PROCESSING: { label: 'Diproses', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: RotateCcw },
-  COMPLETED: { label: 'Selesai', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: CheckCircle2 },
-  FAILED: { label: 'Gagal', color: 'bg-red-500/10 text-red-600 border-red-500/20', icon: XCircle },
-  CANCELLED: { label: 'Dibatalkan', color: 'bg-gray-500/10 text-gray-600 border-gray-500/20', icon: X },
+  PENDING: { label: 'Menunggu', color: 'bg-warning/10 text-warning border-warning/20', icon: Clock },
+  VALIDATING: { label: 'Divalidasi', color: 'bg-warning/10 text-warning border-warning/20', icon: Clock },
+  PROCESSING: { label: 'Diproses', color: 'bg-primary/10 text-secondary border-primary/20', icon: RotateCcw },
+  COMPLETED: { label: 'Selesai', color: 'bg-primary/10 text-primary-dark border-primary/20', icon: CheckCircle2 },
+  FAILED: { label: 'Gagal', color: 'bg-error/10 text-error border-error/20', icon: XCircle },
+  CANCELLED: { label: 'Dibatalkan', color: 'bg-text-secondary/10 text-text-secondary border-text-secondary/20', icon: X },
   // RELAY-014: enum gained these (ADR-0028/0030) — missing entries crashed the
   // whole page (reading 'icon' of undefined) on any held/step-up row.
-  PENDING_COMPLIANCE_REVIEW: { label: 'Tinjauan AML', color: 'bg-orange-500/10 text-orange-600 border-orange-500/20', icon: AlertCircle },
-  PENDING_STEP_UP: { label: 'Butuh Verifikasi', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20', icon: AlertCircle },
+  PENDING_COMPLIANCE_REVIEW: { label: 'Tinjauan AML', color: 'bg-accent/10 text-accent border-accent/20', icon: AlertCircle },
+  PENDING_STEP_UP: { label: 'Butuh Verifikasi', color: 'bg-accent/10 text-accent border-accent/20', icon: AlertCircle },
 };
 
 const typeConfig: Record<string, { label: string; icon: typeof ArrowLeftRight }> = {
@@ -192,7 +192,7 @@ export default function TransactionsPage() {
             ],
           }}
         >
-          <Button type="text" shape="circle" className="h-9 w-9 rounded-xl" icon={<MoreHorizontal className="h-4 w-4" />} aria-label="Opsi transaksi" />
+          <Button type="text" shape="circle" className="min-h-[44px] min-w-[44px] rounded-xl" icon={<MoreHorizontal className="h-4 w-4" />} aria-label="Opsi transaksi" />
         </Dropdown>
       ),
     },
@@ -287,8 +287,8 @@ export default function TransactionsPage() {
             <>
               <Card className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center">
-                      <ArrowUpRight className="h-6 w-6 text-red-500" />
+                    <div className="h-12 w-12 rounded-xl bg-error/10 flex items-center justify-center">
+                      <ArrowUpRight className="h-6 w-6 text-error" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Total Keluar</p>
@@ -302,8 +302,8 @@ export default function TransactionsPage() {
             <>
               <Card className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                      <Clock className="h-6 w-6 text-blue-500" />
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-primary" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Menunggu</p>
@@ -317,8 +317,8 @@ export default function TransactionsPage() {
             <>
               <Card className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                      <CheckCircle2 className="h-6 w-6 text-purple-500" />
+                    <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                      <CheckCircle2 className="h-6 w-6 text-accent" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Selesai</p>
@@ -407,7 +407,7 @@ export default function TransactionsPage() {
                                 type="text"
                                 danger
                                 size="small"
-                                className="w-full text-red-600 hover:text-red-600 hover:bg-red-50"
+                                className="w-full text-error hover:text-white hover:bg-error"
                                 onClick={() => handleCancelClick(transaction)}
                               >
                                 <X className="h-4 w-4 mr-2" />
@@ -462,7 +462,7 @@ export default function TransactionsPage() {
       </>
 
       {/* Cancel Confirmation Dialog */}
-      <Modal open={isCancelDialogOpen} onCancel={() => setIsCancelDialogOpen(false)} footer={null} centered width={512} title={<Typography.Title level={4} className="!mb-1 flex items-center gap-2"><AlertCircle className="h-5 w-5 text-red-500" />Batalkan Transaksi?</Typography.Title>}>
+      <Modal open={isCancelDialogOpen} onCancel={() => setIsCancelDialogOpen(false)} footer={null} centered width={512} title={<Typography.Title level={4} className="!mb-1 flex items-center gap-2"><AlertCircle className="h-5 w-5 text-error" />Batalkan Transaksi?</Typography.Title>}>
         <div>
           <Typography.Text type="secondary">
             Apakah Anda yakin ingin membatalkan transaksi ini? Tindakan ini tidak dapat dibatalkan.

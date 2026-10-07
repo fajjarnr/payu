@@ -130,7 +130,7 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
 
       {/* Investment CTA - Full Width */}
       <div className="lg:col-span-12">
-       <div className="card-gradient rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 text-primary-foreground relative overflow-hidden group shadow-card border border-white/10">
+       <div className="card-gradient rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 text-primary-foreground relative overflow-hidden group shadow-card border border-surface/10">
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
          <div className="space-y-6 text-center lg:text-left">
           <h3 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold uppercase tracking-tight leading-none">{t('futureTitle')}</h3>
@@ -139,13 +139,13 @@ function Dashboard({ username, handleLogout }: { username: string; handleLogout:
           </p>
          </div>
          <div className="shrink-0 transition-transform hover:scale-105 active:scale-95">
-          <Link href="/investments" className="bg-white text-emerald-600 px-10 py-5 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all shadow-2xl flex items-center gap-3 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-white/30">
+          <Link href="/investments" className="bg-surface text-primary-dark px-10 py-5 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all shadow-2xl flex items-center gap-3 hover:bg-primary-light focus:outline-none focus:ring-4 focus:ring-white/30">
            {t('startInvesting')} <ChevronRight className="h-6 w-6" />
           </Link>
          </div>
         </div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition-transform duration-1000" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-surface/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition-transform duration-1000" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
        </div>
       </div>
      </div>

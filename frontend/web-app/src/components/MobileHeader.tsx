@@ -16,7 +16,7 @@ export default function MobileHeader({
   const router = useRouter();
 
   return (
-    <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border px-4 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-card/80 border-b border-border px-4 h-16 flex items-center justify-between">
       <div className="flex items-center gap-3">
         {showBack && (
           <Button

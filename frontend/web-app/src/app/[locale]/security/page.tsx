@@ -110,15 +110,15 @@ export default function SecurityPage() {
                     </p>
                     <div className="flex items-center justify-between p-5 bg-muted/20 rounded-xl border border-border group-hover:border-primary/20 transition-all">
                       <span className="text-xs font-bold text-foreground tracking-widest uppercase">Status Keamanan: {hasBiometric ? 'Aktif' : 'Non-aktif'}</span>
-                       <Switch checked={hasBiometric} onChange={handleBiometricToggle} />
+                       <Switch checked={hasBiometric} onChange={handleBiometricToggle} aria-label="Status Keamanan Biometrik" />
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden group h-full">
                   <div className="flex items-center gap-4 mb-6 relative z-10">
-                    <div className="h-16 w-16 bg-blue-500/10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
-                      <Key className="h-8 w-8 text-blue-600" />
+                    <div className="h-16 w-16 bg-primary/10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
+                      <Key className="h-8 w-8 text-secondary" />
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-foreground">Token Perangkat</h3>
@@ -141,9 +141,9 @@ export default function SecurityPage() {
               <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6 relative z-10">
                   <h3 className="text-xl font-bold text-foreground">Sesi Terautentikasi</h3>
-                  <div className="flex items-center gap-3 px-4 py-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                    <ShieldAlert className="h-4 w-4 text-amber-600 animate-pulse" />
-                    <span className="text-xs font-bold text-amber-700 tracking-widest uppercase">Deteksi Sesi Tidak Normal</span>
+                  <div className="flex items-center gap-3 px-4 py-2 bg-warning/10 rounded-xl border border-warning/20">
+                    <ShieldAlert className="h-4 w-4 text-warning animate-pulse" />
+                    <span className="text-xs font-bold text-warning tracking-widest uppercase">Deteksi Sesi Tidak Normal</span>
                   </div>
                 </div>
 
@@ -165,7 +165,7 @@ export default function SecurityPage() {
                           <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mt-0.5">{session.location} • {session.status}</p>
                         </div>
                       </div>
-                      <Button type="text" danger className="sm:mt-0 mt-4 text-xs font-bold text-destructive tracking-widest uppercase hover:bg-destructive/5 px-4 h-10 border border-transparent hover:border-destructive/10 whitespace-nowrap">Putuskan Sesi</Button>
+                      <Button type="text" danger className="sm:mt-0 mt-4 text-xs font-bold text-destructive tracking-widest uppercase hover:bg-destructive/5 px-4 min-h-[44px] border border-transparent hover:border-destructive/10 whitespace-nowrap">Putuskan Sesi</Button>
                     </div>
                   )))}
                 </div>
@@ -173,17 +173,17 @@ export default function SecurityPage() {
             </div>
 
             <div className="mt-8">
-              <div className="bg-destructive rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-card group">
+              <div className="bg-destructive rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-card group">
                 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
                   <div className="text-center lg:text-left space-y-4">
                     <h3 className="text-3xl font-bold">Protokol Panic.</h3>
-                    <p className="text-sm font-medium text-white/70 max-w-xl leading-relaxed">Membekukan semua dompet, menonaktifkan kartu virtual, dan mencabut semua sesi aktif secara instan. Gunakan hanya jika akun Anda dalam bahaya besar.</p>
+                    <p className="text-sm font-medium text-surface/70 max-w-xl leading-relaxed">Membekukan semua dompet, menonaktifkan kartu virtual, dan mencabut semua sesi aktif secara instan. Gunakan hanya jika akun Anda dalam bahaya besar.</p>
                   </div>
-                    <Button className="w-full lg:w-auto px-12 h-16 rounded-xl shadow-2xl text-destructive hover:bg-white bg-white">
+                    <Button className="w-full lg:w-auto px-12 h-16 rounded-xl shadow-2xl text-destructive hover:bg-surface bg-surface">
                       Inisialisasi Lockdown Global
                     </Button>
                 </div>
-                <Lock className="absolute bottom-[-60px] right-[-60px] h-72 w-72 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
+                <Lock className="absolute bottom-[-60px] right-[-60px] h-72 w-72 text-surface/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
               </div>
             </div>
         </div>

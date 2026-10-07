@@ -119,12 +119,12 @@ export default function BackofficeLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-24 bg-card/50 backdrop-blur-3xl border-b border-border sticky top-0 z-30">
+        <header className="h-24 bg-card/50 border-b border-border sticky top-0 z-30">
           <div className="px-8 h-full flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Button
                 type="text"
-                className="h-10 w-10 p-0 lg:hidden"
+                className="min-h-[44px] min-w-[44px] p-0 lg:hidden"
                 onClick={() => setIsSidebarOpen(true)}
                 icon={<Menu className="h-6 w-6" />}
               />
@@ -142,6 +142,7 @@ export default function BackofficeLayout({
               <div className="hidden xl:flex items-center bg-muted/30 rounded-xl px-4 w-80 gap-3 border border-border focus-within:border-primary/30 transition-all">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
+                  aria-label="Pencarian Universal Admin"
                   type="text"
                   placeholder="Universal Admin Search..."
                   className="bg-transparent border-none focus-visible:ring-0 text-xs font-bold uppercase tracking-widest w-full h-12"

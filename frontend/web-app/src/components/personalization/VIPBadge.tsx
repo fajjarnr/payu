@@ -40,16 +40,16 @@ export default function VIPBadge({
     return (
       <div
         className={clsx(
-          'bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 rounded-xl p-4',
+          'bg-gradient-to-br from-warning/10 to-accent/10 border border-warning/20 rounded-xl p-4',
           className
         )}
       >
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <Icon className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-warning to-accent flex items-center justify-center">
+              <Icon className="h-5 w-5 text-surface" />
             </div>
-            <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-card animate-pulse" />
+            <div className="absolute -top-1 -right-1 h-3 w-3 bg-success rounded-full border-2 border-card animate-pulse" />
           </div>
 
           <div>
@@ -89,7 +89,7 @@ export default function VIPBadge({
   return (
     <Badge
       className={clsx(
-        'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-lg shadow-amber-500/20 font-bold tracking-widest uppercase py-1',
+        'bg-gradient-to-r from-warning to-accent hover:from-warning hover:to-accent text-surface border-none shadow-lg shadow-warning/20 font-bold tracking-widest uppercase py-1',
         size === 'sm' ? 'px-2 h-6 text-xs' : size === 'md' ? 'px-3 h-8 text-xs' : 'px-4 h-10 text-xs',
         className
       )}

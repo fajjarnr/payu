@@ -120,6 +120,14 @@ export default function BannerCarousel({
               <div
                 className="relative overflow-hidden rounded-2xl shadow-2xl shadow-bank-green/20 aspect-[1.8/1] sm:aspect-[2.5/1] md:aspect-[3.2/1] cursor-pointer group/item"
                 onClick={() => handleBannerClick(banner)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleBannerClick(banner);
+                  }
+                }}
               >
                 {/* Background Image */}
                 <div className="absolute inset-0 transition-transform duration-1000 group-hover/item:scale-105">
@@ -138,7 +146,7 @@ export default function BannerCarousel({
                 {/* Content */}
                 <div className="relative z-10 h-full flex flex-col justify-center p-5 sm:p-8 lg:p-10">
                   <div className="max-w-xl">
-                    <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-xs font-bold tracking-[0.2em] rounded-full mb-4 backdrop-blur-md uppercase border border-white/20">
+                    <span className="inline-block px-4 py-1.5 bg-bank-green/90 text-white text-xs font-bold tracking-[0.2em] rounded-full mb-4 uppercase border border-white/20">
                       PROMO
                     </span>
                     <h3 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 leading-[1.1] tracking-tight uppercase">
@@ -156,10 +164,10 @@ export default function BannerCarousel({
         {/* Navigation - Premium styling */}
         {banners.length > 1 && (
           <div className="hidden sm:block">
-            <Button type="text" shape="circle" icon={<ChevronLeft className="h-4 w-4" />} aria-label="Previous banner" onClick={(e) => { e.preventDefault(); carouselRef.current?.prev(); }} disabled={current <= 0} className="absolute left-2 top-1/2 z-10 -translate-y-1/2 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-95 cursor-pointer disabled:cursor-not-allowed border border-border bg-background shadow-sm hover:bg-muted hover:text-foreground hover:border-border h-10 w-10 p-0 left-6 h-12 w-12 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300">
+            <Button type="text" shape="circle" icon={<ChevronLeft className="h-4 w-4" />} aria-label="Previous banner" onClick={(e) => { e.preventDefault(); carouselRef.current?.prev(); }} disabled={current <= 0} className="absolute left-2 top-1/2 z-10 -translate-y-1/2 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-95 cursor-pointer disabled:cursor-not-allowed border border-border bg-background shadow-sm hover:bg-muted hover:text-foreground hover:border-border h-12 w-12 p-0 left-6 bg-white/10 hover:bg-white/20 border-white/20 text-white opacity-0 group-hover/carousel:opacity-100 transition-all duration-300">
               <span className="sr-only">Previous</span>
             </Button>
-            <Button type="text" shape="circle" icon={<ChevronRight className="h-4 w-4" />} aria-label="Next banner" onClick={(e) => { e.preventDefault(); carouselRef.current?.next(); }} disabled={current >= banners.length - 1} className="absolute right-2 top-1/2 z-10 -translate-y-1/2 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all focus-visible:outline-none focus-visible:ring-1 focus:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-95 cursor-pointer disabled:cursor-not-allowed border border-border bg-background shadow-sm hover:bg-muted hover:text-foreground hover:border-border h-10 w-10 p-0 right-6 h-12 w-12 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-md opacity-0 group-hover/carousel:opacity-100 transition-all duration-300">
+            <Button type="text" shape="circle" icon={<ChevronRight className="h-4 w-4" />} aria-label="Next banner" onClick={(e) => { e.preventDefault(); carouselRef.current?.next(); }} disabled={current >= banners.length - 1} className="absolute right-2 top-1/2 z-10 -translate-y-1/2 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-xs font-bold uppercase tracking-[0.15em] transition-all focus-visible:outline-none focus-visible:ring-1 focus:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-95 cursor-pointer disabled:cursor-not-allowed border border-border bg-background shadow-sm hover:bg-muted hover:text-foreground hover:border-border h-12 w-12 p-0 right-6 bg-white/10 hover:bg-white/20 border-white/20 text-white opacity-0 group-hover/carousel:opacity-100 transition-all duration-300">
               <span className="sr-only">Next</span>
             </Button>
           </div>

@@ -15,45 +15,45 @@ import { axeConfig } from './setup';
 
 const TestComponents = {
   PrimaryButton: () => (
-    <button className="bg-emerald-500 text-white px-4 py-2 rounded">
+    <button className="bg-primary text-surface px-4 py-2 rounded">
       Primary Action
     </button>
   ),
 
   SecondaryButton: () => (
-    <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded">
+    <button className="bg-border text-text-primary px-4 py-2 rounded">
       Secondary Action
     </button>
   ),
 
   DarkModeText: () => (
-    <div className="bg-gray-950 text-white p-4">
+    <div className="bg-text-primary text-surface p-4">
       <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-gray-300">Welcome back to PayU</p>
+      <p className="text-border">Welcome back to PayU</p>
     </div>
   ),
 
   ErrorMessage: () => (
-    <div className="bg-red-50 text-red-700 p-3 rounded border border-red-200">
+    <div className="bg-error text-white p-3 rounded border border-error">
       Error: Invalid credentials
     </div>
   ),
 
   SuccessMessage: () => (
-    <div className="bg-emerald-50 text-emerald-700 p-3 rounded border border-emerald-200">
+    <div className="bg-primary-light text-primary-dark p-3 rounded border border-primary-light">
       Success: Transaction completed
     </div>
   ),
 
   LinkText: () => (
-    <a href="#" className="text-emerald-600 hover:text-emerald-700 underline">
+    <a href="#" className="text-primary-dark hover:text-primary-dark underline">
       Learn more about PayU
     </a>
   ),
 
   // Lower contrast is acceptable for disabled elements
   DisabledButton: () => (
-    <button disabled className="bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed">
+    <button disabled className="bg-border text-text-secondary px-4 py-2 rounded cursor-not-allowed">
       Disabled Action
     </button>
   ),
@@ -63,7 +63,7 @@ const TestComponents = {
     <input
       type="text"
       placeholder="Enter your name"
-      className="border border-gray-300 px-3 py-2 rounded text-gray-900 placeholder-gray-400"
+      className="border border-border px-3 py-2 rounded text-text-primary placeholder-text-disabled"
     />
   ),
 };
@@ -155,14 +155,14 @@ describe('Color Contrast - WCAG 2.1 AA Compliance', () => {
 describe('Color Contrast - Common UI Patterns', () => {
   it('should pass contrast checks on card components', async () => {
     const Card = () => (
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+      <div className="bg-surface dark:bg-text-primary rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-text-primary dark:text-surface">
           Account Balance
         </h2>
-        <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
+        <p className="text-3xl font-bold text-primary-dark dark:text-primary mt-2">
           Rp 1.000.000
         </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-text-secondary dark:text-text-disabled mt-1">
           Last updated: Today
         </p>
       </div>
@@ -175,11 +175,11 @@ describe('Color Contrast - Common UI Patterns', () => {
 
   it('should pass contrast checks on navigation', async () => {
     const Navigation = () => (
-      <nav className="bg-gray-950 text-white px-4 py-3">
+      <nav className="bg-text-primary text-surface px-4 py-3">
         <ul className="flex space-x-6">
-          <li><span className="text-white hover:text-emerald-400 cursor-pointer">Home</span></li>
-          <li><span className="text-gray-300 hover:text-emerald-400 cursor-pointer">Transfer</span></li>
-          <li><span className="text-gray-300 hover:text-emerald-400 cursor-pointer">History</span></li>
+          <li><span className="text-surface hover:text-primary cursor-pointer">Home</span></li>
+          <li><span className="text-border hover:text-primary cursor-pointer">Transfer</span></li>
+          <li><span className="text-border hover:text-primary cursor-pointer">History</span></li>
         </ul>
       </nav>
     );
@@ -191,30 +191,30 @@ describe('Color Contrast - Common UI Patterns', () => {
 
   it('should pass contrast checks on form elements', async () => {
     const Form = () => (
-      <form className="space-y-4 bg-white p-6 rounded-lg">
+      <form className="space-y-4 bg-surface p-6 rounded-lg">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-text-primary">
             Email Address
           </label>
           <input
             id="email"
             type="email"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm text-gray-900"
+            className="mt-1 block w-full border border-border rounded-md shadow-sm text-text-primary"
           />
         </div>
         <div>
-          <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="amount" className="block text-sm font-medium text-text-primary">
             Amount
           </label>
           <input
             id="amount"
             type="number"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm text-gray-900"
+            className="mt-1 block w-full border border-border rounded-md shadow-sm text-text-primary"
           />
         </div>
         <button
           type="submit"
-          className="w-full bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-emerald-700"
+          className="w-full bg-primary-dark text-surface py-2 px-4 rounded-md hover:bg-primary-dark"
         >
           Submit
         </button>

@@ -68,8 +68,8 @@ export default function FinancialHealthScore({
       return {
         label: t('financialHealthExcellent'),
         description: 'Kesehatan finansial Anda sangat baik. Pertahankan kebiasaan baik ini!',
-        color: 'text-emerald-600',
-        bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+        color: 'text-primary-dark',
+        bgColor: 'bg-primary-light dark:bg-primary-dark/30',
         icon: CheckCircle2,
       };
     }
@@ -86,8 +86,8 @@ export default function FinancialHealthScore({
       return {
         label: t('financialHealthFair'),
         description: 'Kesehatan finansial Anda cukup. Pertimbangkan untuk mengurangi pengeluaran.',
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
+        color: 'text-secondary dark:text-warning',
+        bgColor: 'bg-warning dark:bg-warning/30',
         icon: Info,
       };
     }
@@ -95,8 +95,8 @@ export default function FinancialHealthScore({
       return {
         label: t('financialHealthPoor'),
         description: 'Kesehatan finansial Anda kurang. Segera tinjau kembali anggaran Anda.',
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-50 dark:bg-orange-950/30',
+        color: 'text-white dark:text-accent',
+        bgColor: 'bg-accent dark:bg-accent/30',
         icon: AlertCircle,
       };
     }
@@ -140,7 +140,7 @@ export default function FinancialHealthScore({
           <div
             className={cn(
               'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm',
-              isImprovement ? 'bg-emerald-500/10 text-emerald-500' : 'bg-destructive/10 text-destructive'
+              isImprovement ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
             )}
             role="status"
             aria-live="polite"
@@ -220,9 +220,9 @@ export default function FinancialHealthScore({
             ))
           ) : (
             <>
-              <ScoreFactor label="Tabungan" value={0} color="bg-emerald-500" ariaLabel="Faktor tabungan" />
-              <ScoreFactor label="Investasi" value={0} color="bg-emerald-400" ariaLabel="Faktor investasi" />
-              <ScoreFactor label="Pengeluaran" value={0} color="bg-emerald-300" ariaLabel="Faktor pengeluaran" />
+              <ScoreFactor label="Tabungan" value={0} color="bg-primary" ariaLabel="Faktor tabungan" />
+              <ScoreFactor label="Investasi" value={0} color="bg-primary" ariaLabel="Faktor investasi" />
+              <ScoreFactor label="Pengeluaran" value={0} color="bg-primary-light" ariaLabel="Faktor pengeluaran" />
             </>
           )}
         </div>

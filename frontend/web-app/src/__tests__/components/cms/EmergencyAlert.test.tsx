@@ -145,7 +145,7 @@ describe('EmergencyAlert', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
 
     const warningAlert = container.textContent?.includes('System Maintenance')
-      ? container.querySelector('.bg-amber-50')
+      ? container.querySelector('.bg-warning')
       : null;
 
     expect(warningAlert).toBeInTheDocument();
@@ -155,7 +155,7 @@ describe('EmergencyAlert', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
 
     const infoAlert = container.textContent?.includes('New Feature Available')
-      ? container.querySelector('.bg-blue-50')
+      ? container.querySelector('.bg-primary-light')
       : null;
 
     expect(infoAlert).toBeInTheDocument();
@@ -260,10 +260,10 @@ describe('EmergencyAlert', () => {
     expect(screen.getAllByRole('alert')).toHaveLength(mockAlerts.length);
   });
 
-  it('should have backdrop blur effect', () => {
+  it('should have semi-transparent background', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
 
-    const alertContainer = container.querySelector('.backdrop-blur-md');
+    const alertContainer = container.querySelector('.bg-background\\/50');
     expect(alertContainer).toBeInTheDocument();
   });
 

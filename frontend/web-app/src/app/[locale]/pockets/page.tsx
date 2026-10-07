@@ -231,12 +231,12 @@ export default function PocketsPage() {
                                         type="default"
                                         className="bg-muted lg:bg-card text-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest border border-border shadow-lg hover:bg-muted/80 transition-all flex items-center gap-2 uppercase"
                                     >
-                                        <Users className="h-4 w-4 text-emerald-500" /> Kantong Bersama
+                                        <Users className="h-4 w-4 text-primary" /> Kantong Bersama
                                     </Button>
                                     <Button
                                         type="primary"
                                         onClick={() => setIsCreateModalOpen(true)}
-                                        className="bg-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-emerald-500/20 flex items-center gap-2 hover:bg-emerald-500 transition-all uppercase"
+                                        className="bg-primary-dark text-surface px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-primary/20 flex items-center gap-2 hover:bg-primary transition-all uppercase"
                                     >
                                         <Plus className="h-4 w-4" /> Tambah Kantong
                                     </Button>
@@ -246,19 +246,19 @@ export default function PocketsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
                             <div className="md:col-span-12 lg:col-span-8">
                                 <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col justify-between min-h-[280px] lg:min-h-[320px] relative overflow-hidden group shadow-2xl">
-                                    <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -z-0" />
+                                    <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-0" />
 
                                     <div className="relative z-10 flex flex-col h-full">
                                         <div className="flex justify-between items-start mb-6">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <div className="h-2 w-2 bg-emerald-500 rounded-full shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
-                                                    <p className="text-xs font-bold text-emerald-500 tracking-widest uppercase">Dompet Aktif</p>
+                                                    <div className="h-2 w-2 bg-primary rounded-full shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
+                                                    <p className="text-xs font-bold text-primary tracking-widest uppercase">Dompet Aktif</p>
                                                 </div>
                                                 <h3 className="text-3xl font-bold text-foreground">Kantong Utama Cair</h3>
                                             </div>
                                             <div className="h-12 w-12 bg-muted/50 rounded-xl flex items-center justify-center border border-border transition-transform group-hover:scale-110 shadow-inner">
-                                                <Wallet className="h-6 w-6 text-emerald-500" />
+                                                <Wallet className="h-6 w-6 text-primary" />
                                             </div>
                                         </div>
 
@@ -275,14 +275,14 @@ export default function PocketsPage() {
                                     </div>
 
                                     <div className="absolute bottom-6 right-6">
-                                        <Button type="text" icon={<ArrowUpRight className="h-6 w-6" />} className="p-4 bg-emerald-600/10 text-emerald-500 rounded-xl shadow-sm border border-emerald-500/20 hover:bg-emerald-600 hover:text-white transition-all active:scale-95" />
+                                        <Button type="text" icon={<ArrowUpRight className="h-6 w-6" />} className="p-4 bg-primary-dark/10 text-primary rounded-xl shadow-sm border border-primary/20 hover:bg-primary-dark hover:text-surface transition-all active:scale-95" />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-6">
                                 <div className="bg-card p-5 sm:p-6 lg:p-8 rounded-2xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group min-h-[180px]">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl" />
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
                                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1 opacity-60">Protokol Cadangan</p>
                                     <p className="text-2xl font-bold text-foreground tabular-nums">{formatCurrency(balance?.reservedBalance ?? '0', { locale: bcp47Locale })}</p>
                                     <div className="h-1.5 w-full bg-muted rounded-full mt-4 overflow-hidden shadow-inner">
@@ -291,25 +291,23 @@ export default function PocketsPage() {
                                           const avail = Number(balance?.availableBalance ?? 0);
                                           const tot = res + avail;
                                           const pct = tot > 0 ? Math.min(100, Math.round((res / tot) * 100)) : 0;
-                                          return <div className="h-full bg-emerald-500/40" style={{ width: `${pct}%` }} />;
+                                          return <div className="h-full bg-primary/40" style={{ width: `${pct}%` }} />;
                                         })()}
                                     </div>
                                 </div>
-                                <div className="bg-gray-900 p-5 sm:p-6 lg:p-8 rounded-2xl text-white relative overflow-hidden shadow-2xl group flex flex-col justify-between min-h-[180px] border border-white/5">
+                                <div className="bg-text-primary p-5 sm:p-6 lg:p-8 rounded-2xl text-surface relative overflow-hidden shadow-2xl group flex flex-col justify-between min-h-[180px] border border-surface/5">
                                     <div className="relative z-10 flex items-center gap-4 mb-6">
-                                        <div className="h-12 w-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/10 backdrop-blur-md">
-                                            <ShieldCheck className="h-6 w-6 text-emerald-500" />
-                                        </div>
+                                        <div className="h-12 w-12 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
                                         <div>
                                             <h3 className="text-sm font-bold">Keamanan Tier-1</h3>
-                                            <p className="text-xs text-gray-400 font-bold tracking-widest uppercase opacity-60">OJK & ASPI Compliant</p>
+                                            <p className="text-xs text-text-disabled font-bold tracking-widest uppercase opacity-60">OJK & ASPI Compliant</p>
                                         </div>
                                     </div>
                                     <div className="relative z-10">
-                                        <p className="text-xs font-bold text-white/20 tracking-widest uppercase mb-1">Status Enkripsi</p>
-                                        <p className="text-xs font-mono text-emerald-500/80">RESP-V3 ACTIVE</p>
+                                        <p className="text-xs font-bold text-surface/20 tracking-widest uppercase mb-1">Status Enkripsi</p>
+                                        <p className="text-xs font-mono text-primary/80">RESP-V3 ACTIVE</p>
                                     </div>
-                                    <Coins className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/[0.03] -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
+                                    <Coins className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-surface/[0.03] -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
                                 </div>
                             </div>
                         </div>
@@ -340,7 +338,7 @@ export default function PocketsPage() {
                                                     <div className="flex items-center gap-3">
                                                         <div className={clsx(
                                                             "h-10 w-10 rounded-xl flex items-center justify-center",
-                                                            pocket.status === 'FROZEN' ? "bg-yellow-500/10 text-yellow-500" : "bg-emerald-500/10 text-emerald-500"
+                                                            pocket.status === 'FROZEN' ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary"
                                                         )}>
                                                             {pocket.type === 'GOAL' ? <Target className="h-5 w-5" /> : <Wallet className="h-5 w-5" />}
                                                         </div>
@@ -357,16 +355,16 @@ export default function PocketsPage() {
                                                         menu={{
                                                             className: 'w-48',
                                                             items: [
-                                                                { key: 'credit', label: <span className="flex items-center gap-2"><ArrowDownLeft className="h-4 w-4 mr-2 text-emerald-500" />Tambah Dana</span>, onClick: () => openCreditModal(pocket) },
-                                                                { key: 'debit', label: <span className="flex items-center gap-2"><ArrowUpRight className="h-4 w-4 mr-2 text-blue-500" />Ambil Dana</span>, onClick: () => openDebitModal(pocket) },
+                                                                { key: 'credit', label: <span className="flex items-center gap-2"><ArrowDownLeft className="h-4 w-4 mr-2 text-primary" />Tambah Dana</span>, onClick: () => openCreditModal(pocket) },
+                                                                { key: 'debit', label: <span className="flex items-center gap-2"><ArrowUpRight className="h-4 w-4 mr-2 text-primary" />Ambil Dana</span>, onClick: () => openDebitModal(pocket) },
                                                                 pocket.status === 'ACTIVE'
-                                                                    ? { key: 'freeze', label: <span className="flex items-center gap-2"><Lock className="h-4 w-4 mr-2 text-yellow-500" />Bekukan</span>, onClick: () => handleFreeze(pocket.id) }
-                                                                    : { key: 'unfreeze', label: <span className="flex items-center gap-2"><UnlockIcon className="h-4 w-4 mr-2 text-emerald-500" />Aktifkan</span>, onClick: () => handleUnfreeze(pocket.id) },
+                                                                    ? { key: 'freeze', label: <span className="flex items-center gap-2"><Lock className="h-4 w-4 mr-2 text-warning" />Bekukan</span>, onClick: () => handleFreeze(pocket.id) }
+                                                                    : { key: 'unfreeze', label: <span className="flex items-center gap-2"><UnlockIcon className="h-4 w-4 mr-2 text-primary" />Aktifkan</span>, onClick: () => handleUnfreeze(pocket.id) },
                                                                 { key: 'close', danger: true, label: <span className="flex items-center gap-2"><Trash2 className="h-4 w-4 mr-2" />Tutup Kantong</span>, onClick: () => openCloseModal(pocket) },
                                                             ],
                                                         }}
                                                     >
-                                                        <Button type="text" aria-label="Opsi kantong" icon={<MoreVertical className="h-4 w-4 text-muted-foreground" />} className="p-2 hover:bg-muted rounded-lg transition-colors" />
+                                                        <Button type="text" aria-label="Opsi kantong" icon={<MoreVertical className="h-4 w-4 text-muted-foreground" />} className="min-h-[44px] min-w-[44px] hover:bg-muted rounded-lg transition-colors" />
                                                     </Dropdown>
                                                 </div>
 
@@ -377,7 +375,7 @@ export default function PocketsPage() {
                                                     </div>
                                                     {pocket.target && (
                                                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                                                            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${Math.min(percentage, 100)}%` }} />
+                                                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${Math.min(percentage, 100)}%` }} />
                                                         </div>
                                                     )}
                                                     <div className="flex items-center justify-between pt-2">
@@ -591,7 +589,7 @@ export default function PocketsPage() {
                                                                     )}>
                                                                         {member.role}
                                                                     </span>
-                                                                    <Button type="text" icon={<MoreVertical className="h-3 w-3 text-muted-foreground" />} className="p-1 hover:bg-muted rounded transition-colors" />
+                                                                    <Button type="text" icon={<MoreVertical className="h-3 w-3 text-muted-foreground" />} className="min-h-[44px] min-w-[44px] hover:bg-muted rounded transition-colors" />
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -606,20 +604,20 @@ export default function PocketsPage() {
 
                         <div className="mt-8">
                             <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 relative overflow-hidden group shadow-card">
-                                <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
+                                <div className="absolute top-0 right-0 w-80 h-80 bg-surface/5 rounded-full blur-3xl -z-0" />
                                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                                     <div className="space-y-4 max-w-xl text-center md:text-left">
                                         <div className="flex items-center justify-center md:justify-start gap-4">
                                             <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                                                <TrendingUp className="h-6 w-6 text-white" />
+                                                <TrendingUp className="h-6 w-6 text-surface" />
                                             </div>
                                             <h3 className="text-2xl sm:text-3xl font-bold">Akselerasi Kekayaan Anda.</h3>
                                         </div>
-                                        <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                                        <p className="text-sm text-text-disabled font-medium leading-relaxed">
                                             Pindahkan dana mengendap dari kantong ke reksa dana yield tinggi atau emas digital. AI kami menyarankan Anda bisa berhemat hingga <span className="text-bank-green font-bold">Rp 12,5 Juta</span> lebih per tahun.
                                         </p>
                                     </div>
-                                    <Button type="primary" className="whitespace-nowrap px-8 py-4 bg-bank-green text-white rounded-xl font-bold text-xs tracking-widest shadow-2xl shadow-bank-green/40 hover:bg-bank-emerald transition-all">
+                                    <Button type="primary" className="whitespace-nowrap px-8 py-4 bg-bank-green text-surface rounded-xl font-bold text-xs tracking-widest shadow-2xl shadow-bank-green/40 hover:bg-bank-emerald transition-all">
                                         Jelajahi Marketplace
                                     </Button>
                                 </div>
@@ -778,7 +776,7 @@ export default function PocketsPage() {
             <Modal open={isCloseModalOpen} onCancel={() => setIsCloseModalOpen(false)} footer={null} centered width={512} title={undefined}>
                 <div>
                     <div>
-                        <Typography.Title level={4} className="text-red-600 flex items-center gap-2">
+                        <Typography.Title level={4} className="text-error flex items-center gap-2">
                             <Trash2 className="h-5 w-5" />
                             Tutup Kantong?
                         </Typography.Title>
@@ -786,8 +784,8 @@ export default function PocketsPage() {
                             Apakah Anda yakin ingin menutup kantong &ldquo;{selectedPocketForAction?.name}&rdquo;? Dana yang tersisa akan dikembalikan ke dompet utama.
                         </Typography.Text>
                     </div>
-                    <div className="p-4 bg-red-50 rounded-xl border border-red-100">
-                        <p className="text-sm text-red-600 font-medium flex items-center gap-2"><TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" /> Tindakan ini tidak dapat dibatalkan</p>
+                    <div className="p-4 bg-error rounded-xl border border-error">
+                        <p className="text-sm text-error font-medium flex items-center gap-2"><TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" /> Tindakan ini tidak dapat dibatalkan</p>
                     </div>
                     <div>
                         <Button onClick={() => setIsCloseModalOpen(false)}>

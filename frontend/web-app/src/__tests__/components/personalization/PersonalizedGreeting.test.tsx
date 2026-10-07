@@ -64,7 +64,7 @@ describe('PersonalizedGreeting', () => {
       <PersonalizedGreeting showTimeBased={true} showSegment={false} />
     );
 
-    expect(container.querySelector('.from-amber-500')).toBeNull();
+    expect(container.querySelector('.from-warning')).toBeNull();
   });
 });
 

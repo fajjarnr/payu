@@ -51,25 +51,25 @@ export class ErrorBoundary extends Component<Props, State> {
    return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
      <div className="max-w-md w-full bg-card rounded-[3rem] p-10 border border-border shadow-sm text-center relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-error/5 rounded-full blur-3xl" />
 
       <div className="relative z-10">
-       <div className="h-20 w-20 bg-red-50 dark:bg-red-900/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-8 border border-red-100 dark:border-red-900/20">
-        <AlertTriangle className="h-10 w-10 text-red-500" />
+       <div className="h-20 w-20 bg-error dark:bg-error/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-8 border border-error dark:border-error/20">
+        <AlertTriangle className="h-10 w-10 text-error" />
        </div>
 
        <h2 className="text-2xl font-bold text-foreground  mb-4">
         Terjadi Kesalahan
        </h2>
        
-       <p className="text-sm text-gray-500 font-medium mb-8 leading-relaxed">
+       <p className="text-sm text-text-secondary font-medium mb-8 leading-relaxed">
         Maaf, terjadi kesalahan yang tidak terduga. Kami telah mencatat masalah ini dan sedang mengatasinya.
        </p>
 
        {process.env.NODE_ENV === 'development' && this.state.error && (
-        <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-4 mb-8 text-left border border-red-100 dark:border-red-900/20">
-         <p className="text-xs font-bold text-gray-400 tracking-widest mb-2">Detail Teknis</p>
-         <p className="text-xs text-red-600 dark:text-red-400 font-mono break-words">
+        <div className="bg-error dark:bg-error/10 rounded-2xl p-4 mb-8 text-left border border-error dark:border-error/20">
+         <p className="text-xs font-bold text-text-disabled tracking-widest mb-2">Detail Teknis</p>
+         <p className="text-xs text-error dark:text-error font-mono break-words">
           {this.state.error.message}
          </p>
         </div>
@@ -78,7 +78,7 @@ export class ErrorBoundary extends Component<Props, State> {
        <div className="space-y-3">
         <button
          onClick={this.handleRefresh}
-         className="w-full bg-foreground text-background py-5 rounded-[1.25rem] font-bold text-xs tracking-[0.2em] hover:bg-bank-green hover:text-white transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+         className="w-full bg-foreground text-background py-5 rounded-[1.25rem] font-bold text-xs tracking-[0.2em] hover:bg-bank-green hover:text-surface transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 cursor-pointer"
         >
          <RefreshCw className="h-4 w-4" />
          Muat Ulang Halaman
@@ -87,7 +87,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="flex gap-3">
          <button
           onClick={this.handleGoBack}
-          className="flex-1 bg-gray-50 dark:bg-gray-900 py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          className="flex-1 bg-surface-dim dark:bg-text-primary py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-surface-dim dark:hover:bg-text-primary transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
          >
           <ArrowLeft className="h-4 w-4" />
           Kembali
@@ -95,7 +95,7 @@ export class ErrorBoundary extends Component<Props, State> {
          
          <button
           onClick={this.handleGoHome}
-          className="flex-1 bg-gray-50 dark:bg-gray-900 py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          className="flex-1 bg-surface-dim dark:bg-text-primary py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-surface-dim dark:hover:bg-text-primary transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
          >
           <Home className="h-4 w-4" />
           Beranda
@@ -103,7 +103,7 @@ export class ErrorBoundary extends Component<Props, State> {
         </div>
        </div>
 
-       <p className="text-xs text-gray-400 font-bold tracking-widest mt-8">
+       <p className="text-xs text-text-disabled font-bold tracking-widest mt-8">
         Masalah berlanjut? Hubungi tim dukungan kami.
        </p>
       </div>

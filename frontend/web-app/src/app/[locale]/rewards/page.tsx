@@ -86,47 +86,47 @@ export default function RewardsPage() {
                 <div className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   <div className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
                         <div className="flex items-start justify-between mb-6">
                           <div>
                             <div className="flex items-center gap-3 mb-3">
-                              <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/10">
+                              <div className="h-12 w-12 bg-surface/20 rounded-xl flex items-center justify-center border border-surface/10">
                                 <Coins className="h-6 w-6" />
                               </div>
                               <div>
-                                <p className="text-xs font-bold text-white/80 tracking-widest uppercase">Saldo Poin</p>
+                                <p className="text-xs font-bold text-surface/80 tracking-widest uppercase">Saldo Poin</p>
                                 <h3 className="text-3xl font-bold">{loyaltyStats.currentBalance.toLocaleString()}</h3>
                               </div>
                             </div>
-                            <p className="text-sm text-white/80">Tukarkan poin Anda untuk berbagai hadiah menarik</p>
+                            <p className="text-sm text-surface/80">Tukarkan poin Anda untuk berbagai hadiah menarik</p>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6 mb-6">
                           <div>
-                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Total Diperoleh</p>
+                            <p className="text-xs font-bold text-surface/60 tracking-widest uppercase mb-1">Total Diperoleh</p>
                             <p className="text-2xl font-bold">{loyaltyStats.totalEarned.toLocaleString()}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Total Ditukar</p>
+                            <p className="text-xs font-bold text-surface/60 tracking-widest uppercase mb-1">Total Ditukar</p>
                             <p className="text-2xl font-bold">{loyaltyStats.totalRedeemed.toLocaleString()}</p>
                           </div>
                         </div>
 
                         {loyaltyStats.pointsExpiring > 0 && (
-                          <div className="bg-white/10 rounded-xl p-4 border border-white/10">
+                          <div className="bg-surface/10 rounded-xl p-4 border border-surface/10">
                             <div className="flex items-center gap-3">
                               <Calendar className="h-5 w-5 text-warning" />
                               <div>
-                                <p className="text-xs font-bold text-white/80 tracking-widest uppercase">Poin Akan Kadaluarsa</p>
+                                <p className="text-xs font-bold text-surface/80 tracking-widest uppercase">Poin Akan Kadaluarsa</p>
                                 <p className="font-bold">{loyaltyStats.pointsExpiring.toLocaleString()} poin - {loyaltyStats.expiryDate}</p>
                               </div>
                             </div>
                           </div>
                         )}
                       </div>
-                      <Trophy className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-white/5 -rotate-12" />
+                      <Trophy className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-surface/5 -rotate-12" />
                     </div>
                   </div>
 
@@ -218,29 +218,29 @@ export default function RewardsPage() {
                 <div className="mt-0 space-y-6 lg:space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-1">
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl h-full">
+                    <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl h-full">
                       <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-6">
-                          <div className="h-14 w-14 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                          <div className="h-14 w-14 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
                             <DollarSign className="h-7 w-7" />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-gray-400 tracking-widest uppercase">Total Cashback</p>
+                            <p className="text-xs font-bold text-text-disabled tracking-widest uppercase">Total Cashback</p>
                             <h3 className="text-4xl font-bold">{formatCurrency(cashbackTotal)}</h3>
                           </div>
                         </div>
                         <div className="space-y-4">
-                          <div className="flex justify-between items-center py-3 border-b border-white/10">
-                            <span className="text-sm text-gray-400">Dikreditkan</span>
+                          <div className="flex justify-between items-center py-3 border-b border-surface/10">
+                            <span className="text-sm text-text-disabled">Dikreditkan</span>
                             <span className="font-bold text-success-light">{formatCurrency(cashbackCredited)}</span>
                           </div>
-                          <div className="flex justify-between items-center py-3 border-b border-white/10">
-                            <span className="text-sm text-gray-400">Menunggu</span>
+                          <div className="flex justify-between items-center py-3 border-b border-surface/10">
+                            <span className="text-sm text-text-disabled">Menunggu</span>
                             <span className="font-bold text-warning">{formatCurrency(cashbackPending)}</span>
                           </div>
                           <div className="flex justify-between items-center pt-3">
-                            <span className="text-sm text-gray-400">Kadaluarsa</span>
-                            <span className="font-bold text-red-400">{formatCurrency(asMoney('0'))}</span>
+                            <span className="text-sm text-text-disabled">Kadaluarsa</span>
+                            <span className="font-bold text-error">{formatCurrency(asMoney('0'))}</span>
                           </div>
                         </div>
                       </div>
@@ -318,37 +318,37 @@ export default function RewardsPage() {
                   label: <span className="px-6 flex items-center gap-2"><Share2 className="h-4 w-4" /> Referral</span>,
                   children: (
                 <div className="mt-0 space-y-6 lg:space-y-8">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-white relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-6">
                           <h3 className="text-xl font-bold">Kode Referral Anda</h3>
-                          <div className="h-12 w-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                          <div className="h-12 w-12 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
                             <Gift className="h-6 w-6" />
                           </div>
                         </div>
 
-                        <div className="bg-white/10 rounded-xl p-6 mb-6 border border-white/10">
+                        <div className="bg-surface/10 rounded-xl p-6 mb-6 border border-surface/10">
                           <div className="flex items-center justify-between">
                             <span className="text-4xl font-bold tracking-widest">{referralStats.code}</span>
-                              <Button shape="circle" type="text" className="h-12 w-12 bg-white/10 rounded-lg border border-white/10 hover:bg-white/30 transition-all text-white">
+                              <Button shape="circle" type="text" className="h-12 w-12 bg-surface/10 rounded-lg border border-surface/10 hover:bg-surface/30 transition-all text-surface">
                                 <Copy className="h-6 w-6" />
                               </Button>
                           </div>
-                          <p className="text-sm text-white/80 mt-4">Bagikan kode ini kepada teman dan dapatkan {referralStats.rewardPerReferral} poin untuk setiap teman yang berhasil bergabung</p>
+                          <p className="text-sm text-surface/80 mt-4">Bagikan kode ini kepada teman dan dapatkan {referralStats.rewardPerReferral} poin untuk setiap teman yang berhasil bergabung</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                           <div>
-                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Total Teman</p>
+                            <p className="text-xs font-bold text-surface/60 tracking-widest uppercase mb-1">Total Teman</p>
                             <p className="text-2xl font-bold">{referralStats.totalReferrals}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-white/60 tracking-widest uppercase mb-1">Berhasil Bergabung</p>
+                            <p className="text-xs font-bold text-surface/60 tracking-widest uppercase mb-1">Berhasil Bergabung</p>
                             <p className="text-2xl font-bold text-success-light">{referralStats.completedReferrals}</p>
                           </div>
                         </div>
                       </div>
-                      <Share2 className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-white/5 -rotate-12" />
+                      <Share2 className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-surface/5 -rotate-12" />
                     </div>
 
                     <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">

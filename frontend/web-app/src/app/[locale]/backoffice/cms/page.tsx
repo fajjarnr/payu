@@ -30,9 +30,9 @@ export default function CMSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<string>('ALL');
   const contentMenuItems: MenuProps['items'] = [
-    { key: 'activate', label: (<span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest p-3"><CheckCircle2 className="h-4 w-4 text-emerald-500" />Activate</span>) },
-    { key: 'pause', label: (<span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest p-3"><Clock className="h-4 w-4 text-amber-500" />Pause</span>) },
-    { key: 'archive', label: (<span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest p-3 text-rose-500"><Trash2 className="h-4 w-4" />Archive</span>) },
+    { key: 'activate', label: (<span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest p-3"><CheckCircle2 className="h-4 w-4 text-primary" />Activate</span>) },
+    { key: 'pause', label: (<span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest p-3"><Clock className="h-4 w-4 text-warning" />Pause</span>) },
+    { key: 'archive', label: (<span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest p-3 text-error"><Trash2 className="h-4 w-4" />Archive</span>) },
   ];
 
   const { data: banners, isLoading: bannersLoading, error: bannersError } = useActiveContent('BANNER');
@@ -52,13 +52,13 @@ export default function CMSPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return <Badge count="Active" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-emerald-500/10 [&_sup]:text-emerald-500 [&_sup]:border [&_sup]:border-emerald-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Active" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-primary/10 [&_sup]:text-primary [&_sup]:border [&_sup]:border-primary/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'SCHEDULED':
-        return <Badge count="Scheduled" color="gold" className="uppercase tracking-widest text-xs [&_sup]:bg-amber-500/10 [&_sup]:text-amber-500 [&_sup]:border [&_sup]:border-amber-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Scheduled" color="gold" className="uppercase tracking-widest text-xs [&_sup]:bg-warning/10 [&_sup]:text-warning [&_sup]:border [&_sup]:border-warning/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'DRAFT':
-        return <Badge count="Draft" className="uppercase tracking-widest text-xs [&_sup]:bg-slate-500/10 [&_sup]:text-slate-500 [&_sup]:border [&_sup]:border-slate-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" showZero />;
+        return <Badge count="Draft" className="uppercase tracking-widest text-xs [&_sup]:bg-text-secondary/10 [&_sup]:text-text-secondary [&_sup]:border [&_sup]:border-text-secondary/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" showZero />;
       case 'ARCHIVED':
-        return <Badge count="Archived" color="red" className="uppercase tracking-widest text-xs [&_sup]:bg-rose-500/10 [&_sup]:text-rose-500 [&_sup]:border [&_sup]:border-rose-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Archived" color="red" className="uppercase tracking-widest text-xs [&_sup]:bg-error/10 [&_sup]:text-error [&_sup]:border [&_sup]:border-error/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       default:
         return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">{status}</span>;
     }
@@ -67,15 +67,15 @@ export default function CMSPage() {
   const getContentTypeIcon = (type: string) => {
     switch (type) {
       case 'BANNER':
-        return <ImageIcon className="h-4 w-4 text-blue-500" />;
+        return <ImageIcon className="h-4 w-4 text-primary" />;
       case 'PROMO':
-        return <Gift className="h-4 w-4 text-emerald-500" />;
+        return <Gift className="h-4 w-4 text-primary" />;
       case 'ALERT':
-        return <AlertCircle className="h-4 w-4 text-rose-500" />;
+        return <AlertCircle className="h-4 w-4 text-error" />;
       case 'POPUP':
-        return <ExternalLink className="h-4 w-4 text-purple-500" />;
+        return <ExternalLink className="h-4 w-4 text-accent" />;
       default:
-        return <FileText className="h-4 w-4 text-slate-500" />;
+        return <FileText className="h-4 w-4 text-text-secondary" />;
     }
   };
   const columns: TableColumnsType<Content> = [
@@ -86,7 +86,7 @@ export default function CMSPage() {
         <div className="flex items-start gap-4">
           <div className="h-16 w-16 rounded-lg bg-muted flex-shrink-0 overflow-hidden border border-border relative">
             {item.imageUrl ? (
-              <Image src={item.imageUrl} alt={item.title} fill sizes="64px" className="object-cover" />
+              <Image src={item.imageUrl} alt={item.title} fill sizes="64px" className="object-cover" loading="lazy" />
             ) : (
               <div className="h-full w-full flex items-center justify-center">
                 {getContentTypeIcon(item.contentType)}
@@ -127,7 +127,7 @@ export default function CMSPage() {
       render: (_, item) => (
         <div className="flex items-center gap-2">
           <div className="w-12 bg-muted h-1.5 rounded-full overflow-hidden">
-            <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${item.priority * 10}%` }} />
+            <div className="bg-primary h-full rounded-full" style={{ width: `${item.priority * 10}%` }} />
           </div>
           <span className="text-xs font-bold text-foreground">{item.priority}</span>
         </div>
@@ -139,10 +139,10 @@ export default function CMSPage() {
       align: 'right',
       render: () => (
         <div className="flex items-center justify-end gap-2">
-          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<Eye className="h-4 w-4" />} />
-          <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<Edit className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Eye className="h-4 w-4" />} />
+          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Edit className="h-4 w-4" />} />
           <Dropdown trigger={['click']} placement="bottomRight" menu={{ items: contentMenuItems }}>
-            <Button type="text" className="h-9 w-9 rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} />
+            <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} />
           </Dropdown>
         </div>
       ),
@@ -156,13 +156,13 @@ export default function CMSPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Total Content', value: String(allContent.length), color: 'bg-blue-500', icon: FileText },
-              { label: 'Active Now', value: String(allContent.filter((c) => c.status === 'ACTIVE').length), color: 'bg-emerald-500', icon: CheckCircle2 },
-              { label: 'Scheduled', value: String(allContent.filter((c) => c.status === 'SCHEDULED').length), color: 'bg-amber-500', icon: Clock },
-              { label: 'Pending Review', value: String(allContent.filter((c) => c.status === 'DRAFT').length), color: 'bg-rose-500', icon: AlertCircle },
+              { label: 'Total Content', value: String(allContent.length), color: 'bg-primary', icon: FileText },
+              { label: 'Active Now', value: String(allContent.filter((c) => c.status === 'ACTIVE').length), color: 'bg-primary', icon: CheckCircle2 },
+              { label: 'Scheduled', value: String(allContent.filter((c) => c.status === 'SCHEDULED').length), color: 'bg-warning', icon: Clock },
+              { label: 'Pending Review', value: String(allContent.filter((c) => c.status === 'DRAFT').length), color: 'bg-error', icon: AlertCircle },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
                 <div>
@@ -179,6 +179,7 @@ export default function CMSPage() {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-5 sm:p-6 lg:p-8 rounded-2xl shadow-sm">
             <div className="flex flex-wrap items-center gap-3">
               <Select
+                aria-label="Pilih tab konten"
                 value={activeTab}
                 onChange={(value: string) => setActiveTab(value)}
                 className="min-w-40"
@@ -190,13 +191,14 @@ export default function CMSPage() {
               <div className="relative flex-1 lg:w-80 flex items-center">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                 <Input
+                  aria-label="Cari konten"
                   placeholder="Search content..."
                   className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button type="primary" className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
+              <Button type="primary" className="h-12 px-6 rounded-xl bg-primary-dark hover:bg-primary text-surface font-bold text-xs tracking-widest uppercase gap-2">
                 <Plus className="h-4 w-4" />
                 New Content
               </Button>
@@ -222,13 +224,13 @@ export default function CMSPage() {
                 Showing <span className="text-foreground">{filteredContent.length}</span> results
               </p>
               <div className="flex items-center gap-2">
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronLeft className="h-4 w-4" />} />
-                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronLeft className="h-4 w-4" />} />
+                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
                   1
                 </div>
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center">2</Button>
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center">3</Button>
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronRight className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center">2</Button>
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center">3</Button>
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" icon={<ChevronRight className="h-4 w-4" />} />
               </div>
             </div>
           </div>

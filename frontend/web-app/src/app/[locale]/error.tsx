@@ -29,7 +29,7 @@ export default function Error({ error, reset }: ErrorProps) {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-6 sm:px-10 lg:px-12 bg-background">
-      <div className="max-w-md w-full bg-card/80 backdrop-blur-xl rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm text-center relative overflow-hidden">
+      <div className="max-w-md w-full bg-card/80 rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-destructive/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-bank-green/5 rounded-full blur-3xl" />
 
@@ -68,7 +68,7 @@ export default function Error({ error, reset }: ErrorProps) {
           <div className="space-y-3" role="group" aria-label="Tindakan pemulihan error">
             <button
               onClick={handleReset}
-              className="w-full bg-foreground text-background py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-bank-green hover:text-white transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full bg-foreground text-background py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-bank-green hover:text-surface transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Coba muat ulang halaman ini"
             >
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -78,7 +78,7 @@ export default function Error({ error, reset }: ErrorProps) {
             <div className="flex gap-3">
               <button
                 onClick={handleGoBack}
-                className="flex-1 bg-white/5 backdrop-blur-sm py-4 rounded-xl font-bold text-xs tracking-widest border border-border hover:bg-white/10 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex-1 bg-surface/5 py-4 rounded-xl font-bold text-xs tracking-widest border border-border hover:bg-surface/10 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Kembali ke halaman sebelumnya"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -87,7 +87,7 @@ export default function Error({ error, reset }: ErrorProps) {
 
               <button
                 onClick={handleGoHome}
-                className="flex-1 bg-white/5 backdrop-blur-sm py-4 rounded-xl font-bold text-xs tracking-widest border border-border hover:bg-white/10 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex-1 bg-surface/5 py-4 rounded-xl font-bold text-xs tracking-widest border border-border hover:bg-surface/10 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Kembali ke beranda dashboard"
               >
                 <Home className="h-4 w-4" aria-hidden="true" />

@@ -84,11 +84,11 @@ function PromoItem({ promo }: PromoItemProps) {
         <div className="flex items-start gap-3">
           <div className={clsx(
             'h-10 w-10 rounded-lg flex items-center justify-center shrink-0',
-            isExpiringSoon ? 'bg-orange-500/10' : 'bg-primary/10'
+            isExpiringSoon ? 'bg-accent/10' : 'bg-primary/10'
           )}>
             <Star className={clsx(
               'h-5 w-5',
-              isExpiringSoon ? 'text-orange-500' : 'text-primary'
+              isExpiringSoon ? 'text-accent' : 'text-primary'
             )} />
           </div>
 
@@ -121,7 +121,7 @@ function PromoItem({ promo }: PromoItemProps) {
               <div className="text-right">
                 <p className={clsx(
                   'text-xs font-bold',
-                  isExpiringSoon ? 'text-orange-500' : 'text-muted-foreground'
+                  isExpiringSoon ? 'text-accent' : 'text-muted-foreground'
                 )}>
                   {isExpiringSoon ? `Berakhir dalam ${daysLeft} hari` : `${daysLeft} hari lagi`}
                 </p>
@@ -157,11 +157,11 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
   return (
     <div
       className={clsx(
-        'bg-gradient-to-r from-primary to-emerald-600 rounded-xl p-4 text-white relative overflow-hidden',
+        'bg-gradient-to-r from-primary to-primary-dark rounded-xl p-4 text-surface relative overflow-hidden',
         className
       )}
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-surface/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
 
       <div className="relative z-10 flex items-center justify-between gap-4">
         <div className="flex-1">
@@ -176,7 +176,7 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
         </div>
 
         <button
-          className="h-11 px-4 bg-white text-primary rounded-lg font-bold text-xs tracking-wider flex items-center gap-2 shadow-lg transition-transform hover:scale-105 active:scale-95"
+          className="h-11 px-4 bg-surface text-primary rounded-lg font-bold text-xs tracking-wider flex items-center gap-2 shadow-lg transition-transform hover:scale-105 active:scale-95"
         >
           Klaim
           <ArrowRight className="h-4 w-4" />

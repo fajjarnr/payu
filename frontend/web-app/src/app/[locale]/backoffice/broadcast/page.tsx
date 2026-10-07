@@ -29,11 +29,11 @@ export default function BroadcastPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'SENT':
-        return <Badge count="Sent" color="green" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-emerald-500/10 [&_sup]:text-emerald-500 [&_sup]:border [&_sup]:border-emerald-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Sent" color="green" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-primary/10 [&_sup]:text-primary [&_sup]:border [&_sup]:border-primary/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'SCHEDULED':
-        return <Badge count="Scheduled" color="gold" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-amber-500/10 [&_sup]:text-amber-500 [&_sup]:border [&_sup]:border-amber-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Scheduled" color="gold" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-warning/10 [&_sup]:text-warning [&_sup]:border [&_sup]:border-warning/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       case 'FAILED':
-        return <Badge count="Failed" color="red" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-rose-500/10 [&_sup]:text-rose-500 [&_sup]:border [&_sup]:border-rose-500/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
+        return <Badge count="Failed" color="red" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-error/10 [&_sup]:text-error [&_sup]:border [&_sup]:border-error/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
       default:
         return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">{status}</span>;
     }
@@ -44,7 +44,7 @@ export default function BroadcastPage() {
       case 'PUSH': return <Smartphone className="h-3 w-3" />;
       case 'SMS': return <MessageSquare className="h-3 w-3" />;
       case 'EMAIL': return <Mail className="h-3 w-3" />;
-      case 'WHATSAPP': return <Bell className="h-3 w-3 text-emerald-500" />;
+      case 'WHATSAPP': return <Bell className="h-3 w-3 text-primary" />;
       default: return null;
     }
   };
@@ -91,7 +91,7 @@ export default function BroadcastPage() {
     {
       key: 'engagement',
       title: 'Engagement',
-      render: () => <span className="text-xs font-bold text-emerald-500">—</span>,
+      render: () => <span className="text-xs font-bold text-primary">—</span>,
     },
     {
       key: 'date',
@@ -113,13 +113,13 @@ export default function BroadcastPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Broadcasts Sent', value: isLoading ? '…' : String(notifications?.length ?? 0), color: 'bg-emerald-500', icon: Send },
-              { label: 'Total Messages', value: '—', color: 'bg-blue-500', icon: Smartphone },
-              { label: 'Avg Open Rate', value: '—', color: 'bg-indigo-500', icon: CheckCircle2 },
-              { label: 'Unsubscribe Rate', value: '—', color: 'bg-rose-500', icon: AlertCircle },
+              { label: 'Broadcasts Sent', value: isLoading ? '…' : String(notifications?.length ?? 0), color: 'bg-primary', icon: Send },
+              { label: 'Total Messages', value: '—', color: 'bg-primary', icon: Smartphone },
+              { label: 'Avg Open Rate', value: '—', color: 'bg-secondary', icon: CheckCircle2 },
+              { label: 'Unsubscribe Rate', value: '—', color: 'bg-error', icon: AlertCircle },
             ].map((stat, i) => (
               <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg`}>
                   <stat.icon className="h-6 w-6" />
                 </div>
                 <div>
@@ -138,6 +138,7 @@ export default function BroadcastPage() {
               <div className="relative flex-1 lg:w-96 flex items-center">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
                 <Input
+                  aria-label="Cari siaran"
                   placeholder="Search broadcasts..."
                   className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
                   value={searchTerm}
@@ -151,7 +152,7 @@ export default function BroadcastPage() {
                 <Users className="h-4 w-4" />
                 Targeting Rules
               </Button>
-              <Button type="primary" className="h-12 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-widest uppercase gap-2">
+              <Button type="primary" className="h-12 px-6 rounded-xl bg-primary-dark hover:bg-primary text-surface font-bold text-xs tracking-widest uppercase gap-2">
                 <Plus className="h-4 w-4" />
                 Create Broadcast
               </Button>
@@ -176,11 +177,11 @@ export default function BroadcastPage() {
                 Multi-channel Delivery Engine Active
               </p>
               <div className="flex items-center gap-2">
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
-                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} />
+                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
                   1
                 </div>
-                <Button className="h-10 w-10 rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
+                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} />
               </div>
             </div>
           </div>
