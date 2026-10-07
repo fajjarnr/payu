@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   ArrowRightLeft,
   QrCode,
@@ -9,11 +9,11 @@ import {
   MoreHorizontal,
   GripVertical,
   ChevronRight,
-} from '@/components/icons';
-import { useTranslations } from 'next-intl';
-import clsx from 'clsx';
-import { cn } from '@/lib/utils';
-import { Button, Card } from 'antd';
+} from "@/components/icons";
+import { useTranslations } from "next-intl";
+import clsx from "clsx";
+import { cn } from "@/lib/utils";
+import { Button, Card } from "antd";
 
 interface QuickAction {
   id: string;
@@ -35,74 +35,74 @@ interface QuickActionsProps {
 
 const defaultActions: QuickAction[] = [
   {
-    id: 'transfer',
-    label: 'Transfer',
+    id: "transfer",
+    label: "Transfer",
     icon: ArrowRightLeft,
-    href: '/transfer',
-    color: 'text-primary',
-    bgColor: 'bg-success-light',
-    description: 'Kirim uang instan',
-    ariaLabel: 'Transfer uang ke akun lain',
+    href: "/transfer",
+    color: "text-primary",
+    bgColor: "bg-success-light",
+    description: "Kirim uang instan",
+    ariaLabel: "Transfer uang ke akun lain",
   },
   {
-    id: 'qris',
-    label: 'QRIS',
+    id: "qris",
+    label: "QRIS",
     icon: QrCode,
-    href: '/qris',
-    color: 'text-primary',
-    bgColor: 'bg-chart-2',
-    description: 'Scan QR untuk bayar',
-    ariaLabel: 'Pembayaran QRIS',
+    href: "/qris",
+    color: "text-primary",
+    bgColor: "bg-chart-2",
+    description: "Scan QR untuk bayar",
+    ariaLabel: "Pembayaran QRIS",
   },
   {
-    id: 'bills',
-    label: 'Tagihan',
+    id: "bills",
+    label: "Tagihan",
     icon: Receipt,
-    href: '/bills',
-    color: 'text-primary',
-    bgColor: 'bg-chart-3',
-    description: 'Bayar tagihan & isi ulang',
-    ariaLabel: 'Bayar tagihan dan isi ulang',
+    href: "/bills",
+    color: "text-primary",
+    bgColor: "bg-chart-3",
+    description: "Bayar tagihan & isi ulang",
+    ariaLabel: "Bayar tagihan dan isi ulang",
   },
   {
-    id: 'pockets',
-    label: 'Kantong',
+    id: "pockets",
+    label: "Kantong",
     icon: Wallet,
-    href: '/pockets',
-    color: 'text-primary',
-    bgColor: 'bg-chart-green1',
-    description: 'Kelola kantong uang',
-    ariaLabel: 'Kelola kantong',
+    href: "/pockets",
+    color: "text-primary",
+    bgColor: "bg-chart-green1",
+    description: "Kelola kantong uang",
+    ariaLabel: "Kelola kantong",
   },
   {
-    id: 'cards',
-    label: 'Kartu',
+    id: "cards",
+    label: "Kartu",
     icon: CreditCard,
-    href: '/cards',
-    color: 'text-primary',
-    bgColor: 'bg-chart-green2',
-    description: 'Kartu virtual',
-    ariaLabel: 'Kelola kartu virtual',
+    href: "/cards",
+    color: "text-primary",
+    bgColor: "bg-chart-green2",
+    description: "Kartu virtual",
+    ariaLabel: "Kelola kartu virtual",
   },
   {
-    id: 'topup',
-    label: 'Isi Ulang',
+    id: "topup",
+    label: "Isi Ulang",
     icon: Smartphone,
-    href: '/bills?category=pulsa',
-    color: 'text-primary',
-    bgColor: 'bg-chart-green3',
-    description: 'Isi pulsa & paket data',
-    ariaLabel: 'Isi ulang pulsa',
+    href: "/bills?category=pulsa",
+    color: "text-primary",
+    bgColor: "bg-chart-green3",
+    description: "Isi pulsa & paket data",
+    ariaLabel: "Isi ulang pulsa",
   },
 ];
 
 export default function QuickActions({
   actions = defaultActions,
   maxActions = 6,
-  className = '',
+  className = "",
   onReorder,
 }: QuickActionsProps) {
-  const t = useTranslations('dashboard');
+  const t = useTranslations("dashboard");
   const [items, setItems] = useState(actions.slice(0, maxActions));
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -124,18 +124,21 @@ export default function QuickActions({
       role="region"
       aria-labelledby="quick-actions-title"
       className={cn("relative overflow-hidden group", className)}
-      styles={{ body: { display: 'contents' } }}
+      styles={{ body: { display: "contents" } }}
     >
       {/* Decorative background */}
       <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-start justify-between space-y-0 pb-6">
+      <div className="flex flex-row items-start justify-between p-6 pb-6">
         <div>
-          <h3 id="quick-actions-title" className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
-            {t('quickActionsTitle')}
+          <h3
+            id="quick-actions-title"
+            className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase"
+          >
+            {t("quickActionsTitle")}
           </h3>
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] uppercase tracking-widest text-xs sm:text-xs font-bold opacity-60">
-            {t('quickActionsSubtitle')}
+            {t("quickActionsSubtitle")}
           </p>
         </div>
 
@@ -144,11 +147,13 @@ export default function QuickActions({
           size="small"
           data-testid="edit-quick-actions-button"
           onClick={() => setIsEditMode(!isEditMode)}
-          aria-label={isEditMode ? 'Selesai mengedit' : 'Edit urutan aksi cepat'}
+          aria-label={
+            isEditMode ? "Selesai mengedit" : "Edit urutan aksi cepat"
+          }
           aria-pressed={isEditMode}
           className="text-xs sm:text-xs px-4"
         >
-          {isEditMode ? 'Selesai' : 'Edit'}
+          {isEditMode ? "Selesai" : "Edit"}
         </Button>
       </div>
 
@@ -162,7 +167,8 @@ export default function QuickActions({
           >
             <p className="text-xs text-muted-foreground flex items-center gap-3">
               <GripVertical className="h-5 w-5" aria-hidden="true" />
-              {t('quickActionsDragHint')} - Gunakan tombol panah atau tombol naik/turun untuk mengatur ulang
+              {t("quickActionsDragHint")} - Gunakan tombol panah atau tombol
+              naik/turun untuk mengatur ulang
             </p>
           </div>
         )}
@@ -207,15 +213,22 @@ interface QuickActionItemProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
 }
-function QuickActionItem({ action, isEditMode, isFirst, isLast, onMoveUp, onMoveDown }: QuickActionItemProps) {
+function QuickActionItem({
+  action,
+  isEditMode,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+}: QuickActionItemProps) {
   const Icon = action.icon;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!isEditMode) return;
-    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
       e.preventDefault();
       onMoveUp();
-    } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+    } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
       e.preventDefault();
       onMoveDown();
     }
@@ -227,31 +240,38 @@ function QuickActionItem({ action, isEditMode, isFirst, isLast, onMoveUp, onMove
         href={action.href}
         data-testid={`quick-action-${action.id}`}
         className={clsx(
-          'group relative p-6 rounded-2xl border transition-all flex flex-col items-center text-center',
-          'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset',
+          "group relative p-6 rounded-2xl border transition-all flex flex-col items-center text-center",
+          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset",
           isEditMode
-            ? 'border-dashed border-primary/30 bg-muted/30'
-            : 'border-border bg-card hover:border-primary/30 hover:shadow-xl hover:bg-primary/5 shadow-sm'
+            ? "border-dashed border-primary/30 bg-muted/30"
+            : "border-border bg-card hover:border-primary/30 hover:shadow-xl hover:bg-primary/5 shadow-sm",
         )}
         aria-label={action.ariaLabel}
       >
         {isEditMode && (
           <div className="absolute top-4 right-4 flex items-center gap-1">
-            <GripVertical className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <GripVertical
+              className="h-5 w-5 text-muted-foreground"
+              aria-hidden="true"
+            />
             <span className="sr-only">Drag untuk mengatur ulang</span>
           </div>
         )}
         <div
           className={clsx(
-            'h-16 w-16 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 shadow-lg',
-            action.bgColor
+            "h-16 w-16 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 shadow-lg",
+            action.bgColor,
           )}
         >
-          <Icon className={clsx('h-8 w-8', action.color)} aria-hidden="true" />
+          <Icon className={clsx("h-8 w-8", action.color)} aria-hidden="true" />
         </div>
-        <p className="text-sm font-bold text-foreground mb-1 shadow-sm">{action.label}</p>
+        <p className="text-sm font-bold text-foreground mb-1 shadow-sm">
+          {action.label}
+        </p>
         {action.description && (
-          <p className="text-xs sm:text-xs text-muted-foreground font-medium line-clamp-1 opacity-80 uppercase tracking-[0.05em]">{action.description}</p>
+          <p className="text-xs sm:text-xs text-muted-foreground font-medium line-clamp-1 opacity-80 uppercase tracking-[0.05em]">
+            {action.description}
+          </p>
         )}
       </a>
       {isEditMode && (

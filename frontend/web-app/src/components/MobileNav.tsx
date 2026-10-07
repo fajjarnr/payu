@@ -28,11 +28,22 @@ export default function MobileNav() {
   // Don't show if not authenticated
   if (!isAuthenticated) return null;
 
+  // next-intl `as-needed` keeps `/id` unprefixed: strip a leading locale
+  // segment before comparing, so active state works in both locales.
+  const barePathname =
+    pathname === "/id" ||
+    pathname === "/en" ||
+    pathname.startsWith("/id/") ||
+    pathname.startsWith("/en/")
+      ? pathname.replace(/^\/(id|en)(?=\/|$)/, "") || "/"
+      : pathname;
+
   const selectedKeys = navItems
     .filter(
       (item) =>
-        pathname === item.href ||
-        (item.href.endsWith("/dashboard") && pathname.endsWith("/dashboard")),
+        barePathname === item.href ||
+        (item.href.endsWith("/dashboard") &&
+          barePathname.endsWith("/dashboard")),
     )
     .map((item) => item.href);
 

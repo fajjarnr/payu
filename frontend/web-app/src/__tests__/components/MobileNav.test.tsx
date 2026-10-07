@@ -142,6 +142,22 @@ describe("MobileNav", () => {
     expect(activeLink).toHaveAttribute("aria-current", "page");
   });
 
+  it("should highlight active item with /en locale prefix", () => {
+    mockPathname = "/en/transfer";
+    renderWithIntl(<MobileNav />);
+
+    const transferLink = screen.getByText("Transfer").closest("a");
+    expect(transferLink).toHaveAttribute("aria-current", "page");
+  });
+
+  it("should highlight active item with /id locale prefix", () => {
+    mockPathname = "/id/qris";
+    renderWithIntl(<MobileNav />);
+
+    const qrisLink = screen.getByText("Bayar QRIS").closest("a");
+    expect(qrisLink).toHaveAttribute("aria-current", "page");
+  });
+
   it("should use increased stroke width for active icon", () => {
     mockPathname = "/dashboard";
     const { container: _container } = renderWithIntl(<MobileNav />);

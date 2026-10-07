@@ -107,13 +107,26 @@ export default function StatsCharts({
         className="lg:col-span-5 relative overflow-hidden group"
         styles={{ body: { display: "contents" } }}
       >
-        <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-center justify-between pb-6">
+        <div className="flex flex-row items-center justify-between p-6">
           <h3 className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
             {t("perfTitle")}
           </h3>
-          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-5 py-2.5 rounded-xl cursor-pointer hover:bg-muted transition-colors uppercase tracking-widest shadow-sm">
+          <button
+            type="button"
+            aria-label={t("january2026")}
+            className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-4 py-2 rounded-xl hover:bg-muted transition-colors uppercase tracking-widest shadow-sm min-h-[44px]"
+          >
             {t("january2026")} <ChevronDown className="h-4 w-4" />
-          </div>
+          </button>
+        </div>
+
+        <div className="p-6 pt-0 space-y-2">
+          <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">
+            {t("totalValue")}
+          </p>
+          <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">
+            {displayTotal}
+          </h4>
         </div>
 
         <div className="p-6 pt-0 flex flex-col sm:flex-row items-center justify-between gap-6 lg:gap-8">
@@ -175,15 +188,6 @@ export default function StatsCharts({
               ]}
             />
           </div>
-
-          <div className="text-right w-full sm:w-auto shrink-0 space-y-2">
-            <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">
-              {t("totalValue")}
-            </p>
-            <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">
-              {displayTotal}
-            </h4>
-          </div>
         </div>
       </Card>
 
@@ -192,13 +196,17 @@ export default function StatsCharts({
         className="lg:col-span-7 group overflow-hidden"
         styles={{ body: { display: "contents" } }}
       >
-        <div className="flex flex-col space-y-1.5 p-6 flex flex-row items-center justify-between pb-6">
+        <div className="flex flex-row items-center justify-between p-6">
           <h3 className="text-2xl font-bold leading-none tracking-tight text-xl font-bold text-foreground">
             {t("spendingOverview")}
           </h3>
-          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-5 py-2.5 rounded-xl cursor-pointer hover:bg-muted transition-colors uppercase tracking-widest shadow-sm">
+          <button
+            type="button"
+            aria-label={t("year2026")}
+            className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-4 py-2 rounded-xl hover:bg-muted transition-colors uppercase tracking-widest shadow-sm min-h-[44px]"
+          >
             {t("year2026")} <ChevronDown className="h-4 w-4" />
-          </div>
+          </button>
         </div>
 
         <div className="p-6 pt-0">

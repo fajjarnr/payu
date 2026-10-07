@@ -96,16 +96,27 @@ export default function DashboardLayout({
     { href: "/support", icon: LifeBuoy, label: t("support") },
   ];
 
+  // next-intl `as-needed` keeps `/id` unprefixed: strip a leading locale
+  // segment before comparing, so active state works in both locales.
+  const barePathname =
+    pathname === "/id" ||
+    pathname === "/en" ||
+    pathname.startsWith("/id/") ||
+    pathname.startsWith("/en/")
+      ? pathname.replace(/^\/(id|en)(?=\/|$)/, "") || "/"
+      : pathname;
+
   const selectedKeys = [
     ...mainMenu
       .filter(
         (item) =>
-          pathname === item.href ||
-          (item.href.endsWith("/dashboard") && pathname.endsWith("/dashboard")),
+          barePathname === item.href ||
+          (item.href.endsWith("/dashboard") &&
+            barePathname.endsWith("/dashboard")),
       )
       .map((item) => item.href),
     ...otherMenu
-      .filter((item) => pathname.includes(item.href))
+      .filter((item) => barePathname.includes(item.href))
       .map((item) => item.href),
   ];
 

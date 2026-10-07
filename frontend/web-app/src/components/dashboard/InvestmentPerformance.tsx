@@ -8,7 +8,7 @@ const RadialBar = dynamic(
   { ssr: false },
 );
 
-import { Card } from "antd";
+import { Card, Skeleton } from "antd";
 import { TrendingUp, Target, ArrowUpRight } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -44,15 +44,17 @@ export default function InvestmentPerformance({
         className={cn("flex flex-col group overflow-hidden h-full", className)}
         styles={{ body: { display: "contents" } }}
       >
-        <div className="flex flex-col space-y-1.5 p-6 items-start pb-2">
+        <div className="flex flex-col space-y-2 p-6 items-start pb-2">
           <h3 className="text-2xl font-bold leading-none tracking-tight text-sm font-bold text-foreground tracking-widest uppercase">
             {t("perfTitle")}
           </h3>
         </div>
-        <div className="p-6 pt-0 flex-1 flex items-center justify-center min-h-[200px]">
-          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
-            {t("loading")}
-          </p>
+        <div className="p-6 pt-0 flex-1">
+          <Skeleton
+            title={false}
+            paragraph={false}
+            className="block animate-pulse rounded-xl bg-muted/50 min-h-[220px] w-full"
+          />
         </div>
       </Card>
     );
@@ -73,7 +75,7 @@ export default function InvestmentPerformance({
       className={cn("flex flex-col group overflow-hidden h-full", className)}
       styles={{ body: { display: "contents" } }}
     >
-      <div className="flex flex-col space-y-1.5 p-6 items-start pb-2">
+      <div className="flex flex-col space-y-2 p-6 items-start pb-2">
         <div className="flex items-center gap-2 mb-1">
           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <TrendingUp className="h-4 w-4 text-primary" />
@@ -154,7 +156,7 @@ export default function InvestmentPerformance({
         </div>
       </div>
 
-      <div className="flex items-center p-6 pt-0 flex-col gap-2 pt-0 pb-6 border-t border-border/10">
+      <div className="flex flex-col items-center gap-2 p-6 pb-6 border-t border-border/10">
         {displayMonthlyChange !== 0 && (
           <div className="flex items-center gap-2 leading-none font-bold text-xs uppercase tracking-widest text-primary mt-4">
             {displayMonthlyChange > 0 ? t("up") : t("down")}{" "}
