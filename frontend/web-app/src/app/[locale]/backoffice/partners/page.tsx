@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import type { CSSProperties } from 'react';
 import {
   Store,
   Search,
@@ -16,10 +17,19 @@ import {
   ChevronRight,
   ExternalLink,
 } from '@/components/icons';
-import { Badge, Button, Input, Table } from 'antd';
+import { Avatar, Button, Card, Divider, Flex, Input, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { usePartners } from '@/hooks';
 import type { Partner } from '@/services';
+import StatCards from '../_components/StatCards';
+
+const labelStyle: CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: 'var(--ant-color-text-secondary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+};
 
 type PartnerRow = {
   id: number;
@@ -56,58 +66,46 @@ export default function PartnersPage() {
   const activeCount = partners.filter(p => p.status === 'ACTIVE').length;
   const pendingCount = partners.filter(p => p.status === 'UNDER_REVIEW').length;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'ACTIVE':
-        return <Badge count="Active" color="green" className="uppercase tracking-widest text-xs [&_sup]:bg-primary/10 [&_sup]:text-primary [&_sup]:border [&_sup]:border-primary/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
-      case 'UNDER_REVIEW':
-        return <Badge count="Reviewing" color="gold" className="uppercase tracking-widest text-xs [&_sup]:bg-warning/10 [&_sup]:text-warning [&_sup]:border [&_sup]:border-warning/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
-      case 'SUSPENDED':
-        return <Badge count="Suspended" color="red" className="uppercase tracking-widest text-xs [&_sup]:bg-error/10 [&_sup]:text-error [&_sup]:border [&_sup]:border-error/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
-      default:
-        return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">{status}</span>;
-    }
-  };
   const columns: TableColumnsType<PartnerRow> = [
     {
       key: 'org',
       title: 'Partner Org',
       render: (_, partner) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center border border-border">
-            <Store className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div>
-            <p className="font-bold text-foreground text-sm leading-tight">{partner.name}</p>
-            <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">{partner.id}</p>
-          </div>
-        </div>
+        <Flex align="center" gap={12}>
+          <Avatar
+            shape="square"
+            size={40}
+            style={{ background: 'var(--ant-color-fill-tertiary)', color: 'var(--ant-color-text-secondary)' }}
+            icon={<Store style={{ fontSize: 20 }} />}
+          />
+          <Space direction="vertical" size={0}>
+            <Typography.Text strong style={{ fontSize: 14 }}>{partner.name}</Typography.Text>
+            <Typography.Text type="secondary" strong style={labelStyle}>{partner.id}</Typography.Text>
+          </Space>
+        </Flex>
       ),
     },
     {
       key: 'type',
       title: 'Type',
-      render: (_, partner) => <span className="text-xs font-bold text-foreground uppercase tracking-widest">{partner.type}</span>,
+      render: (_, partner) => <Typography.Text strong style={labelStyle}>{partner.type}</Typography.Text>,
     },
-    { key: 'status', title: 'Status', render: (_, partner) => getStatusBadge(partner.status) },
+    { key: 'status', title: 'Status', render: (_, partner) => partnerStatusBadge(partner.status) },
     {
       key: 'api',
       title: 'API Integration',
       render: (_, partner) => (
-        <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold border-primary/20 text-primary font-bold uppercase tracking-widest gap-1.5">
-          <ShieldCheck className="h-3 w-3" />
-          {partner.apiLevel}
-        </span>
+        <Tag color="blue" icon={<ShieldCheck style={{ fontSize: 12 }} />}>{partner.apiLevel}</Tag>
       ),
     },
     {
       key: 'volume',
       title: 'Volume',
       render: (_, partner) => (
-        <div>
-          <p className="text-xs font-bold text-foreground">{partner.volume}</p>
-          <p className="text-xs text-muted-foreground font-medium">{partner.transactions} txns</p>
-        </div>
+        <Space direction="vertical" size={0}>
+          <Typography.Text strong style={{ fontSize: 12 }}>{partner.volume}</Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>{partner.transactions} txns</Typography.Text>
+        </Space>
       ),
     },
     {
@@ -115,93 +113,79 @@ export default function PartnersPage() {
       title: 'Actions',
       align: 'right',
       render: () => (
-        <div className="flex items-center justify-end gap-2">
-          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<ExternalLink className="h-4 w-4" />} aria-label="Buka tautan eksternal" />
-          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<Settings className="h-4 w-4" />} aria-label="Pengaturan partner" />
-          <Button type="text" className="min-h-[44px] min-w-[44px] rounded-lg hover:bg-muted/50 p-0" icon={<MoreHorizontal className="h-4 w-4" />} aria-label="Aksi lainnya" />
-        </div>
+        <Flex align="center" justify="flex-end" gap={8}>
+          <Button type="text" icon={<ExternalLink style={{ fontSize: 16 }} />} aria-label="Buka tautan eksternal" />
+          <Button type="text" icon={<Settings style={{ fontSize: 16 }} />} aria-label="Pengaturan partner" />
+          <Button type="text" icon={<MoreHorizontal style={{ fontSize: 16 }} />} aria-label="Aksi lainnya" />
+        </Flex>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <>
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              { label: 'Total Partners', value: isLoading ? '…' : String(partners.length), color: 'bg-primary', icon: Store },
-              { label: 'Active Merchants', value: isLoading ? '…' : String(activeCount), color: 'bg-primary', icon: CheckCircle2 },
-              { label: 'Pending Apps', value: isLoading ? '…' : String(pendingCount), color: 'bg-warning', icon: AlertCircle },
-              { label: 'SNAP BI Volume', value: '—', color: 'bg-secondary', icon: Globe },
-            ].map((stat, i) => (
-              <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg`}>
-                  <stat.icon className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</p>
-                  <p className="text-2xl font-bold text-foreground mt-0.5">{stat.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+    <Space direction="vertical" size={24} style={{ width: '100%' }}>
+      <StatCards stats={[
+        { label: 'Total Partners', value: isLoading ? '…' : String(partners.length), icon: Store },
+        { label: 'Active Merchants', value: isLoading ? '…' : String(activeCount), icon: CheckCircle2 },
+        { label: 'Pending Apps', value: isLoading ? '…' : String(pendingCount), icon: AlertCircle },
+        { label: 'SNAP BI Volume', value: '—', icon: Globe },
+      ]} />
 
-        <>
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-5 sm:p-6 rounded-2xl shadow-sm">
-            <div className="flex items-center gap-4 w-full lg:w-auto">
-              <div className="relative flex-1 lg:w-96 flex items-center">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-                <Input
-                  aria-label="Cari mitra berdasarkan nama atau ID"
-                  placeholder="Search partners by name or ID..."
-                  className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+      <Card>
+        <Flex gap={16} wrap align="center" justify="space-between">
+          <Input
+            aria-label="Cari mitra berdasarkan nama atau ID"
+            placeholder="Search partners by name or ID..."
+            prefix={<Search style={{ fontSize: 16, color: 'var(--ant-color-text-secondary)' }} />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: 1, minWidth: 200, maxWidth: 384 }}
+          />
+          <Flex gap={16} wrap>
+            <Button icon={<Key style={{ fontSize: 16 }} />}>
+              Manage API Keys
+            </Button>
+            <Button type="primary" icon={<Plus style={{ fontSize: 16 }} />}>
+              Register New Partner
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
 
-            <div className="flex items-center gap-4 w-full lg:w-auto">
-              <Button className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
-                <Key className="h-4 w-4" />
-                Manage API Keys
-              </Button>
-              <Button type="primary" className="h-12 px-6 rounded-xl bg-primary-dark hover:bg-primary text-surface font-bold text-xs tracking-widest uppercase gap-2">
-                <Plus className="h-4 w-4" />
-                Register New Partner
-              </Button>
-            </div>
-          </div>
-        </>
-
-        <>
-          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <Table<PartnerRow>
-              columns={columns}
-              dataSource={partners}
-              rowKey="id"
-              pagination={false}
-              loading={isLoading}
-              locale={{ emptyText: 'No partners found' }}
-            />
-
-            <div className="p-6 border-t border-border flex items-center justify-between">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                Partner Portal & SNAP BI Registry Syncing
-              </p>
-              <div className="flex items-center gap-2">
-                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} aria-label="Halaman sebelumnya" />
-                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
-                  1
-                </div>
-                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} aria-label="Halaman berikutnya" />
-              </div>
-            </div>
-          </div>
-        </>
-      </>
-    </div>
+      <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
+        <Table<PartnerRow>
+          columns={columns}
+          dataSource={partners}
+          rowKey="id"
+          pagination={false}
+          loading={isLoading}
+          locale={{ emptyText: 'No partners found' }}
+        />
+        <Divider style={{ margin: 0 }} />
+        <Flex align="center" justify="space-between" wrap gap={16} style={{ padding: 24 }}>
+          <Typography.Text type="secondary" strong style={labelStyle}>
+            Partner Portal & SNAP BI Registry Syncing
+          </Typography.Text>
+          <Flex align="center" gap={8}>
+            <Button icon={<ChevronLeft style={{ fontSize: 16 }} />} aria-label="Halaman sebelumnya" disabled />
+            <Button type="primary">1</Button>
+            <Button icon={<ChevronRight style={{ fontSize: 16 }} />} aria-label="Halaman berikutnya" disabled />
+          </Flex>
+        </Flex>
+      </Card>
+    </Space>
   );
+}
+
+function partnerStatusBadge(status: string) {
+  switch (status) {
+    case 'ACTIVE':
+      return <Tag color="green">Active</Tag>;
+    case 'UNDER_REVIEW':
+      return <Tag color="gold">Reviewing</Tag>;
+    case 'SUSPENDED':
+      return <Tag color="red">Suspended</Tag>;
+    default:
+      return <Tag>{status}</Tag>;
+  }
 }

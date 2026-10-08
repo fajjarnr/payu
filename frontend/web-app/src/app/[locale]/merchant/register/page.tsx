@@ -6,260 +6,265 @@ import { useMutation } from '@tanstack/react-query';
 import { Building2, Mail, Phone, User, CreditCard, ArrowRight, ShieldCheck, CheckCircle2, FileText } from '@/components/icons';
 import { PartnerService } from '@/services/PartnerService';
 import { z } from 'zod';
-import clsx from 'clsx';
 import { notify as toast } from '@/lib/notify';
+import { Button, Card, Col, Input, Row, Space, Typography } from 'antd';
 
 const merchantSchema = z.object({
- name: z.string().min(3, 'Nama merchant minimal 3 karakter'),
- email: z.string().email('Format email tidak valid'),
- phone: z.string().min(10, 'Nomor telepon minimal 10 digit'),
- type: z.string().min(1, 'Tipe merchant wajib dipilih'),
- publicKey: z.string().optional(),
+  name: z.string().min(3, 'Nama merchant minimal 3 karakter'),
+  email: z.string().email('Format email tidak valid'),
+  phone: z.string().min(10, 'Nomor telepon minimal 10 digit'),
+  type: z.string().min(1, 'Tipe merchant wajib dipilih'),
+  publicKey: z.string().optional(),
 });
 
 type MerchantFormData = z.infer<typeof merchantSchema>;
 
 const merchantTypes = [
- { value: 'RETAIL', label: 'Retail', description: 'Toko fisik atau online dengan transaksi reguler' },
- { value: 'FOOD_BEVERAGE', label: 'Food & Beverage', description: 'Restoran, kafe, dan layanan makanan' },
- { value: 'TRANSPORTATION', label: 'Transportation', description: 'Ojek online, logistik, dan pengiriman' },
- { value: 'MARKETPLACE', label: 'Marketplace', description: 'Platform e-commerce multi-vendor' },
- { value: 'UTILITY', label: 'Utility', description: 'Pembayaran tagihan dan layanan utilitas' },
+  { value: 'RETAIL', label: 'Retail', description: 'Toko fisik atau online dengan transaksi reguler' },
+  { value: 'FOOD_BEVERAGE', label: 'Food & Beverage', description: 'Restoran, kafe, dan layanan makanan' },
+  { value: 'TRANSPORTATION', label: 'Transportation', description: 'Ojek online, logistik, dan pengiriman' },
+  { value: 'MARKETPLACE', label: 'Marketplace', description: 'Platform e-commerce multi-vendor' },
+  { value: 'UTILITY', label: 'Utility', description: 'Pembayaran tagihan dan layanan utilitas' },
 ];
 
+const labelStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: 'var(--ant-color-text-secondary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+};
+
 export default function MerchantRegisterPage() {
- const router = useRouter();
- const [formData, setFormData] = useState<MerchantFormData>({
-  name: '',
-  email: '',
-  phone: '',
-  type: '',
-  publicKey: '',
- });
- const [errors, setErrors] = useState<Partial<Record<keyof MerchantFormData, string>>>({});
+  const router = useRouter();
+  const [formData, setFormData] = useState<MerchantFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    type: '',
+    publicKey: '',
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof MerchantFormData, string>>>({});
 
- const registerMutation = useMutation({
-  mutationFn: (data: MerchantFormData) => PartnerService.register(data),
-  onSuccess: () => {
-   toast.success('Registrasi merchant berhasil! Silakan tunggu verifikasi.');
-   router.push('/merchant');
-  },
-  onError: () => {
-   toast.error('Registrasi gagal. Silakan coba lagi.');
-  }
- });
-
- const validateForm = (): boolean => {
-  const result = merchantSchema.safeParse(formData);
-  if (!result.success) {
-   const newErrors: Partial<Record<keyof MerchantFormData, string>> = {};
-   result.error.issues.forEach((err) => {
-    if (err.path[0]) {
-     newErrors[err.path[0] as keyof MerchantFormData] = err.message;
+  const registerMutation = useMutation({
+    mutationFn: (data: MerchantFormData) => PartnerService.register(data),
+    onSuccess: () => {
+      toast.success('Registrasi merchant berhasil! Silakan tunggu verifikasi.');
+      router.push('/merchant');
+    },
+    onError: () => {
+      toast.error('Registrasi gagal. Silakan coba lagi.');
     }
-   });
-   setErrors(newErrors);
-   return false;
-  }
-  setErrors({});
-  return true;
- };
+  });
 
- const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (validateForm()) {
-   registerMutation.mutate(formData);
-  }
- };
+  const validateForm = (): boolean => {
+    const result = merchantSchema.safeParse(formData);
+    if (!result.success) {
+      const newErrors: Partial<Record<keyof MerchantFormData, string>> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          newErrors[err.path[0] as keyof MerchantFormData] = err.message;
+        }
+      });
+      setErrors(newErrors);
+      return false;
+    }
+    setErrors({});
+    return true;
+  };
 
- const handleChange = (field: keyof MerchantFormData, value: string) => {
-  setFormData(prev => ({ ...prev, [field]: value }));
-  if (errors[field]) {
-   setErrors(prev => ({ ...prev, [field]: undefined }));
-  }
- };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      registerMutation.mutate(formData);
+    }
+  };
 
- return (
-  <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12 px-4">
-   <div className="max-w-4xl mx-auto space-y-6">
-    <div className="text-center space-y-4">
-     <div className="inline-flex items-center justify-center h-20 w-20 bg-bank-green/10 rounded-2xl mb-4">
-      <Building2 className="h-10 w-10 text-bank-green" />
-     </div>
-     <h1 className="text-4xl font-bold text-foreground ">Daftar Merchant Baru</h1>
-     <p className="text-sm text-gray-500 dark:text-text-secondary font-medium max-w-xl mx-auto">
-      Bergabunglah dengan ekosistem pembayaran PayU dan terima pembayaran instan dari jutaan pengguna.
-     </p>
-    </div>
+  const handleChange = (field: keyof MerchantFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
 
-    <form onSubmit={handleSubmit} className="space-y-6">
-     <div className="bg-card rounded-[3rem] p-5 sm:p-6 border border-border shadow-sm relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--ant-color-fill-tertiary)', padding: '48px 16px' }}>
+      <div style={{ maxWidth: 896, margin: '0 auto' }}>
+        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+          <Space direction="vertical" size={16} style={{ width: '100%', textAlign: 'center', alignItems: 'center' }}>
+            <div style={{ width: 80, height: 80, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Building2 style={{ width: 40, height: 40, color: 'var(--ant-color-primary)' }} />
+            </div>
+            <Typography.Title level={1} style={{ margin: 0 }}>Daftar Merchant Baru</Typography.Title>
+            <Typography.Text type="secondary" style={{ maxWidth: 576 }}>
+              Bergabunglah dengan ekosistem pembayaran PayU dan terima pembayaran instan dari jutaan pengguna.
+            </Typography.Text>
+          </Space>
 
-      <div className="relative z-10 space-y-6">
-       <div>
-        <label htmlFor="merchant-name" className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
-         Nama Merchant
-        </label>
-        <div className="relative">
-         <User className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-         <input id="merchant-name"
-          type="text"
-          value={formData.name}
-          onChange={(e) => handleChange('name', e.target.value)}
-          placeholder="Masukkan nama bisnis Anda"
-          className={clsx(
-           "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-bold text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none ",
-           errors.name && "border-red-500 focus:ring-red-500/10 focus:border-red-500"
-          )}
-         />
-        </div>
-        {errors.name && <p className="text-red-500 text-xs mt-2 ml-4 font-bold tracking-widest">{errors.name}</p>}
-       </div>
+          <form onSubmit={handleSubmit}>
+            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              <Card>
+                <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                    <label htmlFor="merchant-name" style={labelStyle}>
+                      Nama Merchant
+                    </label>
+                    <Input
+                      id="merchant-name"
+                      value={formData.name}
+                      onChange={(e) => handleChange('name', e.target.value)}
+                      placeholder="Masukkan nama bisnis Anda"
+                      size="large"
+                      prefix={<User style={{ width: 20, height: 20, color: 'var(--ant-color-text-tertiary)' }} />}
+                      status={errors.name ? 'error' : undefined}
+                    />
+                    {errors.name && <Typography.Text type="danger">{errors.name}</Typography.Text>}
+                  </Space>
 
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-         <label htmlFor="merchant-email" className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
-          Email Bisnis
-         </label>
-         <div className="relative">
-          <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input id="merchant-email"
-           type="email"
-           value={formData.email}
-           onChange={(e) => handleChange('email', e.target.value)}
-           placeholder="email@perusahaan.com"
-           className={clsx(
-            "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-bold text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none lowercase",
-            errors.email && "border-red-500 focus:ring-red-500/10 focus:border-red-500"
-           )}
-          />
-         </div>
-         {errors.email && <p className="text-red-500 text-xs mt-2 ml-4 font-bold tracking-widest">{errors.email}</p>}
-        </div>
+                  <Row gutter={[32, 24]}>
+                    <Col xs={24} md={12}>
+                      <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                        <label htmlFor="merchant-email" style={labelStyle}>
+                          Email Bisnis
+                        </label>
+                        <Input
+                          id="merchant-email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => handleChange('email', e.target.value)}
+                          placeholder="email@perusahaan.com"
+                          size="large"
+                          prefix={<Mail style={{ width: 20, height: 20, color: 'var(--ant-color-text-tertiary)' }} />}
+                          status={errors.email ? 'error' : undefined}
+                        />
+                        {errors.email && <Typography.Text type="danger">{errors.email}</Typography.Text>}
+                      </Space>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                        <label htmlFor="merchant-phone" style={labelStyle}>
+                          Nomor Telepon
+                        </label>
+                        <Input
+                          id="merchant-phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => handleChange('phone', e.target.value)}
+                          placeholder="+62 812-3456-7890"
+                          size="large"
+                          prefix={<Phone style={{ width: 20, height: 20, color: 'var(--ant-color-text-tertiary)' }} />}
+                          status={errors.phone ? 'error' : undefined}
+                        />
+                        {errors.phone && <Typography.Text type="danger">{errors.phone}</Typography.Text>}
+                      </Space>
+                    </Col>
+                  </Row>
+                </Space>
+              </Card>
 
-        <div>
-         <label htmlFor="merchant-phone" className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
-          Nomor Telepon
-         </label>
-         <div className="relative">
-          <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input id="merchant-phone"
-           type="tel"
-           value={formData.phone}
-           onChange={(e) => handleChange('phone', e.target.value)}
-           placeholder="+62 812-3456-7890"
-           className={clsx(
-            "w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-lg font-bold text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none ",
-            errors.phone && "border-red-500 focus:ring-red-500/10 focus:border-red-500"
-           )}
-          />
-         </div>
-         {errors.phone && <p className="text-red-500 text-xs mt-2 ml-4 font-bold tracking-widest">{errors.phone}</p>}
-        </div>
-       </div>
-      </div>
-     </div>
+              <Card title={<Typography.Title level={4} style={{ margin: 0 }}>Tipe Merchant</Typography.Title>}>
+                <Row gutter={[24, 24]}>
+                  {merchantTypes.map((type) => {
+                    const selected = formData.type === type.value;
+                    return (
+                      <Col xs={24} md={12} key={type.value}>
+                        <button
+                          type="button"
+                          onClick={() => handleChange('type', type.value)}
+                          aria-pressed={selected}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            padding: 24,
+                            borderRadius: 16,
+                            borderWidth: 2,
+                            borderStyle: 'solid',
+                            borderColor: selected ? 'var(--ant-color-primary)' : 'var(--ant-color-border)',
+                            backgroundColor: selected ? 'var(--ant-color-primary-bg)' : 'var(--ant-color-bg-container)',
+                          }}
+                        >
+                          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                            <Space size={16}>
+                              <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selected ? 'var(--ant-color-primary)' : 'var(--ant-color-fill-secondary)' }}>
+                                <Building2 style={{ width: 20, height: 20, color: selected ? 'var(--ant-color-text-light-solid)' : 'var(--ant-color-text-tertiary)' }} />
+                              </div>
+                              <Typography.Text strong>{type.label}</Typography.Text>
+                            </Space>
+                            <Typography.Text type="secondary">{type.description}</Typography.Text>
+                            {selected && (
+                              <CheckCircle2 style={{ width: 20, height: 20, color: 'var(--ant-color-primary)', alignSelf: 'flex-end' }} />
+                            )}
+                          </Space>
+                        </button>
+                      </Col>
+                    );
+                  })}
+                </Row>
+                {errors.type && <Typography.Text type="danger">{errors.type}</Typography.Text>}
+              </Card>
 
-     <div className="bg-card rounded-[3rem] p-5 sm:p-6 border border-border shadow-sm relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
-      <h3 className="text-xl font-bold text-foreground mb-6 relative z-10">Tipe Merchant</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-       {merchantTypes.map((type) => (
-        <button
-         key={type.value}
-         type="button"
-         onClick={() => handleChange('type', type.value)}
-         className={clsx(
-          "flex flex-col items-start gap-4 p-6 rounded-2xl border-2 transition-all text-left group",
-          formData.type === type.value
-           ? "bg-bank-green/5 border-bank-green"
-           : "bg-gray-50 dark:bg-gray-900/50 border-border hover:border-bank-green/50 hover:bg-gray-100 dark:hover:bg-gray-800"
-         )}
-        >
-         <div className="flex items-center gap-4">
-          <div className={clsx(
-           "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
-           formData.type === type.value ? "bg-bank-green" : "bg-gray-200 dark:bg-gray-700 group-hover:bg-bank-green"
-          )}>
-           <Building2 className={clsx("h-5 w-5", formData.type === type.value ? "text-white" : "text-gray-400 group-hover:text-white")} />
+              <Card>
+                <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                  <label htmlFor="merchant-public-key" style={labelStyle}>
+                    Public Key (Opsional)
+                  </label>
+                  <Input.TextArea
+                    id="merchant-public-key"
+                    value={formData.publicKey}
+                    onChange={(e) => handleChange('publicKey', e.target.value)}
+                    placeholder="-----BEGIN PUBLIC KEY-----"
+                    rows={4}
+                    style={{ fontFamily: 'ui-monospace, monospace' }}
+                  />
+                  <Typography.Text type="secondary">
+                    Diperlukan untuk integrasi API custom
+                  </Typography.Text>
+                </Space>
+              </Card>
+
+              <Card style={{ backgroundColor: 'var(--ant-color-text)', border: 'none', position: 'relative', overflow: 'hidden' }}>
+                <Row justify="space-between" align="middle" gutter={[32, 24]}>
+                  <Col xs={24} md={16}>
+                    <Space direction="vertical" size={16}>
+                      <Space size={12}>
+                        <div style={{ width: 40, height: 40, backgroundColor: 'var(--ant-color-primary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <ShieldCheck style={{ width: 20, height: 20, color: 'var(--ant-color-text-light-solid)' }} />
+                        </div>
+                        <Typography.Title level={3} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>Siap untuk Mulai?</Typography.Title>
+                      </Space>
+                      <Typography.Text style={{ color: 'var(--ant-color-text-light-solid)', opacity: 0.7 }}>
+                        Dengan mendaftar, Anda menyetujui <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>Syarat & Ketentuan</Typography.Text> serta <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>Kebijakan Privasi</Typography.Text> PayU.
+                      </Typography.Text>
+                    </Space>
+                  </Col>
+                  <Col xs={24} md={8} style={{ textAlign: 'right' }}>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={registerMutation.isPending}
+                      size="large"
+                      icon={!registerMutation.isPending ? <ArrowRight style={{ width: 16, height: 16 }} /> : undefined}
+                    >
+                      {registerMutation.isPending ? 'Sedang Memproses...' : 'Daftar Sekarang'}
+                    </Button>
+                  </Col>
+                </Row>
+                <CreditCard style={{ position: 'absolute', bottom: -30, right: -30, width: 192, height: 192, opacity: 0.08, transform: 'rotate(-12deg)', color: 'var(--ant-color-text-light-solid)' }} />
+              </Card>
+            </Space>
+          </form>
+
+          <div style={{ textAlign: 'center' }}>
+            <Button type="link" onClick={() => router.push('/merchant')}>
+              Kembali ke Dashboard Merchant
+            </Button>
           </div>
-          <span className="font-bold text-foreground text-sm">{type.label}</span>
-         </div>
-         <p className="text-xs font-bold text-gray-400 tracking-widest leading-relaxed">{type.description}</p>
-         {formData.type === type.value && (
-          <CheckCircle2 className="h-5 w-5 text-bank-green self-end" />
-         )}
-        </button>
-       ))}
+        </Space>
       </div>
-      {errors.type && <p className="text-red-500 text-xs mt-4 font-bold tracking-widest">{errors.type}</p>}
-     </div>
-
-     <div className="bg-card rounded-[3rem] p-5 sm:p-6 border border-border shadow-sm relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
-      <div className="relative z-10 space-y-6">
-       <div>
-        <label htmlFor="merchant-public-key" className="text-xs font-bold text-gray-400 tracking-widest ml-1 block mb-3">
-         Public Key (Opsional)
-        </label>
-        <div className="relative">
-         <FileText className="absolute left-6 top-6 h-5 w-5 text-gray-400" />
-         <textarea id="merchant-public-key"
-          value={formData.publicKey}
-          onChange={(e) => handleChange('publicKey', e.target.value)}
-          placeholder="-----BEGIN PUBLIC KEY-----"
-          rows={4}
-          className="w-full pl-16 pr-6 py-6 rounded-2xl border-border bg-gray-50 dark:bg-gray-900/50 text-sm font-mono text-foreground placeholder:text-gray-300 focus:ring-4 focus:ring-bank-green/10 focus:border-bank-green transition-all outline-none resize-none"
-         />
-        </div>
-        <p className="text-xs text-gray-400 font-bold tracking-widest mt-2 ml-4">
-         Diperlukan untuk integrasi API custom
-        </p>
-       </div>
-      </div>
-     </div>
-
-     <div className="bg-foreground text-background rounded-[3rem] p-5 sm:p-6 relative overflow-hidden shadow-2xl">
-      <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -z-0" />
-      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-       <div className="space-y-4 max-w-xl text-center md:text-left">
-        <div className="flex items-center gap-3">
-         <div className="h-10 w-10 bg-bank-green rounded-2xl flex items-center justify-center shadow-lg shadow-bank-green/20">
-          <ShieldCheck className="h-5 w-5 text-white" />
-         </div>
-         <h3 className="text-2xl font-bold ">Siap untuk Mulai?</h3>
-        </div>
-        <p className="text-sm text-gray-400 font-medium leading-relaxed tracking-wide">
-         Dengan mendaftar, Anda menyetujui <span className="text-bank-green font-bold">Syarat & Ketentuan</span> serta <span className="text-bank-green font-bold">Kebijakan Privasi</span> PayU.
-        </p>
-       </div>
-       <button
-        type="submit"
-        disabled={registerMutation.isPending}
-        className="whitespace-nowrap bg-bank-green text-white px-12 py-6 rounded-2xl font-bold text-xs tracking-widest hover:bg-bank-emerald transition-all active:scale-95 shadow-2xl shadow-bank-green/20 disabled:bg-bank-green/50 disabled:active:scale-100 flex items-center gap-3"
-       >
-        {registerMutation.isPending ? 'Sedang Memproses...' : (
-         <>
-          Daftar Sekarang
-          <ArrowRight className="h-4 w-4" />
-         </>
-        )}
-       </button>
-      </div>
-      <CreditCard className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-white/5 -rotate-12" />
-     </div>
-    </form>
-
-    <div className="text-center">
-     <button
-      onClick={() => router.push('/merchant')}
-      className="inline-flex items-center min-h-[44px] text-xs font-bold text-gray-400 tracking-widest hover:text-foreground transition-colors"
-     >
-      Kembali ke Dashboard Merchant
-     </button>
     </div>
-   </div>
-  </div>
- );
+  );
 }

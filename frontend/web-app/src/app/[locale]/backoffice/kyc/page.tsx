@@ -1,14 +1,22 @@
 'use client';
 
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BackofficeService, BackofficeKycStatus } from '@/services';
 import type { KycReviewResponse } from '@/services';
 import { Link } from '@/lib/navigation';
 import { Search, ChevronLeft, ChevronRight } from '@/components/icons';
-import { Badge, Button, Input, Select, Table } from 'antd';
+import { Avatar, Button, Card, Divider, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
-import clsx from 'clsx';
+
+const labelStyle: CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: 'var(--ant-color-text-secondary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+};
 
 export default function KycReviewsPage() {
  const [status, setStatus] = useState<string>('');
@@ -25,50 +33,43 @@ export default function KycReviewsPage() {
       key: 'customer',
       title: 'Nasabah',
       render: (_, review) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-xs text-muted-foreground border border-border">
+        <Flex align="center" gap={12}>
+          <Avatar style={{ background: 'var(--ant-color-fill-tertiary)', color: 'var(--ant-color-text-secondary)' }}>
             {review.fullName.slice(0, 2).toUpperCase()}
-          </div>
-          <div>
-            <div className="text-sm font-bold text-foreground">{review.fullName}</div>
-            <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{review.userId}</div>
-          </div>
-        </div>
+          </Avatar>
+          <Space direction="vertical" size={0}>
+            <Typography.Text strong style={{ fontSize: 14 }}>{review.fullName}</Typography.Text>
+            <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{review.userId}</Typography.Text>
+          </Space>
+        </Flex>
       ),
     },
     {
       key: 'document',
       title: 'Dokumen',
       render: (_, review) => (
-        <div>
-          <div className="text-sm font-bold text-foreground">{review.documentType}</div>
-          <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{review.documentNumber}</div>
-        </div>
+        <Space direction="vertical" size={0}>
+          <Typography.Text strong style={{ fontSize: 14 }}>{review.documentType}</Typography.Text>
+          <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{review.documentNumber}</Typography.Text>
+        </Space>
       ),
     },
     {
       key: 'date',
       title: 'Tanggal Kirim',
       render: (_, review) => (
-        <span className="text-muted-foreground font-bold text-xs">
+        <Typography.Text type="secondary" strong style={{ fontSize: 12 }}>
           {new Date(review.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-        </span>
+        </Typography.Text>
       ),
     },
     {
       key: 'status',
       title: 'Status',
       render: (_, review) => (
-        <Badge
-          count={review.status}
-          color={review.status === BackofficeKycStatus.REJECTED ? 'red' : undefined}
-          showZero
-          className={clsx(
-            "font-bold uppercase tracking-widest",
-            review.status === BackofficeKycStatus.APPROVED && "[&_sup]:border-primary [&_sup]:text-primary [&_sup]:bg-primary/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            review.status === BackofficeKycStatus.PENDING && "[&_sup]:border-warning [&_sup]:text-warning [&_sup]:bg-warning/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-          )}
-        />
+        <Tag color={review.status === BackofficeKycStatus.REJECTED ? 'red' : review.status === BackofficeKycStatus.APPROVED ? 'green' : 'gold'}>
+          {review.status}
+        </Tag>
       ),
     },
     {
@@ -77,8 +78,8 @@ export default function KycReviewsPage() {
       align: 'right',
       render: (_, review) => (
         <Link href={`/backoffice/kyc/${review.id}`}>
-          <Button type="text" size="small" className="min-h-[44px] gap-2 font-bold uppercase tracking-widest group-hover:bg-primary group-hover:text-surface">
-            Review <ChevronRight className="h-4 w-4" />
+          <Button type="text" size="small" icon={<ChevronRight style={{ fontSize: 16 }} />} aria-label={`Review ${review.fullName}`}>
+            Review
           </Button>
         </Link>
       ),
@@ -86,37 +87,35 @@ export default function KycReviewsPage() {
   ];
 
  return (
-  <div className="space-y-6">
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">KYC Reviews</h1>
-        <p className="text-sm text-muted-foreground font-medium mt-1">Review verifikasi identitas dan dokumen nasabah.</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="bg-warning/10 px-4 py-2 rounded-lg border border-warning/20">
-          <span className="text-xs font-bold text-warning tracking-widest uppercase">Tertunda: {isLoading ? '…' : pendingCount}</span>
-        </div>
-      </div>
-    </div>
+  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+    <Flex align="flex-start" justify="space-between" gap={24} wrap>
+      <Space direction="vertical" size={4}>
+        <Typography.Title level={2} style={{ margin: 0 }}>KYC Reviews</Typography.Title>
+        <Typography.Text type="secondary">Review verifikasi identitas dan dokumen nasabah.</Typography.Text>
+      </Space>
+      <Tag color="gold">Tertunda: {isLoading ? '…' : pendingCount}</Tag>
+    </Flex>
 
-    <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
-      <div className="relative flex-1 flex items-center">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-        <Input aria-label="Cari nasabah atau nomor dokumen" placeholder="Cari nasabah atau nomor dokumen..." className="pl-12 h-12 w-full" />
-      </div>
-      <div className="flex gap-4">
+    <Card>
+      <Flex gap={16} wrap>
+        <Input
+          aria-label="Cari nasabah atau nomor dokumen"
+          placeholder="Cari nasabah atau nomor dokumen..."
+          prefix={<Search style={{ fontSize: 16, color: 'var(--ant-color-text-secondary)' }} />}
+          style={{ flex: 1, minWidth: 200 }}
+        />
         <Select
           aria-label="Filter status"
           value={status || undefined}
           placeholder="Semua Status"
           onChange={(value: string) => setStatus(value ?? '')}
-          className="min-w-44 h-12"
+          style={{ minWidth: 176 }}
           options={[{ value: '', label: 'Semua Status' }, ...Object.values(BackofficeKycStatus).map((s) => ({ value: s, label: s }))]}
         />
-      </div>
-    </div>
+      </Flex>
+    </Card>
 
-    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+    <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
       <Table<KycReviewResponse>
         columns={columns}
         dataSource={reviews}
@@ -125,25 +124,24 @@ export default function KycReviewsPage() {
         loading={isLoading}
         locale={{ emptyText: isError ? 'Akses ditolak — hubungi administrator' : 'Tidak ada review ditemukan' }}
       />
-
-      <div className="px-8 py-6 border-t border-border flex justify-between items-center bg-muted/10">
+      <Divider style={{ margin: 0 }} />
+      <Flex align="center" justify="space-between" style={{ padding: '24px 32px' }}>
         <Button
           onClick={() => setPage(p => Math.max(0, p - 1))}
           disabled={page === 0}
-          className="h-11 px-6 gap-2 font-bold uppercase tracking-widest"
+          icon={<ChevronLeft style={{ fontSize: 16 }} />}
         >
-          <ChevronLeft className="h-4 w-4" /> Sebelumnya
+          Sebelumnya
         </Button>
-        <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Halaman {page + 1}</span>
+        <Typography.Text type="secondary" strong style={labelStyle}>Halaman {page + 1}</Typography.Text>
         <Button
           onClick={() => setPage(p => p + 1)}
           disabled={reviews.length < 20}
-          className="h-11 px-6 gap-2 font-bold uppercase tracking-widest"
         >
-          Selanjutnya <ChevronRight className="h-4 w-4" />
+          Selanjutnya <ChevronRight style={{ fontSize: 16 }} />
         </Button>
-      </div>
-    </div>
-  </div>
+      </Flex>
+    </Card>
+  </Space>
  );
 }

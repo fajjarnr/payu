@@ -3,52 +3,24 @@
 import React, { useState } from 'react';
 import { Link } from '@/lib/navigation';
 import { usePathname } from '@/lib/navigation';
-import { 
-  Users, 
-  AlertTriangle, 
-  Headphones, 
-  FileText, 
-  ClipboardCheck, 
+import {
+  Users,
+  AlertTriangle,
+  Headphones,
+  FileText,
+  ClipboardCheck,
   Gift,
-  TrendingUp, 
-  BellRing, 
+  TrendingUp,
+  BellRing,
   Store,
   LayoutDashboard,
   Search,
   Bell,
   Menu,
-  ChevronRight
 } from '@/components/icons';
-import clsx from 'clsx';
-import { Avatar, Button, Input } from 'antd';
+import { Avatar, Badge, Button, Flex, Input, Layout, Menu as AntMenu, Space, Typography } from 'antd';
 
-interface SidebarItemProps {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-  active?: boolean;
-}
-
-const SidebarItem = ({ href, icon: Icon, label, active }: SidebarItemProps) => (
-  <Link
-    href={href}
-    className={clsx(
-      "flex items-center justify-between px-6 py-3.5 rounded-xl transition-all duration-300 group font-bold",
-      active
-        ? "bg-primary text-white shadow-lg shadow-primary/20"
-        : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
-    )}
-  >
-    <div className="flex items-center gap-3">
-      <Icon className={clsx(
-        "h-5 w-5 transition-colors",
-        active ? "text-white" : "text-muted-foreground group-hover:text-primary"
-      )} />
-      <span className="text-xs tracking-widest uppercase">{label}</span>
-    </div>
-    {active && <ChevronRight className="h-4 w-4" />}
-  </Link>
-);
+const GROUP_ORDER = ['CORE', 'OPERATIONS', 'PLATFORM', 'GOVERNANCE', 'GROWTH', 'FINANCIAL', 'ECOSYSTEM'];
 
 export default function BackofficeLayout({
   children,
@@ -56,7 +28,7 @@ export default function BackofficeLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [, setIsSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const navigation = [
     { name: 'Command Center', href: '/backoffice', icon: LayoutDashboard, group: 'CORE' },
@@ -71,111 +43,106 @@ export default function BackofficeLayout({
     { name: 'Partners', href: '/backoffice/partners', icon: Store, group: 'ECOSYSTEM' },
   ];
 
-  const groupedNav = navigation.reduce((acc, item) => {
-    if (!acc[item.group]) acc[item.group] = [];
-    acc[item.group].push(item);
-    return acc;
-  }, {} as Record<string, typeof navigation>);
-
   const activeNav = navigation.find(item => pathname === item.href || (item.href !== '/backoffice' && pathname.startsWith(item.href)));
+  const selectedKey = activeNav?.href ?? '/backoffice';
 
   return (
-    <div className="min-h-screen bg-background flex font-inter text-foreground">
-      {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex flex-col w-80 bg-card border-r border-border h-screen sticky top-0 overflow-y-auto scrollbar-hide">
-        <div className="p-8 border-b border-border mb-8">
-          <Link href="/" className="flex items-center gap-4 group">
-            <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-primary/20 transition-transform group-hover:scale-105">
-              U
-            </div>
-            <div>
-              <span className="text-2xl font-bold text-foreground uppercase tracking-tighter block leading-none">PayU</span>
-              <span className="text-xs font-bold text-primary uppercase tracking-widest mt-1 block">Backoffice</span>
-            </div>
-          </Link>
-        </div>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Layout.Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        breakpoint="lg"
+        width={320}
+        style={{ background: 'var(--ant-color-bg-container)' }}
+      >
+        <Flex align="center" gap={16} style={{ padding: 32 }}>
+          <Avatar
+            shape="square"
+            size={48}
+            style={{ background: 'var(--ant-color-primary)', color: 'var(--ant-color-text-light-solid)', fontSize: 24, fontWeight: 700, flexShrink: 0 }}
+          >
+            U
+          </Avatar>
+          {!collapsed && (
+            <Space direction="vertical" size={4}>
+              <Typography.Title level={4} style={{ margin: 0, textTransform: 'uppercase' }}>PayU</Typography.Title>
+              <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ant-color-primary)' }}>Backoffice</Typography.Text>
+            </Space>
+          )}
+        </Flex>
+        <AntMenu
+          mode="inline"
+          selectedKeys={[selectedKey]}
+          style={{ borderInlineEnd: 'none' }}
+          items={GROUP_ORDER.flatMap((group) => {
+            const items = navigation.filter((n) => n.group === group);
+            if (items.length === 0) return [];
+            return [{
+              key: `group-${group}`,
+              type: 'group' as const,
+              label: collapsed ? undefined : group,
+              children: items.map((item) => ({
+                key: item.href,
+                icon: <item.icon style={{ fontSize: 20 }} />,
+                label: <Link href={item.href}>{item.name}</Link>,
+              })),
+            }];
+          })}
+        />
+      </Layout.Sider>
 
-        <nav className="flex-1 px-4 space-y-8 pb-10">
-          {Object.entries(groupedNav).map(([group, items]) => (
-            <div key={group} className="space-y-2">
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-6 mb-4 opacity-70">
-                {group}
-              </h3>
-              <div className="space-y-1">
-                {items.map((item) => (
-                  <SidebarItem
-                    key={item.href}
-                    href={item.href}
-                    icon={item.icon}
-                    label={item.name}
-                    active={pathname === item.href || (item.href !== '/backoffice' && pathname.startsWith(item.href))}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-24 bg-card/50 border-b border-border sticky top-0 z-30">
-          <div className="px-8 h-full flex items-center justify-between">
-            <div className="flex items-center gap-6">
+      <Layout>
+        <Layout.Header style={{ background: 'var(--ant-color-bg-container)', padding: '0 32px', height: 96, lineHeight: '96px' }}>
+          <Flex align="center" justify="space-between" style={{ height: '100%' }}>
+            <Flex align="center" gap={24}>
               <Button
                 type="text"
-                className="min-h-[44px] min-w-[44px] p-0 lg:hidden"
-                onClick={() => setIsSidebarOpen(true)}
-                icon={<Menu className="h-6 w-6" />}
+                onClick={() => setCollapsed((c) => !c)}
+                icon={<Menu style={{ fontSize: 24 }} />}
                 aria-label="Buka menu navigasi"
               />
-              <div className="hidden md:flex flex-col">
-                <h2 className="text-xl font-bold text-foreground">
+              <Space direction="vertical" size={4} style={{ lineHeight: 1.4 }}>
+                <Typography.Title level={4} style={{ margin: 0 }}>
                   {activeNav?.name || 'Dashboard'}
-                </h2>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">
+                </Typography.Title>
+                <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                   Secured Administrator Access
-                </p>
-              </div>
-            </div>
+                </Typography.Text>
+              </Space>
+            </Flex>
 
-            <div className="flex items-center gap-6">
-              <div className="hidden xl:flex items-center bg-muted/30 rounded-xl px-4 w-80 gap-3 border border-border focus-within:border-primary/30 transition-all">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  aria-label="Pencarian Universal Admin"
+            <Flex align="center" gap={24}>
+              <Input
+                aria-label="Pencarian Universal Admin"
+                placeholder="Universal Admin Search..."
+                prefix={<Search style={{ fontSize: 16, color: 'var(--ant-color-text-secondary)' }} />}
+                style={{ width: 320 }}
+              />
+              <Badge dot>
+                <Button
                   type="text"
-                  placeholder="Universal Admin Search..."
-                  className="bg-transparent border-none focus-visible:ring-0 text-xs font-bold uppercase tracking-widest w-full h-12"
+                  icon={<Bell style={{ fontSize: 20, color: 'var(--ant-color-text-secondary)' }} />}
+                  aria-label="Notifikasi"
                 />
-              </div>
-
-              <Button
-                type="text"
-                className="relative h-12 w-12 rounded-xl bg-muted/30 border border-border"
-                icon={<Bell className="h-5 w-5 text-muted-foreground" />}
-                aria-label="Notifikasi"
-              >
-                <span className="absolute top-3 right-3 h-2 w-2 bg-primary rounded-full border-2 border-background" />
-              </Button>
-
-              <div className="flex items-center gap-4 pl-6 border-l border-border">
-                <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold text-foreground uppercase">Administrator</p>
-                  <p className="text-xs font-bold text-primary uppercase tracking-widest">Super User</p>
-                </div>
-                <Avatar size={48} className="border-2 border-primary/20 shadow-lg shadow-primary/10 bg-primary/5 text-primary font-bold">
+              </Badge>
+              <Flex align="center" gap={16}>
+                <Space direction="vertical" size={0} style={{ textAlign: 'right', lineHeight: 1.4 }}>
+                  <Typography.Text strong style={{ fontSize: 12, textTransform: 'uppercase' }}>Administrator</Typography.Text>
+                  <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ant-color-primary)' }}>Super User</Typography.Text>
+                </Space>
+                <Avatar size={48} style={{ background: 'var(--ant-color-primary-bg)', color: 'var(--ant-color-primary)', fontWeight: 700 }}>
                   AD
                 </Avatar>
-              </div>
-            </div>
-          </div>
-        </header>
+              </Flex>
+            </Flex>
+          </Flex>
+        </Layout.Header>
 
-        <main className="p-8 lg:p-8 overflow-y-auto">
-          <>{children}</>
-        </main>
-      </div>
-    </div>
+        <Layout.Content style={{ padding: 32, overflowY: 'auto' }}>
+          {children}
+        </Layout.Content>
+      </Layout>
+    </Layout>
   );
 }

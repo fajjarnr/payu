@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import type { CSSProperties } from 'react';
 import {
   Send,
   Search,
@@ -15,39 +16,25 @@ import {
   ChevronRight,
   Plus
 } from '@/components/icons';
-import { Badge, Button, Input, Table } from 'antd';
+import { Avatar, Button, Card, Divider, Flex, Input, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
 import type { Notification } from '@/services';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotifications } from '@/hooks/useNotifications';
+import StatCards from '../_components/StatCards';
+
+const labelStyle: CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: 'var(--ant-color-text-secondary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+};
 
 export default function BroadcastPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { accountId } = useAuthStore();
   const { data: notifications, isLoading, error } = useNotifications(accountId ?? '', 20);
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'SENT':
-        return <Badge count="Sent" color="green" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-primary/10 [&_sup]:text-primary [&_sup]:border [&_sup]:border-primary/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
-      case 'SCHEDULED':
-        return <Badge count="Scheduled" color="gold" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-warning/10 [&_sup]:text-warning [&_sup]:border [&_sup]:border-warning/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
-      case 'FAILED':
-        return <Badge count="Failed" color="red" className="px-3 py-1 uppercase tracking-widest text-xs [&_sup]:bg-error/10 [&_sup]:text-error [&_sup]:border [&_sup]:border-error/20 [&_sup]:px-3 [&_sup]:py-1 [&_sup]:rounded-full [&_sup]:font-semibold" />;
-      default:
-        return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">{status}</span>;
-    }
-  };
-
-  const getChannelIcon = (channel: string) => {
-    switch (channel) {
-      case 'PUSH': return <Smartphone className="h-3 w-3" />;
-      case 'SMS': return <MessageSquare className="h-3 w-3" />;
-      case 'EMAIL': return <Mail className="h-3 w-3" />;
-      case 'WHATSAPP': return <Bell className="h-3 w-3 text-primary" />;
-      default: return null;
-    }
-  };
 
   const filteredBroadcasts = (notifications ?? []).filter((bc) =>
     (bc.title ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
@@ -58,135 +45,128 @@ export default function BroadcastPage() {
       key: 'title',
       title: 'Broadcast Title',
       render: (_, bc) => (
-        <div className="space-y-1">
-          <p className="font-bold text-foreground text-sm uppercase tracking-tight">{bc.title}</p>
-          <div className="flex items-center gap-2">
-            <Users className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{bc.recipient}</span>
-          </div>
-        </div>
+        <Space direction="vertical" size={4}>
+          <Typography.Text strong style={{ fontSize: 14, textTransform: 'uppercase' }}>{bc.title}</Typography.Text>
+          <Space size={8}>
+            <Users style={{ fontSize: 12, color: 'var(--ant-color-text-secondary)' }} />
+            <Typography.Text type="secondary" strong style={labelStyle}>{bc.recipient}</Typography.Text>
+          </Space>
+        </Space>
       ),
     },
     {
       key: 'channels',
-      title: 'Channels',
       render: (_, bc) => (
-        <div className="flex items-center gap-1.5">
-          <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center border border-border" title={bc.channel}>
-            {getChannelIcon(bc.channel)}
-          </div>
-        </div>
+        <Avatar
+          shape="square"
+          size={28}
+          style={{ background: 'var(--ant-color-fill-tertiary)', color: 'var(--ant-color-text-secondary)' }}
+          icon={channelIcon(bc.channel)}
+        />
       ),
     },
     {
       key: 'status',
       title: 'Status',
-      render: (_, bc) => getStatusBadge(bc.status),
+      render: (_, bc) => broadcastStatusBadge(bc.status),
     },
     {
       key: 'reach',
       title: 'Reach',
-      render: () => <span className="text-xs font-bold text-foreground">—</span>,
+      render: () => <Typography.Text strong style={{ fontSize: 12 }}>—</Typography.Text>,
     },
     {
       key: 'engagement',
       title: 'Engagement',
-      render: () => <span className="text-xs font-bold text-primary">—</span>,
+      render: () => <Typography.Text strong style={{ fontSize: 12, color: 'var(--ant-color-primary)' }}>—</Typography.Text>,
     },
     {
       key: 'date',
       title: 'Date',
       align: 'right',
       render: (_, bc) => (
-        <div>
-          <p className="text-xs font-medium text-foreground">{new Date(bc.createdAt).toLocaleTimeString()}</p>
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widester mt-0.5">{new Date(bc.createdAt).toLocaleDateString()}</p>
-        </div>
+        <Space direction="vertical" size={2} style={{ textAlign: 'right' }}>
+          <Typography.Text style={{ fontSize: 12 }}>{new Date(bc.createdAt).toLocaleTimeString()}</Typography.Text>
+          <Typography.Text type="secondary" strong style={labelStyle}>{new Date(bc.createdAt).toLocaleDateString()}</Typography.Text>
+        </Space>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <>
-        {/* Header Stats */}
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              { label: 'Broadcasts Sent', value: isLoading ? '…' : String(notifications?.length ?? 0), color: 'bg-primary', icon: Send },
-              { label: 'Total Messages', value: '—', color: 'bg-primary', icon: Smartphone },
-              { label: 'Avg Open Rate', value: '—', color: 'bg-secondary', icon: CheckCircle2 },
-              { label: 'Unsubscribe Rate', value: '—', color: 'bg-error', icon: AlertCircle },
-            ].map((stat, i) => (
-              <div key={i} className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-                <div className={`${stat.color} h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg`}>
-                  <stat.icon className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</p>
-                  <p className="text-2xl font-bold text-foreground mt-0.5">{stat.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+    <Space direction="vertical" size={24} style={{ width: '100%' }}>
+      <StatCards stats={[
+        { label: 'Broadcasts Sent', value: isLoading ? '…' : String(notifications?.length ?? 0), icon: Send },
+        { label: 'Total Messages', value: '—', icon: Smartphone },
+        { label: 'Avg Open Rate', value: '—', icon: CheckCircle2 },
+        { label: 'Unsubscribe Rate', value: '—', icon: AlertCircle },
+      ]} />
 
-        {/* Toolbar */}
-        <>
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card border border-border p-5 sm:p-6 rounded-2xl shadow-sm">
-            <div className="flex items-center gap-4 w-full lg:w-auto">
-              <div className="relative flex-1 lg:w-96 flex items-center">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-                <Input
-                  aria-label="Cari siaran"
-                  placeholder="Search broadcasts..."
-                  className="pl-12 bg-muted/30 border-border h-12 rounded-xl text-xs font-bold uppercase tracking-widest w-full"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+      <Card>
+        <Flex gap={16} wrap align="center" justify="space-between">
+          <Input
+            aria-label="Cari siaran"
+            placeholder="Search broadcasts..."
+            prefix={<Search style={{ fontSize: 16, color: 'var(--ant-color-text-secondary)' }} />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: 1, minWidth: 200, maxWidth: 384 }}
+          />
+          <Flex gap={16} wrap>
+            <Button icon={<Users style={{ fontSize: 16 }} />}>
+              Targeting Rules
+            </Button>
+            <Button type="primary" icon={<Plus style={{ fontSize: 16 }} />}>
+              Create Broadcast
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
 
-            <div className="flex items-center gap-4 w-full lg:w-auto">
-              <Button className="h-12 px-6 rounded-xl border-border bg-card text-xs font-bold tracking-widest uppercase gap-2">
-                <Users className="h-4 w-4" />
-                Targeting Rules
-              </Button>
-              <Button type="primary" className="h-12 px-6 rounded-xl bg-primary-dark hover:bg-primary text-surface font-bold text-xs tracking-widest uppercase gap-2">
-                <Plus className="h-4 w-4" />
-                Create Broadcast
-              </Button>
-            </div>
-          </div>
-        </>
-
-        {/* Broadcast Table */}
-        <>
-          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <Table<Notification>
-              columns={columns}
-              dataSource={filteredBroadcasts}
-              rowKey="id"
-              pagination={false}
-              loading={isLoading}
-              locale={{ emptyText: error ? 'Failed to load broadcasts' : 'No broadcasts found' }}
-            />
-
-            <div className="p-6 border-t border-border flex items-center justify-between">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                Multi-channel Delivery Engine Active
-              </p>
-              <div className="flex items-center gap-2">
-                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronLeft className="h-4 w-4" />} aria-label="Halaman sebelumnya" />
-                <div className="h-10 px-4 flex items-center justify-center rounded-xl bg-primary text-surface font-bold text-xs">
-                  1
-                </div>
-                <Button className="min-h-[44px] min-w-[44px] rounded-xl border-border hover:bg-muted/50 p-0 flex items-center justify-center" disabled icon={<ChevronRight className="h-4 w-4" />} aria-label="Halaman berikutnya" />
-              </div>
-            </div>
-          </div>
-        </>
-      </>
-    </div>
+      <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
+        <Table<Notification>
+          columns={columns}
+          dataSource={filteredBroadcasts}
+          rowKey="id"
+          pagination={false}
+          loading={isLoading}
+          locale={{ emptyText: error ? 'Failed to load broadcasts' : 'No broadcasts found' }}
+        />
+        <Divider style={{ margin: 0 }} />
+        <Flex align="center" justify="space-between" wrap gap={16} style={{ padding: 24 }}>
+          <Typography.Text type="secondary" strong style={labelStyle}>
+            Multi-channel Delivery Engine Active
+          </Typography.Text>
+          <Flex align="center" gap={8}>
+            <Button icon={<ChevronLeft style={{ fontSize: 16 }} />} aria-label="Halaman sebelumnya" disabled />
+            <Button type="primary">1</Button>
+            <Button icon={<ChevronRight style={{ fontSize: 16 }} />} aria-label="Halaman berikutnya" disabled />
+          </Flex>
+        </Flex>
+      </Card>
+    </Space>
   );
+}
+
+function broadcastStatusBadge(status: string) {
+  switch (status) {
+    case 'SENT':
+      return <Tag color="green">Sent</Tag>;
+    case 'SCHEDULED':
+      return <Tag color="gold">Scheduled</Tag>;
+    case 'FAILED':
+      return <Tag color="red">Failed</Tag>;
+    default:
+      return <Tag>{status}</Tag>;
+  }
+}
+
+function channelIcon(channel: string) {
+  switch (channel) {
+    case 'PUSH': return <Smartphone style={{ fontSize: 12 }} />;
+    case 'SMS': return <MessageSquare style={{ fontSize: 12 }} />;
+    case 'EMAIL': return <Mail style={{ fontSize: 12 }} />;
+    case 'WHATSAPP': return <Bell style={{ fontSize: 12, color: 'var(--ant-color-primary)' }} />;
+    default: return null;
+  }
 }

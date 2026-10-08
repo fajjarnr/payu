@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BackofficeService, FraudCaseStatus } from '@/services';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/lib/navigation';
+import { Button, Card, Descriptions, Flex, Input, Space, Spin, Typography } from 'antd';
 
 export default function FraudCaseDetailPage() {
  const { id } = useParams() as { id: string };
@@ -28,107 +29,74 @@ export default function FraudCaseDetailPage() {
  });
 
  if (isLoading) {
-  return <div>Loading...</div>;
+  return <Spin data-testid="loading" />;
  }
 
  if (!fraudCase) {
-  return <div>Case not found</div>;
+  return <Typography.Text data-testid="not-found">Case not found</Typography.Text>;
  }
 
  return (
-  <div className="space-y-6">
-   <div className="bg-white dark:bg-secondary shadow overflow-hidden sm:rounded-lg">
-    <div className="px-4 py-5 sm:px-6">
-     <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-primary">Fraud Case Details</h3>
-     <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-text-secondary">
-      Case ID: {fraudCase.id}
-     </p>
-    </div>
-    <div className="border-t border-gray-200 dark:border-border">
-     <dl>
-      <div className="bg-gray-50 dark:bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500 dark:text-text-secondary">User ID</dt>
-       <dd className="mt-1 text-sm text-gray-900 dark:text-primary sm:mt-0 sm:col-span-2">{fraudCase.userId}</dd>
-      </div>
-      <div className="bg-white dark:bg-secondary px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500 dark:text-text-secondary">Account Number</dt>
-       <dd className="mt-1 text-sm text-gray-900 dark:text-primary sm:mt-0 sm:col-span-2">{fraudCase.accountNumber}</dd>
-      </div>
-      <div className="bg-gray-50 dark:bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500 dark:text-text-secondary">Transaction ID</dt>
-       <dd className="mt-1 text-sm text-gray-900 dark:text-primary sm:mt-0 sm:col-span-2">{fraudCase.transactionId}</dd>
-      </div>
-       <div className="bg-white dark:bg-secondary px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500 dark:text-text-secondary">Transaction Amount</dt>
-       <dd className="mt-1 text-sm text-gray-900 dark:text-primary sm:mt-0 sm:col-span-2">{fraudCase.amount}</dd>
-      </div>
-      <div className="bg-gray-50 dark:bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500 dark:text-text-secondary">Risk Level</dt>
-       <dd className="mt-1 text-sm text-gray-900 dark:text-primary sm:mt-0 sm:col-span-2">{fraudCase.riskLevel}</dd>
-      </div>
-      <div className="bg-white dark:bg-secondary px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500 dark:text-text-secondary">Fraud Type</dt>
-       <dd className="mt-1 text-sm text-gray-900 dark:text-primary sm:mt-0 sm:col-span-2">{fraudCase.fraudType}</dd>
-      </div>
-       <div className="bg-gray-50 dark:bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500 dark:text-text-secondary">Description</dt>
-       <dd className="mt-1 text-sm text-gray-900 dark:text-primary sm:mt-0 sm:col-span-2">{fraudCase.description}</dd>
-      </div>
-       <div className="bg-white dark:bg-secondary px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-gray-500 dark:text-text-secondary">Current Status</dt>
-       <dd className="mt-1 text-sm text-gray-900 dark:text-primary sm:mt-0 sm:col-span-2">{fraudCase.status}</dd>
-      </div>
-     </dl>
-    </div>
-   </div>
+  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+   <Card
+     title={<Typography.Title level={4} style={{ margin: 0 }}>Fraud Case Details</Typography.Title>}
+     extra={<Typography.Text type="secondary">Case ID: {fraudCase.id}</Typography.Text>}
+   >
+    <Descriptions column={1} bordered>
+     <Descriptions.Item label="User ID">{fraudCase.userId}</Descriptions.Item>
+     <Descriptions.Item label="Account Number">{fraudCase.accountNumber}</Descriptions.Item>
+     <Descriptions.Item label="Transaction ID">{fraudCase.transactionId}</Descriptions.Item>
+     <Descriptions.Item label="Transaction Amount">{fraudCase.amount}</Descriptions.Item>
+     <Descriptions.Item label="Risk Level">{fraudCase.riskLevel}</Descriptions.Item>
+     <Descriptions.Item label="Fraud Type">{fraudCase.fraudType}</Descriptions.Item>
+     <Descriptions.Item label="Description">{fraudCase.description}</Descriptions.Item>
+     <Descriptions.Item label="Current Status">{fraudCase.status}</Descriptions.Item>
+    </Descriptions>
+   </Card>
 
    {(fraudCase.status === FraudCaseStatus.OPEN || fraudCase.status === FraudCaseStatus.UNDER_INVESTIGATION) && (
-    <div className="bg-white dark:bg-secondary shadow sm:rounded-lg p-6">
-     <h4 className="text-lg font-medium text-gray-900 dark:text-primary mb-4">Resolve Case</h4>
-     <div className="mb-4">
-      <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-primary">
-       Notes
-      </label>
-      <textarea
-       id="notes"
-       rows={3}
-       className="mt-1 block w-full rounded-md border-gray-300 dark:border-border shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm"
-       value={decisionNotes}
-       onChange={(e) => setDecisionNotes(e.target.value)}
-      />
-     </div>
-     <div className="flex space-x-3">
-       <button
-       onClick={() => mutation.mutate(FraudCaseStatus.UNDER_INVESTIGATION)}
-       disabled={mutation.isPending}
-       className="inline-flex items-center min-h-[44px] px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-      >
-       Investigate
-      </button>
-      <button
-       onClick={() => mutation.mutate(FraudCaseStatus.RESOLVED)}
-       disabled={mutation.isPending}
-       className="inline-flex items-center min-h-[44px] px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-      >
-       Resolve (Confirmed Fraud)
-      </button>
-      <button
-       onClick={() => mutation.mutate(FraudCaseStatus.FALSE_POSITIVE)}
-       disabled={mutation.isPending}
-       className="inline-flex items-center min-h-[44px] px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-      >
-       False Positive
-      </button>
-       <button
-       onClick={() => mutation.mutate(FraudCaseStatus.CLOSED)}
-       disabled={mutation.isPending}
-       className="inline-flex items-center min-h-[44px] px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-      >
-       Close
-      </button>
-     </div>
-    </div>
+    <Card title={<Typography.Title level={4} style={{ margin: 0 }}>Resolve Case</Typography.Title>}>
+     <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space direction="vertical" size={4} style={{ width: '100%' }}>
+       <Typography.Text strong>Notes</Typography.Text>
+       <Input.TextArea
+        id="notes"
+        rows={3}
+        value={decisionNotes}
+        onChange={(e) => setDecisionNotes(e.target.value)}
+       />
+      </Space>
+      <Flex gap={12} wrap>
+       <Button
+        type="primary"
+        onClick={() => mutation.mutate(FraudCaseStatus.UNDER_INVESTIGATION)}
+        disabled={mutation.isPending}
+       >
+        Investigate
+       </Button>
+       <Button
+        type="primary"
+        onClick={() => mutation.mutate(FraudCaseStatus.RESOLVED)}
+        disabled={mutation.isPending}
+       >
+        Resolve (Confirmed Fraud)
+       </Button>
+       <Button
+        onClick={() => mutation.mutate(FraudCaseStatus.FALSE_POSITIVE)}
+        disabled={mutation.isPending}
+       >
+        False Positive
+       </Button>
+       <Button
+        onClick={() => mutation.mutate(FraudCaseStatus.CLOSED)}
+        disabled={mutation.isPending}
+       >
+        Close
+       </Button>
+      </Flex>
+     </Space>
+    </Card>
    )}
-  </div>
+  </Space>
  );
 }

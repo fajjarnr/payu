@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, Building2, CreditCard, Plus, Loader2 } from '@/components/icons';
+import { Trash2, Building2, CreditCard, Plus } from '@/components/icons';
 import { useTranslations } from 'next-intl';
-import { Button, Input } from 'antd';
+import { Button, Card, Col, Divider, Empty, Input, List, Row, Skeleton, Space, Tag, Typography } from 'antd';
 
-
-import { Card } from 'antd';
 import { useBeneficiaries, useCreateBeneficiary, useDeleteBeneficiary } from '@/hooks/useBeneficiaries';
 import { notify as toast } from '@/lib/notify';
 
@@ -21,6 +19,20 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
   const createMut = useCreateBeneficiary(accountId);
   const deleteMut = useDeleteBeneficiary(accountId);
 
+  const errorMessage = (err: unknown, fallback: string) => {
+    if (err && typeof err === 'object' && 'response' in err) {
+      const response = err.response;
+      if (response && typeof response === 'object' && 'data' in response) {
+        const data = response.data;
+        if (data && typeof data === 'object' && 'error' in data) {
+          const e = data.error;
+          if (e && typeof e === 'object' && 'message' in e && typeof e.message === 'string') return e.message;
+        }
+      }
+    }
+    if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') return err.message;
+    return fallback;
+  };
   const [bankCode, setBankCode] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [nickname, setNickname] = useState('');
@@ -42,7 +54,7 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
       toast.success(t('added'));
       setBankCode(''); setAccountNumber(''); setNickname('');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: { message?: string } } }; message?: string })?.response?.data?.error?.message || (err as { message?: string })?.message || t('addFailed');
+      toast.error(errorMessage(err, t('addFailed')));
     }
   };
 
@@ -51,82 +63,103 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
       await deleteMut.mutateAsync(id);
       toast.success(t('removed'));
     } catch (err: unknown) {
-      toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message || t('deleteFailed'));
+      toast.error(errorMessage(err, t('deleteFailed')));
     }
   };
 
   return (
-    <Card data-testid="beneficiary-manager" className="overflow-hidden" styles={{ body: { display: 'contents' } }}>
-      <div className="flex flex-col space-y-1.5 p-6 pb-4">
-        <h3 className="text-2xl font-bold leading-none tracking-tight flex items-center gap-2 text-base">
-          <Building2 className="h-5 w-5 text-primary" aria-hidden="true" />
-          {t('title')}
-        </h3>
-        <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]">{t('description')}</p>
-      </div>
-      <div className="p-6 pt-0 space-y-6">
-        {/* List */}
-        <div className="space-y-3" role="list" aria-label="Beneficiary list">
-          {isLoading ? (
-            <div className="space-y-2" aria-busy="true">
-              <div className="h-16 bg-muted animate-pulse rounded-xl" />
-              <div className="h-16 bg-muted/50 animate-pulse rounded-xl" />
-            </div>
-          ) : !beneficiaries || beneficiaries.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6" data-testid="beneficiary-empty">{t('empty')}</p>
-          ) : (
-            beneficiaries.map((b) => (
-              <div key={b.id} role="listitem" data-testid={`beneficiary-${b.id}`} className="flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/10 shrink-0">
-                    <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold truncate">{b.nickname || b.accountName} <span className="text-xs font-mono text-muted-foreground">({b.bankCode})</span></p>
-                    <p className="text-xs font-mono text-muted-foreground truncate">{b.accountNumber}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {onSelect && (
-                    <Button type="default" size="small" onClick={() => onSelect(b.accountNumber)} data-testid={`beneficiary-select-${b.id}`} className="cursor-pointer border-transparent bg-transparent hover:bg-muted hover:text-foreground hover:border-transparent active:bg-transparent active:border-transparent">
-                      {t('use')}
-                    </Button>
-                  )}
-                  <Button type="default" onClick={() => handleDelete(b.id)} disabled={deleteMut.isPending} aria-label={t('delete', { name: b.nickname || b.accountNumber })} data-testid={`beneficiary-delete-${b.id}`} className="h-11 w-11 cursor-pointer border-transparent bg-transparent hover:bg-muted hover:text-foreground hover:border-transparent active:bg-transparent active:border-transparent">
-                    {deleteMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+    <Card
+      data-testid="beneficiary-manager"
+      title={
+        <Space size={8}>
+          <Building2 style={{ fontSize: 20, color: 'var(--ant-color-primary)' }} aria-hidden="true" />
+          <Typography.Text strong>{t('title')}</Typography.Text>
+        </Space>
+      }
+    >
+      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <Typography.Text type="secondary">{t('description')}</Typography.Text>
+        {isLoading ? (
+          <Skeleton active paragraph={{ rows: 2 }} aria-busy="true" />
+        ) : !beneficiaries || beneficiaries.length === 0 ? (
+          <Empty description={t('empty')}>
+            <Typography.Text data-testid="beneficiary-empty" type="secondary">{t('empty')}</Typography.Text>
+          </Empty>
+        ) : (
+          <div role="list" aria-label="Beneficiary list">
+          <List
+            dataSource={beneficiaries}
+            renderItem={(b) => (
+              <List.Item
+                key={b.id}
+                role="listitem"
+                data-testid={`beneficiary-${b.id}`}
+                actions={[
+                  ...(onSelect
+                    ? [<Button key="use" type="link" size="small" onClick={() => onSelect(b.accountNumber)} data-testid={`beneficiary-select-${b.id}`}>{t('use')}</Button>]
+                    : []),
+                  <Button
+                    key="delete"
+                    type="text"
+                    danger
+                    icon={<Trash2 style={{ fontSize: 16 }} />}
+                    loading={deleteMut.isPending}
+                    onClick={() => handleDelete(b.id)}
+                    aria-label={t('delete', { name: b.nickname || b.accountNumber })}
+                    data-testid={`beneficiary-delete-${b.id}`}
+                  />,
+                ]}
+              >
+                <List.Item.Meta
+                  avatar={
+                    <span style={{ width: 40, height: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ant-color-primary-bg)', border: '1px solid var(--ant-color-border)' }}>
+                      <CreditCard style={{ fontSize: 20, color: 'var(--ant-color-primary)' }} aria-hidden="true" />
+                    </span>
+                  }
+                  title={
+                    <Space size={8}>
+                      <Typography.Text strong ellipsis>{b.nickname || b.accountName}</Typography.Text>
+                      <Tag>{b.bankCode}</Tag>
+                    </Space>
+                  }
+                  description={<Typography.Text type="secondary" copyable={false}>{b.accountNumber}</Typography.Text>}
+                />
+              </List.Item>
+            )}
+          />
+          </div>
+        )}
 
-        {/* Create form */}
-        <div className="bg-muted/30 p-4 sm:p-6 rounded-xl border border-border space-y-4" data-testid="beneficiary-form">
-          <h4 className="text-xs font-bold tracking-[0.15em] uppercase text-muted-foreground">{t('addTitle')}</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <label htmlFor="beneficiary-bankCode" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-widest">{t('bankCode')}</label>
-              <Input id="beneficiary-bankCode" data-testid="beneficiary-bankCode" value={bankCode} onChange={(e) => setBankCode(e.target.value)} placeholder="014" maxLength={10} className="flex h-14 min-h-[44px] w-full rounded-xl border border-border bg-muted/20 px-6 py-3 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 h-11" />
-              {errors.bankCode && <p className="text-xs text-destructive" role="alert">{errors.bankCode}</p>}
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <label htmlFor="beneficiary-accountNumber" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-widest">{t('accountNumber')}</label>
-              <Input id="beneficiary-accountNumber" data-testid="beneficiary-accountNumber" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g,''))} placeholder="1234567890" inputMode="numeric" className="flex h-14 min-h-[44px] w-full rounded-xl border border-border bg-muted/20 px-6 py-3 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 h-11" />
-              {errors.accountNumber && <p className="text-xs text-destructive" role="alert">{errors.accountNumber}</p>}
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <label htmlFor="beneficiary-nickname" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-widest">{t('nicknameOptional')}</label>
-            <Input id="beneficiary-nickname" data-testid="beneficiary-nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="My BCA" maxLength={100} className="flex h-14 min-h-[44px] w-full rounded-xl border border-border bg-muted/20 px-6 py-3 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 h-11" />
-            {errors.nickname && <p className="text-xs text-destructive" role="alert">{errors.nickname}</p>}
-          </div>
-          <Button type="primary" size="large" onClick={handleCreate} disabled={createMut.isPending} data-testid="beneficiary-create" className="w-full sm:w-auto cursor-pointer">
-            {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+        <Divider />
+
+        <Space direction="vertical" size={16} style={{ width: '100%' }} data-testid="beneficiary-form">
+          <Typography.Text strong>{t('addTitle')}</Typography.Text>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                <Typography.Text>{t('bankCode')}</Typography.Text>
+                <Input id="beneficiary-bankCode" data-testid="beneficiary-bankCode" value={bankCode} onChange={(e) => setBankCode(e.target.value)} placeholder="014" maxLength={10} status={errors.bankCode ? 'error' : undefined} />
+                {errors.bankCode && <Typography.Text type="danger" role="alert">{errors.bankCode}</Typography.Text>}
+              </Space>
+            </Col>
+            <Col span={16}>
+              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                <Typography.Text>{t('accountNumber')}</Typography.Text>
+                <Input id="beneficiary-accountNumber" data-testid="beneficiary-accountNumber" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g,''))} placeholder="1234567890" inputMode="numeric" status={errors.accountNumber ? 'error' : undefined} />
+                {errors.accountNumber && <Typography.Text type="danger" role="alert">{errors.accountNumber}</Typography.Text>}
+              </Space>
+            </Col>
+          </Row>
+          <Space direction="vertical" size={4} style={{ width: '100%' }}>
+            <Typography.Text>{t('nicknameOptional')}</Typography.Text>
+            <Input id="beneficiary-nickname" data-testid="beneficiary-nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="My BCA" maxLength={100} status={errors.nickname ? 'error' : undefined} />
+            {errors.nickname && <Typography.Text type="danger" role="alert">{errors.nickname}</Typography.Text>}
+          </Space>
+          <Button type="primary" size="large" onClick={handleCreate} loading={createMut.isPending} icon={<Plus style={{ fontSize: 16 }} />} data-testid="beneficiary-create">
             {t('add')}
           </Button>
-        </div>
-      </div>
+        </Space>
+      </Space>
     </Card>
   );
 }

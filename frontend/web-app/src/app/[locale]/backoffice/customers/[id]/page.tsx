@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BackofficeService, CustomerCaseStatus } from '@/services';
 import { useParams } from 'next/navigation';
+import { Button, Card, Descriptions, Flex, Input, Select, Space, Spin, Typography } from 'antd';
 
 export default function CustomerCaseDetailPage() {
  const { id } = useParams() as { id: string };
@@ -29,96 +30,66 @@ export default function CustomerCaseDetailPage() {
  });
 
  if (isLoading) {
-  return <div>Loading...</div>;
+  return <Spin data-testid="loading" />;
  }
 
  if (!customerCase) {
-  return <div>Case not found</div>;
+  return <Typography.Text data-testid="not-found">Case not found</Typography.Text>;
  }
 
  return (
-  <div className="space-y-6">
-   <div className="bg-surface shadow overflow-hidden sm:rounded-lg">
-    <div className="px-4 py-5 sm:px-6">
-     <h3 className="text-lg leading-6 font-medium text-text-primary">Customer Case: {customerCase.caseNumber}</h3>
-     <p className="mt-1 max-w-2xl text-sm text-text-secondary">
-      {customerCase.subject}
-     </p>
-    </div>
-    <div className="border-t border-border">
-     <dl>
-      <div className="bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-text-secondary">User ID</dt>
-       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.userId}</dd>
-      </div>
-       <div className="bg-surface px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-text-secondary">Case Type</dt>
-       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.caseType}</dd>
-      </div>
-       <div className="bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-text-secondary">Priority</dt>
-       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.priority}</dd>
-      </div>
-       <div className="bg-surface px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-text-secondary">Description</dt>
-       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2 whitespace-pre-wrap">{customerCase.description}</dd>
-      </div>
-      <div className="bg-surface-dim px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-text-secondary">Current Status</dt>
-       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.status}</dd>
-      </div>
-       <div className="bg-surface px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-       <dt className="text-sm font-medium text-text-secondary">Latest Notes</dt>
-       <dd className="mt-1 text-sm text-text-primary sm:mt-0 sm:col-span-2">{customerCase.notes}</dd>
-      </div>
-     </dl>
-    </div>
-   </div>
+  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+   <Card
+     title={<Typography.Title level={4} style={{ margin: 0 }}>Customer Case: {customerCase.caseNumber}</Typography.Title>}
+     extra={<Typography.Text type="secondary">{customerCase.subject}</Typography.Text>}
+   >
+    <Descriptions column={1} bordered>
+     <Descriptions.Item label="User ID">{customerCase.userId}</Descriptions.Item>
+     <Descriptions.Item label="Case Type">{customerCase.caseType}</Descriptions.Item>
+     <Descriptions.Item label="Priority">{customerCase.priority}</Descriptions.Item>
+     <Descriptions.Item label="Description"><Typography.Text style={{ whiteSpace: 'pre-wrap' }}>{customerCase.description}</Typography.Text></Descriptions.Item>
+     <Descriptions.Item label="Current Status">{customerCase.status}</Descriptions.Item>
+     <Descriptions.Item label="Latest Notes">{customerCase.notes}</Descriptions.Item>
+    </Descriptions>
+   </Card>
 
-   <div className="bg-surface shadow sm:rounded-lg p-6">
-    <h4 className="text-lg font-medium text-text-primary mb-4">Update Case</h4>
-     <div className="mb-4">
-      <label htmlFor="status" className="block text-sm font-medium text-text-primary">
-       New Status
-      </label>
-      <select
+   <Card title={<Typography.Title level={4} style={{ margin: 0 }}>Update Case</Typography.Title>}>
+    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+     <Space direction="vertical" size={4} style={{ width: '100%' }}>
+      <Typography.Text strong>New Status</Typography.Text>
+      <Select
        id="status"
-       className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-       value={newStatus}
-       onChange={(e) => setNewStatus(e.target.value as CustomerCaseStatus)}
+       style={{ width: '100%' }}
+       value={newStatus || undefined}
+       placeholder="Select Status"
+       onChange={(value) => setNewStatus(value as CustomerCaseStatus)}
+       options={Object.values(CustomerCaseStatus).map((s) => ({ value: s, label: s }))}
+      />
+     </Space>
+     <Space direction="vertical" size={4} style={{ width: '100%' }}>
+      <Typography.Text strong>Notes</Typography.Text>
+      <Input.TextArea
+       id="notes"
+       rows={3}
+       value={updateNotes}
+       onChange={(e) => setUpdateNotes(e.target.value)}
+      />
+     </Space>
+     <Flex>
+      <Button
+       type="primary"
+       onClick={() => {
+        if (newStatus) {
+          mutation.mutate(newStatus as CustomerCaseStatus)
+        }
+       }}
+       disabled={mutation.isPending || !newStatus}
       >
-       <option value="">Select Status</option>
-       {Object.values(CustomerCaseStatus).map((s) => (
-        <option key={s} value={s}>
-         {s}
-        </option>
-       ))}
-      </select>
-     </div>
-    <div className="mb-4">
-     <label htmlFor="notes" className="block text-sm font-medium text-text-primary">
-      Notes
-     </label>
-     <textarea
-      id="notes"
-      rows={3}
-      className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-      value={updateNotes}
-      onChange={(e) => setUpdateNotes(e.target.value)}
-     />
-    </div>
-    <button
-     onClick={() => {
-      if (newStatus) {
-        mutation.mutate(newStatus as CustomerCaseStatus)
-      }
-     }}
-     disabled={mutation.isPending || !newStatus}
-     className="inline-flex items-center min-h-[44px] px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-surface bg-primary-dark hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-primary-light"
-    >
-     Update Case
-    </button>
-   </div>
-  </div>
+       Update Case
+      </Button>
+     </Flex>
+    </Space>
+   </Card>
+  </Space>
  );
 }

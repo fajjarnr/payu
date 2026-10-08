@@ -1,13 +1,13 @@
 'use client';
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BackofficeService, CustomerCaseStatus, CustomerCasePriority } from '@/services';
 import type { CustomerCaseResponse } from '@/services';
 import { Link } from '@/lib/navigation';
 import { Search, ChevronLeft, ChevronRight, MessageSquare } from '@/components/icons';
-import { Badge, Button, Input, Select, Table } from 'antd';
+import { Button, Card, Divider, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
-import clsx from 'clsx';
 
 export default function CustomerCasesPage() {
  const [status, setStatus] = useState<string>('');
@@ -24,48 +24,34 @@ export default function CustomerCasesPage() {
     {
       key: 'caseNumber',
       title: 'No. Tiket',
-      render: (_, c) => <span className="font-bold text-muted-foreground tabular-nums">#{c.caseNumber}</span>,
+      render: (_, c) => <Typography.Text type="secondary" strong style={{ fontVariantNumeric: 'tabular-nums' }}>#{c.caseNumber}</Typography.Text>,
     },
     {
       key: 'subject',
       title: 'Subjek & Nasabah',
       render: (_, c) => (
-        <div>
-          <div className="text-sm font-bold text-foreground">{c.subject}</div>
-          <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{c.userId}</div>
-        </div>
+        <Space direction="vertical" size={0}>
+          <Typography.Text strong style={{ fontSize: 14 }}>{c.subject}</Typography.Text>
+          <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{c.userId}</Typography.Text>
+        </Space>
       ),
     },
     {
       key: 'priority',
       title: 'Prioritas',
       render: (_, c) => (
-        <Badge
-          count={c.priority}
-          color={c.priority === CustomerCasePriority.URGENT ? 'red' : undefined}
-          showZero
-          className={clsx(
-            "font-bold uppercase tracking-widest",
-            c.priority === CustomerCasePriority.HIGH && "[&_sup]:border-accent [&_sup]:text-accent [&_sup]:bg-accent/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.priority === CustomerCasePriority.MEDIUM && "[&_sup]:border-primary [&_sup]:text-primary [&_sup]:bg-primary/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.priority === CustomerCasePriority.LOW && "[&_sup]:border-text-secondary [&_sup]:text-text-secondary [&_sup]:bg-text-secondary/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-          )}
-        />
+        <Tag color={c.priority === CustomerCasePriority.URGENT ? 'red' : c.priority === CustomerCasePriority.HIGH ? 'orange' : c.priority === CustomerCasePriority.MEDIUM ? 'blue' : undefined}>
+          {c.priority}
+        </Tag>
       ),
     },
     {
       key: 'status',
       title: 'Status',
       render: (_, c) => (
-        <Badge
-          count={c.status}
-          showZero
-          className={clsx(
-            "font-bold uppercase tracking-widest",
-            c.status === CustomerCaseStatus.OPEN && "[&_sup]:text-secondary [&_sup]:bg-secondary/5 [&_sup]:border-secondary/10 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.status === CustomerCaseStatus.RESOLVED && "[&_sup]:text-primary-dark [&_sup]:bg-primary-dark/5 [&_sup]:border-primary-dark/10 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-          )}
-        />
+        <Tag color={c.status === CustomerCaseStatus.OPEN ? 'blue' : c.status === CustomerCaseStatus.RESOLVED ? 'green' : undefined}>
+          {c.status}
+        </Tag>
       ),
     },
     {
@@ -74,8 +60,8 @@ export default function CustomerCasesPage() {
       align: 'right',
       render: (_, c) => (
         <Link href={`/backoffice/customers/${c.id}`}>
-          <Button type="text" size="small" className="min-h-[44px] gap-2 font-bold uppercase tracking-widest">
-            <MessageSquare className="h-4 w-4" /> Buka
+          <Button type="text" size="small" icon={<MessageSquare style={{ fontSize: 16 }} />} aria-label={`Buka tiket ${c.caseNumber}`}>
+            Buka
           </Button>
         </Link>
       ),
@@ -83,31 +69,29 @@ export default function CustomerCasesPage() {
   ];
 
  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Customer Operations</h1>
-          <p className="text-sm text-muted-foreground font-medium mt-1">Kelola tiket dukungan, keluhan, dan bantuan nasabah.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 px-4 py-2 rounded-lg border border-primary/20">
-            <span className="text-xs font-bold text-primary tracking-widest uppercase">Open: {isLoading ? '…' : openCount}</span>
-          </div>
-        </div>
-      </div>
+    <Space direction="vertical" size={24} style={{ width: '100%' }}>
+      <Flex align="flex-start" justify="space-between" gap={24} wrap>
+        <Space direction="vertical" size={4}>
+          <Typography.Title level={2} style={{ margin: 0 }}>Customer Operations</Typography.Title>
+          <Typography.Text type="secondary">Kelola tiket dukungan, keluhan, dan bantuan nasabah.</Typography.Text>
+        </Space>
+        <Tag color="blue">Open: {isLoading ? '…' : openCount}</Tag>
+      </Flex>
 
-      <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
-        <div className="relative flex-1 flex items-center">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-          <Input aria-label="Cari tiket atau ID nasabah" placeholder="Cari tiket atau ID nasabah..." className="pl-12 h-12 w-full" />
-        </div>
-        <div className="flex gap-4">
+      <Card>
+        <Flex gap={16} wrap>
+          <Input
+            aria-label="Cari tiket atau ID nasabah"
+            placeholder="Cari tiket atau ID nasabah..."
+            prefix={<Search style={{ fontSize: 16, color: 'var(--ant-color-text-secondary)' }} />}
+            style={{ flex: 1, minWidth: 200 }}
+          />
           <Select
             aria-label="Filter prioritas"
             value={priority || undefined}
             placeholder="Semua Prioritas"
             onChange={(value: string) => setPriority(value ?? '')}
-            className="min-w-44 h-12"
+            style={{ minWidth: 176 }}
             options={[{ value: '', label: 'Semua Prioritas' }, ...Object.values(CustomerCasePriority).map((s) => ({ value: s, label: s }))]}
           />
           <Select
@@ -115,13 +99,13 @@ export default function CustomerCasesPage() {
             value={status || undefined}
             placeholder="Semua Status"
             onChange={(value: string) => setStatus(value ?? '')}
-            className="min-w-44 h-12"
+            style={{ minWidth: 176 }}
             options={[{ value: '', label: 'Semua Status' }, ...Object.values(CustomerCaseStatus).map((s) => ({ value: s, label: s }))]}
           />
-        </div>
-      </div>
+        </Flex>
+      </Card>
 
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
         <Table<CustomerCaseResponse>
           columns={columns}
           dataSource={cases}
@@ -130,25 +114,24 @@ export default function CustomerCasesPage() {
           loading={isLoading}
           locale={{ emptyText: isError ? 'Akses ditolak — hubungi administrator' : 'Tidak ada tiket ditemukan' }}
         />
-
-        <div className="px-8 py-6 border-t border-border flex justify-between items-center bg-muted/10">
+        <Divider style={{ margin: 0 }} />
+        <Flex align="center" justify="space-between" style={{ padding: '24px 32px' }}>
           <Button
             onClick={() => setPage(p => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="h-11 px-6 gap-2 font-bold uppercase tracking-widest"
+            icon={<ChevronLeft style={{ fontSize: 16 }} />}
           >
-            <ChevronLeft className="h-4 w-4" /> Sebelumnya
+            Sebelumnya
           </Button>
-          <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Halaman {page + 1}</span>
+          <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Halaman {page + 1}</Typography.Text>
           <Button
             onClick={() => setPage(p => p + 1)}
             disabled={cases.length < 20}
-            className="h-11 px-6 gap-2 font-bold uppercase tracking-widest"
           >
-            Selanjutnya <ChevronRight className="h-4 w-4" />
+            Selanjutnya <ChevronRight style={{ fontSize: 16 }} />
           </Button>
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Card>
+    </Space>
   );
 }

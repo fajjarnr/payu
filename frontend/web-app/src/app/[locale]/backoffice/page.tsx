@@ -4,7 +4,25 @@ import { Link } from '@/lib/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Users, AlertTriangle, Headphones, FileText, ClipboardCheck, ArrowUpRight } from '@/components/icons';
 import { BackofficeService, BackofficeKycStatus, FraudCaseStatus, CustomerCaseStatus } from '@/services';
+import { Card, Col, Row, Space, Tag, Typography } from 'antd';
+import type { CSSProperties } from 'react';
 
+const tileStyle: CSSProperties = {
+  width: 48,
+  height: 48,
+  borderRadius: 12,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const labelStyle: CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: 'var(--ant-color-text-secondary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+};
 export default function BackofficeDashboard() {
   const { data: kyc } = useQuery({
     queryKey: ['kyc-reviews', 'PENDING', 0],
@@ -18,80 +36,76 @@ export default function BackofficeDashboard() {
     queryKey: ['customer-cases', 'OPEN', 0],
     queryFn: () => BackofficeService.getCustomerCases(CustomerCaseStatus.OPEN, undefined, 0),
   });
-  const count = (list: unknown) => (Array.isArray(list) ? list.length : 0);
+  const kycCount = Array.isArray(kyc) ? kyc.length : 0;
+  const fraudCount = Array.isArray(fraud) ? fraud.length : 0;
+  const ticketCount = Array.isArray(tickets) ? tickets.length : 0;
   const stats = [
-    { label: 'KYC Tertunda', value: String(count(kyc)), change: 'ANTRIAN', icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Fraud Terbuka', value: String(count(fraud)), change: 'ANTRIAN', icon: AlertTriangle, color: 'text-error', bg: 'bg-error/10' },
-    { label: 'Tiket Terbuka', value: String(count(tickets)), change: 'ANTRIAN', icon: Headphones, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'KYC Tertunda', value: String(kycCount), change: 'ANTRIAN', icon: Users, bg: 'var(--ant-color-primary-bg)', fg: 'var(--ant-color-primary)' },
+    { label: 'Fraud Terbuka', value: String(fraudCount), change: 'ANTRIAN', icon: AlertTriangle, bg: 'var(--ant-color-error-bg)', fg: 'var(--ant-color-error)' },
+    { label: 'Tiket Terbuka', value: String(ticketCount), change: 'ANTRIAN', icon: Headphones, bg: 'var(--ant-color-primary-bg)', fg: 'var(--ant-color-primary)' },
   ];
 
   const quickLinks = [
-    { name: 'KYC Reviews', description: 'Review pending customer verifications', href: '/backoffice/kyc', icon: Users, color: 'bg-secondary' },
-    { name: 'Fraud Monitoring', description: 'Investigate suspicious activities', href: '/backoffice/fraud', icon: AlertTriangle, color: 'bg-error' },
-    { name: 'Customer Ops', description: 'Manage support cases and inquiries', href: '/backoffice/customers', icon: Headphones, color: 'bg-primary' },
-    { name: 'CMS Content', description: 'Manage banners and dynamic content', href: '/backoffice/cms', icon: FileText, color: 'bg-primary' },
-    { name: 'Audit Logs', description: 'Review system changes and audits', href: '/backoffice/compliance', icon: ClipboardCheck, color: 'bg-text-secondary' },
+    { name: 'KYC Reviews', description: 'Review pending customer verifications', href: '/backoffice/kyc', icon: Users },
+    { name: 'Fraud Monitoring', description: 'Investigate suspicious activities', href: '/backoffice/fraud', icon: AlertTriangle },
+    { name: 'Customer Ops', description: 'Manage support cases and inquiries', href: '/backoffice/customers', icon: Headphones },
+    { name: 'CMS Content', description: 'Manage banners and dynamic content', href: '/backoffice/cms', icon: FileText },
+    { name: 'Audit Logs', description: 'Review system changes and audits', href: '/backoffice/compliance', icon: ClipboardCheck },
   ];
 
   return (
-    <>
-      <div className="space-y-12 pb-12">
-        <>
-          <>
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">Command Center</h1>
-              <p className="text-sm text-muted-foreground font-medium mt-1">Sistem orkestrasi internal PayU Digital Banking.</p>
-            </div>
-          </>
-
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              {stats.map((stat, i) => (
-                <div key={i} className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-sm group hover:shadow-card transition-all">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className={`h-12 w-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
-                      <stat.icon className="h-6 w-6" />
-                    </div>
-                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">
-                      {stat.change}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">{stat.label}</p>
-                    <h3 className="text-3xl font-bold text-foreground tabular-nums">{stat.value}</h3>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {quickLinks.map((link, i) => (
-                <Link key={i} href={link.href} className="group">
-                  <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all h-full flex flex-col">
-                    <div className="flex justify-between items-start mb-8">
-                      <div className={`h-14 w-14 rounded-xl ${link.color} text-surface flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
-                        <link.icon className="h-7 w-7" />
-                      </div>
-                      <div className="h-10 w-10 bg-muted/50 rounded-lg flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
-                        <ArrowUpRight className="h-5 w-5" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">{link.name}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{link.description}</p>
-                    </div>
-                    <div className="mt-8 pt-6 border-t border-border">
-                      <span className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase group-hover:text-primary transition-colors">Open Management &rarr;</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </>
-        </>
+    <Space direction="vertical" size={32} style={{ width: '100%', paddingBottom: 48 }}>
+      <div>
+        <Typography.Title level={2} style={{ margin: 0 }}>Command Center</Typography.Title>
+        <Typography.Text type="secondary">Sistem orkestrasi internal PayU Digital Banking.</Typography.Text>
       </div>
-    </>
+
+      <Row gutter={[24, 24]}>
+        {stats.map((stat, i) => (
+          <Col key={i} xs={24} md={8}>
+            <Card>
+              <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                <Space align="start" style={{ width: '100%', justifyContent: 'space-between' }}>
+                  <div style={{ ...tileStyle, background: stat.bg, color: stat.fg }}>
+                    <stat.icon style={{ fontSize: 24 }} />
+                  </div>
+                  <Tag color="green">{stat.change}</Tag>
+                </Space>
+                <div>
+                  <Typography.Text strong style={labelStyle}>{stat.label}</Typography.Text>
+                  <Typography.Title level={3} style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>{stat.value}</Typography.Title>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      <Row gutter={[24, 24]}>
+        {quickLinks.map((link, i) => (
+          <Col key={i} xs={24} md={12} lg={8}>
+            <Link href={link.href} style={{ textDecoration: 'none' }}>
+              <Card hoverable style={{ height: '100%' }}>
+                <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                  <Space align="start" style={{ width: '100%', justifyContent: 'space-between' }}>
+                    <div style={{ ...tileStyle, width: 56, height: 56, background: 'var(--ant-color-primary)', color: 'var(--ant-color-text-light-solid)' }}>
+                      <link.icon style={{ fontSize: 28 }} />
+                    </div>
+                    <div style={{ ...tileStyle, width: 40, height: 40, background: 'var(--ant-color-fill-tertiary)', color: 'var(--ant-color-text-secondary)' }}>
+                      <ArrowUpRight style={{ fontSize: 20 }} />
+                    </div>
+                  </Space>
+                  <div>
+                    <Typography.Title level={4} style={{ marginBottom: 8 }}>{link.name}</Typography.Title>
+                    <Typography.Text type="secondary">{link.description}</Typography.Text>
+                  </div>
+                  <Typography.Text strong style={labelStyle}>Open Management &rarr;</Typography.Text>
+                </Space>
+              </Card>
+            </Link>
+          </Col>
+        ))}
+      </Row>
+    </Space>
   );
 }

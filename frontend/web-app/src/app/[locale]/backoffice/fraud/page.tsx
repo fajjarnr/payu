@@ -7,9 +7,8 @@ import { BackofficeService, FraudCaseStatus, FraudRiskLevel } from '@/services';
 import type { FraudCaseResponse } from '@/services';
 import { Link } from '@/lib/navigation';
 import { Search, ChevronLeft, ChevronRight, Eye } from '@/components/icons';
-import { Badge, Button, Input, Select, Table } from 'antd';
+import { Button, Card, Divider, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
-import clsx from 'clsx';
 
  export default function FraudCasesPage() {
  const [status, setStatus] = useState<string>('');
@@ -27,33 +26,25 @@ import clsx from 'clsx';
       key: 'risk',
       title: 'Risiko',
       render: (_, c) => (
-        <Badge
-          count={c.riskLevel}
-          color={c.riskLevel === FraudRiskLevel.CRITICAL ? 'red' : undefined}
-          showZero
-          className={clsx(
-            "font-bold uppercase tracking-widest",
-            c.riskLevel === FraudRiskLevel.HIGH && "[&_sup]:border-accent [&_sup]:text-accent [&_sup]:bg-accent/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.riskLevel === FraudRiskLevel.MEDIUM && "[&_sup]:border-warning [&_sup]:text-warning [&_sup]:bg-warning/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-            c.riskLevel === FraudRiskLevel.LOW && "[&_sup]:border-primary [&_sup]:text-primary [&_sup]:bg-primary/5 [&_sup]:border [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full",
-          )}
-        />
+        <Tag color={c.riskLevel === FraudRiskLevel.CRITICAL ? 'red' : c.riskLevel === FraudRiskLevel.HIGH ? 'orange' : c.riskLevel === FraudRiskLevel.MEDIUM ? 'gold' : 'green'}>
+          {c.riskLevel}
+        </Tag>
       ),
     },
-    { key: 'type', title: 'Tipe Kecurangan', render: (_, c) => <span className="font-bold text-foreground">{c.fraudType}</span> },
-    { key: 'amount', title: 'Jumlah', render: (_, c) => <span className="font-bold tabular-nums">Rp {Number(c.amount).toLocaleString('id-ID')}</span> },
+    { key: 'type', title: 'Tipe Kecurangan', render: (_, c) => <Typography.Text strong>{c.fraudType}</Typography.Text> },
+    { key: 'amount', title: 'Jumlah', render: (_, c) => <Typography.Text strong style={{ fontVariantNumeric: 'tabular-nums' }}>Rp {Number(c.amount).toLocaleString('id-ID')}</Typography.Text> },
     {
       key: 'status',
       title: 'Status',
-      render: (_, c) => <Badge count={c.status} showZero className="font-bold uppercase tracking-widest opacity-70 [&_sup]:px-2.5 [&_sup]:py-0.5 [&_sup]:rounded-full" />,
+      render: (_, c) => <Tag>{c.status}</Tag>,
     },
     {
       key: 'date',
       title: 'Tanggal',
       render: (_, c) => (
-        <span className="text-muted-foreground font-bold text-xs">
+        <Typography.Text type="secondary" strong style={{ fontSize: 12 }}>
           {new Date(c.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-        </span>
+        </Typography.Text>
       ),
     },
     {
@@ -62,8 +53,8 @@ import clsx from 'clsx';
       align: 'right',
       render: (_, c) => (
         <Link href={`/backoffice/fraud/${c.id}`}>
-          <Button type="text" size="small" className="min-h-[44px] gap-2 font-bold uppercase tracking-widest">
-            <Eye className="h-4 w-4" /> Detail
+          <Button type="text" size="small" icon={<Eye style={{ fontSize: 16 }} />} aria-label={`Detail kasus ${c.id}`}>
+            Detail
           </Button>
         </Link>
       ),
@@ -71,31 +62,29 @@ import clsx from 'clsx';
   ];
 
  return (
-  <div className="space-y-6">
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Fraud Monitoring</h1>
-        <p className="text-sm text-muted-foreground font-medium mt-1">Sistem deteksi risiko dan investigasi kecurangan transaksi.</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="bg-error/10 px-4 py-2 rounded-lg border border-error/20">
-          <span className="text-xs font-bold text-error tracking-widest uppercase">Kritis: {isLoading ? '…' : criticalCount}</span>
-        </div>
-      </div>
-    </div>
+  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+    <Flex align="flex-start" justify="space-between" gap={24} wrap>
+      <Space direction="vertical" size={4}>
+        <Typography.Title level={2} style={{ margin: 0 }}>Fraud Monitoring</Typography.Title>
+        <Typography.Text type="secondary">Sistem deteksi risiko dan investigasi kecurangan transaksi.</Typography.Text>
+      </Space>
+      <Tag color="red">Kritis: {isLoading ? '…' : criticalCount}</Tag>
+    </Flex>
 
-    <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
-      <div className="relative flex-1 flex items-center">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
-        <Input aria-label="Cari kasus" placeholder="Cari kasus..." className="pl-12 h-12 w-full" />
-      </div>
-      <div className="flex gap-4">
+    <Card>
+      <Flex gap={16} wrap>
+        <Input
+          aria-label="Cari kasus"
+          placeholder="Cari kasus..."
+          prefix={<Search style={{ fontSize: 16, color: 'var(--ant-color-text-secondary)' }} />}
+          style={{ flex: 1, minWidth: 200 }}
+        />
         <Select
           aria-label="Filter tingkat risiko"
           value={riskLevel || undefined}
           placeholder="Semua Risiko"
           onChange={(value: string) => setRiskLevel(value ?? '')}
-          className="min-w-44 h-12"
+          style={{ minWidth: 176 }}
           options={[{ value: '', label: 'Semua Risiko' }, ...Object.values(FraudRiskLevel).map((s) => ({ value: s, label: s }))]}
         />
         <Select
@@ -103,13 +92,13 @@ import clsx from 'clsx';
           value={status || undefined}
           placeholder="Semua Status"
           onChange={(value: string) => setStatus(value ?? '')}
-          className="min-w-44 h-12"
+          style={{ minWidth: 176 }}
           options={[{ value: '', label: 'Semua Status' }, ...Object.values(FraudCaseStatus).map((s) => ({ value: s, label: s }))]}
         />
-      </div>
-    </div>
+      </Flex>
+    </Card>
 
-    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+    <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
       <Table<FraudCaseResponse>
         columns={columns}
         dataSource={cases}
@@ -118,25 +107,24 @@ import clsx from 'clsx';
         loading={isLoading}
         locale={{ emptyText: isError ? 'Akses ditolak — hubungi administrator' : 'Tidak ada kasus ditemukan' }}
       />
-
-      <div className="px-8 py-6 border-t border-border flex justify-between items-center bg-muted/10">
+      <Divider style={{ margin: 0 }} />
+      <Flex align="center" justify="space-between" style={{ padding: '24px 32px' }}>
         <Button
           onClick={() => setPage(p => Math.max(0, p - 1))}
           disabled={page === 0}
-          className="h-11 px-6 gap-2 font-bold uppercase tracking-widest"
+          icon={<ChevronLeft style={{ fontSize: 16 }} />}
         >
-          <ChevronLeft className="h-4 w-4" /> Sebelumnya
+          Sebelumnya
         </Button>
-        <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Halaman {page + 1}</span>
+        <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Halaman {page + 1}</Typography.Text>
         <Button
           onClick={() => setPage(p => p + 1)}
           disabled={cases.length < 20}
-          className="h-11 px-6 gap-2 font-bold uppercase tracking-widest"
         >
-          Selanjutnya <ChevronRight className="h-4 w-4" />
+          Selanjutnya <ChevronRight style={{ fontSize: 16 }} />
         </Button>
-      </div>
-    </div>
-  </div>
+      </Flex>
+    </Card>
+  </Space>
  );
 }
