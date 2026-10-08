@@ -223,7 +223,7 @@ export default function LendingPage() {
                             >
                               Skor Kredit Anda
                             </Typography.Text>
-                            <Space align="baseline" size={12}>
+                            <Space align="baseline" size={12} style={{ gap: 12 }}>
                               <Typography.Title
                                 level={1}
                                 style={{

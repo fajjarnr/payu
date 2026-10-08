@@ -186,7 +186,7 @@ export default function ExchangePage() {
 
                     {/* To Currency */}
                     <Col xs={24} md={11}>
-                      <Form.Item name="toCurrency" rules={[rule('toCurrency')]} style={{ marginBottom: 0 }} label={<label htmlFor="exchange-to-currency" style={labelStyle}>To Currency</label>}>
+                      <Form.Item name="toCurrency" rules={[rule('toCurrency')]} style={{ marginBottom: 0 }} label={<label htmlFor="exchange-to-currency" style={labelStyle}>{t('toCurrency')}</label>}>
                         <Select id="exchange-to-currency"
                           value={toCurrency}
                           onChange={(v) => form.setFieldsValue({ toCurrency: v as ExchangeRequest['toCurrency'] })}

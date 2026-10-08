@@ -118,8 +118,8 @@ export default function NotificationsPage() {
                 options={[
                   { label: 'Semua', value: 'ALL' },
                   { label: 'Belum Dibaca', value: 'UNREAD' },
-                  { label: 'PROMO', value: 'PROMO' },
-                  { label: 'SECURITY', value: 'SECURITY' },
+                  { label: 'Promo', value: 'PROMO' },
+                  { label: 'Keamanan', value: 'SECURITY' },
                 ]}
               />
             </Col>

@@ -17,14 +17,6 @@ export default function StatementsPage() {
   return (
     <DashboardLayout>
       <Space direction="vertical" size={16} style={{ maxWidth: 1024, margin: '0 auto', padding: '32px 16px', width: '100%' }}>
-        <Space direction="vertical" size={4}>
-          <Typography.Title level={2} style={{ marginBottom: 0 }}>
-            {t('generator.title')}
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            {t('generator.subtitle')}
-          </Typography.Text>
-        </Space>
         <StatementDownloader />
       </Space>
     </DashboardLayout>
