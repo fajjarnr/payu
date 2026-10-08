@@ -247,17 +247,6 @@ export default function SecurityPage() {
               </Col>
             </Row>
           </div>
-          <Lock
-            style={{
-              position: 'absolute',
-              bottom: -60,
-              right: -60,
-              fontSize: 288,
-              color: 'var(--ant-color-text-light-solid)',
-              opacity: 0.05,
-              transform: 'rotate(-12deg)',
-            }}
-          />
         </Card>
       </Space>
     </DashboardLayout>

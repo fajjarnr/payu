@@ -246,16 +246,6 @@ export default function SupportPage() {
               </Button>
             </Col>
           </Row>
-          <LifeBuoy
-            style={{
-              position: "absolute",
-              bottom: -60,
-              right: -60,
-              width: 288,
-              height: 288,
-              opacity: 0.05,
-            }}
-          />
         </Card>
       </Space>
     </DashboardLayout>

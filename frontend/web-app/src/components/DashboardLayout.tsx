@@ -23,6 +23,9 @@ import {
   Gift,
   Landmark,
   FileText,
+  Bank,
+  FileSearch,
+  Partition,
   Search,
 } from "@/components/icons";
 import { useTranslations, useLocale } from "next-intl";
@@ -87,7 +90,7 @@ export default function DashboardLayout({
     { href: "/scheduled-transfers", icon: Calendar, label: t("scheduled") },
     { href: "/qris", icon: QrCode, label: t("qrPayment") },
     { href: "/bills", icon: Receipt, label: t("bills") },
-    { href: "/split-bill", icon: Gift, label: t("splitBill") },
+    { href: "/split-bill", icon: Partition, label: t("splitBill") },
   ];
 
   const financeMenu = [
@@ -95,7 +98,7 @@ export default function DashboardLayout({
     { href: "/cards", icon: CreditCard, label: t("cards") },
     { href: "/investments", icon: TrendingUp, label: t("investments") },
     { href: "/exchange", icon: Landmark, label: t("exchange") },
-    { href: "/lending", icon: FileText, label: t("lending") },
+    { href: "/lending", icon: Bank, label: t("lending") },
     { href: "/rewards", icon: Gift, label: t("rewards") },
   ];
 
@@ -103,7 +106,7 @@ export default function DashboardLayout({
     { href: "/security", icon: ShieldCheck, label: t("security") },
     { href: "/settings", icon: Settings, label: t("settings") },
     { href: "/notifications", icon: Bell, label: t("notifications") },
-    { href: "/statements", icon: FileText, label: t("statements") },
+    { href: "/statements", icon: FileSearch, label: t("statements") },
     { href: "/support", icon: LifeBuoy, label: t("support") },
   ];
 

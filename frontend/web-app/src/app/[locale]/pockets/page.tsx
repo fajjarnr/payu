@@ -463,18 +463,6 @@ export default function PocketsPage() {
                     border: "none",
                   }}
                 >
-                  <Coins
-                    aria-hidden="true"
-                    style={{
-                      position: "absolute",
-                      bottom: -30,
-                      right: -30,
-                      fontSize: 192,
-                      color: token.colorBgContainer,
-                      opacity: 0.03,
-                      transform: "rotate(-12deg)",
-                    }}
-                  />
                   <Flex align="center" gap={16}>
                     <Flex
                       align="center"
