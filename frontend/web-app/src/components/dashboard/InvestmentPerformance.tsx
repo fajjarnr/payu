@@ -8,9 +8,10 @@ const RadialBar = dynamic(
   { ssr: false },
 );
 
-import { Card, Skeleton } from "antd";
+import { Card, Col, Divider, Row, Skeleton, Space, Typography } from "antd";
 import { TrendingUp, Target, ArrowUpRight } from "@/components/icons";
-import { cn } from "@/lib/utils";
+
+const { Title, Text } = Typography;
 
 export const description = "Statistik performa investasi dalam format radial";
 
@@ -28,6 +29,14 @@ interface InvestmentPerformanceProps {
   isLoading?: boolean;
 }
 
+const labelStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: "var(--ant-color-text-secondary)",
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+};
+
 export default function InvestmentPerformance({
   className,
   roi,
@@ -40,22 +49,18 @@ export default function InvestmentPerformance({
   const t = useTranslations("investments");
   if (isLoading) {
     return (
-      <Card
-        className={cn("flex flex-col group overflow-hidden h-full", className)}
-        styles={{ body: { display: "contents" } }}
-      >
-        <div className="flex flex-col space-y-2 p-6 items-start pb-2">
-          <h3 className="text-2xl font-bold leading-none tracking-tight text-sm font-bold text-foreground tracking-widest uppercase">
+      <Card className={className} style={{ height: "100%" }}>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Title level={4} style={{ margin: 0 }}>
             {t("perfTitle")}
-          </h3>
-        </div>
-        <div className="p-6 pt-0 flex-1">
+          </Title>
           <Skeleton
+            active
             title={false}
             paragraph={false}
-            className="block animate-pulse rounded-xl bg-muted/50 min-h-[220px] w-full"
+            style={{ minHeight: 220 }}
           />
-        </div>
+        </Space>
       </Card>
     );
   }
@@ -71,26 +76,39 @@ export default function InvestmentPerformance({
   const fraction = Math.max(0, Math.min(1, displayRoi / maxRoi));
 
   return (
-    <Card
-      className={cn("flex flex-col group overflow-hidden h-full", className)}
-      styles={{ body: { display: "contents" } }}
-    >
-      <div className="flex flex-col space-y-2 p-6 items-start pb-2">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </div>
-          <h3 className="text-2xl font-bold leading-none tracking-tight text-sm font-bold text-foreground tracking-widest uppercase">
-            {t("perfTitle")}
-          </h3>
-        </div>
-        <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]">
-          {t("perfYield")}
-        </p>
-      </div>
+    <Card className={className} style={{ height: "100%" }}>
+      <Space
+        direction="vertical"
+        size={16}
+        style={{ width: "100%", height: "100%" }}
+      >
+        <Space direction="vertical" size={4} style={{ width: "100%" }}>
+          <Space size={8}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                backgroundColor: "var(--ant-color-primary-bg)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <TrendingUp
+                style={{ width: 16, height: 16, color: "var(--ant-color-primary)" }}
+              />
+            </div>
+            <Title level={4} style={{ margin: 0 }}>
+              {t("perfTitle")}
+            </Title>
+          </Space>
+          <Text type="secondary" strong style={labelStyle}>
+            {t("perfYield")}
+          </Text>
+        </Space>
 
-      <div className="p-6 pt-0 flex-1 pb-4 flex flex-col justify-center">
-        <div className="mx-auto max-h-[220px] w-full">
+        <div style={{ margin: "0 auto", maxHeight: 220, width: "100%" }}>
           <RadialBar
             data={[{ category: "return", value: fraction }]}
             xField="category"
@@ -134,44 +152,78 @@ export default function InvestmentPerformance({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-2">
-          <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-              <Target className="h-3 w-3" /> {t("target")}
-            </p>
-            <p className="text-xs font-bold text-foreground">
-              {displayTarget > 0 ? `${displayTarget}%` : "--"}
-            </p>
-          </div>
-          <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-              <ArrowUpRight className="h-3 w-3" /> {t("profit")}
-            </p>
-            <p className="text-xs font-bold text-primary">
-              {displayProfit > 0
-                ? `Rp ${(displayProfit / 1000000).toFixed(2)}Jt`
-                : "Rp 0"}
-            </p>
-          </div>
-        </div>
-      </div>
+        <Row gutter={[16, 16]}>
+          <Col span={12}>
+            <Card
+              size="small"
+              style={{ backgroundColor: "var(--ant-color-fill-tertiary)" }}
+            >
+              <Space direction="vertical" size={4}>
+                <Space size={4}>
+                  <Target style={{ width: 12, height: 12 }} />
+                  <Text type="secondary" strong style={labelStyle}>
+                    {t("target")}
+                  </Text>
+                </Space>
+                <Text strong style={{ fontSize: 12 }}>
+                  {displayTarget > 0 ? `${displayTarget}%` : "--"}
+                </Text>
+              </Space>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card
+              size="small"
+              style={{ backgroundColor: "var(--ant-color-fill-tertiary)" }}
+            >
+              <Space direction="vertical" size={4}>
+                <Space size={4}>
+                  <ArrowUpRight style={{ width: 12, height: 12 }} />
+                  <Text type="secondary" strong style={labelStyle}>
+                    {t("profit")}
+                  </Text>
+                </Space>
+                <Text
+                  strong
+                  style={{ fontSize: 12, color: "var(--ant-color-primary)" }}
+                >
+                  {displayProfit > 0
+                    ? `Rp ${(displayProfit / 1000000).toFixed(2)}Jt`
+                    : "Rp 0"}
+                </Text>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
 
-      <div className="flex flex-col items-center gap-2 p-6 pb-6 border-t border-border/10">
-        {displayMonthlyChange !== 0 && (
-          <div className="flex items-center gap-2 leading-none font-bold text-xs uppercase tracking-widest text-primary mt-4">
-            {displayMonthlyChange > 0 ? t("up") : t("down")}{" "}
-            {Math.abs(displayMonthlyChange)}% {t("thisMonth")}{" "}
-            <TrendingUp className="h-3 w-3" />
-          </div>
-        )}
-        <div className="text-xs text-muted-foreground lowercase leading-none">
-          {displayInvestment > 0
-            ? t("basedOnTotal", {
-                amount: `Rp ${(displayInvestment / 1000000).toFixed(0)}Jt`,
-              })
-            : t("noData")}
-        </div>
-      </div>
+        <Divider style={{ margin: 0 }} />
+        <Space direction="vertical" size={8} align="center" style={{ width: "100%", textAlign: "center" }}>
+          {displayMonthlyChange !== 0 && (
+            <Space size={8}>
+              <Text
+                strong
+                style={{
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "var(--ant-color-primary)",
+                }}
+              >
+                {displayMonthlyChange > 0 ? t("up") : t("down")}{" "}
+                {Math.abs(displayMonthlyChange)}% {t("thisMonth")}
+              </Text>
+              <TrendingUp style={{ width: 12, height: 12 }} />
+            </Space>
+          )}
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {displayInvestment > 0
+              ? t("basedOnTotal", {
+                  amount: `Rp ${(displayInvestment / 1000000).toFixed(0)}Jt`,
+                })
+              : t("noData")}
+          </Text>
+        </Space>
+      </Space>
     </Card>
   );
 }

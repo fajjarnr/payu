@@ -11,9 +11,15 @@ const RadialBar = dynamic(
   () => import("@ant-design/plots").then((m) => m.RadialBar),
   { ssr: false },
 );
-import { cn } from "@/lib/utils";
 import { ChevronDown } from "@/components/icons";
-import { Card } from "antd";
+import { Button, Card, Col, Row, Space, Typography } from "antd";
+
+const { Title, Text } = Typography;
+
+const LEGEND_COLORS: Record<string, string> = {
+  "bg-primary": "var(--ant-color-primary)",
+  "bg-primary-light": "var(--ant-color-primary-bg)",
+};
 
 function ChartLegend({
   color,
@@ -25,15 +31,33 @@ function ChartLegend({
   percentage: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className={cn("w-2.5 h-2.5 rounded-full", color)} />
-      <div>
-        <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">
+    <Space size={12} align="center">
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          backgroundColor: LEGEND_COLORS[color] ?? "var(--ant-color-primary)",
+          flexShrink: 0,
+        }}
+      />
+      <Space direction="vertical" size={0}>
+        <Text
+          type="secondary"
+          strong
+          style={{
+            fontSize: 12,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}
+        >
           {label}
-        </p>
-        <p className="text-xs font-bold text-foreground">{percentage}</p>
-      </div>
-    </div>
+        </Text>
+        <Text strong style={{ fontSize: 12 }}>
+          {percentage}
+        </Text>
+      </Space>
+    </Space>
   );
 }
 
@@ -70,171 +94,220 @@ export default function StatsCharts({
 
   if (isLoading) {
     return (
-      <div
-        className={cn(
-          "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8",
-          className,
-        )}
-      >
-        <Card className="lg:col-span-5 flex items-center justify-center min-h-[300px]">
-          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
-            {t("loading")}
-          </p>
-        </Card>
-        <Card className="lg:col-span-7 flex items-center justify-center min-h-[300px]">
-          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
-            {t("loading")}
-          </p>
-        </Card>
-      </div>
+      <Row gutter={[24, 24]} className={className || undefined}>
+        <Col xs={24} lg={10}>
+          <Card style={{ minHeight: 300 }}>
+            <Text
+              type="secondary"
+              strong
+              style={{
+                fontSize: 14,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
+              {t("loading")}
+            </Text>
+          </Card>
+        </Col>
+        <Col xs={24} lg={14}>
+          <Card style={{ minHeight: 300 }}>
+            <Text
+              type="secondary"
+              strong
+              style={{
+                fontSize: 14,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
+              {t("loading")}
+            </Text>
+          </Card>
+        </Col>
+      </Row>
     );
   }
 
   const spendingData = spdData.map((d) => ({
     month: d.month,
-    amount: Number(d.amount),
+    amount: d.amount,
   }));
   const leadValue = invData[0]?.value ?? 0;
 
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-8",
-        className,
-      )}
-    >
-      <Card
-        className="lg:col-span-5 relative overflow-hidden group"
-        styles={{ body: { display: "contents" } }}
-      >
-        <div className="flex flex-row items-center justify-between p-6">
-          <h3 className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
-            {t("perfTitle")}
-          </h3>
-          <button
-            type="button"
-            aria-label={t("january2026")}
-            className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-4 py-2 rounded-xl hover:bg-muted transition-colors uppercase tracking-widest shadow-sm min-h-[44px]"
-          >
-            {t("january2026")} <ChevronDown className="h-4 w-4" />
-          </button>
-        </div>
+    <Row gutter={[24, 24]} className={className || undefined}>
+      <Col xs={24} lg={10}>
+        <Card>
+          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <Row justify="space-between" align="middle">
+              <Title level={3} style={{ margin: 0 }}>
+                {t("perfTitle")}
+              </Title>
+              <Button
+                type="default"
+                size="small"
+                aria-label={t("january2026")}
+                style={{ minHeight: 44 }}
+              >
+                <Space size={8} align="center">
+                  <Text
+                    type="secondary"
+                    strong
+                    style={{
+                      fontSize: 12,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("january2026")}
+                  </Text>
+                  <ChevronDown style={{ width: 16, height: 16 }} />
+                </Space>
+              </Button>
+            </Row>
 
-        <div className="p-6 pt-0 space-y-2">
-          <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase">
-            {t("totalValue")}
-          </p>
-          <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">
-            {displayTotal}
-          </h4>
-        </div>
+            <Space direction="vertical" size={8}>
+              <Text
+                type="secondary"
+                strong
+                style={{
+                  fontSize: 12,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {t("totalValue")}
+              </Text>
+              <Title level={4} style={{ margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                {displayTotal}
+              </Title>
+            </Space>
 
-        <div className="p-6 pt-0 flex flex-col sm:flex-row items-center justify-between gap-6 lg:gap-8">
-          <div className="space-y-6 w-full sm:w-auto">
-            {legend.map((item) => (
-              <ChartLegend
-                key={item.label}
-                color={item.color}
-                label={item.label}
-                percentage={item.percentage}
-              />
-            ))}
-          </div>
-
-          <div className="relative h-64 w-64 flex-shrink-0">
-            <RadialBar
-              data={invData}
-              xField="category"
-              yField="value"
-              maxAngle={250}
-              innerRadius={0.75}
-              colorField="category"
-              scale={{
-                color: {
-                  range:
-                    invData.length > 0
-                      ? invData.map((d) => d.fill || PRIMARY)
-                      : [PRIMARY],
-                },
-              }}
-              legend={false}
-              tooltip={false}
-              label={false}
-              annotations={[
-                {
-                  type: "text",
-                  style: {
-                    text: `+${leadValue}%`,
-                    x: "50%",
-                    y: "46%",
-                    textAlign: "center",
-                    fontSize: 30,
-                    fontWeight: 700,
-                    fill: "#0f172a",
-                  },
-                },
-                {
-                  type: "text",
-                  style: {
-                    text: "Yield",
-                    x: "50%",
-                    y: "56%",
-                    textAlign: "center",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    fill: "#6b7280",
-                  },
-                },
-              ]}
-            />
-          </div>
-        </div>
-      </Card>
+            <Row gutter={[24, 24]} align="middle">
+              <Col xs={24} sm={12}>
+                <Space direction="vertical" size={24}>
+                  {legend.map((item) => (
+                    <ChartLegend
+                      key={item.label}
+                      color={item.color}
+                      label={item.label}
+                      percentage={item.percentage}
+                    />
+                  ))}
+                </Space>
+              </Col>
+              <Col xs={24} sm={12}>
+                <div style={{ height: 256, width: "100%" }}>
+                  <RadialBar
+                    data={invData}
+                    xField="category"
+                    yField="value"
+                    maxAngle={250}
+                    innerRadius={0.75}
+                    colorField="category"
+                    scale={{
+                      color: {
+                        range:
+                          invData.length > 0
+                            ? invData.map((d) => d.fill || PRIMARY)
+                            : [PRIMARY],
+                      },
+                    }}
+                    legend={false}
+                    tooltip={false}
+                    label={false}
+                    annotations={[
+                      {
+                        type: "text",
+                        style: {
+                          text: `+${leadValue}%`,
+                          x: "50%",
+                          y: "46%",
+                          textAlign: "center",
+                          fontSize: 30,
+                          fontWeight: 700,
+                          fill: "#0f172a",
+                        },
+                      },
+                      {
+                        type: "text",
+                        style: {
+                          text: "Yield",
+                          x: "50%",
+                          y: "56%",
+                          textAlign: "center",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          fill: "#6b7280",
+                        },
+                      },
+                    ]}
+                  />
+                </div>
+              </Col>
+            </Row>
+          </Space>
+        </Card>
+      </Col>
 
       {/* Spending Overview (Column chart) */}
-      <Card
-        className="lg:col-span-7 group overflow-hidden"
-        styles={{ body: { display: "contents" } }}
-      >
-        <div className="flex flex-row items-center justify-between p-6">
-          <h3 className="text-2xl font-bold leading-none tracking-tight text-xl font-bold text-foreground">
-            {t("spendingOverview")}
-          </h3>
-          <button
-            type="button"
-            aria-label={t("year2026")}
-            className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/60 px-4 py-2 rounded-xl hover:bg-muted transition-colors uppercase tracking-widest shadow-sm min-h-[44px]"
-          >
-            {t("year2026")} <ChevronDown className="h-4 w-4" />
-          </button>
-        </div>
+      <Col xs={24} lg={14}>
+        <Card>
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Row justify="space-between" align="middle">
+              <Title level={3} style={{ margin: 0 }}>
+                {t("spendingOverview")}
+              </Title>
+              <Button
+                type="default"
+                size="small"
+                aria-label={t("year2026")}
+                style={{ minHeight: 44 }}
+              >
+                <Space size={8} align="center">
+                  <Text
+                    type="secondary"
+                    strong
+                    style={{
+                      fontSize: 12,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("year2026")}
+                  </Text>
+                  <ChevronDown style={{ width: 16, height: 16 }} />
+                </Space>
+              </Button>
+            </Row>
 
-        <div className="p-6 pt-0">
-          <div className="h-80 w-full mt-4">
-            <Column
-              data={spendingData}
-              xField="month"
-              yField="amount"
-              style={{
-                fill: PRIMARY,
-                radiusTopLeft: 8,
-                radiusTopRight: 8,
-                maxWidth: 40,
-              }}
-              axis={{
-                x: {
-                  title: false,
-                  labelFill: "#6b7280",
-                  labelFontSize: 10,
-                  labelFontWeight: 700,
-                },
-                y: false,
-              }}
-              label={false}
-            />
-          </div>
-        </div>
-      </Card>
-    </div>
+            <div style={{ height: 320, width: "100%", marginTop: 16 }}>
+              <Column
+                data={spendingData}
+                xField="month"
+                yField="amount"
+                style={{
+                  fill: PRIMARY,
+                  radiusTopLeft: 8,
+                  radiusTopRight: 8,
+                  maxWidth: 40,
+                }}
+                axis={{
+                  x: {
+                    title: false,
+                    labelFill: "#6b7280",
+                    labelFontSize: 10,
+                    labelFontWeight: 700,
+                  },
+                  y: false,
+                }}
+                label={false}
+              />
+            </div>
+          </Space>
+        </Card>
+      </Col>
+    </Row>
   );
 }

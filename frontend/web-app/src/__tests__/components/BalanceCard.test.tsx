@@ -59,14 +59,14 @@ describe('BalanceCard', () => {
    expect(screen.getAllByText('Bulan ini')).toHaveLength(2);
  });
 
- it('applies responsive classes for mobile screens', () => {
+ it('uses antd grid for responsive layout', () => {
    const { container } = renderWithIntl(<BalanceCard balance={1000000} />);
 
-   const mainGrid = container.querySelector('.grid');
-   expect(mainGrid).toHaveClass('grid-cols-1', 'lg:grid-cols-12');
+   const mainGrid = container.querySelector('.ant-row');
+   expect(mainGrid).toBeInTheDocument();
 
-   const balanceSection = container.querySelector('.text-2xl');
-   expect(balanceSection).toBeInTheDocument();
+   const balanceHeading = screen.getByText('Rp 1.000.000');
+   expect(balanceHeading).toBeInTheDocument();
  });
 
  it('does not invent net worth without portfolio data', () => {

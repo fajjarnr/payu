@@ -11,10 +11,23 @@ import {
   Trash2,
 } from "@/components/icons";
 import { useTranslations, useLocale } from "next-intl";
-import clsx from "clsx";
 
-import { cn } from "@/lib/utils";
-import { Button, Card, Collapse, Progress, Skeleton } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Collapse,
+  Divider,
+  Progress,
+  Row,
+  Skeleton,
+  Space,
+  Tag,
+  Typography,
+} from "antd";
+
+const { Title, Text } = Typography;
 
 interface Budget {
   id: string;
@@ -33,6 +46,42 @@ interface BudgetTrackingProps {
   className?: string;
   isLoading?: boolean;
 }
+
+type BudgetStatus = Budget["status"];
+
+const STATUS_STYLE: Record<BudgetStatus, React.CSSProperties> = {
+  safe: {
+    backgroundColor: "var(--ant-color-success-bg)",
+    color: "var(--ant-color-success)",
+  },
+  warning: {
+    backgroundColor: "var(--ant-color-warning-bg)",
+    color: "var(--ant-color-warning)",
+  },
+  danger: {
+    backgroundColor: "var(--ant-color-error-bg)",
+    color: "var(--ant-color-error)",
+  },
+  exceeded: {
+    backgroundColor: "var(--ant-color-error-bg)",
+    color: "var(--ant-color-error)",
+  },
+};
+
+const PROGRESS_COLOR: Record<BudgetStatus, string> = {
+  safe: "var(--ant-color-success)",
+  warning: "var(--ant-color-warning)",
+  danger: "var(--ant-color-error)",
+  exceeded: "var(--ant-color-error)",
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: "var(--ant-color-text-secondary)",
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+};
 
 export default function BudgetTracking({
   budgets,
@@ -54,36 +103,6 @@ export default function BudgetTracking({
   ).length;
   const warningCount = budgetList.filter((b) => b.status === "warning").length;
 
-  const getStatusColor = (status: Budget["status"]) => {
-    switch (status) {
-      case "safe":
-        return "bg-success-light text-primary";
-      case "warning":
-        return "bg-warning dark:bg-warning/30 text-secondary";
-      case "danger":
-        return "bg-accent dark:bg-accent/30 text-white";
-      case "exceeded":
-        return "bg-destructive/10 text-destructive";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
-
-  const getProgressColor = (status: Budget["status"]) => {
-    switch (status) {
-      case "safe":
-        return "bg-primary";
-      case "warning":
-        return "bg-warning";
-      case "danger":
-        return "bg-accent";
-      case "exceeded":
-        return "bg-destructive";
-      default:
-        return "bg-muted";
-    }
-  };
-
   const getStatusIcon = (status: Budget["status"]) => {
     switch (status) {
       case "safe":
@@ -101,265 +120,344 @@ export default function BudgetTracking({
     <Card
       role="region"
       aria-labelledby="budget-tracking-title"
-      className={cn(
-        "relative overflow-hidden h-full flex flex-col group",
-        className,
-      )}
-      styles={{ body: { display: "contents" } }}
+      className={className}
+      style={{ position: "relative", overflow: "hidden", height: "100%" }}
     >
       {/* Decorative background */}
-      <div className="absolute top-1/2 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          right: 0,
+          width: 192,
+          height: 192,
+          backgroundColor: "var(--ant-color-primary-bg)",
+          borderRadius: "50%",
+          filter: "blur(48px)",
+          transform: "translate(50%, -50%)",
+          pointerEvents: "none",
+        }}
+      />
 
-      <div className="flex flex-row items-start justify-between gap-4 p-6 pb-6 shrink-0">
-        <div>
-          <h3
-            id="budget-tracking-title"
-            className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase"
+      <Space direction="vertical" size={24} style={{ width: "100%", position: "relative" }}>
+        <Row justify="space-between" align="top">
+          <Space direction="vertical" size={4}>
+            <Title level={3} id="budget-tracking-title" style={{ margin: 0 }}>
+              {t("budgetTracking")}
+            </Title>
+            <Text type="secondary" strong style={labelStyle}>
+              {new Date().toLocaleDateString(undefined, {
+                month: "long",
+                year: "numeric",
+              })}
+            </Text>
+          </Space>
+
+          <Button
+            aria-label="Tambah anggaran"
+            size="small"
+            type="primary"
+            icon={<Plus style={{ width: 16, height: 16 }} />}
           >
-            {t("budgetTracking")}
-          </h3>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
-            {new Date().toLocaleDateString(undefined, {
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
-        </div>
+            Tambah
+          </Button>
+        </Row>
 
-        <Button
-          aria-label="Tambah anggaran"
-          size="small"
-          type="primary"
-          className="flex gap-3 px-6 h-11 text-xs font-bold uppercase tracking-widest"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Tambah</span>
-        </Button>
-      </div>
-
-      <div className="p-6 pt-0 flex-1 overflow-y-auto scrollbar-hide">
         {isLoading ? (
-          <div className="space-y-4">
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
             {[1, 2, 3].map((i) => (
               <Skeleton
                 key={i}
+                active
                 title={false}
                 paragraph={false}
-                className="block animate-pulse rounded-xl bg-muted/50 h-16 w-full"
+                style={{ height: 64 }}
               />
             ))}
-          </div>
+          </Space>
         ) : budgetList.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[120px]">
-            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 120,
+            }}
+          >
+            <Text type="secondary" strong style={labelStyle}>
               Belum ada anggaran
-            </p>
+            </Text>
           </div>
         ) : (
-          <>
+          <Space direction="vertical" size={24} style={{ width: "100%" }}>
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-              <SummaryCard
-                label="Total Anggaran"
-                value={totalBudget}
-                currency={currency}
-                locale={locale}
-                color="bg-success-light"
-                textColor="text-primary"
-              />
-              <SummaryCard
-                label="Terpakai"
-                value={totalSpent}
-                currency={currency}
-                locale={locale}
-                color="bg-muted/50"
-                textColor="text-foreground"
-              />
-              <SummaryCard
-                label="Sisa"
-                value={totalRemaining}
-                currency={currency}
-                locale={locale}
-                color={
-                  totalRemaining >= 0 ? "bg-success-light" : "bg-destructive/10"
-                }
-                textColor={
-                  totalRemaining >= 0 ? "text-primary" : "text-destructive"
-                }
-              />
-            </div>
+            <Row gutter={[12, 12]}>
+              <Col xs={24} sm={8}>
+                <SummaryCard
+                  label="Total Anggaran"
+                  value={totalBudget}
+                  currency={currency}
+                  locale={locale}
+                  backgroundColor="var(--ant-color-success-bg)"
+                  color="var(--ant-color-primary)"
+                />
+              </Col>
+              <Col xs={24} sm={8}>
+                <SummaryCard
+                  label="Terpakai"
+                  value={totalSpent}
+                  currency={currency}
+                  locale={locale}
+                  backgroundColor="var(--ant-color-fill-tertiary)"
+                  color="var(--ant-color-text)"
+                />
+              </Col>
+              <Col xs={24} sm={8}>
+                <SummaryCard
+                  label="Sisa"
+                  value={totalRemaining}
+                  currency={currency}
+                  locale={locale}
+                  backgroundColor={
+                    totalRemaining >= 0
+                      ? "var(--ant-color-success-bg)"
+                      : "var(--ant-color-error-bg)"
+                  }
+                  color={
+                    totalRemaining >= 0
+                      ? "var(--ant-color-primary)"
+                      : "var(--ant-color-error)"
+                  }
+                />
+              </Col>
+            </Row>
 
             {/* Alerts */}
             {(exceededCount > 0 || warningCount > 0) && (
-              <div
-                className="mb-6 p-4 bg-destructive/5 border border-destructive/20 rounded-xl"
+              <Alert
+                type="error"
                 role="alert"
                 aria-live="polite"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                    <AlertTriangle
-                      className="h-4 w-4 text-destructive"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground">
-                      {exceededCount > 0 && warningCount > 0
-                        ? `${exceededCount} anggaran terlampaui dan ${warningCount} hampir habis`
-                        : exceededCount > 0
-                          ? `${exceededCount} anggaran terlampaui`
-                          : `${warningCount} anggaran hampir habis`}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {exceededCount > 0
-                        ? "Pertimbangkan untuk mengurangi pengeluaran"
-                        : "Berhati-hatilah dengan pengeluaran"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                showIcon
+                icon={
+                  <AlertTriangle
+                    style={{ width: 16, height: 16 }}
+                    aria-hidden="true"
+                  />
+                }
+                message={
+                  <Text strong style={{ fontSize: 12 }}>
+                    {exceededCount > 0 && warningCount > 0
+                      ? `${exceededCount} anggaran terlampaui dan ${warningCount} hampir habis`
+                      : exceededCount > 0
+                        ? `${exceededCount} anggaran terlampaui`
+                        : `${warningCount} anggaran hampir habis`}
+                  </Text>
+                }
+                description={
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {exceededCount > 0
+                      ? "Pertimbangkan untuk mengurangi pengeluaran"
+                      : "Berhati-hatilah dengan pengeluaran"}
+                  </Text>
+                }
+              />
             )}
 
             <Collapse
               accordion
-              className="space-y-3"
               expandIcon={() => null}
               items={budgetList.map((budget) => {
                 const StatusIcon = getStatusIcon(budget.status);
                 const panelId = `budget-panel-${budget.id}`;
                 return {
                   key: budget.id,
-                  className: cn(
-                    "bg-muted/30 rounded-xl border-none overflow-hidden transition-all",
-                    budget.status === "exceeded" &&
-                      "ring-2 ring-destructive/10",
-                  ),
+                  style: {
+                    backgroundColor: "var(--ant-color-fill-tertiary)",
+                    borderRadius: 12,
+                    border:
+                      budget.status === "exceeded"
+                        ? "2px solid var(--ant-color-error-border)"
+                        : "none",
+                    overflow: "hidden",
+                  },
                   label: (
                     <span
                       role="button"
                       aria-expanded={false}
                       aria-controls={panelId}
                       aria-label={`${budget.category}, status ${budget.status}, ${budget.percentage}%`}
-                      className="flex flex-1 items-center justify-between px-4 py-4 text-xs font-bold uppercase tracking-[0.1em] hover:no-underline group/trigger"
+                      style={{
+                        display: "flex",
+                        flex: 1,
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "16px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                      }}
                     >
-                      <div className="flex items-center gap-4 w-full text-left">
-                        <div
-                          className={cn(
-                            "h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg",
-                            getStatusColor(budget.status),
-                          )}
-                        >
-                          <StatusIcon className="h-5 w-5" aria-hidden="true" />
-                        </div>
-                        <div className="flex-1 min-w-0 pr-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm font-bold text-foreground uppercase tracking-tight">
-                              {budget.category}
-                            </p>
-                            <span className="text-xs text-muted-foreground tabular-nums font-bold">
-                              {budget.percentage.toFixed(1)}%
-                            </span>
-                          </div>
-                          <Progress
-                            percent={Math.min(budget.percentage, 100)}
-                            showInfo={false}
-                            railColor="transparent"
-                            className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50"
-                            classNames={{
-                              track: `bg-primary transition-all duration-500 ease-in-out ${getProgressColor(budget.status)}`,
-                            }}
-                            styles={{
-                              body: { height: "100%" },
-                              rail: { height: "100%" },
-                              track: { height: "100%" },
-                            }}
-                            aria-label={`${budget.category}: ${budget.percentage}%`}
-                            aria-valuetext={`${budget.percentage}% (${budget.status})`}
-                          />
-                        </div>
+                    <Space size={16} style={{ width: "100%", padding: "8px 0" }}>
+                      <div
+                        style={{
+                          ...STATUS_STYLE[budget.status],
+                          width: 40,
+                          height: 40,
+                          borderRadius: 16,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <StatusIcon
+                          style={{ width: 20, height: 20 }}
+                          aria-hidden="true"
+                        />
                       </div>
+                      <Space
+                        direction="vertical"
+                        size={8}
+                        style={{ flex: 1, minWidth: 0 }}
+                      >
+                        <Row justify="space-between" align="middle">
+                          <Text strong style={{ fontSize: 14 }}>
+                            {budget.category}
+                          </Text>
+                          <Tag
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              fontVariantNumeric: "tabular-nums",
+                              border: "none",
+                              background: "none",
+                              margin: 0,
+                              padding: 0,
+                              color: "var(--ant-color-text-secondary)",
+                            }}
+                          >
+                            {budget.percentage.toFixed(1)}%
+                          </Tag>
+                        </Row>
+                        <Progress
+                          percent={Math.min(budget.percentage, 100)}
+                          showInfo={false}
+                          strokeColor={PROGRESS_COLOR[budget.status]}
+                          aria-label={`${budget.category}: ${budget.percentage}%`}
+                          aria-valuetext={`${budget.percentage}% (${budget.status})`}
+                        />
+                      </Space>
+                      </Space>
                     </span>
                   ),
                   children: (
-                    <div id={panelId} className="px-4 pb-4 pt-0">
-                      <div className="pt-4 border-t border-border/20 space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <DetailItem
-                            label="Batas Anggaran"
-                            value={budget.limit}
-                            currency={currency}
-                            locale={locale}
-                          />
-                          <DetailItem
-                            label="Terpakai"
-                            value={budget.spent}
-                            currency={currency}
-                            locale={locale}
-                          />
-                          <DetailItem
-                            label={
-                              budget.remaining >= 0
-                                ? t("budgetRemaining")
-                                : t("budgetOver")
-                            }
-                            value={Math.abs(budget.remaining)}
-                            currency={currency}
-                            locale={locale}
-                            valueColor={
-                              budget.remaining >= 0
-                                ? "text-primary"
-                                : "text-destructive"
-                            }
-                          />
-                          <DetailItem
-                            label="Persentase"
-                            value={`${budget.percentage.toFixed(1)}%`}
-                            currency=""
-                            locale={locale}
-                            isPercentage
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            aria-label={`Edit anggaran ${budget.category}`}
-                            type="default"
-                            size="small"
-                            className="flex-1 min-h-[44px] text-xs font-bold uppercase tracking-widest bg-muted/30"
-                          >
-                            <Edit className="h-3.5 w-3.5 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            aria-label={`Hapus anggaran ${budget.category}`}
-                            type="default"
-                            size="small"
-                            danger
-                            className="flex-1 min-h-[44px] text-xs font-bold uppercase tracking-widest text-destructive hover:text-surface hover:bg-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 mr-2" />
-                            Hapus
-                          </Button>
-                        </div>
-                      </div>
+                    <div id={panelId}>
+                      <Space
+                        direction="vertical"
+                        size={16}
+                        style={{
+                          width: "100%",
+                          paddingTop: 16,
+                          borderTop:
+                            "1px solid var(--ant-color-border-secondary)",
+                        }}
+                      >
+                        <Row gutter={[16, 16]}>
+                          <Col span={12}>
+                            <DetailItem
+                              label="Batas Anggaran"
+                              value={budget.limit}
+                              currency={currency}
+                              locale={locale}
+                            />
+                          </Col>
+                          <Col span={12}>
+                            <DetailItem
+                              label="Terpakai"
+                              value={budget.spent}
+                              currency={currency}
+                              locale={locale}
+                            />
+                          </Col>
+                          <Col span={12}>
+                            <DetailItem
+                              label={
+                                budget.remaining >= 0
+                                  ? t("budgetRemaining")
+                                  : t("budgetOver")
+                              }
+                              value={Math.abs(budget.remaining)}
+                              currency={currency}
+                              locale={locale}
+                              color={
+                                budget.remaining >= 0
+                                  ? "var(--ant-color-primary)"
+                                  : "var(--ant-color-error)"
+                              }
+                            />
+                          </Col>
+                          <Col span={12}>
+                            <DetailItem
+                              label="Persentase"
+                              value={`${budget.percentage.toFixed(1)}%`}
+                              currency=""
+                              locale={locale}
+                              isPercentage
+                            />
+                          </Col>
+                        </Row>
+                        <Row gutter={[8, 8]}>
+                          <Col span={12}>
+                            <Button
+                              aria-label={`Edit anggaran ${budget.category}`}
+                              type="default"
+                              size="small"
+                              block
+                              icon={
+                                <Edit style={{ width: 14, height: 14 }} />
+                              }
+                              style={{ minHeight: 44 }}
+                            >
+                              Edit
+                            </Button>
+                          </Col>
+                          <Col span={12}>
+                            <Button
+                              aria-label={`Hapus anggaran ${budget.category}`}
+                              type="default"
+                              size="small"
+                              danger
+                              block
+                              icon={
+                                <Trash2 style={{ width: 14, height: 14 }} />
+                              }
+                              style={{ minHeight: 44 }}
+                            >
+                              Hapus
+                            </Button>
+                          </Col>
+                        </Row>
+                      </Space>
                     </div>
                   ),
                 };
               })}
             />
 
-            <div className="mt-6 pt-4 border-t border-border">
-              <Button
-                aria-label="Kelola anggaran"
-                type="default"
-                className="w-full text-xs font-bold uppercase tracking-widest text-primary border-transparent bg-transparent hover:bg-muted hover:text-foreground hover:border-transparent active:bg-transparent active:border-transparent"
-              >
-                {t("manageBudgets")}
-              </Button>
-            </div>
-          </>
+            <Divider style={{ margin: 0 }} />
+            <Button
+              aria-label="Kelola anggaran"
+              type="text"
+              block
+              style={{ color: "var(--ant-color-primary)" }}
+            >
+              {t("manageBudgets")}
+            </Button>
+          </Space>
         )}
-      </div>
+      </Space>
     </Card>
   );
 }
@@ -369,8 +467,8 @@ interface SummaryCardProps {
   value: number;
   currency: string;
   locale: string;
+  backgroundColor: string;
   color: string;
-  textColor: string;
 }
 
 function SummaryCard({
@@ -378,28 +476,27 @@ function SummaryCard({
   value,
   currency,
   locale,
+  backgroundColor,
   color,
-  textColor,
 }: SummaryCardProps) {
   return (
-    <div
-      className={clsx(
-        "p-4 rounded-2xl border border-surface/5 shadow-sm",
-        color,
-      )}
-    >
-      <p className="text-xs font-bold uppercase tracking-widest mb-2">
-        {label}
-      </p>
-      <p
-        className={clsx(
-          "text-base sm:text-lg font-bold tabular-nums tracking-tight",
-          textColor,
-        )}
-      >
-        {currency} {value.toLocaleString(locale)}
-      </p>
-    </div>
+    <Card size="small" style={{ backgroundColor }}>
+      <Space direction="vertical" size={8}>
+        <Text strong style={{ ...labelStyle, color }}>
+          {label}
+        </Text>
+        <Text
+          strong
+          style={{
+            fontSize: 18,
+            fontVariantNumeric: "tabular-nums",
+            color,
+          }}
+        >
+          {currency} {value.toLocaleString(locale)}
+        </Text>
+      </Space>
+    </Card>
   );
 }
 
@@ -408,7 +505,7 @@ interface DetailItemProps {
   value: number | string;
   currency: string;
   locale: string;
-  valueColor?: string;
+  color?: string;
   isPercentage?: boolean;
 }
 
@@ -417,24 +514,19 @@ function DetailItem({
   value,
   currency,
   locale,
-  valueColor = "text-foreground",
+  color = "var(--ant-color-text)",
   isPercentage = false,
 }: DetailItemProps) {
   return (
-    <div className="space-y-1">
-      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+    <Space direction="vertical" size={4}>
+      <Text type="secondary" strong style={labelStyle}>
         {label}
-      </p>
-      <p
-        className={clsx(
-          "text-sm font-bold tabular-nums tracking-tight",
-          valueColor,
-        )}
-      >
+      </Text>
+      <Text strong style={{ fontSize: 14, fontVariantNumeric: "tabular-nums", color }}>
         {isPercentage
           ? value
           : `${currency} ${Number(value).toLocaleString(locale)}`}
-      </p>
-    </div>
+      </Text>
+    </Space>
   );
 }

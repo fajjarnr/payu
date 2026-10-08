@@ -16,9 +16,10 @@ import {
   MoreHorizontal as MoreIcon,
   X,
 } from "@/components/icons";
-import { cn } from "@/lib/utils";
-import { Badge, Button, Card, Dropdown, Skeleton, Table } from "antd";
+import { Button, Card, Col, Divider, Dropdown, Row, Skeleton, Space, Table, Tag, Typography } from "antd";
 import type { TableColumnsType } from "antd";
+
+const { Title, Text } = Typography;
 
 import { useTransactions, useCancelTransaction } from "@/hooks";
 import { useAuthStore } from "@/stores";
@@ -27,27 +28,12 @@ import { formatCurrency } from "@/lib/currency";
 import type { Transaction } from "@/services/TransactionService";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  PENDING: {
-    label: "Menunggu",
-    color: "bg-warning/10 text-warning border-warning/20",
-  },
-  VALIDATING: {
-    label: "Validasi",
-    color: "bg-accent/10 text-accent border-accent/20",
-  },
-  PROCESSING: {
-    label: "Diproses",
-    color: "bg-primary/10 text-secondary border-primary/20",
-  },
-  COMPLETED: {
-    label: "Selesai",
-    color: "bg-primary/10 text-primary-dark border-primary/20",
-  },
-  FAILED: { label: "Gagal", color: "bg-error/10 text-error border-error/20" },
-  CANCELLED: {
-    label: "Batal",
-    color: "bg-text-secondary/10 text-text-secondary border-text-secondary/20",
-  },
+  PENDING: { label: "Menunggu", color: "warning" },
+  VALIDATING: { label: "Validasi", color: "warning" },
+  PROCESSING: { label: "Diproses", color: "processing" },
+  COMPLETED: { label: "Selesai", color: "success" },
+  FAILED: { label: "Gagal", color: "error" },
+  CANCELLED: { label: "Batal", color: "default" },
 };
 
 // Helper to check if transaction type is a credit (income)
@@ -56,6 +42,13 @@ const isCreditType = (type: string): boolean => type === "TOP_UP";
 interface TransferActivityProps {
   className?: string;
 }
+
+const QUICK_CATEGORIES = [
+  { icon: Landmark, label: "Bank" },
+  { icon: Smartphone, label: "E-Wallet" },
+  { icon: ReceiptText, label: "Tagihan" },
+  { icon: MoreIcon, label: "Lain" },
+];
 
 export default function TransferActivity({
   className = "",
@@ -106,33 +99,66 @@ export default function TransferActivity({
       key: "date",
       title: "Tanggal",
       render: (_, item) => (
-        <div>
-          <div className="text-xs sm:text-xs text-muted-foreground font-bold tabular-nums uppercase tracking-tighter">
+        <Space direction="vertical" size={4}>
+          <Text
+            type="secondary"
+            strong
+            style={{
+              fontSize: 12,
+              fontVariantNumeric: "tabular-nums",
+              textTransform: "uppercase",
+            }}
+          >
             {formatDate(item.createdAt)}
-          </div>
-          <div className="text-xs font-mono text-muted-foreground/50 mt-1">
+          </Text>
+          <Text
+            type="secondary"
+            style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}
+          >
             {item.referenceNumber}
-          </div>
-        </div>
+          </Text>
+        </Space>
       ),
     },
     {
       key: "recipient",
       title: "Penerima",
       render: (_, item) => (
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:scale-110 transition-transform shadow-sm">
-            <User className="h-6 w-6 text-primary" />
+        <Space size={16} align="center">
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "var(--ant-color-fill-secondary)",
+              border: "1px solid var(--ant-color-border-secondary)",
+              flexShrink: 0,
+            }}
+          >
+            <User
+              style={{
+                width: 24,
+                height: 24,
+                color: "var(--ant-color-primary)",
+              }}
+            />
           </div>
-          <div>
-            <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest leading-none mb-2 uppercase">
+          <Space direction="vertical" size={4}>
+            <Text
+              type="secondary"
+              strong
+              style={{ fontSize: 12, textTransform: "uppercase" }}
+            >
               {item.type}
-            </p>
-            <p className="text-sm font-bold text-foreground uppercase tracking-tight truncate max-w-[150px]">
+            </Text>
+            <Text strong ellipsis style={{ maxWidth: 150 }}>
               {item.description}
-            </p>
-          </div>
-        </div>
+            </Text>
+          </Space>
+        </Space>
       ),
     },
     {
@@ -140,18 +166,12 @@ export default function TransferActivity({
       title: "Status",
       align: "center",
       render: (_, item) => (
-        <Badge
-          count={statusConfig[item.status]?.label || item.status}
-          showZero
-          color="green"
-          className="inline-flex items-center"
-          classNames={{
-            indicator: cn(
-              "inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold shadow-none transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-transparent text-foreground font-bold text-xs",
-              statusConfig[item.status]?.color || statusConfig.PENDING.color,
-            ),
-          }}
-        />
+        <Tag
+          bordered={false}
+          color={statusConfig[item.status]?.color ?? "warning"}
+        >
+          {statusConfig[item.status]?.label || item.status}
+        </Tag>
       ),
     },
     {
@@ -159,15 +179,19 @@ export default function TransferActivity({
       title: "Jumlah",
       align: "right",
       render: (_, item) => (
-        <p
-          className={cn(
-            "text-sm sm:text-base font-bold tabular-nums tracking-tight",
-            isCreditType(item.type) ? "text-primary-dark" : "text-foreground",
-          )}
+        <Text
+          strong
+          style={{
+            fontSize: 14,
+            fontVariantNumeric: "tabular-nums",
+            color: isCreditType(item.type)
+              ? "var(--ant-color-primary)"
+              : undefined,
+          }}
         >
           {isCreditType(item.type) ? "+" : "-"}
           {formatAmount(item.amount)}
-        </p>
+        </Text>
       ),
     },
     {
@@ -180,11 +204,7 @@ export default function TransferActivity({
             items: [
               {
                 key: "detail",
-                label: (
-                  <span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
-                    Lihat Detail
-                  </span>
-                ),
+                label: "Lihat Detail",
               },
               ...(canCancel(item.status)
                 ? [
@@ -192,10 +212,10 @@ export default function TransferActivity({
                       key: "cancel",
                       danger: true,
                       label: (
-                        <span className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground text-error focus:text-error">
-                          <X className="h-4 w-4 mr-2" />
+                        <Space size={8} align="center">
+                          <X style={{ width: 16, height: 16 }} />
                           Batalkan
-                        </span>
+                        </Space>
                       ),
                       onClick: () => handleCancel(item.id),
                     },
@@ -207,10 +227,9 @@ export default function TransferActivity({
           placement="bottomRight"
         >
           <Button
-            type="default"
+            type="text"
             aria-label="Opsi transaksi"
-            className="h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent"
-            icon={<MoreHorizontal className="h-4 w-4" />}
+            icon={<MoreHorizontal style={{ width: 16, height: 16 }} />}
           />
         </Dropdown>
       ),
@@ -218,121 +237,178 @@ export default function TransferActivity({
   ];
 
   return (
-    <div
+    <Space
+      direction="vertical"
+      size={24}
+      style={{ width: "100%" }}
       data-testid="transfer-activity-section"
-      className={cn("flex flex-col gap-6", className)}
+      className={className || undefined}
     >
       {/* Quick Transfer strip */}
-      <Card
-        data-testid="quick-transfer-card"
-        className="relative overflow-hidden group"
-        styles={{ body: { display: "contents" } }}
-      >
-        {/* Decorative background */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl transition-transform group-hover:scale-125 pointer-events-none" />
+      <Card data-testid="quick-transfer-card">
+        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          <Row justify="space-between" align="middle">
+            <Title level={4} style={{ margin: 0 }}>
+              Kirim Cepat
+            </Title>
+            <Button
+              type="text"
+              aria-label="Cari transfer"
+              icon={<Search style={{ width: 20, height: 20 }} />}
+            />
+          </Row>
 
-        <div className="flex flex-row items-center justify-between p-6">
-          <h3 className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
-            Kirim Cepat
-          </h3>
-          <button
-            type="button"
-            aria-label="Cari transfer"
-            className="p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors border border-transparent hover:border-border shadow-sm"
-          >
-            <Search className="h-5 w-5 text-muted-foreground" />
-          </button>
-        </div>
-
-        <div className="p-6 pt-0 space-y-6 relative z-10 flex flex-col justify-between">
-          <div>
-            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.1em] mb-6 text-center uppercase">
+          <Space direction="vertical" size={8} style={{ width: "100%" }}>
+            <Text
+              type="secondary"
+              strong
+              style={{
+                fontSize: 12,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                textAlign: "center",
+                display: "block",
+              }}
+            >
               Kategori Favorit
-            </p>
-            <div className="grid grid-cols-4 gap-6 px-1">
-              {[
-                { icon: Landmark, label: "Bank" },
-                { icon: Smartphone, label: "E-Wallet" },
-                { icon: ReceiptText, label: "Tagihan" },
-                { icon: MoreIcon, label: "Lain" },
-              ].map((item, i) => (
+            </Text>
+            <Row gutter={[16, 16]}>
+              {QUICK_CATEGORIES.map((item) => (
+                <Col span={6} key={item.label}>
+                  <Button
+                    type="text"
+                    data-testid={`quick-transfer-category-${item.label.toLowerCase()}`}
+                    style={{ height: "auto", width: "100%", padding: 8 }}
+                  >
+                    <Space direction="vertical" size={8} align="center">
+                      <div
+                        style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 16,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "var(--ant-color-primary-bg)",
+                          border:
+                            "1px solid var(--ant-color-primary-border)",
+                        }}
+                      >
+                        <item.icon
+                          style={{
+                            width: 24,
+                            height: 24,
+                            color: "var(--ant-color-primary)",
+                          }}
+                        />
+                      </div>
+                      <Text
+                        type="secondary"
+                        strong
+                        style={{ fontSize: 12, textTransform: "uppercase" }}
+                      >
+                        {item.label}
+                      </Text>
+                    </Space>
+                  </Button>
+                </Col>
+              ))}
+            </Row>
+          </Space>
+
+          <Space direction="vertical" size={8} style={{ width: "100%" }}>
+            <Text
+              type="secondary"
+              strong
+              style={{
+                fontSize: 12,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                textAlign: "center",
+                display: "block",
+              }}
+            >
+              Kontak Terbaru
+            </Text>
+            <Row justify="space-between">
+              {[1, 2, 3, 4, 5].map((i) => (
                 <Button
                   key={i}
-                  data-testid={`quick-transfer-category-${item.label.toLowerCase()}`}
-                  type="default"
-                  className="flex flex-col items-center gap-4 group/btn h-auto p-0 hover:bg-transparent border-transparent bg-transparent hover:bg-muted hover:text-foreground hover:border-transparent active:bg-transparent active:border-transparent"
-                >
-                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-primary/[0.03] flex items-center justify-center group-hover/btn:bg-primary/10 group-hover/btn:scale-105 transition-all border border-primary/10 group-hover/btn:border-primary/30 shadow-sm overflow-hidden">
-                    <item.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
-                  </div>
-                  <span className="text-xs sm:text-xs font-bold text-muted-foreground group-hover/btn:text-primary uppercase tracking-tighter">
-                    {item.label}
-                  </span>
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.1em] mb-6 text-center uppercase">
-              Kontak Terbaru
-            </p>
-            <div className="flex justify-between items-center px-2">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <button
-                  key={i}
-                  type="button"
                   aria-label={`Kontak ${i}`}
-                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-accent border-2 border-background shadow-md flex items-center justify-center overflow-hidden hover:scale-110 active:scale-95 transition-all hover:ring-2 ring-primary/30 group/avatar"
-                >
-                  <User className="h-6 w-6 sm:h-7 sm:w-7 text-primary/60 group-hover/avatar:text-primary transition-colors" />
-                </button>
+                  icon={
+                    <User
+                      style={{
+                        width: 24,
+                        height: 24,
+                        color: "var(--ant-color-primary)",
+                      }}
+                    />
+                  }
+                  style={{ width: 52, height: 52, borderRadius: 16 }}
+                />
               ))}
-            </div>
-          </div>
+            </Row>
+          </Space>
 
           <Button
             data-testid="quick-transfer-send-button"
             type="primary"
             size="large"
-            className="w-full uppercase tracking-[0.1em] font-bold text-xs h-14 sm:h-16 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 transition-all mt-4"
+            block
+            style={{
+              height: 56,
+              fontWeight: 700,
+              fontSize: 12,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+            }}
           >
             Kirim Sekarang
           </Button>
-        </div>
+        </Space>
       </Card>
 
       {/* Recent Transfer Activity ledger */}
-      <Card
-        data-testid="recent-activity-card"
-        className="overflow-hidden"
-        styles={{ body: { display: "contents" } }}
-      >
-        <div className="flex flex-row items-center justify-between p-6">
-          <h3 className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase">
-            Aktivitas Terakhir
-          </h3>
-          <button
-            type="button"
-            aria-label="Pilih bulan"
-            className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted/50 px-4 py-2 rounded-xl hover:bg-muted transition-colors border border-transparent hover:border-border tracking-widest uppercase shadow-sm min-h-[44px]"
-          >
-            Januari <ChevronDown className="h-4 w-4" />
-          </button>
-        </div>
+      <Card data-testid="recent-activity-card">
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Row justify="space-between" align="middle">
+            <Title level={4} style={{ margin: 0 }}>
+              Aktivitas Terakhir
+            </Title>
+            <Button
+              type="default"
+              size="small"
+              aria-label="Pilih bulan"
+              style={{ minHeight: 44 }}
+            >
+              <Space size={8} align="center">
+                <Text
+                  type="secondary"
+                  strong
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Januari
+                </Text>
+                <ChevronDown style={{ width: 16, height: 16 }} />
+              </Space>
+            </Button>
+          </Row>
 
-        <div className="p-6 pt-0 overflow-x-auto">
           {isLoading ? (
-            <div className="space-y-4">
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
               {[1, 2, 3, 4].map((i) => (
                 <Skeleton
                   key={i}
+                  active
                   title={false}
-                  paragraph={false}
-                  className="block animate-pulse rounded-xl bg-muted/50 h-16 w-full"
+                  paragraph={{ rows: 1 }}
                 />
               ))}
-            </div>
+            </Space>
           ) : (
             <>
               <div className="hidden md:block">
@@ -352,114 +428,172 @@ export default function TransferActivity({
               </div>
 
               {/* Mobile Card Layout */}
-              <div className="md:hidden space-y-4">
-                {displayTransactions.map((item: Transaction) => (
-                  <div
-                    key={item.id}
-                    data-testid={`transfer-card-mobile-${item.id}`}
-                    className="bg-muted/30 p-4 rounded-xl border border-transparent hover:border-primary/20 transition-all"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-card flex items-center justify-center border border-border shadow-sm">
-                          <User className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-foreground leading-tight truncate max-w-[120px]">
-                            {item.description}
-                          </p>
-                          <p className="text-xs font-semibold text-muted-foreground tracking-widest leading-none uppercase">
-                            {item.type}
-                          </p>
-                        </div>
-                      </div>
-                      <p
-                        className={cn(
-                          "text-sm font-bold tabular-nums",
-                          isCreditType(item.type)
-                            ? "text-primary-dark"
-                            : "text-foreground",
-                        )}
+              <div className="md:hidden">
+                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  {displayTransactions.map((item: Transaction) => (
+                    <Card
+                      key={item.id}
+                      size="small"
+                      data-testid={`transfer-card-mobile-${item.id}`}
+                    >
+                      <Space
+                        direction="vertical"
+                        size={12}
+                        style={{ width: "100%" }}
                       >
-                        {isCreditType(item.type) ? "+" : "-"}
-                        {formatAmount(item.amount)}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        {formatDate(item.createdAt)}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          count={
-                            statusConfig[item.status]?.label || item.status
-                          }
-                          showZero
-                          color="green"
-                          className="inline-flex items-center"
-                          classNames={{
-                            indicator: cn(
-                              "inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold shadow-none transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-transparent text-foreground font-bold text-xs",
-                              statusConfig[item.status]?.color ||
-                                statusConfig.PENDING.color,
-                            ),
-                          }}
-                        />
-                        {canCancel(item.status) && (
-                          <Button
-                            type="default"
-                            aria-label="Batalkan transaksi"
-                            className="h-11 w-11 text-error hover:text-white hover:bg-error border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent"
-                            icon={<X className="h-4 w-4" />}
-                            onClick={() => handleCancel(item.id)}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                        <Row justify="space-between" align="middle">
+                          <Space size={12} align="center">
+                            <div
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 12,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor:
+                                  "var(--ant-color-fill-secondary)",
+                                border:
+                                  "1px solid var(--ant-color-border-secondary)",
+                                flexShrink: 0,
+                              }}
+                            >
+                              <User
+                                style={{
+                                  width: 20,
+                                  height: 20,
+                                  color: "var(--ant-color-primary)",
+                                }}
+                              />
+                            </div>
+                            <Space direction="vertical" size={2}>
+                              <Text strong ellipsis style={{ maxWidth: 120 }}>
+                                {item.description}
+                              </Text>
+                              <Text
+                                type="secondary"
+                                style={{
+                                  fontSize: 12,
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {item.type}
+                              </Text>
+                            </Space>
+                          </Space>
+                          <Text
+                            strong
+                            style={{ fontVariantNumeric: "tabular-nums" }}
+                          >
+                            {isCreditType(item.type) ? "+" : "-"}
+                            {formatAmount(item.amount)}
+                          </Text>
+                        </Row>
+                        <Divider style={{ margin: 0 }} />
+                        <Row justify="space-between" align="middle">
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {formatDate(item.createdAt)}
+                          </Text>
+                          <Space size={8} align="center">
+                            <Tag
+                              bordered={false}
+                              color={
+                                statusConfig[item.status]?.color ?? "warning"
+                              }
+                            >
+                              {statusConfig[item.status]?.label || item.status}
+                            </Tag>
+                            {canCancel(item.status) && (
+                              <Button
+                                type="text"
+                                aria-label="Batalkan transaksi"
+                                danger
+                                icon={
+                                  <X style={{ width: 16, height: 16 }} />
+                                }
+                                onClick={() => handleCancel(item.id)}
+                              />
+                            )}
+                          </Space>
+                        </Row>
+                      </Space>
+                    </Card>
+                  ))}
+                </Space>
               </div>
 
               {!displayTransactions.length && (
-                <div className="text-center py-12">
-                  <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ReceiptText className="h-8 w-8 text-muted-foreground" />
+                <Space
+                  direction="vertical"
+                  size={8}
+                  align="center"
+                  style={{ width: "100%", textAlign: "center", padding: "48px 0" }}
+                >
+                  <div
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "var(--ant-color-fill-tertiary)",
+                    }}
+                  >
+                    <ReceiptText
+                      style={{
+                        width: 32,
+                        height: 32,
+                        color: "var(--ant-color-text-tertiary)",
+                      }}
+                    />
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">
+                  <Title level={4} style={{ margin: 0 }}>
                     Belum Ada Transaksi
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
+                  </Title>
+                  <Text type="secondary">
                     Transaksi Anda akan muncul di sini
-                  </p>
-                </div>
+                  </Text>
+                </Space>
               )}
 
-              <div className="mt-6 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-6">
+              <Divider style={{ margin: 0 }} />
+              <Row justify="space-between" align="middle">
                 <Button
-                  type="default"
+                  type="link"
                   size="small"
                   data-testid="repeat-last-transfer-button"
-                  className="flex items-center gap-3 text-xs font-bold text-primary hover:text-primary/80 tracking-widest transition-colors uppercase min-h-[44px] h-auto p-0 hover:bg-transparent border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent"
-                  icon={<RotateCcw className="h-4 w-4" />}
+                  icon={<RotateCcw style={{ width: 16, height: 16 }} />}
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 12,
+                    textTransform: "uppercase",
+                    minHeight: 44,
+                  }}
                 >
                   Ulangi Transfer Terakhir
                 </Button>
                 <Link href="/transactions">
                   <Button
-                    type="default"
+                    type="link"
                     size="small"
                     data-testid="view-full-history-button"
-                    className="flex items-center gap-3 text-xs font-bold text-primary hover:underline tracking-widest transition-all uppercase min-h-[44px] h-auto p-0 hover:bg-transparent border-transparent bg-transparent hover:border-transparent active:bg-transparent active:border-transparent"
-                    icon={<ArrowRight className="h-4 w-4" />}
+                    icon={<ArrowRight style={{ width: 16, height: 16 }} />}
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 12,
+                      textTransform: "uppercase",
+                      minHeight: 44,
+                    }}
                   >
                     Riwayat Lengkap
                   </Button>
                 </Link>
-              </div>
+              </Row>
             </>
           )}
-        </div>
+        </Space>
       </Card>
-    </div>
+    </Space>
   );
 }

@@ -4,9 +4,20 @@ import React, { useState } from "react";
 
 import { TrendingUp } from "@/components/icons";
 import { useTranslations } from "next-intl";
-import clsx from "clsx";
-import { cn } from "@/lib/utils";
-import { Button, Card, Collapse, Progress, Skeleton } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Collapse,
+  Progress,
+  Row,
+  Skeleton,
+  Space,
+  Tag,
+  Typography,
+} from "antd";
+
+const { Title, Text } = Typography;
 
 interface SpendingCategory {
   id: string;
@@ -25,6 +36,19 @@ interface SpendingInsightsProps {
   className?: string;
   isLoading?: boolean;
 }
+
+const BERK_BG: Record<string, string> = {
+  "bg-chart-1": "var(--ant-color-primary-bg)",
+  "bg-chart-2": "var(--ant-color-success-bg)",
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: "var(--ant-color-text-secondary)",
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+};
 
 export default function SpendingInsights({
   data,
@@ -45,256 +69,343 @@ export default function SpendingInsights({
         )
       : null;
 
-  // State for manual expansion removed in favor of Accordion
+  const HighestIcon = highestCategory?.icon;
 
   return (
     <Card
       role="region"
       aria-labelledby="spending-insights-title"
-      className={cn(
-        "relative overflow-hidden h-full flex flex-col group",
-        className,
-      )}
-      styles={{ body: { display: "contents" } }}
+      className={className}
+      style={{ position: "relative", overflow: "hidden", height: "100%" }}
     >
-      <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          width: 160,
+          height: 160,
+          backgroundColor: "var(--ant-color-primary-bg)",
+          borderRadius: "50%",
+          filter: "blur(48px)",
+          pointerEvents: "none",
+        }}
+      />
 
-      <div className="flex flex-row items-start justify-between gap-4 p-6 pb-6 shrink-0 z-10">
-        <div>
-          <h3
-            id="spending-insights-title"
-            className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase"
-          >
-            {t("spendingInsights")}
-          </h3>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]">
-            {new Date().toLocaleDateString(undefined, {
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
-        </div>
+      <Space direction="vertical" size={24} style={{ width: "100%", position: "relative" }}>
+        <Row justify="space-between" align="top">
+          <Space direction="vertical" size={4}>
+            <Title level={3} id="spending-insights-title" style={{ margin: 0 }}>
+              {t("spendingInsights")}
+            </Title>
+            <Text type="secondary" strong style={labelStyle}>
+              {new Date().toLocaleDateString(undefined, {
+                month: "long",
+                year: "numeric",
+              })}
+            </Text>
+          </Space>
 
-        {/* View Mode Toggle */}
-        <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
-          <Button
-            type="default"
-            onClick={() => setViewMode("category")}
-            aria-label="Tampilan per kategori"
-            className={clsx(
-              "px-3 py-2 min-h-[44px] min-w-[44px] text-xs font-extrabold transition-all",
-              viewMode === "category"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground",
-            )}
-            aria-pressed={viewMode === "category"}
-          >
-            Kategori
-          </Button>
-          <Button
-            type="default"
-            onClick={() => setViewMode("monthly")}
-            aria-label="Tampilan bulanan"
-            className={clsx(
-              "px-3 py-2 min-h-[44px] min-w-[44px] text-xs font-extrabold transition-all",
-              viewMode === "monthly"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground",
-            )}
-            aria-pressed={viewMode === "monthly"}
-          >
-            Bulanan
-          </Button>
-        </div>
-      </div>
+          <Space size={4}>
+            <Button
+              type={viewMode === "category" ? "primary" : "default"}
+              onClick={() => setViewMode("category")}
+              aria-label="Tampilan per kategori"
+              aria-pressed={viewMode === "category"}
+            >
+              Kategori
+            </Button>
+            <Button
+              type={viewMode === "monthly" ? "primary" : "default"}
+              onClick={() => setViewMode("monthly")}
+              aria-label="Tampilan bulanan"
+              aria-pressed={viewMode === "monthly"}
+            >
+              Bulanan
+            </Button>
+          </Space>
+        </Row>
 
-      <div className="p-6 pt-0 flex-1 overflow-y-auto z-10 relative scrollbar-hide">
         {isLoading ? (
-          <div className="space-y-4">
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
             {[1, 2, 3].map((i) => (
               <Skeleton
                 key={i}
+                active
                 title={false}
                 paragraph={false}
-                className="block animate-pulse rounded-xl bg-muted/50 h-16 w-full"
+                style={{ height: 64 }}
               />
             ))}
-          </div>
+          </Space>
         ) : categories.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[120px]">
-            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 120,
+            }}
+          >
+            <Text type="secondary" strong style={labelStyle}>
               Belum ada data pengeluaran
-            </p>
+            </Text>
           </div>
         ) : (
-          <>
+          <Space direction="vertical" size={24} style={{ width: "100%" }}>
             {/* Summary */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              <div className="bg-muted/50 rounded-xl p-4">
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
-                  Total Pengeluaran
-                </p>
-                <p className="text-xl font-bold text-foreground tabular-nums">
-                  {currency} {totalSpending.toLocaleString("id-ID")}
-                </p>
-              </div>
-              <div className="bg-muted/50 rounded-xl p-4">
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">
-                  Kategori Terbesar
-                </p>
-                {highestCategory && (
-                  <div className="flex items-center gap-2">
-                    <highestCategory.icon className="h-4 w-4 text-primary" />
-                    <p className="text-sm font-bold text-foreground uppercase tracking-tight">
-                      {highestCategory.name}
-                    </p>
-                  </div>
-                )}
-                {highestCategory && (
-                  <p className="text-xs text-muted-foreground tabular-nums font-medium">
-                    {currency} {highestCategory.amount.toLocaleString("id-ID")}
-                  </p>
-                )}
-              </div>
-            </div>
-            {/* Category List with Shadcn Accordion */}
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12}>
+                <Card
+                  size="small"
+                  style={{ backgroundColor: "var(--ant-color-fill-tertiary)" }}
+                >
+                  <Space direction="vertical" size={4}>
+                    <Text type="secondary" strong style={labelStyle}>
+                      Total Pengeluaran
+                    </Text>
+                    <Text
+                      strong
+                      style={{ fontSize: 20, fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {currency} {totalSpending.toLocaleString("id-ID")}
+                    </Text>
+                  </Space>
+                </Card>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Card
+                  size="small"
+                  style={{ backgroundColor: "var(--ant-color-fill-tertiary)" }}
+                >
+                  <Space direction="vertical" size={4}>
+                    <Text type="secondary" strong style={labelStyle}>
+                      Kategori Terbesar
+                    </Text>
+                    {highestCategory && (
+                      <Space size={8}>
+                        {HighestIcon && (
+                          <HighestIcon
+                            style={{
+                              width: 16,
+                              height: 16,
+                              color: "var(--ant-color-primary)",
+                            }}
+                          />
+                        )}
+                        <Text strong>{highestCategory.name}</Text>
+                      </Space>
+                    )}
+                    {highestCategory && (
+                      <Text
+                        type="secondary"
+                        style={{ fontSize: 12, fontVariantNumeric: "tabular-nums" }}
+                      >
+                        {currency} {highestCategory.amount.toLocaleString("id-ID")}
+                      </Text>
+                    )}
+                  </Space>
+                </Card>
+              </Col>
+            </Row>
+            {/* Category List with antd Accordion */}
             <Collapse
               accordion
               aria-label="Daftar kategori pengeluaran"
-              className="space-y-3 pb-2"
               expandIcon={() => null}
               items={categories.map((category) => {
                 const Icon = category.icon;
                 const panelId = `spending-panel-${category.id}`;
                 return {
                   key: category.id,
-                  className:
-                    "bg-muted/30 rounded-xl border-none overflow-hidden",
+                  style: {
+                    backgroundColor: "var(--ant-color-fill-tertiary)",
+                    borderRadius: 12,
+                    border: "none",
+                    overflow: "hidden",
+                  },
                   label: (
                     <span
                       role="button"
                       aria-expanded={false}
                       aria-controls={panelId}
-                      className="flex flex-1 items-center justify-between px-4 py-4 text-xs font-bold uppercase tracking-[0.1em] hover:no-underline group/trigger"
+                      style={{
+                        display: "flex",
+                        flex: 1,
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "16px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                      }}
                     >
-                      <div className="flex items-center gap-4 w-full text-left">
-                        <div
-                          className={cn(
-                            "h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover/trigger:scale-110",
-                            category.color,
-                          )}
-                        >
-                          <Icon
-                            className="h-5 w-5 text-surface"
-                            aria-hidden="true"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0 pr-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-bold text-foreground uppercase tracking-tight">
-                              {category.name}
-                            </p>
-                            <p className="text-xs font-bold text-foreground tabular-nums">
-                              {currency}{" "}
-                              {category.amount.toLocaleString("id-ID")}
-                            </p>
-                          </div>
-                          <Progress
-                            percent={category.percentage}
-                            showInfo={false}
-                            railColor="transparent"
-                            className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50"
-                            classNames={{
-                              track: `bg-primary transition-all duration-500 ease-in-out ${category.color}`,
-                            }}
-                            styles={{
-                              body: { height: "100%" },
-                              rail: { height: "100%" },
-                              track: { height: "100%" },
-                            }}
-                            aria-label={`${category.name}: ${category.percentage}% dari total`}
-                          />
-                        </div>
-                        <div
-                          className={cn(
-                            "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold flex-shrink-0 mr-4",
-                            category.trend === "up"
-                              ? "bg-destructive/10 text-destructive"
-                              : category.trend === "down"
-                                ? "bg-primary/10 text-primary"
-                                : "bg-muted text-muted-foreground",
-                          )}
-                          aria-label={`Tren ${category.trend === "up" ? "naik" : category.trend === "down" ? "turun" : "tetap"} ${category.trendValue}%`}
-                        >
-                          <TrendingUp
-                            aria-hidden="true"
-                            className={cn(
-                              "h-3 w-3",
-                              category.trend === "down" && "rotate-180",
-                            )}
-                          />
-                          {category.trendValue}%
-                        </div>
+                    <Space size={16} style={{ width: "100%", padding: "8px 0" }}>
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 16,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          backgroundColor:
+                            BERK_BG[category.color] ??
+                            "var(--ant-color-primary-bg)",
+                        }}
+                      >
+                        <Icon
+                          style={{
+                            width: 20,
+                            height: 20,
+                            color: "var(--ant-color-text-light-solid)",
+                          }}
+                          aria-hidden="true"
+                        />
                       </div>
+                      <Space
+                        direction="vertical"
+                        size={8}
+                        style={{ flex: 1, minWidth: 0 }}
+                      >
+                        <Row justify="space-between" align="middle">
+                          <Text strong style={{ fontSize: 14 }}>
+                            {category.name}
+                          </Text>
+                          <Text
+                            strong
+                            style={{
+                              fontSize: 12,
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {currency} {category.amount.toLocaleString("id-ID")}
+                          </Text>
+                        </Row>
+                        <Progress
+                          percent={category.percentage}
+                          showInfo={false}
+                          aria-label={`${category.name}: ${category.percentage}% dari total`}
+                        />
+                      </Space>
+                      <Tag
+                        aria-label={`Tren ${category.trend === "up" ? "naik" : category.trend === "down" ? "turun" : "tetap"} ${category.trendValue}%`}
+                        icon={
+                          category.trend !== "neutral" ? (
+                            <TrendingUp
+                              aria-hidden="true"
+                              style={{
+                                width: 12,
+                                height: 12,
+                                transform:
+                                  category.trend === "down"
+                                    ? "rotate(180deg)"
+                                    : undefined,
+                              }}
+                            />
+                          ) : undefined
+                        }
+                        style={{
+                          backgroundColor:
+                            category.trend === "up"
+                              ? "var(--ant-color-error-bg)"
+                              : category.trend === "down"
+                                ? "var(--ant-color-success-bg)"
+                                : "var(--ant-color-fill-secondary)",
+                          color:
+                            category.trend === "up"
+                              ? "var(--ant-color-error)"
+                              : category.trend === "down"
+                                ? "var(--ant-color-success)"
+                                : "var(--ant-color-text-secondary)",
+                          border: "none",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {category.trendValue}%
+                      </Tag>
+                    </Space>
                     </span>
                   ),
                   children: (
-                    <div id={panelId} className="px-4 pb-4 pt-0">
-                      <div className="space-y-4 pt-4 border-t border-border/10">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
-                              Persentase
-                            </p>
-                            <p className="text-xs font-bold text-foreground">
-                              {category.percentage}% dari total
-                            </p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">
-                              Status
-                            </p>
-                            <p
-                              className={cn(
-                                "text-xs font-bold",
-                                category.trend === "up"
-                                  ? "text-destructive"
-                                  : "text-primary",
-                              )}
+                    <div id={panelId}>
+                      <Space
+                        direction="vertical"
+                        size={16}
+                        style={{
+                          width: "100%",
+                          paddingTop: 16,
+                          borderTop: "1px solid var(--ant-color-border-secondary)",
+                        }}
+                      >
+                        <Row gutter={[16, 16]}>
+                          <Col span={12}>
+                            <Space direction="vertical" size={4}>
+                              <Text type="secondary" strong style={labelStyle}>
+                                Persentase
+                              </Text>
+                              <Text strong style={{ fontSize: 12 }}>
+                                {category.percentage}% dari total
+                              </Text>
+                            </Space>
+                          </Col>
+                          <Col span={12}>
+                            <Space direction="vertical" size={4}>
+                              <Text type="secondary" strong style={labelStyle}>
+                                Status
+                              </Text>
+                              <Text
+                                strong
+                                style={{
+                                  fontSize: 12,
+                                  color:
+                                    category.trend === "up"
+                                      ? "var(--ant-color-error)"
+                                      : "var(--ant-color-success)",
+                                }}
+                              >
+                                {category.trend === "up" ? "Meningkat" : "Menurun"}
+                              </Text>
+                            </Space>
+                          </Col>
+                        </Row>
+                        <Row gutter={[8, 8]}>
+                          <Col span={12}>
+                            <Button
+                              aria-label={`Lihat transaksi ${category.name}`}
+                              size="small"
+                              type="primary"
+                              block
+                              style={{ minHeight: 44 }}
                             >
-                              {category.trend === "up"
-                                ? "Meningkat"
-                                : "Menurun"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            aria-label={`Lihat transaksi ${category.name}`}
-                            size="small"
-                            type="primary"
-                            className="flex-1 text-xs font-bold uppercase tracking-widest min-h-[44px]"
-                          >
-                            Lihat Transaksi
-                          </Button>
-                          <Button
-                            aria-label={`Set anggaran ${category.name}`}
-                            type="default"
-                            size="small"
-                            className="flex-1 text-xs font-bold uppercase tracking-widest min-h-[44px] bg-muted/30"
-                          >
-                            Set Anggaran
-                          </Button>
-                        </div>
-                      </div>
+                              Lihat Transaksi
+                            </Button>
+                          </Col>
+                          <Col span={12}>
+                            <Button
+                              aria-label={`Set anggaran ${category.name}`}
+                              type="default"
+                              size="small"
+                              block
+                              style={{ minHeight: 44 }}
+                            >
+                              Set Anggaran
+                            </Button>
+                          </Col>
+                        </Row>
+                      </Space>
                     </div>
                   ),
                 };
               })}
             />
-          </>
+          </Space>
         )}
-      </div>
+      </Space>
     </Card>
   );
 }

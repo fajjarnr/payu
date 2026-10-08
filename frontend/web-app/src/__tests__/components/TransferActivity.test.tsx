@@ -37,13 +37,15 @@ describe("TransferActivity", () => {
     const { container } = renderWithIntl(<TransferActivity />);
 
     const section = screen.getByTestId("transfer-activity-section");
-    expect(section).toHaveClass("flex-col");
+    expect(section).toHaveClass("ant-space-vertical");
 
     const cards = container.querySelectorAll(
       '[data-testid="quick-transfer-card"], [data-testid="recent-activity-card"]',
     );
     expect(cards).toHaveLength(2);
 
+    const desktopTable = container.querySelector(".md\\:block");
+    expect(desktopTable).toBeInTheDocument();
     const cardView = container.querySelector(".md\\:hidden");
     expect(cardView).toBeInTheDocument();
   });
@@ -57,12 +59,12 @@ describe("TransferActivity", () => {
   });
 
   it("renders transfer recent contacts in quick transfer", () => {
-    const { container } = renderWithIntl(<TransferActivity />);
+    renderWithIntl(<TransferActivity />);
 
     expect(screen.getByText("Kontak Terbaru")).toBeInTheDocument();
 
-    const userAvatars = container.querySelectorAll(".rounded-xl");
-    expect(userAvatars.length).toBeGreaterThan(0);
+    const contactButtons = screen.getAllByRole("button", { name: /Kontak \d/ });
+    expect(contactButtons.length).toBeGreaterThan(0);
   });
 
   it("displays transfer categories", () => {

@@ -8,8 +8,19 @@ import {
   Info,
 } from "@/components/icons";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
-import { Card, Progress, Skeleton } from "antd";
+import {
+  Card,
+  Col,
+  Divider,
+  Progress,
+  Row,
+  Skeleton,
+  Space,
+  Tag,
+  Typography,
+} from "antd";
+
+const { Title, Text } = Typography;
 
 interface ScoreFactorData {
   label: string;
@@ -26,13 +37,41 @@ interface FinancialHealthScoreProps {
   isLoading?: boolean;
 }
 
+type HealthTone = "success" | "primary" | "warning" | "error";
+
 interface HealthLevel {
   label: string;
   description: string;
-  color: string;
-  bgColor: string;
+  tone: HealthTone;
   icon: React.ElementType;
 }
+
+const TONE_COLOR: Record<HealthTone, string> = {
+  success: "var(--ant-color-success)",
+  primary: "var(--ant-color-primary)",
+  warning: "var(--ant-color-warning)",
+  error: "var(--ant-color-error)",
+};
+
+const TONE_BG: Record<HealthTone, string> = {
+  success: "var(--ant-color-success-bg)",
+  primary: "var(--ant-color-primary-bg)",
+  warning: "var(--ant-color-warning-bg)",
+  error: "var(--ant-color-error-bg)",
+};
+
+const FACTOR_BAR: Record<string, string> = {
+  "bg-primary": "var(--ant-color-primary)",
+  "bg-primary-light": "var(--ant-color-primary-bg)",
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: "var(--ant-color-text-secondary)",
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+};
 
 export default function FinancialHealthScore({
   score,
@@ -50,27 +89,15 @@ export default function FinancialHealthScore({
       <Card
         role="region"
         aria-labelledby="financial-health-title"
-        className={cn(
-          "relative overflow-hidden flex flex-col justify-between group",
-          className,
-        )}
-        styles={{ body: { display: "contents" } }}
+        className={className}
+        style={{ position: "relative", overflow: "hidden" }}
       >
-        <div className="flex flex-col space-y-2 p-6">
-          <h3
-            id="financial-health-title"
-            className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase"
-          >
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Title level={3} id="financial-health-title" style={{ margin: 0 }}>
             {t("financialHealthScore")}
-          </h3>
-        </div>
-        <div className="p-6 pt-0">
-          <Skeleton
-            title={false}
-            paragraph={false}
-            className="block animate-pulse rounded-xl bg-muted/50 min-h-[280px] w-full"
-          />
-        </div>
+          </Title>
+          <Skeleton active title={false} paragraph={false} style={{ minHeight: 280 }} />
+        </Space>
       </Card>
     );
   }
@@ -80,25 +107,26 @@ export default function FinancialHealthScore({
       <Card
         role="region"
         aria-labelledby="financial-health-title"
-        className={cn(
-          "relative overflow-hidden flex flex-col justify-between group",
-          className,
-        )}
-        styles={{ body: { display: "contents" } }}
+        className={className}
+        style={{ position: "relative", overflow: "hidden" }}
       >
-        <div className="flex flex-col space-y-2 p-6">
-          <h3
-            id="financial-health-title"
-            className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase"
-          >
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Title level={3} id="financial-health-title" style={{ margin: 0 }}>
             {t("financialHealthScore")}
-          </h3>
-        </div>
-        <div className="p-6 pt-0 flex items-center justify-center min-h-[200px]">
-          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">
-            Belum ada data
-          </p>
-        </div>
+          </Title>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 200,
+            }}
+          >
+            <Text type="secondary" strong style={labelStyle}>
+              Belum ada data
+            </Text>
+          </div>
+        </Space>
       </Card>
     );
   }
@@ -109,8 +137,7 @@ export default function FinancialHealthScore({
         label: t("financialHealthExcellent"),
         description:
           "Kesehatan finansial Anda sangat baik. Pertahankan kebiasaan baik ini!",
-        color: "text-primary-dark",
-        bgColor: "bg-primary-light dark:bg-primary-dark/30",
+        tone: "success",
         icon: CheckCircle2,
       };
     }
@@ -119,8 +146,7 @@ export default function FinancialHealthScore({
         label: t("financialHealthGood"),
         description:
           "Kesehatan finansial Anda baik. Terus tingkatkan penghematan.",
-        color: "text-primary",
-        bgColor: "bg-success-light dark:bg-success-light/20",
+        tone: "primary",
         icon: CheckCircle2,
       };
     }
@@ -129,8 +155,7 @@ export default function FinancialHealthScore({
         label: t("financialHealthFair"),
         description:
           "Kesehatan finansial Anda cukup. Pertimbangkan untuk mengurangi pengeluaran.",
-        color: "text-secondary dark:text-warning",
-        bgColor: "bg-warning dark:bg-warning/30",
+        tone: "warning",
         icon: Info,
       };
     }
@@ -139,8 +164,7 @@ export default function FinancialHealthScore({
         label: t("financialHealthPoor"),
         description:
           "Kesehatan finansial Anda kurang. Segera tinjau kembali anggaran Anda.",
-        color: "text-white dark:text-accent",
-        bgColor: "bg-accent dark:bg-accent/30",
+        tone: "error",
         icon: AlertCircle,
       };
     }
@@ -148,13 +172,13 @@ export default function FinancialHealthScore({
       label: t("financialHealthVeryPoor"),
       description:
         "Kesehatan finansial Anda sangat kurang. Prioritaskan perbaikan segera.",
-      color: "text-destructive",
-      bgColor: "bg-destructive/10",
+      tone: "error",
       icon: AlertCircle,
     };
   };
 
   const healthLevel = getHealthLevel(score);
+  const HealthIcon = healthLevel.icon;
   const scoreChange = previousScore != null ? score - previousScore : 0;
   const isImprovement = scoreChange > 0;
 
@@ -166,170 +190,230 @@ export default function FinancialHealthScore({
     <Card
       role="region"
       aria-labelledby="financial-health-title"
-      className={cn(
-        "relative overflow-hidden flex flex-col justify-between group",
-        className,
-      )}
-      styles={{ body: { display: "contents" } }}
+      className={className}
+      style={{ position: "relative", overflow: "hidden" }}
     >
-      {/* Decorative background gradient */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      {/* Decorative background glow */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          width: 128,
+          height: 128,
+          backgroundColor: "var(--ant-color-primary-bg)",
+          borderRadius: "50%",
+          filter: "blur(48px)",
+          pointerEvents: "none",
+        }}
+      />
 
-      <div className="flex flex-row items-start justify-between gap-4 p-6 pb-6">
-        <div>
-          <h3
-            id="financial-health-title"
-            className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase"
-          >
-            {t("financialHealthScore")}
-          </h3>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
-            Update terakhir:{" "}
-            {new Date().toLocaleDateString(undefined, {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
-          </p>
-        </div>
-        {previousScore != null && (
-          <div
-            className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold shadow-sm",
-              isImprovement
-                ? "bg-primary/10 text-primary"
-                : "bg-destructive/10 text-destructive",
-            )}
-            role="status"
-            aria-live="polite"
-            aria-label={`Skor berubah ${isImprovement ? "meningkat" : "menurun"} ${Math.abs(scoreChange)} poin`}
-          >
-            {isImprovement ? (
-              <TrendingUp className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <AlertCircle className="h-4 w-4" aria-hidden="true" />
-            )}
-            {isImprovement ? "+" : ""}
-            {scoreChange}
-          </div>
-        )}
-      </div>
+      <Space
+        direction="vertical"
+        size={24}
+        style={{ width: "100%", position: "relative" }}
+      >
+        <Row justify="space-between" align="top">
+          <Space direction="vertical" size={4}>
+            <Title level={3} id="financial-health-title" style={{ margin: 0 }}>
+              {t("financialHealthScore")}
+            </Title>
+            <Text type="secondary" strong style={labelStyle}>
+              Update terakhir:{" "}
+              {new Date().toLocaleDateString(undefined, {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </Text>
+          </Space>
+          {previousScore != null && (
+            <Tag
+              icon={
+                isImprovement ? (
+                  <TrendingUp style={{ width: 16, height: 16 }} aria-hidden="true" />
+                ) : (
+                  <AlertCircle style={{ width: 16, height: 16 }} aria-hidden="true" />
+                )
+              }
+              role="status"
+              aria-live="polite"
+              aria-label={`Skor berubah ${isImprovement ? "meningkat" : "menurun"} ${Math.abs(scoreChange)} poin`}
+              style={{
+                backgroundColor: isImprovement
+                  ? "var(--ant-color-success-bg)"
+                  : "var(--ant-color-error-bg)",
+                color: isImprovement
+                  ? "var(--ant-color-success)"
+                  : "var(--ant-color-error)",
+                border: "none",
+                fontSize: 12,
+                fontWeight: 700,
+                padding: "8px 12px",
+                borderRadius: 12,
+              }}
+            >
+              {isImprovement ? "+" : ""}
+              {scoreChange}
+            </Tag>
+          )}
+        </Row>
 
-      <div className="p-6 pt-0">
         {/* Score Display with Circular Progress */}
-        <div className="flex flex-col xl:flex-row items-center gap-6 lg:gap-8 mb-8">
-          <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
-            {/* Circular Progress */}
-            <svg
-              className="w-full h-full transform -rotate-90"
-              viewBox="0 0 120 120"
-              role="progressbar"
-              aria-label="Skor kesehatan finansial"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={score}
-            >
-              <circle
-                cx="60"
-                cy="60"
-                r="54"
-                fill="none"
-                stroke="hsl(var(--muted))"
-                strokeWidth="6"
-                className="opacity-10"
-              />
-              <circle
-                cx="60"
-                cy="60"
-                r="54"
-                fill="none"
-                stroke={
-                  score >= 70
-                    ? "hsl(var(--primary))"
-                    : score >= 50
-                      ? "hsl(var(--warning))"
-                      : "hsl(var(--destructive))"
-                }
-                strokeWidth="10"
-                strokeLinecap="round"
-                strokeDasharray={strokeDasharray}
-                strokeDashoffset={strokeDashoffset}
-                className="filter drop-shadow-[0_0_8px_rgba(0,208,156,0.3)]"
-              />
-            </svg>
-
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold text-foreground tabular-nums tracking-tighter">
-                {score}
-              </span>
-              <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest">
-                dari 100
-              </span>
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-4 text-center xl:text-left">
+        <Row gutter={[32, 32]} align="middle">
+          <Col xs={24} xl={10}>
             <div
-              className={cn(
-                "inline-flex items-center gap-3 px-4 py-2 rounded-xl border border-transparent transition-all shadow-sm",
-                healthLevel.bgColor,
-              )}
+              style={{
+                position: "relative",
+                width: 192,
+                height: 192,
+                maxWidth: "100%",
+                margin: "0 auto",
+              }}
             >
-              <healthLevel.icon
-                className={cn("h-5 w-5", healthLevel.color)}
-                aria-hidden="true"
-              />
-              <span
-                className={cn(
-                  "text-xs font-bold uppercase tracking-[0.1em]",
-                  healthLevel.color,
-                )}
+              <svg
+                style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}
+                viewBox="0 0 120 120"
+                role="progressbar"
+                aria-label="Skor kesehatan finansial"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={score}
               >
-                {healthLevel.label}
-              </span>
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="54"
+                  fill="none"
+                  stroke="var(--ant-color-fill-secondary)"
+                  strokeWidth="6"
+                />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="54"
+                  fill="none"
+                  stroke={
+                    score >= 70
+                      ? "var(--ant-color-success)"
+                      : score >= 50
+                        ? "var(--ant-color-warning)"
+                        : "var(--ant-color-error)"
+                  }
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  strokeDasharray={strokeDasharray}
+                  strokeDashoffset={strokeDashoffset}
+                />
+              </svg>
+
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  strong
+                  style={{
+                    fontSize: 30,
+                    lineHeight: 1,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {score}
+                </Text>
+                <Text type="secondary" strong style={{ ...labelStyle, marginTop: 4 }}>
+                  dari 100
+                </Text>
+              </div>
             </div>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-bold opacity-80 uppercase tracking-tight">
-              {healthLevel.description}
-            </p>
-          </div>
-        </div>
+          </Col>
+
+          <Col xs={24} xl={14}>
+            <Space
+              direction="vertical"
+              size={16}
+              style={{ width: "100%", textAlign: "center" }}
+            >
+              <div>
+                <Tag
+                  icon={
+                    <HealthIcon
+                      style={{ width: 20, height: 20 }}
+                      aria-hidden="true"
+                    />
+                  }
+                  style={{
+                    backgroundColor: TONE_BG[healthLevel.tone],
+                    color: TONE_COLOR[healthLevel.tone],
+                    border: "none",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    padding: "8px 16px",
+                    borderRadius: 12,
+                  }}
+                >
+                  {healthLevel.label}
+                </Tag>
+              </div>
+              <Text type="secondary" style={{ fontSize: 14 }}>
+                {healthLevel.description}
+              </Text>
+            </Space>
+          </Col>
+        </Row>
 
         {/* Score Factors */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8 pt-6 border-t border-border/30">
+        <Divider style={{ margin: 0 }} />
+        <Row gutter={[24, 24]}>
           {factors && factors.length > 0 ? (
             factors.map((f) => (
-              <ScoreFactor
-                key={f.label}
-                label={f.label}
-                value={f.value}
-                color={f.color}
-                ariaLabel={`Faktor ${f.label}`}
-              />
+              <Col xs={24} sm={8} key={f.label}>
+                <ScoreFactor
+                  label={f.label}
+                  value={f.value}
+                  color={f.color}
+                  ariaLabel={`Faktor ${f.label}`}
+                />
+              </Col>
             ))
           ) : (
             <>
-              <ScoreFactor
-                label="Tabungan"
-                value={0}
-                color="bg-primary"
-                ariaLabel="Faktor tabungan"
-              />
-              <ScoreFactor
-                label="Investasi"
-                value={0}
-                color="bg-primary"
-                ariaLabel="Faktor investasi"
-              />
-              <ScoreFactor
-                label="Pengeluaran"
-                value={0}
-                color="bg-primary-light"
-                ariaLabel="Faktor pengeluaran"
-              />
+              <Col xs={24} sm={8}>
+                <ScoreFactor
+                  label="Tabungan"
+                  value={0}
+                  color="bg-primary"
+                  ariaLabel="Faktor tabungan"
+                />
+              </Col>
+              <Col xs={24} sm={8}>
+                <ScoreFactor
+                  label="Investasi"
+                  value={0}
+                  color="bg-primary"
+                  ariaLabel="Faktor investasi"
+                />
+              </Col>
+              <Col xs={24} sm={8}>
+                <ScoreFactor
+                  label="Pengeluaran"
+                  value={0}
+                  color="bg-primary-light"
+                  ariaLabel="Faktor pengeluaran"
+                />
+              </Col>
             </>
           )}
-        </div>
-      </div>
+        </Row>
+      </Space>
     </Card>
   );
 }
@@ -343,30 +427,21 @@ interface ScoreFactorProps {
 
 function ScoreFactor({ label, value, color, ariaLabel }: ScoreFactorProps) {
   return (
-    <div className="text-center space-y-3">
+    <Space direction="vertical" size={12} style={{ width: "100%", textAlign: "center" }}>
       <Progress
         percent={value}
         showInfo={false}
-        railColor="transparent"
-        className="relative h-2 w-full overflow-hidden rounded-full bg-muted/50 h-2 w-full"
-        classNames={{
-          track: `bg-primary transition-all duration-500 ease-in-out ${color}`,
-        }}
-        styles={{
-          body: { height: "100%" },
-          rail: { height: "100%" },
-          track: { height: "100%" },
-        }}
+        strokeColor={FACTOR_BAR[color] ?? "var(--ant-color-primary)"}
         aria-label={ariaLabel}
       />
-      <div>
-        <p className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest mb-1">
+      <Space direction="vertical" size={4} style={{ width: "100%" }}>
+        <Text type="secondary" strong style={labelStyle}>
           {label}
-        </p>
-        <p className="text-sm sm:text-base font-bold text-foreground tabular-nums tracking-tight">
+        </Text>
+        <Text strong style={{ fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
           {value}
-        </p>
-      </div>
-    </div>
+        </Text>
+      </Space>
+    </Space>
   );
 }

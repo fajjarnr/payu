@@ -11,9 +11,9 @@ import {
   ChevronRight,
 } from "@/components/icons";
 import { useTranslations } from "next-intl";
-import clsx from "clsx";
-import { cn } from "@/lib/utils";
-import { Button, Card } from "antd";
+import { Button, Card, Col, Divider, Flex, Row, Space, Typography } from "antd";
+
+const { Title, Text } = Typography;
 
 interface QuickAction {
   id: string;
@@ -123,84 +123,78 @@ export default function QuickActions({
       data-testid="quick-actions-card"
       role="region"
       aria-labelledby="quick-actions-title"
-      className={cn("relative overflow-hidden group", className)}
-      styles={{ body: { display: "contents" } }}
+      style={{ position: "relative", overflow: "hidden" }}
+      className={className}
     >
-      {/* Decorative background */}
-      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <Row justify="space-between" align="top">
+          <div>
+            <Title level={3} id="quick-actions-title" style={{ margin: 0 }}>
+              {t("quickActionsTitle")}
+            </Title>
+            <Text type="secondary" strong style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginTop: 4 }}>
+              {t("quickActionsSubtitle")}
+            </Text>
+          </div>
 
-      <div className="flex flex-row items-start justify-between p-6 pb-6">
-        <div>
-          <h3
-            id="quick-actions-title"
-            className="text-2xl font-bold leading-none tracking-tight text-base sm:text-lg font-bold text-foreground tracking-widest uppercase"
+          <Button
+            type={isEditMode ? "primary" : "default"}
+            size="small"
+            data-testid="edit-quick-actions-button"
+            onClick={() => setIsEditMode(!isEditMode)}
+            aria-label={
+              isEditMode ? "Selesai mengedit" : "Edit urutan aksi cepat"
+            }
+            aria-pressed={isEditMode}
           >
-            {t("quickActionsTitle")}
-          </h3>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-            {t("quickActionsSubtitle")}
-          </p>
-        </div>
+            {isEditMode ? "Selesai" : "Edit"}
+          </Button>
+        </Row>
 
-        <Button
-          type={isEditMode ? "primary" : "default"}
-          size="small"
-          data-testid="edit-quick-actions-button"
-          onClick={() => setIsEditMode(!isEditMode)}
-          aria-label={
-            isEditMode ? "Selesai mengedit" : "Edit urutan aksi cepat"
-          }
-          aria-pressed={isEditMode}
-          className="text-xs sm:text-xs px-4"
-        >
-          {isEditMode ? "Selesai" : "Edit"}
-        </Button>
-      </div>
-
-      <div className="p-6 pt-0">
         {/* Reorder hint in edit mode */}
         {isEditMode && (
-          <div
-            className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl"
-            role="status"
-            aria-live="polite"
-          >
-            <p className="text-xs text-muted-foreground flex items-center gap-3">
-              <GripVertical className="h-5 w-5" aria-hidden="true" />
-              {t("quickActionsDragHint")} - Gunakan tombol panah atau tombol
-              naik/turun untuk mengatur ulang
-            </p>
-          </div>
+          <Card size="small" style={{ backgroundColor: "var(--ant-color-primary-bg)" }} role="status" aria-live="polite">
+            <Space size={12}>
+              <GripVertical style={{ width: 20, height: 20 }} aria-hidden="true" />
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {t("quickActionsDragHint")} - Gunakan tombol panah atau tombol
+                naik/turun untuk mengatur ulang
+              </Text>
+            </Space>
+          </Card>
         )}
 
         {/* Actions Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-8">
+        <Row gutter={[24, 24]}>
           {items.map((action, index) => (
-            <QuickActionItem
-              key={action.id}
-              action={action}
-              isEditMode={isEditMode}
-              isFirst={index === 0}
-              isLast={index === items.length - 1}
-              onMoveUp={() => moveItem(action.id, -1)}
-              onMoveDown={() => moveItem(action.id, 1)}
-            />
+            <Col xs={12} sm={6} lg={6} xl={4} key={action.id}>
+              <QuickActionItem
+                action={action}
+                isEditMode={isEditMode}
+                isFirst={index === 0}
+                isLast={index === items.length - 1}
+                onMoveUp={() => moveItem(action.id, -1)}
+                onMoveDown={() => moveItem(action.id, 1)}
+              />
+            </Col>
           ))}
-        </div>
+        </Row>
+
         {/* More Actions Link */}
-        <div className="mt-8 pt-6 border-t border-border">
-          <Button
-            type="default"
-            data-testid="view-all-features-button"
-            aria-label="Lihat semua fitur"
-            className="w-full text-xs sm:text-sm font-bold text-muted-foreground hover:text-foreground justify-center gap-3 h-12 border-transparent bg-transparent hover:bg-muted hover:border-transparent active:bg-transparent active:border-transparent"
-          >
-            <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-            Lihat Semua Fitur
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </Button>
-        </div>
-      </div>
+        <Divider style={{ margin: "32px 0 0" }} />
+        <Button
+          type="text"
+          data-testid="view-all-features-button"
+          aria-label="Lihat semua fitur"
+          block
+        >
+          <Space size={12}>
+            <MoreHorizontal style={{ width: 20, height: 20 }} aria-hidden="true" />
+            <Text strong style={{ fontSize: 14 }}>Lihat Semua Fitur</Text>
+            <ChevronRight style={{ width: 20, height: 20 }} aria-hidden="true" />
+          </Space>
+        </Button>
+      </Space>
     </Card>
   );
 }
@@ -235,53 +229,67 @@ function QuickActionItem({
   };
 
   return (
-    <div className="relative" onKeyDown={handleKeyDown}>
+    <Space direction="vertical" size={8} style={{ width: "100%" }}>
       <a
         href={action.href}
         data-testid={`quick-action-${action.id}`}
-        className={clsx(
-          "group relative p-6 rounded-2xl border transition-all flex flex-col items-center text-center",
-          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset",
-          isEditMode
-            ? "border-dashed border-primary/30 bg-muted/30"
-            : "border-border bg-card hover:border-primary/30 hover:shadow-xl hover:bg-primary/5 shadow-sm",
-        )}
+        onKeyDown={handleKeyDown}
         aria-label={action.ariaLabel}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          padding: 24,
+          borderRadius: 16,
+          border: isEditMode
+            ? "2px dashed var(--ant-color-primary-border)"
+            : "1px solid var(--ant-color-border-secondary)",
+          backgroundColor: isEditMode
+            ? "var(--ant-color-fill-tertiary)"
+            : "var(--ant-color-bg-container)",
+          textDecoration: "none",
+          transition: "border-color 0.2s, box-shadow 0.2s",
+        }}
       >
         {isEditMode && (
-          <div className="absolute top-4 right-4 flex items-center gap-1">
-            <GripVertical
-              className="h-5 w-5 text-muted-foreground"
-              aria-hidden="true"
-            />
+          <div style={{ position: "absolute", top: 16, right: 16 }}>
+            <GripVertical style={{ width: 20, height: 20, color: "var(--ant-color-text-tertiary)" }} aria-hidden="true" />
             <span className="sr-only">Drag untuk mengatur ulang</span>
           </div>
         )}
         <div
-          className={clsx(
-            "h-16 w-16 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 shadow-lg",
-            action.bgColor,
-          )}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+            backgroundColor: "var(--ant-color-primary-bg)",
+            color: "var(--ant-color-primary)",
+          }}
         >
-          <Icon className={clsx("h-8 w-8", action.color)} aria-hidden="true" />
+          <Icon style={{ width: 32, height: 32 }} aria-hidden="true" />
         </div>
-        <p className="text-sm font-bold text-foreground mb-1 shadow-sm">
+        <Text strong style={{ fontSize: 14, display: "block" }}>
           {action.label}
-        </p>
+        </Text>
         {action.description && (
-          <p className="text-xs sm:text-xs text-muted-foreground font-medium line-clamp-1 opacity-80 uppercase tracking-[0.05em]">
+          <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
             {action.description}
-          </p>
+          </Text>
         )}
       </a>
       {isEditMode && (
-        <div className="mt-2 flex justify-center gap-2">
+        <Space size={8} style={{ width: "100%", justifyContent: "center" }}>
           <Button
             size="small"
             disabled={isFirst}
             onClick={onMoveUp}
             aria-label={`Pindahkan ${action.label} ke atas`}
-            className="min-h-[44px] min-w-[44px]"
+            style={{ minWidth: 44, minHeight: 44 }}
           >
             Naik
           </Button>
@@ -290,12 +298,12 @@ function QuickActionItem({
             disabled={isLast}
             onClick={onMoveDown}
             aria-label={`Pindahkan ${action.label} ke bawah`}
-            className="min-h-[44px] min-w-[44px]"
+            style={{ minWidth: 44, minHeight: 44 }}
           >
             Turun
           </Button>
-        </div>
+        </Space>
       )}
-    </div>
+    </Space>
   );
 }

@@ -85,10 +85,10 @@ describe("StatsCharts", () => {
     expect(screen.getByText("Rp 1Jt")).toBeInTheDocument();
   });
 
-  it("applies mobile-specific styling", () => {
+  it("uses antd grid for responsive layout", () => {
     const { container } = renderWithIntl(<StatsCharts />);
 
-    const grid = container.querySelector(".grid-cols-1");
+    const grid = container.querySelector(".ant-row");
     expect(grid).toBeInTheDocument();
   });
 });
