@@ -29,103 +29,113 @@ spec:
       serviceAccountName: analytics-service
       terminationGracePeriodSeconds: 30
       topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
-        labelSelector:
-          matchLabels:
-            app.kubernetes.io/name: analytics-service
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: analytics-service
       volumes:
-      - name: tmp
-        emptyDir: {}
-      containers:
-      - name: app
-        image: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.18.74
-        imagePullPolicy: Always
-        command:
-        - python
-        - -m
-        - uvicorn
-        - app.main:app
-        args:
-        - --host
-        - 0.0.0.0
-        - --port
-        - "8080"
-        - --workers
-        - "1"
-        ports:
-        - containerPort: 8080
-          name: http
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          capabilities:
-            drop:
-            - ALL
-          seccompProfile:
-            type: RuntimeDefault
-        volumeMounts:
         - name: tmp
-          mountPath: /tmp
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 15
-        startupProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 5
-          failureThreshold: 90
-        resources:
-          requests:
-            cpu: 100m
-            memory: 256Mi
-          limits:
-            cpu: 500m
-            memory: 1Gi
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: ANALYTICS_DATABASE_URL
-        - name: KAFKA_BOOTSTRAP_SERVERS
-          valueFrom:
-            configMapKeyRef:
-              name: service-endpoints
-              key: KAFKA_URL
-        - name: SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: payu-secrets
-              key: secret-key
-        - name: ENVIRONMENT
-          value: "container"
-        - name: ENABLE_TRACING
-          value: "false"
-        - name: JAVA_TOOL_OPTIONS
-          value: "--enable-native-access=ALL-UNNAMED"
-        - name: PAYU_SECURITY_ENCRYPTION_SALT
-          valueFrom:
-            secretKeyRef:
-              name: dev-env-secrets
-              key: ENCRYPTION_SALT
-              optional: true
-        - name: WEBHOOK_SECURITY_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: dev-env-secrets
-              key: WEBHOOK_SECRET
-              optional: true
+          emptyDir: {}
+      containers:
+        - name: app
+          image: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service:1.18.74
+          imagePullPolicy: Always
+          command:
+            - python
+            - -m
+            - uvicorn
+            - app.main:app
+          args:
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8080"
+            - --workers
+            - "1"
+          ports:
+            - containerPort: 8080
+              name: http
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            failureThreshold: 90
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: ANALYTICS_DATABASE_URL
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: service-endpoints
+                  key: KAFKA_URL
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: payu-secrets
+                  key: secret-key
+            - name: ENVIRONMENT
+              value: "container"
+            - name: ENABLE_TRACING
+              value: "false"
+            - name: JAVA_TOOL_OPTIONS
+              value: "--enable-native-access=ALL-UNNAMED"
+            - name: PAYU_SECURITY_ENCRYPTION_SALT
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env-secrets
+                  key: ENCRYPTION_SALT
+                  optional: true
+            - name: WEBHOOK_SECURITY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env-secrets
+                  key: WEBHOOK_SECRET
+                  optional: true
+            # AI-AUTH-001: jwt_auth.py verifies the Keycloak RS256 signature against
+            # JWKS and fails closed when KEYCLOAK_URL is absent. Without these two the
+            # service answers 401 to every authenticated analytics call.
+            - name: KEYCLOAK_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: service-endpoints
+                  key: KEYCLOAK_URL
+            - name: KEYCLOAK_REALM
+              value: "payu"

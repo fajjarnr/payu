@@ -57,8 +57,13 @@ spec:
           clientRole: false
 
     # Users (dev/test only — never commit prod credentials)
+    # Explicit `id` pins the Keycloak `sub` so it matches the external_id seeded
+    # by account-service V113__seed_dev_journey_users.sql (ownership checks key
+    # on sub). Without it RHBK mints a random id per realm and every
+    # ownership-gated endpoint 403s.
     users:
-      - username: customer1
+      - id: 8d177115-af87-47d5-8b94-a09e7cfa55bc
+        username: customer1
         enabled: true
         emailVerified: true
         email: customer1@payu.fajjjar.my.id
@@ -82,7 +87,8 @@ spec:
           - KYC_VERIFIED
           - PREMIUM
 
-      - username: customer2
+      - id: a4c42cbd-9549-4467-9916-837713941c48
+        username: customer2
         enabled: true
         emailVerified: true
         email: customer2@payu.fajjjar.my.id
@@ -104,7 +110,8 @@ spec:
         realmRoles:
           - USER
 
-      - username: admin
+      - id: fc1eafbb-ea56-4bde-8d16-7253297f4756
+        username: admin
         enabled: true
         emailVerified: true
         email: admin@payu.fajjjar.my.id

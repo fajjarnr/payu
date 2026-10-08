@@ -14,10 +14,10 @@ public interface SplitBillJpaRepository extends JpaRepository<SplitBillEntity, U
     Optional<SplitBillEntity> findByReferenceNumber(String referenceNumber);
 
     /**
-     * READY-071: Fetch participants eagerly to avoid LazyInitializationException
-     * during JSON serialization (JPA session is closed after the @Transactional
-     * boundary). Per JPA best practice, use @EntityGraph for the eager fetch.
+     * QAMVP-008 keeps `participants` @Transient (a managed @OneToMany here would
+     * re-insert on every save and violate the NOT NULL FK). An @EntityGraph on a
+     * transient attribute fails the query outright, so participants are loaded
+     * explicitly through SplitBillPersistenceAdapter.findParticipantsBySplitBillId.
      */
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"participants"})
     List<SplitBillEntity> findByCreatorAccountId(UUID accountId, Pageable pageable);
 }

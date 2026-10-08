@@ -220,7 +220,11 @@ export default function BillsPage() {
             vertical
             align="center"
             justify="center"
-            style={{ minHeight: "60vh", padding: "48px 16px", textAlign: "center" }}
+            style={{
+              minHeight: "60vh",
+              padding: "48px 16px",
+              textAlign: "center",
+            }}
           >
             <Flex vertical align="center" className="animate-fade-in">
               <Flex
@@ -388,7 +392,11 @@ export default function BillsPage() {
               type="default"
               onClick={() => setSelectedBiller(null)}
               aria-label="Kembali"
-              icon={<ChevronRight style={{ fontSize: 24, transform: "rotate(180deg)" }} />}
+              icon={
+                <ChevronRight
+                  style={{ fontSize: 24, transform: "rotate(180deg)" }}
+                />
+              }
               style={{ width: 48, height: 48 }}
             />
 
@@ -409,7 +417,11 @@ export default function BillsPage() {
                 }}
               />
 
-              <Flex align="center" gap={24} style={{ position: "relative", zIndex: 1 }}>
+              <Flex
+                align="center"
+                gap={24}
+                style={{ position: "relative", zIndex: 1 }}
+              >
                 <Flex
                   align="center"
                   justify="center"
@@ -626,7 +638,11 @@ export default function BillsPage() {
                   <Button
                     type="text"
                     onClick={() => setSelectedBiller(item)}
-                    style={{ height: "auto", width: "100%", whiteSpace: "normal" }}
+                    style={{
+                      height: "auto",
+                      width: "100%",
+                      whiteSpace: "normal",
+                    }}
                   >
                     <Flex vertical align="center" gap={16}>
                       <Flex
@@ -657,39 +673,6 @@ export default function BillsPage() {
                   </Button>
                 </Col>
               ))}
-              <Col xs={8} sm={6}>
-                <Button
-                  type="text"
-                  style={{ height: "auto", width: "100%", whiteSpace: "normal" }}
-                >
-                  <Flex vertical align="center" gap={16}>
-                    <Flex
-                      align="center"
-                      justify="center"
-                      style={{
-                        width: 72,
-                        height: 72,
-                        borderRadius: 16,
-                        background: token.colorFillTertiary,
-                        color: token.colorTextSecondary,
-                      }}
-                    >
-                      <Plus style={{ fontSize: 32 }} />
-                    </Flex>
-                    <Typography.Text
-                      type="secondary"
-                      strong
-                      style={{
-                        fontSize: 12,
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Lainnya
-                    </Typography.Text>
-                  </Flex>
-                </Button>
-              </Col>
             </Row>
           </Card>
 

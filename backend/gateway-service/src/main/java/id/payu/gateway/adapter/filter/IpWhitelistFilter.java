@@ -8,6 +8,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Context;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,10 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
 
     @Inject
     GatewayConfig config;
+
+    /** Socket peer; used when no trusted proxy header is present. */
+    @Context
+    io.vertx.ext.web.RoutingContext routingContext;
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
@@ -97,6 +102,14 @@ public class IpWhitelistFilter implements ContainerRequestFilter {
         String realIp = requestContext.getHeaderString("X-Real-IP");
         if (realIp != null && !realIp.isBlank()) {
             return realIp.trim();
+        }
+
+        // No proxy header (e.g. an in-cluster caller like the web-app BFF): fall
+        // back to the socket peer. Returning a sentinel here made every such
+        // request fail the allowlist even when the peer is on a private range.
+        if (routingContext != null && routingContext.request() != null
+                && routingContext.request().remoteAddress() != null) {
+            return routingContext.request().remoteAddress().hostAddress();
         }
 
         return "unknown";

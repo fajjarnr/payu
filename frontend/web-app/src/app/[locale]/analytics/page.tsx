@@ -5,6 +5,7 @@
 import dynamic from "next/dynamic";
 import React from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Link } from "@/lib/navigation";
 import {
   TrendingUp,
   TrendingDown,
@@ -23,16 +24,7 @@ const Column = dynamic(
 const Pie = dynamic(() => import("@ant-design/plots").then((m) => m.Pie), {
   ssr: false,
 });
-import {
-  Button,
-  Card,
-  Space,
-  Row,
-  Col,
-  Typography,
-  Tag,
-  theme,
-} from "antd";
+import { Button, Card, Space, Row, Col, Typography, Tag, theme } from "antd";
 
 export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
@@ -80,6 +72,9 @@ export default function AnalyticsPage() {
         }
       : null;
 
+  // The hooks query a fixed 30-day window; label the window that was actually
+  // queried instead of a hardcoded month name.
+  const periodLabel = "30 hari terakhir";
   // BUG-FE-062: Replace hardcoded fallback data with zeros/empty state
   const analyticsData = analytics ??
     restData ?? {
@@ -152,9 +147,9 @@ export default function AnalyticsPage() {
                 {isConnected ? "Live Update" : "Offline"}
               </Typography.Text>
             </Tag>
-            <Button type="default">
-              <Calendar style={{ width: 16, height: 16 }} /> Januari 2026
-            </Button>
+            <Tag bordered={false}>
+              <Calendar style={{ width: 16, height: 16 }} /> {periodLabel}
+            </Tag>
           </Space>
         </Row>
 
@@ -207,7 +202,9 @@ export default function AnalyticsPage() {
                       style={{
                         width: 24,
                         height: 24,
-                        color: stat.isPos ? token.colorPrimary : token.colorError,
+                        color: stat.isPos
+                          ? token.colorPrimary
+                          : token.colorError,
                       }}
                     />
                   </div>
@@ -243,10 +240,7 @@ export default function AnalyticsPage() {
                   <Typography.Title level={4} style={{ marginBottom: 0 }}>
                     Trajektori Pengeluaran
                   </Typography.Title>
-                  <Typography.Text
-                    type="secondary"
-                    style={{ fontSize: 12 }}
-                  >
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     Analisis arus kas harian periode ini
                   </Typography.Text>
                 </div>
@@ -431,7 +425,9 @@ export default function AnalyticsPage() {
                 langganan berulang Anda.
               </Typography.Text>
             </div>
-            <Button type="primary">Terapkan Optimasi</Button>
+            <Link href="/transactions">
+              <Button type="primary">Terapkan Optimasi</Button>
+            </Link>
           </Row>
         </Card>
       </Space>

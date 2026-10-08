@@ -51,11 +51,12 @@ public class BeneficiaryController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Getting beneficiaries for account: {}", accountId);
 
-        if (accountDoesNotBelongToPrincipal(accountId, jwt)) {
+        User owner = resolveOwner(accountId, jwt);
+        if (owner == null) {
             return forbidden(accountId, jwt);
         }
 
-        List<Beneficiary> beneficiaries = beneficiaryPersistencePort.findActiveByUserId(accountId);
+        List<Beneficiary> beneficiaries = beneficiaryPersistencePort.findActiveByUserId(owner.getId());
         List<BeneficiaryResponse> responses = beneficiaries.stream()
                 .map(BeneficiaryResponse::from)
                 .collect(Collectors.toList());
@@ -74,32 +75,27 @@ public class BeneficiaryController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Creating beneficiary for account: {}", accountId);
 
-        if (accountDoesNotBelongToPrincipal(accountId, jwt)) {
+        User owner = resolveOwner(accountId, jwt);
+        if (owner == null) {
             return forbidden(accountId, jwt);
         }
 
-        long count = beneficiaryPersistencePort.countActiveByUserId(accountId);
+        long count = beneficiaryPersistencePort.countActiveByUserId(owner.getId());
         if (count >= MAX_BENEFICIARIES) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(ApiResponse.error("BEN_001", "Maximum " + MAX_BENEFICIARIES + " beneficiaries allowed"));
         }
 
         if (beneficiaryPersistencePort.existsByUserIdAndBankCodeAndAccountNumber(
-                accountId, request.getBankCode(), request.getAccountNumber())) {
+                owner.getId(), request.getBankCode(), request.getAccountNumber())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(ApiResponse.error("BEN_002", "Beneficiary already exists"));
-        }
-
-        var user = userPersistencePort.findById(accountId).orElse(null);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("ACC_001", "Account not found"));
         }
 
         String accountName = request.getNickname() != null ? request.getNickname() : "Account Holder";
 
         Beneficiary beneficiary = Beneficiary.builder()
-                .userId(user.getId())
+                .userId(owner.getId())
                 .bankCode(request.getBankCode())
                 .accountNumber(request.getAccountNumber())
                 .accountName(accountName)
@@ -126,12 +122,13 @@ public class BeneficiaryController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Updating beneficiary: {} for account: {}", beneficiaryId, accountId);
 
-        if (accountDoesNotBelongToPrincipal(accountId, jwt)) {
+        User owner = resolveOwner(accountId, jwt);
+        if (owner == null) {
             return forbidden(accountId, jwt);
         }
 
         Beneficiary beneficiary = beneficiaryPersistencePort.findById(beneficiaryId).orElse(null);
-        if (beneficiary == null || beneficiary.getUserId() == null || !Objects.equals(beneficiary.getUserId(), accountId)) {
+        if (beneficiary == null || beneficiary.getUserId() == null || !Objects.equals(beneficiary.getUserId(), owner.getId())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("BEN_003", "Beneficiary not found"));
         }
@@ -154,12 +151,13 @@ public class BeneficiaryController {
             @AuthenticationPrincipal Jwt jwt) {
         log.info("Deleting beneficiary: {} for account: {}", beneficiaryId, accountId);
 
-        if (accountDoesNotBelongToPrincipal(accountId, jwt)) {
+        User owner = resolveOwner(accountId, jwt);
+        if (owner == null) {
             return forbidden(accountId, jwt);
         }
 
         Beneficiary beneficiary = beneficiaryPersistencePort.findById(beneficiaryId).orElse(null);
-        if (beneficiary == null || beneficiary.getUserId() == null || !Objects.equals(beneficiary.getUserId(), accountId)) {
+        if (beneficiary == null || beneficiary.getUserId() == null || !Objects.equals(beneficiary.getUserId(), owner.getId())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("BEN_003", "Beneficiary not found"));
         }
@@ -171,10 +169,16 @@ public class BeneficiaryController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    private boolean accountDoesNotBelongToPrincipal(UUID accountId, Jwt jwt) {
-        String externalId = jwt.getSubject();
-        var userOpt = userPersistencePort.findByExternalId(externalId);
-        return userOpt.isEmpty() || !userOpt.get().getId().equals(accountId);
+    /**
+     * Resolves the authenticated principal to the local user that owns
+     * {accountId}. The path variable is a wallet account id, while
+     * beneficiaries.user_id references users(id) — the two are distinct UUIDs,
+     * so ownership must be resolved through the user's account list.
+     */
+    private User resolveOwner(UUID accountId, Jwt jwt) {
+        return userPersistencePort.findByExternalId(jwt.getSubject())
+                .filter(user -> userPersistencePort.findAccountIdsByUserId(user.getId()).contains(accountId))
+                .orElse(null);
     }
 
     private <T> ResponseEntity<ApiResponse<T>> forbidden(UUID accountId, Jwt jwt) {

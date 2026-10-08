@@ -44,6 +44,29 @@ class SplitBillServiceTest {
     private SplitBillService splitBillService;
 
     @Test
+    @DisplayName("list by account loads participants so the response is complete")
+    void listByAccountPopulatesParticipants() {
+        UUID accountId = UUID.randomUUID();
+        UUID billId = UUID.randomUUID();
+        SplitBillEntity bill = SplitBillEntity.builder()
+                .totalAmount(new BigDecimal("1000000.0000"))
+                .splitType(SplitType.EQUAL)
+                .status(SplitStatus.ACTIVE)
+                .build();
+        bill.setId(billId);
+        SplitBillParticipantEntity p = participant(new BigDecimal("500000.0000"), new BigDecimal("0.0000"));
+        org.mockito.Mockito.when(persistencePort.findByCreatorAccountId(accountId, 0, 20))
+                .thenReturn(List.of(bill));
+        org.mockito.Mockito.when(persistencePort.findParticipantsBySplitBillId(billId))
+                .thenReturn(List.of(p));
+
+        List<SplitBillEntity> result = splitBillService.getAccountSplitBills(accountId, 0, 20);
+
+        assertEquals(1, result.size());
+        assertEquals(List.of(p), result.get(0).getParticipants());
+    }
+
+    @Test
     @DisplayName("isFullyPaid returns false when all participants paid their share but total collected < bill total")
     void isFullyPaidFalseWhenTotalCollectedBelowBillTotal() {
         // Total bill is 1,000,000 but custom shares only add up to 600,000

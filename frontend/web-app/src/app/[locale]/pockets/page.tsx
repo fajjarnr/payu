@@ -27,6 +27,7 @@ import { BalanceResponse, WalletTransaction, Pocket } from "@/types";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
+import { Link } from "@/lib/navigation";
 import { useAuthStore } from "@/stores";
 import {
   usePockets,
@@ -317,7 +318,16 @@ export default function PocketsPage() {
               </Typography.Text>
             </div>
             <Flex gap={12}>
-              <Button icon={<Users />}>Kantong Bersama</Button>
+              <Button
+                icon={<Users />}
+                onClick={() =>
+                  document
+                    .getElementById("shared-pockets")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+              >
+                Kantong Bersama
+              </Button>
               <Button
                 type="primary"
                 icon={<Plus />}
@@ -412,6 +422,11 @@ export default function PocketsPage() {
                   type="text"
                   aria-label="Buka detail"
                   icon={<ArrowUpRight />}
+                  onClick={() =>
+                    document
+                      .getElementById("pocket-list")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
                   style={{
                     position: "absolute",
                     bottom: 24,
@@ -455,7 +470,11 @@ export default function PocketsPage() {
                 </Card>
                 <Card
                   styles={{
-                    body: { minHeight: 160, position: "relative", overflow: "hidden" },
+                    body: {
+                      minHeight: 160,
+                      position: "relative",
+                      overflow: "hidden",
+                    },
                   }}
                   style={{
                     background: token.colorText,
@@ -481,7 +500,10 @@ export default function PocketsPage() {
                     <div>
                       <Typography.Text
                         strong
-                        style={{ display: "block", color: token.colorBgContainer }}
+                        style={{
+                          display: "block",
+                          color: token.colorBgContainer,
+                        }}
                       >
                         Keamanan Tier-1
                       </Typography.Text>
@@ -573,11 +595,7 @@ export default function PocketsPage() {
                                     : token.colorPrimary,
                               }}
                             >
-                              {pocket.type === "GOAL" ? (
-                                <Target />
-                              ) : (
-                                <Wallet />
-                              )}
+                              {pocket.type === "GOAL" ? <Target /> : <Wallet />}
                             </Flex>
                             <div>
                               <Typography.Text strong>
@@ -626,7 +644,9 @@ export default function PocketsPage() {
                                       label: (
                                         <Flex align="center" gap={8}>
                                           <Lock
-                                            style={{ color: token.colorWarning }}
+                                            style={{
+                                              color: token.colorWarning,
+                                            }}
                                           />
                                           Bekukan
                                         </Flex>
@@ -638,7 +658,9 @@ export default function PocketsPage() {
                                       label: (
                                         <Flex align="center" gap={8}>
                                           <UnlockIcon
-                                            style={{ color: token.colorPrimary }}
+                                            style={{
+                                              color: token.colorPrimary,
+                                            }}
                                           />
                                           Aktifkan
                                         </Flex>
@@ -686,7 +708,10 @@ export default function PocketsPage() {
                             {pocket.target && (
                               <Typography.Text
                                 strong
-                                style={{ color: token.colorPrimary, fontSize: 12 }}
+                                style={{
+                                  color: token.colorPrimary,
+                                  fontSize: 12,
+                                }}
                               >
                                 {percentage}%
                               </Typography.Text>
@@ -760,7 +785,9 @@ export default function PocketsPage() {
                   <Typography.Title level={3} style={{ marginBottom: 0 }}>
                     Tujuan Khusus
                   </Typography.Title>
-                  <Button type="link">Kelola Portofolio</Button>
+                  <Link href="/investments">
+                    <Button type="link">Kelola Portofolio</Button>
+                  </Link>
                 </Flex>
 
                 <Row gutter={[16, 16]}>
@@ -846,7 +873,10 @@ export default function PocketsPage() {
                             </Flex>
                             {goal.locked ? (
                               <Typography.Text
-                                style={{ ...labelStyle, color: token.colorPrimary }}
+                                style={{
+                                  ...labelStyle,
+                                  color: token.colorPrimary,
+                                }}
                               >
                                 <Lock /> Dana Terkunci & Dijamin
                               </Typography.Text>
@@ -865,7 +895,10 @@ export default function PocketsPage() {
                                 >
                                   Sisa:{" "}
                                   {formatCurrency(
-                                    addCurrency(goal.target, `-${goal.current}`),
+                                    addCurrency(
+                                      goal.target,
+                                      `-${goal.current}`,
+                                    ),
                                     { locale: bcp47Locale },
                                   )}
                                 </Typography.Text>
@@ -937,7 +970,10 @@ export default function PocketsPage() {
                             vertical
                             align="center"
                             justify="center"
-                            style={{ padding: "32px 24px", textAlign: "center" }}
+                            style={{
+                              padding: "32px 24px",
+                              textAlign: "center",
+                            }}
                           >
                             <History style={{ fontSize: 48, opacity: 0.2 }} />
                             <Typography.Text strong type="secondary">
@@ -1027,7 +1063,9 @@ export default function PocketsPage() {
                     />
                   )}
                   <div style={{ marginTop: "auto", paddingTop: 24 }}>
-                    <Button block>Lihat Rekening Koran</Button>
+                    <Link href="/statements">
+                      <Button block>Lihat Rekening Koran</Button>
+                    </Link>
                   </div>
                 </Card>
               </Space>
@@ -1035,7 +1073,12 @@ export default function PocketsPage() {
           </Row>
 
           {/* Shared pockets */}
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space
+            id="shared-pockets"
+            direction="vertical"
+            size={16}
+            style={{ width: "100%" }}
+          >
             <Flex justify="space-between" align="center">
               <Flex align="center" gap={12}>
                 <Users style={{ color: token.colorPrimary }} />
@@ -1043,7 +1086,12 @@ export default function PocketsPage() {
                   Kantong Bersama
                 </Typography.Title>
               </Flex>
-              <Button icon={<UserPlus />}>Buat Kantong Baru</Button>
+              <Button
+                icon={<UserPlus />}
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                Buat Kantong Baru
+              </Button>
             </Flex>
 
             <Row gutter={[16, 16]}>
@@ -1103,7 +1151,9 @@ export default function PocketsPage() {
                           <ChevronRight
                             style={{
                               color: token.colorTextSecondary,
-                              transform: isSelected ? "rotate(90deg)" : undefined,
+                              transform: isSelected
+                                ? "rotate(90deg)"
+                                : undefined,
                             }}
                           />
                         </Flex>
@@ -1125,7 +1175,10 @@ export default function PocketsPage() {
                             </Typography.Title>
                             <Typography.Text
                               strong
-                              style={{ color: token.colorPrimary, fontSize: 12 }}
+                              style={{
+                                color: token.colorPrimary,
+                                fontSize: 12,
+                              }}
                             >
                               {percentage}%
                             </Typography.Text>
@@ -1169,6 +1222,11 @@ export default function PocketsPage() {
                             <Button
                               type="link"
                               icon={<UserPlus />}
+                              onClick={() =>
+                                toast.info(
+                                  "Undangan anggota kantong bersama belum tersedia",
+                                )
+                              }
                               style={{ padding: 0 }}
                             >
                               Undang
@@ -1234,6 +1292,11 @@ export default function PocketsPage() {
                                   <Button
                                     type="text"
                                     icon={<MoreVertical />}
+                                    onClick={() =>
+                                      toast.info(
+                                        "Kelola anggota kantong bersama belum tersedia",
+                                      )
+                                    }
                                     aria-label="Aksi lainnya"
                                     style={{ minWidth: 44, minHeight: 44 }}
                                   />
@@ -1297,9 +1360,11 @@ export default function PocketsPage() {
                   lebih per tahun.
                 </Typography.Text>
               </Space>
-              <Button type="primary" size="large">
-                Jelajahi Marketplace
-              </Button>
+              <Link href="/investments">
+                <Button type="primary" size="large">
+                  Jelajahi Marketplace
+                </Button>
+              </Link>
             </Flex>
           </Card>
         </Space>

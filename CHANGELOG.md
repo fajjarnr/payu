@@ -12,6 +12,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (verifikasi data seluruh halaman web-app + backoffice, 2026-10-08)
+
+- **`account-service` tidak ter-deploy** — di-drop dari `workloads/base/kustomization.yaml` (ADR-0066 per-service ApplicationSet) tapi tidak ada ArgoCD Application untuknya, sehingga gateway selalu `Name or service not known` dan dashboard menampilkan Rp 0 dengan 401/503 di semua endpoint ownership. Deploy ulang dari overlay `payu-dev`; migrasi `V113` (seed users/profiles/accounts) kini benar-benar jalan.
+- **Drift realm Keycloak** — role `USER`/`ADMIN`/`BACKOFFICE`/`KYC_VERIFIED`/`PREMIUM`, 4 protocol mapper `payu-web-app` (`account_id`, `nik`, `phone_number`, `preferred_username`), dan atribut user hilang; tanpa klaim `account_id` wallet lookup jatuh ke `account-<sub>`. Sinkron via Admin REST per `docs/operations/runbooks/dev-seed.md`; `keycloak-realm-import.yaml` mem-pin `id` user agar `sub` deterministik untuk realm baru.
+- **`V113__seed_dev_journey_users.sql` memakai sub Keycloak hardcoded** yang tak pernah cocok dengan sub acak hasil create live → semua endpoint ownership-gated 403 (temuan lama FE-AUDIT-007). `external_id` direkonsiliasi ke sub live.
+- **`BeneficiaryController` membandingkan `{accountId}` (wallet account id) dengan `users(id)`** — dua UUID berbeda, jadi seluruh operasi beneficiaries selalu 403. Ownership kini lewat `findAccountIdsByUserId`; `BeneficiaryController*Test` diselaraskan ke kontrak path yang benar (19 test hijau).
+- **`KEYCLOAK_URL` tidak di-inject ke analytics-service** — `jwt_auth.py` fail-closed sehingga semua panggilan analytics 401. Env ditambahkan di `workloads/base/analytics-service/deployment.yaml`; ConfigMap live `service-endpoints` juga menunjuk namespace `payu-dev` padahal Keycloak di `payu-sso` (dikoreksi).
+- **`IpWhitelistFilter` mengembalikan sentinel `"unknown"`** bila tak ada header proxy, sehingga pemanggil in-cluster (BFF web-app) selalu kena `IP_NOT_ALLOWED` di `/api/v1/backoffice/*` walau peer-nya ada di allowlist RFC1918. Fallback ke socket peer via `RoutingContext.remoteAddress()`.
+- **`SplitBillJpaRepository.findByCreatorAccountId` memakai `@EntityGraph(participants)`** pada atribut `@Transient` (QAMVP-008) → `InvalidDataAccessApiUsageException` 500 di halaman split-bill. EntityGraph dihapus; participants dimuat eksplisit di service (+ regression test).
+- **Route gateway `cards` tidak mengizinkan `DELETE`** → tombol "Hapus Kartu" 405; `CardService.getCardsByAccountId` juga mengembalikan kartu `CANCELLED` hasil soft-delete. Keduanya diperbaiki + regression test.
+- **`V7__seed_dev_journey_fx_rates.sql`** menyediakan rate fixture dev (tabel kosong + provider BI tak terjangkau membuat halaman FX 500).
+- **Dead control web-app**: 59 tombol tanpa handler di 20 halaman. Backoffice CMS/partners/campaigns kini memanggil `POST/PUT/PATCH/DELETE /contents`, `POST /partners`, `POST /promotions`; compliance/partners menampilkan state 403 yang jujur; kontrol tanpa endpoint (broadcast, sync FX, lockdown, autentikator, undangan kantong bersama, paginasi palsu) dihapus atau diberi tujuan nyata; `notifications` tidak lagi push ke route `/notifications/[id]` yang tidak ada.
+
 ### Removed
 
 - **Dead KYC producer + topic (hygiene, tanpa image baru)**: `UserEventPublisherPort.publishKycCompleted` tanpa caller + topic `payu.account.kyc-completed.v1` (+`.dlq`) tanpa consumer maupun producer (alur KYC live lewat `payu.kyc.verified.v1` kyc-service → analytics langsung). Hapus method port + adapter + const + test pengunci + deklarasi `KafkaTopic` (live topic + DLQ dihapus, NotFound terverifikasi). Consumer lag grup analytics 0 di semua partisi pasca-fix (tak ada event stranded). `kycStatus` metrik tak dibaca UI mana pun — tak ada perubahan perilaku; ikut build account berikut. Bukti: adapter test 2/2 hijau.

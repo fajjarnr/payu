@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import SecurityPage from '@/app/[locale]/security/page';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import SecurityPage from "@/app/[locale]/security/page";
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -14,21 +14,27 @@ const createWrapper = () => {
   return wrapper;
 };
 
-vi.mock('@/components/DashboardLayout', () => ({
+vi.mock("@/lib/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/navigation")>()),
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+vi.mock("@/components/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dashboard-layout">{children}</div>
   ),
 }));
 
-
-vi.mock('@/stores/authStore', () => ({
+vi.mock("@/stores/authStore", () => ({
   useAuthStore: () => ({
-    user: { id: 'user_1' },
+    user: { id: "user_1" },
     isAuthenticated: true,
   }),
 }));
 
-vi.mock('@/hooks/useBiometrics', () => ({
+vi.mock("@/hooks/useBiometrics", () => ({
   useBiometricRegistrations: () => ({
     data: [],
     isLoading: false,
@@ -37,38 +43,38 @@ vi.mock('@/hooks/useBiometrics', () => ({
   useRevokeBiometric: () => ({ mutateAsync: vi.fn() }),
 }));
 
-describe('SecurityPage', () => {
+describe("SecurityPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should render within DashboardLayout', () => {
+  it("should render within DashboardLayout", () => {
     render(<SecurityPage />, { wrapper: createWrapper() });
-    expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
+    expect(screen.getByTestId("dashboard-layout")).toBeInTheDocument();
   });
 
-  it('should render page title', () => {
+  it("should render page title", () => {
     render(<SecurityPage />, { wrapper: createWrapper() });
-    expect(screen.getByText('Keamanan & Tata Kelola')).toBeInTheDocument();
+    expect(screen.getByText("Keamanan & Tata Kelola")).toBeInTheDocument();
   });
 
-  it('should render biometric MFA section', () => {
+  it("should render biometric MFA section", () => {
     render(<SecurityPage />, { wrapper: createWrapper() });
-    expect(screen.getByText('MFA Biometrik')).toBeInTheDocument();
+    expect(screen.getByText("MFA Biometrik")).toBeInTheDocument();
   });
 
-  it('should render device tokens section', () => {
+  it("should render device tokens section", () => {
     render(<SecurityPage />, { wrapper: createWrapper() });
-    expect(screen.getByText('Token Perangkat')).toBeInTheDocument();
+    expect(screen.getByText("Token Perangkat")).toBeInTheDocument();
   });
 
-  it('should render authenticated sessions', () => {
+  it("should render authenticated sessions", () => {
     render(<SecurityPage />, { wrapper: createWrapper() });
-    expect(screen.getByText('Sesi Terautentikasi')).toBeInTheDocument();
+    expect(screen.getByText("Sesi Terautentikasi")).toBeInTheDocument();
   });
 
-  it('should render panic protocol', () => {
+  it("should render panic protocol", () => {
     render(<SecurityPage />, { wrapper: createWrapper() });
-    expect(screen.getByText('Protokol Panic.')).toBeInTheDocument();
+    expect(screen.getByText("Protokol Panic.")).toBeInTheDocument();
   });
 });

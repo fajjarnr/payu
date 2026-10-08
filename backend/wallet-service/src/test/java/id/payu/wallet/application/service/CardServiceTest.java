@@ -3,6 +3,7 @@ package id.payu.wallet.application.service;
 import id.payu.wallet.domain.model.Card;
 import id.payu.wallet.domain.model.CardStatus;
 import id.payu.wallet.domain.port.out.CardPersistencePort;
+import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.port.out.WalletPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,5 +79,21 @@ class CardServiceTest {
 
         assertThat(closed.getStatus()).isEqualTo(CardStatus.CANCELLED);
         verify(cardPersistencePort).save(card);
+    }
+
+    @Test
+    void getCardsByAccountIdHidesCancelledCards() {
+        UUID walletId = UUID.randomUUID();
+        Wallet wallet = Wallet.builder().id(walletId).accountId("ACC-1").build();
+        when(walletPersistencePort.findByAccountId("ACC-1")).thenReturn(Optional.of(wallet));
+
+        Card active = card("00000000-0000-0000-0000-000000000001", CardStatus.ACTIVE);
+        Card frozen = card("00000000-0000-0000-0000-000000000002", CardStatus.FROZEN);
+        Card cancelled = card("00000000-0000-0000-0000-000000000003", CardStatus.CANCELLED);
+        when(cardPersistencePort.findByWalletId(walletId)).thenReturn(java.util.List.of(active, frozen, cancelled));
+
+        assertThat(cardService.getCardsByAccountId("ACC-1"))
+                .extracting(Card::getId)
+                .containsExactly(active.getId(), frozen.getId());
     }
 }

@@ -43,7 +43,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("BeneficiaryController authorization")
 class BeneficiaryControllerAuthorizationTest {
 
+    /** Wallet account id used in the path — NOT the user id. */
     private static final UUID VICTIM_ACCOUNT = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    /** Local users(id) of the victim; beneficiaries.user_id references this. */
+    private static final UUID VICTIM_USER = UUID.fromString("00000000-0000-0000-0000-0000000000aa");
     private static final UUID VICTIM_BENEFICIARY = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     private MockMvc mockMvc;
@@ -63,14 +66,16 @@ class BeneficiaryControllerAuthorizationTest {
         objectMapper = new ObjectMapper();
 
         given(userPersistencePort.findByExternalId("victim-external-id"))
-                .willReturn(Optional.of(User.builder().id(VICTIM_ACCOUNT).externalId("victim-external-id").build()));
+                .willReturn(Optional.of(User.builder().id(VICTIM_USER).externalId("victim-external-id").build()));
         given(userPersistencePort.findByExternalId("attacker-external-id"))
                 .willReturn(Optional.of(User.builder().id(UUID.randomUUID()).externalId("attacker-external-id").build()));
+        given(userPersistencePort.findAccountIdsByUserId(VICTIM_USER))
+                .willReturn(java.util.List.of(VICTIM_ACCOUNT));
 
         given(beneficiaryPersistencePort.findById(VICTIM_BENEFICIARY))
                 .willReturn(Optional.of(Beneficiary.builder()
                         .id(VICTIM_BENEFICIARY)
-                        .userId(VICTIM_ACCOUNT)
+                        .userId(VICTIM_USER)
                         .status(BeneficiaryStatus.ACTIVE)
                         .build()));
     }

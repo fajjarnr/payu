@@ -2,11 +2,11 @@
 
 import React from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Link } from "@/lib/navigation";
 import {
   LifeBuoy,
   MessageCircle,
   Mail,
-  Phone,
   ExternalLink,
   HelpCircle,
   FileText,
@@ -18,12 +18,16 @@ export default function SupportPage() {
   const t = useTranslations("support");
   const { token } = theme.useToken();
 
+  // Live chat and phone have no backend or published number in this deployment;
+  // the only support channels that actually exist are the ticket form (POST
+  // /support/tickets) and the support mailbox published in the legal terms.
   const supportChannels = [
     {
       label: t("liveChat"),
       desc: t("liveChatDesc"),
       icon: MessageCircle,
       action: t("contactUs"),
+      href: "/support/ticket",
       color: "primary",
     },
     {
@@ -31,14 +35,8 @@ export default function SupportPage() {
       desc: t("emailDesc"),
       icon: Mail,
       action: t("sendMessage"),
+      href: "mailto:support@payu.fajjjar.my.id",
       color: "secondary",
-    },
-    {
-      label: t("phone"),
-      desc: t("phoneDesc"),
-      icon: Phone,
-      action: t("callUs"),
-      color: "text-primary",
     },
   ];
 
@@ -123,6 +121,7 @@ export default function SupportPage() {
                   {channel.desc}
                 </Typography.Text>
                 <Button
+                  href={channel.href}
                   style={{
                     width: "100%",
                     height: 56,
@@ -241,9 +240,11 @@ export default function SupportPage() {
               </Space>
             </Col>
             <Col xs={24} lg={8}>
-              <Button type="primary" block style={{ height: 64 }}>
-                Cek Detail Infrastruktur
-              </Button>
+              <a href="/api/v1/health" target="_blank" rel="noreferrer">
+                <Button type="primary" block style={{ height: 64 }}>
+                  Cek Detail Infrastruktur
+                </Button>
+              </a>
             </Col>
           </Row>
         </Card>

@@ -1,28 +1,34 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import SupportPage from '@/app/[locale]/support/page';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import SupportPage from "@/app/[locale]/support/page";
 
-vi.mock('next-intl', () => ({
+vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
     const map: Record<string, string> = {
-      title: 'Terminal Bantuan',
-      liveChat: 'Bantuan Langsung',
-      email: 'Protokol Email',
-      phone: 'Panggilan Suara',
-      faqs: 'Repositori Inteligensi',
+      title: "Terminal Bantuan",
+      liveChat: "Bantuan Langsung",
+      email: "Protokol Email",
+      phone: "Panggilan Suara",
+      faqs: "Repositori Inteligensi",
     };
     return map[key] || key;
   },
 }));
 
-vi.mock('@/components/DashboardLayout', () => ({
+vi.mock("@/lib/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/navigation")>()),
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+vi.mock("@/components/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dashboard-layout">{children}</div>
   ),
 }));
 
-
-vi.mock('@/hooks/useSupport', () => ({
+vi.mock("@/hooks/useSupport", () => ({
   useTickets: () => ({
     data: [],
     isLoading: false,
@@ -37,36 +43,38 @@ vi.mock('@/hooks/useSupport', () => ({
   }),
 }));
 
-describe('SupportPage', () => {
+describe("SupportPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should render within DashboardLayout', () => {
+  it("should render within DashboardLayout", () => {
     render(<SupportPage />);
-    expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
+    expect(screen.getByTestId("dashboard-layout")).toBeInTheDocument();
   });
 
-  it('should render page title', () => {
+  it("should render page title", () => {
     render(<SupportPage />);
-    expect(screen.getByText('Terminal Bantuan')).toBeInTheDocument();
+    expect(screen.getByText("Terminal Bantuan")).toBeInTheDocument();
   });
 
-  it('should render help channels', () => {
+  it("should render the channels that actually exist", () => {
+    // Phone support has no published number and live chat has no backend in this
+    // deployment, so only the ticket form and the support mailbox are shown.
     render(<SupportPage />);
-    expect(screen.getByText('Bantuan Langsung')).toBeInTheDocument();
-    expect(screen.getByText('Protokol Email')).toBeInTheDocument();
-    expect(screen.getByText('Panggilan Suara')).toBeInTheDocument();
+    expect(screen.getByText("Bantuan Langsung")).toBeInTheDocument();
+    expect(screen.getByText("Protokol Email")).toBeInTheDocument();
+    expect(screen.queryByText("Panggilan Suara")).not.toBeInTheDocument();
   });
 
-  it('should render knowledge repository', () => {
+  it("should render knowledge repository", () => {
     render(<SupportPage />);
-    expect(screen.getByText('Repositori Inteligensi')).toBeInTheDocument();
+    expect(screen.getByText("Repositori Inteligensi")).toBeInTheDocument();
   });
 
-  it('should render system status', () => {
+  it("should render system status", () => {
     render(<SupportPage />);
-    expect(screen.getByText('Gateway: —')).toBeInTheDocument();
-    expect(screen.getByText('Backend: —')).toBeInTheDocument();
+    expect(screen.getByText("Gateway: —")).toBeInTheDocument();
+    expect(screen.getByText("Backend: —")).toBeInTheDocument();
   });
 });

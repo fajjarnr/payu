@@ -96,7 +96,10 @@ public class SplitBillService implements SplitBillUseCase {
 
     @Override
     public List<SplitBillEntity> getAccountSplitBills(UUID accountId, int page, int size) {
-        return persistencePort.findByCreatorAccountId(accountId, page, size);
+        return persistencePort.findByCreatorAccountId(accountId, page, size).stream()
+                .peek(bill -> bill.setParticipants(
+                        persistencePort.findParticipantsBySplitBillId(bill.getId())))
+                .toList();
     }
 
     @Override

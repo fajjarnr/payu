@@ -479,7 +479,9 @@ gateway:
     cards:
       service: "wallet-service"
       target-prefix: "/api/v1/cards"
-      methods: ["GET", "POST", "PUT"]
+      # CardController exposes DELETE /api/v1/cards/{cardId}; without DELETE here
+      # the web-app "Hapus Kartu" control dies at the gateway with 405.
+      methods: ["GET", "POST", "PUT", "DELETE"]
     savings-goals:
       service: "wallet-service"
       target-prefix: "/api/v1/wallets"

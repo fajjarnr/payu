@@ -41,19 +41,28 @@ class BeneficiaryControllerTest {
             .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .build();
 
+    /**
+     * Path {accountId} is a wallet account id; beneficiaries.user_id references
+     * users(id). Derive a distinct, stable user id so the two never collapse.
+     */
+    private static UUID ownerUserOf(UUID accountId) {
+        return UUID.nameUUIDFromBytes(("user-" + accountId).getBytes());
+    }
+
     private void authAs(UUID accountId) {
+        UUID userId = ownerUserOf(accountId);
         Jwt jwt = Jwt.withTokenValue("t").header("alg", "none").subject("ext-" + accountId).build();
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
         User user = new User();
-        user.setId(accountId);
+        user.setId(userId);
         when(userPort.findByExternalId("ext-" + accountId)).thenReturn(Optional.of(user));
-        when(userPort.findById(accountId)).thenReturn(Optional.of(user));
+        when(userPort.findAccountIdsByUserId(userId)).thenReturn(List.of(accountId));
     }
 
     private Beneficiary beneficiary(UUID accountId) {
         return Beneficiary.builder()
                 .id(UUID.randomUUID())
-                .userId(accountId)
+                .userId(ownerUserOf(accountId))
                 .bankCode("011")
                 .accountNumber("1234567890")
                 .accountName("Ali")
@@ -65,7 +74,7 @@ class BeneficiaryControllerTest {
     void getBeneficiariesOwned() throws Exception {
         UUID accountId = UUID.randomUUID();
         authAs(accountId);
-        when(benPort.findActiveByUserId(accountId)).thenReturn(List.of(beneficiary(accountId)));
+        when(benPort.findActiveByUserId(ownerUserOf(accountId))).thenReturn(List.of(beneficiary(accountId)));
 
         mvc.perform(get("/api/v1/accounts/{accountId}/beneficiaries", accountId))
                 .andExpect(status().isOk())
@@ -88,8 +97,8 @@ class BeneficiaryControllerTest {
     void createBeneficiarySuccess() throws Exception {
         UUID accountId = UUID.randomUUID();
         authAs(accountId);
-        when(benPort.countActiveByUserId(accountId)).thenReturn(0L);
-        when(benPort.existsByUserIdAndBankCodeAndAccountNumber(eq(accountId), eq("011"), eq("1234567890")))
+        when(benPort.countActiveByUserId(ownerUserOf(accountId))).thenReturn(0L);
+        when(benPort.existsByUserIdAndBankCodeAndAccountNumber(eq(ownerUserOf(accountId)), eq("011"), eq("1234567890")))
                 .thenReturn(false);
         when(benPort.save(any(Beneficiary.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -104,8 +113,8 @@ class BeneficiaryControllerTest {
     void createBeneficiaryConflictOnDuplicate() throws Exception {
         UUID accountId = UUID.randomUUID();
         authAs(accountId);
-        when(benPort.countActiveByUserId(accountId)).thenReturn(0L);
-        when(benPort.existsByUserIdAndBankCodeAndAccountNumber(eq(accountId), eq("011"), eq("1234567890")))
+        when(benPort.countActiveByUserId(ownerUserOf(accountId))).thenReturn(0L);
+        when(benPort.existsByUserIdAndBankCodeAndAccountNumber(eq(ownerUserOf(accountId)), eq("011"), eq("1234567890")))
                 .thenReturn(true);
 
         mvc.perform(post("/api/v1/accounts/{accountId}/beneficiaries", accountId)
@@ -119,7 +128,7 @@ class BeneficiaryControllerTest {
     void createBeneficiaryLimitReached() throws Exception {
         UUID accountId = UUID.randomUUID();
         authAs(accountId);
-        when(benPort.countActiveByUserId(accountId)).thenReturn(50L);
+        when(benPort.countActiveByUserId(ownerUserOf(accountId))).thenReturn(50L);
 
         mvc.perform(post("/api/v1/accounts/{accountId}/beneficiaries", accountId)
                         .contentType("application/json")

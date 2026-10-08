@@ -1,9 +1,16 @@
-import api from '@/lib/api';
-import type { Money } from '@/lib/currency';
+import api from "@/lib/api";
+import type { Money } from "@/lib/currency";
 
-export type PromotionStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
+export type PromotionStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "EXPIRED";
 // XBUG-011: Superset of backend Reward.RewardType + Promotion.PromotionType values
-export type RewardType = 'LOYALTY_POINTS' | 'CASHBACK' | 'VOUCHER' | 'REWARD_POINTS' | 'REFERRAL_BONUS' | 'DISCOUNT' | 'PROMOTION_REWARD';
+export type RewardType =
+  | "LOYALTY_POINTS"
+  | "CASHBACK"
+  | "VOUCHER"
+  | "REWARD_POINTS"
+  | "REFERRAL_BONUS"
+  | "DISCOUNT"
+  | "PROMOTION_REWARD";
 
 export interface Promotion {
   id: string;
@@ -62,7 +69,8 @@ export interface Reward {
   type: RewardType;
   value: number;
   // XBUG-013: Aligned status values with backend (AWARDED/CLAIMED/EXPIRED)
-  status: 'PENDING' | 'APPROVED' | 'REDEEMED' | 'EXPIRED' | 'AWARDED' | 'CLAIMED';
+  status:
+    "PENDING" | "APPROVED" | "REDEEMED" | "EXPIRED" | "AWARDED" | "CLAIMED";
   expiresAt: string;
   createdAt: string;
   redeemedAt?: string;
@@ -72,7 +80,7 @@ export interface LoyaltyPoints {
   id: string;
   accountId: string;
   points: number;
-  type: 'EARNED' | 'REDEEMED' | 'EXPIRED';
+  type: "EARNED" | "REDEEMED" | "EXPIRED";
   description: string;
   referenceId?: string;
   createdAt: string;
@@ -105,10 +113,10 @@ export interface Cashback {
   id: string;
   accountId: string;
   amount: Money;
-  type: 'PERCENTAGE' | 'FIXED';
+  type: "PERCENTAGE" | "FIXED";
   referenceId: string;
   merchantName?: string;
-  status: 'PENDING' | 'APPROVED' | 'CREDITED' | 'EXPIRED';
+  status: "PENDING" | "APPROVED" | "CREDITED" | "EXPIRED";
   createdAt: string;
   creditedAt?: string;
   expiresAt?: string;
@@ -117,7 +125,7 @@ export interface Cashback {
 export interface CreateCashbackRequest {
   accountId: string;
   amount: Money;
-  type: 'PERCENTAGE' | 'FIXED';
+  type: "PERCENTAGE" | "FIXED";
   referenceId: string;
   merchantName?: string;
   expiresAt?: string;
@@ -138,8 +146,8 @@ export interface Referral {
   referralCode: string;
   referrerReward: Money;
   refereeReward: Money;
-  rewardType: 'CASHBACK' | 'POINTS';
-  status: 'PENDING' | 'COMPLETED' | 'EXPIRED';
+  rewardType: "CASHBACK" | "POINTS";
+  status: "PENDING" | "COMPLETED" | "EXPIRED";
   completedAt?: string;
   expiryDate: string;
   createdAt: string;
@@ -149,7 +157,7 @@ export interface CreateReferralRequest {
   referrerAccountId: string;
   referrerReward: Money;
   refereeReward: Money;
-  rewardType: 'CASHBACK' | 'POINTS';
+  rewardType: "CASHBACK" | "POINTS";
   expiryDate: string;
 }
 
@@ -179,7 +187,7 @@ export class PromotionService {
   }
 
   async getActivePromotions(): Promise<Promotion[]> {
-    const response = await api.get<Promotion[]>('/promotions');
+    const response = await api.get<Promotion[]>("/promotions");
     return response.data;
   }
 
@@ -193,48 +201,74 @@ export class PromotionService {
     return response.data;
   }
 
-  async claimPromotion(code: string, request: ClaimPromotionRequest): Promise<Reward> {
-    const response = await api.post<Reward>(`/promotions/${code}/claim`, request);
+  async claimPromotion(
+    code: string,
+    request: ClaimPromotionRequest,
+  ): Promise<Reward> {
+    const response = await api.post<Reward>(
+      `/promotions/${code}/claim`,
+      request,
+    );
     return response.data;
   }
 
-  async addLoyaltyPoints(request: CreateLoyaltyPointsRequest): Promise<LoyaltyPoints> {
-    const response = await api.post<LoyaltyPoints>('/loyalty-points', request);
+  async createPromotion(request: CreatePromotionRequest): Promise<Promotion> {
+    const response = await api.post<Promotion>("/promotions", request);
     return response.data;
   }
 
-  async redeemLoyaltyPoints(request: RedeemLoyaltyPointsRequest): Promise<LoyaltyPoints> {
-    const response = await api.post<LoyaltyPoints>('/loyalty-points/redeem', request);
+  async addLoyaltyPoints(
+    request: CreateLoyaltyPointsRequest,
+  ): Promise<LoyaltyPoints> {
+    const response = await api.post<LoyaltyPoints>("/loyalty-points", request);
+    return response.data;
+  }
+
+  async redeemLoyaltyPoints(
+    request: RedeemLoyaltyPointsRequest,
+  ): Promise<LoyaltyPoints> {
+    const response = await api.post<LoyaltyPoints>(
+      "/loyalty-points/redeem",
+      request,
+    );
     return response.data;
   }
 
   async getLoyaltyPoints(accountId: string): Promise<LoyaltyPoints[]> {
-    const response = await api.get<LoyaltyPoints[]>(`/loyalty-points/account/${accountId}`);
+    const response = await api.get<LoyaltyPoints[]>(
+      `/loyalty-points/account/${accountId}`,
+    );
     return response.data;
   }
 
   async getLoyaltyBalance(accountId: string): Promise<LoyaltyBalanceResponse> {
-    const response = await api.get<LoyaltyBalanceResponse>(`/loyalty-points/account/${accountId}/balance`);
+    const response = await api.get<LoyaltyBalanceResponse>(
+      `/loyalty-points/account/${accountId}/balance`,
+    );
     return response.data;
   }
 
   async getCashbacks(accountId: string): Promise<Cashback[]> {
-    const response = await api.get<Cashback[]>(`/cashbacks/account/${accountId}`);
+    const response = await api.get<Cashback[]>(
+      `/cashbacks/account/${accountId}`,
+    );
     return response.data;
   }
 
   async getCashback(accountId: string): Promise<CashbackSummaryResponse> {
-    const response = await api.get<CashbackSummaryResponse>(`/cashbacks/account/${accountId}/summary`);
+    const response = await api.get<CashbackSummaryResponse>(
+      `/cashbacks/account/${accountId}/summary`,
+    );
     return response.data;
   }
 
   async createReferral(request: CreateReferralRequest): Promise<Referral> {
-    const response = await api.post<Referral>('/referrals', request);
+    const response = await api.post<Referral>("/referrals", request);
     return response.data;
   }
 
   async completeReferral(request: CompleteReferralRequest): Promise<Referral> {
-    const response = await api.post<Referral>('/referrals/complete', request);
+    const response = await api.post<Referral>("/referrals/complete", request);
     return response.data;
   }
 
@@ -244,12 +278,18 @@ export class PromotionService {
   }
 
   async getReferrals(accountId: string): Promise<Referral[]> {
-    const response = await api.get<Referral[]>(`/referrals/referrer/${accountId}`);
+    const response = await api.get<Referral[]>(
+      `/referrals/referrer/${accountId}`,
+    );
     return response.data;
   }
 
-  async getReferralSummary(accountId: string): Promise<ReferralSummaryResponse> {
-    const response = await api.get<ReferralSummaryResponse>(`/referrals/referrer/${accountId}/summary`);
+  async getReferralSummary(
+    accountId: string,
+  ): Promise<ReferralSummaryResponse> {
+    const response = await api.get<ReferralSummaryResponse>(
+      `/referrals/referrer/${accountId}/summary`,
+    );
     return response.data;
   }
 
@@ -268,7 +308,9 @@ export class PromotionService {
 
   /** GET /rewards/account/{accountId}/summary — Get rewards summary */
   async getRewardsSummary(accountId: string): Promise<RewardsSummary> {
-    const response = await api.get<RewardsSummary>(`/rewards/account/${accountId}/summary`);
+    const response = await api.get<RewardsSummary>(
+      `/rewards/account/${accountId}/summary`,
+    );
     return response.data;
   }
 }

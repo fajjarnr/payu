@@ -4,6 +4,7 @@
 
 import React, { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Link } from "@/lib/navigation";
 import { SkipLink } from "@/lib/a11y";
 import {
   Eye,
@@ -66,7 +67,7 @@ interface CardData {
 
 export default function CardsPage() {
   const { token } = theme.useToken();
-  const { accountId: authAccountId } = useAuthStore();
+  const { accountId: authAccountId, user } = useAuthStore();
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -93,7 +94,9 @@ export default function CardsPage() {
     primaryCard?.cardNumber ??
     "\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022";
   const cardExpiry = primaryCard?.expiryDate ?? "--/--";
-  const cardOwner = primaryCard?.cardHolder ?? "\u2014";
+  // Placeholder glyphs are display-only; the create call needs a real holder name.
+  const cardOwner =
+    primaryCard?.cardHolder ?? user?.fullName ?? user?.username ?? "";
   const cardLast4 = cardNumber.slice(-4);
   const isFrozen = primaryCard?.status === "FROZEN";
 
@@ -195,7 +198,7 @@ export default function CardsPage() {
               onClick={() =>
                 createCard.mutate({
                   accountId: authAccountId ?? "",
-                  cardHolderName: cardOwner,
+                  cardHolderName: cardOwner || "CARD HOLDER",
                   dailyLimit: asMoney("25000000.0000"),
                 })
               }
@@ -415,7 +418,9 @@ export default function CardsPage() {
                         danger
                         onClick={handleOpenDeleteModal}
                         disabled={deleteCard.isPending}
-                        icon={deleteCard.isPending ? <Loader2 spin /> : <Trash2 />}
+                        icon={
+                          deleteCard.isPending ? <Loader2 spin /> : <Trash2 />
+                        }
                       >
                         Hapus Kartu
                       </Button>
@@ -729,9 +734,11 @@ export default function CardsPage() {
                   </Typography.Text>
                 </div>
               </Flex>
-              <Button type="primary" size="large">
-                Upgrade Sekarang
-              </Button>
+              <Link href="/settings">
+                <Button type="primary" size="large">
+                  Upgrade Sekarang
+                </Button>
+              </Link>
             </Flex>
           </Card>
 
@@ -785,10 +792,7 @@ export default function CardsPage() {
                     }
                     placeholder="25000000"
                   />
-                  <Typography.Text
-                    type="secondary"
-                    style={{ fontSize: 12 }}
-                  >
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     Maksimum transaksi per hari
                   </Typography.Text>
                 </div>
@@ -813,10 +817,7 @@ export default function CardsPage() {
                     }
                     placeholder="100000000"
                   />
-                  <Typography.Text
-                    type="secondary"
-                    style={{ fontSize: 12 }}
-                  >
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     Maksimum transaksi per bulan
                   </Typography.Text>
                 </div>

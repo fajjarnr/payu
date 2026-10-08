@@ -84,7 +84,11 @@ public class CardService implements CardUseCase {
             return List.of();
         }
 
-        return cardPersistencePort.findByWalletId(wallet.get().getId());
+        // closeCard() is a soft delete (status CANCELLED); a closed card must not
+        // come back in the account's card list.
+        return cardPersistencePort.findByWalletId(wallet.get().getId()).stream()
+                .filter(card -> card.getStatus() != CardStatus.CANCELLED)
+                .toList();
     }
 
     @Override

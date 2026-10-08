@@ -1,107 +1,132 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import AnalyticsPage from '@/app/[locale]/analytics/page';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import AnalyticsPage from "@/app/[locale]/analytics/page";
 
-vi.mock('@/components/DashboardLayout', () => ({
+vi.mock("@/lib/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/navigation")>()),
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+vi.mock("@/components/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dashboard-layout">{children}</div>
   ),
 }));
 
-
-vi.mock('@/stores/authStore', () => ({
-  useAuthStore: (selector: (s: unknown) => unknown) => selector({
-    user: { id: 'user_1' },
-    accountId: 'acct_1',
-    isAuthenticated: true,
-  }),
+vi.mock("@/stores/authStore", () => ({
+  useAuthStore: (selector: (s: unknown) => unknown) =>
+    selector({
+      user: { id: "user_1" },
+      accountId: "acct_1",
+      isAuthenticated: true,
+    }),
 }));
 const { wsMock, cashFlowMock, trendsMock } = vi.hoisted(() => ({
-  wsMock: vi.fn((..._args: unknown[]): { isConnected: boolean; data: unknown } => ({
-    isConnected: true,
-    data: {
-      totalIncome: 25000000,
-      totalExpense: 15000000,
-      monthlySavings: 10000000,
-      investmentROI: 8.5,
-      spendingByCategory: [],
-      monthlyTrend: [],
-    },
-  })),
-  cashFlowMock: vi.fn((..._args: unknown[]): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false })),
-  trendsMock: vi.fn((..._args: unknown[]): { data: unknown; isLoading: boolean } => ({ data: undefined, isLoading: false })),
+  wsMock: vi.fn(
+    (..._args: unknown[]): { isConnected: boolean; data: unknown } => ({
+      isConnected: true,
+      data: {
+        totalIncome: 25000000,
+        totalExpense: 15000000,
+        monthlySavings: 10000000,
+        investmentROI: 8.5,
+        spendingByCategory: [],
+        monthlyTrend: [],
+      },
+    }),
+  ),
+  cashFlowMock: vi.fn(
+    (..._args: unknown[]): { data: unknown; isLoading: boolean } => ({
+      data: undefined,
+      isLoading: false,
+    }),
+  ),
+  trendsMock: vi.fn(
+    (..._args: unknown[]): { data: unknown; isLoading: boolean } => ({
+      data: undefined,
+      isLoading: false,
+    }),
+  ),
 }));
 
-vi.mock('@/hooks/useAnalytics', () => ({
+vi.mock("@/hooks/useAnalytics", () => ({
   useAnalyticsWebSocket: (...args: [unknown]) => wsMock(...args),
   useCashFlow: (...args: [unknown]) => cashFlowMock(...args),
   useSpendingTrends: (...args: [unknown]) => trendsMock(...args),
 }));
 // Mock plots to avoid canvas rendering issues in jsdom
-vi.mock('@ant-design/plots', () => ({
-  Column: ({ data }: { data: unknown[] }) => <div data-testid="trajectory-column">{data.length}</div>,
-  Pie: ({ data }: { data: unknown[] }) => <div data-testid="breakdown-pie">{data.length}</div>,
+vi.mock("@ant-design/plots", () => ({
+  Column: ({ data }: { data: unknown[] }) => (
+    <div data-testid="trajectory-column">{data.length}</div>
+  ),
+  Pie: ({ data }: { data: unknown[] }) => (
+    <div data-testid="breakdown-pie">{data.length}</div>
+  ),
 }));
 
-describe('AnalyticsPage', () => {
+describe("AnalyticsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should render within DashboardLayout', () => {
+  it("should render within DashboardLayout", () => {
     render(<AnalyticsPage />);
-    expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
+    expect(screen.getByTestId("dashboard-layout")).toBeInTheDocument();
   });
 
-  it('should render page title', () => {
+  it("should render page title", () => {
     render(<AnalyticsPage />);
-    expect(screen.getByText('Intelijen Keuangan')).toBeInTheDocument();
+    expect(screen.getByText("Intelijen Keuangan")).toBeInTheDocument();
   });
 
-  it('should render financial summary cards', () => {
+  it("should render financial summary cards", () => {
     render(<AnalyticsPage />);
-    expect(screen.getByText('Total Pemasukan')).toBeInTheDocument();
-    expect(screen.getByText('Total Pengeluaran')).toBeInTheDocument();
-    expect(screen.getByText('Tabungan Bulanan')).toBeInTheDocument();
-    expect(screen.getByText('ROI Investasi')).toBeInTheDocument();
+    expect(screen.getByText("Total Pemasukan")).toBeInTheDocument();
+    expect(screen.getByText("Total Pengeluaran")).toBeInTheDocument();
+    expect(screen.getByText("Tabungan Bulanan")).toBeInTheDocument();
+    expect(screen.getByText("ROI Investasi")).toBeInTheDocument();
   });
 
-  it('should render chart sections', () => {
+  it("should render chart sections", () => {
     render(<AnalyticsPage />);
-    expect(screen.getByText('Trajektori Pengeluaran')).toBeInTheDocument();
-    expect(screen.getByText('Rincian Pengeluaran')).toBeInTheDocument();
+    expect(screen.getByText("Trajektori Pengeluaran")).toBeInTheDocument();
+    expect(screen.getByText("Rincian Pengeluaran")).toBeInTheDocument();
   });
 
-  it('should show live connection status', () => {
+  it("should show live connection status", () => {
     render(<AnalyticsPage />);
-    expect(screen.getByText('Live Update')).toBeInTheDocument();
+    expect(screen.getByText("Live Update")).toBeInTheDocument();
   });
 
-  it('hydrates from REST when the websocket has no data', () => {
+  it("hydrates from REST when the websocket has no data", () => {
     wsMock.mockReturnValueOnce({ isConnected: false, data: null });
     cashFlowMock.mockReturnValueOnce({
-      data: { income: '5000000', expenses: '3000000', netCashFlow: '2000000' },
+      data: { income: "5000000", expenses: "3000000", netCashFlow: "2000000" },
       isLoading: false,
     });
     trendsMock.mockReturnValueOnce({
       data: {
-        totalSpending: '3000000',
+        totalSpending: "3000000",
         monthOverMonthChange: -5,
-        categories: [{ category: 'Makanan', amount: '1500000', percentage: 50 }],
+        categories: [
+          { category: "Makanan", amount: "1500000", percentage: 50 },
+        ],
       },
       isLoading: false,
     });
     render(<AnalyticsPage />);
-    expect(screen.getByText('Rp 5.000.000')).toBeInTheDocument();
-    expect(screen.getByText('Makanan')).toBeInTheDocument();
+    expect(screen.getByText("Rp 5.000.000")).toBeInTheDocument();
+    expect(screen.getByText("Makanan")).toBeInTheDocument();
   });
 
-  it('queries analytics by accountId, the event key (FE-AUDIT-006)', () => {
+  it("queries analytics by accountId, the event key (FE-AUDIT-006)", () => {
     render(<AnalyticsPage />);
     // Transaction/wallet events are keyed by account_id (backend BUG-AUTH-013);
     // querying by Keycloak sub returns zero rows.
-    expect(cashFlowMock).toHaveBeenCalledWith('acct_1');
-    expect(trendsMock).toHaveBeenCalledWith('acct_1');
-    expect(wsMock).toHaveBeenCalledWith('acct_1');
+    expect(cashFlowMock).toHaveBeenCalledWith("acct_1");
+    expect(trendsMock).toHaveBeenCalledWith("acct_1");
+    expect(wsMock).toHaveBeenCalledWith("acct_1");
   });
 });
