@@ -18,8 +18,21 @@ import {
   FileText,
   TrendingUp,
 } from "@/components/icons";
-import clsx from "clsx";
-import { Button, Skeleton, Tabs } from "antd";
+import {
+  Button,
+  Skeleton,
+  Tabs,
+  Card,
+  Space,
+  Row,
+  Col,
+  Divider,
+  Typography,
+  Tag,
+  List,
+  Progress,
+  theme,
+} from "antd";
 import {
   useCreditScore,
   usePayLater,
@@ -34,6 +47,7 @@ import { asMoney, formatCurrency } from "@/lib/currency";
 import { notify as toast } from "@/lib/notify";
 
 export default function LendingPage() {
+  const { token } = theme.useToken();
   const { user } = useAuthStore();
   const userId = user?.id ?? "";
   const { data: creditScoreData, isLoading: isLoadingScore } =
@@ -102,8 +116,8 @@ export default function LendingPage() {
       tenure: "6 - 36 bulan",
       processingTime: "1-2 hari kerja",
       icon: FileText,
-      color: "text-primary",
-      bg: "bg-primary/10",
+      color: token.colorPrimary,
+      bg: token.colorPrimaryBg,
     },
     {
       name: "Pinjaman Multiguna",
@@ -115,8 +129,8 @@ export default function LendingPage() {
       tenure: "12 - 60 bulan",
       processingTime: "3-5 hari kerja",
       icon: TrendingUp,
-      color: "text-primary",
-      bg: "bg-success-light",
+      color: token.colorSuccess,
+      bg: token.colorSuccessBg,
     },
   ];
 
@@ -151,411 +165,757 @@ export default function LendingPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            <Typography.Title level={2} style={{ marginBottom: 0 }}>
               Pinjaman & Kredit
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium mt-1">
+            </Typography.Title>
+            <Typography.Text type="secondary">
               Solusi pembiayaan fleksibel sesuai kebutuhan Anda.
-            </p>
+            </Typography.Text>
           </div>
           <Button
             type="primary"
+            size="large"
             onClick={handleActivatePayLater}
             disabled={activatePayLater.isPending}
             data-testid="activate-paylater-button"
-            className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2 disabled:opacity-50"
           >
-            <Plus className="h-4 w-4" />{" "}
+            <Plus style={{ width: 16, height: 16 }} />{" "}
             {activatePayLater.isPending ? "Memproses..." : "Aktifkan PayLater"}
           </Button>
-        </div>
+        </Row>
         <Tabs
           defaultActiveKey="loans"
           data-testid="lending-tabs"
-          className="w-full"
           items={[
             {
               key: "loans",
               label: (
-                <span data-testid="loans-tab" className="px-8">
-                  Pinjaman
-                </span>
+                <span data-testid="loans-tab">Pinjaman</span>
               ),
               children: (
-                <div className="mt-0 space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                      <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
-                        <div className="relative z-10 flex items-start justify-between mb-8">
+                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} lg={16}>
+                      <Card
+                        style={{
+                          background: `linear-gradient(135deg, ${token.colorText}, ${token.colorTextSecondary})`,
+                          color: token.colorBgContainer,
+                        }}
+                        styles={{ body: { padding: 24 } }}
+                      >
+                        <Row
+                          justify="space-between"
+                          align="top"
+                          gutter={[16, 16]}
+                        >
                           <div>
-                            <p className="text-xs font-bold text-text-disabled tracking-widest uppercase mb-2">
+                            <Typography.Text
+                              strong
+                              style={{
+                                fontSize: 12,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                                color: token.colorBgLayout,
+                              }}
+                            >
                               Skor Kredit Anda
-                            </p>
-                            <div className="flex items-baseline gap-3">
-                              <h3 className="text-5xl font-bold">
+                            </Typography.Text>
+                            <Space align="baseline" size={12}>
+                              <Typography.Title
+                                level={1}
+                                style={{
+                                  marginBottom: 0,
+                                  color: token.colorBgContainer,
+                                }}
+                              >
                                 {isLoadingScore ? (
-                                  <Skeleton className="h-12 w-20 bg-surface/20" />
+                                  <Skeleton.Input
+                                    active
+                                    size="large"
+                                    style={{ width: 80 }}
+                                  />
                                 ) : (
                                   creditScore.score
                                 )}
-                              </h3>
-                              <div className="flex items-center gap-2 bg-success-light/20 px-3 py-1 rounded-full border border-success-light/20">
-                                <span className="text-lg font-bold text-success-light">
+                              </Typography.Title>
+                              <Tag color="success">
+                                <Typography.Text
+                                  strong
+                                  style={{ color: token.colorSuccess }}
+                                >
                                   Grade{" "}
                                   {isLoadingScore ? "..." : creditScore.grade}
-                                </span>
-                              </div>
-                            </div>
-                            <p className="text-xs text-text-disabled font-bold tracking-widest uppercase mt-3">
+                                </Typography.Text>
+                              </Tag>
+                            </Space>
+                            <Typography.Text
+                              strong
+                              style={{
+                                display: "block",
+                                marginTop: 12,
+                                fontSize: 12,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                                color: token.colorBgLayout,
+                              }}
+                            >
                               Terakhir diperbarui:{" "}
                               {isLoadingScore ? "..." : creditScore.lastUpdated}
-                            </p>
+                            </Typography.Text>
                           </div>
-                          <div className="h-16 w-16 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
-                            <ShieldCheck className="h-8 w-8 text-bank-green" />
+                          <div
+                            style={{
+                              width: 64,
+                              height: 64,
+                              borderRadius: 12,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: "rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <ShieldCheck
+                              style={{
+                                width: 32,
+                                height: 32,
+                                color: token.colorSuccess,
+                              }}
+                            />
                           </div>
-                        </div>
+                        </Row>
 
-                        <div className="space-y-3 mb-6">
+                        <Space
+                          direction="vertical"
+                          size={12}
+                          style={{ marginTop: 32 }}
+                        >
                           {isLoadingScore
                             ? [1, 2].map((i) => (
-                                <Skeleton
+                                <Skeleton.Input
                                   key={i}
-                                  className="h-5 w-48 bg-surface/10"
+                                  active
+                                  size="small"
+                                  style={{ width: 192 }}
                                 />
                               ))
                             : creditScore.factors.map((factor, i) => (
-                                <div
-                                  key={i}
-                                  className="flex items-center gap-3"
-                                >
-                                  <div className="h-6 w-6 rounded-full bg-success-light/20 flex items-center justify-center">
-                                    <CheckCircle className="h-4 w-4 text-success-light" />
+                                <Space key={i} size={12}>
+                                  <div
+                                    style={{
+                                      width: 24,
+                                      height: 24,
+                                      borderRadius: "50%",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      background: "rgba(255,255,255,0.2)",
+                                    }}
+                                  >
+                                    <CheckCircle
+                                      style={{
+                                        width: 16,
+                                        height: 16,
+                                        color: token.colorSuccess,
+                                      }}
+                                    />
                                   </div>
-                                  <span className="text-sm font-medium">
+                                  <Typography.Text
+                                    style={{ color: token.colorBgContainer }}
+                                  >
                                     {factor}
-                                  </span>
-                                </div>
+                                  </Typography.Text>
+                                </Space>
                               ))}
-                        </div>
+                        </Space>
 
-                        <div className="w-full bg-surface/10 h-2 rounded-full overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-success-light to-primary h-full rounded-full"
+                        <Progress
+                          percent={
+                            (creditScore.score / creditScore.maxScore) * 100
+                          }
+                          showInfo={false}
+                          strokeColor={token.colorSuccess}
+                          style={{ marginTop: 16 }}
+                        />
+                      </Card>
+                    </Col>
+                    <Col xs={24} lg={8}>
+                      <Card style={{ height: "100%" }}>
+                        <div
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 12,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginBottom: 24,
+                            background: token.colorPrimaryBg,
+                          }}
+                        >
+                          <Wallet
                             style={{
-                              width: `${(creditScore.score / creditScore.maxScore) * 100}%`,
+                              width: 24,
+                              height: 24,
+                              color: token.colorPrimary,
                             }}
                           />
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="lg:col-span-1">
-                    <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
-                      <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 border border-primary/10">
-                        <Wallet className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-bold text-foreground mb-3">
-                        Total Limit Pinjaman
-                      </h3>
-                      <p className="text-3xl font-bold text-primary mb-2">
-                        {isLoadingPreApprovals ? (
-                          <Skeleton className="h-9 w-32" />
-                        ) : (
-                          formatCurrency(preApprovals?.[0]?.maxAmount ?? "0")
-                        )}
-                      </p>
-                      <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                        Tersedia berdasarkan skor kredit
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6 mt-8">
-                    <h3 className="text-xl font-bold text-foreground">
-                      Produk Pinjaman
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {loanProducts.map((product, i) => (
-                        <div
-                          key={i}
-                          data-testid={`loan-product-${i}`}
-                          className="bg-card p-5 sm:p-6 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]"
+                        <Typography.Title
+                          level={4}
+                          style={{ marginBottom: 12 }}
                         >
-                          <div className="flex justify-between items-start mb-6">
-                            <div
-                              className={clsx(
-                                "h-16 w-16 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110",
-                                product.bg,
-                                product.color,
-                              )}
+                          Total Limit Pinjaman
+                        </Typography.Title>
+                        <Typography.Title
+                          level={2}
+                          style={{
+                            marginBottom: 8,
+                            color: token.colorPrimary,
+                          }}
+                        >
+                          {isLoadingPreApprovals ? (
+                            <Skeleton.Input
+                              active
+                              size="large"
+                              style={{ width: 128 }}
+                            />
+                          ) : (
+                            formatCurrency(preApprovals?.[0]?.maxAmount ?? "0")
+                          )}
+                        </Typography.Title>
+                        <Typography.Text
+                          strong
+                          type="secondary"
+                          style={{
+                            fontSize: 12,
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Tersedia berdasarkan skor kredit
+                        </Typography.Text>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Space
+                    direction="vertical"
+                    size={16}
+                    style={{ marginTop: 16, width: "100%" }}
+                  >
+                    <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                      Produk Pinjaman
+                    </Typography.Title>
+                    <Row gutter={[16, 16]}>
+                      {loanProducts.map((product, i) => (
+                        <Col xs={24} md={12} key={i}>
+                          <Card
+                            data-testid={`loan-product-${i}`}
+                            hoverable
+                            style={{ height: "100%" }}
+                          >
+                            <Row
+                              justify="space-between"
+                              align="top"
+                              style={{ marginBottom: 24 }}
                             >
-                              <product.icon className="h-8 w-8" />
+                              <div
+                                style={{
+                                  width: 64,
+                                  height: 64,
+                                  borderRadius: 12,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  background: product.bg,
+                                  color: product.color,
+                                }}
+                              >
+                                <product.icon
+                                  style={{ width: 32, height: 32 }}
+                                />
+                              </div>
+                              <div
+                                style={{
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: 8,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  background: token.colorFillTertiary,
+                                  color: token.colorTextSecondary,
+                                }}
+                              >
+                                <Percent
+                                  style={{ width: 20, height: 20 }}
+                                />
+                              </div>
+                            </Row>
+                            <div>
+                              <Typography.Title
+                                level={4}
+                                style={{ marginBottom: 8 }}
+                              >
+                                {product.name}
+                              </Typography.Title>
+                              <Typography.Paragraph type="secondary">
+                                {product.description}
+                              </Typography.Paragraph>
+                              <Space
+                                direction="vertical"
+                                size={12}
+                                style={{ marginBottom: 24, width: "100%" }}
+                              >
+                                <Row justify="space-between" align="middle">
+                                  <Typography.Text type="secondary">
+                                    Limit Pinjaman
+                                  </Typography.Text>
+                                  <Typography.Text strong>
+                                    {formatCurrency(product.minAmount)} -{" "}
+                                    {formatCurrency(product.maxAmount)}
+                                  </Typography.Text>
+                                </Row>
+                                <Row justify="space-between" align="middle">
+                                  <Typography.Text type="secondary">
+                                    Bunga
+                                  </Typography.Text>
+                                  <Typography.Text
+                                    strong
+                                    style={{ color: token.colorPrimary }}
+                                  >
+                                    {product.interestRate}
+                                  </Typography.Text>
+                                </Row>
+                                <Row justify="space-between" align="middle">
+                                  <Typography.Text type="secondary">
+                                    Tenor
+                                  </Typography.Text>
+                                  <Typography.Text strong>
+                                    {product.tenure}
+                                  </Typography.Text>
+                                </Row>
+                                <Row justify="space-between" align="middle">
+                                  <Typography.Text type="secondary">
+                                    Proses
+                                  </Typography.Text>
+                                  <Typography.Text strong>
+                                    {product.processingTime}
+                                  </Typography.Text>
+                                </Row>
+                              </Space>
+                              <Button
+                                type="primary"
+                                size="large"
+                                block
+                                onClick={() => handleApplyLoan(product.name)}
+                                disabled={applyLoan.isPending}
+                                data-testid={`apply-loan-${i}`}
+                              >
+                                {applyLoan.isPending ? (
+                                  "Memproses..."
+                                ) : (
+                                  <>
+                                    Ajukan Sekarang{" "}
+                                    <ArrowRight
+                                      style={{ width: 16, height: 16 }}
+                                    />
+                                  </>
+                                )}
+                              </Button>
                             </div>
-                            <div className="h-10 w-10 bg-muted/30 rounded-lg flex items-center justify-center text-muted-foreground">
-                              <Percent className="h-5 w-5" />
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="text-xl font-bold text-foreground mb-2 leading-tight">
-                              {product.name}
-                            </h4>
-                            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                              {product.description}
-                            </p>
-                            <div className="space-y-3 mb-6">
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground font-medium">
-                                  Limit Pinjaman
-                                </span>
-                                <span className="font-bold text-foreground">
-                                  {formatCurrency(product.minAmount)} -{" "}
-                                  {formatCurrency(product.maxAmount)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground font-medium">
-                                  Bunga
-                                </span>
-                                <span className="font-bold text-primary">
-                                  {product.interestRate}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground font-medium">
-                                  Tenor
-                                </span>
-                                <span className="font-bold text-foreground">
-                                  {product.tenure}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground font-medium">
-                                  Proses
-                                </span>
-                                <span className="font-bold text-foreground">
-                                  {product.processingTime}
-                                </span>
-                              </div>
-                            </div>
-                            <Button
-                              type="primary"
-                              onClick={() => handleApplyLoan(product.name)}
-                              disabled={applyLoan.isPending}
-                              data-testid={`apply-loan-${i}`}
-                              className="w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                              {applyLoan.isPending ? (
-                                "Memproses..."
-                              ) : (
-                                <>
-                                  Ajukan Sekarang{" "}
-                                  <ArrowRight className="h-4 w-4" />
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
+                          </Card>
+                        </Col>
                       ))}
-                    </div>
-                  </div>
-                </div>
+                    </Row>
+                  </Space>
+                </Space>
               ),
             },
             {
               key: "paylater",
               label: (
-                <span data-testid="paylater-tab" className="px-8">
-                  PayLater
-                </span>
+                <span data-testid="paylater-tab">PayLater</span>
               ),
               children: (
-                <div className="mt-0 space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2">
-                      <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
-                        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
+                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  <Row gutter={[16, 16]}>
+                    <Col xs={24} lg={16}>
+                      <Card
+                        style={{
+                          background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+                          color: token.colorBgContainer,
+                        }}
+                        styles={{ body: { padding: 24 } }}
+                      >
+                        <Row
+                          justify="space-between"
+                          align="middle"
+                          gutter={[16, 16]}
+                          style={{ marginBottom: 24 }}
+                        >
                           <div>
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="h-12 w-12 bg-surface/20 rounded-xl flex items-center justify-center border border-surface/10">
-                                <CreditCard className="h-6 w-6" />
+                            <Space
+                              size={12}
+                              align="center"
+                              style={{ marginBottom: 12 }}
+                            >
+                              <div
+                                style={{
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: 12,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  background: "rgba(255,255,255,0.2)",
+                                }}
+                              >
+                                <CreditCard
+                                  style={{ width: 24, height: 24 }}
+                                />
                               </div>
                               <div>
-                                <p className="text-xs font-bold text-surface/80 tracking-widest uppercase">
+                                <Typography.Text
+                                  strong
+                                  style={{
+                                    display: "block",
+                                    fontSize: 12,
+                                    letterSpacing: "0.1em",
+                                    textTransform: "uppercase",
+                                    color: "rgba(255,255,255,0.8)",
+                                  }}
+                                >
                                   PayLater Limit
-                                </p>
-                                <h3 className="text-3xl font-bold tracking-tight mt-1">
+                                </Typography.Text>
+                                <Typography.Title
+                                  level={2}
+                                  style={{
+                                    marginBottom: 0,
+                                    color: token.colorBgContainer,
+                                  }}
+                                >
                                   {formatCurrency(payLaterStats.creditLimit)}
-                                </h3>
+                                </Typography.Title>
                               </div>
-                            </div>
-                            <div className="flex gap-4 text-xs font-bold text-surface/80">
-                              <span>
+                            </Space>
+                            <Space
+                              size={16}
+                              style={{
+                                fontSize: 12,
+                                color: "rgba(255,255,255,0.8)",
+                              }}
+                            >
+                              <Typography.Text
+                                strong
+                                style={{ color: "rgba(255,255,255,0.8)" }}
+                              >
                                 Terpakai:{" "}
                                 {formatCurrency(payLaterStats.usedLimit)}
-                              </span>
-                              <span>•</span>
-                              <span>
+                              </Typography.Text>
+                              <Typography.Text
+                                strong
+                                style={{ color: "rgba(255,255,255,0.8)" }}
+                              >
+                                •
+                              </Typography.Text>
+                              <Typography.Text
+                                strong
+                                style={{ color: "rgba(255,255,255,0.8)" }}
+                              >
                                 Tersedia:{" "}
                                 {formatCurrency(payLaterStats.availableLimit)}
-                              </span>
-                            </div>
+                              </Typography.Text>
+                            </Space>
                           </div>
 
-                          <div className="text-left md:text-right bg-surface/10 p-4 rounded-xl border border-surface/10"></div>
-
-                          <div className="relative z-10 space-y-2">
-                            <div className="flex justify-between text-xs font-bold tracking-widest uppercase text-surface/80">
-                              <span>Penggunaan Limit</span>
-                              <span>{creditUtilization.toFixed(0)}%</span>
-                            </div>
-                            <div className="w-full bg-secondary/20 h-3 rounded-full overflow-hidden p-0.5 border border-surface/10">
-                              <div
-                                className="bg-surface h-full rounded-full transition-all duration-500"
-                                style={{ width: `${creditUtilization}%` }}
-                              />
-                            </div>
+                          <div style={{ minWidth: 200 }}>
+                            <Row justify="space-between" align="middle">
+                              <Typography.Text
+                                strong
+                                style={{
+                                  fontSize: 12,
+                                  letterSpacing: "0.1em",
+                                  textTransform: "uppercase",
+                                  color: "rgba(255,255,255,0.8)",
+                                }}
+                              >
+                                Penggunaan Limit
+                              </Typography.Text>
+                              <Typography.Text
+                                strong
+                                style={{ color: token.colorBgContainer }}
+                              >
+                                {creditUtilization.toFixed(0)}%
+                              </Typography.Text>
+                            </Row>
+                            <Progress
+                              percent={creditUtilization}
+                              showInfo={false}
+                              strokeColor={token.colorBgContainer}
+                              trailColor="rgba(255,255,255,0.2)"
+                              style={{ marginTop: 8 }}
+                            />
                           </div>
+                        </Row>
 
-                          <div className="relative z-10 mt-8 pt-6 border-t border-surface/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div>
-                              <p className="text-xs font-bold text-surface/60 tracking-widest uppercase">
-                                Pembayaran Minimum
-                              </p>
-                              <p className="text-xl font-bold">
-                                {formatCurrency(payLaterStats.minimumPayment)}
-                              </p>
-                            </div>
-                            <Button
-                              onClick={handlePayBill}
-                              disabled={payLaterPayment.isPending}
-                              data-testid="pay-bill-button"
-                              className="px-8 h-12 rounded-xl bg-surface text-primary hover:bg-surface/90 shadow-lg disabled:opacity-50"
+                        <Divider style={{ borderColor: "rgba(255,255,255,0.2)" }} />
+
+                        <Row
+                          justify="space-between"
+                          align="middle"
+                          gutter={[16, 16]}
+                        >
+                          <div>
+                            <Typography.Text
+                              strong
+                              style={{
+                                display: "block",
+                                fontSize: 12,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                                color: "rgba(255,255,255,0.6)",
+                              }}
                             >
-                              {payLaterPayment.isPending
-                                ? "Memproses..."
-                                : "Bayar Tagihan"}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="lg:col-span-1">
-                        <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
-                          <div className="flex justify-between items-start mb-6">
-                            <h3 className="text-lg font-bold text-foreground">
-                              Ringkasan Transaksi
-                            </h3>
-                            <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/10">
-                              <TrendingUp className="h-4 w-4 text-primary" />
-                            </div>
-                          </div>
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center py-3 border-b border-border">
-                              <span className="text-sm text-muted-foreground font-medium">
-                                Total Transaksi
-                              </span>
-                              <span className="text-lg font-bold text-foreground">
-                                {payLaterStats.transactions.length}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 border-b border-border">
-                              <span className="text-sm text-muted-foreground font-medium">
-                                Pembayaran Berhasil
-                              </span>
-                              <span className="text-lg font-bold text-success-light">
-                                {
-                                  payLaterStats.transactions.filter(
-                                    (t) => t.status === "paid",
-                                  ).length
-                                }
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center py-3">
-                              <span className="text-sm text-muted-foreground font-medium">
-                                Menunggu Pembayaran
-                              </span>
-                              <span className="text-lg font-bold text-warning">
-                                {
-                                  payLaterStats.transactions.filter(
-                                    (t) => t.status !== "paid",
-                                  ).length
-                                }
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-6 mt-8">
-                      <h3 className="text-xl font-bold text-foreground">
-                        Riwayat Transaksi PayLater
-                      </h3>
-                      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                        <div className="divide-y divide-border">
-                          {payLaterStats.transactions.map((txn) => (
-                            <div
-                              key={txn.id}
-                              data-testid={`transaction-${txn.id}`}
-                              className="p-6 hover:bg-muted/30 transition-colors"
+                              Pembayaran Minimum
+                            </Typography.Text>
+                            <Typography.Title
+                              level={4}
+                              style={{
+                                marginBottom: 0,
+                                color: token.colorBgContainer,
+                              }}
                             >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <div
-                                    className={clsx(
-                                      "h-12 w-12 rounded-xl flex items-center justify-center",
+                              {formatCurrency(payLaterStats.minimumPayment)}
+                            </Typography.Title>
+                          </div>
+                          <Button
+                            size="large"
+                            onClick={handlePayBill}
+                            disabled={payLaterPayment.isPending}
+                            data-testid="pay-bill-button"
+                            style={{
+                              background: token.colorBgContainer,
+                              color: token.colorPrimary,
+                            }}
+                          >
+                            {payLaterPayment.isPending
+                              ? "Memproses..."
+                              : "Bayar Tagihan"}
+                          </Button>
+                        </Row>
+                      </Card>
+                    </Col>
+                    <Col xs={24} lg={8}>
+                      <Card style={{ height: "100%" }}>
+                        <Row
+                          justify="space-between"
+                          align="top"
+                          style={{ marginBottom: 24 }}
+                        >
+                          <Typography.Title
+                            level={5}
+                            style={{ marginBottom: 0 }}
+                          >
+                            Ringkasan Transaksi
+                          </Typography.Title>
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: token.colorPrimaryBg,
+                            }}
+                          >
+                            <TrendingUp
+                              style={{
+                                width: 16,
+                                height: 16,
+                                color: token.colorPrimary,
+                              }}
+                            />
+                          </div>
+                        </Row>
+                        <Space
+                          direction="vertical"
+                          size={16}
+                          style={{ width: "100%" }}
+                        >
+                          <Row
+                            justify="space-between"
+                            align="middle"
+                            style={{
+                              paddingTop: 12,
+                              paddingBottom: 12,
+                              borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                            }}
+                          >
+                            <Typography.Text type="secondary">
+                              Total Transaksi
+                            </Typography.Text>
+                            <Typography.Text strong style={{ fontSize: 16 }}>
+                              {payLaterStats.transactions.length}
+                            </Typography.Text>
+                          </Row>
+                          <Row
+                            justify="space-between"
+                            align="middle"
+                            style={{
+                              paddingTop: 12,
+                              paddingBottom: 12,
+                              borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                            }}
+                          >
+                            <Typography.Text type="secondary">
+                              Pembayaran Berhasil
+                            </Typography.Text>
+                            <Typography.Text
+                              strong
+                              style={{
+                                fontSize: 16,
+                                color: token.colorSuccess,
+                              }}
+                            >
+                              {
+                                payLaterStats.transactions.filter(
+                                  (t) => t.status === "paid",
+                                ).length
+                              }
+                            </Typography.Text>
+                          </Row>
+                          <Row
+                            justify="space-between"
+                            align="middle"
+                            style={{ paddingTop: 12, paddingBottom: 12 }}
+                          >
+                            <Typography.Text type="secondary">
+                              Menunggu Pembayaran
+                            </Typography.Text>
+                            <Typography.Text
+                              strong
+                              style={{
+                                fontSize: 16,
+                                color: token.colorWarning,
+                              }}
+                            >
+                              {
+                                payLaterStats.transactions.filter(
+                                  (t) => t.status !== "paid",
+                                ).length
+                              }
+                            </Typography.Text>
+                          </Row>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
+                  <Space
+                    direction="vertical"
+                    size={16}
+                    style={{ marginTop: 16, width: "100%" }}
+                  >
+                    <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                      Riwayat Transaksi PayLater
+                    </Typography.Title>
+                    <Card styles={{ body: { padding: 0 } }}>
+                      <List
+                        dataSource={payLaterStats.transactions}
+                        renderItem={(txn) => (
+                          <List.Item
+                            key={txn.id}
+                            data-testid={`transaction-${txn.id}`}
+                          >
+                            <Row
+                              justify="space-between"
+                              align="middle"
+                              style={{ width: "100%" }}
+                              gutter={[16, 16]}
+                            >
+                              <Space size={16}>
+                                <div
+                                  style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 12,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    background:
                                       txn.status === "paid"
-                                        ? "bg-success-light/10 text-success-light"
-                                        : "bg-warning/10 text-warning",
-                                    )}
-                                  >
-                                    {txn.status === "paid" ? (
-                                      <CheckCircle className="h-6 w-6" />
-                                    ) : (
-                                      <Clock className="h-6 w-6" />
-                                    )}
-                                  </div>
-                                  <div>
-                                    <h4 className="font-bold text-foreground">
-                                      {txn.merchant}
-                                    </h4>
-                                    <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">
-                                      {txn.date}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-lg font-bold text-foreground">
-                                    {formatCurrency(txn.amount)}
-                                  </p>
-                                  <p
-                                    className={clsx(
-                                      "text-xs font-bold tracking-widest uppercase flex items-center justify-end gap-1",
+                                        ? token.colorSuccessBg
+                                        : token.colorWarningBg,
+                                    color:
                                       txn.status === "paid"
-                                        ? "text-success-light"
-                                        : "text-warning",
-                                    )}
-                                  >
-                                    {txn.status === "paid"
-                                      ? "Dibayar"
-                                      : "Menunggu Pembayaran"}
-                                  </p>
+                                        ? token.colorSuccess
+                                        : token.colorWarning,
+                                  }}
+                                >
+                                  {txn.status === "paid" ? (
+                                    <CheckCircle
+                                      style={{ width: 24, height: 24 }}
+                                    />
+                                  ) : (
+                                    <Clock style={{ width: 24, height: 24 }} />
+                                  )}
                                 </div>
+                                <div>
+                                  <Typography.Text strong>
+                                    {txn.merchant}
+                                  </Typography.Text>
+                                  <Typography.Text
+                                    strong
+                                    type="secondary"
+                                    style={{
+                                      display: "block",
+                                      fontSize: 12,
+                                      letterSpacing: "0.1em",
+                                    }}
+                                  >
+                                    {txn.date}
+                                  </Typography.Text>
+                                </div>
+                              </Space>
+                              <div style={{ textAlign: "right" }}>
+                                <Typography.Text
+                                  strong
+                                  style={{ display: "block", fontSize: 16 }}
+                                >
+                                  {formatCurrency(txn.amount)}
+                                </Typography.Text>
+                                <Typography.Text
+                                  strong
+                                  style={{
+                                    fontSize: 12,
+                                    letterSpacing: "0.1em",
+                                    color:
+                                      txn.status === "paid"
+                                        ? token.colorSuccess
+                                        : token.colorWarning,
+                                  }}
+                                >
+                                  {txn.status === "paid"
+                                    ? "Dibayar"
+                                    : "Menunggu Pembayaran"}
+                                </Typography.Text>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                            </Row>
+                          </List.Item>
+                        )}
+                      />
+                    </Card>
+                  </Space>
+                </Space>
               ),
             },
           ]}
         />
-      </div>
+      </Space>
     </DashboardLayout>
   );
 }

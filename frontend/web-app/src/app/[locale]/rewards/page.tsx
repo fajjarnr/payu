@@ -1,14 +1,38 @@
 'use client';
 
 import React from 'react';
+import type { CSSProperties } from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { Gift, Coins, DollarSign, Share2, TrendingUp, Copy, ArrowRight, Trophy, CheckCircle, Award, Calendar, Zap, History, Clock } from '@/components/icons';
-import clsx from 'clsx';
-import { Button, Tabs } from 'antd';
+import { Button, Card, Col, List, Row, Space, Tabs, Tag, Typography } from 'antd';
 import { useLoyaltyBalance, useCashbacks, useReferralSummary, useActivePromotions } from '@/hooks';
 import { addCurrency, asMoney, formatExactDecimal, type Money } from '@/lib/currency';
 import { useAuthStore } from '@/stores/authStore';
 import type { LoyaltyBalanceResponse, Cashback, ReferralSummaryResponse, Promotion } from '@/services/PromotionService';
+
+const labelStyle: CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: 'var(--ant-color-text-secondary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+};
+
+const lightLabelStyle: CSSProperties = {
+  ...labelStyle,
+  color: 'rgba(255, 255, 255, 0.6)',
+};
+
+const iconBoxStyle = (size: number, backgroundColor: string): CSSProperties => ({
+  width: size,
+  height: size,
+  borderRadius: 12,
+  backgroundColor,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+});
 
 export default function RewardsPage() {
   const { accountId } = useAuthStore();
@@ -68,331 +92,287 @@ export default function RewardsPage() {
     return formatExactDecimal(amount, 0, 'id-ID');
   };
 
+  const earnMethods: Array<{ Icon: typeof Zap; title: string; description: string }> = [
+    { Icon: Zap, title: 'Transaksi Rutin', description: 'Dapatkan 1 poin untuk setiap Rp 10.000 transaksi' },
+    { Icon: Calendar, title: 'Login Harian', description: 'Dapatkan 10-100 poin untuk login setiap hari' },
+    { Icon: Share2, title: 'Referral Teman', description: 'Dapatkan 1000 poin untuk setiap teman yang berhasil bergabung' },
+    { Icon: Award, title: 'Event Khusus', description: 'Bonus poin untuk event dan promosi tertentu' },
+  ];
+
+  const referralSummaryRows: Array<{ Icon: typeof CheckCircle; iconColor: string; iconBg: string; title: string; description: string }> = [
+    { Icon: CheckCircle, iconColor: 'var(--ant-color-primary)', iconBg: 'var(--ant-color-primary-bg)', title: 'Berhasil Bergabung', description: `${referralStats.completedReferrals} teman telah berhasil bergabung` },
+    { Icon: Clock, iconColor: 'var(--ant-color-warning)', iconBg: 'var(--ant-color-warning-bg)', title: 'Menunggu Konfirmasi', description: `${referralStats.pendingReferrals} teman dalam proses verifikasi` },
+    { Icon: Trophy, iconColor: 'var(--ant-color-success)', iconBg: 'var(--ant-color-success-bg)', title: 'Total Penghasilan', description: `${referralStats.totalEarnings.toLocaleString()} poin dari referral` },
+  ];
+
   return (
     <DashboardLayout>
-        <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground tracking-tight">Rewards & Gamifikasi</h1>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">Kumpulkan poin, dapatkan cashback, dan raih lebih banyak keuntungan.</p>
-                </div>
-              </div>
-            <Tabs defaultActiveKey="points" className="w-full"
-              items={[
-                {
-                  key: 'points',
-                  label: <span className="px-6 flex items-center gap-2"><Coins className="h-4 w-4" /> Poin Loyalty</span>,
-                  children: (
-                <div className="mt-0 space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  <div className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
-                      <div className="relative z-10">
-                        <div className="flex items-start justify-between mb-6">
-                          <div>
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="h-12 w-12 bg-surface/20 rounded-xl flex items-center justify-center border border-surface/10">
-                                <Coins className="h-6 w-6" />
-                              </div>
-                              <div>
-                                <p className="text-xs font-bold text-surface/80 tracking-widest uppercase">Saldo Poin</p>
-                                <h3 className="text-3xl font-bold">{loyaltyStats.currentBalance.toLocaleString()}</h3>
-                              </div>
+      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <Space direction="vertical" size={4}>
+          <Typography.Title level={2} style={{ margin: 0 }}>Rewards &amp; Gamifikasi</Typography.Title>
+          <Typography.Text type="secondary">Kumpulkan poin, dapatkan cashback, dan raih lebih banyak keuntungan.</Typography.Text>
+        </Space>
+        <Tabs
+          defaultActiveKey="points"
+          items={[
+            {
+              key: 'points',
+              label: <Space size={8}><Coins style={{ width: 16, height: 16 }} />Poin Loyalty</Space>,
+              children: (
+                <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                  <Row gutter={[24, 24]}>
+                    <Col xs={24} lg={12}>
+                      <Card style={{ background: 'linear-gradient(135deg, var(--ant-color-primary), var(--ant-color-primary-active))', border: 'none', position: 'relative', overflow: 'hidden' }} styles={{ body: { padding: 24 } }}>
+                        <Space direction="vertical" size={24} style={{ width: '100%', position: 'relative', zIndex: 1 }}>
+                          <Space size={12} align="start">
+                            <div style={iconBoxStyle(48, 'rgba(255, 255, 255, 0.2)')}>
+                              <Coins style={{ width: 24, height: 24, color: 'var(--ant-color-text-light-solid)' }} />
                             </div>
-                            <p className="text-sm text-surface/80">Tukarkan poin Anda untuk berbagai hadiah menarik</p>
-                          </div>
-                        </div>
+                            <Space direction="vertical" size={0}>
+                              <Typography.Text strong style={{ ...lightLabelStyle, display: 'block' }}>Saldo Poin</Typography.Text>
+                              <Typography.Title level={3} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>{loyaltyStats.currentBalance.toLocaleString()}</Typography.Title>
+                            </Space>
+                          </Space>
+                          <Typography.Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>Tukarkan poin Anda untuk berbagai hadiah menarik</Typography.Text>
+                          <Row gutter={24}>
+                            <Col span={12}>
+                              <Typography.Text strong style={{ ...lightLabelStyle, display: 'block', marginBottom: 4 }}>Total Diperoleh</Typography.Text>
+                              <Typography.Title level={4} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>{loyaltyStats.totalEarned.toLocaleString()}</Typography.Title>
+                            </Col>
+                            <Col span={12}>
+                              <Typography.Text strong style={{ ...lightLabelStyle, display: 'block', marginBottom: 4 }}>Total Ditukar</Typography.Text>
+                              <Typography.Title level={4} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>{loyaltyStats.totalRedeemed.toLocaleString()}</Typography.Title>
+                            </Col>
+                          </Row>
+                          {loyaltyStats.pointsExpiring > 0 && (
+                            <Card size="small" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.15)' }} styles={{ body: { padding: 16 } }}>
+                              <Space size={12} align="start">
+                                <Calendar style={{ width: 20, height: 20, color: 'var(--ant-color-warning)' }} />
+                                <Space direction="vertical" size={0}>
+                                  <Typography.Text strong style={{ ...lightLabelStyle, display: 'block' }}>Poin Akan Kadaluarsa</Typography.Text>
+                                  <Typography.Text strong style={{ color: 'var(--ant-color-text-light-solid)' }}>{loyaltyStats.pointsExpiring.toLocaleString()} poin - {loyaltyStats.expiryDate}</Typography.Text>
+                                </Space>
+                              </Space>
+                            </Card>
+                          )}
+                        </Space>
+                        <Trophy style={{ position: 'absolute', bottom: -40, right: -40, width: 192, height: 192, opacity: 0.08, transform: 'rotate(-12deg)', color: 'var(--ant-color-text-light-solid)' }} />
+                      </Card>
+                    </Col>
 
-                        <div className="grid grid-cols-2 gap-6 mb-6">
-                          <div>
-                            <p className="text-xs font-bold text-surface/60 tracking-widest uppercase mb-1">Total Diperoleh</p>
-                            <p className="text-2xl font-bold">{loyaltyStats.totalEarned.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-surface/60 tracking-widest uppercase mb-1">Total Ditukar</p>
-                            <p className="text-2xl font-bold">{loyaltyStats.totalRedeemed.toLocaleString()}</p>
-                          </div>
-                        </div>
+                    <Col xs={24} lg={12}>
+                      <Card style={{ height: '100%' }}>
+                        <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 24 }}>Cara Mendapatkan Poin</Typography.Title>
+                        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                          {earnMethods.map(({ Icon, title, description }) => (
+                            <Space key={title} size={16} align="start">
+                              <div style={iconBoxStyle(40, 'var(--ant-color-primary-bg)')}>
+                                <Icon style={{ width: 20, height: 20, color: 'var(--ant-color-primary)' }} />
+                              </div>
+                              <Space direction="vertical" size={0}>
+                                <Typography.Text strong>{title}</Typography.Text>
+                                <Typography.Text type="secondary" style={{ fontSize: 14 }}>{description}</Typography.Text>
+                              </Space>
+                            </Space>
+                          ))}
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
 
-                        {loyaltyStats.pointsExpiring > 0 && (
-                          <div className="bg-surface/10 rounded-xl p-4 border border-surface/10">
-                            <div className="flex items-center gap-3">
-                              <Calendar className="h-5 w-5 text-warning" />
-                              <div>
-                                <p className="text-xs font-bold text-surface/80 tracking-widest uppercase">Poin Akan Kadaluarsa</p>
-                                <p className="font-bold">{loyaltyStats.pointsExpiring.toLocaleString()} poin - {loyaltyStats.expiryDate}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <Trophy className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-surface/5 -rotate-12" />
-                    </div>
-                  </div>
-
-                  <div className="lg:col-span-2">
-                    <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
-                      <h3 className="text-lg font-bold text-foreground mb-6">Cara Mendapatkan Poin</h3>
-                      <div className="space-y-6">
-                        <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0 border border-primary/10">
-                            <Zap className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-foreground">Transaksi Rutin</h4>
-                            <p className="text-sm text-muted-foreground">Dapatkan 1 poin untuk setiap Rp 10.000 transaksi</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0 border border-primary/10">
-                            <Calendar className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-foreground">Login Harian</h4>
-                            <p className="text-sm text-muted-foreground">Dapatkan 10-100 poin untuk login setiap hari</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0 border border-primary/10">
-                            <Share2 className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-foreground">Referral Teman</h4>
-                            <p className="text-sm text-muted-foreground">Dapatkan 1000 poin untuk setiap teman yang berhasil bergabung</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0 border border-primary/10">
-                            <Award className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-foreground">Event Khusus</h4>
-                            <p className="text-sm text-muted-foreground">Bonus poin untuk event dan promosi tertentu</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6 mt-8">
-                  <h3 className="text-xl font-bold text-foreground">Riwayat Poin</h3>
-                  <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                    <div className="divide-y divide-border">
-                      {recentPoints.map((point) => (
-                        <div key={point.id} className="p-6 hover:bg-muted/30 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className={clsx(
-                                'h-12 w-12 rounded-xl flex items-center justify-center',
-                                point.type === 'EARNED' ? 'bg-success-light/10 text-success-light' : 'bg-warning/10 text-warning'
-                              )}>
-                                {point.type === 'EARNED' ? <TrendingUp className="h-6 w-6" /> : <History className="h-6 w-6" />}
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-foreground">{point.description}</h4>
-                                <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">{point.date}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className={clsx(
-                                'text-lg font-bold',
-                                point.type === 'EARNED' ? 'text-success-light' : 'text-warning'
-                              )}>
-                                {point.type === 'EARNED' ? '+' : ''}{point.points}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                </div>
-                  ),
-                },
-                {
-                  key: 'cashback',
-                  label: <span className="px-6 flex items-center gap-2"><DollarSign className="h-4 w-4" /> Cashback</span>,
-                  children: (
-                <div className="mt-0 space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-1">
-                    <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl h-full">
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="h-14 w-14 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
-                            <DollarSign className="h-7 w-7" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-text-disabled tracking-widest uppercase">Total Cashback</p>
-                            <h3 className="text-4xl font-bold">{formatCurrency(cashbackTotal)}</h3>
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center py-3 border-b border-surface/10">
-                            <span className="text-sm text-text-disabled">Dikreditkan</span>
-                            <span className="font-bold text-success-light">{formatCurrency(cashbackCredited)}</span>
-                          </div>
-                          <div className="flex justify-between items-center py-3 border-b border-surface/10">
-                            <span className="text-sm text-text-disabled">Menunggu</span>
-                            <span className="font-bold text-warning">{formatCurrency(cashbackPending)}</span>
-                          </div>
-                          <div className="flex justify-between items-center pt-3">
-                            <span className="text-sm text-text-disabled">Kadaluarsa</span>
-                            <span className="font-bold text-error">{formatCurrency(asMoney('0'))}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="lg:col-span-2">
-                    <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
-                      <h3 className="text-lg font-bold text-foreground mb-6">Promosi Aktif</h3>
-                      <div className="space-y-4">
-                        {activePromotions.map((promo, i) => (
-                          <div key={i} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border hover:border-primary/20 transition-all group">
-                            <div className="flex items-center gap-4">
-                              <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10 group-hover:scale-110 transition-transform">
-                                <Gift className="h-6 w-6 text-primary" />
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-foreground">{promo.name}</h4>
-                                <p className="text-sm text-muted-foreground">{promo.description}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-primary">{promo.value}</p>
-                              <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">Berakhir: {promo.endDate}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6 mt-8">
-                  <h3 className="text-xl font-bold text-foreground">Riwayat Cashback</h3>
-                  <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                    <div className="divide-y divide-border">
-                      {cashbackHistory.map((cb) => (
-                        <div key={cb.id} className="p-6 hover:bg-muted/30 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className={clsx(
-                                'h-12 w-12 rounded-xl flex items-center justify-center',
-                                cb.status === 'credited' ? 'bg-success-light/10 text-success-light' : 'bg-warning/10 text-warning'
-                              )}>
-                                {cb.status === 'credited' ? <CheckCircle className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-foreground">{cb.merchant}</h4>
-                                <div className="flex items-center gap-2">
-                                  <p className="text-sm text-muted-foreground">{cb.description}</p>
-                                  <span className={clsx(
-                                    'text-xs font-bold tracking-widest uppercase',
-                                    cb.status === 'credited' ? 'text-success-light' : 'text-warning'
-                                  )}>
-                                    - {cb.status === 'credited' ? 'Dikreditkan' : 'Menunggu'}
-                                  </span>
+                  <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                    <Typography.Title level={4} style={{ margin: 0 }}>Riwayat Poin</Typography.Title>
+                    <Card styles={{ body: { padding: 0 } }}>
+                      <List
+                        dataSource={recentPoints}
+                        renderItem={(point) => (
+                          <List.Item style={{ padding: 24 }}>
+                            <Row justify="space-between" align="middle" style={{ width: '100%' }}>
+                              <Space size={16}>
+                                <div style={iconBoxStyle(48, point.type === 'EARNED' ? 'var(--ant-color-success-bg)' : 'var(--ant-color-warning-bg)')}>
+                                  {point.type === 'EARNED'
+                                    ? <TrendingUp style={{ width: 24, height: 24, color: 'var(--ant-color-success)' }} />
+                                    : <History style={{ width: 24, height: 24, color: 'var(--ant-color-warning)' }} />}
                                 </div>
-                                <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">{cb.date}</p>
-                              </div>
+                                <Space direction="vertical" size={0}>
+                                  <Typography.Text strong>{point.description}</Typography.Text>
+                                  <Typography.Text strong style={labelStyle}>{point.date}</Typography.Text>
+                                </Space>
+                              </Space>
+                              <Typography.Text strong type={point.type === 'EARNED' ? 'success' : 'warning'} style={{ fontSize: 18 }}>
+                                {point.type === 'EARNED' ? '+' : ''}{point.points}
+                              </Typography.Text>
+                            </Row>
+                          </List.Item>
+                        )}
+                      />
+                    </Card>
+                  </Space>
+                </Space>
+              ),
+            },
+            {
+              key: 'cashback',
+              label: <Space size={8}><DollarSign style={{ width: 16, height: 16 }} />Cashback</Space>,
+              children: (
+                <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                  <Row gutter={[24, 24]}>
+                    <Col xs={24} lg={8}>
+                      <Card style={{ background: 'linear-gradient(135deg, var(--ant-color-text), var(--ant-color-text-secondary))', border: 'none', height: '100%' }} styles={{ body: { padding: 24 } }}>
+                        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                          <Space size={12} align="start">
+                            <div style={iconBoxStyle(56, 'rgba(255, 255, 255, 0.1)')}>
+                              <DollarSign style={{ width: 28, height: 28, color: 'var(--ant-color-text-light-solid)' }} />
                             </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-foreground">{formatCurrency(cb.amount)}</p>
-                            </div>
-                          </div>
+                            <Space direction="vertical" size={0}>
+                              <Typography.Text strong style={{ ...lightLabelStyle, display: 'block' }}>Total Cashback</Typography.Text>
+                              <Typography.Title level={3} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>{formatCurrency(cashbackTotal)}</Typography.Title>
+                            </Space>
+                          </Space>
+                          <Space direction="vertical" size={0} style={{ width: '100%' }}>
+                            <Row justify="space-between" align="middle" style={{ padding: '12px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                              <Typography.Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.65)' }}>Dikreditkan</Typography.Text>
+                              <Typography.Text strong type="success">{formatCurrency(cashbackCredited)}</Typography.Text>
+                            </Row>
+                            <Row justify="space-between" align="middle" style={{ padding: '12px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                              <Typography.Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.65)' }}>Menunggu</Typography.Text>
+                              <Typography.Text strong type="warning">{formatCurrency(cashbackPending)}</Typography.Text>
+                            </Row>
+                            <Row justify="space-between" align="middle" style={{ paddingTop: 12 }}>
+                              <Typography.Text style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.65)' }}>Kadaluarsa</Typography.Text>
+                              <Typography.Text strong type="danger">{formatCurrency(asMoney('0'))}</Typography.Text>
+                            </Row>
+                          </Space>
+                        </Space>
+                      </Card>
+                    </Col>
+
+                    <Col xs={24} lg={16}>
+                      <Card style={{ height: '100%' }}>
+                        <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 24 }}>Promosi Aktif</Typography.Title>
+                        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                          {activePromotions.map((promo) => (
+                            <Card key={promo.id} size="small">
+                              <Row justify="space-between" align="middle" gutter={[16, 16]}>
+                                <Space size={16}>
+                                  <div style={iconBoxStyle(48, 'var(--ant-color-primary-bg)')}>
+                                    <Gift style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
+                                  </div>
+                                  <Space direction="vertical" size={0}>
+                                    <Typography.Text strong>{promo.name}</Typography.Text>
+                                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>{promo.description}</Typography.Text>
+                                  </Space>
+                                </Space>
+                                <Space direction="vertical" size={0} align="end">
+                                  <Typography.Text strong style={{ fontSize: 18, color: 'var(--ant-color-primary)' }}>{promo.value}</Typography.Text>
+                                  <Typography.Text strong style={{ ...labelStyle, fontSize: 11 }}>Berakhir: {promo.endDate}</Typography.Text>
+                                </Space>
+                              </Row>
+                            </Card>
+                          ))}
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                    <Typography.Title level={4} style={{ margin: 0 }}>Riwayat Cashback</Typography.Title>
+                    <Card styles={{ body: { padding: 0 } }}>
+                      <List
+                        dataSource={cashbackHistory}
+                        renderItem={(cb) => (
+                          <List.Item style={{ padding: 24 }}>
+                            <Row justify="space-between" align="middle" style={{ width: '100%' }}>
+                              <Space size={16}>
+                                <div style={iconBoxStyle(48, cb.status === 'credited' ? 'var(--ant-color-success-bg)' : 'var(--ant-color-warning-bg)')}>
+                                  {cb.status === 'credited'
+                                    ? <CheckCircle style={{ width: 24, height: 24, color: 'var(--ant-color-success)' }} />
+                                    : <Clock style={{ width: 24, height: 24, color: 'var(--ant-color-warning)' }} />}
+                                </div>
+                                <Space direction="vertical" size={4}>
+                                  <Typography.Text strong>{cb.merchant}</Typography.Text>
+                                  <Space size={8}>
+                                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>{cb.description}</Typography.Text>
+                                    <Tag color={cb.status === 'credited' ? 'success' : 'warning'}>
+                                      {cb.status === 'credited' ? 'Dikreditkan' : 'Menunggu'}
+                                    </Tag>
+                                  </Space>
+                                  <Typography.Text strong style={{ ...labelStyle, fontSize: 11 }}>{cb.date}</Typography.Text>
+                                </Space>
+                              </Space>
+                              <Typography.Text strong style={{ fontSize: 18 }}>{formatCurrency(cb.amount)}</Typography.Text>
+                            </Row>
+                          </List.Item>
+                        )}
+                      />
+                    </Card>
+                  </Space>
+                </Space>
+              ),
+            },
+            {
+              key: 'referral',
+              label: <Space size={8}><Share2 style={{ width: 16, height: 16 }} />Referral</Space>,
+              children: (
+                <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                  <Card style={{ background: 'linear-gradient(135deg, var(--ant-color-primary), var(--ant-color-primary-active))', border: 'none', position: 'relative', overflow: 'hidden' }} styles={{ body: { padding: 24 } }}>
+                    <Space direction="vertical" size={24} style={{ width: '100%', position: 'relative', zIndex: 1 }}>
+                      <Row justify="space-between" align="middle">
+                        <Typography.Title level={4} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>Kode Referral Anda</Typography.Title>
+                        <div style={iconBoxStyle(48, 'rgba(255, 255, 255, 0.1)')}>
+                          <Gift style={{ width: 24, height: 24, color: 'var(--ant-color-text-light-solid)' }} />
                         </div>
+                      </Row>
+
+                      <Card size="small" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.1)' }} styles={{ body: { padding: 24 } }}>
+                        <Row justify="space-between" align="middle">
+                          <Typography.Title level={2} style={{ margin: 0, letterSpacing: '0.15em', color: 'var(--ant-color-text-light-solid)' }}>{referralStats.code}</Typography.Title>
+                          <Button shape="circle" type="text" style={{ width: 48, height: 48, color: 'var(--ant-color-text-light-solid)' }} aria-label="Salin kode" icon={<Copy style={{ width: 24, height: 24 }} />} />
+                        </Row>
+                        <Typography.Text style={{ display: 'block', marginTop: 16, fontSize: 14, color: 'rgba(255, 255, 255, 0.8)' }}>
+                          Bagikan kode ini kepada teman dan dapatkan {referralStats.rewardPerReferral} poin untuk setiap teman yang berhasil bergabung
+                        </Typography.Text>
+                      </Card>
+
+                      <Row gutter={24}>
+                        <Col span={12}>
+                          <Typography.Text strong style={{ ...lightLabelStyle, display: 'block', marginBottom: 4 }}>Total Teman</Typography.Text>
+                          <Typography.Title level={4} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>{referralStats.totalReferrals}</Typography.Title>
+                        </Col>
+                        <Col span={12}>
+                          <Typography.Text strong style={{ ...lightLabelStyle, display: 'block', marginBottom: 4 }}>Berhasil Bergabung</Typography.Text>
+                          <Typography.Text strong type="success" style={{ fontSize: 24 }}>{referralStats.completedReferrals}</Typography.Text>
+                        </Col>
+                      </Row>
+                    </Space>
+                    <Share2 style={{ position: 'absolute', bottom: -40, right: -40, width: 192, height: 192, opacity: 0.08, transform: 'rotate(-12deg)', color: 'var(--ant-color-text-light-solid)' }} />
+                  </Card>
+
+                  <Card>
+                    <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 24 }}>Ringkasan Referral</Typography.Title>
+                    <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                      {referralSummaryRows.map(({ Icon, iconColor, iconBg, title, description }) => (
+                        <Space key={title} size={16} align="start">
+                          <div style={iconBoxStyle(40, iconBg)}>
+                            <Icon style={{ width: 20, height: 20, color: iconColor }} />
+                          </div>
+                          <Space direction="vertical" size={0}>
+                            <Typography.Text strong>{title}</Typography.Text>
+                            <Typography.Text type="secondary" style={{ fontSize: 14 }}>{description}</Typography.Text>
+                          </Space>
+                        </Space>
                       ))}
-                    </div>
-                  </div>
-                </div>
-                </div>
-                  ),
-                },
-                {
-                  key: 'referral',
-                  label: <span className="px-6 flex items-center gap-2"><Share2 className="h-4 w-4" /> Referral</span>,
-                  children: (
-                <div className="mt-0 space-y-6">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-xl font-bold">Kode Referral Anda</h3>
-                          <div className="h-12 w-12 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
-                            <Gift className="h-6 w-6" />
-                          </div>
-                        </div>
-
-                        <div className="bg-surface/10 rounded-xl p-6 mb-6 border border-surface/10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-4xl font-bold tracking-widest">{referralStats.code}</span>
-                              <Button shape="circle" type="text" className="h-12 w-12 bg-surface/10 rounded-lg border border-surface/10 hover:bg-surface/30 transition-all text-surface" aria-label="Salin kode">
-                                <Copy className="h-6 w-6" />
-                              </Button>
-                          </div>
-                          <p className="text-sm text-surface/80 mt-4">Bagikan kode ini kepada teman dan dapatkan {referralStats.rewardPerReferral} poin untuk setiap teman yang berhasil bergabung</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                          <div>
-                            <p className="text-xs font-bold text-surface/60 tracking-widest uppercase mb-1">Total Teman</p>
-                            <p className="text-2xl font-bold">{referralStats.totalReferrals}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-surface/60 tracking-widest uppercase mb-1">Berhasil Bergabung</p>
-                            <p className="text-2xl font-bold text-success-light">{referralStats.completedReferrals}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <Share2 className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-surface/5 -rotate-12" />
-                    </div>
-
-                    <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
-                      <h3 className="text-lg font-bold text-foreground mb-6">Ringkasan Referral</h3>
-                      <div className="space-y-6">
-                        <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0 border border-primary/10">
-                            <CheckCircle className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-foreground">Berhasil Bergabung</h4>
-                            <p className="text-sm text-muted-foreground">{referralStats.completedReferrals} teman telah berhasil bergabung</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 bg-warning/10 rounded-lg flex items-center justify-center shrink-0 border border-warning/10">
-                            <Clock className="h-5 w-5 text-warning" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-foreground">Menunggu Konfirmasi</h4>
-                            <p className="text-sm text-muted-foreground">{referralStats.pendingReferrals} teman dalam proses verifikasi</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 bg-success-light/10 rounded-lg flex items-center justify-center shrink-0 border border-success-light/10">
-                            <Trophy className="h-5 w-5 text-success-light" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-foreground">Total Penghasilan</h4>
-                            <p className="text-sm text-muted-foreground">{referralStats.totalEarnings.toLocaleString()} poin dari referral</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button type="primary" size="large" className="mt-8 w-full h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2">
-                        Bagikan Link Referral <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                </div>
-                  ),
-                },
-              ]}
-            />
-        </div>
+                    </Space>
+                    <Button type="primary" size="large" block style={{ marginTop: 32, height: 56 }}>
+                      <Space size={8}>Bagikan Link Referral<ArrowRight style={{ width: 16, height: 16 }} /></Space>
+                    </Button>
+                  </Card>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </Space>
     </DashboardLayout>
   );
 }

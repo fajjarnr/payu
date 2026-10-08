@@ -18,12 +18,36 @@ import {
   X,
   Zap,
 } from '@/components/icons';
+import {
+  Button,
+  Card,
+  Col,
+  Divider,
+  Flex,
+  Grid,
+  Row,
+  Tag,
+  theme,
+  Typography,
+} from 'antd';
 import { Fragment, useState } from 'react';
+
+const { Title, Text } = Typography;
+
+const CONTENT_WIDTH = 1080;
+const NAV_TARGETS = ['features', 'how', 'about'] as const;
 
 export default function LandingPage() {
   const t = useTranslations('landing');
+  const { token } = theme.useToken();
+  const screens = Grid.useBreakpoint();
+  const isSm = Boolean(screens.sm);
+  const isMd = Boolean(screens.md);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const rawHeroTitle = t.raw('heroTitle') as string;
+
+  const onPrimary = { color: token.colorTextLightSolid };
+  const mutedSurface = { background: token.colorFillTertiary };
 
   const handleNavClick = (e: React.MouseEvent, targetId: string) => {
     e.preventDefault();
@@ -31,353 +55,1087 @@ export default function LandingPage() {
     setMobileMenuOpen(false);
   };
 
+  const navLabels: Record<(typeof NAV_TARGETS)[number], string> = {
+    features: t('nav.features'),
+    how: t('how.title'),
+    about: t('nav.about'),
+  };
+
+  const features = [
+    {
+      icon: BarChart3,
+      title: t('slide2.analytics.title'),
+      desc: t('slide2.analytics.desc'),
+    },
+    { icon: QrCode, title: t('features.qris.title'), desc: t('features.qris.desc') },
+    { icon: Wallet, title: t('features.pockets.title'), desc: t('features.pockets.desc') },
+    { icon: ReceiptText, title: t('features.bills.title'), desc: t('features.bills.desc') },
+    {
+      icon: Globe,
+      title: t('slide2.connectivity.title'),
+      desc: t('slide2.connectivity.desc'),
+    },
+    { icon: Shield, title: t('slide2.security.title'), desc: t('slide2.security.desc') },
+  ];
+
+  const steps = [
+    { n: 1, title: t('how.step1.title'), desc: t('how.step1.desc') },
+    { n: 2, title: t('how.step2.title'), desc: t('how.step2.desc') },
+    { n: 3, title: t('how.step3.title'), desc: t('how.step3.desc') },
+  ];
+
+  const securityItems = [
+    { icon: Lock, label: t('secure.item1') },
+    { icon: Fingerprint, label: t('secure.item2') },
+    { icon: BadgeCheck, label: t('secure.item3') },
+  ];
+
+  const quickActions = [
+    { icon: QrCode, label: 'QRIS' },
+    { icon: Zap, label: 'Kirim' },
+    { icon: Plus, label: 'Top Up' },
+    { icon: Wallet, label: 'Pocket' },
+  ];
+
+  const demoTransactions = [
+    { name: 'QRIS Merchant', amount: '-Rp45.000', positive: false },
+    { name: 'Top Up Pocket', amount: '+Rp500.000', positive: true },
+    { name: 'Transfer', amount: '-Rp120.000', positive: false },
+  ];
+
+  const brandMark = (
+    <Flex align="center" gap={6}>
+      <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: '-0.02em' }}>
+        PayU
+      </span>
+      <span
+        aria-hidden="true"
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          background: token.colorPrimary,
+          display: 'inline-block',
+        }}
+      />
+    </Flex>
+  );
+
   return (
-    <div className="min-h-screen bg-background font-inter text-foreground">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80">
-        <div className="mx-auto flex h-16 max-w-[1080px] items-center justify-between px-4 sm:px-6">
-          <Link href={'/'} className="flex items-center gap-1.5 cursor-pointer" aria-label="PayU Home">
-            <span className="font-heading text-xl font-bold tracking-tight">PayU</span>
-            <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+    <Flex
+      vertical
+      style={{
+        minHeight: '100vh',
+        background: token.colorBgLayout,
+        color: token.colorText,
+      }}
+    >
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          background: token.colorBgContainer,
+        }}
+      >
+        <Flex
+          align="center"
+          justify="space-between"
+          gap={16}
+          style={{
+            maxWidth: CONTENT_WIDTH,
+            margin: '0 auto',
+            height: 64,
+            padding: '0 16px',
+          }}
+        >
+          <Link
+            href={'/'}
+            aria-label="PayU Home"
+            style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}
+          >
+            {brandMark}
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground" aria-label="Main">
-            <a href="#features" onClick={(e) => handleNavClick(e, 'features')} className="inline-flex items-center min-h-[44px] transition-colors hover:text-foreground cursor-pointer">
-              {t('nav.features')}
-            </a>
-            <a href="#how" onClick={(e) => handleNavClick(e, 'how')} className="inline-flex items-center min-h-[44px] transition-colors hover:text-foreground cursor-pointer">
-              {t('how.title')}
-            </a>
-            <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className="inline-flex items-center min-h-[44px] transition-colors hover:text-foreground cursor-pointer">
-              {t('nav.about')}
-            </a>
-          </nav>
+          {isMd && (
+            <Flex component="nav" align="center" gap={32} aria-label="Main">
+              {NAV_TARGETS.map((target) => (
+                <Button
+                  key={target}
+                  type="text"
+                  href={`#${target}`}
+                  onClick={(e) => handleNavClick(e, target)}
+                >
+                  {navLabels[target]}
+                </Button>
+              ))}
+            </Flex>
+          )}
 
-          <div className="flex items-center gap-2.5">
-            <Link
-              href={'/login'}
-              className="hidden sm:inline-flex min-h-[44px] items-center rounded-full border border-border bg-card px-5 text-sm font-medium transition-colors hover:bg-accent/10 cursor-pointer"
-            >
-              {t('nav.login')}
-            </Link>
-            <Link
-              href={'/onboarding'}
-              className="hidden sm:inline-flex min-h-[44px] items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
-            >
-              {t('getStarted')}
-            </Link>
-            <button
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-border bg-card cursor-pointer md:hidden shrink-0"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-expanded={mobileMenuOpen}
-              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-            >
-              {mobileMenuOpen ? <X style={{ fontSize: 20 }} /> : <Menu style={{ fontSize: 20 }} />}
-            </button>
-          </div>
-        </div>
+          <Flex align="center" gap={10}>
+            {isSm && (
+              <>
+                <Link
+                  href={'/login'}
+                  style={{ cursor: 'pointer', textDecoration: 'none' }}
+                >
+                  <Button type="default">{t('nav.login')}</Button>
+                </Link>
+                <Link
+                  href={'/onboarding'}
+                  style={{ cursor: 'pointer', textDecoration: 'none' }}
+                >
+                  <Button type="primary">{t('getStarted')}</Button>
+                </Link>
+              </>
+            )}
+            {!isMd && (
+              <Button
+                type="default"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-expanded={mobileMenuOpen}
+                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                icon={
+                  mobileMenuOpen ? (
+                    <X style={{ fontSize: 20 }} />
+                  ) : (
+                    <Menu style={{ fontSize: 20 }} />
+                  )
+                }
+                style={{ width: 44, height: 44 }}
+              />
+            )}
+          </Flex>
+        </Flex>
 
         {mobileMenuOpen && (
-          <div className="border-t border-border bg-background md:hidden">
-            <nav className="mx-auto flex max-w-[1080px] flex-col gap-1 px-4 sm:px-6 py-4" aria-label="Mobile">
-              <a href="#features" onClick={(e) => handleNavClick(e, 'features')} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
-                {t('nav.features')}
-              </a>
-              <a href="#how" onClick={(e) => handleNavClick(e, 'how')} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
-                {t('how.title')}
-              </a>
-              <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
-                {t('nav.about')}
-              </a>
-              <Link href={'/login'} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-muted cursor-pointer">
-                {t('nav.login')}
+          <div
+            style={{
+              borderTop: `1px solid ${token.colorBorderSecondary}`,
+              background: token.colorBgContainer,
+            }}
+          >
+            <Flex
+              component="nav"
+              vertical
+              gap={4}
+              aria-label="Mobile"
+              style={{
+                maxWidth: CONTENT_WIDTH,
+                margin: '0 auto',
+                padding: '16px',
+              }}
+            >
+              {NAV_TARGETS.map((target) => (
+                <Button
+                  key={target}
+                  type="text"
+                  block
+                  href={`#${target}`}
+                  onClick={(e) => handleNavClick(e, target)}
+                  style={{ justifyContent: 'flex-start', fontSize: 16, fontWeight: 500 }}
+                >
+                  {navLabels[target]}
+                </Button>
+              ))}
+              <Link
+                href={'/login'}
+                style={{ cursor: 'pointer', textDecoration: 'none' }}
+              >
+                <Button
+                  type="text"
+                  block
+                  style={{ justifyContent: 'flex-start', fontSize: 16, fontWeight: 500 }}
+                >
+                  {t('nav.login')}
+                </Button>
               </Link>
-              <Link href={'/onboarding'} className="mt-1 inline-flex min-h-[44px] items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground cursor-pointer">
-                {t('getStarted')}
+              <Link
+                href={'/onboarding'}
+                style={{ cursor: 'pointer', textDecoration: 'none', marginTop: 4 }}
+              >
+                <Button type="primary" block>
+                  {t('getStarted')}
+                </Button>
               </Link>
-            </nav>
+            </Flex>
           </div>
         )}
       </header>
 
-      <main>
+      <main style={{ flex: 1 }}>
         {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-40 right-[-12%] size-[520px] rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute bottom-[-30%] left-[-10%] size-[400px] rounded-full bg-primary/5 blur-3xl" aria-hidden="true" />
+        <section style={{ position: 'relative', overflow: 'hidden' }}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: -160,
+              right: '-12%',
+              width: 520,
+              height: 520,
+              borderRadius: '50%',
+              background: token.colorPrimary,
+              opacity: 0.1,
+              filter: 'blur(48px)',
+              pointerEvents: 'none',
+            }}
+          />
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              bottom: '-30%',
+              left: '-10%',
+              width: 400,
+              height: 400,
+              borderRadius: '50%',
+              background: token.colorPrimary,
+              opacity: 0.05,
+              filter: 'blur(48px)',
+              pointerEvents: 'none',
+            }}
+          />
 
-          <div className="relative mx-auto grid max-w-[1080px] grid-cols-1 items-center gap-10 sm:gap-14 px-4 sm:px-6 pb-16 sm:pb-20 pt-10 sm:pt-16 lg:pt-24 lg:grid-cols-2">
-            <div className="min-w-0">
-              <span className="inline-block animate-fade-in rounded-full bg-primary/10 px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-semibold text-primary motion-reduce:animate-none">
-                {t('badge')}
-              </span>
-              <h1 className="animate-fade-in mt-4 sm:mt-6 font-heading text-[28px] leading-[1.1] sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight motion-reduce:animate-none" style={{ animationDelay: '80ms' }}>
-                {rawHeroTitle.split(/<br\s*\/?>/i).map((line, index) => (
-                  <Fragment key={`${index}-${line}`}>
-                    {index > 0 && <br />}
-                    {line}
-                  </Fragment>
-                ))}
-              </h1>
-              <p className="animate-fade-in mt-6 max-w-md text-lg leading-relaxed text-muted-foreground motion-reduce:animate-none" style={{ animationDelay: '160ms' }}>
-                {t('slide4.subtitle')}
-              </p>
-              <div className="animate-fade-in mt-8 flex flex-wrap items-center gap-3 motion-reduce:animate-none" style={{ animationDelay: '240ms' }}>
-                <Link
-                  href={'/onboarding'}
-                  className="inline-flex min-h-[48px] items-center rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 cursor-pointer"
+          <Row
+            gutter={[{ xs: 0, lg: 40 }, 56]}
+            align="middle"
+            style={{
+              position: 'relative',
+              maxWidth: CONTENT_WIDTH,
+              margin: '0 auto',
+              padding: '40px 16px 64px',
+            }}
+          >
+            <Col xs={24} lg={12}>
+              <div>
+                <Tag
+                  className="animate-fade-in"
+                  style={{
+                    margin: 0,
+                    border: 'none',
+                    borderRadius: 9999,
+                    padding: '6px 14px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: token.colorPrimaryBg,
+                    color: token.colorPrimaryText,
+                  }}
                 >
-                  {t('getStarted')}
-                </Link>
-                <Link
-                  href={'/login'}
-                  className="inline-flex min-h-[48px] items-center rounded-full border border-border bg-card px-7 text-sm font-semibold transition-colors hover:bg-accent/10 cursor-pointer"
+                  {t('badge')}
+                </Tag>
+                <Title
+                  level={1}
+                  className="animate-fade-in"
+                  style={{
+                    marginTop: 24,
+                    marginBottom: 0,
+                    fontSize: 'clamp(28px, 4vw, 60px)',
+                    lineHeight: 1.1,
+                    fontWeight: 800,
+                    letterSpacing: '-0.025em',
+                    animationDelay: '80ms',
+                  }}
                 >
-                  {t('nav.login')}
-                </Link>
+                  {rawHeroTitle.split(/<br\s*\/?>/i).map((line, index) => (
+                    <Fragment key={`${index}-${line}`}>
+                      {index > 0 && <br />}
+                      {line}
+                    </Fragment>
+                  ))}
+                </Title>
+                <Text
+                  type="secondary"
+                  className="animate-fade-in"
+                  style={{
+                    display: 'block',
+                    marginTop: 24,
+                    maxWidth: 448,
+                    fontSize: 18,
+                    lineHeight: 1.6,
+                    animationDelay: '160ms',
+                  }}
+                >
+                  {t('slide4.subtitle')}
+                </Text>
+                <Flex
+                  wrap
+                  align="center"
+                  gap={12}
+                  className="animate-fade-in"
+                  style={{ marginTop: 32, animationDelay: '240ms' }}
+                >
+                  <Link
+                    href={'/onboarding'}
+                    style={{ cursor: 'pointer', textDecoration: 'none' }}
+                  >
+                    <Button type="primary" size="large">
+                      {t('getStarted')}
+                    </Button>
+                  </Link>
+                  <Link
+                    href={'/login'}
+                    style={{ cursor: 'pointer', textDecoration: 'none' }}
+                  >
+                    <Button type="default" size="large">
+                      {t('nav.login')}
+                    </Button>
+                  </Link>
+                </Flex>
+                <Text
+                  type="secondary"
+                  className="animate-fade-in"
+                  style={{ display: 'block', marginTop: 16, fontSize: 12, animationDelay: '300ms' }}
+                >
+                  {t('hero.freeAdmin')}
+                </Text>
+
+                <Flex
+                  component="dl"
+                  gap={40}
+                  style={{
+                    margin: 0,
+                    marginTop: 40,
+                    paddingTop: 24,
+                    borderTop: `1px solid ${token.colorBorderSecondary}`,
+                  }}
+                >
+                  <div>
+                    <dt className="sr-only">{t('slide3.statsAnnual')}</dt>
+                    <dd
+                      style={{
+                        margin: 0,
+                        fontSize: 24,
+                        fontWeight: 700,
+                        fontVariantNumeric: 'tabular-nums',
+                        letterSpacing: '-0.025em',
+                      }}
+                    >
+                      50T+
+                    </dd>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('slide3.statsAnnual')}
+                    </Text>
+                  </div>
+                  <div>
+                    <dt className="sr-only">{t('slide3.statsTrusted')}</dt>
+                    <dd
+                      style={{
+                        margin: 0,
+                        fontSize: 24,
+                        fontWeight: 700,
+                        fontVariantNumeric: 'tabular-nums',
+                        letterSpacing: '-0.025em',
+                      }}
+                    >
+                      2.4M+
+                    </dd>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('slide3.statsTrusted')}
+                    </Text>
+                  </div>
+                  <div style={{ display: isSm ? 'block' : 'none' }}>
+                    <dt className="sr-only">{t('secure.item3')}</dt>
+                    <dd
+                      style={{
+                        margin: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 24,
+                        fontWeight: 700,
+                        letterSpacing: '-0.025em',
+                      }}
+                    >
+                      ISO
+                      <BadgeCheck
+                        aria-hidden="true"
+                        style={{ fontSize: 20, color: token.colorPrimary }}
+                      />
+                    </dd>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('secure.item3')}
+                    </Text>
+                  </div>
+                </Flex>
               </div>
-              <p className="animate-fade-in mt-4 text-xs text-muted-foreground motion-reduce:animate-none" style={{ animationDelay: '300ms' }}>
-                {t('hero.freeAdmin')}
-              </p>
-
-              <dl className="mt-10 flex gap-10 border-t border-border pt-6">
-                <div>
-                  <dt className="sr-only">{t('slide3.statsAnnual')}</dt>
-                  <dd className="font-heading text-2xl font-bold tabular-nums tracking-tight">50T+</dd>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{t('slide3.statsAnnual')}</p>
-                </div>
-                <div>
-                  <dt className="sr-only">{t('slide3.statsTrusted')}</dt>
-                  <dd className="font-heading text-2xl font-bold tabular-nums tracking-tight">2.4M+</dd>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{t('slide3.statsTrusted')}</p>
-                </div>
-                <div className="hidden sm:block">
-                  <dt className="sr-only">{t('secure.item3')}</dt>
-                  <dd className="flex items-center gap-1.5 font-heading text-2xl font-bold tracking-tight">
-                    ISO
-                    <BadgeCheck style={{ fontSize: 20 }} className="text-primary" aria-hidden="true" />
-                  </dd>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{t('secure.item3')}</p>
-                </div>
-              </dl>
-            </div>
+            </Col>
 
             {/* Phone Mockup — decorative */}
-            <div className="relative mx-auto hidden w-[290px] [perspective:1400px] sm:block lg:w-[310px]" aria-hidden="true">
-              <div className="animate-[float-3d_8s_ease-in-out_infinite] motion-reduce:animate-none">
-              <div className="absolute -inset-10 rounded-full bg-primary/10 blur-3xl" />
-              <div className="relative rounded-[3rem] border border-border bg-card p-2.5 shadow-2xl shadow-primary/10">
-                <div className="space-y-5 rounded-[2.5rem] bg-background px-5 pb-7 pt-4">
-                  <div className="mx-auto h-1.5 w-16 rounded-full bg-border" />
-                  <div className="flex items-center justify-between pt-1">
-                    <div>
-                      <p className="text-xs text-muted-foreground">PayU</p>
-                      <p className="text-sm font-semibold tracking-tight">Demo Preview</p>
-                    </div>
-                    <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">P</div>
-                  </div>
-
-                  <div className="rounded-2xl bg-primary p-4 text-primary-foreground shadow-lg shadow-primary/30">
-                    <p className="text-xs opacity-70">Total Saldo</p>
-                    <p className="mt-0.5 font-heading text-xl font-bold tracking-tight tabular-nums">Rp24.562.800</p>
-                    <p className="mt-3 text-xs font-medium opacity-70">•••• 4682</p>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { icon: QrCode, label: 'QRIS' },
-                      { icon: Zap, label: 'Kirim' },
-                      { icon: Plus, label: 'Top Up' },
-                      { icon: Wallet, label: 'Pocket' },
-                    ].map(({ icon: Icon, label }) => (
-                      <div key={label} className="flex flex-col items-center gap-1.5">
-                        <div className="flex size-11 w-full items-center justify-center rounded-xl bg-primary/10 text-primary">
-                          <Icon style={{ fontSize: 18 }} />
+            <Col
+              xs={24}
+              lg={12}
+              aria-hidden="true"
+              style={{ display: isSm ? 'block' : 'none' }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  margin: '0 auto',
+                  width: 310,
+                  maxWidth: '100%',
+                  perspective: 1400,
+                }}
+              >
+                <div className="animate-[float-3d_8s_ease-in-out_infinite] motion-reduce:animate-none">
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: -40,
+                      borderRadius: '50%',
+                      background: token.colorPrimary,
+                      opacity: 0.1,
+                      filter: 'blur(48px)',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'relative',
+                      borderRadius: 48,
+                      border: `1px solid ${token.colorBorderSecondary}`,
+                      background: token.colorBgContainer,
+                      padding: 10,
+                      boxShadow: token.boxShadowSecondary,
+                    }}
+                  >
+                    <Flex
+                      vertical
+                      gap={20}
+                      style={{
+                        borderRadius: 40,
+                        background: token.colorBgLayout,
+                        padding: '16px 20px 28px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          margin: '0 auto',
+                          width: 64,
+                          height: 6,
+                          borderRadius: 9999,
+                          background: token.colorBorder,
+                        }}
+                      />
+                      <Flex
+                        align="center"
+                        justify="space-between"
+                        style={{ paddingTop: 4 }}
+                      >
+                        <div>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            PayU
+                          </Text>
+                          <Text strong style={{ display: 'block', fontSize: 14 }}>
+                            Demo Preview
+                          </Text>
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+                        <Flex
+                          align="center"
+                          justify="center"
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: '50%',
+                            background: token.colorPrimaryBg,
+                            color: token.colorPrimaryText,
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}
+                        >
+                          P
+                        </Flex>
+                      </Flex>
+
+                      <div
+                        style={{
+                          borderRadius: 16,
+                          background: token.colorPrimary,
+                          padding: 16,
+                          ...onPrimary,
+                          boxShadow: token.boxShadowSecondary,
+                        }}
+                      >
+                        <p style={{ margin: 0, fontSize: 12, opacity: 0.7 }}>
+                          Total Saldo
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            marginTop: 2,
+                            fontSize: 20,
+                            fontWeight: 700,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          Rp24.562.800
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            marginTop: 12,
+                            fontSize: 12,
+                            fontWeight: 500,
+                            opacity: 0.7,
+                          }}
+                        >
+                          •••• 4682
+                        </p>
                       </div>
-                    ))}
+
+                      <Row gutter={8}>
+                        {quickActions.map(({ icon: Icon, label }) => (
+                          <Col span={6} key={label}>
+                            <Flex vertical align="center" gap={6}>
+                              <Flex
+                                align="center"
+                                justify="center"
+                                style={{
+                                  width: '100%',
+                                  height: 44,
+                                  borderRadius: 12,
+                                  background: token.colorPrimaryBg,
+                                  color: token.colorPrimaryText,
+                                }}
+                              >
+                                <Icon style={{ fontSize: 18 }} />
+                              </Flex>
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {label}
+                              </Text>
+                            </Flex>
+                          </Col>
+                        ))}
+                      </Row>
+
+                      <Flex vertical gap={12}>
+                        {demoTransactions.map((tx) => (
+                          <Flex key={tx.name} align="center" justify="space-between">
+                            <Flex align="center" gap={10}>
+                              <Flex
+                                align="center"
+                                justify="center"
+                                style={{
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: '50%',
+                                  background: tx.positive
+                                    ? token.colorPrimaryBg
+                                    : token.colorFillTertiary,
+                                  color: tx.positive
+                                    ? token.colorPrimaryText
+                                    : token.colorTextSecondary,
+                                }}
+                              >
+                                {tx.positive ? (
+                                  <Plus style={{ fontSize: 14 }} />
+                                ) : (
+                                  <QrCode style={{ fontSize: 14 }} />
+                                )}
+                              </Flex>
+                              <Text style={{ fontSize: 12, fontWeight: 500 }}>
+                                {tx.name}
+                              </Text>
+                            </Flex>
+                            <Text
+                              strong
+                              style={{
+                                fontSize: 12,
+                                fontVariantNumeric: 'tabular-nums',
+                                color: tx.positive ? token.colorPrimaryText : undefined,
+                              }}
+                            >
+                              {tx.amount}
+                            </Text>
+                          </Flex>
+                        ))}
+                      </Flex>
+                    </Flex>
                   </div>
 
-                  <div className="space-y-3">
-                    {[
-                      { name: 'QRIS Merchant', amount: '-Rp45.000', positive: false },
-                      { name: 'Top Up Pocket', amount: '+Rp500.000', positive: true },
-                      { name: 'Transfer', amount: '-Rp120.000', positive: false },
-                    ].map((tx) => (
-                      <div key={tx.name} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`flex size-8 items-center justify-center rounded-full ${tx.positive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                            {tx.positive ? <Plus style={{ fontSize: 14 }} /> : <QrCode style={{ fontSize: 14 }} />}
-                          </div>
-                          <span className="text-xs font-medium">{tx.name}</span>
-                        </div>
-                        <span className={`text-xs font-semibold tabular-nums ${tx.positive ? 'text-primary' : ''}`}>{tx.amount}</span>
+                  <Card
+                    style={{
+                      position: 'absolute',
+                      right: -48,
+                      top: 64,
+                      boxShadow: token.boxShadowSecondary,
+                    }}
+                    styles={{ body: { padding: '12px 16px' } }}
+                  >
+                    <Flex align="center" gap={10}>
+                      <CheckCircle2
+                        style={{ fontSize: 18, color: token.colorPrimary }}
+                      />
+                      <div>
+                        <Text strong style={{ display: 'block', fontSize: 11 }}>
+                          Payment Successful
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          QRIS • Rp45.000
+                        </Text>
                       </div>
-                    ))}
-                  </div>
+                    </Flex>
+                  </Card>
                 </div>
               </div>
-
-              <div className="absolute -right-12 top-16 flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 shadow-xl">
-                <CheckCircle2 style={{ fontSize: 18 }} className="text-primary" />
-                <div>
-                  <p className="text-[11px] font-semibold">Payment Successful</p>
-                  <p className="text-xs text-muted-foreground">QRIS • Rp45.000</p>
-                </div>
-              </div>
-              </div>
-            </div>
-          </div>
+            </Col>
+          </Row>
         </section>
 
         {/* Features */}
-        <section id="features" className="scroll-mt-24 border-t border-border py-20 sm:py-24">
-          <div className="mx-auto max-w-[1080px] px-6">
-            <div className="max-w-xl">
-              <span className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
+        <section
+          id="features"
+          style={{
+            scrollMarginTop: 96,
+            borderTop: `1px solid ${token.colorBorderSecondary}`,
+            padding: '80px 0',
+          }}
+        >
+          <div style={{ maxWidth: CONTENT_WIDTH, margin: '0 auto', padding: '0 24px' }}>
+            <div style={{ maxWidth: 576 }}>
+              <Tag
+                style={{
+                  margin: 0,
+                  border: 'none',
+                  borderRadius: 9999,
+                  padding: '6px 16px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: token.colorPrimaryBg,
+                  color: token.colorPrimaryText,
+                }}
+              >
                 {t('slide2.badge')}
-              </span>
-              <h2 className="mt-5 font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
-                {t('slide2.title')} <span className="text-primary">{t('slide2.titleHighlight')}</span>
-              </h2>
-              <p className="mt-4 text-muted-foreground">{t('slide2.subtitle')}</p>
+              </Tag>
+              <Title
+                level={2}
+                style={{
+                  marginTop: 20,
+                  marginBottom: 0,
+                  fontSize: 'clamp(28px, 3vw, 36px)',
+                  fontWeight: 800,
+                  letterSpacing: '-0.025em',
+                }}
+              >
+                {t('slide2.title')}{' '}
+                <span style={{ color: token.colorPrimaryText }}>
+                  {t('slide2.titleHighlight')}
+                </span>
+              </Title>
+              <Text
+                type="secondary"
+                style={{ display: 'block', marginTop: 16 }}
+              >
+                {t('slide2.subtitle')}
+              </Text>
             </div>
 
-            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                { icon: BarChart3, title: t('slide2.analytics.title'), desc: t('slide2.analytics.desc') },
-                { icon: QrCode, title: t('features.qris.title'), desc: t('features.qris.desc') },
-                { icon: Wallet, title: t('features.pockets.title'), desc: t('features.pockets.desc') },
-                { icon: ReceiptText, title: t('features.bills.title'), desc: t('features.bills.desc') },
-                { icon: Globe, title: t('slide2.connectivity.title'), desc: t('slide2.connectivity.desc') },
-                { icon: Shield, title: t('slide2.security.title'), desc: t('slide2.security.desc') },
-              ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="group rounded-2xl border border-border bg-card p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
-                  <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <Icon style={{ fontSize: 20 }} />
-                  </div>
-                  <h3 className="mt-5 font-heading text-lg font-bold tracking-tight">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
-                </div>
+            <Row gutter={[20, 20]} style={{ marginTop: 48 }}>
+              {features.map(({ icon: Icon, title, desc }) => (
+                <Col key={title} xs={24} sm={12} lg={8}>
+                  <Card hoverable style={{ height: '100%' }}>
+                    <Flex
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 12,
+                        background: token.colorPrimaryBg,
+                        color: token.colorPrimaryText,
+                      }}
+                    >
+                      <Icon style={{ fontSize: 20 }} />
+                    </Flex>
+                    <Title
+                      level={4}
+                      style={{ marginTop: 20, marginBottom: 0, fontWeight: 700 }}
+                    >
+                      {title}
+                    </Title>
+                    <Text
+                      type="secondary"
+                      style={{
+                        display: 'block',
+                        marginTop: 8,
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {desc}
+                    </Text>
+                  </Card>
+                </Col>
               ))}
-            </div>
+            </Row>
           </div>
         </section>
 
         {/* How it works */}
-        <section id="how" className="scroll-mt-24 py-20 sm:py-24">
-          <div className="mx-auto max-w-[1080px] px-6">
-            <div className="rounded-2xl bg-muted/50 px-8 py-14 sm:px-14">
-              <h2 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{t('how.title')}</h2>
-              <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-6">
-                {[
-                  { n: 1, title: t('how.step1.title'), desc: t('how.step1.desc') },
-                  { n: 2, title: t('how.step2.title'), desc: t('how.step2.desc') },
-                  { n: 3, title: t('how.step3.title'), desc: t('how.step3.desc') },
-                ].map(({ n, title, desc }) => (
-                  <li key={n} className="relative border-t-2 border-primary/20 pt-6 sm:border-t-0 sm:border-l-2 sm:border-l-primary/20 sm:pl-8 sm:pt-0">
-                    <span className="font-heading text-5xl font-extrabold tracking-tighter text-primary/25" aria-hidden="true">
+        <section id="how" style={{ scrollMarginTop: 96, padding: '80px 0' }}>
+          <div style={{ maxWidth: CONTENT_WIDTH, margin: '0 auto', padding: '0 24px' }}>
+            <Card
+              variant="borderless"
+              style={{ ...mutedSurface, padding: 0 }}
+              styles={{ body: { padding: '56px 56px' } }}
+            >
+              <Title
+                level={2}
+                style={{
+                  margin: 0,
+                  fontSize: 'clamp(28px, 3vw, 36px)',
+                  fontWeight: 800,
+                  letterSpacing: '-0.025em',
+                }}
+              >
+                {t('how.title')}
+              </Title>
+              <Flex
+                component="ol"
+                gap={24}
+                wrap
+                style={{
+                  listStyle: 'none',
+                  margin: 0,
+                  marginTop: 48,
+                  padding: 0,
+                }}
+              >
+                {steps.map(({ n, title, desc }) => (
+                  <li
+                    key={n}
+                    style={{
+                      flex: '1 1 240px',
+                      position: 'relative',
+                      paddingLeft: 24,
+                      borderLeft: `2px solid ${token.colorPrimaryBorder}`,
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        display: 'block',
+                        fontSize: 48,
+                        fontWeight: 800,
+                        letterSpacing: '-0.05em',
+                        color: token.colorPrimary,
+                        opacity: 0.25,
+                      }}
+                    >
                       0{n}
                     </span>
-                    <h3 className="mt-3 font-heading text-lg font-bold tracking-tight">{title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                    <Title
+                      level={4}
+                      style={{ marginTop: 12, marginBottom: 0, fontWeight: 700 }}
+                    >
+                      {title}
+                    </Title>
+                    <Text
+                      type="secondary"
+                      style={{
+                        display: 'block',
+                        marginTop: 8,
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {desc}
+                    </Text>
                   </li>
                 ))}
-              </ol>
-            </div>
+              </Flex>
+            </Card>
           </div>
         </section>
 
         {/* Security / About */}
-        <section id="about" className="scroll-mt-24 pb-20 sm:pb-24">
-          <div className="mx-auto max-w-[1080px] px-6">
-            <div className="relative overflow-hidden rounded-2xl bg-primary px-8 py-14 text-primary-foreground sm:px-14 sm:py-16">
-              <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
-              <div className="pointer-events-none absolute -bottom-28 -left-20 size-80 rounded-full bg-black/10 blur-2xl" aria-hidden="true" />
+        <section id="about" style={{ scrollMarginTop: 96, paddingBottom: 80 }}>
+          <div style={{ maxWidth: CONTENT_WIDTH, margin: '0 auto', padding: '0 24px' }}>
+            <Card
+              variant="borderless"
+              style={{
+                position: 'relative',
+                overflow: 'hidden',
+                background: token.colorPrimary,
+                ...onPrimary,
+              }}
+              styles={{ body: { padding: '56px' } }}
+            >
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  right: -96,
+                  top: -96,
+                  width: 288,
+                  height: 288,
+                  borderRadius: '50%',
+                  background: token.colorTextLightSolid,
+                  opacity: 0.1,
+                  filter: 'blur(40px)',
+                  pointerEvents: 'none',
+                }}
+              />
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  bottom: -112,
+                  left: -80,
+                  width: 320,
+                  height: 320,
+                  borderRadius: '50%',
+                  background: token.colorTextLightSolid,
+                  opacity: 0.1,
+                  filter: 'blur(40px)',
+                  pointerEvents: 'none',
+                }}
+              />
 
-              <div className="relative grid gap-12 lg:grid-cols-2 lg:items-center">
-                <div>
-                  <span className="inline-block rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold">
-                    {t('slide3.badge')}
-                  </span>
-                  <h2 className="mt-5 font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">
-                    {t('slide3.title')} <span className="opacity-70">{t('slide3.titleHighlight')}</span>
-                  </h2>
-                  <p className="mt-4 max-w-md leading-relaxed opacity-80">{t('slide2.security.desc')}</p>
-                </div>
+              <Row gutter={[48, 48]} align="middle" style={{ position: 'relative' }}>
+                <Col xs={24} lg={12}>
+                  <div>
+                    <Tag
+                      style={{
+                        margin: 0,
+                        border: 'none',
+                        borderRadius: 9999,
+                        padding: '6px 16px',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: token.colorTextLightSolid,
+                        ...onPrimary,
+                      }}
+                    >
+                      {t('slide3.badge')}
+                    </Tag>
+                    <Title
+                      level={2}
+                      style={{
+                        marginTop: 20,
+                        marginBottom: 0,
+                        fontSize: 'clamp(28px, 3vw, 36px)',
+                        fontWeight: 800,
+                        letterSpacing: '-0.025em',
+                        ...onPrimary,
+                      }}
+                    >
+                      {t('slide3.title')}{' '}
+                      <span style={{ opacity: 0.7 }}>{t('slide3.titleHighlight')}</span>
+                    </Title>
+                    <Text
+                      style={{
+                        display: 'block',
+                        marginTop: 16,
+                        maxWidth: 448,
+                        lineHeight: 1.6,
+                        opacity: 0.8,
+                        ...onPrimary,
+                      }}
+                    >
+                      {t('slide2.security.desc')}
+                    </Text>
+                  </div>
+                </Col>
 
-                <ul className="space-y-4">
-                  {[
-                    { icon: Lock, label: t('secure.item1') },
-                    { icon: Fingerprint, label: t('secure.item2') },
-                    { icon: BadgeCheck, label: t('secure.item3') },
-                  ].map(({ icon: Icon, label }) => (
-                    <li key={label} className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15">
-                        <Icon style={{ fontSize: 18 }} aria-hidden="true" />
-                      </span>
-                      <span className="text-sm font-semibold">{label}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                <Col xs={24} lg={12}>
+                  <Flex component="ul" vertical gap={16} style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                    {securityItems.map(({ icon: Icon, label }) => (
+                      <li key={label}>
+                        <Flex
+                          align="center"
+                          gap={16}
+                          style={{
+                            borderRadius: 16,
+                            background: token.colorTextLightSolid,
+                            padding: '16px 20px',
+                          }}
+                        >
+                          <Flex
+                            align="center"
+                            justify="center"
+                            style={{
+                              width: 40,
+                              height: 40,
+                              flex: 'none',
+                              borderRadius: 12,
+                              background: token.colorTextLightSolid,
+                              ...onPrimary,
+                            }}
+                          >
+                            <Icon aria-hidden="true" style={{ fontSize: 18 }} />
+                          </Flex>
+                          <Text strong style={{ fontSize: 14, ...onPrimary }}>
+                            {label}
+                          </Text>
+                        </Flex>
+                      </li>
+                    ))}
+                  </Flex>
+                </Col>
+              </Row>
 
-              <div className="relative mt-14 flex gap-14 border-t border-white/15 pt-8">
+              <Flex
+                gap={56}
+                style={{
+                  position: 'relative',
+                  marginTop: 56,
+                  paddingTop: 32,
+                  borderTop: `1px solid ${token.colorBorderSecondary}`,
+                }}
+              >
                 <div>
-                  <p className="font-heading text-3xl font-extrabold tabular-nums tracking-tighter sm:text-4xl">50T+</p>
-                  <p className="mt-1 text-sm opacity-70">{t('slide3.statsAnnual')}</p>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 32,
+                      fontWeight: 800,
+                      fontVariantNumeric: 'tabular-nums',
+                      letterSpacing: '-0.05em',
+                    }}
+                  >
+                    50T+
+                  </p>
+                  <Text style={{ display: 'block', marginTop: 4, fontSize: 14, opacity: 0.7, ...onPrimary }}>
+                    {t('slide3.statsAnnual')}
+                  </Text>
                 </div>
                 <div>
-                  <p className="font-heading text-3xl font-extrabold tabular-nums tracking-tighter sm:text-4xl">2.4M+</p>
-                  <p className="mt-1 text-sm opacity-70">{t('slide3.statsTrusted')}</p>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 32,
+                      fontWeight: 800,
+                      fontVariantNumeric: 'tabular-nums',
+                      letterSpacing: '-0.05em',
+                    }}
+                  >
+                    2.4M+
+                  </p>
+                  <Text style={{ display: 'block', marginTop: 4, fontSize: 14, opacity: 0.7, ...onPrimary }}>
+                    {t('slide3.statsTrusted')}
+                  </Text>
                 </div>
-              </div>
-            </div>
+              </Flex>
+            </Card>
           </div>
         </section>
 
         {/* CTA */}
-        <section id="support" className="scroll-mt-24 border-t border-border py-24 sm:py-32">
-          <div className="mx-auto flex max-w-[1080px] flex-col items-center px-6 text-center">
-            <h2 className="max-w-2xl font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">
-              {t('slide4.title')} <span className="text-primary">{t('slide4.titleHighlight')}</span>
-            </h2>
-            <p className="mt-5 max-w-md text-muted-foreground">{t('slide4.subtitle')}</p>
+        <section
+          id="support"
+          style={{
+            scrollMarginTop: 96,
+            borderTop: `1px solid ${token.colorBorderSecondary}`,
+            padding: '96px 0',
+          }}
+        >
+          <Flex
+            vertical
+            align="center"
+            style={{
+              maxWidth: CONTENT_WIDTH,
+              margin: '0 auto',
+              padding: '0 24px',
+              textAlign: 'center',
+            }}
+          >
+            <Title
+              level={2}
+              style={{
+                margin: 0,
+                maxWidth: 672,
+                fontSize: 'clamp(32px, 4vw, 48px)',
+                fontWeight: 800,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {t('slide4.title')}{' '}
+              <span style={{ color: token.colorPrimaryText }}>
+                {t('slide4.titleHighlight')}
+              </span>
+            </Title>
+            <Text
+              type="secondary"
+              style={{ display: 'block', marginTop: 20, maxWidth: 448 }}
+            >
+              {t('slide4.subtitle')}
+            </Text>
             <Link
               href={'/onboarding'}
-              className="mt-9 inline-flex min-h-[48px] items-center rounded-full bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-colors hover:bg-primary/90 cursor-pointer"
+              style={{ cursor: 'pointer', textDecoration: 'none', marginTop: 36 }}
             >
-              {t('slide4.button')}
+              <Button type="primary" size="large">
+                {t('slide4.button')}
+              </Button>
             </Link>
-          </div>
+          </Flex>
         </section>
       </main>
 
-      <footer className="border-t border-border bg-muted/40">
-        <div className="mx-auto max-w-[1080px] px-6 py-12">
-          <div className="flex flex-col justify-between gap-8 sm:flex-row">
-            <div className="max-w-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="font-heading text-lg font-bold tracking-tight">PayU</span>
-                <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
-              </div>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t('footer.tagline')}</p>
+      <footer
+        style={{
+          borderTop: `1px solid ${token.colorBorderSecondary}`,
+          ...mutedSurface,
+        }}
+      >
+        <div style={{ maxWidth: CONTENT_WIDTH, margin: '0 auto', padding: '48px 24px' }}>
+          <Flex justify="space-between" gap={32} wrap>
+            <div style={{ maxWidth: 320 }}>
+              {brandMark}
+              <Text
+                type="secondary"
+                style={{
+                  display: 'block',
+                  marginTop: 12,
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                }}
+              >
+                {t('footer.tagline')}
+              </Text>
             </div>
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span className="mb-1 text-xs font-semibold uppercase tracking-wider text-foreground/60">Legal</span>
-              <Link href={'/terms'} className="transition-colors hover:text-foreground cursor-pointer">
+            <Flex vertical gap={8} style={{ fontSize: 14 }}>
+              <Text
+                strong
+                style={{
+                  marginBottom: 4,
+                  fontSize: 12,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: token.colorTextTertiary,
+                }}
+              >
+                Legal
+              </Text>
+              <Link
+                href={'/terms'}
+                style={{
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  color: token.colorTextSecondary,
+                }}
+              >
                 {t('slide4.terms')}
               </Link>
-              <Link href={'/privacy'} className="transition-colors hover:text-foreground cursor-pointer">
+              <Link
+                href={'/privacy'}
+                style={{
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  color: token.colorTextSecondary,
+                }}
+              >
                 {t('slide4.privacy')}
               </Link>
-            </div>
-          </div>
-          <div className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
+            </Flex>
+          </Flex>
+          <Divider style={{ marginTop: 40, marginBottom: 24 }} />
+          <Text type="secondary" style={{ fontSize: 12 }}>
             © 2026 PayU. All rights reserved.
-          </div>
+          </Text>
         </div>
       </footer>
-    </div>
+    </Flex>
   );
 }

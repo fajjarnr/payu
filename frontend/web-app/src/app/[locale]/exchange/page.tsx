@@ -1,16 +1,14 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Button, Input, Form, Select } from 'antd';
+import type { CSSProperties } from 'react';
+import { Alert, Button, Card, Col, Empty, Form, Input, Row, Select, Space, Spin, Tag, Typography } from 'antd';
 import { zodFieldRule } from '@/lib/zodForm';
 import {
   ArrowRightLeft,
   TrendingUp,
   CheckCircle,
   Clock,
-  Info,
-  Loader2,
-  AlertCircle
 } from '@/components/icons';
 import { exchangeSchema, type ExchangeRequest } from '@/types';
 import { useFxRate, useFxEstimate, useFxConversion, useFxConversions } from '@/hooks';
@@ -18,8 +16,20 @@ import { useAuthStore, useUIStore } from '@/stores';
 import { SUPPORTED_CURRENCIES } from '@/services/FxService';
 import { compareCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
 import DashboardLayout from "@/components/DashboardLayout";
-import clsx from 'clsx';
 import { useTranslations } from 'next-intl';
+
+const labelStyle: CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: 'var(--ant-color-text-secondary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+};
+
+const capsPrimaryStyle: CSSProperties = {
+  ...labelStyle,
+  color: 'var(--ant-color-primary)',
+};
 
 export default function ExchangePage() {
   const accountId = useAuthStore((state) => state.accountId);
@@ -131,337 +141,309 @@ export default function ExchangePage() {
 
   return (
     <DashboardLayout>
-
-        <div className="space-y-6">
-
-            {/* Header */}
-
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('currencyExchange')}</h1>
-                <p className="text-sm text-muted-foreground font-medium mt-1">
-                  {t('exchangeSubtitle')}
-                </p>
-              </div>
-
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Main Exchange Form */}
-              <div className="lg:col-span-8 space-y-6">
-                <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-card relative overflow-hidden">
-                  {/* Ambient glow effect */}
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/3 rounded-full blur-3xl pointer-events-none" />
-
-                  <Form form={form} onFinish={onValid} initialValues={{ fromCurrency: 'IDR', toCurrency: 'USD', amount: '' }} layout="vertical" className="relative z-10">
-                    <h3 className="text-sm font-bold text-foreground mb-6 tracking-widest uppercase">{t('exchangeCalculator')}</h3>
-
-                    {/* Currency Selector Row */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6">
-                      {/* From Currency */}
-                      <div className="flex-1">
-                        <Form.Item name="fromCurrency" rules={[rule('fromCurrency')]} className="mb-0" label={<label htmlFor="exchange-from-currency" className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">{t('fromCurrency')}</label>}>
-                          <Select id="exchange-from-currency"
-                            value={fromCurrency}
-                            onChange={(v) => form.setFieldsValue({ fromCurrency: v as ExchangeRequest['fromCurrency'] })}
-                            className="w-full"
-                            aria-label="From currency"
-                            options={Object.values(SUPPORTED_CURRENCIES).map((currency) => ({ value: currency.code, label: `${currency.flag} ${currency.code} - ${currency.name}` }))}
-                          />
-                        </Form.Item>
-                      </div>
-
-                      {/* Swap Button */}
-
-                          <Button
-                            htmlType="button"
-                            shape="circle"
-                            onClick={handleSwap}
-                            className="h-14 w-14 rounded-xl shadow-lg sm:mt-8"
-                            aria-label="Swap currencies"
-                            icon={<ArrowRightLeft className="h-6 w-6" />}
-                          />
-
-
-                      {/* To Currency */}
-                      <div className="flex-1">
-                        <Form.Item name="toCurrency" rules={[rule('toCurrency')]} className="mb-0" label={<label htmlFor="exchange-to-currency" className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">To Currency</label>}>
-                          <Select id="exchange-to-currency"
-                            value={toCurrency}
-                            onChange={(v) => form.setFieldsValue({ toCurrency: v as ExchangeRequest['toCurrency'] })}
-                            className="w-full"
-                            aria-label="To currency"
-                            options={Object.values(SUPPORTED_CURRENCIES).map((currency) => ({ value: currency.code, label: `${currency.flag} ${currency.code} - ${currency.name}` }))}
-                          />
-                        </Form.Item>
-                      </div>
-                    </div>
-
-                    {/* Amount Input */}
-                    <div className="space-y-4 mb-6">
-                      <div className="flex justify-between items-center">
-                        <label htmlFor="exchange-amount" className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                          Amount
-                        </label>
-                        {isLoadingRate && fromCurrency !== toCurrency && (
-                          <div className="flex items-center gap-2 text-xs text-primary">
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            <span className="font-bold tracking-widest uppercase">Updating Rate</span>
-                          </div>
-                        )}
-                      </div>
-                      <Form.Item name="amount" rules={[rule('amount')]} className="mb-0">
-                      <div className="relative group">
-                        <Input id="exchange-amount"
-                          type="number"
-                          step="any"
-                          min="0"
-                          placeholder="0.00"
-                          className="pl-16 h-20 text-4xl"
-                          aria-label="Amount to exchange"
-                        />
-                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground/40 pointer-events-none">
-                          {fromCurrencyInfo?.symbol}
-                        </div>
-                      </div>
-                      </Form.Item>
-                    </div>
-
-                    {/* Rate Display */}
-                    {fromCurrency !== toCurrency && (
-                      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-6 border border-primary/20 mb-6">
-                        {rateError ? (
-                          <div className="flex items-center gap-3 text-destructive">
-                            <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                            <div>
-                              <p className="text-sm font-bold">Unable to fetch exchange rate</p>
-                              <Button type="link" onClick={() => refetchRate()} className="text-xs font-bold underline mt-1">
-                                Try again
-                              </Button>
-                            </div>
-                          </div>
-                        ) : fxRate ? (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <TrendingUp className="h-4 w-4 text-primary" />
-                                <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                                  Current Rate
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
-                                <span className="text-xs font-bold text-primary tracking-widest uppercase">
-                                  Live
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-baseline gap-3">
-                              <span className="text-3xl font-bold text-foreground">
-                                1 {fromCurrency}
-                              </span>
-                              <span className="text-muted-foreground">=</span>
-                              <span className="text-3xl font-bold text-primary">
-                                {formatExactDecimal(fxRate.rate, 4)} {toCurrency}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              <span>Valid until {new Date(fxRate.validUntil).toLocaleTimeString()}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center py-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Conversion Preview */}
-                    {displayAmount !== null && fromCurrency !== toCurrency && (
-                      <div className="bg-card rounded-xl p-6 border-2 border-primary/30 mb-6 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
-                        <div className="relative z-10 flex items-center justify-between">
-                          <div>
-                            <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">
-                              You will receive
-                            </p>
-                            <p className="text-3xl font-bold text-foreground">
-                              {formatCurrency(displayAmount, toCurrency)}
-                            </p>
-                          </div>
-                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <CheckCircle className="h-6 w-6 text-primary" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Info Box */}
-                    {fromCurrency === toCurrency ? (
-                      <div className="bg-info/10 rounded-xl p-6 border border-info/20 mb-6">
-                        <div className="flex items-start gap-3">
-                          <Info className="h-5 w-5 text-info flex-shrink-0 mt-0.5" />
-                          <p className="text-sm font-medium text-foreground">
-                            Please select different currencies to perform an exchange.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-muted/50 rounded-xl p-6 border border-border mb-6">
-                        <div className="flex items-start gap-3">
-                          <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                          <div className="text-sm text-muted-foreground">
-                            <p className="font-medium text-foreground mb-2">Exchange Information</p>
-                            <ul className="space-y-1 text-xs">
-                              <li>Exchange rates are updated every 60 seconds</li>
-                              <li>No hidden fees - the rate you see is the rate you get</li>
-                              <li>Minimum exchange amount: 10,000 {fromCurrency}</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* CTA Button */}
-
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        size="large"
-                        className="w-full"
-                        disabled={conversionMutation.isPending || (fromCurrency === toCurrency) || compareCurrency(amount, '0') <= 0 || !fxRate}
-                      >
-                        {conversionMutation.isPending ? (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            <span>Processing Exchange...</span>
-                          </div>
-                        ) : (
-                          <span>Exchange Currency Now</span>
-                        )}
-                      </Button>
-
-                  </Form>
-                </div>
-              </div>
-
-              {/* Sidebar - Recent Conversions & Info */}
-              <div className="lg:col-span-4 space-y-6">
-                {/* Rate Updates Card */}
-                <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-card">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">
-                      Market Status
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
-                      <span className="text-xs font-bold text-primary-dark tracking-widest uppercase">Live</span>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Last Update</span>
-                      <span className="text-xs font-bold text-foreground">
-                        {fxRate ? new Date(fxRate.validFrom).toLocaleTimeString() : '--:--:--'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Next Update</span>
-                      <span className="text-xs font-bold text-foreground">
-                        {fxRate ? new Date(new Date(fxRate.validFrom).getTime() + 60000).toLocaleTimeString() : '--:--:--'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Supported Pairs</span>
-                      <span className="text-xs font-bold text-primary">
-                        {Object.keys(SUPPORTED_CURRENCIES).length} currencies
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Conversions */}
-                <div className="bg-card rounded-2xl p-5 sm:p-6 border border-border shadow-card">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">
-                      Recent Exchanges
-                    </h3>
-                  </div>
-
-                  {isLoadingConversions ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : recentConversions.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-sm text-muted-foreground">
-                        No exchange history yet
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {recentConversions.map((conversion) => {
-                        const fromInfo = SUPPORTED_CURRENCIES[conversion.fromCurrency];
-                        const toInfo = SUPPORTED_CURRENCIES[conversion.toCurrency];
-                        const statusColor = conversion.status === 'COMPLETED' ? 'text-primary' :
-                                           conversion.status === 'PENDING' ? 'text-warning' :
-                                           conversion.status === 'FAILED' ? 'text-destructive' : 'text-muted-foreground';
-
-                        return (
-                          <div
-                            key={conversion.id}
-                            className="bg-muted/50 p-4 rounded-xl border border-border hover:border-border/80 transition-all"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2 text-lg">
-                                <span>{fromInfo?.flag}</span>
-                                <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-                                <span>{toInfo?.flag}</span>
-                              </div>
-                              <span className={clsx("text-xs font-bold tracking-widest uppercase", statusColor)}>
-                                {conversion.status.toLowerCase()}
-                              </span>
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-sm font-bold text-foreground">
-                                {fromInfo?.symbol}{formatExactDecimal(conversion.fromAmount, fromInfo?.decimalPlaces)}
-                              </span>
-                              <span className="text-muted-foreground">→</span>
-                              <span className="text-sm font-bold text-primary">
-                                {toInfo?.symbol}{formatExactDecimal(conversion.toAmount, toInfo?.decimalPlaces)}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(conversion.conversionDate).toLocaleString()}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Help Card */}
-                <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-2xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
-                  <div className="absolute bottom-[-20px] right-[-20px] opacity-10">
-                    <TrendingUp className="h-32 w-32" />
-                  </div>
-                  <div className="relative z-10">
-                    <h3 className="font-bold text-lg mb-2">{t('needHelp')}</h3>
-                    <p className="text-xs text-text-disabled font-bold tracking-widest uppercase mb-6">
-                      {t('exchangeSupport')}
-                    </p>
-                    <Button type="default" className="text-xs font-bold tracking-widest uppercase bg-surface/10 px-6 py-3 rounded-xl border border-surface/10 hover:bg-surface/20 transition-all">
-                      Contact Support
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <div>
+          <Typography.Title level={2} style={{ marginTop: 0, marginBottom: 4 }}>{t('currencyExchange')}</Typography.Title>
+          <Typography.Text type="secondary">{t('exchangeSubtitle')}</Typography.Text>
         </div>
 
+        <Row gutter={[24, 24]}>
+          {/* Main Exchange Form */}
+          <Col xs={24} lg={16}>
+            <Card style={{ position: 'relative', overflow: 'hidden' }}>
+              {/* Ambient glow effect */}
+              <div style={{ position: 'absolute', top: 0, right: 0, width: 384, height: 384, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: '50%', filter: 'blur(64px)', pointerEvents: 'none' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <Form form={form} onFinish={onValid} initialValues={{ fromCurrency: 'IDR', toCurrency: 'USD', amount: '' }} layout="vertical">
+                  <Typography.Text strong style={{ ...labelStyle, display: 'block', marginBottom: 24 }}>{t('exchangeCalculator')}</Typography.Text>
+
+                  {/* Currency Selector Row */}
+                  <Row gutter={[16, 16]} align="bottom">
+                    {/* From Currency */}
+                    <Col xs={24} md={11}>
+                      <Form.Item name="fromCurrency" rules={[rule('fromCurrency')]} style={{ marginBottom: 0 }} label={<label htmlFor="exchange-from-currency" style={labelStyle}>{t('fromCurrency')}</label>}>
+                        <Select id="exchange-from-currency"
+                          value={fromCurrency}
+                          onChange={(v) => form.setFieldsValue({ fromCurrency: v as ExchangeRequest['fromCurrency'] })}
+                          style={{ width: '100%' }}
+                          aria-label="From currency"
+                          options={Object.values(SUPPORTED_CURRENCIES).map((currency) => ({ value: currency.code, label: `${currency.flag} ${currency.code} - ${currency.name}` }))}
+                        />
+                      </Form.Item>
+                    </Col>
+
+                    {/* Swap Button */}
+                    <Col xs={24} md={2} style={{ textAlign: 'center' }}>
+                      <Button
+                        htmlType="button"
+                        shape="circle"
+                        onClick={handleSwap}
+                        style={{ width: 56, height: 56 }}
+                        aria-label="Swap currencies"
+                        icon={<ArrowRightLeft style={{ width: 24, height: 24 }} />}
+                      />
+                    </Col>
+
+                    {/* To Currency */}
+                    <Col xs={24} md={11}>
+                      <Form.Item name="toCurrency" rules={[rule('toCurrency')]} style={{ marginBottom: 0 }} label={<label htmlFor="exchange-to-currency" style={labelStyle}>To Currency</label>}>
+                        <Select id="exchange-to-currency"
+                          value={toCurrency}
+                          onChange={(v) => form.setFieldsValue({ toCurrency: v as ExchangeRequest['toCurrency'] })}
+                          style={{ width: '100%' }}
+                          aria-label="To currency"
+                          options={Object.values(SUPPORTED_CURRENCIES).map((currency) => ({ value: currency.code, label: `${currency.flag} ${currency.code} - ${currency.name}` }))}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  {/* Amount Input */}
+                  <Space direction="vertical" size={16} style={{ width: '100%', marginTop: 24 }}>
+                    <Row justify="space-between" align="middle">
+                      <label htmlFor="exchange-amount" style={labelStyle}>
+                        Amount
+                      </label>
+                      {isLoadingRate && fromCurrency !== toCurrency && (
+                        <Space size={8}>
+                          <Spin size="small" />
+                          <Typography.Text strong style={capsPrimaryStyle}>Updating Rate</Typography.Text>
+                        </Space>
+                      )}
+                    </Row>
+                    <Form.Item name="amount" rules={[rule('amount')]} style={{ marginBottom: 0 }}>
+                      <Input id="exchange-amount"
+                        type="number"
+                        step="any"
+                        min="0"
+                        placeholder="0.00"
+                        style={{ fontSize: 32, height: 80 }}
+                        prefix={<Typography.Text type="secondary" style={{ fontSize: 24, fontWeight: 700 }}>{fromCurrencyInfo?.symbol}</Typography.Text>}
+                        aria-label="Amount to exchange"
+                      />
+                    </Form.Item>
+                  </Space>
+
+                  {/* Rate Display */}
+                  {fromCurrency !== toCurrency && (
+                    <Card size="small" style={{ marginTop: 24, backgroundColor: 'var(--ant-color-primary-bg)', borderColor: 'var(--ant-color-primary-border)' }}>
+                      {rateError ? (
+                        <Alert
+                          type="error"
+                          showIcon
+                          message="Unable to fetch exchange rate"
+                          action={<Button type="link" size="small" onClick={() => refetchRate()}>Try again</Button>}
+                        />
+                      ) : fxRate ? (
+                        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                          <Row justify="space-between" align="middle">
+                            <Space size={8}>
+                              <TrendingUp style={{ width: 16, height: 16, color: 'var(--ant-color-primary)' }} />
+                              <Typography.Text strong style={labelStyle}>
+                                Current Rate
+                              </Typography.Text>
+                            </Space>
+                            <Space size={8}>
+                              <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--ant-color-primary)' }} />
+                              <Typography.Text strong style={capsPrimaryStyle}>
+                                Live
+                              </Typography.Text>
+                            </Space>
+                          </Row>
+                          <Space size={12} align="baseline">
+                            <Typography.Title level={3} style={{ margin: 0 }}>
+                              1 {fromCurrency}
+                            </Typography.Title>
+                            <Typography.Text type="secondary">=</Typography.Text>
+                            <Typography.Title level={3} style={{ margin: 0, color: 'var(--ant-color-primary)' }}>
+                              {formatExactDecimal(fxRate.rate, 4)} {toCurrency}
+                            </Typography.Title>
+                          </Space>
+                          <Space size={8}>
+                            <Clock style={{ width: 12, height: 12 }} />
+                            <Typography.Text type="secondary" style={{ fontSize: 12 }}>Valid until {new Date(fxRate.validUntil).toLocaleTimeString()}</Typography.Text>
+                          </Space>
+                        </Space>
+                      ) : (
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
+                          <Spin />
+                        </div>
+                      )}
+                    </Card>
+                  )}
+
+                  {/* Conversion Preview */}
+                  {displayAmount !== null && fromCurrency !== toCurrency && (
+                    <Card size="small" style={{ marginTop: 24, borderColor: 'var(--ant-color-primary)', borderWidth: 2 }}>
+                      <Row justify="space-between" align="middle">
+                        <div>
+                          <Typography.Text strong style={{ ...labelStyle, display: 'block', marginBottom: 8 }}>
+                            You will receive
+                          </Typography.Text>
+                          <Typography.Title level={3} style={{ margin: 0 }}>
+                            {formatCurrency(displayAmount, toCurrency)}
+                          </Typography.Title>
+                        </div>
+                        <div style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: 'var(--ant-color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <CheckCircle style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
+                        </div>
+                      </Row>
+                    </Card>
+                  )}
+
+                  {/* Info Box */}
+                  <div style={{ marginTop: 24 }}>
+                    {fromCurrency === toCurrency ? (
+                      <Alert
+                        type="info"
+                        showIcon
+                        message="Please select different currencies to perform an exchange."
+                      />
+                    ) : (
+                      <Alert
+                        type="info"
+                        showIcon
+                        message="Exchange Information"
+                        description={
+                          <ul style={{ margin: '8px 0 0', paddingLeft: 20, fontSize: 12 }}>
+                            <li>Exchange rates are updated every 60 seconds</li>
+                            <li>No hidden fees - the rate you see is the rate you get</li>
+                            <li>Minimum exchange amount: 10,000 {fromCurrency}</li>
+                          </ul>
+                        }
+                      />
+                    )}
+                  </div>
+
+                  {/* CTA Button */}
+                  <div style={{ marginTop: 24 }}>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      size="large"
+                      block
+                      loading={conversionMutation.isPending}
+                      disabled={conversionMutation.isPending || (fromCurrency === toCurrency) || compareCurrency(amount, '0') <= 0 || !fxRate}
+                    >
+                      {conversionMutation.isPending ? 'Processing Exchange...' : 'Exchange Currency Now'}
+                    </Button>
+                  </div>
+                </Form>
+              </div>
+            </Card>
+          </Col>
+
+          {/* Sidebar - Recent Conversions & Info */}
+          <Col xs={24} lg={8}>
+            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              {/* Rate Updates Card */}
+              <Card>
+                <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+                  <Typography.Text strong style={labelStyle}>
+                    Market Status
+                  </Typography.Text>
+                  <Space size={8}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--ant-color-primary)' }} />
+                    <Typography.Text strong style={capsPrimaryStyle}>Live</Typography.Text>
+                  </Space>
+                </Row>
+                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                  <Row justify="space-between" align="middle">
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>Last Update</Typography.Text>
+                    <Typography.Text strong style={{ fontSize: 12 }}>
+                      {fxRate ? new Date(fxRate.validFrom).toLocaleTimeString() : '--:--:--'}
+                    </Typography.Text>
+                  </Row>
+                  <Row justify="space-between" align="middle">
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>Next Update</Typography.Text>
+                    <Typography.Text strong style={{ fontSize: 12 }}>
+                      {fxRate ? new Date(new Date(fxRate.validFrom).getTime() + 60000).toLocaleTimeString() : '--:--:--'}
+                    </Typography.Text>
+                  </Row>
+                  <Row justify="space-between" align="middle">
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>Supported Pairs</Typography.Text>
+                    <Typography.Text strong style={{ fontSize: 12, color: 'var(--ant-color-primary)' }}>
+                      {Object.keys(SUPPORTED_CURRENCIES).length} currencies
+                    </Typography.Text>
+                  </Row>
+                </Space>
+              </Card>
+
+              {/* Recent Conversions */}
+              <Card>
+                <Typography.Text strong style={{ ...labelStyle, display: 'block', marginBottom: 24 }}>
+                  Recent Exchanges
+                </Typography.Text>
+
+                {isLoadingConversions ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
+                    <Spin />
+                  </div>
+                ) : recentConversions.length === 0 ? (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No exchange history yet" />
+                ) : (
+                  <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                    {recentConversions.map((conversion) => {
+                      const fromInfo = SUPPORTED_CURRENCIES[conversion.fromCurrency];
+                      const toInfo = SUPPORTED_CURRENCIES[conversion.toCurrency];
+                      const statusColor = conversion.status === 'COMPLETED' ? 'success' :
+                        conversion.status === 'PENDING' ? 'warning' :
+                          conversion.status === 'FAILED' ? 'error' : 'default';
+
+                      return (
+                        <Card
+                          key={conversion.id}
+                          size="small"
+                          style={{ backgroundColor: 'var(--ant-color-fill-alter)' }}
+                        >
+                          <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
+                            <Space size={8} style={{ fontSize: 18 }}>
+                              <span>{fromInfo?.flag}</span>
+                              <ArrowRightLeft style={{ width: 16, height: 16, color: 'var(--ant-color-text-secondary)' }} />
+                              <span>{toInfo?.flag}</span>
+                            </Space>
+                            <Tag color={statusColor} style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12, fontWeight: 700 }}>
+                              {conversion.status.toLowerCase()}
+                            </Tag>
+                          </Row>
+                          <Space size={8} align="baseline">
+                            <Typography.Text strong style={{ fontSize: 14 }}>
+                              {fromInfo?.symbol}{formatExactDecimal(conversion.fromAmount, fromInfo?.decimalPlaces)}
+                            </Typography.Text>
+                            <Typography.Text type="secondary">→</Typography.Text>
+                            <Typography.Text strong style={{ fontSize: 14, color: 'var(--ant-color-primary)' }}>
+                              {toInfo?.symbol}{formatExactDecimal(conversion.toAmount, toInfo?.decimalPlaces)}
+                            </Typography.Text>
+                          </Space>
+                          <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                            {new Date(conversion.conversionDate).toLocaleString()}
+                          </Typography.Text>
+                        </Card>
+                      );
+                    })}
+                  </Space>
+                )}
+              </Card>
+
+              {/* Help Card */}
+              <Card style={{ backgroundColor: 'var(--ant-color-primary)', border: 'none', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', bottom: -20, right: -20, opacity: 0.1, pointerEvents: 'none' }}>
+                  <TrendingUp style={{ width: 128, height: 128, color: 'var(--ant-color-text-light-solid)' }} />
+                </div>
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <Typography.Title level={4} style={{ color: 'var(--ant-color-text-light-solid)', marginTop: 0, marginBottom: 8 }}>{t('needHelp')}</Typography.Title>
+                  <Typography.Text strong style={{ ...labelStyle, color: 'var(--ant-color-text-light-solid)', display: 'block', marginBottom: 24 }}>
+                    {t('exchangeSupport')}
+                  </Typography.Text>
+                  <Button ghost>
+                    Contact Support
+                  </Button>
+                </div>
+              </Card>
+            </Space>
+          </Col>
+        </Row>
+      </Space>
     </DashboardLayout>
   );
 }

@@ -18,7 +18,7 @@ import {
   RotateCcw,
   Filter
 } from '@/components/icons';
-import { Button, Card, Dropdown, Modal, Skeleton, Table, Tag, Typography } from 'antd';
+import { Button, Card, Col, Divider, Dropdown, Modal, Row, Skeleton, Space, Table, Tag, Typography, theme } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { notify as toast } from '@/lib/notify';
 import clsx from 'clsx';
@@ -26,16 +26,16 @@ import { addCurrency, formatCurrency } from '@/lib/currency';
 import type { Transaction, TransactionFilters, TransactionStatus, TransactionType } from '@/types';
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  PENDING: { label: 'Menunggu', color: 'bg-warning/10 text-warning border-warning/20', icon: Clock },
-  VALIDATING: { label: 'Divalidasi', color: 'bg-warning/10 text-warning border-warning/20', icon: Clock },
-  PROCESSING: { label: 'Diproses', color: 'bg-primary/10 text-secondary border-primary/20', icon: RotateCcw },
-  COMPLETED: { label: 'Selesai', color: 'bg-primary/10 text-primary-dark border-primary/20', icon: CheckCircle2 },
-  FAILED: { label: 'Gagal', color: 'bg-error/10 text-error border-error/20', icon: XCircle },
-  CANCELLED: { label: 'Dibatalkan', color: 'bg-text-secondary/10 text-text-secondary border-text-secondary/20', icon: X },
+  PENDING: { label: 'Menunggu', color: 'warning', icon: Clock },
+  VALIDATING: { label: 'Divalidasi', color: 'warning', icon: Clock },
+  PROCESSING: { label: 'Diproses', color: 'processing', icon: RotateCcw },
+  COMPLETED: { label: 'Selesai', color: 'success', icon: CheckCircle2 },
+  FAILED: { label: 'Gagal', color: 'error', icon: XCircle },
+  CANCELLED: { label: 'Dibatalkan', color: 'default', icon: X },
   // RELAY-014: enum gained these (ADR-0028/0030) — missing entries crashed the
   // whole page (reading 'icon' of undefined) on any held/step-up row.
-  PENDING_COMPLIANCE_REVIEW: { label: 'Tinjauan AML', color: 'bg-accent/10 text-accent border-accent/20', icon: AlertCircle },
-  PENDING_STEP_UP: { label: 'Butuh Verifikasi', color: 'bg-accent/10 text-accent border-accent/20', icon: AlertCircle },
+  PENDING_COMPLIANCE_REVIEW: { label: 'Tinjauan AML', color: 'warning', icon: AlertCircle },
+  PENDING_STEP_UP: { label: 'Butuh Verifikasi', color: 'warning', icon: AlertCircle },
 };
 
 const typeConfig: Record<string, { label: string; icon: typeof ArrowLeftRight }> = {
@@ -56,6 +56,7 @@ const isCreditType = (type: string, t?: Transaction, currentAccountId?: string |
 };
 
 export default function TransactionsPage() {
+  const { token } = theme.useToken();
   const accountId = useAuthStore((state) => state.accountId);
   const [page, setPage] = useState(0);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -108,14 +109,17 @@ export default function TransactionsPage() {
   const canCancel = (status: string) => {
     return status === 'PENDING' || status === 'PROCESSING';
   };
+
   const columns: TableColumnsType<Transaction> = [
     {
       key: 'date',
       title: 'Tanggal',
       render: (_, transaction) => (
         <div>
-          <div className="text-sm font-bold text-foreground">{formatDate(transaction.createdAt)}</div>
-          <div className="text-xs text-muted-foreground font-mono mt-1">{transaction.referenceNumber}</div>
+          <Typography.Text strong>{formatDate(transaction.createdAt)}</Typography.Text>
+          <div>
+            <Typography.Text type="secondary" className="font-mono text-xs">{transaction.referenceNumber}</Typography.Text>
+          </div>
         </div>
       ),
     },
@@ -127,15 +131,24 @@ export default function TransactionsPage() {
         const TypeIcon = type.icon;
         const credit = isCreditType(transaction.type, transaction, accountId);
         return (
-          <div className="flex items-center gap-3">
-            <div className={clsx(
-              "h-10 w-10 rounded-xl flex items-center justify-center border",
-              credit ? "bg-primary/10 border-primary/10" : "bg-muted/50 border-border/50"
-            )}>
-              <TypeIcon className={clsx("h-5 w-5", credit ? "text-primary" : "text-muted-foreground")} />
+          <Space size={12}>
+            <div style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid',
+              ...(credit
+                ? { backgroundColor: token.colorPrimaryBg, borderColor: token.colorPrimaryBorder }
+                : { backgroundColor: token.colorFillTertiary, borderColor: token.colorBorderSecondary }
+              )
+            }}>
+              <TypeIcon style={{ width: 20, height: 20, color: credit ? token.colorPrimary : token.colorTextTertiary }} />
             </div>
-            <span className="text-sm font-bold text-foreground">{type.label}</span>
-          </div>
+            <Typography.Text strong>{type.label}</Typography.Text>
+          </Space>
         );
       },
     },
@@ -143,7 +156,9 @@ export default function TransactionsPage() {
       key: 'description',
       title: 'Deskripsi',
       render: (_, transaction) => (
-        <p className="text-sm font-medium text-foreground max-w-[200px] truncate">{transaction.description}</p>
+        <Typography.Text ellipsis={{ tooltip: transaction.description }} style={{ maxWidth: 200 }}>
+          {transaction.description}
+        </Typography.Text>
       ),
     },
     {
@@ -154,8 +169,8 @@ export default function TransactionsPage() {
         const status = statusConfig[transaction.status];
         const StatusIcon = status.icon;
         return (
-          <Tag bordered={false} className={clsx("font-bold text-xs", status.color)}>
-            <StatusIcon className="h-3 w-3 mr-1" />
+          <Tag bordered={false} color={status.color} className="font-bold text-xs">
+            <StatusIcon style={{ width: 12, height: 12, marginRight: 4 }} />
             {status.label}
           </Tag>
         );
@@ -168,9 +183,9 @@ export default function TransactionsPage() {
       render: (_, transaction) => {
         const credit = isCreditType(transaction.type, transaction, accountId);
         return (
-          <span className={clsx("font-bold tabular-nums", credit ? "text-primary" : "text-foreground")}>
+          <Typography.Text strong className="tabular-nums" type={credit ? undefined : 'secondary'}>
             {credit ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
-          </span>
+          </Typography.Text>
         );
       },
     },
@@ -183,7 +198,6 @@ export default function TransactionsPage() {
           trigger={['click']}
           placement="bottomRight"
           menu={{
-            className: 'w-48',
             items: [
               { key: 'detail', label: 'Lihat Detail' },
               ...(canCancel(transaction.status)
@@ -192,7 +206,7 @@ export default function TransactionsPage() {
             ],
           }}
         >
-          <Button type="text" shape="circle" className="min-h-[44px] min-w-[44px] rounded-xl" icon={<MoreHorizontal className="h-4 w-4" />} aria-label="Opsi transaksi" />
+          <Button type="text" shape="circle" style={{ minWidth: 44, minHeight: 44, borderRadius: 12 }} icon={<MoreHorizontal style={{ width: 16, height: 16 }} />} aria-label="Opsi transaksi" />
         </Dropdown>
       ),
     },
@@ -200,23 +214,23 @@ export default function TransactionsPage() {
 
   return (
     <DashboardLayout>
-      <>
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Riwayat Transaksi</h1>
-              <p className="text-sm text-muted-foreground font-medium mt-1">
-                Kelola dan pantau semua aktivitas transaksi Anda
-              </p>
-            </div>
-            <div className="flex gap-3">
+      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        {/* Header */}
+        <Row gutter={[16, 16]} align="middle" justify="space-between">
+          <Col>
+            <Space direction="vertical" size={4}>
+              <Typography.Title level={1} style={{ margin: 0 }}>Riwayat Transaksi</Typography.Title>
+              <Typography.Text type="secondary">Kelola dan pantau semua aktivitas transaksi Anda</Typography.Text>
+            </Space>
+          </Col>
+          <Col>
+            <Space size={12}>
               {(filters.status || filters.type) && (
                 <Button
                   type="text"
                   size="small"
                   onClick={() => setFilters({})}
-                  className="text-xs font-bold text-muted-foreground hover:text-primary"
+                  className="text-xs font-bold"
                 >
                   Hapus Filter
                 </Button>
@@ -225,7 +239,6 @@ export default function TransactionsPage() {
                 trigger={['click']}
                 placement="bottomRight"
                 menu={{
-                  className: 'w-48',
                   selectedKeys: filters.status ? [filters.status] : [],
                   items: [
                     { key: 'all', label: 'Semua Status', onClick: () => setFilters({ ...filters, status: undefined }) },
@@ -237,9 +250,11 @@ export default function TransactionsPage() {
                   ],
                 }}
               >
-                <Button className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  {filters.status ? statusConfig[filters.status].label : 'Status'}
+                <Button>
+                  <Space size={8}>
+                    <Filter style={{ width: 16, height: 16 }} />
+                    {filters.status ? statusConfig[filters.status].label : 'Status'}
+                  </Space>
                 </Button>
               </Dropdown>
 
@@ -247,7 +262,6 @@ export default function TransactionsPage() {
                 trigger={['click']}
                 placement="bottomRight"
                 menu={{
-                  className: 'w-56',
                   selectedKeys: filters.type ? [filters.type] : [],
                   items: [
                     { key: 'all', label: 'Semua Tipe', onClick: () => setFilters({ ...filters, type: undefined }) },
@@ -259,246 +273,310 @@ export default function TransactionsPage() {
                   ],
                 }}
               >
-                <Button className="gap-2">
-                  <ArrowLeftRight className="h-4 w-4" />
-                  {filters.type ? typeConfig[filters.type]?.label : 'Tipe'}
+                <Button>
+                  <Space size={8}>
+                    <ArrowLeftRight style={{ width: 16, height: 16 }} />
+                    {filters.type ? typeConfig[filters.type]?.label : 'Tipe'}
+                  </Space>
                 </Button>
               </Dropdown>
-            </div>
-          </div>
+            </Space>
+          </Col>
+        </Row>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <>
-              <Card className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/10">
-                      <ArrowDownLeft className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Total Masuk</p>
-                       <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton.Input active size="small" className="!h-7 !w-24" /> : formatAmount(totalIn, 'IDR')}
-                      </p>
-                    </div>
-                  </div>
-              </Card>
-            </>
-            <>
-              <Card className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-error/10 flex items-center justify-center">
-                      <ArrowUpRight className="h-6 w-6 text-error" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Total Keluar</p>
-                      <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton.Input active size="small" className="!h-7 !w-24" /> : formatAmount(totalOut, 'IDR')}
-                      </p>
-                    </div>
-                  </div>
-              </Card>
-            </>
-            <>
-              <Card className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Clock className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Menunggu</p>
-                      <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton.Input active size="small" className="!h-7 !w-24" /> : String(pendingCount)}
-                      </p>
-                    </div>
-                  </div>
-              </Card>
-            </>
-            <>
-              <Card className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <CheckCircle2 className="h-6 w-6 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Selesai</p>
-                      <p className="text-xl font-bold text-foreground">
-                        {isLoading ? <Skeleton.Input active size="small" className="!h-7 !w-24" /> : String(completedCount)}
-                      </p>
-                    </div>
-                  </div>
-              </Card>
-            </>
-          </div>
-
-          {/* Transactions Table */}
-          <Card
-            title={<span className="text-lg font-bold tracking-widest uppercase">Daftar Transaksi</span>}
-            extra={<Tag bordered className="font-mono">Halaman {page + 1}</Tag>}
-          >
-            <div>
-              {isLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton.Input key={i} active className="!h-16 !w-full" />
-                  ))}
+        {/* Stats Cards */}
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={6}>
+            <Card>
+              <Space size={16}>
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: token.colorPrimaryBg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: `1px solid ${token.colorPrimaryBorder}`
+                }}>
+                  <ArrowDownLeft style={{ width: 24, height: 24, color: token.colorPrimary }} />
                 </div>
-              ) : (
-                <>
-                  <div className="hidden md:block">
-                    <Table<Transaction>
-                      columns={columns}
-                      dataSource={transactions ?? []}
-                      rowKey="id"
-                      pagination={false}
-                      loading={isLoading}
-                      locale={{ emptyText: 'Tidak ada transaksi' }}
-                    />
-                  </div>
+                <div>
+                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Total Masuk</Typography.Text>
+                  <Typography.Title level={2} style={{ margin: 0 }}>
+                    {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : formatAmount(totalIn, 'IDR')}
+                  </Typography.Title>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card>
+              <Space size={16}>
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: token.colorErrorBg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <ArrowUpRight style={{ width: 24, height: 24, color: token.colorError }} />
+                </div>
+                <div>
+                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Total Keluar</Typography.Text>
+                  <Typography.Title level={2} style={{ margin: 0 }}>
+                    {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : formatAmount(totalOut, 'IDR')}
+                  </Typography.Title>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card>
+              <Space size={16}>
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: token.colorPrimaryBg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Clock style={{ width: 24, height: 24, color: token.colorPrimary }} />
+                </div>
+                <div>
+                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Menunggu</Typography.Text>
+                  <Typography.Title level={2} style={{ margin: 0 }}>
+                    {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : String(pendingCount)}
+                  </Typography.Title>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card>
+              <Space size={16}>
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: token.colorInfoBg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <CheckCircle2 style={{ width: 24, height: 24, color: token.colorInfo }} />
+                </div>
+                <div>
+                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Selesai</Typography.Text>
+                  <Typography.Title level={2} style={{ margin: 0 }}>
+                    {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : String(completedCount)}
+                  </Typography.Title>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
 
-                  {/* Mobile Layout */}
-                  <div className="md:hidden space-y-4">
-                    {transactions?.map((transaction: Transaction) => {
-                      const status = statusConfig[transaction.status];
-                      const type = typeConfig[transaction.type] || typeConfig.INTERNAL_TRANSFER;
-                      const StatusIcon = status.icon;
-                      const TypeIcon = type.icon;
+        {/* Transactions Table */}
+        <Card
+          title={<Typography.Text strong className="text-lg tracking-widest uppercase">Daftar Transaksi</Typography.Text>}
+          extra={<Tag bordered className="font-mono">Halaman {page + 1}</Tag>}
+        >
+          {isLoading ? (
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton.Input key={i} active style={{ height: 64, width: '100%' }} />
+              ))}
+            </Space>
+          ) : (
+            <>
+              <div className="hidden md:block">
+                <Table<Transaction>
+                  columns={columns}
+                  dataSource={transactions ?? []}
+                  rowKey="id"
+                  pagination={false}
+                  loading={isLoading}
+                  locale={{ emptyText: 'Tidak ada transaksi' }}
+                />
+              </div>
 
-                      return (
-                        <div
-                          key={transaction.id}
-                          className="bg-muted/30 p-4 rounded-xl border border-border/50"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className={clsx(
-                                "h-10 w-10 rounded-xl flex items-center justify-center border",
-                                isCreditType(transaction.type) ? "bg-primary/10 border-primary/10" : "bg-muted/50 border-border/50"
-                              )}>
-                                <TypeIcon className={clsx(
-                                  "h-5 w-5",
-                                    isCreditType(transaction.type) ? "text-primary" : "text-muted-foreground"
-                                )} />
+              {/* Mobile Layout */}
+              <div className="md:hidden">
+                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                  {transactions?.map((transaction: Transaction) => {
+                    const status = statusConfig[transaction.status];
+                    const type = typeConfig[transaction.type] || typeConfig.INTERNAL_TRANSFER;
+                    const StatusIcon = status.icon;
+                    const TypeIcon = type.icon;
+
+                    return (
+                      <Card key={transaction.id} size="small">
+                        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                          <Row justify="space-between" align="middle">
+                            <Space size={12}>
+                              <div style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 12,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1px solid',
+                                ...(isCreditType(transaction.type)
+                                  ? { backgroundColor: token.colorPrimaryBg, borderColor: token.colorPrimaryBorder }
+                                  : { backgroundColor: token.colorFillTertiary, borderColor: token.colorBorderSecondary }
+                                )
+                              }}>
+                                <TypeIcon style={{
+                                  width: 20, height: 20,
+                                  color: isCreditType(transaction.type) ? token.colorPrimary : token.colorTextTertiary
+                                }} />
                               </div>
                               <div>
-                                <p className="text-sm font-bold text-foreground">{type.label}</p>
-                                <p className="text-xs text-muted-foreground">{formatDate(transaction.createdAt)}</p>
+                                <Typography.Text strong>{type.label}</Typography.Text>
+                                <div>
+                                  <Typography.Text type="secondary" className="text-xs">{formatDate(transaction.createdAt)}</Typography.Text>
+                                </div>
                               </div>
-                            </div>
-                            <Tag bordered={false} className={clsx("font-bold text-xs", status.color)}>
-                              <StatusIcon className="h-3 w-3 mr-1" />
+                            </Space>
+                            <Tag bordered={false} color={status.color} className="font-bold text-xs">
+                              <StatusIcon style={{ width: 12, height: 12, marginRight: 4 }} />
                               {status.label}
                             </Tag>
-                          </div>
-                          <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                            <p className="text-xs text-muted-foreground truncate max-w-[150px]">
+                          </Row>
+                          <Divider style={{ margin: 0 }} />
+                          <Row justify="space-between" align="middle">
+                            <Typography.Text type="secondary" ellipsis={{ tooltip: transaction.description }} style={{ maxWidth: 150 }}>
                               {transaction.description}
-                            </p>
-                            <p className={clsx(
-                              "text-sm font-bold tabular-nums",
-                              isCreditType(transaction.type) ? "text-primary" : "text-foreground"
-                            )}>
+                            </Typography.Text>
+                            <Typography.Text strong className="tabular-nums" type={isCreditType(transaction.type) ? undefined : 'secondary'}>
                               {isCreditType(transaction.type) ? '+' : '-'}{formatAmount(transaction.amount, transaction.currency)}
-                            </p>
-                          </div>
+                            </Typography.Text>
+                          </Row>
                           {canCancel(transaction.status) && (
-                            <div className="mt-3 pt-3 border-t border-border/50">
+                            <>
+                              <Divider style={{ margin: 0 }} />
                               <Button
                                 type="text"
                                 danger
                                 size="small"
-                                className="w-full text-error hover:text-white hover:bg-error"
+                                style={{ width: '100%' }}
                                 onClick={() => handleCancelClick(transaction)}
                               >
-                                <X className="h-4 w-4 mr-2" />
-                                Batalkan Transaksi
+                                <Space size={8}>
+                                  <X style={{ width: 16, height: 16 }} />
+                                  Batalkan Transaksi
+                                </Space>
                               </Button>
-                            </div>
+                            </>
                           )}
-                        </div>
-                      );
-                    })}
+                        </Space>
+                      </Card>
+                    );
+                  })}
+                </Space>
+              </div>
+
+              {!transactions || transactions.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                  <div style={{
+                    width: 64,
+                    height: 64,
+                    backgroundColor: token.colorFillTertiary,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px'
+                  }}>
+                    <AlertCircle style={{ width: 32, height: 32, color: token.colorTextTertiary }} />
                   </div>
+                  <Typography.Title level={3} style={{ margin: 0 }}>Tidak Ada Transaksi</Typography.Title>
+                  <Typography.Text type="secondary">
+                    Anda belum memiliki transaksi. Mulai lakukan transfer atau pembayaran.
+                  </Typography.Text>
+                </div>
+              ) : null}
 
-                  {!transactions || transactions.length === 0 ? (
-                    <div className="text-center py-8">
-                      <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <h3 className="text-lg font-bold text-foreground mb-2">Tidak Ada Transaksi</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Anda belum memiliki transaksi. Mulai lakukan transfer atau pembayaran.
-                      </p>
-                    </div>
-                  ) : null}
-
-                  {/* Pagination */}
-                  {transactions && transactions.length > 0 && (
-                    <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/50">
-                      <Button
-                        size="small"
-                        onClick={() => setPage((p) => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                      >
-                        Sebelumnya
-                      </Button>
-                      <span className="text-sm text-muted-foreground">
-                        Halaman {page + 1}
-                      </span>
-                      <Button
-                        size="small"
-                        onClick={() => setPage((p) => p + 1)}
-                        disabled={!transactions || transactions.length < 20}
-                      >
-                        Selanjutnya
-                      </Button>
-                    </div>
-                  )}
+              {/* Pagination */}
+              {transactions && transactions.length > 0 && (
+                <>
+                  <Divider style={{ margin: '24px 0' }} />
+                  <Row justify="space-between" align="middle">
+                    <Button
+                      size="small"
+                      onClick={() => setPage((p) => Math.max(0, p - 1))}
+                      disabled={page === 0}
+                    >
+                      Sebelumnya
+                    </Button>
+                    <Typography.Text type="secondary">
+                      Halaman {page + 1}
+                    </Typography.Text>
+                    <Button
+                      size="small"
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={!transactions || transactions.length < 20}
+                    >
+                      Selanjutnya
+                    </Button>
+                  </Row>
                 </>
               )}
-            </div>
-          </Card>
-        </div>
-      </>
+            </>
+          )}
+        </Card>
+      </Space>
 
       {/* Cancel Confirmation Dialog */}
-      <Modal open={isCancelDialogOpen} onCancel={() => setIsCancelDialogOpen(false)} footer={null} centered width={512} title={<Typography.Title level={4} className="!mb-1 flex items-center gap-2"><AlertCircle className="h-5 w-5 text-error" />Batalkan Transaksi?</Typography.Title>}>
-        <div>
+      <Modal open={isCancelDialogOpen} onCancel={() => setIsCancelDialogOpen(false)} footer={null} centered width={512} title={<Typography.Title level={4} style={{ marginBottom: 4 }}><Space size={8}><AlertCircle style={{ width: 20, height: 20, color: token.colorError }} />Batalkan Transaksi?</Space></Typography.Title>}>
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Typography.Text type="secondary">
             Apakah Anda yakin ingin membatalkan transaksi ini? Tindakan ini tidak dapat dibatalkan.
           </Typography.Text>
           {selectedTransaction && (
-            <div className="bg-muted/50 p-4 rounded-xl space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Referensi</span>
-                <span className="text-sm font-mono font-medium">{selectedTransaction.referenceNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Deskripsi</span>
-                <span className="text-sm font-medium truncate max-w-[150px]">{selectedTransaction.description}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Jumlah</span>
-                <span className="text-sm font-bold">
-                  {formatAmount(selectedTransaction.amount, selectedTransaction.currency)}
-                </span>
-              </div>
-            </div>
+            <Card size="small">
+              <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                <Row justify="space-between">
+                  <Typography.Text type="secondary">Referensi</Typography.Text>
+                  <Typography.Text className="font-mono">{selectedTransaction.referenceNumber}</Typography.Text>
+                </Row>
+                <Row justify="space-between">
+                  <Typography.Text type="secondary">Deskripsi</Typography.Text>
+                  <Typography.Text ellipsis={{ tooltip: selectedTransaction.description }} style={{ maxWidth: 150 }}>{selectedTransaction.description}</Typography.Text>
+                </Row>
+                <Row justify="space-between">
+                  <Typography.Text type="secondary">Jumlah</Typography.Text>
+                  <Typography.Text strong>
+                    {formatAmount(selectedTransaction.amount, selectedTransaction.currency)}
+                  </Typography.Text>
+                </Row>
+              </Space>
+            </Card>
           )}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2">
-            <Button onClick={() => setIsCancelDialogOpen(false)}>
-              Batal
-            </Button>
-            <Button
-              danger
-              type="primary"
-              onClick={handleConfirmCancel}
-              disabled={cancelTransaction.isPending}
-            >
-              {cancelTransaction.isPending ? 'Membatalkan...' : 'Ya, Batalkan'}
-            </Button>
-          </div>
-        </div>
+          <Row justify="end" gutter={8}>
+            <Col>
+              <Button onClick={() => setIsCancelDialogOpen(false)}>
+                Batal
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                danger
+                type="primary"
+                onClick={handleConfirmCancel}
+                disabled={cancelTransaction.isPending}
+              >
+                {cancelTransaction.isPending ? 'Membatalkan...' : 'Ya, Batalkan'}
+              </Button>
+            </Col>
+          </Row>
+        </Space>
       </Modal>
     </DashboardLayout>
   );

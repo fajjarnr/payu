@@ -12,7 +12,22 @@ import {
   Truck,
   CheckCircle,
 } from "@/components/icons";
-import { Button, DatePicker, Form, Input } from "antd";
+import {
+  Button,
+  DatePicker,
+  Form,
+  Input,
+  Card,
+  Space,
+  Row,
+  Col,
+  Divider,
+  Typography,
+  Radio,
+  Segmented,
+  Tag,
+  Badge,
+} from "antd";
 import dayjs from "dayjs";
 import {
   transferSchema,
@@ -29,7 +44,6 @@ import { useBeneficiaries } from "@/hooks/useBeneficiaries";
 import { useUIStore } from "@/stores";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
-import clsx from "clsx";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { formatCurrencyWithoutSymbol } from "@/lib/currency";
@@ -308,148 +322,172 @@ export default function TransferPage() {
       <DashboardLayout>
         <SkipLink href="#main-content" />
         <main id="main-content" className="overflow-x-hidden">
-          <div className="space-y-6">
-            <div className="flex items-center gap-6">
+          <Space direction="vertical" size={16}>
+            <Space size={16}>
               <Button
                 type="default"
                 data-testid="back-from-review-button"
                 onClick={() => setShowReview(false)}
-                className="w-14 h-14 bg-card rounded-xl border border-border shadow-sm"
+                size="large"
                 aria-label="Kembali"
               >
                 <ChevronRight className="h-6 w-6 rotate-180" />
               </Button>
-            </div>
+            </Space>
 
-            <div className="bg-card rounded-xl p-5 sm:p-6 shadow-card border border-border relative overflow-hidden">
-              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-border">
-                <div className="flex items-center gap-6">
-                  <div
-                    className={clsx(
-                      "w-20 h-20 rounded-2xl flex items-center justify-center font-bold text-3xl shadow-lg",
-                      selectedContactData?.color ?? "bg-muted text-muted-foreground",
-                    )}
-                    aria-hidden={!isRecipientVerified}
-                  >
-                    {selectedContactData?.initial ?? "?"}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">
-                      Kepada Penerima
-                    </p>
-                    {isRecipientVerified ? (
-                      <>
-                        <h3 className="text-2xl font-bold text-foreground">
-                          {selectedContactData.name}
-                        </h3>
-                        <p className="text-xs font-bold text-primary tracking-tight">
-                          ID Akun: {reviewAccountId}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h3 className="text-2xl font-bold text-foreground">
-                          Penerima belum terverifikasi
-                        </h3>
-                        <p
-                          id="recipient-verification-alert"
-                          role="alert"
-                          className="text-sm font-bold text-error tracking-tight mt-1"
-                        >
-                          ID Akun {reviewAccountId || "-"} tidak cocok dengan
-                          penerima tersimpan. Cek kembali nomornya atau
-                          tambahkan sebagai penerima favorit.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="text-left md:text-right">
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">
+            <Card>
+              <Row gutter={[16, 16]} justify="space-between" align="middle" style={{ marginBottom: 32, paddingBottom: 32 }}>
+                <Col xs={24} md={12}>
+                  <Space size={16}>
+                    <div
+                      style={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: 16,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: "bold",
+                        fontSize: "1.875rem",
+                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                        ...(selectedContactData?.color
+                          ? {}
+                          : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }),
+                      }}
+                      aria-hidden={!isRecipientVerified}
+                    >
+                      {selectedContactData?.initial ?? "?"}
+                    </div>
+                    <div>
+                      <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                        Kepada Penerima
+                      </Typography.Text>
+                      {isRecipientVerified ? (
+                        <>
+                          <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                            {selectedContactData.name}
+                          </Typography.Title>
+                          <Typography.Text strong style={{ display: "block", marginTop: 4 }}>
+                            ID Akun: {reviewAccountId}
+                          </Typography.Text>
+                        </>
+                      ) : (
+                        <>
+                          <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                            Penerima belum terverifikasi
+                          </Typography.Title>
+                          <Typography.Text
+                            strong
+                            type="danger"
+                            style={{ display: "block", marginTop: 4 }}
+                            id="recipient-verification-alert"
+                            role="alert"
+                          >
+                            ID Akun {reviewAccountId || "-"} tidak cocok dengan
+                            penerima tersimpan. Cek kembali nomornya atau
+                            tambahkan sebagai penerima favorit.
+                          </Typography.Text>
+                        </>
+                      )}
+                    </div>
+                  </Space>
+                </Col>
+                <Col xs={24} md={12} style={{ textAlign: "right" }}>
+                  <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
                     Jumlah Transfer
-                  </p>
-                  <p className="text-4xl sm:text-4xl font-bold text-foreground animate-amount-settle">
+                  </Typography.Text>
+                  <Typography.Text strong style={{ display: "block", fontSize: "2.25rem" }} className="animate-amount-settle">
                     Rp {formatCurrencyWithoutSymbol(amount)}
-                  </p>
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mt-2">
+                  </Typography.Text>
+                  <Typography.Text type="secondary" strong style={{ display: "block", marginTop: 8 }}>
                     Mata Uang IDR
-                  </p>
-                </div>
-              </div>
+                  </Typography.Text>
+                </Col>
+              </Row>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 relative z-10">
-                <div className="bg-muted p-6 rounded-xl border border-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TransferTypeIcon className="h-4 w-4 text-primary" />
-                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                      Tipe Transfer
-                    </p>
-                  </div>
-                  <p className="font-bold text-foreground text-sm">
-                    {selectedTransferType?.label}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {selectedTransferType?.processingTime}
-                  </p>
-                </div>
-                <div className="bg-muted p-6 rounded-xl border border-border">
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">
-                    Biaya Transfer
-                  </p>
-                  <p className="font-bold text-foreground text-sm">
-                    {selectedTransferType?.fee}
-                  </p>
-                </div>
-                <div className="bg-muted p-6 rounded-xl border border-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    {scheduleType !== "NOW" && (
-                      <CalendarIcon className="h-4 w-4 text-primary" />
+              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                <Col xs={24} md={8}>
+                  <Card>
+                    <Space size={8} style={{ display: "block", marginBottom: 8 }}>
+                      <TransferTypeIcon className="h-4 w-4 text-primary" />
+                      <Typography.Text type="secondary" strong>
+                        Tipe Transfer
+                      </Typography.Text>
+                    </Space>
+                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                      {selectedTransferType?.label}
+                    </Typography.Text>
+                    <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem", marginTop: 4 }}>
+                      {selectedTransferType?.processingTime}
+                    </Typography.Text>
+                  </Card>
+                </Col>
+                <Col xs={24} md={8}>
+                  <Card>
+                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 8 }}>
+                      Biaya Transfer
+                    </Typography.Text>
+                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                      {selectedTransferType?.fee}
+                    </Typography.Text>
+                  </Card>
+                </Col>
+                <Col xs={24} md={8}>
+                  <Card>
+                    <Space size={8} style={{ display: "block", marginBottom: 8 }}>
+                      {scheduleType !== "NOW" && (
+                        <CalendarIcon className="h-4 w-4 text-primary" />
+                      )}
+                      <Typography.Text type="secondary" strong>
+                        Jadwal
+                      </Typography.Text>
+                    </Space>
+                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                      {selectedScheduleType?.label}
+                    </Typography.Text>
+                    {scheduleType === "SCHEDULED" && scheduledAt && (
+                      <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem", marginTop: 4 }}>
+                        {format(new Date(scheduledAt), "PPP", { locale: id })}
+                      </Typography.Text>
                     )}
-                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                      Jadwal
-                    </p>
-                  </div>
-                  <p className="font-bold text-foreground text-sm">
-                    {selectedScheduleType?.label}
-                  </p>
-                  {scheduleType === "SCHEDULED" && scheduledAt && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {format(new Date(scheduledAt), "PPP", { locale: id })}
-                    </p>
-                  )}
-                  {scheduleType === "RECURRING" && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Tanggal {recurringDay || "-"}-
-                      {recurringMonth || "setiap bulan"}
-                    </p>
-                  )}
-                </div>
-              </div>
+                    {scheduleType === "RECURRING" && (
+                      <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem", marginTop: 4 }}>
+                        Tanggal {recurringDay || "-"}-
+                        {recurringMonth || "setiap bulan"}
+                      </Typography.Text>
+                    )}
+                  </Card>
+                </Col>
+              </Row>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                <div className="bg-muted p-5 sm:p-6 rounded-xl border border-border">
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">
-                    Kantong Sumber
-                  </p>
-                  <p className="font-bold text-foreground text-lg">
-                    Kantong Utama Cair
-                  </p>
-                  <p className="text-xs font-bold text-primary tracking-widest uppercase mt-2">
-                    Saldo: Rp 86.353.000
-                  </p>
-                </div>
+              <Row gutter={[16, 16]}>
+                <Col xs={24} md={12}>
+                  <Card>
+                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 8 }}>
+                      Kantong Sumber
+                    </Typography.Text>
+                    <Typography.Text strong style={{ display: "block", fontSize: "1.125rem" }}>
+                      Kantong Utama Cair
+                    </Typography.Text>
+                    <Typography.Text strong style={{ display: "block", color: "hsl(var(--primary))", marginTop: 8 }}>
+                      Saldo: Rp 86.353.000
+                    </Typography.Text>
+                  </Card>
+                </Col>
                 {description && (
-                  <div className="bg-muted p-5 sm:p-6 rounded-xl border border-border">
-                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">
-                      Pesan Konfirmasi
-                    </p>
-                    <p className="font-bold text-foreground text-lg">
-                      &quot;{description}&quot;
-                    </p>
-                  </div>
+                  <Col xs={24} md={12}>
+                    <Card>
+                      <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 8 }}>
+                        Pesan Konfirmasi
+                      </Typography.Text>
+                      <Typography.Text strong style={{ display: "block", fontSize: "1.125rem" }}>
+                        &quot;{description}&quot;
+                      </Typography.Text>
+                    </Card>
+                  </Col>
                 )}
-              </div>
-            </div>
+              </Row>
+            </Card>
 
             <Button
               type="primary"
@@ -461,13 +499,14 @@ export default function TransferPage() {
                   ? undefined
                   : "recipient-verification-alert"
               }
-              className="w-full h-16 rounded-2xl shadow-2xl shadow-primary/20"
+              block
+              size="large"
             >
               {transferMutation.isPending
                 ? "Memvalidasi Transaksi..."
                 : "Otorisasi Transfer Sekarang"}
             </Button>
-          </div>
+          </Space>
         </main>
       </DashboardLayout>
     );
@@ -491,85 +530,95 @@ export default function TransferPage() {
       <DashboardLayout>
         <SkipLink href="#main-content" />
         <main id="main-content" className="overflow-x-hidden">
-          <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-12">
-            <div className="animate-seal-lock will-change-transform mb-8">
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "48px 16px" }}>
+            <div className="animate-seal-lock will-change-transform" style={{ marginBottom: 32 }}>
+              <div style={{ width: 96, height: 96, borderRadius: "50%", backgroundColor: "hsl(var(--primary) / 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <CheckCircle className="w-14 h-14 text-primary" />
               </div>
             </div>
 
-            <h2
-              aria-live="polite"
-              className="text-2xl sm:text-3xl font-bold text-foreground mb-2 text-center"
-            >
+            <Typography.Title level={2} style={{ textAlign: "center", marginBottom: 8 }}>
               Transfer Berhasil!
-            </h2>
-            <p className="text-sm text-muted-foreground mb-8 text-center">
+            </Typography.Title>
+            <Typography.Text type="secondary" style={{ textAlign: "center", display: "block", marginBottom: 32 }}>
               {successSchedule?.label === "Sekarang"
                 ? "Dana telah dikirim ke penerima"
                 : successSchedule?.label === "Terjadwal"
                   ? "Transfer terjadwal telah diatur"
                   : "Transfer berulang telah diatur"}
-            </p>
+            </Typography.Text>
 
-            <div className="w-full max-w-md bg-card rounded-2xl border border-border shadow-card p-6 sm:p-8 space-y-6 animate-receipt-unfold">
-              <div className="flex items-center gap-4 pb-6 border-b border-border">
-                <div
-                  className={clsx(
-                    "w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-xl shadow-sm",
-                    successContact?.color || "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {successContact?.initial || "?"}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">
-                    Penerima
-                  </p>
-                  <p className="font-bold text-foreground text-lg">
-                    {successContact?.name || "-"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formValues.toAccountId || "-"}
-                  </p>
-                </div>
-              </div>
+            <Card className="animate-receipt-unfold" style={{ width: "100%", maxWidth: 448 }}>
+              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space size={16} style={{ paddingBottom: 24 }}>
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: "1.25rem",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                      ...(successContact?.color
+                        ? {}
+                        : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }),
+                    }}
+                  >
+                    {successContact?.initial || "?"}
+                  </div>
+                  <div>
+                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                      Penerima
+                    </Typography.Text>
+                    <Typography.Text strong style={{ display: "block", fontSize: "1.125rem" }}>
+                      {successContact?.name || "-"}
+                    </Typography.Text>
+                    <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem" }}>
+                      {formValues.toAccountId || "-"}
+                    </Typography.Text>
+                  </div>
+                </Space>
 
-              <div className="text-center">
-                <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">
-                  Jumlah Transfer
-                </p>
-                <p className="text-4xl font-bold text-foreground animate-amount-settle">
-                  Rp {formatCurrencyWithoutSymbol(amount)}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">
-                    Tipe Transfer
-                  </p>
-                  <p className="font-bold text-foreground text-sm">
-                    {selectedTransferType?.label || "-"}
-                  </p>
+                <div style={{ textAlign: "center" }}>
+                  <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 8 }}>
+                    Jumlah Transfer
+                  </Typography.Text>
+                  <Typography.Text strong style={{ display: "block", fontSize: "2.25rem" }} className="animate-amount-settle">
+                    Rp {formatCurrencyWithoutSymbol(amount)}
+                  </Typography.Text>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">
-                    Waktu
-                  </p>
-                  <p className="font-bold text-foreground text-sm">
-                    {format(now, "dd MMM yyyy, HH:mm", { locale: id })}
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mt-8">
+                <Row gutter={[16, 16]} style={{ paddingTop: 16 }}>
+                  <Col span={12}>
+                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                      Tipe Transfer
+                    </Typography.Text>
+                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                      {selectedTransferType?.label || "-"}
+                    </Typography.Text>
+                  </Col>
+                  <Col span={12} style={{ textAlign: "right" }}>
+                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                      Waktu
+                    </Typography.Text>
+                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                      {format(now, "dd MMM yyyy, HH:mm", { locale: id })}
+                    </Typography.Text>
+                  </Col>
+                </Row>
+              </Space>
+            </Card>
+
+            <Space direction="vertical" size={16} style={{ width: "100%", maxWidth: 448, marginTop: 32 }}>
               <Button
                 type="primary"
                 onClick={handleTransferAgain}
                 data-testid="transfer-again-button"
-                className="flex-1 h-14 rounded-xl shadow-lg shadow-primary/20"
+                block
+                size="large"
               >
                 Transfer Lagi
               </Button>
@@ -577,11 +626,12 @@ export default function TransferPage() {
                 type="default"
                 onClick={() => router.push("/dashboard")}
                 data-testid="back-to-dashboard-button"
-                className="flex-1 h-14 rounded-xl border border-border"
+                block
+                size="large"
               >
                 Kembali ke Dashboard
               </Button>
-            </div>
+            </Space>
           </div>
         </main>
       </DashboardLayout>
@@ -592,485 +642,547 @@ export default function TransferPage() {
     <DashboardLayout>
       <SkipLink href="#main-content" />
       <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6">
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+        <Space direction="vertical" size={16}>
+          <div>
+            <Typography.Title level={1} style={{ marginBottom: 0 }}>
               Transfer Instan
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium mt-1">
+            </Typography.Title>
+            <Typography.Text type="secondary" style={{ display: "block", marginTop: 4 }}>
               Kirim dana secara aman dalam hitungan detik.
-            </p>
+            </Typography.Text>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            <div className="lg:col-span-8 space-y-6 sm:space-y-6">
-              <Form
-                form={form}
-                onFinish={onValid}
-                initialValues={{
-                  amount: "0",
-                  transferType: "INTERNAL_TRANSFER",
-                  scheduleType: "NOW",
-                }}
-                layout="vertical"
-              >
-                <Form.Item
-                  name="transferType"
-                  rules={[rule("transferType")]}
-                  noStyle
+          <Row gutter={[16, 16]}>
+            <Col xs={24} lg={16}>
+              <Space direction="vertical" size={16}>
+                <Form
+                  form={form}
+                  onFinish={onValid}
+                  initialValues={{
+                    amount: "0",
+                    transferType: "INTERNAL_TRANSFER",
+                    scheduleType: "NOW",
+                  }}
+                  layout="vertical"
                 >
-                  <Input type="hidden" />
-                </Form.Item>
-                <Form.Item
-                  name="scheduleType"
-                  rules={[rule("scheduleType")]}
-                  noStyle
-                >
-                  <Input type="hidden" />
-                </Form.Item>
-                <Form.Item
-                  name="fromAccountId"
-                  rules={[rule("fromAccountId")]}
-                  noStyle
-                >
-                  <Input type="hidden" />
-                </Form.Item>
-                <fieldset className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card">
-                  <legend className="text-xs sm:text-sm font-bold text-foreground tracking-widest uppercase px-2">
-                    Pilih Metode Transfer
-                  </legend>
-                  <div
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-                    role="radiogroup"
-                    aria-label="Pilih Metode Transfer"
-                  >
-                    {TRANSFER_TYPES.map((t) => {
-                      const Icon = t.icon;
-                      const isSelected = transferType === t.type;
-                      return (
-                        <Button
-                          type="text"
-                          htmlType="button"
-                          key={t.type}
-                          role="radio"
-                          aria-checked={isSelected}
-                          onClick={() =>
-                            form.setFieldsValue({ transferType: t.type })
-                          }
-                          data-testid={`transfer-type-${t.type.toLowerCase()}`}
-                          className={clsx(
-                            "flex flex-col gap-4 p-6 rounded-xl border-2 transition-all group",
-                            isSelected
-                              ? "bg-primary/5 border-primary shadow-lg shadow-primary/10"
-                              : "bg-muted border-transparent hover:border-border hover:bg-card",
-                          )}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div
-                              className={clsx(
-                                "h-12 w-12 rounded-xl flex items-center justify-center",
-                                isSelected
-                                  ? "bg-primary/10 text-primary"
-                                  : "bg-muted/50 text-muted-foreground",
-                              )}
-                            >
-                              <Icon className="h-6 w-6" />
-                            </div>
-                            {isSelected && (
-                              <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
-                            )}
-                          </div>
-                          <div className="text-left">
-                            <h4 className="font-bold text-foreground text-sm mb-1">
-                              {t.label}
-                            </h4>
-                            <p className="text-xs text-muted-foreground mb-2">
-                              {t.description}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/50 px-2 py-1 rounded">
-                                {t.fee}
-                              </span>
-                              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/50 px-2 py-1 rounded">
-                                {t.processingTime}
-                              </span>
-                            </div>
-                          </div>
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-
-                <fieldset className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card">
-                  <legend className="text-xs sm:text-sm font-bold text-foreground tracking-widest uppercase px-2">
-                    Jadwal Transfer
-                  </legend>
-                  <div
-                    className="grid grid-cols-1 sm:grid-cols-3 gap-4"
-                    role="radiogroup"
-                    aria-label="Jadwal Transfer"
-                  >
-                    {SCHEDULE_TYPES.map((s) => {
-                      const isSelected = scheduleType === s.type;
-                      return (
-                        <Button
-                          type="text"
-                          htmlType="button"
-                          key={s.type}
-                          role="radio"
-                          aria-checked={isSelected}
-                          onClick={() =>
-                            form.setFieldsValue({ scheduleType: s.type })
-                          }
-                          data-testid={`schedule-type-${s.type.toLowerCase()}`}
-                          className={clsx(
-                            "flex flex-col gap-3 p-6 rounded-xl border-2 transition-all group",
-                            isSelected
-                              ? "bg-primary/5 border-primary shadow-lg shadow-primary/10"
-                              : "bg-muted border-transparent hover:border-border hover:bg-card",
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            {s.type !== "NOW" && (
-                              <div
-                                className={clsx(
-                                  "h-10 w-10 rounded-lg flex items-center justify-center",
-                                  isSelected
-                                    ? "bg-primary/10 text-primary"
-                                    : "bg-muted/50 text-muted-foreground",
-                                )}
-                              >
-                                {s.type === "SCHEDULED" ? (
-                                  <CalendarIcon className="h-5 w-5" />
-                                ) : (
-                                  <Clock className="h-5 w-5" />
-                                )}
-                              </div>
-                            )}
-                            {isSelected && (
-                              <div className="ml-auto h-2 w-2 bg-primary rounded-full animate-pulse" />
-                            )}
-                          </div>
-                          <div className="text-left">
-                            <h4 className="font-bold text-foreground text-sm mb-1">
-                              {s.label}
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                              {s.description}
-                            </p>
-                          </div>
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-
-                {scheduleType === "SCHEDULED" && (
-                  <div className="mt-6 bg-muted/50 p-6 rounded-xl border border-border">
-                    <Form.Item
-                      name="scheduledAt"
-                      rules={[rule("scheduledAt")]}
-                      className="mb-0"
-                      label={
-                        <label
-                          htmlFor="transfer-scheduled-at"
-                          className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block"
-                        >
-                          Tanggal Transfer
-                        </label>
-                      }
-                    >
-                      <DatePicker
-                        id="transfer-scheduled-at"
-                        className="w-full h-16 rounded-xl font-bold"
-                        placeholder="Pilih Tanggal Transfer"
-                        format="DD MMM YYYY"
-                        disabledDate={(current) =>
-                          current && current < dayjs().startOf("day")
-                        }
-                        onChange={(date) =>
-                          form.setFieldsValue({
-                            scheduledAt: date
-                              ? date.toDate().toISOString()
-                              : undefined,
-                          })
-                        }
-                      />
-                    </Form.Item>
-                  </div>
-                )}
-
-                {scheduleType === "RECURRING" && (
-                  <div className="mt-8 space-y-6 animate-fade-in">
-                    <div className="space-y-4">
-                      <span
-                        id="recurring-day-label"
-                        className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase ml-2"
-                      >
-                        Pilih Tanggal Tagihan / Transfer
-                      </span>
-                      <Form.Item
-                        name="recurringDay"
-                        rules={[rule("recurringDay")]}
-                        className="mb-0"
-                        noStyle
-                      >
-                        <Input type="hidden" />
-                      </Form.Item>
-                      <div
-                        className="grid grid-cols-7 gap-2 bg-muted/30 p-4 rounded-xl border border-border"
-                        aria-labelledby="recurring-day-label"
-                      >
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map(
-                          (d) => (
-                            <Button
-                              type="text"
-                              htmlType="button"
-                              key={d}
-                              onClick={() =>
-                                form.setFieldsValue({ recurringDay: d })
-                              }
-                              className={clsx(
-                                "aspect-square min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center font-bold text-sm transition-all active:scale-90",
-                                recurringDay === d
-                                  ? "bg-primary text-surface shadow-lg shadow-primary/30 scale-105"
-                                  : "bg-card text-foreground/60 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20",
-                              )}
-                            >
-                              {d}
-                            </Button>
-                          ),
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between ml-2">
-                        <span
-                          id="recurring-month-label"
-                          className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase"
-                        >
-                          Pilih Bulan (Opsional)
-                        </span>
-                        <Button
-                          type="link"
-                          htmlType="button"
-                          onClick={() =>
-                            form.setFieldsValue({ recurringMonth: undefined })
-                          }
-                          className="text-xs font-bold text-primary-dark tracking-widest uppercase hover:underline"
-                        >
-                          Reset ke Setiap Bulan
-                        </Button>
-                      </div>
-                      <Form.Item
-                        name="recurringMonth"
-                        rules={[rule("recurringMonth")]}
-                        className="mb-0"
-                        noStyle
-                      >
-                        <Input type="hidden" />
-                      </Form.Item>
-                      <div
-                        className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 bg-muted/30 p-4 rounded-2xl border border-border"
-                        aria-labelledby="recurring-month-label"
-                      >
-                        {[
-                          "JAN",
-                          "FEB",
-                          "MAR",
-                          "APR",
-                          "MEI",
-                          "JUN",
-                          "JUL",
-                          "AGU",
-                          "SEP",
-                          "OKT",
-                          "NOV",
-                          "DES",
-                        ].map((m, idx) => {
-                          const val = idx + 1;
-                          return (
-                            <Button
-                              type="text"
-                              htmlType="button"
-                              key={m}
-                              onClick={() =>
-                                form.setFieldsValue({ recurringMonth: val })
-                              }
-                              className={clsx(
-                                "py-4 rounded-xl flex items-center justify-center font-bold text-xs tracking-widest transition-all active:scale-95",
-                                recurringMonth === val
-                                  ? "bg-primary text-surface shadow-lg shadow-primary/30"
-                                  : "bg-card text-foreground/60 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20",
-                              )}
-                            >
-                              {m}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="relative group">
                   <Form.Item
-                    name="toAccountId"
-                    rules={[rule("toAccountId")]}
-                    className="mb-0"
+                    name="transferType"
+                    rules={[rule("transferType")]}
                     noStyle
                   >
-                    <Input
-                      data-testid="recipient-account-input"
-                      type="text"
-                      placeholder="Masukkan ID Akun atau Nomor Rekening"
-                      className="pl-16 h-16 text-lg"
-                      aria-label="Nomor Rekening Penerima"
-                    />
+                    <Input type="hidden" />
                   </Form.Item>
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground group-focus-within:text-primary transition-colors z-10 pointer-events-none" />
-                </div>
+                  <Form.Item
+                    name="scheduleType"
+                    rules={[rule("scheduleType")]}
+                    noStyle
+                  >
+                    <Input type="hidden" />
+                  </Form.Item>
+                  <Form.Item
+                    name="fromAccountId"
+                    rules={[rule("fromAccountId")]}
+                    noStyle
+                  >
+                    <Input type="hidden" />
+                  </Form.Item>
+                  <Card>
+                    <Typography.Text strong style={{ display: "block", marginBottom: 16 }}>
+                      Pilih Metode Transfer
+                    </Typography.Text>
+                    <Row gutter={[16, 16]} role="radiogroup" aria-label="Pilih Metode Transfer">
+                      {TRANSFER_TYPES.map((t) => {
+                        const Icon = t.icon;
+                        const isSelected = transferType === t.type;
+                        return (
+                          <Col xs={24} sm={12} key={t.type}>
+                            <Button
+                              type="text"
+                              htmlType="button"
+                              role="radio"
+                              aria-checked={isSelected}
+                              onClick={() =>
+                                form.setFieldsValue({ transferType: t.type })
+                              }
+                              data-testid={`transfer-type-${t.type.toLowerCase()}`}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 16,
+                                padding: 24,
+                                borderRadius: 12,
+                                border: isSelected
+                                  ? "2px solid hsl(var(--primary))"
+                                  : "2px solid transparent",
+                                transition: "all 0.2s",
+                                ...(isSelected
+                                  ? { backgroundColor: "hsl(var(--primary) / 0.05)", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.1)" }
+                                  : { backgroundColor: "hsl(var(--muted))" }),
+                              }}
+                            >
+                              <Row justify="space-between" align="top">
+                                <div
+                                  style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 12,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    ...(isSelected
+                                      ? { backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }
+                                      : { backgroundColor: "hsl(var(--muted) / 0.5)", color: "hsl(var(--muted-foreground))" }),
+                                  }}
+                                >
+                                  <Icon className="h-6 w-6" />
+                                </div>
+                                {isSelected && (
+                                  <div style={{ width: 8, height: 8, backgroundColor: "hsl(var(--primary))", borderRadius: "50%" }} className="animate-pulse" />
+                                )}
+                              </Row>
+                              <div style={{ textAlign: "left" }}>
+                                <Typography.Text strong style={{ display: "block", fontSize: "0.875rem", marginBottom: 4 }}>
+                                  {t.label}
+                                </Typography.Text>
+                                <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem", marginBottom: 8 }}>
+                                  {t.description}
+                                </Typography.Text>
+                                <Space size={8}>
+                                  <Tag>{t.fee}</Tag>
+                                  <Tag>{t.processingTime}</Tag>
+                                </Space>
+                              </div>
+                            </Button>
+                          </Col>
+                        );
+                      })}
+                    </Row>
+                  </Card>
 
-                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -z-0" />
+                  <Card>
+                    <Typography.Text strong style={{ display: "block", marginBottom: 16 }}>
+                      Jadwal Transfer
+                    </Typography.Text>
+                    <Row gutter={[16, 16]} role="radiogroup" aria-label="Jadwal Transfer">
+                      {SCHEDULE_TYPES.map((s) => {
+                        const isSelected = scheduleType === s.type;
+                        return (
+                          <Col xs={24} sm={8} key={s.type}>
+                            <Button
+                              type="text"
+                              htmlType="button"
+                              role="radio"
+                              aria-checked={isSelected}
+                              onClick={() =>
+                                form.setFieldsValue({ scheduleType: s.type })
+                              }
+                              data-testid={`schedule-type-${s.type.toLowerCase()}`}
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 12,
+                                padding: 24,
+                                borderRadius: 12,
+                                border: isSelected
+                                  ? "2px solid hsl(var(--primary))"
+                                  : "2px solid transparent",
+                                transition: "all 0.2s",
+                                ...(isSelected
+                                  ? { backgroundColor: "hsl(var(--primary) / 0.05)", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.1)" }
+                                  : { backgroundColor: "hsl(var(--muted))" }),
+                              }}
+                            >
+                              <Row justify="space-between" align="middle">
+                                {s.type !== "NOW" && (
+                                  <div
+                                    style={{
+                                      width: 40,
+                                      height: 40,
+                                      borderRadius: 8,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      ...(isSelected
+                                        ? { backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }
+                                        : { backgroundColor: "hsl(var(--muted) / 0.5)", color: "hsl(var(--muted-foreground))" }),
+                                    }}
+                                  >
+                                    {s.type === "SCHEDULED" ? (
+                                      <CalendarIcon className="h-5 w-5" />
+                                    ) : (
+                                      <Clock className="h-5 w-5" />
+                                    )}
+                                  </div>
+                                )}
+                                {isSelected && (
+                                  <div style={{ marginLeft: "auto", width: 8, height: 8, backgroundColor: "hsl(var(--primary))", borderRadius: "50%" }} className="animate-pulse" />
+                                )}
+                              </Row>
+                              <div style={{ textAlign: "left" }}>
+                                <Typography.Text strong style={{ display: "block", fontSize: "0.875rem", marginBottom: 4 }}>
+                                  {s.label}
+                                </Typography.Text>
+                                <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem" }}>
+                                  {s.description}
+                                </Typography.Text>
+                              </div>
+                            </Button>
+                          </Col>
+                        );
+                      })}
+                    </Row>
+                  </Card>
 
-                  <div className="flex justify-between items-center mb-6 relative z-10 gap-2">
-                    <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                      Nominal Transfer
-                    </span>
-                    <div className="flex items-center gap-2 sm:gap-3 bg-success-light px-3 sm:px-4 py-1.5 rounded-full border border-primary/10 shadow-sm shrink-0">
-                      <div className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse" />
-                      <span className="text-xs font-bold text-primary tracking-widest uppercase">
-                        Secured IDR
-                      </span>
-                    </div>
-                  </div>
+                  {scheduleType === "SCHEDULED" && (
+                    <Card style={{ marginTop: 24 }}>
+                      <Form.Item
+                        name="scheduledAt"
+                        rules={[rule("scheduledAt")]}
+                        style={{ marginBottom: 0 }}
+                        label={
+                          <label
+                            htmlFor="transfer-scheduled-at"
+                            style={{ fontSize: "0.75rem", fontWeight: "bold", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12, display: "block" }}
+                          >
+                            Tanggal Transfer
+                          </label>
+                        }
+                      >
+                        <DatePicker
+                          id="transfer-scheduled-at"
+                          style={{ width: "100%", height: 64, borderRadius: 12, fontWeight: "bold" }}
+                          placeholder="Pilih Tanggal Transfer"
+                          format="DD MMM YYYY"
+                          disabledDate={(current) =>
+                            current && current < dayjs().startOf("day")
+                          }
+                          onChange={(date) =>
+                            form.setFieldsValue({
+                              scheduledAt: date
+                                ? date.toDate().toISOString()
+                                : undefined,
+                            })
+                          }
+                        />
+                      </Form.Item>
+                    </Card>
+                  )}
 
-                  <div className="flex items-center gap-6 mb-6 relative z-10">
+                  {scheduleType === "RECURRING" && (
+                    <Space direction="vertical" size={16} className="animate-fade-in" style={{ marginTop: 24 }}>
+                      <Space direction="vertical" size={16}>
+                        <Typography.Text type="secondary" strong style={{ display: "block", marginLeft: 8 }} id="recurring-day-label">
+                          Pilih Tanggal Tagihan / Transfer
+                        </Typography.Text>
+                        <Form.Item
+                          name="recurringDay"
+                          rules={[rule("recurringDay")]}
+                          style={{ marginBottom: 0 }}
+                          noStyle
+                        >
+                          <Input type="hidden" />
+                        </Form.Item>
+                        <Row gutter={[8, 8]} style={{ backgroundColor: "hsl(var(--muted) / 0.3)", padding: 16, borderRadius: 12, border: "1px solid hsl(var(--border))" }} aria-labelledby="recurring-day-label">
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                            (d) => (
+                              <Col span={3} key={d}>
+                                <Button
+                                  type="text"
+                                  htmlType="button"
+                                  onClick={() =>
+                                    form.setFieldsValue({ recurringDay: d })
+                                  }
+                                  style={{
+                                    aspectRatio: "1",
+                                    minHeight: 44,
+                                    minWidth: 44,
+                                    borderRadius: 12,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontWeight: "bold",
+                                    fontSize: "0.875rem",
+                                    transition: "all 0.2s",
+                                    ...(recurringDay === d
+                                      ? { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--surface))", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.3)", transform: "scale(1.05)" }
+                                      : { backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground) / 0.6)" }),
+                                  }}
+                                >
+                                  {d}
+                                </Button>
+                              </Col>
+                            ),
+                          )}
+                        </Row>
+                      </Space>
+
+                      <Space direction="vertical" size={16}>
+                        <Row justify="space-between" align="middle" style={{ marginLeft: 8 }}>
+                          <Typography.Text type="secondary" strong id="recurring-month-label">
+                            Pilih Bulan (Opsional)
+                          </Typography.Text>
+                          <Button
+                            type="link"
+                            htmlType="button"
+                            onClick={() =>
+                              form.setFieldsValue({ recurringMonth: undefined })
+                            }
+                            style={{ fontSize: "0.75rem", fontWeight: "bold", color: "hsl(var(--primary-dark))", letterSpacing: "0.1em", textTransform: "uppercase" }}
+                          >
+                            Reset ke Setiap Bulan
+                          </Button>
+                        </Row>
+                        <Form.Item
+                          name="recurringMonth"
+                          rules={[rule("recurringMonth")]}
+                          style={{ marginBottom: 0 }}
+                          noStyle
+                        >
+                          <Input type="hidden" />
+                        </Form.Item>
+                        <Row gutter={[8, 8]} style={{ backgroundColor: "hsl(var(--muted) / 0.3)", padding: 16, borderRadius: 16, border: "1px solid hsl(var(--border))" }} aria-labelledby="recurring-month-label">
+                          {[
+                            "JAN",
+                            "FEB",
+                            "MAR",
+                            "APR",
+                            "MEI",
+                            "JUN",
+                            "JUL",
+                            "AGU",
+                            "SEP",
+                            "OKT",
+                            "NOV",
+                            "DES",
+                          ].map((m, idx) => {
+                            const val = idx + 1;
+                            return (
+                              <Col span={4} key={m}>
+                                <Button
+                                  type="text"
+                                  htmlType="button"
+                                  onClick={() =>
+                                    form.setFieldsValue({ recurringMonth: val })
+                                  }
+                                  style={{
+                                    padding: "16px 0",
+                                    borderRadius: 12,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontWeight: "bold",
+                                    fontSize: "0.75rem",
+                                    letterSpacing: "0.1em",
+                                    transition: "all 0.2s",
+                                    ...(recurringMonth === val
+                                      ? { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--surface))", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.3)" }
+                                      : { backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground) / 0.6)" }),
+                                  }}
+                                >
+                                  {m}
+                                </Button>
+                              </Col>
+                            );
+                          })}
+                        </Row>
+                      </Space>
+                    </Space>
+                  )}
+
+                  <div style={{ position: "relative" }}>
                     <Form.Item
-                      name="amount"
-                      rules={[rule("amount")]}
-                      className="mb-0"
-                      noStyle
-                    >
-                      <Input type="hidden" data-testid="amount-input" />
-                    </Form.Item>
-                    <Input
-                      value={formattedAmount}
-                      onChange={handleAmountChange}
-                      placeholder="0"
-                      aria-label="Nominal Transfer"
-                      className="w-full bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/10 text-3xl sm:text-4xl lg:text-5xl xl:text-7xl font-bold outline-none text-foreground truncate"
-                      variant="borderless"
-                    />
-                  </div>
-
-                  <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-xl border border-border relative z-10">
-                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3">
-                      Memo Transaksi
-                    </p>
-                    <Form.Item
-                      name="description"
-                      rules={[rule("description")]}
-                      className="mb-0"
+                      name="toAccountId"
+                      rules={[rule("toAccountId")]}
+                      style={{ marginBottom: 0 }}
                       noStyle
                     >
                       <Input
-                        data-testid="description-input"
+                        data-testid="recipient-account-input"
                         type="text"
-                        placeholder="Apa tujuan transfer ini?"
-                        className="w-full text-base font-bold bg-transparent border-0 p-0 focus:ring-0 placeholder:text-muted-foreground/40 outline-none"
-                        aria-label="Memo Transaksi"
+                        placeholder="Masukkan ID Akun atau Nomor Rekening"
+                        style={{ paddingLeft: 64, height: 64, fontSize: "1.125rem" }}
+                        aria-label="Nomor Rekening Penerima"
                       />
                     </Form.Item>
+                    <Search style={{ position: "absolute", left: 24, top: "50%", transform: "translateY(-50%)", height: 24, width: 24, color: "hsl(var(--muted-foreground))", zIndex: 10, pointerEvents: "none" }} />
                   </div>
-                </div>
 
-                <Button
-                  type="primary"
-                  htmlType="button"
-                  onClick={handleReview}
-                  data-testid="review-transfer-button"
-                  className="w-full h-16 rounded-2xl shadow-xl shadow-primary/20 group"
-                >
-                  Tinjau Ringkasan Transfer
-                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-2 transition-transform" />
-                </Button>
-              </Form>
-            </div>
+                  <Card>
+                    <div style={{ position: "absolute", top: 0, right: 0, width: 192, height: 192, backgroundColor: "hsl(var(--primary) / 0.05)", borderRadius: "50%", filter: "blur(48px)", zIndex: 0 }} />
 
-            <div className="lg:col-span-4 space-y-6 sm:space-y-6">
-              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card h-full flex flex-col">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">
-                    Penerima Favorit
-                  </h3>
-                  <div className="h-1 w-8 bg-primary rounded-full" />
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-6">
-                  {recentContacts.map((c) => (
-                    <Button
-                      key={c.accountId}
-                      type="text"
-                      htmlType="button"
-                      onClick={() => handleContactSelect(c)}
-                      data-testid={`favorite-contact-${c.name.toLowerCase()}`}
-                      className={clsx(
-                        "flex flex-col items-center gap-4 p-6 rounded-xl border transition-all group",
-                        selectedContact === c.accountId
-                          ? "bg-primary/5 border-primary shadow-lg shadow-primary/10"
-                          : "bg-muted border-transparent hover:border-border hover:bg-card",
-                      )}
-                    >
-                      <div
-                        className={`w-14 h-14 rounded-2xl ${c.color} flex items-center justify-center font-bold text-2xl shadow-sm group-hover:scale-110 transition-transform`}
-                      >
-                        {c.initial}
+                    <Row justify="space-between" align="middle" gutter={[8, 8]} style={{ marginBottom: 24, position: "relative", zIndex: 10 }}>
+                      <Typography.Text type="secondary" strong>
+                        Nominal Transfer
+                      </Typography.Text>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "hsl(var(--success-light))", padding: "6px 12px", borderRadius: "9999px", border: "1px solid hsl(var(--primary) / 0.1)", boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)", flexShrink: 0 }}>
+                        <div style={{ width: 6, height: 6, backgroundColor: "hsl(var(--primary))", borderRadius: "50%" }} className="animate-pulse" />
+                        <Typography.Text strong style={{ fontSize: "0.75rem" }}>
+                          Secured IDR
+                        </Typography.Text>
                       </div>
-                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                        {c.name}
-                      </span>
-                    </Button>
-                  ))}
-                  <Button
-                    type="text"
-                    htmlType="button"
-                    className="flex flex-col items-center gap-4 p-6 rounded-xl border border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all group"
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
-                      <PlusCircle className="h-6 w-6" />
-                    </div>
-                    <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                      Tambah
-                    </span>
-                  </Button>
-                </div>
+                    </Row>
 
-                <div className="mt-auto pt-10">
-                  <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl group">
-                    <div className="relative z-10">
-                      <h4 className="font-bold text-xl mb-2">Bantuan?</h4>
-                      <p className="text-xs text-text-disabled font-bold tracking-widest uppercase mb-8 leading-relaxed">
-                        Proteksi & panduan transaksi aman.
-                      </p>
-                      <Button
-                        type="default"
-                        htmlType="button"
-                        className="text-xs font-bold tracking-widest uppercase bg-surface/10 px-6 py-3 rounded-xl border border-surface/10 hover:bg-surface/20 transition-all"
+                    <Space size={16} style={{ marginBottom: 24, position: "relative", zIndex: 10, display: "block" }}>
+                      <Form.Item
+                        name="amount"
+                        rules={[rule("amount")]}
+                        style={{ marginBottom: 0 }}
+                        noStyle
                       >
-                        Hubungi Kami
+                        <Input type="hidden" data-testid="amount-input" />
+                      </Form.Item>
+                      <Input
+                        value={formattedAmount}
+                        onChange={handleAmountChange}
+                        placeholder="0"
+                        aria-label="Nominal Transfer"
+                        style={{ width: "100%", backgroundColor: "transparent", border: "none", padding: 0, fontSize: "2.25rem", fontWeight: "bold", color: "hsl(var(--foreground))" }}
+                        variant="borderless"
+                      />
+                    </Space>
+
+                    <Card style={{ position: "relative", zIndex: 10 }}>
+                      <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 12 }}>
+                        Memo Transaksi
+                      </Typography.Text>
+                      <Form.Item
+                        name="description"
+                        rules={[rule("description")]}
+                        style={{ marginBottom: 0 }}
+                        noStyle
+                      >
+                        <Input
+                          data-testid="description-input"
+                          type="text"
+                          placeholder="Apa tujuan transfer ini?"
+                          style={{ width: "100%", fontSize: "1rem", fontWeight: "bold", backgroundColor: "transparent", border: "none", padding: 0 }}
+                          aria-label="Memo Transaksi"
+                        />
+                      </Form.Item>
+                    </Card>
+                  </Card>
+
+                  <Button
+                    type="primary"
+                    htmlType="button"
+                    onClick={handleReview}
+                    data-testid="review-transfer-button"
+                    block
+                    size="large"
+                  >
+                    Tinjau Ringkasan Transfer
+                    <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-2 transition-transform" />
+                  </Button>
+                </Form>
+              </Space>
+            </Col>
+
+            <Col xs={24} lg={8}>
+              <Space direction="vertical" size={16}>
+                <Card>
+                  <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+                    <Typography.Text strong>
+                      Penerima Favorit
+                    </Typography.Text>
+                    <div style={{ height: 4, width: 32, backgroundColor: "hsl(var(--primary))", borderRadius: "9999px" }} />
+                  </Row>
+
+                  <Row gutter={[16, 16]}>
+                    {recentContacts.map((c) => (
+                      <Col xs={12} sm={8} lg={12} key={c.accountId}>
+                        <Button
+                          type="text"
+                          htmlType="button"
+                          onClick={() => handleContactSelect(c)}
+                          data-testid={`favorite-contact-${c.name.toLowerCase()}`}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 16,
+                            padding: 24,
+                            borderRadius: 12,
+                            border: selectedContact === c.accountId
+                              ? "1px solid hsl(var(--primary))"
+                              : "1px solid transparent",
+                            transition: "all 0.2s",
+                            ...(selectedContact === c.accountId
+                              ? { backgroundColor: "hsl(var(--primary) / 0.05)", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.1)" }
+                              : { backgroundColor: "hsl(var(--muted))" }),
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 56,
+                              height: 56,
+                              borderRadius: 16,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: "bold",
+                              fontSize: "1.5rem",
+                              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                            }}
+                            className={c.color}
+                          >
+                            {c.initial}
+                          </div>
+                          <Typography.Text type="secondary" strong>
+                            {c.name}
+                          </Typography.Text>
+                        </Button>
+                      </Col>
+                    ))}
+                    <Col xs={12} sm={8} lg={12}>
+                      <Button
+                        type="text"
+                        htmlType="button"
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 16,
+                          padding: 24,
+                          borderRadius: 12,
+                          border: "1px dashed hsl(var(--border))",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        <div style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: "hsl(var(--muted))", display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
+                          <PlusCircle className="h-6 w-6" />
+                        </div>
+                        <Typography.Text type="secondary" strong>
+                          Tambah
+                        </Typography.Text>
                       </Button>
+                    </Col>
+                  </Row>
+
+                  <div style={{ marginTop: "auto", paddingTop: 40 }}>
+                    <div style={{ background: "linear-gradient(135deg, hsl(var(--text-primary)), hsl(var(--text-primary)))", borderRadius: 12, padding: "20px 24px", color: "hsl(var(--surface))", position: "relative", overflow: "hidden", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}>
+                      <div style={{ position: "relative", zIndex: 10 }}>
+                        <Typography.Title level={4} style={{ marginBottom: 8, color: "hsl(var(--surface))" }}>
+                          Bantuan?
+                        </Typography.Title>
+                        <Typography.Text type="secondary" style={{ display: "block", marginBottom: 32, lineHeight: 1.5 }}>
+                          Proteksi & panduan transaksi aman.
+                        </Typography.Text>
+                        <Button
+                          type="default"
+                          htmlType="button"
+                          style={{ fontSize: "0.75rem", fontWeight: "bold", letterSpacing: "0.1em", textTransform: "uppercase", backgroundColor: "hsl(var(--surface) / 0.1)", padding: "12px 24px", borderRadius: 12, border: "1px solid hsl(var(--surface) / 0.1)", color: "hsl(var(--surface))" }}
+                        >
+                          Hubungi Kami
+                        </Button>
+                      </div>
+                      <LifeBuoy style={{ position: "absolute", bottom: -30, right: -30, height: 192, width: 192, color: "hsl(var(--surface) / 0.05)", transform: "rotate(12deg)" }} />
                     </div>
-                    <LifeBuoy className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-surface/5 rotate-12" />
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                </Card>
+              </Space>
+            </Col>
+          </Row>
+        </Space>
       </main>
     </DashboardLayout>
   );

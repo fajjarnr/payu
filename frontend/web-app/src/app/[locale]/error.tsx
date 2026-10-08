@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Button, Card, Space, Typography, Alert } from 'antd';
 import { AlertTriangle, RefreshCw, Home, ArrowLeft, Bug } from '@/components/icons';
 
 interface ErrorProps {
@@ -28,79 +29,59 @@ export default function Error({ error, reset }: ErrorProps) {
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-6 sm:px-10 lg:px-12 bg-background">
-      <div className="max-w-md w-full bg-card/80 rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-sm text-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-destructive/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-bank-green/5 rounded-full blur-3xl" />
-
-        <div className="relative z-10">
-          <div className="h-20 w-20 bg-destructive/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-destructive/20">
-            <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
-          </div>
-
-          <h2 className="text-2xl font-bold text-foreground mb-4 font-heading">
-            Terjadi Kesalahan
-          </h2>
-
-          <p className="text-sm text-muted-foreground font-medium mb-8 leading-relaxed">
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <Card style={{ maxWidth: 448, width: '100%', textAlign: 'center' }}>
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <AlertTriangle style={{ fontSize: 40, color: '#FF4757' }} aria-hidden="true" />
+          <Typography.Title level={2}>Terjadi Kesalahan</Typography.Title>
+          <Typography.Text type="secondary">
             Maaf, terjadi kesalahan yang tidak terduga saat memuat halaman ini. Silakan coba lagi atau kembali ke beranda.
-          </p>
+          </Typography.Text>
 
           {process.env.NODE_ENV === 'development' && (
-            <div className="bg-destructive/10 rounded-2xl p-4 mb-8 text-left border border-destructive/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Bug className="h-3 w-3 text-destructive" aria-hidden="true" />
-                <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                  Detail Teknis
-                </p>
-              </div>
-              <p className="text-xs text-destructive font-mono break-words">
-                {error.message}
-              </p>
-              {error.digest && (
-                <p className="text-xs text-muted-foreground font-mono mt-2">
-                  Digest: {error.digest}
-                </p>
-              )}
-            </div>
+            <Alert
+              type="error"
+              message={
+                <Space direction="vertical" size={4}>
+                  <Space size={8}>
+                    <Bug style={{ fontSize: 12 }} />
+                    <Typography.Text strong style={{ fontSize: 12 }}>Detail Teknis</Typography.Text>
+                  </Space>
+                  <Typography.Text type="danger" style={{ fontSize: 12, wordBreak: 'break-word' }}>
+                    {error.message}
+                  </Typography.Text>
+                  {error.digest && (
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      Digest: {error.digest}
+                    </Typography.Text>
+                  )}
+                </Space>
+              }
+            />
           )}
 
-          <div className="space-y-3" role="group" aria-label="Tindakan pemulihan error">
-            <button
-              onClick={handleReset}
-              className="w-full bg-foreground text-background py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-bank-green hover:text-surface transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Coba muat ulang halaman ini"
-            >
-              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Button type="primary" block onClick={handleReset}>
+              <RefreshCw style={{ marginRight: 8 }} aria-hidden="true" />
               Coba Lagi
-            </button>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleGoBack}
-                className="flex-1 bg-surface/5 py-4 rounded-xl font-bold text-xs tracking-widest border border-border hover:bg-surface/10 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Kembali ke halaman sebelumnya"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Space size={12} style={{ width: '100%' }}>
+              <Button block onClick={handleGoBack}>
+                <ArrowLeft style={{ marginRight: 8 }} aria-hidden="true" />
                 Kembali
-              </button>
-
-              <button
-                onClick={handleGoHome}
-                className="flex-1 bg-surface/5 py-4 rounded-xl font-bold text-xs tracking-widest border border-border hover:bg-surface/10 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Kembali ke beranda dashboard"
-              >
-                <Home className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button block onClick={handleGoHome}>
+                <Home style={{ marginRight: 8 }} aria-hidden="true" />
                 Beranda
-              </button>
-            </div>
-          </div>
+              </Button>
+            </Space>
+          </Space>
 
-          <p className="text-xs text-muted-foreground font-bold tracking-widest mt-8">
+          <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: 32, display: 'block' }}>
             Masalah berlanjut? Hubungi tim dukungan kami.
-          </p>
-        </div>
-      </div>
+          </Typography.Text>
+        </Space>
+      </Card>
     </div>
   );
 }

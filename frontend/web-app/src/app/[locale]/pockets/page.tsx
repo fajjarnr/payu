@@ -27,8 +27,6 @@ import { BalanceResponse, WalletTransaction, Pocket } from "@/types";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
-import clsx from "clsx";
-import { Skeleton } from "antd";
 import { useAuthStore } from "@/stores";
 import {
   usePockets,
@@ -40,7 +38,24 @@ import {
   useUnfreezePocket,
   useClosePocket,
 } from "@/hooks";
-import { Button, Dropdown, Input, Modal, Tag, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Dropdown,
+  Empty,
+  Flex,
+  Input,
+  List,
+  Modal,
+  Progress,
+  Row,
+  Skeleton,
+  Space,
+  Tag,
+  Typography,
+  theme,
+} from "antd";
 import { notify as toast } from "@/lib/notify";
 import {
   addCurrency,
@@ -63,10 +78,19 @@ interface SharedPocket extends Pocket {
   isShared?: boolean;
 }
 
+/** Backend sends `target` as a decimal string; absent from the base Pocket type. */
+type PocketWithTarget = Pocket & { target?: string };
+
+function pocketTarget(p: Pocket): string | undefined {
+  const withTarget = p as PocketWithTarget;
+  return withTarget.target;
+}
+
 /** Extended Pocket type for UI display (target/type not in backend Pocket) */
 type PocketWithGoal = Pocket & { target?: number; type?: string };
 
 export default function PocketsPage() {
+  const { token } = theme.useToken();
   // SECURITY: Get accountId from auth store, NOT localStorage
   const accountId = useAuthStore((state) => state.accountId) || "";
   const locale = useLocale();
@@ -238,7 +262,7 @@ export default function PocketsPage() {
     .map((p: Pocket, idx: number) => ({
       id: p.id,
       name: p.name,
-      target: String((p as unknown as { target?: string }).target ?? p.balance),
+      target: String(pocketTarget(p) ?? p.balance),
       current: String(p.balance),
       color: idx === 0 ? "bank-green" : "bank-emerald",
       icon: idx === 0 ? Target : Lock,
@@ -254,7 +278,7 @@ export default function PocketsPage() {
       accountId: p.accountId,
       name: p.name,
       balance: p.balance,
-      target: Number((p as unknown as { target?: string }).target ?? 0),
+      target: Number(pocketTarget(p) ?? 0),
       type: "SHARED" as const,
       isShared: true,
       createdAt: p.createdAt,
@@ -262,228 +286,349 @@ export default function PocketsPage() {
       sharedMembers: p.sharedMembers ?? [],
     }));
 
+  const reservedPercent = (() => {
+    const res = Number(balance?.reservedBalance ?? 0);
+    const avail = Number(balance?.availableBalance ?? 0);
+    const tot = res + avail;
+    return tot > 0 ? Math.min(100, Math.round((res / tot) * 100)) : 0;
+  })();
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+  };
+
   return (
     <DashboardLayout>
       <SkipLink href="#main-content" />
-      <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+      <main id="main-content">
+        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          {/* Header */}
+          <Flex justify="space-between" align="flex-end" gap={16} wrap>
             <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              <Typography.Title level={2} style={{ marginBottom: 4 }}>
                 Manajemen Kantong
-              </h1>
-              <p className="text-sm text-muted-foreground font-medium mt-1">
+              </Typography.Title>
+              <Typography.Text type="secondary">
                 Kelola dan alokasikan dana Anda dengan presisi tinggi.
-              </p>
+              </Typography.Text>
             </div>
-            <div className="flex gap-3">
-              <Button
-                type="default"
-                className="bg-muted lg:bg-card text-foreground px-8 py-4 rounded-xl font-bold text-xs tracking-widest border border-border shadow-lg hover:bg-muted/80 transition-all flex items-center gap-2 uppercase"
-              >
-                <Users className="h-4 w-4 text-primary" /> Kantong Bersama
-              </Button>
+            <Flex gap={12}>
+              <Button icon={<Users />}>Kantong Bersama</Button>
               <Button
                 type="primary"
+                icon={<Plus />}
                 onClick={() => setIsCreateModalOpen(true)}
-                className="bg-primary-dark text-surface px-8 py-4 rounded-xl font-bold text-xs tracking-widest shadow-xl shadow-primary/20 flex items-center gap-2 hover:bg-primary transition-all uppercase"
               >
-                <Plus className="h-4 w-4" /> Tambah Kantong
+                Tambah Kantong
               </Button>
-            </div>
-          </div>
+            </Flex>
+          </Flex>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
-            <div className="md:col-span-12 lg:col-span-8">
-              <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 border border-border shadow-card flex flex-col justify-between min-h-[280px] lg:min-h-[320px] relative overflow-hidden group shadow-2xl">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-0" />
-
-                <div className="relative z-10 flex flex-col h-full">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="h-2 w-2 bg-primary rounded-full shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
-                        <p className="text-xs font-bold text-primary tracking-widest uppercase">
+          <Row gutter={[16, 16]} align="stretch">
+            {/* Main wallet card */}
+            <Col xs={24} lg={16}>
+              <Card
+                styles={{
+                  body: {
+                    minHeight: 240,
+                    display: "flex",
+                    flexDirection: "column",
+                    position: "relative",
+                  },
+                }}
+              >
+                <Flex vertical justify="space-between" style={{ flex: 1 }}>
+                  <Flex justify="space-between" align="flex-start">
+                    <div>
+                      <Flex align="center" gap={8}>
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            background: token.colorPrimary,
+                          }}
+                        />
+                        <Typography.Text
+                          style={{ ...labelStyle, color: token.colorPrimary }}
+                        >
                           Dompet Aktif
-                        </p>
-                      </div>
-                      <h3 className="text-3xl font-bold text-foreground">
+                        </Typography.Text>
+                      </Flex>
+                      <Typography.Title level={3} style={{ marginBottom: 0 }}>
                         Kantong Utama Cair
-                      </h3>
+                      </Typography.Title>
                     </div>
-                    <div className="h-12 w-12 bg-muted/50 rounded-xl flex items-center justify-center border border-border transition-transform group-hover:scale-110 shadow-inner">
-                      <Wallet className="h-6 w-6 text-primary" />
-                    </div>
-                  </div>
+                    <Flex
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 12,
+                        background: token.colorFillTertiary,
+                        border: `1px solid ${token.colorBorderSecondary}`,
+                        color: token.colorPrimary,
+                      }}
+                    >
+                      <Wallet />
+                    </Flex>
+                  </Flex>
 
-                  <div className="mt-auto">
-                    <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2 opacity-60">
+                  <div style={{ marginTop: "auto" }}>
+                    <Typography.Text
+                      type="secondary"
+                      style={{ ...labelStyle, opacity: 0.6 }}
+                    >
                       Likuiditas Tersedia
-                    </p>
-                    <h4 className="text-5xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tighter tabular-nums">
+                    </Typography.Text>
+                    <Typography.Title
+                      level={1}
+                      style={{
+                        marginBottom: 0,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
                       {balanceLoading ? (
                         <Skeleton.Input
                           active
-                          size="large"
-                          className="!h-16 !w-64 !rounded"
+                          style={{ height: 48, width: 256 }}
                         />
                       ) : (
                         formatCurrency(balance?.balance ?? "0", {
                           locale: bcp47Locale,
                         })
                       )}
-                    </h4>
+                    </Typography.Title>
                   </div>
-                </div>
+                </Flex>
 
-                <div className="absolute bottom-6 right-6">
-                  <Button
-                    type="text"
-                    icon={<ArrowUpRight className="h-6 w-6" />}
-                    className="p-4 bg-primary-dark/10 text-primary rounded-xl shadow-sm border border-primary/20 hover:bg-primary-dark hover:text-surface transition-all active:scale-95"
-                    aria-label="Buka detail"
+                <Button
+                  type="text"
+                  aria-label="Buka detail"
+                  icon={<ArrowUpRight />}
+                  style={{
+                    position: "absolute",
+                    bottom: 24,
+                    right: 24,
+                    color: token.colorPrimary,
+                  }}
+                />
+              </Card>
+            </Col>
+
+            {/* Right column */}
+            <Col xs={24} lg={8}>
+              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Card styles={{ body: { minHeight: 160 } }}>
+                  <Typography.Text
+                    type="secondary"
+                    style={{ ...labelStyle, opacity: 0.6 }}
+                  >
+                    Protokol Cadangan
+                  </Typography.Text>
+                  <Typography.Title
+                    level={3}
+                    style={{
+                      marginTop: 4,
+                      marginBottom: 0,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {formatCurrency(balance?.reservedBalance ?? "0", {
+                      locale: bcp47Locale,
+                    })}
+                  </Typography.Title>
+                  <Progress
+                    percent={reservedPercent}
+                    showInfo={false}
+                    strokeColor={`${token.colorPrimary}66`}
+                    trailColor={token.colorFillTertiary}
+                    size="small"
+                    style={{ marginTop: 16 }}
                   />
-                </div>
-              </div>
-            </div>
-
-            <div className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-6">
-              <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-card flex flex-col justify-center relative overflow-hidden group min-h-[180px]">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-                <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1 opacity-60">
-                  Protokol Cadangan
-                </p>
-                <p className="text-2xl font-bold text-foreground tabular-nums">
-                  {formatCurrency(balance?.reservedBalance ?? "0", {
-                    locale: bcp47Locale,
-                  })}
-                </p>
-                <div className="h-1.5 w-full bg-muted rounded-full mt-4 overflow-hidden shadow-inner">
-                  {(() => {
-                    const res = Number(balance?.reservedBalance ?? 0);
-                    const avail = Number(balance?.availableBalance ?? 0);
-                    const tot = res + avail;
-                    const pct =
-                      tot > 0
-                        ? Math.min(100, Math.round((res / tot) * 100))
-                        : 0;
-                    return (
-                      <div
-                        className="h-full bg-primary/40"
-                        style={{ width: `${pct}%` }}
-                      />
-                    );
-                  })()}
-                </div>
-              </div>
-              <div className="bg-text-primary p-5 sm:p-6 rounded-2xl text-surface relative overflow-hidden shadow-2xl group flex flex-col justify-between min-h-[180px] border border-surface/5">
-                <div className="relative z-10 flex items-center gap-4 mb-6">
-                  <div className="h-12 w-12 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
+                </Card>
+                <Card
+                  styles={{
+                    body: { minHeight: 160, position: "relative", overflow: "hidden" },
+                  }}
+                  style={{
+                    background: token.colorText,
+                    color: token.colorBgContainer,
+                    border: "none",
+                  }}
+                >
+                  <Coins
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      bottom: -30,
+                      right: -30,
+                      fontSize: 192,
+                      color: token.colorBgContainer,
+                      opacity: 0.03,
+                      transform: "rotate(-12deg)",
+                    }}
+                  />
+                  <Flex align="center" gap={16}>
+                    <Flex
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 12,
+                        background: `${token.colorBgContainer}1A`,
+                        border: `1px solid ${token.colorBgContainer}1A`,
+                        color: token.colorBgContainer,
+                      }}
+                    >
+                      <ShieldCheck />
+                    </Flex>
                     <div>
-                      <h3 className="text-sm font-bold">Keamanan Tier-1</h3>
-                      <p className="text-xs text-text-disabled font-bold tracking-widest uppercase opacity-60">
-                        OJK & ASPI Compliant
-                      </p>
-                    </div>
-                  </div>
-                  <div className="relative z-10">
-                    <p className="text-xs font-bold text-surface/20 tracking-widest uppercase mb-1">
-                      Status Enkripsi
-                    </p>
-                    <p className="text-xs font-mono text-primary/80">
-                      RESP-V3 ACTIVE
-                    </p>
-                  </div>
-                  <Coins className="absolute bottom-[-30px] right-[-30px] h-48 w-48 text-surface/[0.03] -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
-                </div>
-              </div>
-            </div>
-
-            {/* Pockets List with CRUD */}
-            <div className="mt-8">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-foreground">
-                  Kantong Saya
-                </h3>
-                <Tag bordered className="font-mono">
-                  Total:{" "}
-                  {formatCurrency(totalBalance?.totalBalance ?? "0", {
-                    locale: bcp47Locale,
-                  })}
-                </Tag>
-              </div>
-
-              {pocketsLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="bg-card rounded-xl p-6 border border-border shadow-sm h-40 animate-pulse"
-                    />
-                  ))}
-                </div>
-              ) : pocketsData && pocketsData.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {pocketsData.map((_pocket) => {
-                    const pocket = _pocket as PocketWithGoal;
-                    const percentage = pocket.target
-                      ? Math.round(
-                          (Number(pocket.balance) / pocket.target) * 100,
-                        )
-                      : 0;
-                    return (
-                      <div
-                        key={pocket.id}
-                        className="bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-card transition-all group"
+                      <Typography.Text
+                        strong
+                        style={{ display: "block", color: token.colorBgContainer }}
                       >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={clsx(
-                                "h-10 w-10 rounded-xl flex items-center justify-center",
-                                pocket.status === "FROZEN"
-                                  ? "bg-warning/10 text-warning"
-                                  : "bg-primary/10 text-primary",
-                              )}
+                        Keamanan Tier-1
+                      </Typography.Text>
+                      <Typography.Text
+                        style={{
+                          ...labelStyle,
+                          color: token.colorBgContainer,
+                          opacity: 0.6,
+                        }}
+                      >
+                        OJK & ASPI Compliant
+                      </Typography.Text>
+                    </div>
+                  </Flex>
+                  <div style={{ marginTop: 24 }}>
+                    <Typography.Text
+                      style={{
+                        ...labelStyle,
+                        color: token.colorBgContainer,
+                        opacity: 0.3,
+                      }}
+                    >
+                      Status Enkripsi
+                    </Typography.Text>
+                    <Typography.Text
+                      style={{
+                        display: "block",
+                        fontFamily: "monospace",
+                        fontSize: 12,
+                        color: `${token.colorBgContainer}B3`,
+                      }}
+                    >
+                      RESP-V3 ACTIVE
+                    </Typography.Text>
+                  </div>
+                </Card>
+              </Space>
+            </Col>
+          </Row>
+
+          {/* Pockets List with CRUD */}
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Flex justify="space-between" align="center">
+              <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                Kantong Saya
+              </Typography.Title>
+              <Tag bordered style={{ fontFamily: "monospace" }}>
+                Total:{" "}
+                {formatCurrency(totalBalance?.totalBalance ?? "0", {
+                  locale: bcp47Locale,
+                })}
+              </Tag>
+            </Flex>
+
+            {pocketsLoading ? (
+              <Row gutter={[16, 16]}>
+                {[1, 2, 3].map((i) => (
+                  <Col key={i} xs={24} sm={12} lg={8}>
+                    <Card loading />
+                  </Col>
+                ))}
+              </Row>
+            ) : pocketsData && pocketsData.length > 0 ? (
+              <Row gutter={[16, 16]}>
+                {pocketsData.map((_pocket) => {
+                  const pocket = _pocket as PocketWithGoal;
+                  const percentage = pocket.target
+                    ? Math.round((Number(pocket.balance) / pocket.target) * 100)
+                    : 0;
+                  return (
+                    <Col key={pocket.id} xs={24} sm={12} lg={8}>
+                      <Card style={{ height: "100%" }}>
+                        <Flex justify="space-between" align="flex-start">
+                          <Flex align="center" gap={12}>
+                            <Flex
+                              align="center"
+                              justify="center"
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 12,
+                                background:
+                                  pocket.status === "FROZEN"
+                                    ? `${token.colorWarning}1A`
+                                    : `${token.colorPrimary}1A`,
+                                color:
+                                  pocket.status === "FROZEN"
+                                    ? token.colorWarning
+                                    : token.colorPrimary,
+                              }}
                             >
                               {pocket.type === "GOAL" ? (
-                                <Target className="h-5 w-5" />
+                                <Target />
                               ) : (
-                                <Wallet className="h-5 w-5" />
+                                <Wallet />
                               )}
-                            </div>
+                            </Flex>
                             <div>
-                              <h4 className="font-bold text-foreground text-sm">
+                              <Typography.Text strong>
                                 {pocket.name}
-                              </h4>
-                              <Tag bordered className="text-xs mt-1">
-                                {pocket.type}
-                              </Tag>
+                              </Typography.Text>
+                              <div>
+                                <Tag bordered style={{ fontSize: 12 }}>
+                                  {pocket.type}
+                                </Tag>
+                              </div>
                             </div>
-                          </div>
+                          </Flex>
                           <Dropdown
                             trigger={["click"]}
                             placement="bottomRight"
                             menu={{
-                              className: "w-48",
+                              style: { minWidth: 192 },
                               items: [
                                 {
                                   key: "credit",
                                   label: (
-                                    <span className="flex items-center gap-2">
-                                      <ArrowDownLeft className="h-4 w-4 mr-2 text-primary" />
+                                    <Flex align="center" gap={8}>
+                                      <ArrowDownLeft
+                                        style={{ color: token.colorPrimary }}
+                                      />
                                       Tambah Dana
-                                    </span>
+                                    </Flex>
                                   ),
                                   onClick: () => openCreditModal(pocket),
                                 },
                                 {
                                   key: "debit",
                                   label: (
-                                    <span className="flex items-center gap-2">
-                                      <ArrowUpRight className="h-4 w-4 mr-2 text-primary" />
+                                    <Flex align="center" gap={8}>
+                                      <ArrowUpRight
+                                        style={{ color: token.colorPrimary }}
+                                      />
                                       Ambil Dana
-                                    </span>
+                                    </Flex>
                                   ),
                                   onClick: () => openDebitModal(pocket),
                                 },
@@ -491,20 +636,24 @@ export default function PocketsPage() {
                                   ? {
                                       key: "freeze",
                                       label: (
-                                        <span className="flex items-center gap-2">
-                                          <Lock className="h-4 w-4 mr-2 text-warning" />
+                                        <Flex align="center" gap={8}>
+                                          <Lock
+                                            style={{ color: token.colorWarning }}
+                                          />
                                           Bekukan
-                                        </span>
+                                        </Flex>
                                       ),
                                       onClick: () => handleFreeze(pocket.id),
                                     }
                                   : {
                                       key: "unfreeze",
                                       label: (
-                                        <span className="flex items-center gap-2">
-                                          <UnlockIcon className="h-4 w-4 mr-2 text-primary" />
+                                        <Flex align="center" gap={8}>
+                                          <UnlockIcon
+                                            style={{ color: token.colorPrimary }}
+                                          />
                                           Aktifkan
-                                        </span>
+                                        </Flex>
                                       ),
                                       onClick: () => handleUnfreeze(pocket.id),
                                     },
@@ -512,10 +661,10 @@ export default function PocketsPage() {
                                   key: "close",
                                   danger: true,
                                   label: (
-                                    <span className="flex items-center gap-2">
-                                      <Trash2 className="h-4 w-4 mr-2" />
+                                    <Flex align="center" gap={8}>
+                                      <Trash2 />
                                       Tutup Kantong
-                                    </span>
+                                    </Flex>
                                   ),
                                   onClick: () => openCloseModal(pocket),
                                 },
@@ -525,188 +674,261 @@ export default function PocketsPage() {
                             <Button
                               type="text"
                               aria-label="Opsi kantong"
-                              icon={
-                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                              }
-                              className="min-h-[44px] min-w-[44px] hover:bg-muted rounded-lg transition-colors"
+                              icon={<MoreVertical />}
+                              style={{ minWidth: 44, minHeight: 44 }}
                             />
                           </Dropdown>
-                        </div>
+                        </Flex>
 
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-end">
-                            <p className="text-2xl font-bold text-foreground">
+                        <Space
+                          direction="vertical"
+                          size={12}
+                          style={{ width: "100%", marginTop: 16 }}
+                        >
+                          <Flex justify="space-between" align="flex-end">
+                            <Typography.Title
+                              level={3}
+                              style={{ marginBottom: 0 }}
+                            >
                               Rp{" "}
                               {formatCurrencyWithoutSymbol(pocket.balance, {
                                 locale: bcp47Locale,
                               })}
-                            </p>
+                            </Typography.Title>
                             {pocket.target && (
-                              <span className="text-xs font-bold text-primary">
+                              <Typography.Text
+                                strong
+                                style={{ color: token.colorPrimary, fontSize: 12 }}
+                              >
                                 {percentage}%
-                              </span>
+                              </Typography.Text>
                             )}
-                          </div>
+                          </Flex>
                           {pocket.target && (
-                            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary rounded-full transition-all"
-                                style={{
-                                  width: `${Math.min(percentage, 100)}%`,
-                                }}
-                              />
-                            </div>
+                            <Progress
+                              percent={Math.min(percentage, 100)}
+                              showInfo={false}
+                              strokeColor={token.colorPrimary}
+                              trailColor={token.colorFillTertiary}
+                              size="small"
+                            />
                           )}
-                          <div className="flex items-center justify-between pt-2">
+                          <Flex justify="space-between" align="center">
                             <Tag
                               bordered={false}
                               color={
                                 pocket.status === "ACTIVE" ? "green" : undefined
                               }
-                              className="text-xs"
+                              style={{ fontSize: 12 }}
                             >
                               {pocket.status}
                             </Tag>
-                            <span className="text-xs text-muted-foreground">
+                            <Typography.Text
+                              type="secondary"
+                              style={{ fontSize: 12 }}
+                            >
                               {pocket.currency}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8 bg-muted/30 rounded-2xl border border-border">
-                  <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h4 className="text-lg font-bold text-foreground mb-2">
-                    Belum Ada Kantong
-                  </h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Buat kantong pertama Anda untuk mulai mengalokasikan dana
-                  </p>
+                            </Typography.Text>
+                          </Flex>
+                        </Space>
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
+            ) : (
+              <Card>
+                <Empty
+                  image={<Wallet style={{ fontSize: 48 }} />}
+                  description={
+                    <Space direction="vertical" size={4}>
+                      <Typography.Text strong style={{ fontSize: 16 }}>
+                        Belum Ada Kantong
+                      </Typography.Text>
+                      <Typography.Text type="secondary">
+                        Buat kantong pertama Anda untuk mulai mengalokasikan
+                        dana
+                      </Typography.Text>
+                    </Space>
+                  }
+                >
                   <Button
                     type="primary"
+                    icon={<Plus />}
                     onClick={() => setIsCreateModalOpen(true)}
                   >
-                    <Plus className="h-4 w-4 mr-2" /> Buat Kantong
+                    Buat Kantong
                   </Button>
-                </div>
-              )}
-            </div>
+                </Empty>
+              </Card>
+            )}
+          </Space>
 
-            <div className="md:col-span-12 lg:col-span-12 gap-6 mt-8 grid grid-cols-1 lg:grid-cols-12">
-              <div className="lg:col-span-7 space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-foreground">
+          {/* Special Goals + Ledger */}
+          <Row gutter={[16, 16]}>
+            <Col xs={24} lg={14}>
+              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Flex justify="space-between" align="center">
+                  <Typography.Title level={3} style={{ marginBottom: 0 }}>
                     Tujuan Khusus
-                  </h3>
-                  <Button
-                    type="link"
-                    className="text-xs font-bold text-primary hover:underline"
-                  >
-                    Kelola Portofolio
-                  </Button>
-                </div>
+                  </Typography.Title>
+                  <Button type="link">Kelola Portofolio</Button>
+                </Flex>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+                <Row gutter={[16, 16]}>
                   {savingGoals.map((goal) => {
                     const percentage = Math.round(
                       (Number(goal.current) / Number(goal.target)) * 100,
                     );
                     const Icon = goal.icon;
+                    const isGreen = goal.color === "bank-green";
                     return (
-                      <div
-                        key={goal.id}
-                        className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-sm group hover:shadow-card hover:-translate-y-1 transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-5 mb-6">
-                          <div
-                            className={clsx(
-                              "h-14 w-14 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110",
-                              goal.color === "bank-green"
-                                ? "bg-primary/10 text-primary border border-primary/10"
-                                : "bg-bank-emerald/10 text-bank-emerald border border-bank-emerald/10",
-                            )}
-                          >
-                            <Icon className="h-7 w-7" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-foreground text-base">
-                              {goal.name}
-                            </h4>
-                            <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                              Target:{" "}
-                              {formatCurrency(goal.target, {
-                                locale: bcp47Locale,
-                              })}
-                            </p>
-                          </div>
-                        </div>
+                      <Col key={goal.id} xs={24} sm={12}>
+                        <Card style={{ height: "100%" }}>
+                          <Flex align="center" gap={20}>
+                            <Flex
+                              align="center"
+                              justify="center"
+                              style={{
+                                width: 56,
+                                height: 56,
+                                borderRadius: 12,
+                                background: isGreen
+                                  ? `${token.colorPrimary}1A`
+                                  : "hsl(145 50% 35% / 0.1)",
+                                border: isGreen
+                                  ? `1px solid ${token.colorPrimary}1A`
+                                  : "1px solid hsl(145 50% 35% / 0.1)",
+                                color: isGreen
+                                  ? token.colorPrimary
+                                  : "hsl(145 50% 35%)",
+                              }}
+                            >
+                              <Icon />
+                            </Flex>
+                            <div>
+                              <Typography.Text strong>
+                                {goal.name}
+                              </Typography.Text>
+                              <Typography.Text
+                                type="secondary"
+                                style={labelStyle}
+                              >
+                                Target:{" "}
+                                {formatCurrency(goal.target, {
+                                  locale: bcp47Locale,
+                                })}
+                              </Typography.Text>
+                            </div>
+                          </Flex>
 
-                        {goal.locked ? (
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-end">
-                              <p className="text-2xl font-bold text-foreground">
+                          <Space
+                            direction="vertical"
+                            size={16}
+                            style={{ width: "100%", marginTop: 24 }}
+                          >
+                            <Flex justify="space-between" align="flex-end">
+                              <Typography.Title
+                                level={3}
+                                style={{ marginBottom: 0 }}
+                              >
                                 {formatCurrency(goal.current, {
                                   locale: bcp47Locale,
                                 })}
-                              </p>
-                              <div className="bg-success-light text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/10">
-                                {goal.interestRate}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs font-bold text-primary tracking-widest uppercase">
-                              <Lock className="h-3 w-3" /> Dana Terkunci &
-                              Dijamin
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-end mb-1">
-                              <p className="text-2xl font-bold text-foreground">
-                                {formatCurrency(goal.current, {
-                                  locale: bcp47Locale,
-                                })}
-                              </p>
-                              <span className="text-xs font-bold text-primary">
-                                +{percentage}%
-                              </span>
-                            </div>
-                            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary rounded-full"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                            <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">
-                              Sisa:{" "}
-                              {formatCurrency(
-                                addCurrency(goal.target, `-${goal.current}`),
-                                { locale: bcp47Locale },
+                              </Typography.Title>
+                              {goal.locked ? (
+                                <Tag
+                                  bordered={false}
+                                  color={token.colorPrimary}
+                                  style={{ borderRadius: 999, fontWeight: 700 }}
+                                >
+                                  {goal.interestRate}
+                                </Tag>
+                              ) : (
+                                <Typography.Text
+                                  strong
+                                  style={{
+                                    color: token.colorPrimary,
+                                    fontSize: 12,
+                                  }}
+                                >
+                                  +{percentage}%
+                                </Typography.Text>
                               )}
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                            </Flex>
+                            {goal.locked ? (
+                              <Typography.Text
+                                style={{ ...labelStyle, color: token.colorPrimary }}
+                              >
+                                <Lock /> Dana Terkunci & Dijamin
+                              </Typography.Text>
+                            ) : (
+                              <>
+                                <Progress
+                                  percent={percentage}
+                                  showInfo={false}
+                                  strokeColor={token.colorPrimary}
+                                  trailColor={token.colorFillTertiary}
+                                  size="small"
+                                />
+                                <Typography.Text
+                                  type="secondary"
+                                  style={{ ...labelStyle, textAlign: "right" }}
+                                >
+                                  Sisa:{" "}
+                                  {formatCurrency(
+                                    addCurrency(goal.target, `-${goal.current}`),
+                                    { locale: bcp47Locale },
+                                  )}
+                                </Typography.Text>
+                              </>
+                            )}
+                          </Space>
+                        </Card>
+                      </Col>
                     );
                   })}
-                </div>
-              </div>
+                </Row>
+              </Space>
+            </Col>
 
-              <div className="lg:col-span-5 space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-foreground">
+            <Col xs={24} lg={10}>
+              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Flex justify="space-between" align="center">
+                  <Typography.Title level={3} style={{ marginBottom: 0 }}>
                     Buku Besar Terakhir
-                  </h3>
-                  <div className="h-10 w-10 bg-muted/50 rounded-xl flex items-center justify-center border border-border">
-                    <History className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                </div>
+                  </Typography.Title>
+                  <Flex
+                    align="center"
+                    justify="center"
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 12,
+                      background: token.colorFillTertiary,
+                      border: `1px solid ${token.colorBorderSecondary}`,
+                      color: token.colorTextSecondary,
+                    }}
+                  >
+                    <History />
+                  </Flex>
+                </Flex>
 
-                <div className="bg-card rounded-xl border border-border shadow-sm min-h-[280px] lg:min-h-[320px] flex flex-col">
+                <Card
+                  styles={{
+                    body: {
+                      minHeight: 320,
+                      display: "flex",
+                      flexDirection: "column",
+                    },
+                  }}
+                >
                   {transactionsLoading ? (
-                    <div className="p-6 space-y-4">
+                    <Space
+                      direction="vertical"
+                      size={16}
+                      style={{ width: "100%" }}
+                    >
                       {[1, 2, 3, 4, 5].map((i) => (
                         <Skeleton
                           key={i}
@@ -714,113 +936,140 @@ export default function PocketsPage() {
                           avatar={{ shape: "square" }}
                           paragraph={{ rows: 1 }}
                           title={false}
-                          className="!p-4"
                         />
                       ))}
-                    </div>
+                    </Space>
                   ) : (
-                    <div className="flex-1">
-                      <div className="divide-y divide-border">
-                        {transactions?.map((tx) => (
-                          <div
-                            key={tx.id}
-                            className="p-4 flex items-center justify-between group hover:bg-muted/30 transition-all"
+                    <List
+                      style={{ flex: 1 }}
+                      dataSource={transactions ?? []}
+                      locale={{
+                        emptyText: (
+                          <Flex
+                            vertical
+                            align="center"
+                            justify="center"
+                            style={{ padding: "32px 24px", textAlign: "center" }}
                           >
-                            <div className="flex gap-4">
-                              <div
-                                className={clsx(
-                                  "h-12 w-12 rounded-xl flex items-center justify-center border transition-all group-hover:scale-105",
-                                  tx.type === "CREDIT"
-                                    ? "bg-success-light border-primary/10"
-                                    : "bg-destructive/5 border-destructive/10",
-                                )}
-                              >
-                                {tx.type === "CREDIT" ? (
-                                  <TrendingUp className="h-5 w-5 text-primary" />
-                                ) : (
-                                  <ChevronRight className="h-5 w-5 text-destructive rotate-90" />
-                                )}
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-foreground mb-0.5">
-                                  {tx.description}
-                                </p>
-                                <p className="text-xs font-medium text-muted-foreground tracking-tight">
-                                  {new Date(tx.createdAt).toLocaleDateString(
-                                    undefined,
-                                    { day: "2-digit", month: "short" },
-                                  )}{" "}
-                                  • {tx.type === "CREDIT" ? "Masuk" : "Keluar"}
-                                </p>
-                              </div>
-                            </div>
-                            <p
-                              className={clsx(
-                                "text-sm font-bold tracking-tight",
-                                tx.type === "CREDIT"
-                                  ? "text-primary"
-                                  : "text-foreground",
-                              )}
+                            <History style={{ fontSize: 48, opacity: 0.2 }} />
+                            <Typography.Text strong type="secondary">
+                              Tidak Ada Aktivitas
+                            </Typography.Text>
+                            <Typography.Text
+                              type="secondary"
+                              style={{ ...labelStyle, opacity: 0.6 }}
                             >
-                              {tx.type === "CREDIT" ? "+" : "-"}{" "}
-                              {formatCurrency(tx.amount, {
-                                locale: bcp47Locale,
-                              })}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {(!transactions || transactions.length === 0) && (
-                        <div className="h-full flex flex-col items-center justify-center text-center py-8 px-6">
-                          <History className="h-12 w-12 text-muted/20 mb-4" />
-                          <p className="text-sm font-bold text-muted-foreground">
-                            Tidak Ada Aktivitas
-                          </p>
-                          <p className="text-xs text-muted-foreground/60 mt-1 uppercase tracking-widest">
-                            Aktivitas keuangan Anda akan muncul di sini
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                              Aktivitas keuangan Anda akan muncul di sini
+                            </Typography.Text>
+                          </Flex>
+                        ),
+                      }}
+                      renderItem={(tx) => {
+                        const isCredit = tx.type === "CREDIT";
+                        return (
+                          <List.Item>
+                            <Flex
+                              justify="space-between"
+                              align="center"
+                              gap={16}
+                              style={{ width: "100%" }}
+                            >
+                              <Flex align="center" gap={16}>
+                                <Flex
+                                  align="center"
+                                  justify="center"
+                                  style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 12,
+                                    background: isCredit
+                                      ? `${token.colorPrimary}1A`
+                                      : `${token.colorError}0D`,
+                                    border: `1px solid ${
+                                      isCredit
+                                        ? `${token.colorPrimary}1A`
+                                        : `${token.colorError}1A`
+                                    }`,
+                                    color: isCredit
+                                      ? token.colorPrimary
+                                      : token.colorError,
+                                  }}
+                                >
+                                  {isCredit ? (
+                                    <TrendingUp />
+                                  ) : (
+                                    <ChevronRight
+                                      style={{ transform: "rotate(90deg)" }}
+                                    />
+                                  )}
+                                </Flex>
+                                <div>
+                                  <Typography.Text strong>
+                                    {tx.description}
+                                  </Typography.Text>
+                                  <Typography.Text
+                                    type="secondary"
+                                    style={{ display: "block", fontSize: 12 }}
+                                  >
+                                    {new Date(tx.createdAt).toLocaleDateString(
+                                      undefined,
+                                      { day: "2-digit", month: "short" },
+                                    )}{" "}
+                                    • {isCredit ? "Masuk" : "Keluar"}
+                                  </Typography.Text>
+                                </div>
+                              </Flex>
+                              <Typography.Text
+                                strong
+                                style={{
+                                  color: isCredit
+                                    ? token.colorPrimary
+                                    : token.colorText,
+                                }}
+                              >
+                                {isCredit ? "+" : "-"}{" "}
+                                {formatCurrency(tx.amount, {
+                                  locale: bcp47Locale,
+                                })}
+                              </Typography.Text>
+                            </Flex>
+                          </List.Item>
+                        );
+                      }}
+                    />
                   )}
-                  <div className="p-6 mt-auto">
-                    <Button
-                      type="default"
-                      className="w-full py-4 bg-muted/50 rounded-xl font-bold text-xs tracking-widest uppercase border border-border hover:bg-muted transition-all text-muted-foreground"
-                    >
-                      Lihat Rekening Koran
-                    </Button>
+                  <div style={{ marginTop: "auto", paddingTop: 24 }}>
+                    <Button block>Lihat Rekening Koran</Button>
                   </div>
-                </div>
-              </div>
-            </div>
+                </Card>
+              </Space>
+            </Col>
+          </Row>
 
-            <div className="mt-8">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-foreground flex items-center gap-3">
-                  <Users className="h-5 w-5 text-primary" />
+          {/* Shared pockets */}
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Flex justify="space-between" align="center">
+              <Flex align="center" gap={12}>
+                <Users style={{ color: token.colorPrimary }} />
+                <Typography.Title level={3} style={{ marginBottom: 0 }}>
                   Kantong Bersama
-                </h3>
-                <Button
-                  type="default"
-                  className="bg-primary/10 text-primary px-6 py-3 rounded-xl font-bold text-xs tracking-widest border border-primary/10 hover:bg-primary/20 transition-all flex items-center gap-2"
-                >
-                  <UserPlus className="h-4 w-4" /> Buat Kantong Baru
-                </Button>
-              </div>
+                </Typography.Title>
+              </Flex>
+              <Button icon={<UserPlus />}>Buat Kantong Baru</Button>
+            </Flex>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {sharedPockets.map((pocket) => {
-                  const percentage = pocket.target
-                    ? Math.round((Number(pocket.balance) / pocket.target) * 100)
-                    : 0;
-                  const isSelected = selectedPocket === pocket.id;
+            <Row gutter={[16, 16]}>
+              {sharedPockets.map((pocket) => {
+                const percentage = pocket.target
+                  ? Math.round((Number(pocket.balance) / pocket.target) * 100)
+                  : 0;
+                const isSelected = selectedPocket === pocket.id;
 
-                  return (
-                    <div
-                      key={pocket.id}
-                      className="bg-card rounded-xl border border-border shadow-sm overflow-hidden group"
+                return (
+                  <Col key={pocket.id} xs={24} md={12}>
+                    <Card
+                      style={{ height: "100%" }}
+                      styles={{ body: { padding: 0 } }}
                     >
                       <div
                         role="button"
@@ -834,422 +1083,541 @@ export default function PocketsPage() {
                             setSelectedPocket(isSelected ? null : pocket.id);
                           }
                         }}
-                        className="p-6 cursor-pointer transition-colors hover:bg-muted/30"
+                        style={{ padding: 24, cursor: "pointer" }}
                       >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                              <Users className="h-5 w-5 text-primary" />
-                            </div>
+                        <Flex justify="space-between" align="flex-start">
+                          <Flex align="center" gap={12}>
+                            <Flex
+                              align="center"
+                              justify="center"
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 12,
+                                background: `${token.colorPrimary}1A`,
+                                color: token.colorPrimary,
+                              }}
+                            >
+                              <Users />
+                            </Flex>
                             <div>
-                              <h4 className="font-bold text-foreground text-sm">
+                              <Typography.Text strong>
                                 {pocket.name}
-                              </h4>
-                              <p className="text-xs text-muted-foreground tracking-widest uppercase">
+                              </Typography.Text>
+                              <Typography.Text
+                                type="secondary"
+                                style={labelStyle}
+                              >
                                 {pocket.sharedMembers?.length} Anggota
-                              </p>
+                              </Typography.Text>
                             </div>
-                          </div>
+                          </Flex>
                           <ChevronRight
-                            className={clsx(
-                              "h-5 w-5 text-muted-foreground transition-transform",
-                              isSelected ? "rotate-90" : "",
-                            )}
+                            style={{
+                              color: token.colorTextSecondary,
+                              transform: isSelected ? "rotate(90deg)" : undefined,
+                            }}
                           />
-                        </div>
+                        </Flex>
 
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-end">
-                            <p className="text-2xl font-bold text-foreground">
+                        <Space
+                          direction="vertical"
+                          size={12}
+                          style={{ width: "100%", marginTop: 16 }}
+                        >
+                          <Flex justify="space-between" align="flex-end">
+                            <Typography.Title
+                              level={3}
+                              style={{ marginBottom: 0 }}
+                            >
                               Rp{" "}
                               {formatCurrencyWithoutSymbol(pocket.balance, {
                                 locale: bcp47Locale,
                               })}
-                            </p>
-                            <span className="text-xs font-bold text-primary">
+                            </Typography.Title>
+                            <Typography.Text
+                              strong
+                              style={{ color: token.colorPrimary, fontSize: 12 }}
+                            >
                               {percentage}%
-                            </span>
-                          </div>
-                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary rounded-full transition-all duration-500"
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
+                            </Typography.Text>
+                          </Flex>
+                          <Progress
+                            percent={percentage}
+                            showInfo={false}
+                            strokeColor={token.colorPrimary}
+                            trailColor={token.colorFillTertiary}
+                            size="small"
+                          />
                           {pocket.target && (
-                            <p className="text-xs font-bold text-muted-foreground tracking-widest text-right uppercase">
+                            <Typography.Text
+                              type="secondary"
+                              style={{ ...labelStyle, textAlign: "right" }}
+                            >
                               Target:{" "}
                               {formatCurrency(pocket.target, {
                                 locale: bcp47Locale,
                               })}
-                            </p>
+                            </Typography.Text>
                           )}
-                        </div>
+                        </Space>
                       </div>
 
                       {isSelected && pocket.sharedMembers && (
-                        <div className="border-t border-border p-4 bg-muted/20">
-                          <div className="flex justify-between items-center mb-3">
-                            <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
+                        <div
+                          style={{
+                            borderTop: `1px solid ${token.colorBorderSecondary}`,
+                            padding: 16,
+                            background: token.colorFillQuaternary,
+                          }}
+                        >
+                          <Flex justify="space-between" align="center">
+                            <Typography.Text
+                              type="secondary"
+                              style={labelStyle}
+                            >
                               Anggota
-                            </p>
+                            </Typography.Text>
                             <Button
                               type="link"
-                              icon={<UserPlus className="h-3 w-3" />}
-                              className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                              icon={<UserPlus />}
+                              style={{ padding: 0 }}
                             >
                               Undang
                             </Button>
-                          </div>
-                          <div className="space-y-2">
+                          </Flex>
+                          <Space
+                            direction="vertical"
+                            size={8}
+                            style={{ width: "100%", marginTop: 12 }}
+                          >
                             {pocket.sharedMembers.map((member, i) => (
-                              <div
+                              <Flex
                                 key={i}
-                                className="flex items-center justify-between p-2 bg-background rounded-lg border border-border"
+                                justify="space-between"
+                                align="center"
+                                style={{
+                                  padding: 8,
+                                  borderRadius: 12,
+                                  background: token.colorBgContainer,
+                                  border: `1px solid ${token.colorBorderSecondary}`,
+                                }}
                               >
-                                <div className="flex items-center gap-2">
-                                  <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center text-xs font-bold text-primary">
+                                <Flex align="center" gap={8}>
+                                  <Flex
+                                    align="center"
+                                    justify="center"
+                                    style={{
+                                      width: 24,
+                                      height: 24,
+                                      borderRadius: "50%",
+                                      background: `${token.colorPrimary}1A`,
+                                      color: token.colorPrimary,
+                                      fontSize: 12,
+                                      fontWeight: 700,
+                                    }}
+                                  >
                                     {member.fullName.charAt(0)}
-                                  </div>
-                                  <span className="text-xs font-bold text-foreground">
+                                  </Flex>
+                                  <Typography.Text
+                                    strong
+                                    style={{ fontSize: 12 }}
+                                  >
                                     {member.fullName}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className={clsx(
-                                      "text-xs font-bold px-2 py-0.5 rounded uppercase tracking-widest",
+                                  </Typography.Text>
+                                </Flex>
+                                <Flex align="center" gap={8}>
+                                  <Tag
+                                    bordered={false}
+                                    color={
                                       member.role === "OWNER"
-                                        ? "bg-primary/10 text-primary"
+                                        ? token.colorPrimary
                                         : member.role === "ADMIN"
-                                          ? "bg-bank-emerald/10 text-bank-emerald"
-                                          : "bg-muted/50 text-muted-foreground",
-                                    )}
+                                          ? "hsl(145 50% 35%)"
+                                          : token.colorFill
+                                    }
+                                    style={{
+                                      ...labelStyle,
+                                      borderRadius: 4,
+                                    }}
                                   >
                                     {member.role}
-                                  </span>
+                                  </Tag>
                                   <Button
                                     type="text"
-                                    icon={
-                                      <MoreVertical className="h-3 w-3 text-muted-foreground" />
-                                    }
-                                    className="min-h-[44px] min-w-[44px] hover:bg-muted rounded transition-colors"
+                                    icon={<MoreVertical />}
                                     aria-label="Aksi lainnya"
+                                    style={{ minWidth: 44, minHeight: 44 }}
                                   />
-                                </div>
-                              </div>
+                                </Flex>
+                              </Flex>
                             ))}
-                          </div>
+                          </Space>
                         </div>
                       )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
+          </Space>
 
-            <div className="mt-8">
-              <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 relative overflow-hidden group shadow-card">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-surface/5 rounded-full blur-3xl -z-0" />
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="space-y-4 max-w-xl text-center md:text-left">
-                    <div className="flex items-center justify-center md:justify-start gap-4">
-                      <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                        <TrendingUp className="h-6 w-6 text-surface" />
-                      </div>
-                      <h3 className="text-2xl sm:text-3xl font-bold">
-                        Akselerasi Kekayaan Anda.
-                      </h3>
-                    </div>
-                    <p className="text-sm text-text-disabled font-medium leading-relaxed">
-                      Pindahkan dana mengendap dari kantong ke reksa dana yield
-                      tinggi atau emas digital. AI kami menyarankan Anda bisa
-                      berhemat hingga{" "}
-                      <span className="text-bank-green font-bold">
-                        Rp 12,5 Juta
-                      </span>{" "}
-                      lebih per tahun.
-                    </p>
-                  </div>
+          {/* Bottom banner */}
+          <Card
+            style={{
+              background: token.colorText,
+              color: token.colorBgContainer,
+              border: "none",
+            }}
+          >
+            <Flex justify="space-between" align="center" gap={24} wrap>
+              <Space direction="vertical" size={16} style={{ maxWidth: 640 }}>
+                <Flex align="center" gap={16}>
+                  <Flex
+                    align="center"
+                    justify="center"
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      background: token.colorPrimary,
+                      color: token.colorBgContainer,
+                    }}
+                  >
+                    <TrendingUp />
+                  </Flex>
+                  <Typography.Title
+                    level={3}
+                    style={{ marginBottom: 0, color: token.colorBgContainer }}
+                  >
+                    Akselerasi Kekayaan Anda.
+                  </Typography.Title>
+                </Flex>
+                <Typography.Text
+                  style={{
+                    color: token.colorBgContainer,
+                    opacity: 0.5,
+                    fontSize: 14,
+                  }}
+                >
+                  Pindahkan dana mengendap dari kantong ke reksa dana yield
+                  tinggi atau emas digital. AI kami menyarankan Anda bisa
+                  berhemat hingga{" "}
+                  <Typography.Text strong style={{ color: token.colorPrimary }}>
+                    Rp 12,5 Juta
+                  </Typography.Text>{" "}
+                  lebih per tahun.
+                </Typography.Text>
+              </Space>
+              <Button type="primary" size="large">
+                Jelajahi Marketplace
+              </Button>
+            </Flex>
+          </Card>
+        </Space>
+
+        {/* Create Pocket Modal */}
+        <Modal
+          open={isCreateModalOpen}
+          onCancel={() => setIsCreateModalOpen(false)}
+          footer={null}
+          centered
+          width={512}
+          title={undefined}
+        >
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <div>
+              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                Buat Kantong Baru
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                Buat kantong untuk mengalokasikan dana sesuai tujuan Anda
+              </Typography.Text>
+            </div>
+            <Space
+              direction="vertical"
+              size={16}
+              style={{ width: "100%", paddingBlock: 16 }}
+            >
+              <div>
+                <Typography.Text
+                  strong
+                  style={{ display: "block", marginBottom: 8 }}
+                >
+                  <label htmlFor="name">Nama Kantong</label>
+                </Typography.Text>
+                <Input
+                  id="name"
+                  placeholder="Contoh: Dana Darurat, Liburan"
+                  value={newPocketName}
+                  onChange={(e) => setNewPocketName(e.target.value)}
+                />
+              </div>
+              <div>
+                <Typography.Text
+                  strong
+                  style={{ display: "block", marginBottom: 8 }}
+                >
+                  <label htmlFor="target">Target Dana (Opsional)</label>
+                </Typography.Text>
+                <Input
+                  id="target"
+                  type="number"
+                  placeholder="5000000"
+                  value={newPocketTarget}
+                  onChange={(e) => setNewPocketTarget(e.target.value)}
+                />
+              </div>
+              <div>
+                <Typography.Text
+                  strong
+                  style={{ display: "block", marginBottom: 8 }}
+                >
+                  Tipe Kantong
+                </Typography.Text>
+                <Flex gap={8}>
                   <Button
-                    type="primary"
-                    className="whitespace-nowrap px-8 py-4 bg-bank-green text-surface rounded-xl font-bold text-xs tracking-widest shadow-2xl shadow-bank-green/40 hover:bg-bank-emerald transition-all"
+                    htmlType="button"
+                    block
+                    type={newPocketType === "SAVINGS" ? "primary" : "default"}
+                    icon={<Wallet />}
+                    onClick={() => setNewPocketType("SAVINGS")}
                   >
-                    Jelajahi Marketplace
+                    Tabungan
                   </Button>
-                </div>
+                  <Button
+                    htmlType="button"
+                    block
+                    type={newPocketType === "GOAL" ? "primary" : "default"}
+                    icon={<Target />}
+                    onClick={() => setNewPocketType("GOAL")}
+                  >
+                    Target
+                  </Button>
+                </Flex>
               </div>
-            </div>
-          </div>
+            </Space>
+            <Flex justify="flex-end" gap={8}>
+              <Button onClick={() => setIsCreateModalOpen(false)}>Batal</Button>
+              <Button
+                type="primary"
+                onClick={handleCreatePocket}
+                disabled={createPocket.isPending || !newPocketName.trim()}
+              >
+                {createPocket.isPending ? "Membuat..." : "Buat Kantong"}
+              </Button>
+            </Flex>
+          </Space>
+        </Modal>
 
-          {/* Create Pocket Modal */}
-          <Modal
-            open={isCreateModalOpen}
-            onCancel={() => setIsCreateModalOpen(false)}
-            footer={null}
-            centered
-            width={512}
-            title={undefined}
-          >
+        {/* Credit Modal */}
+        <Modal
+          open={isCreditModalOpen}
+          onCancel={() => setIsCreditModalOpen(false)}
+          footer={null}
+          centered
+          width={512}
+          title={undefined}
+        >
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <div>
-              <div>
-                <Typography.Title level={4}>Buat Kantong Baru</Typography.Title>
+              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                Tambah Dana
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                Tambahkan dana ke {selectedPocketForAction?.name}
+              </Typography.Text>
+            </div>
+            <Space
+              direction="vertical"
+              size={16}
+              style={{ width: "100%", paddingBlock: 16 }}
+            >
+              <Card
+                styles={{ body: { padding: 16 } }}
+                style={{ background: token.colorFillQuaternary }}
+              >
                 <Typography.Text type="secondary">
-                  Buat kantong untuk mengalokasikan dana sesuai tujuan Anda
+                  Saldo Saat Ini
                 </Typography.Text>
-              </div>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="name"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Nama Kantong
-                  </label>
-                  <Input
-                    id="name"
-                    placeholder="Contoh: Dana Darurat, Liburan"
-                    value={newPocketName}
-                    onChange={(e) => setNewPocketName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="target"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Target Dana (Opsional)
-                  </label>
-                  <Input
-                    id="target"
-                    type="number"
-                    placeholder="5000000"
-                    value={newPocketTarget}
-                    onChange={(e) => setNewPocketTarget(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Tipe Kantong
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      htmlType="button"
-                      type={newPocketType === "SAVINGS" ? "primary" : "default"}
-                      className="flex-1"
-                      onClick={() => setNewPocketType("SAVINGS")}
-                    >
-                      <Wallet className="h-4 w-4 mr-2" /> Tabungan
-                    </Button>
-                    <Button
-                      htmlType="button"
-                      type={newPocketType === "GOAL" ? "primary" : "default"}
-                      className="flex-1"
-                      onClick={() => setNewPocketType("GOAL")}
-                    >
-                      <Target className="h-4 w-4 mr-2" /> Target
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <Button onClick={() => setIsCreateModalOpen(false)}>
-                  Batal
-                </Button>
-                <Button
-                  type="primary"
-                  onClick={handleCreatePocket}
-                  disabled={createPocket.isPending || !newPocketName.trim()}
-                >
-                  {createPocket.isPending ? "Membuat..." : "Buat Kantong"}
-                </Button>
-              </div>
-            </div>
-          </Modal>
-
-          {/* Credit Modal */}
-          <Modal
-            open={isCreditModalOpen}
-            onCancel={() => setIsCreditModalOpen(false)}
-            footer={null}
-            centered
-            width={512}
-            title={undefined}
-          >
-            <div>
-              <div>
-                <Typography.Title level={4}>Tambah Dana</Typography.Title>
-                <Typography.Text type="secondary">
-                  Tambahkan dana ke {selectedPocketForAction?.name}
-                </Typography.Text>
-              </div>
-              <div className="space-y-4 py-4">
-                <div className="p-4 bg-muted rounded-xl">
-                  <p className="text-sm text-muted-foreground">
-                    Saldo Saat Ini
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(selectedPocketForAction?.balance ?? "0", {
-                      locale: bcp47Locale,
-                    })}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="amount"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Jumlah Dana
-                  </label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="100000"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Button onClick={() => setIsCreditModalOpen(false)}>
-                  Batal
-                </Button>
-                <Button
-                  type="primary"
-                  onClick={handleCredit}
-                  disabled={creditPocket.isPending || !amount}
-                >
-                  {creditPocket.isPending ? "Memproses..." : "Tambah Dana"}
-                </Button>
-              </div>
-            </div>
-          </Modal>
-
-          {/* Debit Modal */}
-          <Modal
-            open={isDebitModalOpen}
-            onCancel={() => setIsDebitModalOpen(false)}
-            footer={null}
-            centered
-            width={512}
-            title={undefined}
-          >
-            <div>
-              <div>
-                <Typography.Title level={4}>Ambil Dana</Typography.Title>
-                <Typography.Text type="secondary">
-                  Ambil dana dari {selectedPocketForAction?.name}
-                </Typography.Text>
-              </div>
-              <div className="space-y-4 py-4">
-                <div className="p-4 bg-muted rounded-xl">
-                  <p className="text-sm text-muted-foreground">
-                    Saldo Tersedia
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(selectedPocketForAction?.balance ?? "0", {
-                      locale: bcp47Locale,
-                    })}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="debit-amount"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Jumlah Dana
-                  </label>
-                  <Input
-                    id="debit-amount"
-                    type="number"
-                    placeholder="100000"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Button onClick={() => setIsDebitModalOpen(false)}>
-                  Batal
-                </Button>
-                <Button
-                  onClick={handleDebit}
-                  disabled={debitPocket.isPending || !amount}
-                  danger
-                  type="primary"
-                >
-                  {debitPocket.isPending ? "Memproses..." : "Ambil Dana"}
-                </Button>
-              </div>
-            </div>
-          </Modal>
-
-          {/* Close Modal */}
-          <Modal
-            open={isCloseModalOpen}
-            onCancel={() => setIsCloseModalOpen(false)}
-            footer={null}
-            centered
-            width={512}
-            title={undefined}
-          >
-            <div>
-              <div>
-                <Typography.Title
-                  level={4}
-                  className="text-error flex items-center gap-2"
-                >
-                  <Trash2 className="h-5 w-5" />
-                  Tutup Kantong?
+                <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                  {formatCurrency(selectedPocketForAction?.balance ?? "0", {
+                    locale: bcp47Locale,
+                  })}
                 </Typography.Title>
-                <Typography.Text type="secondary">
-                  Apakah Anda yakin ingin menutup kantong &ldquo;
-                  {selectedPocketForAction?.name}&rdquo;? Dana yang tersisa akan
-                  dikembalikan ke dompet utama.
-                </Typography.Text>
-              </div>
-              <div className="p-4 bg-error rounded-xl border border-error">
-                <p className="text-sm text-error font-medium flex items-center gap-2">
-                  <TriangleAlert
-                    className="h-4 w-4 shrink-0"
-                    aria-hidden="true"
-                  />{" "}
-                  Tindakan ini tidak dapat dibatalkan
-                </p>
-              </div>
+              </Card>
               <div>
-                <Button onClick={() => setIsCloseModalOpen(false)}>
-                  Batal
-                </Button>
-                <Button
-                  onClick={handleClose}
-                  disabled={closePocket.isPending}
-                  danger
-                  type="primary"
+                <Typography.Text
+                  strong
+                  style={{ display: "block", marginBottom: 8 }}
                 >
-                  {closePocket.isPending ? "Menutup..." : "Ya, Tutup Kantong"}
-                </Button>
+                  <label htmlFor="amount">Jumlah Dana</label>
+                </Typography.Text>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="100000"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
               </div>
+            </Space>
+            <Flex justify="flex-end" gap={8}>
+              <Button onClick={() => setIsCreditModalOpen(false)}>Batal</Button>
+              <Button
+                type="primary"
+                onClick={handleCredit}
+                disabled={creditPocket.isPending || !amount}
+              >
+                {creditPocket.isPending ? "Memproses..." : "Tambah Dana"}
+              </Button>
+            </Flex>
+          </Space>
+        </Modal>
+
+        {/* Debit Modal */}
+        <Modal
+          open={isDebitModalOpen}
+          onCancel={() => setIsDebitModalOpen(false)}
+          footer={null}
+          centered
+          width={512}
+          title={undefined}
+        >
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <div>
+              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                Ambil Dana
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                Ambil dana dari {selectedPocketForAction?.name}
+              </Typography.Text>
             </div>
-          </Modal>
-        </div>
+            <Space
+              direction="vertical"
+              size={16}
+              style={{ width: "100%", paddingBlock: 16 }}
+            >
+              <Card
+                styles={{ body: { padding: 16 } }}
+                style={{ background: token.colorFillQuaternary }}
+              >
+                <Typography.Text type="secondary">
+                  Saldo Tersedia
+                </Typography.Text>
+                <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                  {formatCurrency(selectedPocketForAction?.balance ?? "0", {
+                    locale: bcp47Locale,
+                  })}
+                </Typography.Title>
+              </Card>
+              <div>
+                <Typography.Text
+                  strong
+                  style={{ display: "block", marginBottom: 8 }}
+                >
+                  <label htmlFor="debit-amount">Jumlah Dana</label>
+                </Typography.Text>
+                <Input
+                  id="debit-amount"
+                  type="number"
+                  placeholder="100000"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </div>
+            </Space>
+            <Flex justify="flex-end" gap={8}>
+              <Button onClick={() => setIsDebitModalOpen(false)}>Batal</Button>
+              <Button
+                onClick={handleDebit}
+                disabled={debitPocket.isPending || !amount}
+                danger
+                type="primary"
+              >
+                {debitPocket.isPending ? "Memproses..." : "Ambil Dana"}
+              </Button>
+            </Flex>
+          </Space>
+        </Modal>
+
+        {/* Close Modal */}
+        <Modal
+          open={isCloseModalOpen}
+          onCancel={() => setIsCloseModalOpen(false)}
+          footer={null}
+          centered
+          width={512}
+          title={undefined}
+        >
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <div>
+              <Typography.Title
+                level={4}
+                style={{ marginBottom: 0, color: token.colorError }}
+              >
+                <Flex align="center" gap={8}>
+                  <Trash2 />
+                  Tutup Kantong?
+                </Flex>
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                Apakah Anda yakin ingin menutup kantong &ldquo;
+                {selectedPocketForAction?.name}&rdquo;? Dana yang tersisa akan
+                dikembalikan ke dompet utama.
+              </Typography.Text>
+            </div>
+            <Card
+              styles={{ body: { padding: 16 } }}
+              style={{
+                background: `${token.colorError}1A`,
+                border: `1px solid ${token.colorError}`,
+              }}
+            >
+              <Typography.Text
+                style={{
+                  color: token.colorError,
+                  fontWeight: 500,
+                }}
+              >
+                <Flex align="center" gap={8}>
+                  <TriangleAlert aria-hidden="true" /> Tindakan ini tidak dapat
+                  dibatalkan
+                </Flex>
+              </Typography.Text>
+            </Card>
+            <Flex justify="flex-end" gap={8}>
+              <Button onClick={() => setIsCloseModalOpen(false)}>Batal</Button>
+              <Button
+                onClick={handleClose}
+                disabled={closePocket.isPending}
+                danger
+                type="primary"
+              >
+                {closePocket.isPending ? "Menutup..." : "Ya, Tutup Kantong"}
+              </Button>
+            </Flex>
+          </Space>
+        </Modal>
       </main>
     </DashboardLayout>
   );
 }
 
 // Unlock icon component
-function UnlockIcon({ className }: { className?: string }) {
+function UnlockIcon({ style }: { style?: React.CSSProperties }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
+      width="1em"
+      height="1em"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
+      style={style}
     >
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
       <path d="M7 11V7a5 5 0 0 1 9.9-1" />

@@ -3,10 +3,12 @@
 import { useSearchParams } from 'next/navigation';
 import { Link } from '@/lib/navigation';
 import Image from 'next/image';
-import { Button } from 'antd';
+import { Button, Space, Row, Col, Typography } from 'antd';
 import { CheckCircle2, ShieldCheck, ArrowRight, Lock } from '@/components/icons';
 import { useTranslations } from 'next-intl';
 import { Suspense, useEffect } from 'react';
+
+const { Title, Text } = Typography;
 
 /**
  * Page wrapper — provides Suspense boundary required by useSearchParams().
@@ -23,15 +25,17 @@ export default function LoginPage() {
 
 function LoginSkeleton() {
   return (
-    <div className="min-h-screen w-full flex bg-background animate-pulse">
-      <div className="hidden lg:flex w-1/2 bg-text-primary" />
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-[420px] space-y-8">
-          <div className="h-10 w-48 bg-muted rounded-xl" />
-          <div className="h-5 w-64 bg-muted/60 rounded-xl" />
-          <div className="h-12 bg-primary-dark/50 rounded-lg" />
-        </div>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'hsl(var(--background))' }}>
+      <Row style={{ minHeight: '100vh' }}>
+        <Col xs={0} lg={12} style={{ background: 'var(--color-text-primary)' }} />
+        <Col xs={24} lg={12} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+          <div style={{ width: '100%', maxWidth: 420 }}>
+            <div style={{ height: 40, width: 192, background: 'hsl(var(--muted))', borderRadius: 12, marginBottom: 32 }} />
+            <div style={{ height: 20, width: 256, background: 'hsl(var(--muted) / 0.6)', borderRadius: 12, marginBottom: 48 }} />
+            <div style={{ height: 48, background: 'var(--color-primary-dark) / 0.5)', borderRadius: 8 }} />
+          </div>
+        </Col>
+      </Row>
     </div>
   );
 }
@@ -51,104 +55,136 @@ function LoginForm() {
   }, [t]);
 
   return (
-    <div className="min-h-screen w-full flex bg-background font-inter">
-      {/* Left Panel - Branding (Hidden on mobile) */}
-      <aside className="hidden lg:flex flex-col justify-between w-1/2 bg-text-primary border-r border-border/10 p-5 sm:p-6 lg:p-8 relative overflow-hidden text-surface" aria-label="Branding">
-        {/* Background Effects */}
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-bank-green/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
+    <div style={{ minHeight: '100vh', background: 'hsl(var(--background))' }}>
+      <Row style={{ minHeight: '100vh' }}>
+        {/* Left Panel - Branding (Hidden on mobile) */}
+        <Col
+          xs={0}
+          lg={12}
+          style={{
+            background: 'var(--color-text-primary)',
+            borderRight: '1px solid hsl(var(--border) / 0.1)',
+            padding: '32px 24px',
+            position: 'relative',
+            overflow: 'hidden',
+            color: 'var(--color-surface)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          {/* Background Effects */}
+          <div style={{ position: 'absolute', top: 0, right: 0, width: 800, height: 800, background: 'hsl(var(--primary) / 0.1)', borderRadius: '50%', filter: 'blur(120px)', transform: 'translate(50%, -50%)' }} aria-hidden="true" />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, width: 600, height: 600, background: 'var(--color-bank-green) / 0.1)', borderRadius: '50%', filter: 'blur(100px)', transform: 'translate(-25%, 50%)' }} aria-hidden="true" />
 
-        {/* Pattern Overlay */}
-        <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" aria-hidden="true" />
+          {/* Pattern Overlay */}
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'url(https://grainy-gradients.vercel.app/noise.svg)' }} aria-hidden="true" />
 
-        <div className="relative z-10 text-center">
-            <Link href="/" className="flex items-center gap-3 w-fit mx-auto lg:mx-0">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-primary/20">
-                    <Image src="/logo.svg" alt="PayU Brand Logo" width={40} height={40} priority />
-                </div>
-                <span className="text-2xl font-bold tracking-tight text-surface">PayU</span>
+          <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, width: 'fit-content', margin: '0 auto' }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 10px 15px -3px hsl(var(--primary) / 0.2)' }}>
+                <Image src="/logo.svg" alt="PayU Brand Logo" width={40} height={40} priority />
+              </div>
+              <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: 'var(--color-surface)' }}>PayU</span>
             </Link>
-        </div>
+          </div>
 
-        <div className="relative z-10 max-w-lg space-y-6 mx-auto lg:mx-0 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-dark/30 border border-primary/30 text-primary-light text-xs font-bold tracking-widest uppercase mb-4">
-                <ShieldCheck className="w-4 h-4" />
-                <span>{t('branding.tag')}</span>
+          <div style={{ position: 'relative', zIndex: 10, maxWidth: 512, margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 9999, background: 'var(--color-primary-dark) / 0.3)', border: '1px solid hsl(var(--primary) / 0.3)', color: 'var(--color-primary-light)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+              <ShieldCheck style={{ width: 16, height: 16 }} />
+              <span>{t('branding.tag')}</span>
             </div>
-            <h1 className="text-5xl font-bold leading-tight tracking-tight">
-               {t('branding.title')}
-            </h1>
-            <p className="text-lg text-border leading-relaxed">
-                {t('branding.desc')}
-            </p>
+            <Title level={1} style={{ fontSize: 48, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.025em', margin: 0 }}>
+              {t('branding.title')}
+            </Title>
+            <Text style={{ fontSize: 18, color: 'var(--color-border)', lineHeight: 1.6 }}>
+              {t('branding.desc')}
+            </Text>
 
-            <div className="pt-8 space-y-4">
+            <div style={{ paddingTop: 32 }}>
+              <Space direction="vertical" size={16}>
                 {[
-                    t('branding.features.encryption'),
-                    t('branding.features.monitoring'),
-                    t('branding.features.qris')
+                  t('branding.features.encryption'),
+                  t('branding.features.monitoring'),
+                  t('branding.features.qris')
                 ].map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3 text-surface-dim">
-                        <CheckCircle2 className="w-5 h-5 text-primary" />
-                        <span className="font-medium">{feature}</span>
-                    </div>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--color-surface-dim)' }}>
+                    <CheckCircle2 style={{ width: 20, height: 20, color: 'hsl(var(--primary))' }} />
+                    <span style={{ fontWeight: 500 }}>{feature}</span>
+                  </div>
                 ))}
+              </Space>
             </div>
-        </div>
+          </div>
 
-        <div className="relative z-10 text-border text-xs font-mono text-center lg:text-left">
+          <div style={{ position: 'relative', zIndex: 10, color: 'var(--color-border)', fontSize: 12, fontFamily: 'monospace', textAlign: 'center' }}>
             {t('branding.footer')}
-        </div>
-      </aside>
+          </div>
+        </Col>
 
-      {/* Right Panel - Sign in */}
-      <main className="flex-1 flex items-center justify-center p-5 sm:p-6 lg:p-8 bg-background relative" aria-labelledby="login-title">
-        <div className="w-full max-w-[420px] space-y-8">
-            <div className="text-center lg:text-left space-y-2">
-                <h2 id="login-title" className="text-3xl font-bold tracking-tight">{t('welcomeBack')}</h2>
-                <p className="text-muted-foreground">{t('subtitle')}</p>
-            </div>
+        {/* Right Panel - Sign in */}
+        <Col
+          xs={24}
+          lg={12}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '32px 24px',
+            background: 'hsl(var(--background))',
+            position: 'relative',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: 420 }}>
+            <Space direction="vertical" size={32} style={{ width: '100%' }}>
+              <div style={{ textAlign: 'center' }}>
+                <Space direction="vertical" size={8}>
+                  <Title level={2} style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.025em', margin: 0 }}>{t('welcomeBack')}</Title>
+                  <Text type="secondary">{t('subtitle')}</Text>
+                </Space>
+              </div>
 
-            {error && (
-              <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive" role="alert" data-testid="login-error">
-                {t('loginFailed')}
-              </p>
-            )}
+              {error && (
+                <div style={{ borderRadius: 12, border: '1px solid hsl(var(--destructive) / 0.3)', background: 'hsl(var(--destructive) / 0.1)', padding: '12px 16px', fontSize: 14, fontWeight: 500, color: 'hsl(var(--destructive))' }} role="alert" data-testid="login-error">
+                  {t('loginFailed')}
+                </div>
+              )}
 
-            <div className="space-y-6">
+              <Space direction="vertical" size={24} style={{ width: '100%' }}>
                 <Button
-                    type="primary"
-                    htmlType="button"
-                    data-testid="login-submit-button"
-                    className="w-full h-12 bg-primary-dark hover:bg-primary-dark text-surface font-bold text-base shadow-lg shadow-primary-dark/20 transition-all active:scale-[0.98]"
-                    onClick={() => { window.location.href = '/api/auth/authorize'; }}
+                  type="primary"
+                  htmlType="button"
+                  data-testid="login-submit-button"
+                  style={{ width: '100%', height: 48, fontWeight: 700, fontSize: 16, boxShadow: '0 10px 15px -3px var(--color-primary-dark) / 0.2)' }}
+                  onClick={() => { window.location.href = '/api/auth/authorize'; }}
                 >
-                    <Lock className="mr-2 h-4 w-4" />
-                    {t('loginButton')}
+                  <Lock style={{ width: 16, height: 16, marginRight: 8 }} />
+                  {t('loginButton')}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                    {t('oidcNote')}
-                </p>
-            </div>
+                <Text type="secondary" style={{ fontSize: 12, textAlign: 'center' }}>
+                  {t('oidcNote')}
+                </Text>
+              </Space>
 
-            <div className="relative" aria-hidden="true">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
+              <div style={{ position: 'relative' }} aria-hidden="true">
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
+                  <span style={{ width: '100%', borderTop: '1px solid hsl(var(--border))' }} />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-4 text-muted-foreground font-medium">{t('or')}</span>
+                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', fontSize: 12, textTransform: 'uppercase' }}>
+                  <span style={{ background: 'hsl(var(--background))', padding: '0 16px', color: 'hsl(var(--muted-foreground))', fontWeight: 500 }}>{t('or')}</span>
                 </div>
-            </div>
+              </div>
 
-            <div className="text-center text-sm">
-                <span className="text-muted-foreground">{t('noAccount')}</span>{" "}
-                <Link href="/onboarding" data-testid="register-link" className="font-bold text-primary-dark hover:text-primary-dark hover:underline inline-flex items-center">
-                    {t('registerLink')} <ArrowRight className="ml-1 w-3 h-3" />
+              <div style={{ textAlign: 'center', fontSize: 14 }}>
+                <Text type="secondary">{t('noAccount')}</Text>{' '}
+                <Link href="/onboarding" data-testid="register-link" style={{ fontWeight: 700, color: 'var(--color-primary-dark)', display: 'inline-flex', alignItems: 'center' }}>
+                  {t('registerLink')} <ArrowRight style={{ width: 12, height: 12, marginLeft: 4 }} />
                 </Link>
-            </div>
-        </div>
-      </main>
+              </div>
+            </Space>
+          </div>
+        </Col>
+      </Row>
     </div>
-
   );
 }

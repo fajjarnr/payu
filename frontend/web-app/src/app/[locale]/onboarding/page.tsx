@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
 import KYCService from '@/services/KYCService';
-import { Button, Form, Input, Steps } from 'antd';
+import { Button, Form, Input, Steps, Card, Space, Row, Col, Badge, Typography, theme } from 'antd';
 import { registerUserSchema, type RegisterUserRequest } from '@/types';
 import { zodFieldRule } from '@/lib/zodForm';
 import api from '@/lib/api';
@@ -28,9 +28,22 @@ import { Link } from '@/lib/navigation';
 import { useTranslations } from 'next-intl';
 import { notify as toast } from '@/lib/notify';
 
+const { Title, Text } = Typography;
+
+// Branding panel is always dark (same surface as login-form.tsx), so it uses the
+// DESIGN.md surface tokens rather than light-mode antd tokens.
+const BRAND_BG = 'var(--color-text-primary)';
+const BRAND_FG = 'var(--color-surface)';
+const BRAND_MUTED = 'var(--color-border)';
+const BRAND_TILE_BG = 'rgba(255, 255, 255, 0.1)';
+const BRAND_TILE_BORDER = 'rgba(255, 255, 255, 0.3)';
+const BRAND_CARD_BG = 'rgba(255, 255, 255, 0.05)';
+const BRAND_CARD_BORDER = '1px solid rgba(255, 255, 255, 0.1)';
+
 export default function OnboardingPage() {
   const t = useTranslations('auth.onboarding');
   const router = useRouter();
+  const { token } = theme.useToken();
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -101,223 +114,305 @@ export default function OnboardingPage() {
     document.title = `${stepTitles[step - 1]} | PayU Digital Banking`;
   }, [step, t]);
 
-  return (
-    <div className="min-h-screen w-full flex bg-background font-inter">
-      {/* Left Panel - Branding */}
-      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-text-primary border-r border-border/10 p-5 sm:p-6 relative overflow-hidden text-surface" aria-label="Branding">
-        {/* Background Effects */}
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
-        <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" aria-hidden="true" />
+  const labelStyle: React.CSSProperties = { fontSize: token.fontSize, fontWeight: 700 };
+  const iconTile = (size: number): React.CSSProperties => ({
+    width: size,
+    height: size,
+    borderRadius: '50%',
+    background: token.colorPrimaryBg,
+    color: token.colorPrimary,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  });
 
-        <div className="relative z-10">
-          <Link href="/" className="flex items-center gap-3 w-fit hover:opacity-80 transition-opacity" aria-label={t('back')}>
-            <ArrowLeft className="w-5 h-5 text-surface/80" />
-            <span className="font-medium text-surface">{t('back')}</span>
+  return (
+    <Row style={{ minHeight: '100vh' }}>
+      {/* Left Panel - Branding (hidden on mobile) */}
+      <Col
+        xs={0}
+        lg={10}
+        style={{
+          background: BRAND_BG,
+          padding: 24,
+          position: 'relative',
+          overflow: 'hidden',
+          color: BRAND_FG,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}
+        aria-label="Branding"
+      >
+        {/* Background Effects */}
+        <div style={{ position: 'absolute', top: 0, right: 0, width: 800, height: 800, background: token.colorPrimary, opacity: 0.1, borderRadius: '50%', filter: 'blur(120px)', transform: 'translate(50%, -50%)' }} aria-hidden="true" />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: 600, height: 600, background: token.colorPrimary, opacity: 0.1, borderRadius: '50%', filter: 'blur(100px)', transform: 'translate(-25%, 50%)' }} aria-hidden="true" />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')" }} aria-hidden="true" />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 12, width: 'fit-content', color: BRAND_FG }} aria-label={t('back')}>
+            <ArrowLeft style={{ width: 20, height: 20, opacity: 0.8 }} />
+            <Text strong style={{ color: BRAND_FG }}>{t('back')}</Text>
           </Link>
         </div>
 
-        <div className="relative z-10 max-w-lg space-y-6">
-            <div className="space-y-4">
-                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/30 shadow-lg shadow-primary/10" aria-hidden="true">
-                    <ScanFace className="w-8 h-8 text-primary/80" />
-                </div>
-                <h1 className="text-4xl font-bold leading-tight tracking-tight">
-                    {t('branding.title')}
-                </h1>
-                <p className="text-border leading-relaxed text-lg">
-                    {t('branding.desc')}
-                </p>
-            </div>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 480 }}>
+          <Space direction="vertical" size={24}>
+            <Space direction="vertical" size={16}>
+              <div style={{ width: 64, height: 64, borderRadius: token.borderRadiusLG, background: BRAND_TILE_BG, border: `1px solid ${BRAND_TILE_BORDER}`, boxShadow: token.boxShadow, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-hidden="true">
+                <ScanFace style={{ width: 32, height: 32, color: token.colorPrimary }} />
+              </div>
+              <Title level={1} style={{ fontSize: 36, lineHeight: 1.2, letterSpacing: '-0.025em', margin: 0, color: BRAND_FG }}>
+                {t('branding.title')}
+              </Title>
+              <Text style={{ color: BRAND_MUTED, fontSize: 18, lineHeight: 1.625 }}>
+                {t('branding.desc')}
+              </Text>
+            </Space>
 
-            <div className="space-y-6 pt-4">
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-surface/5 border border-surface/10">
-                  <Fingerprint className="w-6 h-6 text-primary/80 shrink-0 mt-1" aria-hidden="true" />
+            <Space direction="vertical" size={16}>
+              <Card size="small" style={{ background: BRAND_CARD_BG, border: BRAND_CARD_BORDER }}>
+                <Space align="start" size={16}>
+                  <Fingerprint style={{ width: 24, height: 24, color: token.colorPrimary, flexShrink: 0, marginTop: 4 }} aria-hidden="true" />
                   <div>
-                    <h3 className="font-bold text-surface mb-1">{t('branding.features.ekyc.title')}</h3>
-                    <p className="text-sm text-border">{t('branding.features.ekyc.desc')}</p>
+                    <Text strong style={{ color: BRAND_FG, display: 'block', marginBottom: 4 }}>{t('branding.features.ekyc.title')}</Text>
+                    <Text style={{ fontSize: 14, color: BRAND_MUTED }}>{t('branding.features.ekyc.desc')}</Text>
                   </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-surface/5 border border-surface/10">
-                  <ShieldCheck className="w-6 h-6 text-primary/80 shrink-0 mt-1" aria-hidden="true" />
+                </Space>
+              </Card>
+              <Card size="small" style={{ background: BRAND_CARD_BG, border: BRAND_CARD_BORDER }}>
+                <Space align="start" size={16}>
+                  <ShieldCheck style={{ width: 24, height: 24, color: token.colorPrimary, flexShrink: 0, marginTop: 4 }} aria-hidden="true" />
                   <div>
-                    <h3 className="font-bold text-surface mb-1">{t('branding.features.data.title')}</h3>
-                    <p className="text-sm text-border">{t('branding.features.data.desc')}</p>
+                    <Text strong style={{ color: BRAND_FG, display: 'block', marginBottom: 4 }}>{t('branding.features.data.title')}</Text>
+                    <Text style={{ fontSize: 14, color: BRAND_MUTED }}>{t('branding.features.data.desc')}</Text>
                   </div>
-                </div>
-            </div>
+                </Space>
+              </Card>
+            </Space>
+          </Space>
         </div>
 
-        <div className="relative z-10 flex items-center gap-2 text-border text-xs font-mono">
-           <div className="w-2 h-2 rounded-full bg-primary animate-pulse" aria-hidden="true" />
-           {t('branding.system')} • v2.4.0
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Space size={8} align="center" style={{ color: BRAND_MUTED, fontSize: token.fontSizeSM, fontFamily: 'monospace' }}>
+            <Badge status="processing" color={token.colorPrimary} />
+            {t('branding.system')} • v2.4.0
+          </Space>
         </div>
-      </aside>
+      </Col>
 
       {/* Right Panel - Form Flow */}
-      <main className="flex-1 flex flex-col items-center justify-center p-5 sm:p-6 bg-background relative" aria-labelledby="onboarding-title">
-        <div className="w-full max-w-[520px]">
-            {/* Mobile back link */}
-            <Link href="/login" className="lg:hidden flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 w-fit">
-                <ArrowLeft className="w-4 h-4" />
+      <Col
+        xs={24}
+        lg={14}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+          background: token.colorBgLayout,
+          position: 'relative',
+        }}
+        aria-labelledby="onboarding-title"
+      >
+        <div style={{ width: '100%', maxWidth: 520 }}>
+          {/* Mobile back link (hidden at lg) */}
+          <Row>
+            <Col xs={24} lg={0} style={{ marginBottom: 16 }}>
+              <Link href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: token.fontSize, color: token.colorTextSecondary }}>
+                <ArrowLeft style={{ width: 16, height: 16 }} />
                 <span>{t('back')}</span>
-            </Link>
+              </Link>
+            </Col>
+          </Row>
 
-            {/* Progress Steps */}
-            <nav className="mb-12" aria-label="Registration Progress">
-              <Steps
-                current={step - 1}
-                items={[t('steps.identity'), t('steps.profile'), t('steps.complete')].map((title) => ({ title }))}
+          {/* Progress Steps */}
+          <nav style={{ marginBottom: 48 }} aria-label="Registration Progress">
+            <Steps
+              current={step - 1}
+              items={[t('steps.identity'), t('steps.profile'), t('steps.complete')].map((title) => ({ title }))}
+            />
+          </nav>
+
+          {step === 1 && (
+            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              <div style={{ textAlign: 'center' }}>
+                <Space direction="vertical" size={8}>
+                  <Title id="onboarding-title" level={3} style={{ margin: 0 }}>{t('step1.title')}</Title>
+                  <Text type="secondary">{t('step1.subtitle')}</Text>
+                </Space>
+              </div>
+
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                aria-label="Unggah file"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    setKtpFile(e.target.files[0]);
+                  }
+                }}
               />
-            </nav>
-            
-                {step === 1 && (
-                    <div
-                        key="step1"
-                        className="space-y-6"
-                    >
-                        <div className="text-center space-y-2">
-                            <h2 id="onboarding-title" className="text-2xl font-bold">{t('step1.title')}</h2>
-                            <p className="text-muted-foreground">{t('step1.subtitle')}</p>
-                        </div>
 
-                        <input
-                            type="file"
-                            accept="image/*"
-                            ref={fileInputRef}
-                            className="hidden"
-                            aria-label="Unggah file"
-                            onChange={(e) => {
-                                if (e.target.files?.[0]) {
-                                    setKtpFile(e.target.files[0]);
-                                }
-                            }}
-                        />
+              <div
+                style={{
+                  border: `2px dashed ${ktpFile ? token.colorBorder : token.colorErrorBorder}`,
+                  borderRadius: token.borderRadiusLG,
+                  padding: 32,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  gap: 16,
+                  background: ktpFile ? token.colorFillQuaternary : token.colorErrorBg,
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label={t('step1.clickToUpload')}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+              >
+                <div style={iconTile(64)}>
+                  <Camera style={{ width: 32, height: 32 }} aria-hidden="true" />
+                </div>
+                <Space direction="vertical" size={4}>
+                  <Text strong>{t('step1.clickToUpload')}</Text>
+                  <Text type="secondary" style={{ fontSize: token.fontSizeSM }}>{t('step1.formats')}</Text>
+                  {ktpFile && (
+                    <Text style={{ fontSize: token.fontSizeSM, color: token.colorPrimary, fontWeight: 500 }}>{ktpFile.name}</Text>
+                  )}
+                </Space>
+              </div>
 
-                        <div 
-                            className={`border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer group flex flex-col items-center justify-center text-center gap-4 ${
-                                !ktpFile 
-                                    ? 'border-error/40 hover:border-primary/50 bg-error/30 dark:border-error/30 dark:bg-error/20 dark:hover:bg-primary/10' 
-                                    : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/10'
-                            }`}
-                            tabIndex={0} 
-                            role="button" 
-                            aria-label={t('step1.clickToUpload')}
-                            onClick={() => fileInputRef.current?.click()}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    fileInputRef.current?.click();
-                                }
-                            }}
-                        >
-                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <Camera className="w-8 h-8 text-primary" aria-hidden="true" />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="font-bold text-foreground">{t('step1.clickToUpload')}</p>
-                                <p className="text-xs text-muted-foreground">{t('step1.formats')}</p>
-                                {ktpFile && (
-                                    <p className="text-xs text-primary-dark font-medium">{ktpFile.name}</p>
-                                )}
-                            </div>
-                        </div>
+              <Button
+                type="primary"
+                block
+                size="large"
+                onClick={() => setStep(2)}
+                disabled={!ktpFile}
+              >
+                {t('step1.button')} <ChevronRight style={{ marginLeft: 8, width: 16, height: 16 }} />
+              </Button>
+              {!ktpFile && (
+                <Text type="danger" role="alert" style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>
+                  <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                  <span>{t('step1.uploadRequiredHint')}</span>
+                </Text>
+              )}
+            </Space>
+          )}
 
-                        <Button
-                            type="primary"
-                            onClick={() => setStep(2)} 
-                            className="w-full h-14 text-base font-bold shadow-xl shadow-primary/20"
-                            disabled={!ktpFile}
-                        >
-                            {t('step1.button')} <ChevronRight className="ml-2 w-4 h-4" />
-                        </Button>
-                        {!ktpFile && (
-                            <p
-                                className="flex items-center gap-2 text-sm text-error dark:text-error font-medium"
-                                role="alert"
-                            >
-                                <AlertCircle className="w-4 h-4 shrink-0" />
-                                <span>{t('step1.uploadRequiredHint')}</span>
-                            </p>
-                        )}
-                    </div>
-                )}
+          {step === 2 && (
+            <Space direction="vertical" size={32} style={{ width: '100%' }}>
+              <div style={{ textAlign: 'center' }}>
+                <Space direction="vertical" size={8}>
+                  <Title id="onboarding-title" level={3} style={{ margin: 0 }}>{t('step2.title')}</Title>
+                  <Text type="secondary">{t('step2.subtitle')}</Text>
+                </Space>
+              </div>
 
-                {step === 2 && (
-                    <div
-                        key="step2"
-                    >
-                         <div className="text-center space-y-2 mb-8">
-                            <h2 id="onboarding-title" className="text-2xl font-bold">{t('step2.title')}</h2>
-                            <p className="text-muted-foreground">{t('step2.subtitle')}</p>
-                        </div>
+              <Form form={form} onFinish={onValid} layout="vertical" initialValues={{ externalId: stableExternalId }}>
+                <Row gutter={[20, 0]}>
+                  <Col span={24}>
+                    <Form.Item name="nik" rules={[rule('nik')]} label={<label htmlFor="onboarding-nik" style={labelStyle}>{t('step2.nik')}</label>}>
+                      <Input id="onboarding-nik" placeholder={t('step2.nikPlaceholder')} maxLength={16} inputMode="numeric" onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) { e.preventDefault(); } }} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={24}>
+                    <Form.Item name="fullName" rules={[rule('fullName')]} label={<label htmlFor="onboarding-fullname" style={labelStyle}>{t('step2.fullName')}</label>}>
+                      <Input id="onboarding-fullname" placeholder={t('step2.fullNamePlaceholder')} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item name="email" rules={[rule('email')]} label={<label htmlFor="onboarding-email" style={labelStyle}>{t('step2.email')}</label>}>
+                      <Input id="onboarding-email" type="email" placeholder={t('step2.emailPlaceholder')} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item name="username" rules={[rule('username')]} label={<label htmlFor="onboarding-username" style={labelStyle}>{t('step2.username')}</label>}>
+                      <Input id="onboarding-username" placeholder={t('step2.usernamePlaceholder')} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item name="password" rules={[rule('password')]} label={<label htmlFor="onboarding-password" style={labelStyle}>{t('step2.password')}</label>}>
+                      <Input
+                        id="onboarding-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder={t('step2.passwordPlaceholder')}
+                        autoComplete="new-password"
+                        suffix={
+                          <Button
+                            type="text"
+                            shape="circle"
+                            icon={showPassword ? <EyeOff style={{ width: 20, height: 20 }} /> : <Eye style={{ width: 20, height: 20 }} />}
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          />
+                        }
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item name="confirmPassword" rules={[rule('confirmPassword')]} dependencies={['password']} label={<label htmlFor="onboarding-confirm-password" style={labelStyle}>{t('step2.confirmPassword')}</label>}>
+                      <Input
+                        id="onboarding-confirm-password"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder={t('step2.confirmPasswordPlaceholder')}
+                        autoComplete="new-password"
+                        suffix={
+                          <Button
+                            type="text"
+                            shape="circle"
+                            icon={showConfirmPassword ? <EyeOff style={{ width: 20, height: 20 }} /> : <Eye style={{ width: 20, height: 20 }} />}
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                          />
+                        }
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Form.Item name="externalId" initialValue={stableExternalId} hidden>
+                  <Input type="hidden" />
+                </Form.Item>
+                <Space size={16} style={{ paddingTop: 24, width: '100%' }}>
+                  <Button type="default" htmlType="button" size="large" onClick={() => setStep(1)}>
+                    {t('step2.backButton')}
+                  </Button>
+                  <Button type="primary" htmlType="submit" size="large" style={{ flex: 1 }} disabled={mutation.isPending}>
+                    {mutation.isPending ? <Loader2 className="animate-spin" /> : t('step2.submitButton')}
+                  </Button>
+                </Space>
+              </Form>
+            </Space>
+          )}
 
-                        <Form form={form} onFinish={onValid} layout="vertical" className="space-y-5" initialValues={{ externalId: stableExternalId }}>
-                            <div className="grid grid-cols-2 gap-5">
-                                <Form.Item name="nik" rules={[rule('nik')]} className="col-span-2 mb-0" label={<label htmlFor="onboarding-nik" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.nik')}</label>}>
-                                    <Input id="onboarding-nik" placeholder={t('step2.nikPlaceholder')} className="h-12" maxLength={16} inputMode="numeric" onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) { e.preventDefault(); } }} />
-                                </Form.Item>
-                                <Form.Item name="fullName" rules={[rule('fullName')]} className="col-span-2 mb-0" label={<label htmlFor="onboarding-fullname" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.fullName')}</label>}>
-                                    <Input id="onboarding-fullname" placeholder={t('step2.fullNamePlaceholder')} className="h-12" />
-                                </Form.Item>
-                                <Form.Item name="email" rules={[rule('email')]} className="col-span-2 md:col-span-1 mb-0" label={<label htmlFor="onboarding-email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.email')}</label>}>
-                                    <Input id="onboarding-email" type="email" placeholder={t('step2.emailPlaceholder')} className="h-12" />
-                                </Form.Item>
-                                <Form.Item name="username" rules={[rule('username')]} className="col-span-2 md:col-span-1 mb-0" label={<label htmlFor="onboarding-username" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.username')}</label>}>
-                                    <Input id="onboarding-username" placeholder={t('step2.usernamePlaceholder')} className="h-12" />
-                                </Form.Item>
-                            </div>
-                            <div className="grid grid-cols-2 gap-5">
-                                <Form.Item name="password" rules={[rule('password')]} className="col-span-2 md:col-span-1 mb-0" label={<label htmlFor="onboarding-password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.password')}</label>}>
-                                    <div className="relative">
-                                        <Input id="onboarding-password" type={showPassword ? 'text' : 'password'} placeholder={t('step2.passwordPlaceholder')} className="h-12 pr-12" autoComplete="new-password" />
-                                        <Button type="text" shape="circle" icon={showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />} onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2" />
-                                    </div>
-                                </Form.Item>
-                                <Form.Item name="confirmPassword" rules={[rule('confirmPassword')]} dependencies={['password']} className="col-span-2 md:col-span-1 mb-0" label={<label htmlFor="onboarding-confirm-password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-bold">{t('step2.confirmPassword')}</label>}>
-                                    <div className="relative">
-                                        <Input id="onboarding-confirm-password" type={showConfirmPassword ? 'text' : 'password'} placeholder={t('step2.confirmPasswordPlaceholder')} className="h-12 pr-12" autoComplete="new-password" />
-                                        <Button type="text" shape="circle" icon={showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />} onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2" />
-                                    </div>
-                                </Form.Item>
-                            </div>
-                            <Form.Item name="externalId" initialValue={stableExternalId} hidden>
-                                <Input type="hidden" />
-                            </Form.Item>
-                             <div className="pt-6 flex gap-4">
-                                <Button type="default" htmlType="button" onClick={() => setStep(1)} className="h-14 px-8">
-                                    {t('step2.backButton')}
-                                </Button>
-                                <Button type="primary" htmlType="submit" className="flex-1 h-14 font-bold shadow-xl shadow-primary/20" disabled={mutation.isPending}>
-                                    {mutation.isPending ? <Loader2 className="animate-spin" /> : t('step2.submitButton')}
-                                </Button>
-                            </div>
-                        </Form>
-                    </div>
-                )}
-
-                {step === 3 && (
-                    <div
-                        key="step3"
-                        className="text-center py-10 space-y-6"
-                    >
-                        <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle2 className="w-12 h-12 text-primary" />
-                        </div>
-                        <div className="space-y-2">
-                            <h2 id="onboarding-title" className="text-3xl font-bold text-foreground">{t('step3.title')}</h2>
-                            <p className="text-muted-foreground max-w-xs mx-auto">
-                                {t('step3.subtitle')}
-                            </p>
-                        </div>
-                        <div className="pt-4">
-                            <Loader2 className="w-6 h-6 text-primary animate-spin mx-auto" aria-label="Processing..." />
-                        </div>
-                    </div>
-                )}
+          {step === 3 && (
+            <Space direction="vertical" size={16} style={{ width: '100%', textAlign: 'center', padding: '40px 0' }}>
+              <div style={{ ...iconTile(96), margin: '0 auto' }}>
+                <CheckCircle2 style={{ width: 48, height: 48 }} />
+              </div>
+              <Space direction="vertical" size={8}>
+                <Title id="onboarding-title" level={2} style={{ margin: 0 }}>{t('step3.title')}</Title>
+                <Text type="secondary" style={{ maxWidth: 320, margin: '0 auto', display: 'block' }}>
+                  {t('step3.subtitle')}
+                </Text>
+              </Space>
+              <Loader2 className="animate-spin" style={{ width: 24, height: 24, color: token.colorPrimary, margin: '16px auto 0' }} aria-label="Processing..." />
+            </Space>
+          )}
         </div>
-      </main>
-    </div>
-
+      </Col>
+    </Row>
   );
 }

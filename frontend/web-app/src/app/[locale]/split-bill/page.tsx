@@ -13,7 +13,7 @@ import {
   Receipt,
   Loader2,
 } from '@/components/icons';
-import { Button, Input, Tag } from 'antd';
+import { Button, Card, Col, Input, Row, Space, Tag, Typography, Empty } from 'antd';
 import {
   useSplitBills,
   useCreateSplitBill,
@@ -24,6 +24,8 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import { addCurrency, asMoney, divideCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
 import type { SplitBillParticipant } from '@/services/TransactionService';
+
+const { Title, Text } = Typography;
 
 export default function SplitBillPage() {
   const { accountId } = useAuthStore();
@@ -76,13 +78,13 @@ export default function SplitBillPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return <Tag bordered={false} color="green" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs uppercase tracking-widest">Aktif</Tag>;
+        return <Tag bordered={false} color="green">Aktif</Tag>;
       case 'SETTLED':
-        return <Tag bordered={false} color="blue" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 text-xs uppercase tracking-widest">Lunas</Tag>;
+        return <Tag bordered={false} color="blue">Lunas</Tag>;
       case 'PENDING':
-        return <Tag bordered={false} color="orange" className="bg-warning/10 text-warning border-warning/20 px-3 py-1 text-xs uppercase tracking-widest">Menunggu</Tag>;
+        return <Tag bordered={false} color="orange">Menunggu</Tag>;
       case 'CANCELLED':
-        return <Tag bordered={false} color="red" className="bg-error/10 text-error border-error/20 px-3 py-1 text-xs uppercase tracking-widest">Dibatalkan</Tag>;
+        return <Tag bordered={false} color="red">Dibatalkan</Tag>;
       default:
         return <Tag bordered>{status}</Tag>;
     }
@@ -121,202 +123,228 @@ export default function SplitBillPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <Space direction="vertical" size={24} style={{ width: '100%' }}>
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Split Bill</h1>
-            <p className="text-sm text-muted-foreground font-medium mt-1">
+        <Row justify="space-between" align="bottom" gutter={[16, 16]}>
+          <Col>
+            <Title level={2} style={{ margin: 0 }}>Split Bill</Title>
+            <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>
               Bagi tagihan dengan teman, keluarga, atau rekan kerja secara adil.
-            </p>
-          </div>
-          <Button
-            type="primary"
-            className="h-14 px-8 shadow-xl shadow-primary/20 flex items-center gap-2"
-            onClick={() => setShowCreateModal(true)}
-          >
-            <Plus className="h-4 w-4" /> Split Bill Baru
-          </Button>
-        </div>
+            </Text>
+          </Col>
+          <Col>
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus style={{ marginRight: 8 }} /> Split Bill Baru
+            </Button>
+          </Col>
+        </Row>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-            <div className="bg-primary h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg">
-              <Receipt className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Aktif</p>
-              <p className="text-2xl font-bold text-foreground mt-0.5">{activeBills.length}</p>
-            </div>
-          </div>
-          <div className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-            <div className="bg-primary h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg">
-              <CheckCircle2 className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Lunas</p>
-              <p className="text-2xl font-bold text-foreground mt-0.5">{settledBills.length}</p>
-            </div>
-          </div>
-          <div className="bg-card border border-border p-6 rounded-2xl shadow-sm flex items-center gap-5">
-            <div className="bg-secondary h-12 w-12 rounded-xl flex items-center justify-center text-surface shadow-lg">
-              <DollarSign className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total</p>
-              <p className="text-2xl font-bold text-foreground mt-0.5">
-                {formatCurrency(splitBills.reduce((sum, b) => addCurrency(sum, b.totalAmount), asMoney('0')))}
-              </p>
-            </div>
-          </div>
-        </div>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={8}>
+            <Card>
+              <Space size={20}>
+                <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Receipt style={{ width: 24, height: 24, color: 'var(--ant-color-text-light-solid)' }} />
+                </div>
+                <div>
+                  <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Aktif</Text>
+                  <Title level={3} style={{ margin: '4px 0 0' }}>{activeBills.length}</Title>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card>
+              <Space size={20}>
+                <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-text-light-solid)' }} />
+                </div>
+                <div>
+                  <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Lunas</Text>
+                  <Title level={3} style={{ margin: '4px 0 0' }}>{settledBills.length}</Title>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card>
+              <Space size={20}>
+                <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-secondary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <DollarSign style={{ width: 24, height: 24, color: 'var(--ant-color-text-light-solid)' }} />
+                </div>
+                <div>
+                  <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Total</Text>
+                  <Title level={3} style={{ margin: '4px 0 0' }}>
+                    {formatCurrency(splitBills.reduce((sum, b) => addCurrency(sum, b.totalAmount), asMoney('0')))}
+                  </Title>
+                </div>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
 
         {/* Create Modal */}
         {showCreateModal && (
-          <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-card space-y-6">
-            <h3 className="text-xl font-bold text-foreground">Buat Split Bill Baru</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="splitbill-description" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
-                  Deskripsi
-                </label>
-                <Input id="splitbill-description"
-                  placeholder="Makan siang, nonton bareng..."
-                  value={newBillName}
-                  onChange={(e) => setNewBillName(e.target.value)}
-                  className="h-12"
-                />
-              </div>
-              <div>
-                <label htmlFor="splitbill-amount" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
-                  Total Tagihan
-                </label>
-                <Input id="splitbill-amount"
-                  type="number"
-                  placeholder="150000"
-                  value={newBillAmount}
-                  onChange={(e) => setNewBillAmount(e.target.value)}
-                  className="h-12"
-                />
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label htmlFor="splitbill-participant-accountId-0" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                  Peserta (min. 1)
-                </label>
-                <Button htmlType="button" size="small" onClick={addParticipantRow} className="min-h-[44px] gap-1 text-xs font-bold uppercase tracking-widest">
-                  <UserPlus className="h-3 w-3" /> Tambah Peserta
-                </Button>
-              </div>
-              {participants.map((p, i) => (
-                <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.4fr_auto] gap-3 items-center">
-                  <Input id={`splitbill-participant-accountId-${i}`}
-                    aria-label={`ID akun peserta ${i + 1}`}
-                    placeholder="Account ID"
-                    value={p.accountId}
-                    onChange={(e) => updateParticipant(i, 'accountId', e.target.value)}
-                    className="h-11"
-                  />
-                  <Input id={`splitbill-participant-accountNumber-${i}`}
-                    aria-label={`Nomor rekening peserta ${i + 1}`}
-                    placeholder="No. Rekening"
-                    value={p.accountNumber}
-                    onChange={(e) => updateParticipant(i, 'accountNumber', e.target.value)}
-                    className="h-11"
-                  />
-                  <Input id={`splitbill-participant-accountName-${i}`}
-                    aria-label={`Nama peserta ${i + 1}`}
-                    placeholder="Nama"
-                    value={p.accountName}
-                    onChange={(e) => updateParticipant(i, 'accountName', e.target.value)}
-                    className="h-11"
-                  />
-                  <Button
-                    type="text"
-                    size="small"
-                    disabled={participants.length === 1}
-                    onClick={() => removeParticipantRow(i)}
-                    className="h-11 text-error"
-                  >
-                    Hapus
+          <Card>
+            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              <Title level={3} style={{ margin: 0 }}>Buat Split Bill Baru</Title>
+              <Row gutter={[24, 24]}>
+                <Col xs={24} md={12}>
+                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                    <label htmlFor="splitbill-description" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                      Deskripsi
+                    </label>
+                    <Input id="splitbill-description"
+                      placeholder="Makan siang, nonton bareng..."
+                      value={newBillName}
+                      onChange={(e) => setNewBillName(e.target.value)}
+                    />
+                  </Space>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                    <label htmlFor="splitbill-amount" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                      Total Tagihan
+                    </label>
+                    <Input id="splitbill-amount"
+                      type="number"
+                      placeholder="150000"
+                      value={newBillAmount}
+                      onChange={(e) => setNewBillAmount(e.target.value)}
+                    />
+                  </Space>
+                </Col>
+              </Row>
+              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Row justify="space-between" align="middle">
+                  <label htmlFor="splitbill-participant-accountId-0" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    Peserta (min. 1)
+                  </label>
+                  <Button htmlType="button" size="small" onClick={addParticipantRow}>
+                    <UserPlus style={{ marginRight: 4 }} /> Tambah Peserta
                   </Button>
-                </div>
-              ))}
-              <p className="text-xs text-muted-foreground">
-                Jumlah tiap peserta dibagi rata (split rata).
-              </p>
-            </div>
-            <div className="flex gap-4">
-              <Button type="primary" onClick={handleCreate} disabled={createSplitBill.isPending} className="h-12 px-8">
-                {createSplitBill.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Buat
-              </Button>
-              <Button onClick={() => setShowCreateModal(false)} className="h-12 px-8">
-                Batal
-              </Button>
-            </div>
-          </div>
+                </Row>
+                {participants.map((p, i) => (
+                  <Row key={i} gutter={[12, 12]} align="middle">
+                    <Col xs={24} md={6}>
+                      <Input id={`splitbill-participant-accountId-${i}`}
+                        aria-label={`ID akun peserta ${i + 1}`}
+                        placeholder="Account ID"
+                        value={p.accountId}
+                        onChange={(e) => updateParticipant(i, 'accountId', e.target.value)}
+                      />
+                    </Col>
+                    <Col xs={24} md={6}>
+                      <Input id={`splitbill-participant-accountNumber-${i}`}
+                        aria-label={`Nomor rekening peserta ${i + 1}`}
+                        placeholder="No. Rekening"
+                        value={p.accountNumber}
+                        onChange={(e) => updateParticipant(i, 'accountNumber', e.target.value)}
+                      />
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Input id={`splitbill-participant-accountName-${i}`}
+                        aria-label={`Nama peserta ${i + 1}`}
+                        placeholder="Nama"
+                        value={p.accountName}
+                        onChange={(e) => updateParticipant(i, 'accountName', e.target.value)}
+                      />
+                    </Col>
+                    <Col xs={24} md={4}>
+                      <Button
+                        type="text"
+                        size="small"
+                        disabled={participants.length === 1}
+                        onClick={() => removeParticipantRow(i)}
+                        style={{ color: 'var(--ant-color-error)' }}
+                      >
+                        Hapus
+                      </Button>
+                    </Col>
+                  </Row>
+                ))}
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Jumlah tiap peserta dibagi rata (split rata).
+                </Text>
+              </Space>
+              <Space size={16}>
+                <Button type="primary" onClick={handleCreate} disabled={createSplitBill.isPending}>
+                  {createSplitBill.isPending ? <Loader2 style={{ marginRight: 8, animation: 'spin 1s linear infinite' }} /> : null}
+                  Buat
+                </Button>
+                <Button onClick={() => setShowCreateModal(false)}>
+                  Batal
+                </Button>
+              </Space>
+            </Space>
+          </Card>
         )}
 
         {/* Active Split Bills */}
         {activeBills.length > 0 && (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-foreground">Split Bill Aktif</h3>
-            <div className="space-y-4">
+          <Space direction="vertical" size={24} style={{ width: '100%' }}>
+            <Title level={3} style={{ margin: 0 }}>Split Bill Aktif</Title>
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
               {activeBills.map((bill) => (
-                <div key={bill.id} className="bg-card border border-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                        <Users className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-foreground">{bill.description}</h4>
-                        <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">
-                          {new Date(bill.createdAt).toLocaleDateString(undefined)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {getStatusBadge(bill.status)}
-                      <span className="text-lg font-bold text-foreground">
-                        {formatCurrency(bill.totalAmount)}
-                      </span>
-                    </div>
-                  </div>
+                <Card key={bill.id}>
+                  <Row justify="space-between" align="middle" gutter={[16, 16]}>
+                    <Col>
+                      <Space size={16}>
+                        <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Users style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
+                        </div>
+                        <div>
+                          <Text strong>{bill.description}</Text>
+                          <br />
+                          <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                            {new Date(bill.createdAt).toLocaleDateString(undefined)}
+                          </Text>
+                        </div>
+                      </Space>
+                    </Col>
+                    <Col>
+                      <Space size={12} align="center">
+                        {getStatusBadge(bill.status)}
+                        <Text strong style={{ fontSize: 18 }}>
+                          {formatCurrency(bill.totalAmount)}
+                        </Text>
+                      </Space>
+                    </Col>
+                  </Row>
 
                   {/* Participants */}
                   {bill.participants?.length > 0 && (
-                    <div className="space-y-3 mb-4">
+                    <Space direction="vertical" size={8} style={{ width: '100%', marginTop: 16 }}>
                       {bill.participants.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center text-xs font-bold text-primary">
+                        <Row key={p.id} justify="space-between" align="middle" style={{ padding: '12px 16px', backgroundColor: 'var(--ant-color-fill-tertiary)', borderRadius: 12 }}>
+                          <Space size={12}>
+                            <div style={{ width: 32, height: 32, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--ant-color-primary)' }}>
                               {p.name?.charAt(0) ?? '?'}
                             </div>
-                            <span className="text-sm font-medium text-foreground">{p.name}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-bold text-foreground">
-                              {formatCurrency(p.amount)}
-                            </span>
+                            <Text>{p.name}</Text>
+                          </Space>
+                          <Space size={12} align="center">
+                            <Text strong>{formatCurrency(p.amount)}</Text>
                             {p.status === 'PAID' ? (
-                              <CheckCircle2 className="h-4 w-4 text-primary" />
+                              <CheckCircle2 style={{ width: 16, height: 16, color: 'var(--ant-color-primary)' }} />
                             ) : p.status === 'DECLINED' ? (
-                              <XCircle className="h-4 w-4 text-error" />
+                              <XCircle style={{ width: 16, height: 16, color: 'var(--ant-color-error)' }} />
                             ) : (
-                              <Clock className="h-4 w-4 text-warning" />
+                              <Clock style={{ width: 16, height: 16, color: 'var(--ant-color-warning)' }} />
                             )}
-                          </div>
-                        </div>
+                          </Space>
+                        </Row>
                       ))}
-                    </div>
+                    </Space>
                   )}
 
                   {/* Actions */}
-                  <div className="flex flex-wrap gap-2">
+                  <Space size={8} style={{ marginTop: 16 }}>
                     <Button
                       size="small"
                       onClick={() =>
@@ -325,16 +353,14 @@ export default function SplitBillPage() {
                           participant: { accountId: '', accountName: 'Teman Baru', amountOwed: divideCurrency(bill.totalAmount, 2), status: 'PENDING' } as SplitBillParticipant,
                         })
                       }
-                      className="text-xs font-bold tracking-widest uppercase gap-1"
                     >
-                      <UserPlus className="h-3 w-3" /> Tambah Peserta
+                      <UserPlus style={{ marginRight: 4 }} /> Tambah Peserta
                     </Button>
                     {bill.status === 'PENDING' && (
                       <Button
                         size="small"
                         type="primary"
                         onClick={() => activateBill.mutate(bill.id)}
-                        className="text-xs font-bold tracking-widest uppercase"
                       >
                         Aktifkan
                       </Button>
@@ -342,66 +368,77 @@ export default function SplitBillPage() {
                     <Button
                       size="small"
                       onClick={() => settleBill.mutate(bill.id)}
-                      className="text-xs font-bold tracking-widest uppercase text-primary-dark border-primary/20 hover:bg-primary/5"
                     >
                       Selesaikan
                     </Button>
-                  </div>
-                </div>
+                  </Space>
+                </Card>
               ))}
-            </div>
-          </div>
+            </Space>
+          </Space>
         )}
 
         {/* Settled Bills */}
         {settledBills.length > 0 && (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-foreground">Riwayat</h3>
-            <div className="space-y-4">
+          <Space direction="vertical" size={24} style={{ width: '100%' }}>
+            <Title level={3} style={{ margin: 0 }}>Riwayat</Title>
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
               {settledBills.map((bill) => (
-                <div key={bill.id} className="bg-card border border-border rounded-2xl p-6 shadow-sm opacity-80">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-muted rounded-xl flex items-center justify-center">
-                        <CheckCircle2 className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-foreground">{bill.description}</h4>
-                        <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase">
-                          {bill.participants?.length ?? 0} peserta
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-lg font-bold text-muted-foreground">
-                      {formatCurrency(bill.totalAmount)}
-                    </span>
-                  </div>
-                </div>
+                <Card key={bill.id} style={{ opacity: 0.8 }}>
+                  <Row justify="space-between" align="middle" gutter={[16, 16]}>
+                    <Col>
+                      <Space size={16}>
+                        <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-fill-tertiary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-text-tertiary)' }} />
+                        </div>
+                        <div>
+                          <Text strong>{bill.description}</Text>
+                          <br />
+                          <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                            {bill.participants?.length ?? 0} peserta
+                          </Text>
+                        </div>
+                      </Space>
+                    </Col>
+                    <Col>
+                      <Text strong style={{ fontSize: 18, color: 'var(--ant-color-text-tertiary)' }}>
+                        {formatCurrency(bill.totalAmount)}
+                      </Text>
+                    </Col>
+                  </Row>
+                </Card>
               ))}
-            </div>
-          </div>
+            </Space>
+          </Space>
         )}
 
         {/* Empty State */}
         {!isLoading && splitBills.length === 0 && (
-          <div className="text-center py-8 bg-card border border-border rounded-2xl">
-            <Users className="h-16 w-16 text-muted-foreground mx-auto opacity-20 mb-6" />
-            <h3 className="text-lg font-bold text-foreground mb-2">Belum ada Split Bill</h3>
-            <p className="text-sm text-muted-foreground font-medium mb-6">
-              Buat split bill pertama Anda untuk membagi tagihan bersama teman.
-            </p>
-            <Button type="primary" onClick={() => setShowCreateModal(true)} className="h-12 px-8 shadow-xl shadow-primary/20">
-              <Plus className="h-4 w-4 mr-2" /> Mulai Split Bill
-            </Button>
-          </div>
+          <Card>
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            <Space direction="vertical" size={8}>
+              <Text strong style={{ fontSize: 16 }}>Belum ada Split Bill</Text>
+              <Text type="secondary">
+                Buat split bill pertama Anda untuk membagi tagihan bersama teman.
+              </Text>
+            </Space>
+          }
+        >
+          <Button type="primary" onClick={() => setShowCreateModal(true)}>
+            <Plus style={{ marginRight: 8 }} /> Mulai Split Bill
+          </Button>
+        </Empty>
+          </Card>
         )}
 
         {isLoading && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+            <Loader2 style={{ width: 32, height: 32, animation: 'spin 1s linear infinite', color: 'var(--ant-color-primary)' }} />
           </div>
         )}
-      </div>
+      </Space>
     </DashboardLayout>
   );
 }

@@ -12,7 +12,16 @@ import {
   Info,
 } from "@/components/icons";
 import { notify as toast } from "@/lib/notify";
-import { Button } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Progress,
+  Row,
+  Space,
+  theme,
+  Typography,
+} from "antd";
 
 // ponytail: minimal EMVCo CRC16 X25 (tag 63) — full TLV 26/30/54/59 + query GET /accounts/{id}/qris when backend live per ADR-0025
 function _crc16X25(data: string): string {
@@ -29,6 +38,7 @@ export default function QRISPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [showMyQr, setShowMyQr] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { token } = theme.useToken();
 
   const handleToggleCamera = () => {
     setIsScanning(!isScanning);
@@ -59,226 +69,636 @@ export default function QRISPage() {
   return (
     <DashboardLayout>
       <SkipLink href="#main-content" />
-      <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6">
+      <main id="main-content" style={{ overflowX: "hidden" }}>
+        <Space direction="vertical" size={16}>
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
             accept="image/*"
             aria-label="Unggah file"
-            className="hidden"
+            style={{ display: "none" }}
           />
 
-          <div className="flex justify-between items-end">
-            <div>
-              <h2 className="text-3xl font-bold text-foreground ">
-                Pembayaran QRIS
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-text-secondary font-medium">
-                Pindai kode QRIS merchant atau P2P untuk membayar secara instan.
-              </p>
-            </div>
-          </div>
+          {/* Header */}
+          <Space direction="vertical" size={4}>
+            <Typography.Title level={2} style={{ marginBottom: 0 }}>
+              Pembayaran QRIS
+            </Typography.Title>
+            <Typography.Text type="secondary">
+              Pindai kode QRIS merchant atau P2P untuk membayar secara instan.
+            </Typography.Text>
+          </Space>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
-            {/* Main Scanner Column (8 units) */}
-            <div className="md:col-span-12 lg:col-span-8 space-y-6">
-              <div className="bg-card rounded-2xl border border-border shadow-2xl relative overflow-hidden group min-h-[320px] lg:min-h-[400px] flex flex-col items-center justify-center p-5 sm:p-8 lg:p-10">
-                {/* Premium Background Effects */}
-                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] -z-0" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -z-0" />
+          <Row gutter={[16, 16]}>
+            {/* Main Scanner Column (16 units) */}
+            <Col xs={24} lg={16}>
+              <Space direction="vertical" size={16}>
+                {/* Scanner Card */}
+                <Card
+                  style={{
+                    minHeight: 320,
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                  styles={{
+                    body: {
+                      minHeight: 320,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    },
+                  }}
+                >
+                  {/* Premium Background Effects */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                      width: 400,
+                      height: 400,
+                      backgroundColor: token.colorPrimary,
+                      opacity: 0.05,
+                      borderRadius: "50%",
+                      filter: "blur(100px)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      width: 256,
+                      height: 256,
+                      backgroundColor: token.colorPrimary,
+                      opacity: 0.05,
+                      borderRadius: "50%",
+                      filter: "blur(80px)",
+                    }}
+                  />
 
-                <div className="relative z-10 w-full max-w-md text-center space-y-6">
-                  <div className="relative aspect-square max-w-[350px] xl:max-w-[400px] mx-auto">
-                    {/* Scanner Frame */}
+                  <div
+                    style={{
+                      position: "relative",
+                      zIndex: 10,
+                      width: "100%",
+                      maxWidth: 400,
+                      textAlign: "center",
+                    }}
+                  >
                     <div
-                      className={`absolute inset-0 rounded-2xl border-2 border-dashed transition-all duration-700 ${isScanning ? "bg-primary/10 border-primary" : "bg-muted/20 border-border group-hover:border-primary/40"}`}
-                    />
-                    <div className="absolute inset-8 xl:inset-10 border-2 border-primary/20 rounded-xl animate-pulse" />
-
-                    {/* Floating Scanner Icon */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      style={{
+                        position: "relative",
+                        aspectRatio: "1",
+                        maxWidth: 350,
+                        margin: "0 auto",
+                      }}
+                    >
+                      {/* Scanner Frame */}
                       <div
-                        className={`w-22 h-22 xl:w-24 xl:h-24 bg-background rounded-2xl flex items-center justify-center mb-5 shadow-2xl border border-border transition-transform duration-500 ${isScanning ? "scale-110 ring-4 ring-primary/30" : "group-hover:scale-110"}`}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: 12,
+                          border: `2px dashed ${isScanning ? token.colorPrimary : token.colorBorder}`,
+                          transition: "all 0.7s",
+                          backgroundColor: isScanning
+                            ? `${token.colorPrimary}1a`
+                            : `${token.colorFillQuaternary}33`,
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 32,
+                          border: `2px solid ${token.colorPrimary}33`,
+                          borderRadius: 12,
+                          animation: "pulse 2s infinite",
+                        }}
+                      />
+
+                      {/* Floating Scanner Icon */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                       >
-                        <Camera
-                          className={`h-9 w-9 xl:h-10 xl:w-10 ${isScanning ? "text-primary animate-pulse" : "text-primary"}`}
+                        <div
+                          style={{
+                            width: 88,
+                            height: 88,
+                            backgroundColor: token.colorBgContainer,
+                            borderRadius: 12,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginBottom: 20,
+                            boxShadow: token.boxShadowSecondary,
+                            border: `1px solid ${token.colorBorder}`,
+                            transition: "transform 0.5s",
+                            transform: isScanning
+                              ? "scale(1.1)"
+                              : undefined,
+                          }}
+                        >
+                          <Camera
+                            style={{
+                              width: 36,
+                              height: 36,
+                              color: token.colorPrimary,
+                            }}
+                          />
+                        </div>
+                        <Typography.Text
+                          type="secondary"
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            letterSpacing: "0.3em",
+                            textTransform: "uppercase",
+                            opacity: 0.4,
+                          }}
+                        >
+                          {isScanning
+                            ? "Kamera Aktif — Mengarahkan ke QR..."
+                            : "Memindai Kode QRIS..."}
+                        </Typography.Text>
+                      </div>
+
+                      {/* Corner Borders */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: 40,
+                          height: 40,
+                          borderTop: `4px solid ${token.colorPrimary}`,
+                          borderLeft: `4px solid ${token.colorPrimary}`,
+                          borderRadius: "12px 0 0 0",
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          right: 0,
+                          width: 40,
+                          height: 40,
+                          borderTop: `4px solid ${token.colorPrimary}`,
+                          borderRight: `4px solid ${token.colorPrimary}`,
+                          borderRadius: "0 12px 0 0",
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          left: 0,
+                          width: 40,
+                          height: 40,
+                          borderBottom: `4px solid ${token.colorPrimary}`,
+                          borderLeft: `4px solid ${token.colorPrimary}`,
+                          borderRadius: "0 0 0 12px",
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          right: 0,
+                          width: 40,
+                          height: 40,
+                          borderBottom: `4px solid ${token.colorPrimary}`,
+                          borderRight: `4px solid ${token.colorPrimary}`,
+                          borderRadius: "0 0 12px 0",
+                        }}
+                      />
+                    </div>
+
+                    <Space
+                      direction="vertical"
+                      size={20}
+                      style={{ maxWidth: 320, margin: "0 auto" }}
+                    >
+                      <Button
+                        type="primary"
+                        onClick={handleToggleCamera}
+                        data-testid="qris-camera-button"
+                        block
+                        style={{
+                          height: 56,
+                          borderRadius: 12,
+                          fontWeight: 700,
+                          fontSize: 12,
+                          letterSpacing: "0.2em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        <Camera style={{ width: 16, height: 16 }} />{" "}
+                        {isScanning ? "Tutup Kamera" : "Buka Kamera"}
+                      </Button>
+                      <Button
+                        onClick={handleUploadClick}
+                        data-testid="qris-upload-button"
+                        block
+                        style={{
+                          height: 56,
+                          borderRadius: 12,
+                          fontWeight: 700,
+                          fontSize: 12,
+                          letterSpacing: "0.2em",
+                          textTransform: "uppercase",
+                          backgroundColor: `${token.colorFillQuaternary}66`,
+                          borderColor: token.colorBorder,
+                        }}
+                      >
+                        <ImageIcon
+                          style={{
+                            width: 16,
+                            height: 16,
+                            color: token.colorPrimary,
+                          }}
+                        />{" "}
+                        Unggah Foto
+                      </Button>
+                    </Space>
+                  </div>
+                </Card>
+
+                {/* Recent Payments Section */}
+                <Card>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 24,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <History
+                        style={{
+                          width: 20,
+                          height: 20,
+                          color: token.colorPrimary,
+                        }}
+                      />
+                      <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                        Aktivitas Terakhir
+                      </Typography.Title>
+                    </div>
+                    <Button
+                      type="link"
+                      onClick={() =>
+                        toast.info("Menampilkan semua transaksi QRIS")
+                      }
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: token.colorPrimary,
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Lihat Semua
+                    </Button>
+                  </div>
+
+                  <Space direction="vertical" size={16}>
+                    <div
+                      style={{
+                        padding: 32,
+                        textAlign: "center",
+                        backgroundColor: `${token.colorFillQuaternary}1a`,
+                        borderRadius: 12,
+                        border: `1px dashed ${token.colorBorder}80`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 64,
+                          height: 64,
+                          backgroundColor: `${token.colorFillQuaternary}33`,
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          margin: "0 auto 16px",
+                          opacity: 0.3,
+                        }}
+                      >
+                        <History
+                          style={{
+                            width: 32,
+                            height: 32,
+                            color: token.colorText,
+                          }}
                         />
                       </div>
-                      <p className="text-xs font-bold text-muted-foreground tracking-[0.3em] uppercase opacity-40">
-                        {isScanning
-                          ? "Kamera Aktif — Mengarahkan ke QR..."
-                          : "Memindai Kode QRIS..."}
-                      </p>
+                      <Typography.Text
+                        type="secondary"
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          opacity: 0.4,
+                        }}
+                      >
+                        Belum ada riwayat transaksi QRIS
+                      </Typography.Text>
+                    </div>
+                  </Space>
+                </Card>
+              </Space>
+            </Col>
+
+            {/* Right Sidebar Column (8 units) */}
+            <Col xs={24} lg={8}>
+              <Space direction="vertical" size={16}>
+                {/* Security Status Card */}
+                <Card>
+                  <Typography.Text
+                    type="secondary"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: "0.2em",
+                      textTransform: "uppercase",
+                      opacity: 0.6,
+                      display: "block",
+                      marginBottom: 24,
+                    }}
+                  >
+                    Protokol Keamanan
+                  </Typography.Text>
+                  <Space direction="vertical" size={24}>
+                    <div style={{ display: "flex", gap: 16 }}>
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          backgroundColor: `${token.colorPrimary}1a`,
+                          borderRadius: 12,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          border: `1px solid ${token.colorPrimary}1a`,
+                        }}
+                      >
+                        <ShieldCheck
+                          style={{
+                            width: 20,
+                            height: 20,
+                            color: token.colorPrimary,
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Typography.Text strong style={{ fontSize: 12 }}>
+                          Enkripsi RESP-V3
+                        </Typography.Text>
+                        <Typography.Text
+                          type="secondary"
+                          style={{
+                            fontSize: 12,
+                            display: "block",
+                            marginTop: 4,
+                            opacity: 0.7,
+                          }}
+                        >
+                          Token dinamik di-hash per transaksi untuk keamanan
+                          maksimal.
+                        </Typography.Text>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 16 }}>
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          backgroundColor: `${token.colorPrimary}1a`,
+                          borderRadius: 12,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          border: `1px solid ${token.colorPrimary}1a`,
+                        }}
+                      >
+                        <Info
+                          style={{
+                            width: 20,
+                            height: 20,
+                            color: token.colorPrimary,
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Typography.Text strong style={{ fontSize: 12 }}>
+                          Lisensi ASPI/BI
+                        </Typography.Text>
+                        <Typography.Text
+                          type="secondary"
+                          style={{
+                            fontSize: 12,
+                            display: "block",
+                            marginTop: 4,
+                            opacity: 0.7,
+                          }}
+                        >
+                          Sistem pembayaran tunduk pada regulasi QRIS Nasional.
+                        </Typography.Text>
+                      </div>
+                    </div>
+                  </Space>
+                </Card>
+
+                {/* My QR Card */}
+                <Card
+                  style={{
+                    backgroundColor: token.colorBgSpotlight,
+                    color: token.colorTextLightSolid,
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div style={{ position: "relative", zIndex: 10 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        marginBottom: 24,
+                      }}
+                    >
+                      <div>
+                        <Typography.Title
+                          level={4}
+                          style={{ marginBottom: 0, color: token.colorTextLightSolid }}
+                        >
+                          QRIS Personal
+                        </Typography.Title>
+                        <Typography.Text
+                          strong
+                          style={{
+                            fontSize: 12,
+                            color: token.colorPrimary,
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          E-Wallet Access
+                        </Typography.Text>
+                      </div>
+                      <QrCode
+                        style={{
+                          width: 28,
+                          height: 28,
+                          color: `${token.colorPrimary}66`,
+                        }}
+                      />
                     </div>
 
-                    {/* Corner Borders */}
-                    <div className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-primary rounded-tl-2xl" />
-                    <div className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-primary rounded-tr-2xl" />
-                    <div className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-primary rounded-bl-2xl" />
-                    <div className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-primary rounded-br-2xl" />
-                  </div>
+                    <div
+                      style={{
+                        backgroundColor: `${token.colorTextLightSolid}0d`,
+                        borderRadius: 12,
+                        padding: 24,
+                        marginBottom: 24,
+                        display: "flex",
+                        justifyContent: "center",
+                        border: `1px solid ${token.colorTextLightSolid}0d`,
+                        position: "relative",
+                      }}
+                    >
+                      <QrCode
+                        style={{
+                          width: 128,
+                          height: 128,
+                          transition: "all 0.3s",
+                          color: showMyQr
+                            ? token.colorPrimary
+                            : `${token.colorTextLightSolid}33`,
+                          transform: showMyQr ? "scale(1.05)" : undefined,
+                        }}
+                      />
+                      {!showMyQr && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Typography.Text
+                            strong
+                            style={{
+                              fontSize: 12,
+                              color: token.colorTextTertiary,
+                              letterSpacing: "0.2em",
+                              textTransform: "uppercase",
+                              transform: "rotate(-12deg)",
+                            }}
+                          >
+                            Authorized Only
+                          </Typography.Text>
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="flex flex-col sm:flex-row gap-5 max-w-sm mx-auto">
                     <Button
                       type="primary"
-                      onClick={handleToggleCamera}
-                      data-testid="qris-camera-button"
-                      className="flex-1 bg-gradient-to-r from-primary to-primary text-white py-5 rounded-xl font-bold text-xs tracking-[0.2em] shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase"
+                      onClick={() => setShowMyQr(!showMyQr)}
+                      data-testid="qris-show-personal-button"
+                      block
+                      style={{
+                        height: 48,
+                        backgroundColor: `${token.colorPrimary}33`,
+                        color: token.colorPrimary,
+                        borderRadius: 12,
+                        fontWeight: 700,
+                        fontSize: 12,
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        border: `1px solid ${token.colorPrimary}4d`,
+                      }}
                     >
-                      <Camera className="h-4 w-4" />{" "}
-                      {isScanning ? "Tutup Kamera" : "Buka Kamera"}
+                      {showMyQr ? "Sembunyikan Kode" : "Tampilkan Kode Saya"}
                     </Button>
-                    <Button
-                      type="default"
-                      onClick={handleUploadClick}
-                      data-testid="qris-upload-button"
-                      className="flex-1 bg-muted/40 text-foreground py-5 rounded-xl font-bold text-xs tracking-[0.2em] border border-border hover:bg-muted/60 transition-all active:scale-95 flex items-center justify-center gap-2 uppercase"
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -30,
+                      left: -30,
+                      width: 160,
+                      height: 160,
+                      backgroundColor: `${token.colorPrimary}1a`,
+                      borderRadius: "50%",
+                      filter: "blur(80px)",
+                    }}
+                  />
+                </Card>
+
+                {/* Daily Limit Card */}
+                <Card
+                  styles={{
+                    body: {
+                      minHeight: 180,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                    },
+                  }}
+                >
+                  <Space direction="vertical" size={4}>
+                    <Typography.Text
+                      type="secondary"
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        opacity: 0.6,
+                      }}
                     >
-                      <ImageIcon className="h-4 w-4 text-primary" /> Unggah
-                      Foto
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Payments Section */}
-              <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex items-center gap-3">
-                    <History className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg xl:text-xl font-bold text-foreground">
-                      Aktivitas Terakhir
-                    </h3>
-                  </div>
-                  <Button
-                    type="link"
-                    onClick={() =>
-                      toast.info("Menampilkan semua transaksi QRIS")
-                    }
-                    className="text-xs font-bold text-primary tracking-[0.2em] hover:text-primary transition-colors uppercase border-b border-primary/20"
-                  >
-                    Lihat Semua
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="py-8 text-center bg-muted/10 rounded-2xl border border-dashed border-border/50">
-                    <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4 opacity-30">
-                      <History className="h-8 w-8 text-foreground" />
-                    </div>
-                    <p className="text-xs font-bold text-muted-foreground/40 tracking-[0.1em] uppercase">
-                      Belum ada riwayat transaksi QRIS
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Sidebar Column (4 units) */}
-            <div className="md:col-span-12 lg:col-span-4 space-y-6">
-              {/* Security Status Card */}
-              <div className="bg-card rounded-2xl p-5 sm:p-6 xl:p-8 border border-border shadow-sm">
-                <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] mb-6 uppercase opacity-60">
-                  Protokol Keamanan
-                </h3>
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 border border-primary/10">
-                      <ShieldCheck className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-foreground">
-                        Enkripsi RESP-V3
-                      </p>
-                      <p className="text-xs text-muted-foreground font-medium tracking-tight mt-1 leading-relaxed opacity-70">
-                        Token dinamik di-hash per transaksi untuk keamanan
-                        maksimal.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 border border-primary/10">
-                      <Info className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-foreground">
-                        Lisensi ASPI/BI
-                      </p>
-                      <p className="text-xs text-muted-foreground font-medium tracking-tight mt-1 leading-relaxed opacity-70">
-                        Sistem pembayaran tunduk pada regulasi QRIS Nasional.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* My QR Card */}
-              <div className="bg-gray-900 rounded-2xl p-5 sm:p-6 xl:p-8 text-white relative overflow-hidden shadow-2xl group border border-white/5">
-                <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h4 className="font-bold text-xl tracking-tight">
-                        QRIS Personal
-                      </h4>
-                      <p className="text-xs text-primary font-bold tracking-widest uppercase">
-                        E-Wallet Access
-                      </p>
-                    </div>
-                    <QrCode className="h-7 w-7 text-primary/40" />
-                  </div>
-
-                  <div className="bg-white/5 rounded-2xl p-5 sm:p-6 mb-6 flex justify-center border border-white/5 shadow-inner group-hover:bg-white/10 transition-colors">
-                    <QrCode
-                      className={`h-32 w-32 transition-all ${showMyQr ? "text-primary scale-105" : "text-white/20"}`}
-                    />
-                    {!showMyQr && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <p className="text-xs font-bold text-white/30 tracking-[0.2em] uppercase origin-center -rotate-12">
-                          Authorized Only
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <Button
-                    type="primary"
-                    onClick={() => setShowMyQr(!showMyQr)}
-                    data-testid="qris-show-personal-button"
-                    className="w-full py-4 bg-primary/20 hover:bg-primary/40 text-primary rounded-xl font-bold text-xs tracking-[0.2em] transition-all border border-primary/30 uppercase"
-                  >
-                    {showMyQr ? "Sembunyikan Kode" : "Tampilkan Kode Saya"}
-                  </Button>
-                </div>
-                <div className="absolute top-[-30px] left-[-30px] w-40 h-40 bg-primary/10 rounded-full blur-[80px]" />
-              </div>
-
-              {/* Daily Limit Card */}
-              <div className="bg-muted/30 rounded-2xl p-5 sm:p-6 xl:p-8 border border-border flex flex-col justify-between min-h-[180px] xl:min-h-[200px]">
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase opacity-60">
-                    Limit Harian QRIS
-                  </p>
-                  <p className="text-2xl xl:text-3xl font-bold text-foreground tabular-nums">
-                    Rp 10.000.000
-                  </p>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary/40 rounded-full"
-                      style={{ width: "0%" }}
-                    />
-                  </div>
-                  <p className="text-xs font-bold text-primary tracking-widest uppercase">
-                    0% Terpakai
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                      Limit Harian QRIS
+                    </Typography.Text>
+                    <Typography.Title level={2} style={{ marginBottom: 0 }}>
+                      Rp 10.000.000
+                    </Typography.Title>
+                  </Space>
+                  <Space direction="vertical" size={16}>
+                    <Progress percent={0} showInfo={false} />
+                    <Typography.Text
+                      strong
+                      style={{
+                        fontSize: 12,
+                        color: token.colorPrimary,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      0% Terpakai
+                    </Typography.Text>
+                  </Space>
+                </Card>
+              </Space>
+            </Col>
+          </Row>
+        </Space>
       </main>
     </DashboardLayout>
   );

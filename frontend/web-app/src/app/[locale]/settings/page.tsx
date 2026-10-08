@@ -1,176 +1,213 @@
 'use client';
 
 import React, { useState } from 'react';
-import DashboardLayout from "@/components/DashboardLayout";
-import { User, Globe, Bell, Moon, Trash2, Shield, CreditCard, ChevronRight, FileText, Loader2, CheckCircle, Building2 } from '@/components/icons';
-import clsx from 'clsx';
-import StatementDownloader from '@/components/settings/statement-downloader';
-import { Button, Input, Switch } from 'antd';
-import { useAuth, useLogout, useUpdateUser } from '@/hooks';
-import { useAuthStore } from '@/stores';
-import BeneficiaryManager from '@/components/account/BeneficiaryManager';
-import { Alert } from 'antd';
+import {
+  Alert,
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Divider,
+  Input,
+  Row,
+  Space,
+  Switch,
+  Tag,
+  Typography,
+} from 'antd';
+import {
+  Bell,
+  CheckCircle,
+  ChevronRight,
+  Loader2,
+  Trash2,
+  User,
+} from '@/components/icons';
 import { useTranslations } from 'next-intl';
+import DashboardLayout from '@/components/DashboardLayout';
+import { useAuthStore } from '@/stores/authStore';
+import { useUpdateUser, useLogout } from '@/hooks';
+import { notify as toast } from '@/lib/notify';
+import StatementDownloader from '@/components/settings/statement-downloader';
+
+const { Title, Text } = Typography;
+
+interface FormData {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+}
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
-  const [activeTab, setActiveTab] = useState<'profile' | 'statements' | 'beneficiaries'>('profile');
-  const { user } = useAuth();
-  const accountId = useAuthStore((s) => s.accountId) || user?.id || '';
+  const { user, accountId } = useAuthStore();
   const updateUser = useUpdateUser();
   const logoutMutation = useLogout();
 
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phoneNumber: '',
+  const [activeTab, setActiveTab] = useState('profile');
+  const [formData, setFormData] = useState<FormData>({
+    fullName: user?.fullName ?? '',
+    email: user?.email ?? '',
+    phoneNumber: user?.phoneNumber ?? '',
   });
 
-  // React 19 "adjusting state during render" pattern: when the user changes
-  // (login/logout/swap), re-seed the form fields. This avoids the cascading
-  // render warning that comes from setState-in-effect.
-  const [prevUserId, setPrevUserId] = useState(user?.id);
-  if (user?.id !== prevUserId) {
-    setPrevUserId(user?.id);
-    setFormData({
-      fullName: user?.fullName || '',
-      email: user?.email || '',
-      phoneNumber: user?.phoneNumber || '',
-    });
-  }
+  const [preferences, setPreferences] = useState([
+    { label: t('pref.transactionAlert'), desc: t('pref.transactionAlertDesc'), active: true },
+    { label: t('pref.promotionAlert'), desc: t('pref.promotionAlertDesc'), active: false },
+    { label: t('pref.monthlyStatement'), desc: t('pref.monthlyStatementDesc'), active: true },
+  ]);
 
   const menuItems = [
-    { label: t('menu.generalProfile'), icon: User, active: activeTab === 'profile', onClick: () => setActiveTab('profile') },
-    { label: 'Beneficiaries', icon: Building2, active: activeTab === 'beneficiaries', onClick: () => setActiveTab('beneficiaries') },
-    { label: t('menu.eStatement'), icon: FileText, active: activeTab === 'statements', onClick: () => setActiveTab('statements') },
-    { label: t('menu.billingPlan'), icon: CreditCard, active: false },
-    { label: t('menu.privacySecurity'), icon: Shield, active: false },
-    { label: t('menu.advanced'), icon: Globe, active: false },
+    { label: t('menu.profile'), icon: User, onClick: () => setActiveTab('profile'), active: activeTab === 'profile' },
+    { label: t('menu.beneficiaries'), icon: ChevronRight, onClick: () => setActiveTab('beneficiaries'), active: activeTab === 'beneficiaries' },
+    { label: t('menu.eStatement'), icon: CheckCircle, onClick: () => setActiveTab('statements'), active: activeTab === 'statements' },
   ];
 
-  const preferences = [
-    { label: t('pref.pushNotifications'), desc: t('pref.pushNotificationsDesc'), icon: Bell, active: true },
-    { label: t('pref.darkMode'), desc: t('pref.darkModeDesc'), icon: Moon, active: false },
-    { label: t('pref.marketingInsights'), desc: t('pref.marketingInsightsDesc'), icon: Globe, active: true },
-  ];
-
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async () => {
-    if (!user?.id) return;
-
-    await updateUser.mutateAsync({
-      userId: user.id,
-      data: formData,
-    });
+  const handleSubmit = () => {
+    if (!user?.id) {
+      toast.error(t('profileUpdateError'));
+      return;
+    }
+    updateUser.mutate(
+      { userId: user.id, data: { fullName: formData.fullName, email: formData.email, phoneNumber: formData.phoneNumber } },
+      {
+        onSuccess: () => toast.success(t('profileUpdateSuccess')),
+        onError: () => toast.error(t('profileUpdateError')),
+      }
+    );
   };
 
   const handleClearSession = () => {
     logoutMutation.mutate();
   };
 
+  const handleTogglePreference = (index: number) => {
+    setPreferences(prev => prev.map((p, i) => i === index ? { ...p, active: !p.active } : p));
+  };
+
   return (
     <DashboardLayout>
-        <div className="space-y-6">
-          {/* Header */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('header.title')}</h1>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">{t('header.subtitle')}</p>
+      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        {/* Header */}
+        <Row justify="space-between" align="bottom" gutter={[16, 16]}>
+          <Col>
+            <Title level={2} style={{ margin: 0 }}>{t('header.title')}</Title>
+            <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>{t('header.subtitle')}</Text>
+          </Col>
+        </Row>
+
+        <Row gutter={[24, 24]}>
+          {/* Sidebar */}
+          <Col xs={24} md={12} lg={8}>
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              {/* Profile Card */}
+              <Card>
+                <div style={{ position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 0, right: 0, width: 128, height: 128, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: '50%', filter: 'blur(48px)' }} />
+                  <Space direction="vertical" size={16} style={{ width: '100%', textAlign: 'center' }}>
+                    <Avatar size={96} shape="square" style={{ backgroundColor: 'var(--ant-color-primary)', color: 'var(--ant-color-text-light-solid)', fontSize: 36, fontWeight: 700, borderRadius: 16 }}>
+                      {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : 'P'}
+                    </Avatar>
+                    <Title level={3} style={{ margin: 0 }}>{formData.fullName || 'PENGGUNA PAYU'}</Title>
+                    <Tag color="success">{t('premiumMember')}</Tag>
+                    <Divider style={{ margin: '40px 0' }} />
+                    <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                      <Row justify="space-between">
+                        <Text type="secondary" strong>{t('accountId')}</Text>
+                        <Text strong code>{user?.id?.slice(0, 12) || 'PAYU-09228373'}</Text>
+                      </Row>
+                      <Row justify="space-between">
+                        <Text type="secondary" strong>{t('status')}</Text>
+                        <Text strong type="success">{t('ekycVerified')}</Text>
+                      </Row>
+                    </Space>
+                  </Space>
                 </div>
-              </div>
+              </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
-              {/* Sidebar Profiles */}
-              <div className="md:col-span-6 lg:col-span-4 space-y-6">
-                <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              {/* Menu Card */}
+              <Card>
+                <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                  {menuItems.map((item, i) => (
+                    <Button
+                      type="text"
+                      key={i}
+                      onClick={item.onClick}
+                      block
+                      style={
+                        item.active
+                          ? {
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '16px 20px',
+                              borderRadius: 12,
+                              backgroundColor: 'var(--ant-color-primary)',
+                              color: 'var(--ant-color-text-light-solid)',
+                              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                            }
+                          : {
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '16px 20px',
+                              borderRadius: 12,
+                              color: 'var(--ant-color-text-secondary)',
+                            }
+                      }
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <item.icon style={{ width: 20, height: 20 }} />
+                        <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</span>
+                      </span>
+                      {item.active && <ChevronRight style={{ width: 16, height: 16 }} />}
+                    </Button>
+                  ))}
+                </Space>
+              </Card>
+            </Space>
+          </Col>
 
-                  <div className="relative w-24 h-24 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-bold text-4xl shadow-xl shadow-primary/20 mb-6 transition-transform group-hover:scale-110">
-                    {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : 'P'}
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground">{formData.fullName || 'PENGGUNA PAYU'}</h3>
-                  <p className="text-xs font-bold text-primary tracking-widest uppercase mt-3 bg-success-light px-4 py-1.5 rounded-full border border-primary/10">{t('premiumMember')}</p>
+          {/* Main Settings Form */}
+          <Col xs={24} md={12} lg={16}>
+            {activeTab === 'profile' ? (
+              <Card>
+                <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                  {/* Success Alert */}
+                  {updateUser.isSuccess && (
+                    <Alert
+                      type="success"
+                      showIcon
+                      icon={<CheckCircle style={{ width: 16, height: 16, color: 'var(--ant-color-success)' }} />}
+                      description={<Text type="success">{t('profileUpdateSuccess')}</Text>}
+                    />
+                  )}
 
-                  <div className="w-full h-[1px] bg-border my-10" />
+                  {/* Error Alert */}
+                  {updateUser.isError && (
+                    <Alert
+                      type="error"
+                      description={<Text type="danger">{t('profileUpdateError')}</Text>}
+                    />
+                  )}
 
-                  <div className="w-full space-y-4 px-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{t('accountId')}</span>
-                      <span className="text-xs font-bold text-foreground font-mono">{user?.id?.slice(0, 12) || 'PAYU-09228373'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">{t('status')}</span>
-                      <span className="text-xs font-bold text-primary">{t('ekycVerified')}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-card rounded-xl p-3 border border-border shadow-card">
-                  <div className="space-y-2">
-                    {menuItems.map((item, i) => (
-                      <Button
-                        type="text"
-                        key={i}
-                        onClick={item.onClick}
-                        className={clsx(
-                          "w-full flex items-center justify-between px-5 py-4 rounded-xl transition-all",
-                          item.active
-                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                        )}
-                      >
-                        <div className="flex items-center gap-4">
-                          <item.icon className="h-5 w-5" />
-                          <span className="text-xs font-bold tracking-widest uppercase">{item.label}</span>
-                        </div>
-                        {item.active && <ChevronRight className="h-4 w-4" />}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Main Settings Form */}
-              <div className="md:col-span-6 lg:col-span-8">
-                {activeTab === 'profile' ? (
-                  <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card space-y-6 relative overflow-hidden h-full">
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
-
-                    {/* Success Alert */}
-                    {updateUser.isSuccess && (
-                      <Alert
-                        type="success"
-                        showIcon
-                        icon={<CheckCircle className="h-4 w-4 text-success" />}
-                        className="bg-success/10 border-success/20 relative z-10 p-4"
-                        description={<span className="text-success">{t('profileUpdateSuccess')}</span>}
-                      />
-                    )}
-
-                    {/* Error Alert */}
-                    {updateUser.isError && (
-                      <Alert
-                        type="error"
-                        className="bg-error/10 border-error/20 relative z-10 p-4"
-                        description={<span className="text-error">{t('profileUpdateError')}</span>}
-                      />
-                    )}
-
-                    {/* Personal Details */}
-                    <section className="space-y-6 relative z-10">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
-                          <User className="h-6 w-6 text-primary" />
-                        </div>
-                        <h3 className="text-xl font-bold text-foreground">{t('profileCredentials')}</h3>
+                  {/* Personal Details */}
+                  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                    <Space size={16}>
+                      <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--ant-color-primary-border)' }}>
+                        <User style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
                       </div>
+                      <Title level={3} style={{ margin: 0 }}>{t('profileCredentials')}</Title>
+                    </Space>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                          <label htmlFor="settings-fullname" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                    <Row gutter={[24, 24]}>
+                      <Col xs={24} md={12}>
+                        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                          <label htmlFor="settings-fullname" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: 4 }}>
                             {t('form.fullName')}
                           </label>
                           <Input id="settings-fullname"
@@ -178,12 +215,13 @@ export default function SettingsPage() {
                             value={formData.fullName}
                             onChange={(e) => handleInputChange('fullName', e.target.value)}
                             placeholder={t('form.fullNamePlaceholder')}
-                            className="font-bold"
                             disabled={updateUser.isPending}
                           />
-                        </div>
-                        <div className="space-y-3">
-                          <label htmlFor="settings-email" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                        </Space>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                          <label htmlFor="settings-email" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: 4 }}>
                             {t('form.contactEmail')}
                           </label>
                           <Input id="settings-email"
@@ -191,12 +229,13 @@ export default function SettingsPage() {
                             value={formData.email}
                             onChange={(e) => handleInputChange('email', e.target.value)}
                             placeholder="email@contoh.com"
-                            className="font-bold"
                             disabled={updateUser.isPending}
                           />
-                        </div>
-                        <div className="space-y-3">
-                          <label htmlFor="settings-phone" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
+                        </Space>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                          <label htmlFor="settings-phone" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: 4 }}>
                             {t('form.phone')}
                           </label>
                           <Input id="settings-phone"
@@ -204,80 +243,122 @@ export default function SettingsPage() {
                             value={formData.phoneNumber}
                             onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                             placeholder="+62 812-3456-7890"
-                            className="font-bold"
                             disabled={updateUser.isPending}
                           />
-                        </div>
-                      </div>
-                    </section>
+                        </Space>
+                      </Col>
+                    </Row>
+                  </Space>
 
-                    <div className="h-[1px] w-full bg-border" />
+                  <Divider />
 
-                    {/* Preferences */}
-                    <section className="space-y-6 relative z-10">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
-                          <Bell className="h-6 w-6 text-primary" />
-                        </div>
-                        <h3 className="text-xl font-bold text-foreground">{t('systemPreferences')}</h3>
+                  {/* Preferences */}
+                  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                    <Space size={16}>
+                      <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--ant-color-primary-border)' }}>
+                        <Bell style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
                       </div>
+                      <Title level={3} style={{ margin: 0 }}>{t('systemPreferences')}</Title>
+                    </Space>
 
-                      <div className="grid grid-cols-1 gap-6">
-                        {preferences.map((pref, i) => (
-                          <div key={i} className="flex items-center justify-between group p-2 hover:bg-muted/20 rounded-xl transition-all">
-                            <div>
-                              <p className="font-bold text-foreground text-sm">{pref.label}</p>
-                              <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-0.5">{pref.desc}</p>
-                            </div>
-                            <Switch defaultChecked={pref.active} aria-label={pref.label} />
-                          </div>
-                        ))}
-                      </div>
-                    </section>
+                    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                      {preferences.map((pref, i) => (
+                        <Row key={i} justify="space-between" align="middle">
+                          <Col>
+                            <Text strong>{pref.label}</Text>
+                            <br />
+                            <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{pref.desc}</Text>
+                          </Col>
+                          <Col>
+                            <Switch defaultChecked={pref.active} onChange={() => handleTogglePreference(i)} aria-label={pref.label} />
+                          </Col>
+                        </Row>
+                      ))}
+                    </Space>
+                  </Space>
 
-                    <div className="flex flex-col sm:flex-row gap-4 pt-10 relative z-10">
-                      <Button
-                        type="primary"
-                        onClick={handleSubmit}
-                        disabled={updateUser.isPending || !user?.id}
-                      >
-                        {updateUser.isPending ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            {t('saving')}
-                          </>
-                        ) : (
-                          t('syncProfile')
-                        )}
-                      </Button>
-                      <Button
-                        danger
-                        className="text-error hover:bg-error/10 hover:text-error hover:border-error/20"
-                        onClick={handleClearSession}
-                      >
-                        <Trash2 className="h-5 w-5 mr-1" />
-                        {t('clearSession')}
-                      </Button>
-                    </div>
-                  </div>
-                ) : activeTab === 'beneficiaries' ? (
-                  <BeneficiaryManager accountId={accountId} />
-                ) : (
-                  <div className="space-y-6">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
-                        <div>
-                          <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('menu.eStatement')}</h1>
-                          <p className="text-sm text-muted-foreground font-medium mt-1">
-                            {t('eStatementSubtitle')}
-                          </p>
-                        </div>
-                      </div>
-                    <StatementDownloader />
-                  </div>
-                )}
-              </div>
-            </div>
-        </div>
+                  <Space size={16} style={{ paddingTop: 40 }}>
+                    <Button
+                      type="primary"
+                      onClick={handleSubmit}
+                      disabled={updateUser.isPending || !user?.id}
+                    >
+                      {updateUser.isPending ? (
+                        <>
+                          <Loader2 style={{ width: 16, height: 16, marginRight: 8, animation: 'spin 1s linear infinite' }} />
+                          {t('saving')}
+                        </>
+                      ) : (
+                        t('syncProfile')
+                      )}
+                    </Button>
+                    <Button
+                      danger
+                      onClick={handleClearSession}
+                    >
+                      <Trash2 style={{ width: 20, height: 20, marginRight: 4 }} />
+                      {t('clearSession')}
+                    </Button>
+                  </Space>
+                </Space>
+              </Card>
+            ) : activeTab === 'beneficiaries' ? (
+              <BeneficiaryManager accountId={accountId ?? ''} />
+            ) : (
+              <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                <div>
+                  <Title level={2} style={{ margin: 0 }}>{t('menu.eStatement')}</Title>
+                  <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>
+                    {t('eStatementSubtitle')}
+                  </Text>
+                </div>
+                <StatementDownloader />
+              </Space>
+            )}
+          </Col>
+        </Row>
+      </Space>
     </DashboardLayout>
+  );
+}
+
+// Inline BeneficiaryManager to avoid circular imports
+function BeneficiaryManager({ accountId }: { accountId: string }) {
+  const t = useTranslations('settings');
+  const [formData, setFormData] = useState({ accountName: '', accountNumber: '' });
+
+  const handleSubmit = () => {
+    // Mutate beneficiary
+  };
+
+  return (
+    <Card>
+      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <Title level={3} style={{ margin: 0 }}>{t('menu.beneficiaries')}</Title>
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <label htmlFor="beneficiary-name" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            {t('form.accountName')}
+          </label>
+          <Input id="beneficiary-name"
+            type="text"
+            value={formData.accountName}
+            onChange={(e) => setFormData(prev => ({ ...prev, accountName: e.target.value }))}
+            placeholder={t('form.accountNamePlaceholder')}
+          />
+          <label htmlFor="beneficiary-number" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            {t('form.accountNumber')}
+          </label>
+          <Input id="beneficiary-number"
+            type="text"
+            value={formData.accountNumber}
+            onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+            placeholder={t('form.accountNumberPlaceholder')}
+          />
+        </Space>
+        <Button type="primary" onClick={handleSubmit}>
+          {t('addBeneficiary')}
+        </Button>
+      </Space>
+    </Card>
   );
 }

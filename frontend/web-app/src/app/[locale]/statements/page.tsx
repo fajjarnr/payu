@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { Space, Typography } from 'antd';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatementDownloader from '@/components/settings/statement-downloader';
 
@@ -15,17 +16,17 @@ export default function StatementsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
+      <Space direction="vertical" size={16} style={{ maxWidth: 1024, margin: '0 auto', padding: '32px 16px', width: '100%' }}>
+        <Space direction="vertical" size={4}>
+          <Typography.Title level={2} style={{ marginBottom: 0 }}>
             {t('generator.title')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          </Typography.Title>
+          <Typography.Text type="secondary">
             {t('generator.subtitle')}
-          </p>
-        </header>
+          </Typography.Text>
+        </Space>
         <StatementDownloader />
-      </div>
+      </Space>
     </DashboardLayout>
   );
 }

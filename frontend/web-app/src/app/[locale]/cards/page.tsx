@@ -18,8 +18,22 @@ import {
   Trash2,
   Settings,
 } from "@/components/icons";
-import clsx from "clsx";
-import { Button, Input, Switch, Modal, Typography, Alert } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Flex,
+  Input,
+  Modal,
+  Progress,
+  Row,
+  Space,
+  Switch,
+  Tag,
+  Typography,
+  theme,
+} from "antd";
 import {
   useCards,
   useFreezeCard,
@@ -51,6 +65,7 @@ interface CardData {
 }
 
 export default function CardsPage() {
+  const { token } = theme.useToken();
   const { accountId: authAccountId } = useAuthStore();
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
@@ -68,7 +83,12 @@ export default function CardsPage() {
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
 
-  const primaryCard = (cardsData as CardData[] | undefined)?.[0];
+  // Card payload from the API; the card serializer returns `cardHolder`, which
+  // the shared VirtualCard type has not caught up with yet.
+  const cards = (cardsData ?? []) as unknown as CardData[];
+  // Backend sends extra card flags beyond the base VirtualCard type.
+  const extendedPrimary = cardsData?.[0] as ExtendedCardData | undefined;
+  const primaryCard = cards[0];
   const cardNumber =
     primaryCard?.cardNumber ??
     "\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022";
@@ -77,13 +97,20 @@ export default function CardsPage() {
   const cardLast4 = cardNumber.slice(-4);
   const isFrozen = primaryCard?.status === "FROZEN";
 
+  const dailySpent = extendedPrimary?.dailySpent ?? 0;
+  const rawPercent =
+    limitForm.dailyLimit > 0
+      ? Math.round((dailySpent / limitForm.dailyLimit) * 100)
+      : 0;
+  const dailyLimitPercent = Math.min(100, rawPercent);
+
   const handleOpenLimitModal = () => {
     if (cardsData && cardsData.length > 0) {
       const card = cardsData[0];
       setSelectedCard(card);
       setLimitForm({
         dailyLimit: card.dailyLimit ? Number(card.dailyLimit) : 25000000,
-        monthlyLimit: (card as ExtendedCardData).monthlyLimit || 100000000,
+        monthlyLimit: extendedPrimary?.monthlyLimit || 100000000,
       });
       setIsLimitModalOpen(true);
     }
@@ -117,19 +144,51 @@ export default function CardsPage() {
     setIsDeleteModalOpen(false);
   };
 
+  const operations = [
+    {
+      label: "Transaksi Online",
+      desc: "Situs web & retail",
+      icon: Zap,
+      status: extendedPrimary?.onlineEnabled ?? false,
+      tag: "REKOMENDASI",
+    },
+    {
+      label: "Internasional",
+      desc: "Transaksi lintas negara",
+      icon: ShieldCheck,
+      status: extendedPrimary?.internationalEnabled ?? false,
+      tag: "AMAN",
+    },
+    {
+      label: "Langganan",
+      desc: "Merchant & auto-debit",
+      icon: RefreshCw,
+      status: extendedPrimary?.subscriptionEnabled ?? false,
+      tag: "AKTIF",
+    },
+    {
+      label: "Penarikan ATM",
+      desc: "Izin tarik tunai fisik",
+      icon: Sliders,
+      status: extendedPrimary?.atmEnabled ?? false,
+      tag: "BLOKIR",
+    },
+  ];
+
   return (
     <DashboardLayout>
       <SkipLink href="#main-content" />
-      <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+      <main id="main-content">
+        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          {/* Header */}
+          <Flex justify="space-between" align="flex-end" gap={16} wrap>
             <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              <Typography.Title level={2} style={{ marginBottom: 4 }}>
                 Kartu Virtual
-              </h1>
-              <p className="text-sm text-muted-foreground font-medium mt-1">
+              </Typography.Title>
+              <Typography.Text type="secondary">
                 Pembayaran online yang aman dengan rincian kartu instan.
-              </p>
+              </Typography.Text>
             </div>
             <Button
               type="primary"
@@ -141,320 +200,542 @@ export default function CardsPage() {
                 })
               }
               disabled={createCard.isPending}
+              icon={createCard.isPending ? <Loader2 spin /> : <Plus />}
             >
-              {createCard.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4 mr-2" />
-              )}
               Kartu Baru
             </Button>
-          </div>
-          {/* Top Hero Section: Card Visualization & Limits (8/4 Split) */}
-          <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 items-stretch">
-            {/* Left: Digital Card & Primary Actions (8 units) */}
-            <div className="md:col-span-12 lg:col-span-8">
-              <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 h-full relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-0" />
+          </Flex>
 
-                <div className="relative z-10 flex flex-col items-center justify-center gap-6 h-full">
+          {/* Top Hero Section: Card Visualization & Limits */}
+          <Row gutter={[16, 16]} align="stretch">
+            {/* Left: Digital Card & Primary Actions */}
+            <Col xs={24} lg={16}>
+              <Card style={{ height: "100%" }}>
+                <Space
+                  direction="vertical"
+                  size={24}
+                  style={{ width: "100%" }}
+                  align="center"
+                >
                   {/* Digital Card Visualization */}
-                  <div className="w-full max-w-[440px] aspect-[1.586/1] rounded-2xl relative overflow-hidden shadow-2xl group-hover:scale-[1.01] transition-all duration-700 border border-white/10">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-dark" />
-                    <div className="absolute inset-0 bg-white/5" />
-                    <div className="absolute -top-8 -right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
-
-                    <div className="relative z-10 h-full p-5 sm:p-6 flex flex-col justify-between text-white">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold text-xl border border-white/20">
+                  <div
+                    style={{
+                      width: "100%",
+                      maxWidth: 440,
+                      aspectRatio: "1.586 / 1",
+                      borderRadius: 16,
+                      position: "relative",
+                      overflow: "hidden",
+                      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background:
+                          "linear-gradient(135deg, hsl(var(--primary)), var(--color-primary-dark))",
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: -32,
+                        right: -40,
+                        width: 256,
+                        height: 256,
+                        borderRadius: "50%",
+                        background: "rgba(255,255,255,0.2)",
+                        filter: "blur(48px)",
+                      }}
+                    />
+                    <Flex
+                      vertical
+                      justify="space-between"
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        height: "100%",
+                        padding: 24,
+                        color: "#fff",
+                      }}
+                    >
+                      <Flex justify="space-between" align="flex-start">
+                        <Flex align="center" gap={12}>
+                          <Flex
+                            align="center"
+                            justify="center"
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 12,
+                              background: "rgba(255,255,255,0.2)",
+                              border: "1px solid rgba(255,255,255,0.2)",
+                              fontWeight: 700,
+                              fontSize: 20,
+                            }}
+                          >
                             U
-                          </div>
-                          <span className="text-xl font-bold tracking-tighter">
+                          </Flex>
+                          <Typography.Text
+                            style={{
+                              color: "#fff",
+                              fontSize: 20,
+                              fontWeight: 700,
+                              letterSpacing: "-0.02em",
+                            }}
+                          >
                             PayU
-                          </span>
-                        </div>
-                        <div className="h-2 w-2 bg-white rounded-full animate-pulse shadow-[0_0_15px_rgba(255,255,255,1)]" />
-                      </div>
+                          </Typography.Text>
+                        </Flex>
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            background: "#fff",
+                            boxShadow: "0 0 15px rgba(255,255,255,1)",
+                          }}
+                        />
+                      </Flex>
 
-                      <div className="space-y-4">
-                        <div className="text-2xl sm:text-[1.75rem] font-bold tracking-[0.25em] font-mono leading-none drop-shadow-xl tabular-nums">
+                      <Space direction="vertical" size={16}>
+                        <Typography.Text
+                          style={{
+                            color: "#fff",
+                            fontSize: 24,
+                            fontWeight: 700,
+                            letterSpacing: "0.25em",
+                            fontFamily: "monospace",
+                            lineHeight: 1,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
                           {showFullDetails
                             ? cardNumber
                             : `•••• •••• •••• ${cardLast4}`}
-                        </div>
-                        <div className="flex justify-between items-end">
-                          <div className="space-y-1">
-                            <p className="text-xs text-white/50 font-bold tracking-widest uppercase">
+                        </Typography.Text>
+                        <Flex justify="space-between" align="flex-end">
+                          <Space direction="vertical" size={2}>
+                            <Typography.Text
+                              style={{
+                                color: "rgba(255,255,255,0.5)",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                              }}
+                            >
                               Owner
-                            </p>
-                            <p className="text-xs font-bold uppercase tracking-widest truncate max-w-[150px]">
+                            </Typography.Text>
+                            <Typography.Text
+                              ellipsis
+                              style={{
+                                color: "#fff",
+                                maxWidth: 150,
+                                fontSize: 12,
+                                fontWeight: 700,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                              }}
+                            >
                               {cardOwner}
-                            </p>
-                          </div>
-                          <div className="text-right space-y-0.5">
-                            <p className="text-xs text-white/50 font-bold tracking-widest uppercase">
+                            </Typography.Text>
+                          </Space>
+                          <Space direction="vertical" size={2} align="end">
+                            <Typography.Text
+                              style={{
+                                color: "rgba(255,255,255,0.5)",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                              }}
+                            >
                               Exp
-                            </p>
-                            <p className="font-mono font-bold text-xs">
+                            </Typography.Text>
+                            <Typography.Text
+                              style={{
+                                color: "#fff",
+                                fontFamily: "monospace",
+                                fontWeight: 700,
+                                fontSize: 12,
+                              }}
+                            >
                               {cardExpiry}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                            </Typography.Text>
+                          </Space>
+                        </Flex>
+                      </Space>
+                    </Flex>
                   </div>
 
                   {/* Centered Actions */}
-                  <div className="w-full max-w-[440px] grid grid-cols-2 gap-4">
-                    <Button
-                      type="primary"
-                      onClick={() => setShowFullDetails(!showFullDetails)}
-                      className="bg-secondary hover:bg-primary-dark shadow-lg text-white"
+                  <Row
+                    gutter={[16, 16]}
+                    style={{ width: "100%", maxWidth: 440 }}
+                  >
+                    <Col span={12}>
+                      <Button
+                        type="primary"
+                        block
+                        onClick={() => setShowFullDetails(!showFullDetails)}
+                        icon={showFullDetails ? <EyeOff /> : <Eye />}
+                      >
+                        Detail Kartu
+                      </Button>
+                    </Col>
+                    <Col span={12}>
+                      <Button
+                        block
+                        onClick={() =>
+                          primaryCard?.id &&
+                          (isFrozen
+                            ? unfreezeCard.mutate(primaryCard.id)
+                            : freezeCard.mutate(primaryCard.id))
+                        }
+                        icon={<Lock />}
+                      >
+                        {isFrozen ? "Aktifkan" : "Bekukan"}
+                      </Button>
+                    </Col>
+                    <Col span={12}>
+                      <Button
+                        block
+                        onClick={handleOpenLimitModal}
+                        icon={<Settings />}
+                      >
+                        Ubah Limit
+                      </Button>
+                    </Col>
+                    <Col span={12}>
+                      <Button
+                        block
+                        danger
+                        onClick={handleOpenDeleteModal}
+                        disabled={deleteCard.isPending}
+                        icon={deleteCard.isPending ? <Loader2 spin /> : <Trash2 />}
+                      >
+                        Hapus Kartu
+                      </Button>
+                    </Col>
+                  </Row>
+                </Space>
+              </Card>
+            </Col>
+
+            {/* Right: Daily Limit */}
+            <Col xs={24} lg={8}>
+              <Card
+                style={{
+                  height: "100%",
+                  background: token.colorText,
+                  color: token.colorBgContainer,
+                  border: "none",
+                  boxShadow: "0 20px 25px -5px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Flex justify="space-between" align="center">
+                  <Typography.Title
+                    level={4}
+                    style={{ marginBottom: 0, color: token.colorBgContainer }}
+                  >
+                    Limit Harian
+                  </Typography.Title>
+                  <Button
+                    shape="circle"
+                    style={{
+                      minWidth: 44,
+                      minHeight: 44,
+                      background: `${token.colorBgContainer}0D`,
+                      borderColor: `${token.colorBgContainer}1A`,
+                      color: token.colorBgContainer,
+                    }}
+                    onClick={handleOpenLimitModal}
+                    aria-label="Pengaturan kartu"
+                    icon={<Sliders />}
+                  />
+                </Flex>
+
+                <Space
+                  direction="vertical"
+                  size={24}
+                  style={{ width: "100%", marginTop: 24 }}
+                >
+                  <div>
+                    <Typography.Text
+                      style={{
+                        display: "block",
+                        color: token.colorBgContainer,
+                        opacity: 0.4,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        marginBottom: 8,
+                      }}
                     >
-                      {showFullDetails ? (
-                        <EyeOff className="h-4 w-4 mr-2" />
-                      ) : (
-                        <Eye className="h-4 w-4 mr-2" />
-                      )}
-                      Detail Kartu
-                    </Button>
-                    <Button
-                      className="text-muted-foreground/60 hover:text-white hover:bg-destructive hover:border-destructive"
-                      onClick={() =>
-                        primaryCard?.id &&
-                        (isFrozen
-                          ? unfreezeCard.mutate(primaryCard.id)
-                          : freezeCard.mutate(primaryCard.id))
-                      }
+                      Terpakai Hari Ini
+                    </Typography.Text>
+                    <Typography.Text
+                      style={{
+                        color: token.colorBgContainer,
+                        fontSize: 30,
+                        fontWeight: 700,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
                     >
-                      <Lock className="h-4 w-4 mr-2" />{" "}
-                      {isFrozen ? "Aktifkan" : "Bekukan"}
-                    </Button>
-                    <Button onClick={handleOpenLimitModal}>
-                      <Settings className="h-4 w-4 mr-2" /> Ubah Limit
-                    </Button>
-                    <Button
-                      danger
-                      className="text-error hover:bg-error/10 hover:text-error"
-                      onClick={handleOpenDeleteModal}
-                      disabled={deleteCard.isPending}
-                    >
-                      {deleteCard.isPending ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4 mr-2" />
-                      )}
-                      Hapus Kartu
-                    </Button>
+                      {primaryCard
+                        ? `Rp ${dailySpent.toLocaleString("id-ID")}`
+                        : "\u2014"}
+                    </Typography.Text>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Right: Daily Limit (4 units) Styled after Profil Risiko */}
-            <div className="md:col-span-12 lg:col-span-4">
-              <div className="bg-secondary rounded-2xl p-5 sm:p-6 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[320px]">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
-
-                <div className="relative z-10">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold">Limit Harian</h3>
-                    <Button
-                      shape="circle"
-                      className="min-h-[44px] min-w-[44px] bg-white/5 border-white/10 hover:bg-white/10"
-                      onClick={handleOpenLimitModal}
-                      aria-label="Pengaturan kartu"
+                  <Flex
+                    align="center"
+                    gap={12}
+                    style={{
+                      padding: 16,
+                      borderRadius: 12,
+                      background: `${token.colorBgContainer}0D`,
+                      border: `1px solid ${token.colorBgContainer}1A`,
+                    }}
+                  >
+                    <Flex
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: `${token.colorBgContainer}1A`,
+                        color: token.colorBgContainer,
+                      }}
                     >
-                      <Sliders className="h-4 w-4 text-primary" />
-                    </Button>
-
-                    <div className="space-y-6">
-                      <div>
-                        <p className="text-xs text-white/40 font-bold tracking-widest uppercase mb-2">
-                          Terpakai Hari Ini
-                        </p>
-                        <p className="text-3xl font-bold tabular-nums">
-                          {primaryCard
-                            ? `Rp ${((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0).toLocaleString("id-ID")}`
-                            : "\u2014"}
-                        </p>
-                      </div>
-
-                      <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-center gap-3">
-                        <div className="h-8 w-8 bg-primary/20 rounded-lg flex items-center justify-center">
-                          <ShieldCheck className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-primary">
-                            Status Aktif
-                          </p>
-                          <p className="text-xs text-white/40 font-medium tracking-tight">
-                            Terlindungi Protokol Keamanan
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative z-10 space-y-4">
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full shadow-[0_0_15px_rgba(0,208,156,0.5)]"
+                      <ShieldCheck />
+                    </Flex>
+                    <div>
+                      <Typography.Text
                         style={{
-                          width: `${limitForm.dailyLimit > 0 ? Math.min(100, (((cardsData?.[0] as ExtendedCardData)?.dailySpent ?? 0) / limitForm.dailyLimit) * 100) : 0}%`,
+                          display: "block",
+                          color: token.colorBgContainer,
+                          fontSize: 12,
+                          fontWeight: 700,
                         }}
-                      />
+                      >
+                        Status Aktif
+                      </Typography.Text>
+                      <Typography.Text
+                        style={{
+                          color: token.colorBgContainer,
+                          opacity: 0.4,
+                          fontSize: 12,
+                          fontWeight: 500,
+                        }}
+                      >
+                        Terlindungi Protokol Keamanan
+                      </Typography.Text>
                     </div>
-                    <div className="flex justify-between items-end">
-                      <p className="text-xs font-bold text-primary">
-                        {limitForm.dailyLimit > 0
-                          ? Math.round(
-                              (((cardsData?.[0] as ExtendedCardData)
-                                ?.dailySpent ?? 0) /
-                                limitForm.dailyLimit) *
-                                100,
-                            )
-                          : 0}
-                        % Terpakai
-                      </p>
-                      <p className="text-xs font-bold text-white/40 tabular-nums">
-                        Limit: Rp {(limitForm.dailyLimit / 1000000).toFixed(1)}
+                  </Flex>
+
+                  <Space
+                    direction="vertical"
+                    size={16}
+                    style={{ width: "100%" }}
+                  >
+                    <Progress
+                      percent={dailyLimitPercent}
+                      showInfo={false}
+                      strokeColor={token.colorBgContainer}
+                      trailColor={`${token.colorBgContainer}1A`}
+                      size="small"
+                    />
+                    <Flex justify="space-between" align="flex-end">
+                      <Typography.Text
+                        style={{
+                          color: token.colorBgContainer,
+                          fontSize: 12,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {rawPercent}% Terpakai
+                      </Typography.Text>
+                      <Typography.Text
+                        style={{
+                          color: token.colorBgContainer,
+                          opacity: 0.4,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        Limit: Rp {(limitForm.dailyLimit / 1000000).toFixed(1)}{" "}
                         jt
-                      </p>
-                    </div>
+                      </Typography.Text>
+                    </Flex>
                     <Button
-                      className="w-full bg-white/10 hover:bg-white/20 border-white/10 mt-4 text-white"
+                      block
+                      style={{
+                        background: `${token.colorBgContainer}1A`,
+                        borderColor: `${token.colorBgContainer}1A`,
+                        color: token.colorBgContainer,
+                      }}
                       onClick={handleOpenLimitModal}
                     >
                       Ubah Batas Transaksi
                     </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+                  </Space>
+                </Space>
+              </Card>
+            </Col>
+          </Row>
 
-            {/* Mid Section: Catalog Style Operations (4 Columns Grid) */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-bold text-foreground">
-                Kontrol Operasional
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  {
-                    label: "Transaksi Online",
-                    desc: "Situs web & retail",
-                    icon: Zap,
-                    status:
-                      (cardsData?.[0] as ExtendedCardData)?.onlineEnabled ??
-                      false,
-                    tag: "REKOMENDASI",
-                  },
-                  {
-                    label: "Internasional",
-                    desc: "Transaksi lintas negara",
-                    icon: ShieldCheck,
-                    status:
-                      (cardsData?.[0] as ExtendedCardData)
-                        ?.internationalEnabled ?? false,
-                    tag: "AMAN",
-                  },
-                  {
-                    label: "Langganan",
-                    desc: "Merchant & auto-debit",
-                    icon: RefreshCw,
-                    status:
-                      (cardsData?.[0] as ExtendedCardData)
-                        ?.subscriptionEnabled ?? false,
-                    tag: "AKTIF",
-                  },
-                  {
-                    label: "Penarikan ATM",
-                    desc: "Izin tarik tunai fisik",
-                    icon: Sliders,
-                    status:
-                      (cardsData?.[0] as ExtendedCardData)?.atmEnabled ?? false,
-                    tag: "BLOKIR",
-                  },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="bg-card rounded-2xl border border-border p-6 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
-                  >
-                    <div className="flex justify-between items-start mb-6">
-                      <div
-                        className={clsx(
-                          "h-10 w-10 rounded-xl flex items-center justify-center border transition-all",
-                          item.status
-                            ? "bg-primary/10 border-primary/20 text-primary"
-                            : "bg-muted/50 border-border text-muted-foreground",
-                        )}
+          {/* Mid Section: Catalog Style Operations */}
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Typography.Title level={3} style={{ marginBottom: 0 }}>
+              Kontrol Operasional
+            </Typography.Title>
+            <Row gutter={[16, 16]}>
+              {operations.map((item, i) => (
+                <Col key={i} xs={24} sm={12} lg={6}>
+                  <Card style={{ height: "100%" }}>
+                    <Flex justify="space-between" align="flex-start">
+                      <Flex
+                        align="center"
+                        justify="center"
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 12,
+                          background: item.status
+                            ? `${token.colorPrimary}1A`
+                            : token.colorFillTertiary,
+                          border: `1px solid ${
+                            item.status
+                              ? `${token.colorPrimary}33`
+                              : token.colorBorder
+                          }`,
+                          color: item.status
+                            ? token.colorPrimary
+                            : token.colorTextTertiary,
+                        }}
                       >
-                        <item.icon className="h-5 w-5" />
-                      </div>
-                      <span
-                        className={clsx(
-                          "text-xs font-bold px-2 py-0.5 rounded-full tracking-widest",
-                          item.status
-                            ? "bg-primary/10 text-primary"
-                            : "bg-muted text-muted-foreground/60",
-                        )}
+                        <item.icon />
+                      </Flex>
+                      <Tag
+                        bordered={false}
+                        color={
+                          item.status ? token.colorPrimary : token.colorFill
+                        }
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: "0.1em",
+                          borderRadius: 999,
+                          marginInlineEnd: 0,
+                        }}
                       >
                         {item.tag}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase mb-1">
+                      </Tag>
+                    </Flex>
+                    <Space
+                      direction="vertical"
+                      size={2}
+                      style={{ marginTop: 24, width: "100%" }}
+                    >
+                      <Typography.Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                        }}
+                        type="secondary"
+                      >
                         {item.status ? "Aktif" : "Non-aktif"}
-                      </p>
-                      <h4 className="text-sm font-bold text-foreground mb-1">
-                        {item.label}
-                      </h4>
-                      <p className="text-xs text-muted-foreground font-medium opacity-60 leading-tight">
+                      </Typography.Text>
+                      <Typography.Text strong>{item.label}</Typography.Text>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12, opacity: 0.7 }}
+                      >
                         {item.desc}
-                      </p>
-                    </div>
-                    <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
-                      <span className="text-xs font-bold text-primary tracking-widest uppercase">
+                      </Typography.Text>
+                    </Space>
+                    <Flex
+                      justify="space-between"
+                      align="center"
+                      style={{
+                        marginTop: 24,
+                        paddingTop: 24,
+                        borderTop: `1px solid ${token.colorBorderSecondary}`,
+                      }}
+                    >
+                      <Typography.Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: token.colorPrimary,
+                        }}
+                      >
                         Atur Izin
-                      </span>
+                      </Typography.Text>
                       <Switch
                         defaultChecked={item.status}
                         aria-label={`Atur Izin ${item.label}`}
                       />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                    </Flex>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </Space>
 
-            {/* Bottom Banner Area (Full Width) Styled after Target Portofolio Banner */}
-            <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
-              <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
-                <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-inner">
-                  <SecurityIcon className="h-7 w-7 text-primary" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-lg font-bold text-foreground">
+          {/* Bottom Banner Area */}
+          <Card
+            styles={{ body: { padding: 24 } }}
+            style={{
+              background: `${token.colorPrimary}0D`,
+              border: `1px solid ${token.colorPrimary}1A`,
+            }}
+          >
+            <Flex align="center" gap={24} wrap justify="space-between">
+              <Flex align="center" gap={24}>
+                <Flex
+                  align="center"
+                  justify="center"
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 16,
+                    background: `${token.colorPrimary}1A`,
+                    border: `1px solid ${token.colorPrimary}33`,
+                    color: token.colorPrimary,
+                  }}
+                >
+                  <SecurityIcon />
+                </Flex>
+                <div style={{ maxWidth: 640 }}>
+                  <Typography.Title level={4} style={{ marginBottom: 4 }}>
                     Protokol Keamanan Aktif.
-                  </h4>
-                  <p className="text-sm text-muted-foreground font-medium opacity-80 max-w-2xl">
+                  </Typography.Title>
+                  <Typography.Text type="secondary">
                     Sistem AI kami mendeteksi aktivitas mencurigakan secara
                     real-time. Upgrade ke Premium untuk perlindungan asuransi
                     saldo hingga Rp 50.000.000.
-                  </p>
+                  </Typography.Text>
                 </div>
-              </div>
-              <Button
-                type="primary"
-                className="shadow-xl shadow-primary/10 whitespace-nowrap relative z-10 h-14"
-              >
+              </Flex>
+              <Button type="primary" size="large">
                 Upgrade Sekarang
               </Button>
-            </div>
-          </div>
+            </Flex>
+          </Card>
 
+          {/* Limit Modal */}
           <Modal
             open={isLimitModalOpen}
             onCancel={() => setIsLimitModalOpen(false)}
@@ -462,12 +743,12 @@ export default function CardsPage() {
             centered
             width={512}
             title={
-              <Typography.Title level={4} className="!mb-1">
+              <Typography.Title level={4} style={{ marginBottom: 0 }}>
                 Ubah Batas Transaksi
               </Typography.Title>
             }
           >
-            <div>
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
                 Sesuaikan limit harian dan bulanan untuk kartu {cardLast4}.
               </Typography.Text>
@@ -475,23 +756,23 @@ export default function CardsPage() {
               {updateCard.isError && (
                 <Alert
                   type="error"
-                  className="bg-error/10 border-error/20 p-4"
-                  description={
-                    <span className="text-error">
-                      Gagal mengubah limit. Silakan coba lagi.
-                    </span>
-                  }
+                  showIcon
+                  message="Gagal mengubah limit. Silakan coba lagi."
                 />
               )}
 
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="card-daily-limit"
-                    className="text-sm font-medium"
+              <Space
+                direction="vertical"
+                size={16}
+                style={{ width: "100%", paddingBlock: 16 }}
+              >
+                <div>
+                  <Typography.Text
+                    strong
+                    style={{ display: "block", marginBottom: 8 }}
                   >
-                    Limit Harian (IDR)
-                  </label>
+                    <label htmlFor="card-daily-limit">Limit Harian (IDR)</label>
+                  </Typography.Text>
                   <Input
                     id="card-daily-limit"
                     type="number"
@@ -504,17 +785,22 @@ export default function CardsPage() {
                     }
                     placeholder="25000000"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Maksimum transaksi per hari
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="card-monthly-limit"
-                    className="text-sm font-medium"
+                  <Typography.Text
+                    type="secondary"
+                    style={{ fontSize: 12 }}
                   >
-                    Limit Bulanan (IDR)
-                  </label>
+                    Maksimum transaksi per hari
+                  </Typography.Text>
+                </div>
+                <div>
+                  <Typography.Text
+                    strong
+                    style={{ display: "block", marginBottom: 8 }}
+                  >
+                    <label htmlFor="card-monthly-limit">
+                      Limit Bulanan (IDR)
+                    </label>
+                  </Typography.Text>
                   <Input
                     id="card-monthly-limit"
                     type="number"
@@ -527,13 +813,16 @@ export default function CardsPage() {
                     }
                     placeholder="100000000"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <Typography.Text
+                    type="secondary"
+                    style={{ fontSize: 12 }}
+                  >
                     Maksimum transaksi per bulan
-                  </p>
+                  </Typography.Text>
                 </div>
-              </div>
+              </Space>
 
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+              <Flex justify="flex-end" gap={8}>
                 <Button onClick={() => setIsLimitModalOpen(false)}>
                   Batal
                 </Button>
@@ -541,16 +830,15 @@ export default function CardsPage() {
                   type="primary"
                   onClick={handleUpdateLimit}
                   disabled={updateCard.isPending}
+                  icon={updateCard.isPending ? <Loader2 spin /> : undefined}
                 >
-                  {updateCard.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : null}
                   Simpan Perubahan
                 </Button>
-              </div>
-            </div>
+              </Flex>
+            </Space>
           </Modal>
 
+          {/* Delete Modal */}
           <Modal
             open={isDeleteModalOpen}
             onCancel={() => setIsDeleteModalOpen(false)}
@@ -558,12 +846,15 @@ export default function CardsPage() {
             centered
             width={512}
             title={
-              <Typography.Title level={4} className="!mb-1 text-destructive">
+              <Typography.Title
+                level={4}
+                style={{ marginBottom: 0, color: token.colorError }}
+              >
                 Hapus Kartu
               </Typography.Title>
             }
           >
-            <div>
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
                 Apakah Anda yakin ingin menghapus kartu berakhiran {cardLast4}?
                 Tindakan ini tidak dapat dibatalkan.
@@ -572,16 +863,12 @@ export default function CardsPage() {
               {deleteCard.isError && (
                 <Alert
                   type="error"
-                  className="bg-error/10 border-error/20 p-4"
-                  description={
-                    <span className="text-error">
-                      Gagal menghapus kartu. Silakan coba lagi.
-                    </span>
-                  }
+                  showIcon
+                  message="Gagal menghapus kartu. Silakan coba lagi."
                 />
               )}
 
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
+              <Flex justify="flex-end" gap={8}>
                 <Button onClick={() => setIsDeleteModalOpen(false)}>
                   Batal
                 </Button>
@@ -590,33 +877,30 @@ export default function CardsPage() {
                   type="primary"
                   onClick={handleDeleteCard}
                   disabled={deleteCard.isPending}
+                  icon={deleteCard.isPending ? <Loader2 spin /> : <Trash2 />}
                 >
-                  {deleteCard.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4 mr-2" />
-                  )}
                   Hapus Kartu
                 </Button>
-              </div>
-            </div>
+              </Flex>
+            </Space>
           </Modal>
-        </div>
+        </Space>
       </main>
     </DashboardLayout>
   );
 }
 
-function SecurityIcon({ className }: { className?: string }) {
+function SecurityIcon() {
   return (
     <svg
+      width="28"
+      height="28"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
     >
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
       <path d="m9 12 2 2 4-4" />

@@ -21,72 +21,116 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
-import { Button, Input } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Divider,
+  Flex,
+  Grid,
+  Input,
+  Row,
+  Space,
+  Tag,
+  theme,
+  Typography,
+} from "antd";
 import { useUIStore } from "@/stores";
 import { useAuthStore } from "@/stores/authStore";
-import { cn, idempotencyKeyFor } from "@/lib/utils";
+import { idempotencyKeyFor } from "@/lib/utils";
 import { notify as toast } from "@/lib/notify";
 import { formatCurrency, parseCurrencyExact } from "@/lib/currency";
+
+type BillerIcon = React.ComponentType<{ style?: React.CSSProperties }>;
+
+interface Biller {
+  name: string;
+  icon: BillerIcon;
+  /** Tile background / icon colour from the antd theme (dark-mode aware). */
+  bg: string;
+  fg: string;
+  code: string;
+}
+
+interface PaymentSuccess {
+  billerName: string;
+  billerIcon: BillerIcon;
+  billerBg: string;
+  billerFg: string;
+  customerId: string;
+  amount: string;
+  timestamp: Date;
+}
 
 export default function BillsPage() {
   const router = useRouter();
   const { addToast } = useUIStore();
   const { accountId: authAccountId } = useAuthStore();
-  const [selectedBiller, setSelectedBiller] = useState<{
-    name: string;
-    icon: React.ComponentType<{ className?: string }>;
-    color: string;
-    code: string;
-  } | null>(null);
+  const { token } = theme.useToken();
+  const screens = Grid.useBreakpoint();
+  const isSm = Boolean(screens.sm);
+  const isMd = Boolean(screens.md);
+  const [selectedBiller, setSelectedBiller] = useState<Biller | null>(null);
   const [customerId, setCustomerId] = useState("");
   const [amount, setAmount] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successData, setSuccessData] = useState<{
-    billerName: string;
-    billerIcon: React.ComponentType<{ className?: string }>;
-    billerColor: string;
-    customerId: string;
-    amount: string;
-    timestamp: Date;
-  } | null>(null);
+  const [successData, setSuccessData] = useState<PaymentSuccess | null>(null);
 
-  const billers = [
+  const billers: Biller[] = [
     {
       name: "Pulsa",
       icon: Smartphone,
-      color: "bg-primary-light text-secondary",
+      bg: token.colorPrimaryBg,
+      fg: token.colorPrimaryText,
       code: "PULSA",
     },
     {
       name: "Listrik (PLN)",
       icon: Zap,
-      color: "bg-warning text-secondary",
+      bg: token.colorWarningBg,
+      fg: token.colorWarningText,
       code: "PLN",
     },
     {
       name: "Air (PDAM)",
       icon: Droplets,
-      color: "bg-primary-light text-primary-dark",
+      bg: token.colorPrimaryBg,
+      fg: token.colorPrimaryTextActive,
       code: "PDAM",
     },
     {
       name: "Internet/TV",
       icon: Wifi,
-      color: "bg-secondary text-white",
+      bg: token.geekblue6,
+      fg: token.colorTextLightSolid,
       code: "INTERNET",
     },
     {
       name: "Saldo Kartu",
       icon: CreditCard,
-      color: "bg-accent text-white",
+      bg: token.orange6,
+      fg: token.colorTextLightSolid,
       code: "CARDS",
     },
-    { name: "BPJS", icon: Heart, color: "bg-success text-white", code: "BPJS" },
-    { name: "TV Kabel", icon: Tv, color: "bg-accent text-white", code: "TV" },
+    {
+      name: "BPJS",
+      icon: Heart,
+      bg: token.colorSuccess,
+      fg: token.colorTextLightSolid,
+      code: "BPJS",
+    },
+    {
+      name: "TV Kabel",
+      icon: Tv,
+      bg: token.magenta6,
+      fg: token.colorTextLightSolid,
+      code: "TV",
+    },
     {
       name: "Game Voucher",
       icon: Gamepad2,
-      color: "bg-accent text-white",
+      bg: token.purple6,
+      fg: token.colorTextLightSolid,
       code: "VOUCHER",
     },
   ];
@@ -123,7 +167,8 @@ export default function BillsPage() {
       setSuccessData({
         billerName: selectedBiller?.name ?? "",
         billerIcon: selectedBiller?.icon ?? Zap,
-        billerColor: selectedBiller?.color ?? "bg-primary-light text-secondary",
+        billerBg: selectedBiller?.bg ?? token.colorPrimaryBg,
+        billerFg: selectedBiller?.fg ?? token.colorPrimaryText,
         customerId,
         amount,
         timestamp: new Date(),
@@ -170,59 +215,127 @@ export default function BillsPage() {
     return (
       <DashboardLayout>
         <SkipLink href="#main-content" />
-        <main id="main-content" className="overflow-x-hidden">
-          <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-12 text-center">
-            <div className="animate-fade-in flex flex-col items-center">
-              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-8">
-                <CheckCircle2 className="w-12 h-12 text-primary" />
-              </div>
+        <main id="main-content" style={{ overflowX: "hidden" }}>
+          <Flex
+            vertical
+            align="center"
+            justify="center"
+            style={{ minHeight: "60vh", padding: "48px 16px", textAlign: "center" }}
+          >
+            <Flex vertical align="center" className="animate-fade-in">
+              <Flex
+                align="center"
+                justify="center"
+                style={{
+                  width: 96,
+                  height: 96,
+                  marginBottom: 32,
+                  borderRadius: "50%",
+                  background: token.colorPrimaryBg,
+                  color: token.colorPrimary,
+                }}
+              >
+                <CheckCircle2 style={{ fontSize: 48 }} />
+              </Flex>
 
-              <h1 className="text-2xl font-bold text-foreground tracking-tight mb-2">
+              <Typography.Title level={2} style={{ marginBottom: 8 }}>
                 Pembayaran Berhasil!
-              </h1>
-              <p className="text-sm text-muted-foreground font-medium mb-10">
+              </Typography.Title>
+              <Typography.Text
+                type="secondary"
+                strong
+                style={{ display: "block", marginBottom: 40, fontSize: 14 }}
+              >
                 Transaksi Anda telah diproses dengan aman.
-              </p>
+              </Typography.Text>
 
-              <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm w-full max-w-md mb-10">
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border">
-                  <div
-                    className={`w-14 h-14 rounded-xl ${successData.billerColor} flex items-center justify-center shadow-lg`}
+              <Card style={{ width: "100%", maxWidth: 448, marginBottom: 40 }}>
+                <Flex align="center" gap={16}>
+                  <Flex
+                    align="center"
+                    justify="center"
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 12,
+                      background: successData.billerBg,
+                      color: successData.billerFg,
+                      boxShadow: token.boxShadowTertiary,
+                    }}
                   >
-                    <SuccessIcon className="h-7 w-7" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs text-muted-foreground font-bold tracking-widest uppercase mb-1">
+                    <SuccessIcon style={{ fontSize: 28 }} />
+                  </Flex>
+                  <div style={{ textAlign: "left" }}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{
+                        display: "block",
+                        marginBottom: 4,
+                        fontSize: 12,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                      }}
+                    >
                       Penyedia Layanan
-                    </p>
-                    <h3 className="text-lg font-bold text-foreground">
+                    </Typography.Text>
+                    <Typography.Title level={4} style={{ margin: 0 }}>
                       {successData.billerName}
-                    </h3>
+                    </Typography.Title>
                   </div>
-                </div>
+                </Flex>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
+                <Divider />
+
+                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  <Flex justify="space-between" align="center" gap={16}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{
+                        fontSize: 12,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                      }}
+                    >
                       ID Pelanggan
-                    </span>
-                    <span className="font-bold text-foreground text-sm">
+                    </Typography.Text>
+                    <Typography.Text strong style={{ fontSize: 14 }}>
                       {successData.customerId}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
+                    </Typography.Text>
+                  </Flex>
+                  <Flex justify="space-between" align="center" gap={16}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{
+                        fontSize: 12,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                      }}
+                    >
                       Jumlah
-                    </span>
-                    <span className="text-2xl font-bold text-foreground">
+                    </Typography.Text>
+                    <Typography.Title
+                      level={3}
+                      style={{ margin: 0, fontVariantNumeric: "tabular-nums" }}
+                    >
                       {formatCurrency(successData.amount)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
+                    </Typography.Title>
+                  </Flex>
+                  <Flex justify="space-between" align="center" gap={16}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{
+                        fontSize: 12,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                      }}
+                    >
                       Waktu
-                    </span>
-                    <span className="font-bold text-foreground text-sm">
+                    </Typography.Text>
+                    <Typography.Text strong style={{ fontSize: 14 }}>
                       {successData.timestamp.toLocaleString("id-ID", {
                         day: "numeric",
                         month: "long",
@@ -230,32 +343,36 @@ export default function BillsPage() {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                    </span>
-                  </div>
-                </div>
-              </div>
+                    </Typography.Text>
+                  </Flex>
+                </Space>
+              </Card>
 
-              <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+              <Flex
+                vertical={!isSm}
+                gap={16}
+                style={{ width: "100%", maxWidth: 448 }}
+              >
                 <Button
                   type="primary"
                   onClick={() => {
                     setShowSuccess(false);
                     setSuccessData(null);
                   }}
-                  className="flex-1 h-14 rounded-xl shadow-lg shadow-primary/20 font-bold"
+                  style={{ flex: isSm ? 1 : undefined, height: 56 }}
                 >
                   Bayar Lagi
                 </Button>
                 <Button
                   type="default"
                   onClick={() => router.push("/dashboard")}
-                  className="flex-1 h-14 rounded-xl font-bold"
+                  style={{ flex: isSm ? 1 : undefined, height: 56 }}
                 >
                   Kembali ke Dashboard
                 </Button>
-              </div>
-            </div>
-          </div>
+              </Flex>
+            </Flex>
+          </Flex>
         </main>
       </DashboardLayout>
     );
@@ -265,51 +382,94 @@ export default function BillsPage() {
     return (
       <DashboardLayout>
         <SkipLink href="#main-content" />
-        <main id="main-content" className="overflow-x-hidden">
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <Button
-                type="default"
-                onClick={() => setSelectedBiller(null)}
-                className="h-12 w-12 rounded-xl"
-                aria-label="Kembali"
-              >
-                <ChevronRight className="h-6 w-6 rotate-180" />
-              </Button>
-            </div>
+        <main id="main-content" style={{ overflowX: "hidden" }}>
+          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <Button
+              type="default"
+              onClick={() => setSelectedBiller(null)}
+              aria-label="Kembali"
+              icon={<ChevronRight style={{ fontSize: 24, transform: "rotate(180deg)" }} />}
+              style={{ width: 48, height: 48 }}
+            />
 
-            <div className="bg-card rounded-2xl p-6 sm:p-10 border border-border relative overflow-hidden group shadow-sm">
+            <Card style={{ position: "relative", overflow: "hidden" }}>
               <div
-                className={cn(
-                  "absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 opacity-10 rounded-full blur-3xl -z-0",
-                  selectedBiller.color.split(" ")[0],
-                )}
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  width: 256,
+                  height: 256,
+                  borderRadius: "50%",
+                  background: selectedBiller.bg,
+                  opacity: 0.1,
+                  filter: "blur(48px)",
+                  zIndex: 0,
+                }}
               />
 
-              <div className="relative z-10 flex items-center gap-6 mb-6 pb-6 border-b border-border">
-                <div
-                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl ${selectedBiller.color} flex items-center justify-center shadow-xl transition-transform group-hover:scale-110`}
+              <Flex align="center" gap={24} style={{ position: "relative", zIndex: 1 }}>
+                <Flex
+                  align="center"
+                  justify="center"
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 12,
+                    background: selectedBiller.bg,
+                    color: selectedBiller.fg,
+                    boxShadow: token.boxShadowSecondary,
+                  }}
                 >
-                  <selectedBiller.icon className="h-8 w-8 sm:h-10 sm:w-10" />
-                </div>
+                  <selectedBiller.icon style={{ fontSize: 36 }} />
+                </Flex>
                 <div>
-                  <p className="text-xs text-text-disabled font-bold tracking-widest mb-1">
+                  <Typography.Text
+                    strong
+                    style={{
+                      display: "block",
+                      marginBottom: 4,
+                      fontSize: 12,
+                      letterSpacing: "0.1em",
+                      color: token.colorTextQuaternary,
+                    }}
+                  >
                     Penyedia Layanan
-                  </p>
-                  <h3 className="text-xl sm:text-2xl font-bold text-foreground ">
+                  </Typography.Text>
+                  <Typography.Title level={3} style={{ margin: 0 }}>
                     {selectedBiller.name}
-                  </h3>
-                  <p className="text-xs font-bold text-bank-green tracking-widest">
+                  </Typography.Title>
+                  <Typography.Text
+                    strong
+                    style={{
+                      fontSize: 12,
+                      letterSpacing: "0.1em",
+                      color: token.colorSuccessText,
+                    }}
+                  >
                     Mitra Pembayaran Resmi
-                  </p>
+                  </Typography.Text>
                 </div>
-              </div>
+              </Flex>
 
-              <div className="space-y-6 relative z-10">
-                <div className="group">
+              <Divider />
+
+              <Space
+                direction="vertical"
+                size={24}
+                style={{ width: "100%", position: "relative", zIndex: 1 }}
+              >
+                <Flex vertical gap={8} style={{ width: "100%" }}>
                   <label
                     htmlFor="bills-customer-id"
-                    className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block mb-4 group-focus-within:text-primary transition-colors"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: "0.2em",
+                      textTransform: "uppercase",
+                      color: token.colorTextSecondary,
+                    }}
                   >
                     ID Pelanggan / Nomor Rekening
                   </label>
@@ -319,50 +479,74 @@ export default function BillsPage() {
                     value={customerId}
                     onChange={(e) => setCustomerId(e.target.value)}
                     placeholder="Masukkan ID unik Anda"
-                    className="h-16 text-lg sm:text-xl"
+                    style={{ height: 64, fontSize: 20 }}
                   />
-                </div>
+                </Flex>
 
-                <div className="group">
+                <Flex vertical gap={8} style={{ width: "100%" }}>
                   <label
                     htmlFor="bills-amount"
-                    className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block mb-4 group-focus-within:text-primary transition-colors"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: "0.2em",
+                      textTransform: "uppercase",
+                      color: token.colorTextSecondary,
+                    }}
                   >
                     Jumlah Pembayaran (IDR)
                   </label>
-                  <div className="relative">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-xl sm:text-2xl font-bold text-muted-foreground/30 pointer-events-none">
-                      Rp
-                    </div>
-                    <Input
-                      id="bills-amount"
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0"
-                      className="h-20 pl-16 text-3xl sm:text-4xl"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+                  <Input
+                    id="bills-amount"
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0"
+                    prefix={
+                      <span
+                        style={{
+                          fontSize: 24,
+                          fontWeight: 700,
+                          color: token.colorTextQuaternary,
+                        }}
+                      >
+                        Rp
+                      </span>
+                    }
+                    style={{ height: 80, fontSize: 32 }}
+                  />
+                </Flex>
+              </Space>
+            </Card>
 
-            <div className="flex flex-col gap-6">
+            <Flex vertical gap={24}>
               <Button
                 type="primary"
+                block
                 onClick={handlePay}
                 disabled={paymentMutation.isPending}
-                className="w-full h-16 rounded-2xl shadow-xl shadow-primary/20"
+                style={{ height: 64 }}
               >
                 {paymentMutation.isPending
                   ? "Sedang Memproses..."
                   : "Konfirmasi & Bayar Sekarang"}
               </Button>
-              <p className="text-center text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">
+              <Typography.Text
+                type="secondary"
+                strong
+                style={{
+                  display: "block",
+                  textAlign: "center",
+                  fontSize: 12,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  opacity: 0.6,
+                }}
+              >
                 Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU
-              </p>
-            </div>
-          </div>
+              </Typography.Text>
+            </Flex>
+          </Space>
         </main>
       </DashboardLayout>
     );
@@ -371,107 +555,253 @@ export default function BillsPage() {
   return (
     <DashboardLayout>
       <SkipLink href="#main-content" />
-      <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <main id="main-content" style={{ overflowX: "hidden" }}>
+        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          <Flex
+            vertical={!isSm}
+            justify="space-between"
+            align={isSm ? "flex-end" : "flex-start"}
+            gap={16}
+          >
             <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              <Typography.Title level={2} style={{ marginBottom: 0 }}>
                 Tagihan & Top-up
-              </h1>
-              <p className="text-sm text-muted-foreground font-medium mt-1">
+              </Typography.Title>
+              <Typography.Text type="secondary" strong style={{ fontSize: 14 }}>
                 Bayar tagihan utilitas dan top up dompet digital Anda secara
                 instan.
-              </p>
+              </Typography.Text>
             </div>
-            <div className="bg-primary/10 px-6 py-3 rounded-full border border-primary/20 hidden md:block shadow-sm">
-              <p className="text-xs font-bold text-primary tracking-widest uppercase animate-pulse">
+            {isMd && (
+              <Tag
+                color="success"
+                className="animate-pulse"
+                style={{
+                  margin: 0,
+                  padding: "12px 24px",
+                  borderRadius: 9999,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                }}
+              >
                 Penyelesaian Real-time 24/7
-              </p>
-            </div>
-          </div>
+              </Tag>
+            )}
+          </Flex>
 
-          <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border relative overflow-hidden shadow-sm">
-            <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-primary/5 rounded-full blur-3xl" />
-            <h3 className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase mb-6 text-center opacity-60">
+          <Card style={{ position: "relative", overflow: "hidden" }}>
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                width: 256,
+                height: 256,
+                borderRadius: "50%",
+                background: token.colorPrimaryBg,
+                filter: "blur(48px)",
+              }}
+            />
+            <Typography.Text
+              type="secondary"
+              strong
+              style={{
+                display: "block",
+                marginBottom: 24,
+                textAlign: "center",
+                fontSize: 12,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                opacity: 0.6,
+              }}
+            >
               Kategori Layanan
-            </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-6 relative z-10">
+            </Typography.Text>
+            <Row gutter={[24, 24]} style={{ position: "relative", zIndex: 1 }}>
               {billers.map((item) => (
+                <Col key={item.name} xs={8} sm={6}>
+                  <Button
+                    type="text"
+                    onClick={() => setSelectedBiller(item)}
+                    style={{ height: "auto", width: "100%", whiteSpace: "normal" }}
+                  >
+                    <Flex vertical align="center" gap={16}>
+                      <Flex
+                        align="center"
+                        justify="center"
+                        style={{
+                          width: 72,
+                          height: 72,
+                          borderRadius: 16,
+                          background: item.bg,
+                          color: item.fg,
+                          boxShadow: token.boxShadowTertiary,
+                        }}
+                      >
+                        <item.icon style={{ fontSize: 32 }} />
+                      </Flex>
+                      <Typography.Text
+                        strong
+                        style={{
+                          fontSize: 12,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {item.name}
+                      </Typography.Text>
+                    </Flex>
+                  </Button>
+                </Col>
+              ))}
+              <Col xs={8} sm={6}>
                 <Button
                   type="text"
-                  key={item.name}
-                  onClick={() => setSelectedBiller(item)}
-                  className="flex flex-col items-center gap-4 transition-all group active:scale-95"
+                  style={{ height: "auto", width: "100%", whiteSpace: "normal" }}
                 >
-                  <div
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${item.color} flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}
-                  >
-                    <item.icon className="h-7 w-7 sm:h-9 sm:w-9" />
-                  </div>
-                  <span className="text-xs font-bold text-foreground tracking-widest uppercase">
-                    {item.name}
-                  </span>
+                  <Flex vertical align="center" gap={16}>
+                    <Flex
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: 16,
+                        background: token.colorFillTertiary,
+                        color: token.colorTextSecondary,
+                      }}
+                    >
+                      <Plus style={{ fontSize: 32 }} />
+                    </Flex>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{
+                        fontSize: 12,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Lainnya
+                    </Typography.Text>
+                  </Flex>
                 </Button>
-              ))}
-              <Button
-                type="text"
-                className="flex flex-col items-center gap-4 transition-all group active:scale-95"
-              >
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
-                  <Plus className="h-7 w-7 sm:h-9 sm:w-9" />
-                </div>
-                <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase">
-                  Lainnya
-                </span>
-              </Button>
-            </div>
-          </div>
+              </Col>
+            </Row>
+          </Card>
 
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-foreground tracking-tight">
+          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <Typography.Title level={4} style={{ margin: 0 }}>
               Aktivitas Terakhir
-            </h3>
+            </Typography.Title>
             {!isLoading && recentBills.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Row gutter={[24, 24]}>
                 {recentBills.map((bill: PaymentResponse) => (
-                  <div
-                    key={bill.id}
-                    className="bg-card p-6 sm:p-8 rounded-2xl flex items-center justify-between border border-border hover:shadow-xl transition-all group shadow-sm"
-                  >
-                    <div className="flex items-center gap-6">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary transition-transform group-hover:scale-110">
-                        <Zap className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-foreground text-sm uppercase tracking-wider">
-                          {bill.billerCode}
+                  <Col key={bill.id} xs={24} md={12}>
+                    <Card hoverable style={{ height: "100%" }}>
+                      <Flex justify="space-between" align="center" gap={16}>
+                        <Flex align="center" gap={24}>
+                          <Flex
+                            align="center"
+                            justify="center"
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 12,
+                              background: token.colorPrimaryBg,
+                              color: token.colorPrimary,
+                            }}
+                          >
+                            <Zap style={{ fontSize: 24 }} />
+                          </Flex>
+                          <div>
+                            <Typography.Text
+                              strong
+                              style={{
+                                display: "block",
+                                fontSize: 14,
+                                letterSpacing: "0.05em",
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              {bill.billerCode}
+                            </Typography.Text>
+                            <Typography.Text
+                              type="secondary"
+                              strong
+                              style={{
+                                display: "block",
+                                marginTop: 4,
+                                fontSize: 12,
+                                letterSpacing: "0.2em",
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              Ref: {bill.referenceNumber.slice(0, 10)}...
+                            </Typography.Text>
+                          </div>
+                        </Flex>
+                        <div style={{ textAlign: "right" }}>
+                          <Typography.Text
+                            strong
+                            style={{
+                              display: "block",
+                              fontSize: 16,
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {formatCurrency(bill.amount)}
+                          </Typography.Text>
+                          <Typography.Text
+                            strong
+                            style={{
+                              display: "block",
+                              marginTop: 4,
+                              fontSize: 12,
+                              letterSpacing: "0.2em",
+                              textTransform: "uppercase",
+                              color: token.colorPrimary,
+                            }}
+                          >
+                            {bill.status}
+                          </Typography.Text>
                         </div>
-                        <div className="text-xs font-bold text-muted-foreground tracking-[0.2em] uppercase mt-1">
-                          Ref: {bill.referenceNumber.slice(0, 10)}...
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-foreground text-base tabular-nums">
-                        {formatCurrency(bill.amount)}
-                      </div>
-                      <div className="text-xs font-bold text-primary tracking-[0.2em] uppercase mt-1">
-                        {bill.status}
-                      </div>
-                    </div>
-                  </div>
+                      </Flex>
+                    </Card>
+                  </Col>
                 ))}
-              </div>
+              </Row>
             ) : (
-              <div className="bg-card rounded-2xl p-12 text-center border-2 border-dashed border-border flex flex-col items-center justify-center">
-                <LifeBuoy className="h-16 w-16 text-muted/20 mb-6" />
-                <p className="text-muted-foreground font-bold tracking-[0.2em] text-xs uppercase max-w-xs leading-relaxed opacity-60">
-                  Pembayaran tagihan terakhir Anda akan muncul di sini.
-                </p>
-              </div>
+              <Card
+                style={{ borderStyle: "dashed", borderWidth: 2 }}
+                styles={{ body: { padding: 48 } }}
+              >
+                <Flex vertical align="center" justify="center" gap={24}>
+                  <LifeBuoy
+                    style={{ fontSize: 64, color: token.colorTextQuaternary }}
+                  />
+                  <Typography.Text
+                    type="secondary"
+                    strong
+                    style={{
+                      maxWidth: 320,
+                      textAlign: "center",
+                      fontSize: 12,
+                      letterSpacing: "0.2em",
+                      textTransform: "uppercase",
+                      opacity: 0.6,
+                    }}
+                  >
+                    Pembayaran tagihan terakhir Anda akan muncul di sini.
+                  </Typography.Text>
+                </Flex>
+              </Card>
             )}
-          </div>
-        </div>
+          </Space>
+        </Space>
       </main>
     </DashboardLayout>
   );

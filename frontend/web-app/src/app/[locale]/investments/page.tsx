@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardLayout from '@/components/DashboardLayout';
-import { Button } from 'antd';
+import { Button, Space, Row, Col, Card, Typography } from 'antd';
 import { useInvestmentAccount, useBuyDeposit, useSellInvestment, useCreateInvestmentAccount } from '@/hooks';
 import { useTranslations } from 'next-intl';
 import { asMoney, formatCurrency } from '@/lib/currency';
@@ -45,74 +45,73 @@ export default function InvestmentsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('title')}</h1>
-          <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
+      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <div>
+          <Typography.Title level={2} style={{ marginBottom: 4 }}>{t('title')}</Typography.Title>
+          <Typography.Text type="secondary">{t('subtitle')}</Typography.Text>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-                <section data-testid="portfolio-overview-card" className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
-                  <p className="text-sm font-medium text-muted-foreground">{t('accountBalance')}</p>
-                  <h3 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
-                    {loadingAccount
-                      ? '...'
-                      : account && !accountError
-                        ? formatCurrency(account.balance, { withDecimals: false })
-                        : t('accountUnavailable')}
-                  </h3>
-                  {hasAccount && <p className="mt-3 text-sm text-muted-foreground">{t('accountSource')}</p>}
-                  <div className="mt-6 flex flex-wrap gap-4">
-                    <Button
-                      type="primary"
-                      onClick={handleBuy}
-                      disabled={buyDeposit.isPending || createAccount.isPending}
-                      data-testid="invest-buy-button"
-                      className="rounded-xl bg-primary px-6 py-3 min-h-[44px] text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50">
-                      {buyDeposit.isPending ? 'Memproses...' : 'Beli Produk'}
-                    </Button>
-                    <Button
-                      type="default"
-                      onClick={handleSell}
-                      disabled={sellInvestment.isPending}
-                      data-testid="invest-sell-button"
-                      className="rounded-xl border border-border bg-muted/40 px-6 py-3 min-h-[44px] text-xs font-bold uppercase tracking-wider text-foreground hover:bg-muted/60 transition-all active:scale-95 disabled:opacity-50">
-                      {sellInvestment.isPending ? 'Memproses...' : 'Jual Produk'}
-                    </Button>
-                  </div>
-                </section>
-          </div>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={16}>
+            <Card data-testid="portfolio-overview-card">
+              <Typography.Text type="secondary">{t('accountBalance')}</Typography.Text>
+              <Typography.Title level={3} style={{ marginTop: 8 }}>
+                {loadingAccount
+                  ? '...'
+                  : account && !accountError
+                    ? formatCurrency(account.balance, { withDecimals: false })
+                    : t('accountUnavailable')}
+              </Typography.Title>
+              {hasAccount && <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('accountSource')}</Typography.Text>}
+              <Space size={16} style={{ marginTop: 24 }}>
+                <Button
+                  type="primary"
+                  onClick={handleBuy}
+                  disabled={buyDeposit.isPending || createAccount.isPending}
+                  data-testid="invest-buy-button"
+                >
+                  {buyDeposit.isPending ? 'Memproses...' : 'Beli Produk'}
+                </Button>
+                <Button
+                  onClick={handleSell}
+                  disabled={sellInvestment.isPending}
+                  data-testid="invest-sell-button"
+                >
+                  {sellInvestment.isPending ? 'Memproses...' : 'Jual Produk'}
+                </Button>
+              </Space>
+            </Card>
+          </Col>
 
-          <div>
-                <section data-testid="investment-performance-empty" className="h-full rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
-                  <h3 className="text-xl font-semibold text-foreground">{t('performance')}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground">{t('performanceUnavailable')}</p>
-                </section>
-          </div>
+          <Col xs={24} lg={8}>
+            <Card data-testid="investment-performance-empty" style={{ height: '100%' }}>
+              <Typography.Title level={4}>{t('performance')}</Typography.Title>
+              <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('performanceUnavailable')}</Typography.Text>
+            </Card>
+          </Col>
 
-          <div>
-                <section data-testid="investment-risk-empty" className="h-full rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
-                  <h3 className="text-xl font-semibold text-foreground">{t('riskLevel')}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground">{t('riskUnavailable')}</p>
-                </section>
-          </div>
+          <Col xs={24} lg={8}>
+            <Card data-testid="investment-risk-empty" style={{ height: '100%' }}>
+              <Typography.Title level={4}>{t('riskLevel')}</Typography.Title>
+              <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('riskUnavailable')}</Typography.Text>
+            </Card>
+          </Col>
 
-          <div className="lg:col-span-2">
-                <section data-testid="investment-products-empty" className="h-full rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
-                  <h3 className="text-xl font-semibold text-foreground">{t('portfolio')}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground">{t('productsUnavailable')}</p>
-                </section>
-          </div>
+          <Col xs={24} lg={16}>
+            <Card data-testid="investment-products-empty" style={{ height: '100%' }}>
+              <Typography.Title level={4}>{t('portfolio')}</Typography.Title>
+              <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('productsUnavailable')}</Typography.Text>
+            </Card>
+          </Col>
 
-          <div className="lg:col-span-3">
-                <section data-testid="investment-advice-empty" className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
-                  <h3 className="text-xl font-semibold text-foreground">{t('advice')}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground">{t('adviceUnavailable')}</p>
-                </section>
-          </div>
-        </div>
-      </div>
+          <Col xs={24} lg={24}>
+            <Card data-testid="investment-advice-empty">
+              <Typography.Title level={4}>{t('advice')}</Typography.Title>
+              <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('adviceUnavailable')}</Typography.Text>
+            </Card>
+          </Col>
+        </Row>
+      </Space>
     </DashboardLayout>
   );
 }

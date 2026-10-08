@@ -11,12 +11,12 @@ import {
   HelpCircle,
   FileText,
 } from "@/components/icons";
-import clsx from "clsx";
-import { Button } from "antd";
+import { Button, Card, Col, Row, Space, Tag, theme, Typography } from "antd";
 import { useTranslations } from "next-intl";
 
 export default function SupportPage() {
   const t = useTranslations("support");
+  const { token } = theme.useToken();
 
   const supportChannels = [
     {
@@ -65,117 +65,199 @@ export default function SupportPage() {
     },
   ];
 
+  const getChannelColor = (color: string) => {
+    if (color === "primary") return token.colorPrimary;
+    if (color === "secondary") return token.colorPrimaryHover;
+    return token.colorText;
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">
-              {t("title")}
-            </h1>
-            <p className="text-sm text-muted-foreground font-medium mt-1">
-              {t("subtitle")}
-            </p>
-          </div>
-        </div>
+      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        {/* Header */}
+        <Space direction="vertical" size={4}>
+          <Typography.Title level={2} style={{ marginBottom: 0 }}>
+            {t("title")}
+          </Typography.Title>
+          <Typography.Text type="secondary">{t("subtitle")}</Typography.Text>
+        </Space>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Support Channels */}
+        <Row gutter={[16, 16]}>
           {supportChannels.map((channel, i) => (
-            <div key={i}>
-              <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
+            <Col key={i} xs={24} sm={12} lg={8}>
+              <Card
+                style={{ height: "100%" }}
+                styles={{
+                  body: {
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    height: "100%",
+                  },
+                }}
+              >
                 <div
-                  className={clsx(
-                    "h-20 w-20 mb-6 rounded-2xl flex items-center justify-center text-surface shadow-lg transition-transform group-hover:scale-110",
-                    channel.color === "primary"
-                      ? "bg-primary shadow-primary/20"
-                      : channel.color === "secondary"
-                        ? "bg-primary-dark shadow-primary-dark/20"
-                        : "bg-foreground shadow-foreground/10",
-                  )}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    marginBottom: 24,
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: getChannelColor(channel.color),
+                    color: token.colorTextLightSolid,
+                  }}
                 >
-                  <channel.icon className="h-10 w-10" />
+                  <channel.icon style={{ fontSize: 40 }} />
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-3">
+                <Typography.Title level={4} style={{ marginBottom: 12 }}>
                   {channel.label}
-                </h3>
-                <p className="text-xs text-muted-foreground font-medium leading-relaxed mb-6 max-w-[200px]">
+                </Typography.Title>
+                <Typography.Text
+                  type="secondary"
+                  style={{ marginBottom: 24, maxWidth: 200 }}
+                >
                   {channel.desc}
-                </p>
-                <Button className="w-full h-14 rounded-xl mt-10">
+                </Typography.Text>
+                <Button
+                  style={{
+                    width: "100%",
+                    height: 56,
+                    borderRadius: 12,
+                    marginTop: "auto",
+                  }}
+                >
                   {channel.action}
                 </Button>
-              </div>
-            </div>
+              </Card>
+            </Col>
           ))}
-        </div>
+        </Row>
 
-        <div className="mt-4">
-          <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-            <h3 className="text-xl font-bold text-foreground mb-6 relative z-10">
-              {t("faqs")}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-              {faqs.map((faq, i) => (
+        {/* FAQs */}
+        <Card>
+          <Typography.Title level={4} style={{ marginBottom: 24 }}>
+            {t("faqs")}
+          </Typography.Title>
+          <Row gutter={[16, 16]}>
+            {faqs.map((faq, i) => (
+              <Col key={i} xs={24} sm={12}>
                 <div
-                  key={i}
-                  className="flex gap-6 p-6 bg-muted/30 rounded-xl border border-transparent hover:border-border transition-all cursor-pointer group hover:bg-card duration-300"
+                  style={{
+                    display: "flex",
+                    gap: 24,
+                    padding: 24,
+                    backgroundColor: token.colorFillQuaternary,
+                    borderRadius: 12,
+                    cursor: "pointer",
+                  }}
                 >
-                  <div className="h-14 w-14 bg-card rounded-xl flex items-center justify-center shadow-md border border-border shrink-0 transition-transform group-hover:rotate-6">
-                    <faq.icon className="h-6 w-6 text-primary" />
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      backgroundColor: token.colorBgContainer,
+                      borderRadius: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      border: `1px solid ${token.colorBorder}`,
+                    }}
+                  >
+                    <faq.icon
+                      style={{ fontSize: 24, color: token.colorPrimary }}
+                    />
                   </div>
                   <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h4 className="font-bold text-foreground text-sm">
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        marginBottom: 4,
+                      }}
+                    >
+                      <Typography.Text strong style={{ fontSize: 14 }}>
                         {faq.title}
-                      </h4>
-                      <ExternalLink className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Typography.Text>
+                      <ExternalLink
+                        style={{ fontSize: 12, color: token.colorPrimary }}
+                      />
                     </div>
-                    <p className="text-xs text-muted-foreground font-medium leading-relaxed uppercase tracking-widest">
+                    <Typography.Text
+                      type="secondary"
+                      style={{
+                        fontSize: 12,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                      }}
+                    >
                       {faq.desc}
-                    </p>
+                    </Typography.Text>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+              </Col>
+            ))}
+          </Row>
+        </Card>
 
-        <div className="mt-4">
-          <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl group">
-            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-left">
-              <div className="space-y-6 max-w-2xl">
-                <h3 className="text-3xl font-bold">Integritas Sistem Aktif.</h3>
-                <div className="flex flex-wrap justify-center lg:justify-start gap-3">
+        {/* System Status */}
+        <Card style={{ position: "relative", overflow: "hidden" }}>
+          <Row align="middle" gutter={[16, 16]}>
+            <Col xs={24} lg={16}>
+              <Space direction="vertical" size={16}>
+                <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                  Integritas Sistem Aktif.
+                </Typography.Title>
+                <Space size={12} wrap>
                   {["Gateway", "Backend", "Database", "Streaming"].map(
                     (svc, i) => (
-                      <div
+                      <Tag
                         key={i}
-                        className="flex items-center gap-2 bg-surface/10 px-4 py-2 rounded-xl border border-surface/10 shadow-sm"
+                        style={{ padding: "4px 16px", borderRadius: 12 }}
                       >
-                        <span className="text-xs font-bold tracking-widest uppercase">
+                        <Typography.Text
+                          strong
+                          style={{
+                            fontSize: 12,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.1em",
+                          }}
+                        >
                           {svc}: —
-                        </span>
-                      </div>
+                        </Typography.Text>
+                      </Tag>
                     ),
                   )}
-                </div>
-                <p className="text-sm text-text-disabled font-medium pt-2 leading-relaxed">
+                </Space>
+                <Typography.Text style={{ color: token.colorTextDisabled }}>
                   Status infrastruktur belum tersedia. Hubungi tim operasional
                   untuk informasi real-time.
-                </p>
-              </div>
-              <Button
-                type="primary"
-                className="w-full lg:w-auto h-16 px-10 shadow-2xl shadow-bank-green/20"
-              >
+                </Typography.Text>
+              </Space>
+            </Col>
+            <Col xs={24} lg={8}>
+              <Button type="primary" block style={{ height: 64 }}>
                 Cek Detail Infrastruktur
               </Button>
-            </div>
-            <LifeBuoy className="absolute bottom-[-60px] right-[-60px] h-72 w-72 text-surface/5 -rotate-12 group-hover:rotate-12 transition-transform duration-[3000ms]" />
-          </div>
-        </div>
-      </div>
+            </Col>
+          </Row>
+          <LifeBuoy
+            style={{
+              position: "absolute",
+              bottom: -60,
+              right: -60,
+              width: 288,
+              height: 288,
+              opacity: 0.05,
+            }}
+          />
+        </Card>
+      </Space>
     </DashboardLayout>
   );
 }

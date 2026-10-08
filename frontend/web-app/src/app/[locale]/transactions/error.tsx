@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Button, Card, Space, Typography } from 'antd';
 
 export default function Error({
   error,
@@ -14,19 +15,18 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
-      <div className="text-center">
-        <h2 className="mb-2 text-2xl font-semibold text-text-primary">Something went wrong</h2>
-        <p className="mb-6 text-text-secondary">
-          {error.message || 'An unexpected error occurred. Please try again.'}
-        </p>
-        <button
-          onClick={() => reset()}
-          className="rounded-lg bg-primary-dark px-6 py-3 text-surface hover:bg-primary-dark transition-colors"
-        >
-          Try again
-        </button>
-      </div>
+    <div style={{ display: 'flex', minHeight: '60vh', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <Card>
+        <Space direction="vertical" size={16} style={{ textAlign: 'center', width: '100%' }}>
+          <Typography.Title level={2}>Something went wrong</Typography.Title>
+          <Typography.Text type="secondary">
+            {error.message || 'An unexpected error occurred. Please try again.'}
+          </Typography.Text>
+          <Button type="primary" block onClick={() => reset()}>
+            Try again
+          </Button>
+        </Space>
+      </Card>
     </div>
   );
 }

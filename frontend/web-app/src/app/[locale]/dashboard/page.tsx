@@ -13,7 +13,7 @@ import { useAuthStore } from "@/stores";
 import DashboardLayout from "@/components/DashboardLayout";
 import BalanceCard from "@/components/dashboard/BalanceCard";
 import QuickActions from "@/components/dashboard/QuickActions";
-import { Skeleton } from "antd";
+import { Skeleton, Space } from "antd";
 import { cn } from "@/lib/utils";
 import { SkipLink } from "@/lib/a11y";
 
@@ -26,12 +26,10 @@ const TransferActivity = dynamic(
   {
     loading: () => (
       <Skeleton
+        active
         title={false}
-        paragraph={false}
-        className={cn(
-          "block animate-pulse rounded-xl bg-muted/50",
-          "h-[200px] w-full rounded-2xl",
-        )}
+        paragraph={{ rows: 4 }}
+        style={{ height: 200 }}
       />
     ),
   },
@@ -76,17 +74,15 @@ function Dashboard({
       <SkipLink href="#main-content" />
 
       <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6">
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
           {/* Saldo — the one job of this screen */}
           <div>
             {balanceLoading ? (
               <Skeleton
+                active
                 title={false}
-                paragraph={false}
-                className={cn(
-                  "block animate-pulse rounded-xl bg-muted/50",
-                  "h-64 rounded-2xl",
-                )}
+                paragraph={{ rows: 4 }}
+                style={{ height: 256 }}
               />
             ) : (
               <BalanceCard
@@ -102,7 +98,7 @@ function Dashboard({
 
           {/* Ada yang aneh? — recent activity is the fraud check */}
           <TransferActivity />
-        </div>
+        </Space>
       </main>
     </DashboardLayout>
   );

@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/navigation';
-import { Button, Input } from 'antd';
+import { Button, Card, Input, Space, Typography } from 'antd';
 import { ArrowLeft } from '@/components/icons';
 import { notify as toast } from '@/lib/notify';
+
+const { Title, Text } = Typography;
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
@@ -18,7 +20,6 @@ export default function ForgotPasswordPage() {
       return;
     }
     try {
-      // ponytail: OIDC PKCE + Keycloak execute-actions-email per ADR-0039, rate-limit IP + audit payu.auth.password-reset-requested.v1 handled by backend
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Idempotency-Key': typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 10)}` },
@@ -32,33 +33,37 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background p-8">
-      <div className="w-full max-w-[420px] space-y-8">
-        <div className="space-y-2">
-          <Link href="/login" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            <span>Kembali ke login</span>
-          </Link>
-          <h1 className="text-3xl font-bold tracking-tight">{t('forgotPassword')}</h1>
-          <p className="text-muted-foreground">Masukkan email Anda untuk menerima instruksi reset password.</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t('email')}</label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="nama@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12"
-            />
-          </div>
-          <Button type="primary" htmlType="submit" size="large" className="w-full h-12 font-bold">
-            Kirim Instruksi
-          </Button>
-        </form>
-      </div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+      <Card style={{ width: '100%', maxWidth: 420 }}>
+        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <Link href="/login">
+              <Space size={8}>
+                <ArrowLeft style={{ width: 16, height: 16 }} />
+                <Text type="secondary">Kembali ke login</Text>
+              </Space>
+            </Link>
+            <Title level={2} style={{ margin: 0 }}>{t('forgotPassword')}</Title>
+            <Text type="secondary">Masukkan email Anda untuk menerima instruksi reset password.</Text>
+          </Space>
+          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+              <label htmlFor="email" style={{ fontSize: 14, fontWeight: 500 }}>{t('email')}</label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="nama@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                size="large"
+              />
+            </Space>
+            <Button type="primary" htmlType="submit" size="large" block onClick={handleSubmit}>
+              Kirim Instruksi
+            </Button>
+          </Space>
+        </Space>
+      </Card>
     </div>
   );
 }

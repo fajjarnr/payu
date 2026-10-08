@@ -14,7 +14,6 @@ import {
   Wifi,
   WifiOff,
 } from "@/components/icons";
-import clsx from "clsx";
 import { useAnalyticsWebSocket, useCashFlow, useSpendingTrends } from "@/hooks";
 import { useAuthStore } from "@/stores";
 const Column = dynamic(
@@ -24,11 +23,20 @@ const Column = dynamic(
 const Pie = dynamic(() => import("@ant-design/plots").then((m) => m.Pie), {
   ssr: false,
 });
-import { Button, Card } from "antd";
-import { cn } from "@/lib/utils";
+import {
+  Button,
+  Card,
+  Space,
+  Row,
+  Col,
+  Typography,
+  Tag,
+  theme,
+} from "antd";
 
 export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
+  const { token } = theme.useToken();
   // FE-AUDIT-006: analytics events are keyed by account_id (backend BUG-AUTH-013),
   // so queries must use accountId — Keycloak sub returns zero rows.
   const { analytics, isConnected } = useAnalyticsWebSocket(
@@ -41,12 +49,12 @@ export default function AnalyticsPage() {
   // no WS proxy exists in this environment), so seed the page from REST.
   // Live WS data takes precedence when present.
   const CATEGORY_COLORS = [
-    "bg-primary",
-    "bg-primary",
-    "bg-warning",
-    "bg-accent",
-    "bg-error",
-    "bg-text-secondary",
+    "#00D09C",
+    "#00D09C",
+    "#f59e0b",
+    "#8b5cf6",
+    "#f43f5e",
+    "#64748b",
   ];
   const restData =
     cashFlow || trends
@@ -122,45 +130,35 @@ export default function AnalyticsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-end">
+      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Row justify="space-between" align="bottom">
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            <Typography.Title level={2} style={{ marginBottom: 0 }}>
               Intelijen Keuangan
-            </h1>
-            <p className="text-sm text-text-secondary font-medium">
+            </Typography.Title>
+            <Typography.Text type="secondary">
               Wawasan mendalam tentang kebiasaan pengeluaran dan pertumbuhan
               kekayaan Anda.
-            </p>
+            </Typography.Text>
           </div>
-          <div className="flex items-center gap-4">
-            <div
-              className={clsx(
-                "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all",
-                isConnected
-                  ? "bg-success-light text-primary border-primary/10"
-                  : "bg-muted text-muted-foreground border-border",
-              )}
-            >
+          <Space size={16}>
+            <Tag color={isConnected ? "success" : "default"}>
               {isConnected ? (
-                <Wifi className="h-4 w-4 animate-pulse" />
+                <Wifi style={{ width: 16, height: 16 }} />
               ) : (
-                <WifiOff className="h-4 w-4" />
+                <WifiOff style={{ width: 16, height: 16 }} />
               )}
-              <span className="text-xs font-bold tracking-widest uppercase">
+              <Typography.Text strong>
                 {isConnected ? "Live Update" : "Offline"}
-              </span>
-            </div>
-            <Button
-              type="default"
-              className="bg-surface-dim dark:bg-text-primary border border-border px-6 py-3 rounded-xl font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-surface-dim transition-all shadow-sm"
-            >
-              <Calendar className="h-4 w-4" /> Januari 2026
+              </Typography.Text>
+            </Tag>
+            <Button type="default">
+              <Calendar style={{ width: 16, height: 16 }} /> Januari 2026
             </Button>
-          </div>
-        </div>
+          </Space>
+        </Row>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Row gutter={[16, 16]}>
           {[
             {
               label: "Total Pemasukan",
@@ -191,238 +189,252 @@ export default function AnalyticsPage() {
               icon: ArrowUpRight,
             },
           ].map((stat, i) => (
-            <div
-              key={i}
-              className="bg-card p-5 sm:p-6 rounded-xl border border-border shadow-sm group hover:shadow-xl hover:shadow-bank-green/5 transition-all duration-500"
-            >
-              <div className="flex justify-between items-start mb-6">
-                <div className="h-12 w-12 bg-surface-dim dark:bg-text-primary rounded-xl flex items-center justify-center border border-border group-hover:border-bank-green/20 transition-all">
-                  <stat.icon
-                    className={clsx(
-                      "h-6 w-6",
-                      stat.isPos ? "text-bank-green" : "text-error",
-                    )}
-                  />
-                </div>
-                <span
-                  className={clsx(
-                    "text-xs font-bold px-3 py-1 rounded-full leading-none tracking-widest",
-                    stat.isPos
-                      ? "bg-bank-green/10 text-bank-green"
-                      : "bg-error text-white",
-                  )}
-                >
-                  {stat.change > 0 ? "+" : ""}
-                  {stat.change}%
-                </span>
-              </div>
-              <p className="text-xs font-bold text-text-disabled tracking-[0.2em] mb-2">
-                {stat.label}
-              </p>
-              <h3 className="text-2xl font-bold text-foreground">
-                Rp {Number(stat.amount).toLocaleString("id-ID")}
-              </h3>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
-          <div className="md:col-span-6 lg:col-span-8">
-            <Card
-              className={cn(
-                "rounded-2xl border border-border bg-card text-card-foreground shadow-card",
-                "rounded-xl border border-border shadow-sm h-full relative overflow-hidden group",
-              )}
-              styles={{ body: { display: "contents" } }}
-            >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-bank-green/5 rounded-full blur-3xl -z-0" />
-              <div
-                className={cn(
-                  "flex flex-col space-y-1.5 p-6",
-                  "flex flex-row items-center justify-between pb-6 relative z-10 p-6 sm:p-6 lg:p-8",
-                )}
-              >
-                <div>
-                  <h3
-                    className={cn(
-                      "text-2xl font-bold leading-none tracking-tight",
-                      "text-xl font-bold text-foreground",
-                    )}
+            <Col xs={24} sm={12} lg={6} key={i}>
+              <Card>
+                <Row justify="space-between" align="top">
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: `1px solid ${token.colorBorderSecondary}`,
+                    }}
                   >
+                    <stat.icon
+                      style={{
+                        width: 24,
+                        height: 24,
+                        color: stat.isPos ? token.colorPrimary : token.colorError,
+                      }}
+                    />
+                  </div>
+                  <Tag color={stat.isPos ? "success" : "error"}>
+                    {stat.change > 0 ? "+" : ""}
+                    {stat.change}%
+                  </Tag>
+                </Row>
+                <Typography.Text
+                  strong
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: "0.2em",
+                    display: "block",
+                    marginTop: 24,
+                  }}
+                >
+                  {stat.label}
+                </Typography.Text>
+                <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                  Rp {Number(stat.amount).toLocaleString("id-ID")}
+                </Typography.Title>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={12} lg={16}>
+            <Card>
+              <Row justify="space-between" align="middle">
+                <div>
+                  <Typography.Title level={4} style={{ marginBottom: 0 }}>
                     Trajektori Pengeluaran
-                  </h3>
-                  <p
-                    className={cn(
-                      "text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]",
-                      "text-xs text-text-disabled font-bold tracking-widest mt-1 lowercase",
-                    )}
+                  </Typography.Title>
+                  <Typography.Text
+                    type="secondary"
+                    style={{ fontSize: 12 }}
                   >
                     Analisis arus kas harian periode ini
-                  </p>
+                  </Typography.Text>
                 </div>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-bank-green/10 rounded-xl border border-bank-green/10">
-                    <div className="h-2 w-2 bg-bank-green rounded-full animate-pulse" />
-                    <span className="text-xs font-bold text-bank-green tracking-widest uppercase">
+                <Space size={16}>
+                  <Tag color="success">
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: token.colorPrimary,
+                        display: "inline-block",
+                        marginRight: 8,
+                      }}
+                    />
+                    <Typography.Text strong style={{ fontSize: 12 }}>
                       Masuk
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-surface-dim dark:bg-text-primary rounded-xl border border-border">
-                    <div className="h-2 w-2 bg-text-disabled rounded-full" />
-                    <span className="text-xs font-bold text-text-disabled tracking-widest uppercase">
+                    </Typography.Text>
+                  </Tag>
+                  <Tag>
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: token.colorTextTertiary,
+                        display: "inline-block",
+                        marginRight: 8,
+                      }}
+                    />
+                    <Typography.Text strong style={{ fontSize: 12 }}>
                       Keluar
-                    </span>
-                  </div>
-                </div>
+                    </Typography.Text>
+                  </Tag>
+                </Space>
+              </Row>
+
+              <div style={{ height: 400, marginTop: 24 }}>
+                <Column
+                  data={trajectoryData.flatMap((d) => [
+                    { day: d.day, type: "Masuk", amount: Number(d.masuk) },
+                    { day: d.day, type: "Keluar", amount: Number(d.keluar) },
+                  ])}
+                  xField="day"
+                  yField="amount"
+                  colorField="type"
+                  group={true}
+                  scale={{ color: { range: [PRIMARY, TRACK] } }}
+                  style={{
+                    radiusTopLeft: 4,
+                    radiusTopRight: 4,
+                    maxWidth: 32,
+                  }}
+                  axis={{
+                    x: {
+                      title: false,
+                      labelFill: "#6b7280",
+                      labelFontSize: 10,
+                      labelFontWeight: 700,
+                    },
+                    y: false,
+                  }}
+                  label={false}
+                />
               </div>
+            </Card>
+          </Col>
+
+          <Col xs={24} md={12} lg={8}>
+            <Card>
+              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                Rincian Pengeluaran
+              </Typography.Title>
 
               <div
-                className={cn("p-6 pt-0", "h-[400px] relative z-10 px-6 pb-10")}
+                style={{
+                  position: "relative",
+                  aspectRatio: "1",
+                  marginTop: 32,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <div className="h-full w-full">
-                  <Column
-                    data={trajectoryData.flatMap((d) => [
-                      { day: d.day, type: "Masuk", amount: Number(d.masuk) },
-                      { day: d.day, type: "Keluar", amount: Number(d.keluar) },
-                    ])}
-                    xField="day"
-                    yField="amount"
-                    colorField="type"
-                    group={true}
-                    scale={{ color: { range: [PRIMARY, TRACK] } }}
-                    style={{
-                      radiusTopLeft: 4,
-                      radiusTopRight: 4,
-                      maxWidth: 32,
+                <div style={{ width: "100%", height: "100%" }}>
+                  <Pie
+                    data={breakdownData.map((d) => ({
+                      name: d.name,
+                      value: Number(d.value),
+                    }))}
+                    angleField="value"
+                    colorField="name"
+                    scale={{
+                      color: { range: breakdownData.map((d) => d.fill) },
                     }}
-                    axis={{
-                      x: {
-                        title: false,
-                        labelFill: "#6b7280",
-                        labelFontSize: 10,
-                        labelFontWeight: 700,
-                      },
-                      y: false,
-                    }}
+                    innerRadius={0.65}
+                    style={{ lineWidth: 4, stroke: "#fff" }}
+                    legend={false}
                     label={false}
                   />
                 </div>
-              </div>
-            </Card>
-          </div>
-
-          <div className="md:col-span-6 lg:col-span-4">
-            <Card
-              className={cn(
-                "rounded-2xl border border-border bg-card text-card-foreground shadow-card",
-                "rounded-xl border border-border shadow-sm h-full flex flex-col group p-5 sm:p-6",
-              )}
-              styles={{ body: { display: "contents" } }}
-            >
-              <div className={cn("flex flex-col space-y-1.5 p-6", "p-0 mb-6")}>
-                <h3
-                  className={cn(
-                    "text-2xl font-bold leading-none tracking-tight",
-                    "text-xl font-bold text-foreground",
-                  )}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                  }}
                 >
-                  Rincian Pengeluaran
-                </h3>
+                  <Typography.Text
+                    strong
+                    style={{ fontSize: 12, letterSpacing: "0.1em" }}
+                  >
+                    Total Keluar
+                  </Typography.Text>
+                  <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                    Rp{" "}
+                    {Number(analyticsData.totalExpenses).toLocaleString(
+                      "id-ID",
+                      { notation: "compact", compactDisplay: "short" },
+                    )}
+                  </Typography.Title>
+                </div>
               </div>
 
-              <div className={cn("p-6 pt-0", "p-0 flex flex-col h-full")}>
-                <div className="relative aspect-square mb-8 flex items-center justify-center">
-                  <div className="w-full h-full">
-                    <Pie
-                      data={breakdownData.map((d) => ({
-                        name: d.name,
-                        value: Number(d.value),
-                      }))}
-                      angleField="value"
-                      colorField="name"
-                      scale={{
-                        color: { range: breakdownData.map((d) => d.fill) },
-                      }}
-                      innerRadius={0.65}
-                      style={{ lineWidth: 4, stroke: "#fff" }}
-                      legend={false}
-                      label={false}
-                    />
-                  </div>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-                    <p className="text-xs font-bold text-text-disabled tracking-widest uppercase mb-1">
-                      Total Keluar
-                    </p>
-                    <p className="text-2xl font-bold text-foreground">
-                      Rp{" "}
-                      {Number(analyticsData.totalExpenses).toLocaleString(
-                        "id-ID",
-                        { notation: "compact", compactDisplay: "short" },
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-6 flex-1 mt-auto">
-                  {analyticsData.spendingBreakdown.map((cat, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between group/cat cursor-pointer"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={clsx(
-                            "h-3 w-3 rounded-full transition-transform group-hover/cat:scale-150 duration-300",
-                            cat.color,
-                          )}
-                        />
-                        <span className="text-xs font-bold text-foreground tracking-widest uppercase">
-                          {cat.label}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-bold text-text-disabled tracking-[0.1em]">
-                          Rp{" "}
-                          {Number(cat.amount).toLocaleString("id-ID", {
-                            notation: "compact",
-                            compactDisplay: "short",
-                          })}
-                        </span>
-                        <span className="text-xs font-bold text-muted-foreground ml-1">
-                          ({cat.percentage}%)
-                        </span>
-                      </div>
+              <Space direction="vertical" size={16} style={{ marginTop: 32 }}>
+                {analyticsData.spendingBreakdown.map((cat, i) => (
+                  <Row key={i} justify="space-between" align="middle">
+                    <Space size={16}>
+                      <div
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: "50%",
+                          backgroundColor: cat.color,
+                        }}
+                      />
+                      <Typography.Text
+                        strong
+                        style={{ fontSize: 12, letterSpacing: "0.1em" }}
+                      >
+                        {cat.label}
+                      </Typography.Text>
+                    </Space>
+                    <div style={{ textAlign: "right" }}>
+                      <Typography.Text strong style={{ fontSize: 12 }}>
+                        Rp{" "}
+                        {Number(cat.amount).toLocaleString("id-ID", {
+                          notation: "compact",
+                          compactDisplay: "short",
+                        })}
+                      </Typography.Text>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12, marginLeft: 4 }}
+                      >
+                        ({cat.percentage}%)
+                      </Typography.Text>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </Row>
+                ))}
+              </Space>
             </Card>
-          </div>
-        </div>
+          </Col>
+        </Row>
 
-        <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 relative overflow-hidden group shadow-2xl">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-surface/5 rounded-full blur-3xl -z-0" />
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-4 max-w-xl text-center md:text-left">
-              <h3 className="text-3xl font-bold text-surface">
+        <Card>
+          <Row gutter={[16, 16]} align="middle" justify="space-between">
+            <div>
+              <Typography.Title level={3} style={{ marginBottom: 0 }}>
                 Siap untuk menabung otomatis?
-              </h3>
-              <p className="text-sm font-medium text-text-disabled leading-relaxed tracking-wide">
+              </Typography.Title>
+              <Typography.Text type="secondary">
                 Sistem AI kami mendeteksi Anda dapat menabung tambahan{" "}
-                <span className="text-bank-green font-bold">Rp 2.500.000</span>{" "}
+                <Typography.Text strong style={{ color: token.colorPrimary }}>
+                  Rp 2.500.000
+                </Typography.Text>{" "}
                 setiap bulan dengan mengoptimalkan tagihan utilitas dan
                 langganan berulang Anda.
-              </p>
+              </Typography.Text>
             </div>
-            <Button
-              type="primary"
-              className="whitespace-nowrap bg-bank-green text-surface px-8 py-4 rounded-xl font-bold text-xs tracking-[0.2em] hover:bg-bank-emerald transition-all active:scale-95 shadow-xl shadow-bank-green/20"
-            >
-              Terapkan Optimasi
-            </Button>
-          </div>
-        </div>
-      </div>
+            <Button type="primary">Terapkan Optimasi</Button>
+          </Row>
+        </Card>
+      </Space>
     </DashboardLayout>
   );
 }
