@@ -32,7 +32,7 @@ const { Title, Text } = Typography;
 
 // Branding panel is always dark (same surface as login-form.tsx), so it uses the
 // DESIGN.md surface tokens rather than light-mode antd tokens.
-const BRAND_BG = 'var(--color-text-primary)';
+const BRAND_BG = '#1A1A2E'; // branding panel: always dark navy (was bg-text-primary), both modes
 const BRAND_FG = 'var(--color-surface)';
 const BRAND_MUTED = 'var(--color-border)';
 const BRAND_TILE_BG = 'rgba(255, 255, 255, 0.1)';

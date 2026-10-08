@@ -331,7 +331,7 @@ export default function TransferPage() {
                 size="large"
                 aria-label="Kembali"
               >
-                <ChevronRight className="h-6 w-6 rotate-180" />
+                <ChevronRight style={{ width: 24, height: 24, transform: "rotate(180deg)" }} />
               </Button>
             </Space>
 
@@ -409,7 +409,7 @@ export default function TransferPage() {
                 <Col xs={24} md={8}>
                   <Card>
                     <Space size={8} style={{ display: "block", marginBottom: 8 }}>
-                      <TransferTypeIcon className="h-4 w-4 text-primary" />
+                      <TransferTypeIcon style={{ width: 16, height: 16, color: "hsl(var(--primary))" }} />
                       <Typography.Text type="secondary" strong>
                         Tipe Transfer
                       </Typography.Text>
@@ -436,7 +436,7 @@ export default function TransferPage() {
                   <Card>
                     <Space size={8} style={{ display: "block", marginBottom: 8 }}>
                       {scheduleType !== "NOW" && (
-                        <CalendarIcon className="h-4 w-4 text-primary" />
+                        <CalendarIcon style={{ width: 16, height: 16, color: "hsl(var(--primary))" }} />
                       )}
                       <Typography.Text type="secondary" strong>
                         Jadwal
@@ -711,6 +711,8 @@ export default function TransferPage() {
                                 gap: 16,
                                 padding: 24,
                                 borderRadius: 12,
+                                width: "100%",
+                                height: "auto",
                                 border: isSelected
                                   ? "2px solid hsl(var(--primary))"
                                   : "2px solid transparent",
@@ -728,13 +730,14 @@ export default function TransferPage() {
                                     borderRadius: 12,
                                     display: "flex",
                                     alignItems: "center",
-                                    justifyContent: "center",
                                     ...(isSelected
                                       ? { backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }
                                       : { backgroundColor: "hsl(var(--muted) / 0.5)", color: "hsl(var(--muted-foreground))" }),
                                   }}
                                 >
-                                  <Icon className="h-6 w-6" />
+                                  <div style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <Icon className="h-6 w-6" />
+                                  </div>
                                 </div>
                                 {isSelected && (
                                   <div style={{ width: 8, height: 8, backgroundColor: "hsl(var(--primary))", borderRadius: "50%" }} className="animate-pulse" />
@@ -783,6 +786,8 @@ export default function TransferPage() {
                                 gap: 12,
                                 padding: 24,
                                 borderRadius: 12,
+                                width: "100%",
+                                height: "auto",
                                 border: isSelected
                                   ? "2px solid hsl(var(--primary))"
                                   : "2px solid transparent",
@@ -808,9 +813,9 @@ export default function TransferPage() {
                                     }}
                                   >
                                     {s.type === "SCHEDULED" ? (
-                                      <CalendarIcon className="h-5 w-5" />
+                                      <CalendarIcon style={{ width: 20, height: 20 }} />
                                     ) : (
-                                      <Clock className="h-5 w-5" />
+                                      <Clock style={{ width: 20, height: 20 }} />
                                     )}
                                   </div>
                                 )}
@@ -1071,7 +1076,7 @@ export default function TransferPage() {
                     size="large"
                   >
                     Tinjau Ringkasan Transfer
-                    <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-2 transition-transform" />
+                    <ArrowRight style={{ width: 20, height: 20, marginLeft: 8 }} />
                   </Button>
                 </Form>
               </Space>
@@ -1149,7 +1154,7 @@ export default function TransferPage() {
                         }}
                       >
                         <div style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: "hsl(var(--muted))", display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
-                          <PlusCircle className="h-6 w-6" />
+                          <PlusCircle style={{ width: 24, height: 24 }} />
                         </div>
                         <Typography.Text type="secondary" strong>
                           Tambah

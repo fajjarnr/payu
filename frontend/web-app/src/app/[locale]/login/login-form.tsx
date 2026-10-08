@@ -27,12 +27,12 @@ function LoginSkeleton() {
   return (
     <div style={{ minHeight: '100vh', background: 'hsl(var(--background))' }}>
       <Row style={{ minHeight: '100vh' }}>
-        <Col xs={0} lg={12} style={{ background: 'var(--color-text-primary)' }} />
+        <Col xs={0} lg={12} style={{ background: '#1A1A2E' }} />
         <Col xs={24} lg={12} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
           <div style={{ width: '100%', maxWidth: 420 }}>
             <div style={{ height: 40, width: 192, background: 'hsl(var(--muted))', borderRadius: 12, marginBottom: 32 }} />
             <div style={{ height: 20, width: 256, background: 'hsl(var(--muted) / 0.6)', borderRadius: 12, marginBottom: 48 }} />
-            <div style={{ height: 48, background: 'var(--color-primary-dark) / 0.5)', borderRadius: 8 }} />
+            <div style={{ height: 48, background: 'color-mix(in srgb, var(--color-primary-dark) 50%, transparent)', borderRadius: 8 }} />
           </div>
         </Col>
       </Row>
@@ -62,12 +62,12 @@ function LoginForm() {
           xs={0}
           lg={12}
           style={{
-            background: 'var(--color-text-primary)',
+            background: '#1A1A2E',
             borderRight: '1px solid hsl(var(--border) / 0.1)',
             padding: '32px 24px',
             position: 'relative',
             overflow: 'hidden',
-            color: 'var(--color-surface)',
+            color: '#FFFFFF',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -75,7 +75,7 @@ function LoginForm() {
         >
           {/* Background Effects */}
           <div style={{ position: 'absolute', top: 0, right: 0, width: 800, height: 800, background: 'hsl(var(--primary) / 0.1)', borderRadius: '50%', filter: 'blur(120px)', transform: 'translate(50%, -50%)' }} aria-hidden="true" />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, width: 600, height: 600, background: 'var(--color-bank-green) / 0.1)', borderRadius: '50%', filter: 'blur(100px)', transform: 'translate(-25%, 50%)' }} aria-hidden="true" />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, width: 600, height: 600, background: 'color-mix(in srgb, var(--color-bank-green) 90%, transparent)', borderRadius: '50%', filter: 'blur(100px)', transform: 'translate(-25%, 50%)' }} aria-hidden="true" />
 
           {/* Pattern Overlay */}
           <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'url(https://grainy-gradients.vercel.app/noise.svg)' }} aria-hidden="true" />
@@ -85,12 +85,12 @@ function LoginForm() {
               <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 10px 15px -3px hsl(var(--primary) / 0.2)' }}>
                 <Image src="/logo.svg" alt="PayU Brand Logo" width={40} height={40} priority />
               </div>
-              <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: 'var(--color-surface)' }}>PayU</span>
+              <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: '#FFFFFF' }}>PayU</span>
             </Link>
           </div>
 
           <div style={{ position: 'relative', zIndex: 10, maxWidth: 512, margin: '0 auto', textAlign: 'center' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 9999, background: 'var(--color-primary-dark) / 0.3)', border: '1px solid hsl(var(--primary) / 0.3)', color: 'var(--color-primary-light)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 9999, background: 'color-mix(in srgb, var(--color-primary-dark) 70%, transparent)', border: '1px solid hsl(var(--primary) / 0.3)', color: 'var(--color-primary-light)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
               <ShieldCheck style={{ width: 16, height: 16 }} />
               <span>{t('branding.tag')}</span>
             </div>
@@ -108,7 +108,7 @@ function LoginForm() {
                   t('branding.features.monitoring'),
                   t('branding.features.qris')
                 ].map((feature, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--color-surface-dim)' }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#F8F9FA' }}>
                     <CheckCircle2 style={{ width: 20, height: 20, color: 'hsl(var(--primary))' }} />
                     <span style={{ fontWeight: 500 }}>{feature}</span>
                   </div>
