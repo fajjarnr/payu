@@ -7,7 +7,7 @@ export default function LendingLoading() {
         <div className="h-8 w-32 bg-muted rounded-xl mb-2" />
         <div className="h-5 w-52 bg-muted/60 rounded-xl mb-8" />
 
-        <div className="p-6 rounded-3xl border border-border bg-card mb-8">
+        <div className="p-6 rounded-2xl border border-border bg-card mb-8">
           <div className="h-4 w-28 bg-muted rounded mb-3" />
           <div className="h-8 w-44 bg-muted rounded-xl mb-4" />
           <div className="h-3 w-full bg-muted/30 rounded-full mb-2" />
@@ -19,7 +19,7 @@ export default function LendingLoading() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="p-6 rounded-3xl border border-border bg-card">
+            <div key={i} className="p-6 rounded-2xl border border-border bg-card">
               <div className="h-5 w-36 bg-muted rounded mb-2" />
               <div className="h-4 w-full bg-muted/60 rounded mb-4" />
               <div className="flex justify-between items-end">

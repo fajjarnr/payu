@@ -7,7 +7,7 @@ export default function DashboardLoading() {
         <div className="h-8 w-48 bg-muted rounded-xl mb-2" />
         <div className="h-5 w-64 bg-muted/60 rounded-xl mb-8" />
 
-        <div className="p-6 rounded-3xl border border-border bg-card mb-8">
+        <div className="p-6 rounded-2xl border border-border bg-card mb-8">
           <div className="h-4 w-24 bg-muted rounded mb-3" />
           <div className="h-10 w-56 bg-muted rounded-xl mb-4" />
           <div className="flex gap-3">
@@ -26,7 +26,7 @@ export default function DashboardLoading() {
           ))}
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="h-6 w-40 bg-muted rounded-xl mb-6" />
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (

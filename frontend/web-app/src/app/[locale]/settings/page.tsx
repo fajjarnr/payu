@@ -73,7 +73,7 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-6">
           {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
@@ -85,7 +85,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6">
               {/* Sidebar Profiles */}
               <div className="md:col-span-6 lg:col-span-4 space-y-6">
-                <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
+                <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card flex flex-col items-center text-center relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
                   <div className="relative w-24 h-24 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-bold text-4xl shadow-xl shadow-primary/20 mb-6 transition-transform group-hover:scale-110">
@@ -136,7 +136,7 @@ export default function SettingsPage() {
               {/* Main Settings Form */}
               <div className="md:col-span-6 lg:col-span-8">
                 {activeTab === 'profile' ? (
-                  <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-6 relative overflow-hidden h-full">
+                  <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card space-y-6 relative overflow-hidden h-full">
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
 
                     {/* Success Alert */}
@@ -263,7 +263,7 @@ export default function SettingsPage() {
                 ) : activeTab === 'beneficiaries' ? (
                   <BeneficiaryManager accountId={accountId} />
                 ) : (
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                         <div>
                           <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('menu.eStatement')}</h1>

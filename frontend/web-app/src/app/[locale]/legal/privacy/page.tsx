@@ -7,7 +7,7 @@ import { Shield, Eye, Database, Lock, RefreshCw, CheckCircle2 } from '@/componen
 export default function PrivacyPage() {
   return (
     <DashboardLayout>
-      <div className="space-y-6 lg:space-y-8">
+      <div className="space-y-6">
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
             </div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-primary/5 to-bank-emerald/5 rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-8 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-primary/5 to-bank-emerald/5 rounded-xl sm:rounded-2xl p-5 sm:p-6 border border-border shadow-card space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
           <div className="prose prose-sm max-w-none relative z-10">
             <section className="space-y-4">

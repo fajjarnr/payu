@@ -78,7 +78,7 @@ export default function SecurityPage() {
 
   return (
     <DashboardLayout>
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
                   <h1 className="text-2xl font-bold text-foreground tracking-tight">Keamanan & Tata Kelola</h1>
@@ -91,7 +91,7 @@ export default function SecurityPage() {
               </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden group h-full">
+                <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card relative overflow-hidden group h-full">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all" />
 
                   <div className="flex items-center gap-4 mb-6 relative z-10">
@@ -104,7 +104,7 @@ export default function SecurityPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-8 relative z-10">
+                  <div className="space-y-6 relative z-10">
                     <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                       Wajibkan sidik jari atau FaceID untuk setiap transaksi di atas <span className="font-bold text-foreground">Rp 1.000.000</span>.
                     </p>
@@ -115,7 +115,7 @@ export default function SecurityPage() {
                   </div>
                 </div>
 
-                <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden group h-full">
+                <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card relative overflow-hidden group h-full">
                   <div className="flex items-center gap-4 mb-6 relative z-10">
                     <div className="h-16 w-16 bg-primary/10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
                       <Key className="h-8 w-8 text-secondary" />
@@ -126,7 +126,7 @@ export default function SecurityPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-8 relative z-10">
+                  <div className="space-y-6 relative z-10">
                     <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                       Gunakan kunci keamanan fisik atau aplikasi autentikator digital untuk login pada perangkat baru.
                     </p>
@@ -138,7 +138,7 @@ export default function SecurityPage() {
             </div>
 
             <div className="mt-8">
-              <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
+              <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card relative overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6 relative z-10">
                   <h3 className="text-xl font-bold text-foreground">Sesi Terautentikasi</h3>
                   <div className="flex items-center gap-3 px-4 py-2 bg-warning/10 rounded-xl border border-warning/20">
@@ -173,7 +173,7 @@ export default function SecurityPage() {
             </div>
 
             <div className="mt-8">
-              <div className="bg-destructive rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-card group">
+              <div className="bg-destructive rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-card group">
                 <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
                   <div className="text-center lg:text-left space-y-4">
                     <h3 className="text-3xl font-bold">Protokol Panic.</h3>

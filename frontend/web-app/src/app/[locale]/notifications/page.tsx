@@ -67,7 +67,7 @@ export default function NotificationsPage() {
 
   return (
     <DashboardLayout>
-        <div className="w-full space-y-6 lg:space-y-8">
+        <div className="w-full space-y-6">
             {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>

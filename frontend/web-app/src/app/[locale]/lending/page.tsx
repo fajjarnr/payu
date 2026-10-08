@@ -151,7 +151,7 @@ export default function LendingPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 lg:space-y-8">
+      <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight">
@@ -185,10 +185,10 @@ export default function LendingPage() {
                 </span>
               ),
               children: (
-                <div className="mt-0 space-y-6 lg:space-y-8">
+                <div className="mt-0 space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
-                      <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
+                      <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
                         <div className="relative z-10 flex items-start justify-between mb-8">
                           <div>
                             <p className="text-xs font-bold text-text-disabled tracking-widest uppercase mb-2">
@@ -254,7 +254,7 @@ export default function LendingPage() {
                     </div>
                   </div>
                   <div className="lg:col-span-1">
-                    <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
                       <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 border border-primary/10">
                         <Wallet className="h-6 w-6 text-primary" />
                       </div>
@@ -283,7 +283,7 @@ export default function LendingPage() {
                         <div
                           key={i}
                           data-testid={`loan-product-${i}`}
-                          className="bg-card p-5 sm:p-6 lg:p-8 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]"
+                          className="bg-card p-5 sm:p-6 rounded-xl border border-border shadow-sm hover:shadow-card hover:-translate-y-1 transition-all group cursor-pointer active:scale-[0.98]"
                         >
                           <div className="flex justify-between items-start mb-6">
                             <div
@@ -373,10 +373,10 @@ export default function LendingPage() {
                 </span>
               ),
               children: (
-                <div className="mt-0 space-y-6 lg:space-y-8">
+                <div className="mt-0 space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
-                      <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
+                      <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
                         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
                           <div>
                             <div className="flex items-center gap-3 mb-3">
@@ -443,7 +443,7 @@ export default function LendingPage() {
                         </div>
                       </div>
                       <div className="lg:col-span-1">
-                        <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
+                        <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
                           <div className="flex justify-between items-start mb-6">
                             <h3 className="text-lg font-bold text-foreground">
                               Ringkasan Transaksi

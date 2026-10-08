@@ -45,7 +45,7 @@ export default function InvestmentsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 lg:space-y-8">
+      <div className="space-y-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('title')}</h1>
           <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
@@ -53,7 +53,7 @@ export default function InvestmentsPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-                <section data-testid="portfolio-overview-card" className="rounded-3xl border border-border bg-card p-5 sm:p-6 lg:p-8 shadow-sm">
+                <section data-testid="portfolio-overview-card" className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
                   <p className="text-sm font-medium text-muted-foreground">{t('accountBalance')}</p>
                   <h3 className="mt-3 text-4xl font-bold tracking-tight text-foreground">
                     {loadingAccount
@@ -85,28 +85,28 @@ export default function InvestmentsPage() {
           </div>
 
           <div>
-                <section data-testid="investment-performance-empty" className="h-full rounded-3xl border border-border bg-card p-5 sm:p-6 lg:p-8 shadow-sm">
+                <section data-testid="investment-performance-empty" className="h-full rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
                   <h3 className="text-xl font-semibold text-foreground">{t('performance')}</h3>
                   <p className="mt-3 text-sm text-muted-foreground">{t('performanceUnavailable')}</p>
                 </section>
           </div>
 
           <div>
-                <section data-testid="investment-risk-empty" className="h-full rounded-3xl border border-border bg-card p-5 sm:p-6 lg:p-8 shadow-sm">
+                <section data-testid="investment-risk-empty" className="h-full rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
                   <h3 className="text-xl font-semibold text-foreground">{t('riskLevel')}</h3>
                   <p className="mt-3 text-sm text-muted-foreground">{t('riskUnavailable')}</p>
                 </section>
           </div>
 
           <div className="lg:col-span-2">
-                <section data-testid="investment-products-empty" className="h-full rounded-3xl border border-border bg-card p-5 sm:p-6 lg:p-8 shadow-sm">
+                <section data-testid="investment-products-empty" className="h-full rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
                   <h3 className="text-xl font-semibold text-foreground">{t('portfolio')}</h3>
                   <p className="mt-3 text-sm text-muted-foreground">{t('productsUnavailable')}</p>
                 </section>
           </div>
 
           <div className="lg:col-span-3">
-                <section data-testid="investment-advice-empty" className="rounded-3xl border border-border bg-card p-5 sm:p-6 lg:p-8 shadow-sm">
+                <section data-testid="investment-advice-empty" className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
                   <h3 className="text-xl font-semibold text-foreground">{t('advice')}</h3>
                   <p className="mt-3 text-sm text-muted-foreground">{t('adviceUnavailable')}</p>
                 </section>

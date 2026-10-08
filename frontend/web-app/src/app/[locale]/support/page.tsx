@@ -67,7 +67,7 @@ export default function SupportPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 lg:space-y-8">
+      <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight">
@@ -82,7 +82,7 @@ export default function SupportPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {supportChannels.map((channel, i) => (
             <div key={i}>
-              <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
+              <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
                 <div
                   className={clsx(
                     "h-20 w-20 mb-6 rounded-2xl flex items-center justify-center text-surface shadow-lg transition-transform group-hover:scale-110",
@@ -110,7 +110,7 @@ export default function SupportPage() {
         </div>
 
         <div className="mt-4">
-          <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card relative overflow-hidden">
+          <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card relative overflow-hidden">
             <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
             <h3 className="text-xl font-bold text-foreground mb-6 relative z-10">
               {t("faqs")}
@@ -142,7 +142,7 @@ export default function SupportPage() {
         </div>
 
         <div className="mt-4">
-          <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl group">
+          <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl group">
             <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-left">
               <div className="space-y-6 max-w-2xl">
                 <h3 className="text-3xl font-bold">Integritas Sistem Aktif.</h3>

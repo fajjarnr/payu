@@ -308,7 +308,7 @@ export default function TransferPage() {
       <DashboardLayout>
         <SkipLink href="#main-content" />
         <main id="main-content" className="overflow-x-hidden">
-          <div className="space-y-6 lg:space-y-8">
+          <div className="space-y-6">
             <div className="flex items-center gap-6">
               <Button
                 type="default"
@@ -427,7 +427,7 @@ export default function TransferPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-                <div className="bg-muted p-5 sm:p-6 lg:p-8 rounded-xl border border-border">
+                <div className="bg-muted p-5 sm:p-6 rounded-xl border border-border">
                   <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">
                     Kantong Sumber
                   </p>
@@ -439,7 +439,7 @@ export default function TransferPage() {
                   </p>
                 </div>
                 {description && (
-                  <div className="bg-muted p-5 sm:p-6 lg:p-8 rounded-xl border border-border">
+                  <div className="bg-muted p-5 sm:p-6 rounded-xl border border-border">
                     <p className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-2">
                       Pesan Konfirmasi
                     </p>
@@ -592,7 +592,7 @@ export default function TransferPage() {
     <DashboardLayout>
       <SkipLink href="#main-content" />
       <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-6">
           <div className="mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Transfer Instan
@@ -602,8 +602,8 @@ export default function TransferPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
-            <div className="lg:col-span-8 space-y-6 sm:space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+            <div className="lg:col-span-8 space-y-6 sm:space-y-6">
               <Form
                 form={form}
                 onFinish={onValid}
@@ -802,7 +802,7 @@ export default function TransferPage() {
                 )}
 
                 {scheduleType === "RECURRING" && (
-                  <div className="mt-8 space-y-6 lg:space-y-8 animate-fade-in">
+                  <div className="mt-8 space-y-6 animate-fade-in">
                     <div className="space-y-4">
                       <span
                         id="recurring-day-label"
@@ -948,7 +948,7 @@ export default function TransferPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 sm:gap-6 mb-6 relative z-10">
+                  <div className="flex items-center gap-6 mb-6 relative z-10">
                     <Form.Item
                       name="amount"
                       rules={[rule("amount")]}
@@ -1001,7 +1001,7 @@ export default function TransferPage() {
               </Form>
             </div>
 
-            <div className="lg:col-span-4 space-y-6 sm:space-y-8">
+            <div className="lg:col-span-4 space-y-6 sm:space-y-6">
               <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 border border-border shadow-card h-full flex flex-col">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xs font-bold text-foreground tracking-widest uppercase">
@@ -1050,7 +1050,7 @@ export default function TransferPage() {
                 </div>
 
                 <div className="mt-auto pt-10">
-                  <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl group">
+                  <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl group">
                     <div className="relative z-10">
                       <h4 className="font-bold text-xl mb-2">Bantuan?</h4>
                       <p className="text-xs text-text-disabled font-bold tracking-widest uppercase mb-8 leading-relaxed">

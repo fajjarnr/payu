@@ -267,7 +267,7 @@ export default function LandingPage() {
         {/* How it works */}
         <section id="how" className="scroll-mt-24 py-20 sm:py-24">
           <div className="mx-auto max-w-[1080px] px-6">
-            <div className="rounded-3xl bg-muted/50 px-8 py-14 sm:px-14">
+            <div className="rounded-2xl bg-muted/50 px-8 py-14 sm:px-14">
               <h2 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl">{t('how.title')}</h2>
               <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-6">
                 {[
@@ -291,7 +291,7 @@ export default function LandingPage() {
         {/* Security / About */}
         <section id="about" className="scroll-mt-24 pb-20 sm:pb-24">
           <div className="mx-auto max-w-[1080px] px-6">
-            <div className="relative overflow-hidden rounded-3xl bg-primary px-8 py-14 text-primary-foreground sm:px-14 sm:py-16">
+            <div className="relative overflow-hidden rounded-2xl bg-primary px-8 py-14 text-primary-foreground sm:px-14 sm:py-16">
               <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
               <div className="pointer-events-none absolute -bottom-28 -left-20 size-80 rounded-full bg-black/10 blur-2xl" aria-hidden="true" />
 

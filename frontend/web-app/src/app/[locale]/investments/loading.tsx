@@ -9,7 +9,7 @@ export default function InvestmentsLoading() {
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="p-6 rounded-3xl border border-border bg-card">
+            <div key={i} className="p-6 rounded-2xl border border-border bg-card">
               <div className="h-4 w-24 bg-muted rounded mb-3" />
               <div className="h-8 w-40 bg-muted rounded-xl mb-2" />
               <div className="h-3 w-20 bg-muted/60 rounded" />
@@ -17,7 +17,7 @@ export default function InvestmentsLoading() {
           ))}
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="h-6 w-40 bg-muted rounded-xl mb-6" />
           <div className="space-y-4">
             {[...Array(4)].map((_, i) => (

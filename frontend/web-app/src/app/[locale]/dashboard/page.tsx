@@ -76,7 +76,7 @@ function Dashboard({
       <SkipLink href="#main-content" />
 
       <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-6">
           {/* Saldo — the one job of this screen */}
           <div>
             {balanceLoading ? (

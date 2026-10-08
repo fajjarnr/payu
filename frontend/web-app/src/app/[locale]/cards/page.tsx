@@ -121,7 +121,7 @@ export default function CardsPage() {
     <DashboardLayout>
       <SkipLink href="#main-content" />
       <main id="main-content" className="overflow-x-hidden">
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
             <div>
               <h1 className="text-2xl font-bold text-foreground tracking-tight">
@@ -154,7 +154,7 @@ export default function CardsPage() {
           <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-6 items-stretch">
             {/* Left: Digital Card & Primary Actions (8 units) */}
             <div className="md:col-span-12 lg:col-span-8">
-              <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 lg:p-8 h-full relative overflow-hidden group">
+              <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6 h-full relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-0" />
 
                 <div className="relative z-10 flex flex-col items-center justify-center gap-6 h-full">
@@ -164,7 +164,7 @@ export default function CardsPage() {
                     <div className="absolute inset-0 bg-white/5" />
                     <div className="absolute -top-8 -right-10 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
 
-                    <div className="relative z-10 h-full p-5 sm:p-6 lg:p-8 flex flex-col justify-between text-white">
+                    <div className="relative z-10 h-full p-5 sm:p-6 flex flex-col justify-between text-white">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold text-xl border border-white/20">
@@ -254,7 +254,7 @@ export default function CardsPage() {
 
             {/* Right: Daily Limit (4 units) Styled after Profil Risiko */}
             <div className="md:col-span-12 lg:col-span-4">
-              <div className="bg-secondary rounded-2xl p-5 sm:p-6 lg:p-8 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[320px]">
+              <div className="bg-secondary rounded-2xl p-5 sm:p-6 text-white h-full relative overflow-hidden shadow-xl border border-white/5 flex flex-col justify-between min-h-[320px]">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
 
                 <div className="relative z-10">
@@ -429,7 +429,7 @@ export default function CardsPage() {
             </div>
 
             {/* Bottom Banner Area (Full Width) Styled after Target Portofolio Banner */}
-            <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 sm:p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+            <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
               <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
                 <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-inner">

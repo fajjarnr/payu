@@ -7,7 +7,7 @@ import { FileText, Shield, AlertCircle, CheckCircle2 } from '@/components/icons'
 export default function TermsPage() {
   return (
     <DashboardLayout>
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-6">
               <div className="flex flex-col gap-4 mb-6">
                 <div className="flex items-center gap-3">
                   <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
@@ -20,7 +20,7 @@ export default function TermsPage() {
                 </div>
               </div>
 
-              <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-8">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-6 border border-border shadow-card space-y-6">
                 <div className="prose prose-sm max-w-none">
                   <section className="space-y-4">
                     <h3 className="text-xl font-bold text-foreground flex items-center gap-3">

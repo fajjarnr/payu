@@ -104,7 +104,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen w-full flex bg-background font-inter">
       {/* Left Panel - Branding */}
-      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-text-primary border-r border-border/10 p-5 sm:p-6 lg:p-8 relative overflow-hidden text-surface" aria-label="Branding">
+      <aside className="hidden lg:flex flex-col justify-between w-[45%] bg-text-primary border-r border-border/10 p-5 sm:p-6 relative overflow-hidden text-surface" aria-label="Branding">
         {/* Background Effects */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" aria-hidden="true" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" aria-hidden="true" />
@@ -117,7 +117,7 @@ export default function OnboardingPage() {
           </Link>
         </div>
 
-        <div className="relative z-10 max-w-lg space-y-8">
+        <div className="relative z-10 max-w-lg space-y-6">
             <div className="space-y-4">
                 <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/30 shadow-lg shadow-primary/10" aria-hidden="true">
                     <ScanFace className="w-8 h-8 text-primary/80" />
@@ -155,7 +155,7 @@ export default function OnboardingPage() {
       </aside>
 
       {/* Right Panel - Form Flow */}
-      <main className="flex-1 flex flex-col items-center justify-center p-5 sm:p-6 lg:p-8 bg-background relative" aria-labelledby="onboarding-title">
+      <main className="flex-1 flex flex-col items-center justify-center p-5 sm:p-6 bg-background relative" aria-labelledby="onboarding-title">
         <div className="w-full max-w-[520px]">
             {/* Mobile back link */}
             <Link href="/login" className="lg:hidden flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 w-fit">
@@ -174,7 +174,7 @@ export default function OnboardingPage() {
                 {step === 1 && (
                     <div
                         key="step1"
-                        className="space-y-8"
+                        className="space-y-6"
                     >
                         <div className="text-center space-y-2">
                             <h2 id="onboarding-title" className="text-2xl font-bold">{t('step1.title')}</h2>

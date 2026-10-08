@@ -70,7 +70,7 @@ export default function RewardsPage() {
 
   return (
     <DashboardLayout>
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
                   <h1 className="text-2xl font-bold text-foreground tracking-tight">Rewards & Gamifikasi</h1>
@@ -83,10 +83,10 @@ export default function RewardsPage() {
                   key: 'points',
                   label: <span className="px-6 flex items-center gap-2"><Coins className="h-4 w-4" /> Poin Loyalty</span>,
                   children: (
-                <div className="mt-0 space-y-6 lg:space-y-8">
+                <div className="mt-0 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   <div className="lg:col-span-2">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
                         <div className="flex items-start justify-between mb-6">
                           <div>
@@ -131,7 +131,7 @@ export default function RewardsPage() {
                   </div>
 
                   <div className="lg:col-span-2">
-                    <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Cara Mendapatkan Poin</h3>
                       <div className="space-y-6">
                         <div className="flex items-start gap-4">
@@ -215,10 +215,10 @@ export default function RewardsPage() {
                   key: 'cashback',
                   label: <span className="px-6 flex items-center gap-2"><DollarSign className="h-4 w-4" /> Cashback</span>,
                   children: (
-                <div className="mt-0 space-y-6 lg:space-y-8">
+                <div className="mt-0 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-1">
-                    <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl h-full">
+                    <div className="bg-gradient-to-br from-text-primary to-text-primary rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl h-full">
                       <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-6">
                           <div className="h-14 w-14 bg-surface/10 rounded-xl flex items-center justify-center border border-surface/10">
@@ -248,7 +248,7 @@ export default function RewardsPage() {
                   </div>
 
                   <div className="lg:col-span-2">
-                    <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Promosi Aktif</h3>
                       <div className="space-y-4">
                         {activePromotions.map((promo, i) => (
@@ -317,8 +317,8 @@ export default function RewardsPage() {
                   key: 'referral',
                   label: <span className="px-6 flex items-center gap-2"><Share2 className="h-4 w-4" /> Referral</span>,
                   children: (
-                <div className="mt-0 space-y-6 lg:space-y-8">
-                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 lg:p-8 text-surface relative overflow-hidden shadow-2xl">
+                <div className="mt-0 space-y-6">
+                    <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl p-5 sm:p-6 text-surface relative overflow-hidden shadow-2xl">
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-6">
                           <h3 className="text-xl font-bold">Kode Referral Anda</h3>
@@ -351,7 +351,7 @@ export default function RewardsPage() {
                       <Share2 className="absolute bottom-[-40px] right-[-40px] h-48 w-48 text-surface/5 -rotate-12" />
                     </div>
 
-                    <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card h-full">
+                    <div className="bg-card rounded-xl p-5 sm:p-6 border border-border shadow-card h-full">
                       <h3 className="text-lg font-bold text-foreground mb-6">Ringkasan Referral</h3>
                       <div className="space-y-6">
                         <div className="flex items-start gap-4">
