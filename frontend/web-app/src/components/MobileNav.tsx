@@ -88,6 +88,7 @@ export default function MobileNav() {
         disabledOverflow
         selectedKeys={selectedKeys}
         items={items}
+        className="flex w-full"
         style={{
           maxWidth: 512,
           margin: "0 auto",
@@ -98,6 +99,7 @@ export default function MobileNav() {
         styles={{
           list: {
             display: "flex",
+            flexDirection: "row",
             justifyContent: "space-around",
             width: "100%",
           },

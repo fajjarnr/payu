@@ -66,13 +66,13 @@ export default function PersonalizedGreeting({
       <div
         className="flex items-center gap-3 flex-wrap"
       >
-        <Typography.Title
-          level={1}
-          style={{ margin: 0 }}
+        <div
           className="text-2xl font-bold text-foreground uppercase tracking-tighter"
+          role="text"
+          aria-label={`${user?.fullName?.split(' ')[0] || 'User'}!`}
         >
           {user?.fullName?.split(' ')[0] || 'User'}!
-        </Typography.Title>
+        </div>
 
         {showSegment && isVIP && (
           <span

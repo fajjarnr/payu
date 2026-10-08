@@ -177,9 +177,9 @@ export default function BillsPage() {
                 <CheckCircle2 className="w-12 h-12 text-primary" />
               </div>
 
-              <h2 className="text-3xl font-bold text-foreground tracking-tight mb-2">
+              <h1 className="text-2xl font-bold text-foreground tracking-tight mb-2">
                 Pembayaran Berhasil!
-              </h2>
+              </h1>
               <p className="text-sm text-muted-foreground font-medium mb-10">
                 Transaksi Anda telah diproses dengan aman.
               </p>
@@ -375,9 +375,9 @@ export default function BillsPage() {
         <div className="space-y-6 lg:space-y-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             <div>
-              <h2 className="text-3xl font-bold text-foreground tracking-tight">
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">
                 Tagihan & Top-up
-              </h2>
+              </h1>
               <p className="text-sm text-muted-foreground font-medium mt-1">
                 Bayar tagihan utilitas dan top up dompet digital Anda secara
                 instan.

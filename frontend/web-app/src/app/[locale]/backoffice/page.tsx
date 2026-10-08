@@ -39,7 +39,7 @@ export default function BackofficeDashboard() {
         <>
           <>
             <div className="mb-8">
-              <h2 className="text-3xl font-bold text-foreground tracking-tight">Command Center</h2>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">Command Center</h1>
               <p className="text-sm text-muted-foreground font-medium mt-1">Sistem orkestrasi internal PayU Digital Banking.</p>
             </div>
           </>

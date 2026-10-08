@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { locales } from '@/i18n/config';
-import { Inter, Outfit } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import "../globals.css";
 import Providers from "../providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -14,11 +14,6 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const outfit = Outfit({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-outfit',
-});
 
 // WEB-CSP-002: per-request CSP nonces (src/proxy.ts) require dynamic rendering
 // on every route — statically prerendered pages bake inline flight scripts
@@ -66,7 +61,7 @@ export default async function RootLayout({
   const messages = await getMessages({ locale });
 
   return (
-    <html lang={locale} className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={inter.variable} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>

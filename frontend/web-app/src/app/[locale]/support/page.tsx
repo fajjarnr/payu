@@ -70,9 +70,9 @@ export default function SupportPage() {
       <div className="space-y-6 lg:space-y-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-foreground tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               {t("title")}
-            </h2>
+            </h1>
             <p className="text-sm text-muted-foreground font-medium mt-1">
               {t("subtitle")}
             </p>

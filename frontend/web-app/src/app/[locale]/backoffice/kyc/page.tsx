@@ -89,7 +89,7 @@ export default function KycReviewsPage() {
   <div className="space-y-6">
     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
       <div>
-        <h2 className="text-3xl font-bold text-foreground tracking-tight">KYC Reviews</h2>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">KYC Reviews</h1>
         <p className="text-sm text-muted-foreground font-medium mt-1">Review verifikasi identitas dan dokumen nasabah.</p>
       </div>
       <div className="flex items-center gap-3">

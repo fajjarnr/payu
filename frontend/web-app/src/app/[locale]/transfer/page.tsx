@@ -594,9 +594,9 @@ export default function TransferPage() {
       <main id="main-content" className="overflow-x-hidden">
         <div className="space-y-6 lg:space-y-8">
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Transfer Instan
-            </h2>
+            </h1>
             <p className="text-sm text-muted-foreground font-medium mt-1">
               Kirim dana secara aman dalam hitungan detik.
             </p>

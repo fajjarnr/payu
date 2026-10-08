@@ -47,7 +47,7 @@ export default function InvestmentsPage() {
     <DashboardLayout>
       <div className="space-y-6 lg:space-y-8">
         <div className="mb-6">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">{t('title')}</h2>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('title')}</h1>
           <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
         </div>
 

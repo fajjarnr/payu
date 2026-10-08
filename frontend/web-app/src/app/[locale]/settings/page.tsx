@@ -77,7 +77,7 @@ export default function SettingsPage() {
           {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground tracking-tight">{t('header.title')}</h2>
+                  <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('header.title')}</h1>
                   <p className="text-sm text-muted-foreground font-medium mt-1">{t('header.subtitle')}</p>
                 </div>
               </div>
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                   <div className="space-y-8">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                         <div>
-                          <h2 className="text-3xl font-bold text-foreground tracking-tight">{t('menu.eStatement')}</h2>
+                          <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('menu.eStatement')}</h1>
                           <p className="text-sm text-muted-foreground font-medium mt-1">
                             {t('eStatementSubtitle')}
                           </p>

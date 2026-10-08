@@ -125,9 +125,9 @@ export default function AnalyticsPage() {
       <div className="space-y-6 lg:space-y-8">
         <div className="flex justify-between items-end">
           <div>
-            <h2 className="text-3xl font-bold text-foreground tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               Intelijen Keuangan
-            </h2>
+            </h1>
             <p className="text-sm text-text-secondary font-medium">
               Wawasan mendalam tentang kebiasaan pengeluaran dan pertumbuhan
               kekayaan Anda.

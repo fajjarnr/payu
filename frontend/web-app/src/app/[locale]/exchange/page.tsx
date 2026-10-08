@@ -19,10 +19,12 @@ import { SUPPORTED_CURRENCIES } from '@/services/FxService';
 import { compareCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
 import DashboardLayout from "@/components/DashboardLayout";
 import clsx from 'clsx';
+import { useTranslations } from 'next-intl';
 
 export default function ExchangePage() {
   const accountId = useAuthStore((state) => state.accountId);
   const addToast = useUIStore((state) => state.addToast);
+  const t = useTranslations('nav');
 
   const [form] = Form.useForm<ExchangeRequest>();
   const rule = (field: string) => zodFieldRule(form, exchangeSchema, field);
@@ -135,9 +137,9 @@ export default function ExchangePage() {
             {/* Header */}
 
               <div className="mb-6">
-                <h2 className="text-3xl font-bold text-foreground tracking-tight">Currency Exchange</h2>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('currencyExchange')}</h1>
                 <p className="text-sm text-muted-foreground font-medium mt-1">
-                  Real-time foreign exchange rates with competitive pricing.
+                  {t('exchangeSubtitle')}
                 </p>
               </div>
 
@@ -151,13 +153,13 @@ export default function ExchangePage() {
                   <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/3 rounded-full blur-3xl pointer-events-none" />
 
                   <Form form={form} onFinish={onValid} initialValues={{ fromCurrency: 'IDR', toCurrency: 'USD', amount: '' }} layout="vertical" className="relative z-10">
-                    <h3 className="text-sm font-bold text-foreground mb-6 tracking-widest uppercase">Exchange Calculator</h3>
+                    <h3 className="text-sm font-bold text-foreground mb-6 tracking-widest uppercase">{t('exchangeCalculator')}</h3>
 
                     {/* Currency Selector Row */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6">
                       {/* From Currency */}
                       <div className="flex-1">
-                        <Form.Item name="fromCurrency" rules={[rule('fromCurrency')]} className="mb-0" label={<label htmlFor="exchange-from-currency" className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">From Currency</label>}>
+                        <Form.Item name="fromCurrency" rules={[rule('fromCurrency')]} className="mb-0" label={<label htmlFor="exchange-from-currency" className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-3 block">{t('fromCurrency')}</label>}>
                           <Select id="exchange-from-currency"
                             value={fromCurrency}
                             onChange={(v) => form.setFieldsValue({ fromCurrency: v as ExchangeRequest['fromCurrency'] })}
@@ -446,9 +448,9 @@ export default function ExchangePage() {
                     <TrendingUp className="h-32 w-32" />
                   </div>
                   <div className="relative z-10">
-                    <h3 className="font-bold text-lg mb-2">Need Help?</h3>
+                    <h3 className="font-bold text-lg mb-2">{t('needHelp')}</h3>
                     <p className="text-xs text-text-disabled font-bold tracking-widest uppercase mb-6">
-                      Currency exchange support
+                      {t('exchangeSupport')}
                     </p>
                     <Button type="default" className="text-xs font-bold tracking-widest uppercase bg-surface/10 px-6 py-3 rounded-xl border border-surface/10 hover:bg-surface/20 transition-all">
                       Contact Support

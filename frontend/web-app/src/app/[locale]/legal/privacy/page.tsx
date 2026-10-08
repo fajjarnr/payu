@@ -14,7 +14,7 @@ export default function PrivacyPage() {
               <Shield className="h-7 w-7 text-surface" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-foreground tracking-tight">Kebijakan Privasi</h2>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">Kebijakan Privasi</h1>
               <p className="text-sm text-muted-foreground font-medium">Versi 1.0 - Terakhir diperbarui: Januari 2026</p>
             </div>
           </div>

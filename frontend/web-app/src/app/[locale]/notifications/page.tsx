@@ -71,7 +71,7 @@ export default function NotificationsPage() {
             {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
                 <div>
-                  <h2 className="text-3xl font-bold text-foreground tracking-tight">Kotak Masuk</h2>
+                  <h1 className="text-2xl font-bold text-foreground tracking-tight">Kotak Masuk</h1>
                   <p className="text-sm text-muted-foreground font-medium mt-1">Kelola notifikasi, promo, dan peringatan keamanan Anda.</p>
                 </div>
                 <div className="flex items-center gap-3">

@@ -51,7 +51,15 @@
     "lending": "Lending",
     "notifications": "Notifikasi",
     "statements": "Laporan",
-    "exchange": "Valas"
+    "exchange": "Valas",
+    "aiForecaster": "Perkiraan Keuangan AI Aktif",
+    "skipToMain": "Lewati ke konten utama",
+    "currencyExchange": "Penukaran Mata Uang",
+    "exchangeSubtitle": "Kurs valuta asli real-time dengan harga kompetitif.",
+    "exchangeCalculator": "Kalkulator Penukaran",
+    "fromCurrency": "Dari Mata Uang",
+    "needHelp": "Butuh Bantuan?",
+    "exchangeSupport": "Dukungan penukaran mata uang"
   },
   "dashboard": {
     "welcome_morning": "Selamat Pagi",

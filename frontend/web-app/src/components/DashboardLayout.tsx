@@ -26,7 +26,7 @@ import {
   Search,
 } from "@/components/icons";
 import { useTranslations, useLocale } from "next-intl";
-import { useUIStore } from "@/stores";
+import { useUIStore, useNotificationStore } from "@/stores";
 import {
   Layout,
   Menu,
@@ -66,6 +66,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const logoutMutation = useLogout();
   const mode = useUIStore((s) => s.theme);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
   const { token } = theme.useToken();
   const mounted = useSyncExternalStore(
     emptySubscribe,
@@ -286,7 +287,7 @@ export default function DashboardLayout({
                   className="text-lg font-bold leading-tight"
                 />
                 <p className="ml-0.5 mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60">
-                  AI Financial Forecaster Active
+                  {t("aiForecaster")}
                 </p>
               </div>
             </div>
@@ -315,7 +316,7 @@ export default function DashboardLayout({
                 style={{ width: 44, height: 44 }}
               />
 
-              <Badge dot color={token.colorPrimary} offset={[-4, 4]}>
+              <Badge dot={unreadCount > 0} count={unreadCount > 0 ? unreadCount : 0} color={token.colorPrimary} offset={[-4, 4]}>
                 <Button
                   type="text"
                   data-testid="notification-button"

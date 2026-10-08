@@ -57,6 +57,7 @@
     "eslint-config-next": "16.3.3",
     "jest-axe": "^10.0.0",
     "jsdom": "^29.1.1",
+    "lint-staged": "^17.6.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5",

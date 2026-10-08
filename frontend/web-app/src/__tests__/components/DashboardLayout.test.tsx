@@ -111,7 +111,7 @@ describe('DashboardLayout', () => {
     expect(screen.getByPlaceholderText('Pencarian cerdas...')).toBeInTheDocument();
   });
 
-  it('should render notification button with badge', () => {
+  it('should render notification button with badge when unread', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
     const notificationButton = screen.getByRole('button', { name: 'Notifikasi' });
@@ -119,7 +119,8 @@ describe('DashboardLayout', () => {
 
     const badge = notificationButton.closest('.ant-badge');
     expect(badge).toBeInTheDocument();
-    expect(badge?.querySelector('.ant-badge-dot')).toBeInTheDocument();
+    // Badge dot only shows when unreadCount > 0; default store has 0
+    expect(badge?.querySelector('.ant-badge-dot')).not.toBeInTheDocument();
   });
 
   it('should render user profile button', () => {

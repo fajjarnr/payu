@@ -51,7 +51,15 @@
     "lending": "Lending",
     "notifications": "Notifications",
     "statements": "Statements",
-    "exchange": "Foreign Exchange"
+    "exchange": "Foreign Exchange",
+    "aiForecaster": "AI Financial Forecaster Active",
+    "skipToMain": "Skip to main content",
+    "currencyExchange": "Currency Exchange",
+    "exchangeSubtitle": "Real-time foreign exchange rates with competitive pricing.",
+    "exchangeCalculator": "Exchange Calculator",
+    "fromCurrency": "From Currency",
+    "needHelp": "Need Help?",
+    "exchangeSupport": "Currency exchange support"
   },
   "dashboard": {
     "welcome_morning": "Good Morning",

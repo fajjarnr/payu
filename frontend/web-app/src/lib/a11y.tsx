@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 
 /**
@@ -8,11 +9,12 @@ import { useState, useEffect } from 'react';
  *
  * @see https://www.w3.org/WAI/WCAG21/Techniques/general/G1
  */
-export function SkipLink({ href = '#main-content', className = '', children = 'Skip to main content' }: {
+export function SkipLink({ href = '#main-content', className = '', children }: {
   href?: string;
   className?: string;
   children?: React.ReactNode;
 }) {
+  const t = useTranslations('nav');
   return (
     <a
       href={href}
@@ -24,7 +26,7 @@ export function SkipLink({ href = '#main-content', className = '', children = 'S
         ${className}
       `}
     >
-      {children}
+      {children || t('skipToMain')}
     </a>
   );
 }

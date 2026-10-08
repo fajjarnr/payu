@@ -51,7 +51,7 @@
 
   /* Fonts */
   --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-heading: var(--font-outfit), system-ui, sans-serif;
+  --font-heading: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-inter), ui-monospace, monospace;
 }
 
@@ -92,7 +92,7 @@
   --success-foreground: 0 0% 100%;
 
   /* DESIGN.md Color Tokens */
-  --color-primary: #00D09C;
+  --color-primary: #0B7A55;
   --color-primary-dark: #00A87E;
   --color-primary-light: #E6FFF7;
   --color-secondary: #1A1A2E;
@@ -183,9 +183,9 @@
 
   .card-gradient {
     background: linear-gradient(135deg,
-        hsl(145, 63%, 42%) 0%,
-        hsl(145, 50%, 35%) 50%,
-        hsl(150, 60%, 30%) 100%);
+        hsl(145, 63%, 28%) 0%,
+        hsl(145, 50%, 24%) 50%,
+        hsl(150, 60%, 20%) 100%);
   }
 
   .animate-fade-in {
