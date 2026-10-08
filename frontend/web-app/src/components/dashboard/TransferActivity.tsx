@@ -107,7 +107,7 @@ export default function TransferActivity({
       title: "Tanggal",
       render: (_, item) => (
         <div>
-          <div className="text-xs sm:text-xs text-muted-foreground font-bold tabular-nums uppercase tracking-tighter opacity-70">
+          <div className="text-xs sm:text-xs text-muted-foreground font-bold tabular-nums uppercase tracking-tighter">
             {formatDate(item.createdAt)}
           </div>
           <div className="text-xs font-mono text-muted-foreground/50 mt-1">
@@ -125,7 +125,7 @@ export default function TransferActivity({
             <User className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest leading-none mb-2 uppercase opacity-60">
+            <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest leading-none mb-2 uppercase">
               {item.type}
             </p>
             <p className="text-sm font-bold text-foreground uppercase tracking-tight truncate max-w-[150px]">
@@ -246,7 +246,7 @@ export default function TransferActivity({
 
         <div className="p-6 pt-0 space-y-6 relative z-10 flex flex-col justify-between">
           <div>
-            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.25em] mb-6 text-center uppercase opacity-60">
+            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.1em] mb-6 text-center uppercase">
               Kategori Favorit
             </p>
             <div className="grid grid-cols-4 gap-6 px-1">
@@ -274,7 +274,7 @@ export default function TransferActivity({
           </div>
 
           <div>
-            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.25em] mb-6 text-center uppercase opacity-60">
+            <p className="text-xs sm:text-xs font-bold text-muted-foreground tracking-[0.1em] mb-6 text-center uppercase">
               Kontak Terbaru
             </p>
             <div className="flex justify-between items-center px-2">
@@ -295,7 +295,7 @@ export default function TransferActivity({
             data-testid="quick-transfer-send-button"
             type="primary"
             size="large"
-            className="w-full uppercase tracking-[0.2em] font-bold text-xs h-14 sm:h-16 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 transition-all mt-4"
+            className="w-full uppercase tracking-[0.1em] font-bold text-xs h-14 sm:h-16 rounded-2xl shadow-xl shadow-primary/10 hover:shadow-primary/20 transition-all mt-4"
           >
             Kirim Sekarang
           </Button>

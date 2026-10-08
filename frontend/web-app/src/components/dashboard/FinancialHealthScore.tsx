@@ -183,7 +183,7 @@ export default function FinancialHealthScore({
           >
             {t("financialHealthScore")}
           </h3>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
             Update terakhir:{" "}
             {new Date().toLocaleDateString(undefined, {
               day: "numeric",
@@ -259,10 +259,10 @@ export default function FinancialHealthScore({
             </svg>
 
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-4xl sm:text-4xl lg:text-6xl font-bold text-foreground tabular-nums tracking-tighter">
+              <span className="text-3xl font-bold text-foreground tabular-nums tracking-tighter">
                 {score}
               </span>
-              <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest opacity-60">
+              <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest">
                 dari 100
               </span>
             </div>
@@ -281,7 +281,7 @@ export default function FinancialHealthScore({
               />
               <span
                 className={cn(
-                  "text-xs font-bold uppercase tracking-[0.2em]",
+                  "text-xs font-bold uppercase tracking-[0.1em]",
                   healthLevel.color,
                 )}
               >
@@ -360,7 +360,7 @@ function ScoreFactor({ label, value, color, ariaLabel }: ScoreFactorProps) {
         aria-label={ariaLabel}
       />
       <div>
-        <p className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest opacity-60 mb-1">
+        <p className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-widest mb-1">
           {label}
         </p>
         <p className="text-sm sm:text-base font-bold text-foreground tabular-nums tracking-tight">

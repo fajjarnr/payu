@@ -121,7 +121,7 @@ export default function StatsCharts({
         </div>
 
         <div className="p-6 pt-0 space-y-2">
-          <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase opacity-60">
+          <p className="text-xs sm:text-xs text-muted-foreground font-bold tracking-widest uppercase">
             {t("totalValue")}
           </p>
           <h4 className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums tracking-tight">

@@ -56,7 +56,7 @@ export default function PersonalizedGreeting({
         {showTimeBased && (
           <>
             <TimeIcon className="h-4 w-4 text-primary" />
-            <Typography.Text className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            <Typography.Text className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
               {timeGreeting.text}
             </Typography.Text>
           </>
@@ -67,7 +67,7 @@ export default function PersonalizedGreeting({
         className="flex items-center gap-3 flex-wrap"
       >
         <div
-          className="text-2xl font-bold text-foreground uppercase tracking-tighter"
+          className="text-2xl font-bold text-foreground tracking-tight"
           role="text"
           aria-label={`${user?.fullName?.split(' ')[0] || 'User'}!`}
         >
@@ -79,7 +79,7 @@ export default function PersonalizedGreeting({
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-warning to-accent shadow-lg shadow-warning/20"
           >
             <Crown className="h-3.5 w-3.5 text-surface" />
-            <span className="text-xs font-bold tracking-[0.15em] text-surface uppercase">
+            <span className="text-xs font-bold tracking-[0.1em] text-surface uppercase">
               {segmentGreeting}
             </span>
           </span>

@@ -51,10 +51,10 @@ export default function BalanceCard({
         >
           <div className="flex flex-row items-center justify-between p-6 pb-6">
             <div>
-              <h3 className="text-2xl font-bold leading-none tracking-tight text-xs sm:text-sm font-bold text-primary tracking-[0.2em] uppercase">
+              <h3 className="text-xs sm:text-sm font-bold text-primary tracking-[0.1em] uppercase">
                 {t("primaryBalance")}
               </h3>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] mt-2 text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-2">
                 {new Date().toLocaleDateString(bcp47Locale, {
                   day: "numeric",
                   month: "short",
@@ -86,7 +86,7 @@ export default function BalanceCard({
                     --
                   </span>
                 )}
-                <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">
+                <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.1em]">
                   {t("growthFactor")}
                 </span>
               </div>
@@ -100,7 +100,7 @@ export default function BalanceCard({
           styles={{ body: { display: "contents" } }}
         >
           <div className="flex flex-row items-center justify-between p-6 pb-6 gap-2">
-            <h3 className="text-2xl font-bold leading-none tracking-tight text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.2em] uppercase">
+            <h3 className="text-xs sm:text-sm font-bold text-muted-foreground tracking-[0.1em] uppercase">
               {t("netWorth")}
             </h3>
             <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-primary/10">
@@ -126,7 +126,7 @@ export default function BalanceCard({
                     --
                   </span>
                 )}
-                <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">
+                <span className="text-xs sm:text-xs text-muted-foreground font-bold uppercase tracking-[0.1em]">
                   {t("totalGrowth")}
                 </span>
               </div>
@@ -161,12 +161,12 @@ export default function BalanceCard({
             </div>
 
             <div className="space-y-4 sm:space-y-6">
-              <div className="text-base sm:text-xl lg:text-2xl xl:text-3xl font-bold tracking-[0.15em] sm:tracking-[0.2em] lg:tracking-[0.3em] font-mono truncate drop-shadow-2xl">
+              <div className="text-base sm:text-xl lg:text-2xl xl:text-3xl font-bold tracking-[0.1em] sm:tracking-[0.1em] lg:tracking-[0.1em] font-mono truncate drop-shadow-2xl">
                 4829 •••• •••• 1928
               </div>
               <div className="flex justify-between items-end gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-surface/60 font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mb-1 sm:mb-2">
+                  <p className="text-xs text-surface/60 font-bold uppercase tracking-[0.1em] sm:tracking-[0.1em] mb-1 sm:mb-2">
                     {t("cardHolder")}
                   </p>
                   <p className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold uppercase tracking-widest truncate">
@@ -234,7 +234,7 @@ function SummaryItem({
       styles={{ body: { display: "contents" } }}
     >
       <div className="flex flex-row items-center justify-between p-6 pb-6 gap-2">
-        <h3 className="text-2xl font-bold leading-none tracking-tight text-xs lg:text-sm font-bold text-muted-foreground tracking-[0.15em] sm:tracking-[0.2em] uppercase leading-tight">
+        <h3 className="text-xs lg:text-sm font-bold text-muted-foreground tracking-[0.1em] sm:tracking-[0.1em] uppercase leading-tight">
           {label}
         </h3>
         <div
@@ -270,7 +270,7 @@ function SummaryItem({
               {isPositive ? "+" : ""}
               {change}%
             </span>
-            <span className="text-xs text-muted-foreground font-bold uppercase tracking-[0.15em] opacity-70">
+            <span className="text-xs text-muted-foreground font-bold uppercase tracking-[0.1em]">
               {t("thisMonth")}
             </span>
           </div>

@@ -21,6 +21,12 @@ const baseTokens: ThemeConfig['token'] = {
   // (e.g. Modal/Sheet) when those migrations land.
   fontFamily: FONT_FAMILY,
   fontSize: 14,
+  // DESIGN.md role scale — antd Title levels map to spec roles, not antd defaults
+  fontSizeHeading1: 24,
+  fontSizeHeading2: 20,
+  fontSizeHeading3: 16,
+  fontSizeHeading4: 16,
+  fontSizeHeading5: 14,
 };
 
 const componentTokens: ThemeConfig['components'] = {

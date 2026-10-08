@@ -137,7 +137,7 @@ export default function QuickActions({
           >
             {t("quickActionsTitle")}
           </h3>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] uppercase tracking-widest text-xs sm:text-xs font-bold opacity-60">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
             {t("quickActionsSubtitle")}
           </p>
         </div>

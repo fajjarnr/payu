@@ -118,7 +118,7 @@ export default function BudgetTracking({
           >
             {t("budgetTracking")}
           </h3>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em] text-xs sm:text-xs font-bold uppercase tracking-widest opacity-60 mt-1">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
             {new Date().toLocaleDateString(undefined, {
               month: "long",
               year: "numeric",
@@ -257,7 +257,7 @@ export default function BudgetTracking({
                             <p className="text-sm font-bold text-foreground uppercase tracking-tight">
                               {budget.category}
                             </p>
-                            <span className="text-xs text-muted-foreground tabular-nums font-bold opacity-60">
+                            <span className="text-xs text-muted-foreground tabular-nums font-bold">
                               {budget.percentage.toFixed(1)}%
                             </span>
                           </div>
@@ -388,7 +388,7 @@ function SummaryCard({
         color,
       )}
     >
-      <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">
+      <p className="text-xs font-bold uppercase tracking-widest mb-2">
         {label}
       </p>
       <p
@@ -422,7 +422,7 @@ function DetailItem({
 }: DetailItemProps) {
   return (
     <div className="space-y-1">
-      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider opacity-60">
+      <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
         {label}
       </p>
       <p
