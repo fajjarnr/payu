@@ -708,8 +708,8 @@ export default function CardsPage() {
                   align="center"
                   justify="center"
                   style={{
-                    width: 56,
-                    height: 56,
+                    width: 48,
+                    height: 48,
                     borderRadius: 16,
                     background: `${token.colorPrimary}1A`,
                     border: `1px solid ${token.colorPrimary}33`,

@@ -178,7 +178,7 @@ export default function ExchangePage() {
                         htmlType="button"
                         shape="circle"
                         onClick={handleSwap}
-                        style={{ width: 56, height: 56 }}
+                        style={{ width: 48, height: 48 }}
                         aria-label="Swap currencies"
                         icon={<ArrowRightLeft style={{ width: 24, height: 24 }} />}
                       />

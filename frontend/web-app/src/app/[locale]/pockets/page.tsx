@@ -727,7 +727,7 @@ export default function PocketsPage() {
             ) : (
               <Card>
                 <Empty
-                  image={<Wallet style={{ fontSize: 48 }} />}
+                  image={<Wallet style={{ fontSize: 40 }} />}
                   description={
                     <Space direction="vertical" size={4}>
                       <Typography.Text strong style={{ fontSize: 16 }}>
@@ -778,8 +778,8 @@ export default function PocketsPage() {
                               align="center"
                               justify="center"
                               style={{
-                                width: 56,
-                                height: 56,
+                                width: 48,
+                                height: 48,
                                 borderRadius: 12,
                                 background: isGreen
                                   ? `${token.colorPrimary}1A`

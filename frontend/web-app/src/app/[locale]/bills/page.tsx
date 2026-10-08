@@ -227,15 +227,15 @@ export default function BillsPage() {
                 align="center"
                 justify="center"
                 style={{
-                  width: 96,
-                  height: 96,
+                  width: 80,
+                  height: 80,
                   marginBottom: 32,
                   borderRadius: "50%",
                   background: token.colorPrimaryBg,
                   color: token.colorPrimary,
                 }}
               >
-                <CheckCircle2 style={{ fontSize: 48 }} />
+                <CheckCircle2 style={{ fontSize: 40 }} />
               </Flex>
 
               <Typography.Title level={2} style={{ marginBottom: 8 }}>
@@ -255,15 +255,15 @@ export default function BillsPage() {
                     align="center"
                     justify="center"
                     style={{
-                      width: 56,
-                      height: 56,
+                      width: 48,
+                      height: 48,
                       borderRadius: 12,
                       background: successData.billerBg,
                       color: successData.billerFg,
                       boxShadow: token.boxShadowTertiary,
                     }}
                   >
-                    <SuccessIcon style={{ fontSize: 28 }} />
+                    <SuccessIcon style={{ fontSize: 24 }} />
                   </Flex>
                   <div style={{ textAlign: "left" }}>
                     <Typography.Text
