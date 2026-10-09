@@ -26,6 +26,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useAuthStore } from "@/stores/authStore";
 import { useUpdateUser, useLogout } from "@/hooks";
 import { notify as toast } from "@/lib/notify";
+import BeneficiaryManager from "@/components/account/BeneficiaryManager";
 import StatementDownloader from "@/components/settings/statement-downloader";
 
 const { Title, Text } = Typography;
@@ -463,78 +464,5 @@ export default function SettingsPage() {
         </Row>
       </Space>
     </DashboardLayout>
-  );
-}
-
-// Inline BeneficiaryManager to avoid circular imports
-function BeneficiaryManager({ accountId }: { accountId: string }) {
-  const t = useTranslations("settings");
-  const [formData, setFormData] = useState({
-    accountName: "",
-    accountNumber: "",
-  });
-
-  const handleSubmit = () => {
-    // Mutate beneficiary
-  };
-
-  return (
-    <Card>
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
-        <Title level={3} style={{ margin: 0 }}>
-          {t("menu.beneficiaries")}
-        </Title>
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          <label
-            htmlFor="beneficiary-name"
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "var(--ant-color-text-secondary)",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-            }}
-          >
-            {t("form.accountName")}
-          </label>
-          <Input
-            id="beneficiary-name"
-            type="text"
-            value={formData.accountName}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, accountName: e.target.value }))
-            }
-            placeholder={t("form.accountNamePlaceholder")}
-          />
-          <label
-            htmlFor="beneficiary-number"
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "var(--ant-color-text-secondary)",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-            }}
-          >
-            {t("form.accountNumber")}
-          </label>
-          <Input
-            id="beneficiary-number"
-            type="text"
-            value={formData.accountNumber}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                accountNumber: e.target.value,
-              }))
-            }
-            placeholder={t("form.accountNumberPlaceholder")}
-          />
-        </Space>
-        <Button type="primary" onClick={handleSubmit}>
-          {t("addBeneficiary")}
-        </Button>
-      </Space>
-    </Card>
   );
 }

@@ -1,28 +1,48 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import SplitBillPage from '@/app/[locale]/split-bill/page';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { UserEvent } from "@testing-library/user-event";
+import "@testing-library/jest-dom";
+import SplitBillPage from "@/app/[locale]/split-bill/page";
+import { notify } from "@/lib/notify";
 
-vi.mock('@/components/DashboardLayout', () => ({
+const createSplitBillMutate = vi.fn();
+const splitBillsData = vi.fn();
+
+vi.mock("@/components/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dashboard-layout">{children}</div>
   ),
 }));
 
-
-vi.mock('@/stores/authStore', () => ({
-  useAuthStore: () => ({
-    user: { id: 'user_1', username: 'budi' },
-    accountId: 'acct_creator',
-    isAuthenticated: true,
-  }),
+vi.mock("@/stores/authStore", () => ({
+  useAuthStore: (selector?: (s: Record<string, unknown>) => unknown) => {
+    const state = {
+      user: { id: "user_1", username: "budi" },
+      accountId: "acct_creator",
+      isAuthenticated: true,
+    };
+    return selector ? selector(state) : state;
+  },
 }));
 
-const createSplitBillMock = vi.fn();
+vi.mock("@/lib/notify", () => ({
+  notify: {
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+  },
+}));
 
-vi.mock('@/hooks/useSplitBill', () => ({
-  useSplitBills: () => ({ data: [], isLoading: false }),
+// The barrel re-exports this module, so mocking it covers the page's import.
+vi.mock("@/hooks/useSplitBill", () => ({
+  useSplitBills: () => ({ data: splitBillsData(), isLoading: false }),
   useSplitBill: () => ({ data: null, isLoading: false }),
-  useCreateSplitBill: () => ({ mutate: createSplitBillMock, isPending: false }),
+  useCreateSplitBill: () => ({
+    mutate: createSplitBillMutate,
+    isPending: false,
+  }),
   useAcceptSplitBill: () => ({ mutateAsync: vi.fn() }),
   useDeclineSplitBill: () => ({ mutateAsync: vi.fn() }),
   useSplitBillPayment: () => ({ mutateAsync: vi.fn() }),
@@ -31,56 +51,150 @@ vi.mock('@/hooks/useSplitBill', () => ({
   useActivateSplitBill: () => ({ mutateAsync: vi.fn() }),
 }));
 
-vi.mock('@/services/TransactionService', () => ({
+vi.mock("@/services/TransactionService", () => ({
   SplitBillParticipant: {},
 }));
 
-describe('SplitBillPage', () => {
+async function openCreateForm(user: UserEvent) {
+  await user.click(screen.getByRole("button", { name: /Split Bill Baru/ }));
+}
+
+describe("SplitBillPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    splitBillsData.mockReturnValue([]);
   });
 
-  it('should render within DashboardLayout', () => {
+  it("warns instead of silently returning when the description is missing", async () => {
+    const user = userEvent.setup();
     render(<SplitBillPage />);
-    expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
+    await openCreateForm(user);
+
+    await user.click(screen.getByRole("button", { name: "Buat" }));
+
+    expect(notify.warning).toHaveBeenCalledWith(
+      "Masukkan nama/deskripsi split bill",
+    );
+    expect(createSplitBillMutate).not.toHaveBeenCalled();
   });
 
-  it('should render page title', () => {
+  it("warns when the total amount is missing", async () => {
+    const user = userEvent.setup();
     render(<SplitBillPage />);
-    expect(screen.getByText('Split Bill')).toBeInTheDocument();
+    await openCreateForm(user);
+
+    await user.type(screen.getByLabelText("Deskripsi"), "Makan siang");
+    await user.click(screen.getByRole("button", { name: "Buat" }));
+
+    expect(notify.warning).toHaveBeenCalledWith("Masukkan total tagihan");
+    expect(createSplitBillMutate).not.toHaveBeenCalled();
   });
 
-  it('should render create split bill button', () => {
+  it("warns when no participant row is complete", async () => {
+    const user = userEvent.setup();
     render(<SplitBillPage />);
-    expect(screen.getByText('Split Bill Baru')).toBeInTheDocument();
+    await openCreateForm(user);
+
+    await user.type(screen.getByLabelText("Deskripsi"), "Makan siang");
+    await user.type(screen.getByLabelText("Total Tagihan"), "150000");
+    await user.click(screen.getByRole("button", { name: "Buat" }));
+
+    expect(notify.warning).toHaveBeenCalledWith(
+      "Tambahkan minimal satu peserta dengan ID akun, nomor rekening, dan nama",
+    );
+    expect(createSplitBillMutate).not.toHaveBeenCalled();
   });
 
-  it('should submit a split bill with non-empty participants (FE-SPLIT-001)', () => {
+  it("creates the bill once description, amount and a participant are valid", async () => {
+    const user = userEvent.setup();
     render(<SplitBillPage />);
-    fireEvent.click(screen.getByText('Split Bill Baru'));
+    await openCreateForm(user);
 
-    const inputs = screen.getAllByPlaceholderText(/Account ID|No\. Rekening|Nama/);
-    fireEvent.change(inputs[0], { target: { value: 'acct_p1' } });
-    fireEvent.change(inputs[1], { target: { value: '1001001' } });
-    fireEvent.change(inputs[2], { target: { value: 'Andi' } });
-    fireEvent.click(screen.getByRole('button', { name: /Tambah Peserta/ }));
-    const inputs2 = screen.getAllByPlaceholderText(/Account ID|No\. Rekening|Nama/);
-    fireEvent.change(inputs2[3], { target: { value: 'acct_p2' } });
-    fireEvent.change(inputs2[4], { target: { value: '1001002' } });
-    fireEvent.change(inputs2[5], { target: { value: 'Budi' } });
-    fireEvent.change(screen.getByPlaceholderText('Makan siang, nonton bareng...'), { target: { value: 'Makan siang' } });
-    fireEvent.change(screen.getByPlaceholderText('150000'), { target: { value: '300000' } });
+    await user.type(screen.getByLabelText("Deskripsi"), "Makan siang");
+    await user.type(screen.getByLabelText("Total Tagihan"), "150000");
+    await user.type(screen.getByLabelText("ID akun peserta 1"), "acct_2");
+    await user.type(
+      screen.getByLabelText("Nomor rekening peserta 1"),
+      "1001001002",
+    );
+    await user.type(screen.getByLabelText("Nama peserta 1"), "Budi");
+    await user.click(screen.getByRole("button", { name: "Buat" }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Buat' }));
+    expect(notify.warning).not.toHaveBeenCalled();
+    await waitFor(() => expect(createSplitBillMutate).toHaveBeenCalled());
+    const [request] = createSplitBillMutate.mock.calls[0];
+    expect(request.title).toBe("Makan siang");
+    expect(request.totalAmount).toBe("150000");
+  });
 
-    expect(createSplitBillMock).toHaveBeenCalledTimes(1);
-    const request = createSplitBillMock.mock.calls[0][0];
-    expect(request.title).toBe('Makan siang');
+  it("shows DRAFT bills instead of hiding them from the list (FE-SPLIT-001)", async () => {
+    splitBillsData.mockReturnValue([
+      {
+        id: "bill_1",
+        description: "Audit Split Bill",
+        totalAmount: "300000",
+        currency: "IDR",
+        status: "DRAFT",
+        createdAt: new Date().toISOString(),
+        participants: [],
+      },
+    ]);
+
+    render(<SplitBillPage />);
+
+    expect(await screen.findByText("Audit Split Bill")).toBeInTheDocument();
+    expect(screen.getByText("Draf")).toBeInTheDocument();
+  });
+
+  it("should render within DashboardLayout", () => {
+    render(<SplitBillPage />);
+    expect(screen.getByTestId("dashboard-layout")).toBeInTheDocument();
+  });
+
+  it("should render page title", () => {
+    render(<SplitBillPage />);
+    expect(screen.getByText("Split Bill")).toBeInTheDocument();
+  });
+
+  it("should render create split bill button", () => {
+    render(<SplitBillPage />);
+    expect(screen.getByText("Split Bill Baru")).toBeInTheDocument();
+  });
+
+  it("should submit a split bill with non-empty participants (FE-SPLIT-001)", async () => {
+    const user = userEvent.setup();
+    render(<SplitBillPage />);
+    await openCreateForm(user);
+
+    await user.type(screen.getByLabelText("ID akun peserta 1"), "acct_p1");
+    await user.type(
+      screen.getByLabelText("Nomor rekening peserta 1"),
+      "1001001",
+    );
+    await user.type(screen.getByLabelText("Nama peserta 1"), "Andi");
+    await user.click(screen.getByRole("button", { name: /Tambah Peserta/ }));
+    await user.type(screen.getByLabelText("ID akun peserta 2"), "acct_p2");
+    await user.type(
+      screen.getByLabelText("Nomor rekening peserta 2"),
+      "1001002",
+    );
+    await user.type(screen.getByLabelText("Nama peserta 2"), "Budi");
+    await user.type(
+      screen.getByPlaceholderText("Makan siang, nonton bareng..."),
+      "Makan siang",
+    );
+    await user.type(screen.getByPlaceholderText("150000"), "300000");
+
+    await user.click(screen.getByRole("button", { name: "Buat" }));
+
+    expect(createSplitBillMutate).toHaveBeenCalledTimes(1);
+    const request = createSplitBillMutate.mock.calls[0][0];
+    expect(request.title).toBe("Makan siang");
     expect(request.participants.length).toBe(2);
-    expect(request.participants[0].accountId).toBe('acct_p1');
-    expect(request.participants[0].accountNumber).toBe('1001001');
-    expect(request.participants[0].accountName).toBe('Andi');
-    expect(request.participants[0].amountOwed).toBe('150000');
-    expect(request.participants[1].amountOwed).toBe('150000');
+    expect(request.participants[0].accountId).toBe("acct_p1");
+    expect(request.participants[0].accountNumber).toBe("1001001");
+    expect(request.participants[0].accountName).toBe("Andi");
+    expect(request.participants[0].amountOwed).toBe("150000");
+    expect(request.participants[1].amountOwed).toBe("150000");
   });
 });

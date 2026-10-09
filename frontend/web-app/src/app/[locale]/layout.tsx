@@ -1,26 +1,26 @@
-import { notFound } from 'next/navigation';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
-import { locales } from '@/i18n/config';
-import { Inter } from 'next/font/google';
+import { notFound } from "next/navigation";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
+import { locales } from "@/i18n/config";
+import { Inter } from "next/font/google";
 import "../globals.css";
 import Providers from "../providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import EmergencyAlert from "@/components/cms/EmergencyAlert";
+import ChunkReload from "@/components/ChunkReload";
 
 const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
 });
-
 
 // WEB-CSP-002: per-request CSP nonces (src/proxy.ts) require dynamic rendering
 // on every route — statically prerendered pages bake inline flight scripts
 // WITHOUT the nonce, the CSP `script-src 'nonce-…'` directive blocks them, and
 // hydration dies app-wide ("Error: Connection closed.", blank step content on
 // /onboarding). Layout-level config cascades to every child page/route.
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
@@ -28,24 +28,25 @@ export function generateStaticParams() {
 }
 
 export const metadata = {
-  title: 'PayU Digital Banking | Masa Depan Finansial Anda',
-  description: 'Platform digital banking standalone yang aman, cepat, dan transparan.',
+  title: "PayU Digital Banking | Masa Depan Finansial Anda",
+  description:
+    "Platform digital banking standalone yang aman, cepat, dan transparan.",
 };
 
 export const viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  viewportFit: 'cover',
+  viewportFit: "cover",
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
   ],
 };
 
 export default async function RootLayout({
   children,
-  params
+  params,
 }: Readonly<{
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
@@ -65,13 +66,12 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body
-        className="antialiased bg-background overflow-x-hidden"
-      >
+      <body className="antialiased bg-background overflow-x-hidden">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <ErrorBoundary>
             <Providers>
               <EmergencyAlert />
+              <ChunkReload />
               {children}
             </Providers>
           </ErrorBoundary>

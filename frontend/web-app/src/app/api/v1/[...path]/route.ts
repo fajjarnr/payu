@@ -107,6 +107,7 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/disputes",
   "/api/v1/escrow",
   "/api/v1/fx",
+  "/api/v1/gdpr-audit",
   "/api/v1/integration",
   "/api/v1/investments",
   "/api/v1/lending",

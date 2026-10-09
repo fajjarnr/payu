@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TransferPage from "@/app/[locale]/transfer/page";
@@ -30,11 +31,34 @@ vi.mock("@/stores/uiStore", () => ({
 }));
 
 vi.mock("@/hooks/useBeneficiaries", () => ({
-  useBeneficiaries: () => ({ data: [], isLoading: false }),
+  useBeneficiaries: () => ({
+    data: [
+      {
+        id: "ben_1",
+        bankCode: "PAYU",
+        accountNumber: "1001001002",
+        accountName: "Audit Penerima",
+        nickname: "Audit Penerima",
+        status: "ACTIVE",
+      },
+    ],
+    isLoading: false,
+  }),
+  useCreateBeneficiary: () => ({
+    mutate: (vars: unknown, opts: { onSuccess?: () => void }) =>
+      opts.onSuccess?.(),
+    mutateAsync: Promise.resolve(),
+    isPending: false,
+  }),
 }));
+
+const mutateMock = vi.fn((_vars: unknown, opts: { onSuccess?: () => void }) => {
+  opts.onSuccess?.();
+});
 
 vi.mock("@/hooks/useTransactions", () => ({
   useInitiateTransfer: () => ({
+    mutate: mutateMock,
     mutateAsync: vi.fn(),
     isPending: false,
   }),
@@ -76,5 +100,27 @@ describe("TransferPage", () => {
     expect(screen.getByText("Sekarang")).toBeInTheDocument();
     expect(screen.getByText("Terjadwal")).toBeInTheDocument();
     expect(screen.getByText("Berulang")).toBeInTheDocument();
+  });
+
+  it("shows the success screen after submitting from review", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<TransferPage />);
+
+    await user.type(
+      screen.getByLabelText("Nomor Rekening Penerima"),
+      "1001001002",
+    );
+    const amount = screen.getByLabelText("Nominal Transfer");
+    await user.click(amount);
+    await user.keyboard("25000");
+
+    await user.click(screen.getByRole("button", { name: /Tinjau Ringkasan/ }));
+    expect(screen.getByText("Audit Penerima")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /Otorisasi Transfer/ }),
+    );
+
+    expect(await screen.findByText("Transfer Berhasil!")).toBeInTheDocument();
   });
 });

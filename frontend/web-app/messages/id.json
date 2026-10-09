@@ -58,6 +58,7 @@
     "exchangeCalculator": "Kalkulator Penukaran",
     "fromCurrency": "Dari Mata Uang",
     "needHelp": "Butuh Bantuan?",
+    "mobileNavigation": "Navigasi Mobile",
     "exchangeSupport": "Dukungan penukaran mata uang"
   },
   "dashboard": {
@@ -486,17 +487,24 @@
     },
     "menu": {
       "generalProfile": "Profil Umum",
+      "profile": "Profil",
+      "beneficiaries": "Penerima",
       "eStatement": "E-Statement",
       "billingPlan": "Tagihan & Paket",
       "privacySecurity": "Privasi & Keamanan",
       "advanced": "Pengaturan Lanjut"
     },
     "profileCredentials": "Kredensial Profil",
+    "addBeneficiary": "Tambah Penerima",
     "form": {
       "fullName": "Nama Lengkap (Sesuai KTP)",
       "contactEmail": "Email Kontak",
       "phone": "Protokol Telepon",
-      "fullNamePlaceholder": "Nama lengkap"
+      "fullNamePlaceholder": "Nama lengkap",
+      "accountName": "Nama Pemilik Rekening",
+      "accountNamePlaceholder": "Nama pemilik rekening",
+      "accountNumber": "Nomor Rekening",
+      "accountNumberPlaceholder": "Nomor rekening tujuan"
     },
     "systemPreferences": "Preferensi Sistem",
     "pref": {

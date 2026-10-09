@@ -1,8 +1,16 @@
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
-import logger from '@/lib/logger';
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import logger from "@/lib/logger";
 
-const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
+const GATEWAY_URL = process.env.GATEWAY_URL || "http://gateway-service:8080";
+
+/**
+ * AUTH-REFRESH-001: an access token with more than this many seconds left is
+ * considered fresh. Rotating a still-valid token buys nothing and burns a
+ * single-use Keycloak refresh grant, which is what produced the burst of
+ * 400 invalid_grant / 430 ERROR per 24h.
+ */
+const ACCESS_TOKEN_FRESH_WINDOW_SECONDS = 30;
 
 /**
  * Decode JWT payload without verifying signature (BFF already trusts the token from the gateway).
@@ -10,12 +18,12 @@ const GATEWAY_URL = process.env.GATEWAY_URL || 'http://gateway-service:8080';
  */
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
-    const parts = token.split('.');
+    const parts = token.split(".");
     if (parts.length !== 3) return null;
-    const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
+    const payload = Buffer.from(parts[1], "base64url").toString("utf-8");
     return JSON.parse(payload);
   } catch (err) {
-    console.error('[refresh] JWT decode failed:', err);
+    console.error("[refresh] JWT decode failed:", err);
     return null;
   }
 }
@@ -42,22 +50,22 @@ interface RotationResult {
 }
 
 function recordOf(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === 'object' && value !== null
+  return typeof value === "object" && value !== null
     ? (value as Record<string, unknown>)
     : undefined;
 }
 
 function firstString(...candidates: unknown[]): string | undefined {
   for (const candidate of candidates) {
-    if (typeof candidate === 'string' && candidate.length > 0) return candidate;
+    if (typeof candidate === "string" && candidate.length > 0) return candidate;
   }
   return undefined;
 }
 
 async function performRotation(refreshToken: string): Promise<RotationResult> {
   const res = await fetch(`${GATEWAY_URL}/api/v1/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh_token: refreshToken }),
     signal: AbortSignal.timeout(10_000),
   });
@@ -83,8 +91,9 @@ function rotateSingleFlight(refreshToken: string): Promise<RotationResult> {
 // https LB and the browser then rejects the overwritten/cleared cookie.
 function resolveIsSecure(request?: Request): boolean {
   if (request) {
-    const proto = request.headers.get("x-forwarded-proto")
-      ?? new URL(request.url).protocol.replace(":", "");
+    const proto =
+      request.headers.get("x-forwarded-proto") ??
+      new URL(request.url).protocol.replace(":", "");
     return `${proto}://`.startsWith("https://");
   }
   return (process.env.NEXT_PUBLIC_BASE_URL ?? "").startsWith("https://");
@@ -95,19 +104,74 @@ export async function POST(request?: Request) {
   const isSecure = resolveIsSecure(request);
   try {
     const cookieStore = await cookies();
-    const refreshToken = cookieStore.get('refreshToken')?.value;
+    const refreshToken = cookieStore.get("refreshToken")?.value;
 
     if (!refreshToken) {
-      logger.debug({ action: 'refresh' }, 'Token refresh skipped — no refresh token cookie');
+      logger.debug(
+        { action: "refresh" },
+        "Token refresh skipped — no refresh token cookie",
+      );
       const response = NextResponse.json(
-        { success: false, message: 'No refresh token' },
+        { success: false, message: "No refresh token" },
         { status: 401 },
       );
-      response.cookies.set('accessToken', '', { maxAge: 0, path: '/', httpOnly: true, secure: isSecure, sameSite: 'lax' });
+      response.cookies.set("accessToken", "", {
+        maxAge: 0,
+        path: "/",
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: "lax",
+      });
       return response;
     }
 
-    logger.info({ action: 'refresh' }, 'Token refresh attempt');
+    // AUTH-REFRESH-001: skip the rotation entirely when the access token is
+    // still comfortably valid. Keycloak refresh tokens are single-use, so
+    // every avoidable rotation is another chance for a straggler writer to
+    // burn the freshly rotated cookie into invalid_grant. Skipping here means
+    // fewer upstream rotations AND fewer chances to lose the race.
+    const accessToken = cookieStore.get("accessToken")?.value;
+    const accessClaims = accessToken ? decodeJwtPayload(accessToken) : null;
+    const remainingSeconds =
+      typeof accessClaims?.exp === "number"
+        ? accessClaims.exp - Math.floor(Date.now() / 1000)
+        : 0;
+    if (remainingSeconds > ACCESS_TOKEN_FRESH_WINDOW_SECONDS) {
+      logger.debug(
+        {
+          action: "refresh",
+          remainingSeconds,
+          durationMs: Date.now() - startTime,
+        },
+        "Token refresh skipped — access token still valid",
+      );
+      // AUTH-REFRESH-001 regression guard: callers (SessionBootstrap,
+      // useSilentRefresh) hydrate the auth store from this response. The
+      // early return must still carry the user decoded from the fresh
+      // access token, or every page load loses accountId (empty
+      // /accounts//beneficiaries URLs, "User!" greeting).
+      const freshUser = accessClaims
+        ? {
+            id: accessClaims.sub as string,
+            accountId:
+              (accessClaims.account_id as string) ||
+              `account-${accessClaims.sub}`,
+            username: accessClaims.preferred_username as string,
+            fullName: (accessClaims.name as string) || "",
+            email: (accessClaims.email as string) || "",
+            roles:
+              ((accessClaims.realm_access as Record<string, unknown>)
+                ?.roles as string[]) || [],
+          }
+        : undefined;
+      return NextResponse.json({
+        success: true,
+        expiresIn: remainingSeconds,
+        ...(freshUser ? { user: freshUser } : {}),
+      });
+    }
+
+    logger.info({ action: "refresh" }, "Token refresh attempt");
 
     // FE-AUDIT-001: concurrent same-cookie callers share one rotation.
     const { status, data } = await rotateSingleFlight(refreshToken);
@@ -120,18 +184,32 @@ export async function POST(request?: Request) {
       // forced logout. Stale cookies expire on their own; an actually-dead
       // session simply fails validation and lands on login, where SSO
       // silently re-authenticates while the IdP session lives.
-      logger.warn({ action: 'refresh', status, durationMs: Date.now() - startTime }, 'Token refresh rejected — preserving session cookies');
+      logger.warn(
+        { action: "refresh", status, durationMs: Date.now() - startTime },
+        "Token refresh rejected — preserving session cookies",
+      );
       return NextResponse.json(data, { status });
     }
 
     const nested = recordOf(data.data);
-    const newAccessToken = firstString(data.access_token, nested?.access_token, nested?.accessToken);
-    const newRefreshToken = firstString(data.refresh_token, nested?.refresh_token, nested?.refreshToken);
+    const newAccessToken = firstString(
+      data.access_token,
+      nested?.access_token,
+      nested?.accessToken,
+    );
+    const newRefreshToken = firstString(
+      data.refresh_token,
+      nested?.refresh_token,
+      nested?.refreshToken,
+    );
 
     // BUG-CROSS-001: Read expires_in from Keycloak response instead of hardcoding 900s
-    const expiresRaw = typeof data.expires_in === 'number'
-      ? data.expires_in
-      : typeof nested?.expires_in === 'number' ? nested.expires_in : 900;
+    const expiresRaw =
+      typeof data.expires_in === "number"
+        ? data.expires_in
+        : typeof nested?.expires_in === "number"
+          ? nested.expires_in
+          : 900;
     const ACCESS_TOKEN_MAX_AGE = expiresRaw;
 
     // BUG-AUTH-035: Rehydrate user data from refresh token response
@@ -139,15 +217,17 @@ export async function POST(request?: Request) {
     if (!user && newAccessToken) {
       const claims = decodeJwtPayload(newAccessToken);
       if (claims) {
-        const accountId = (claims.account_id as string) || `account-${claims.sub}`;
+        const accountId =
+          (claims.account_id as string) || `account-${claims.sub}`;
         user = {
           id: claims.sub as string,
           accountId,
           username: claims.preferred_username as string,
-          fullName: (claims.name as string) || '',
-          email: (claims.email as string) || '',
+          fullName: (claims.name as string) || "",
+          email: (claims.email as string) || "",
           roles:
-            ((claims.realm_access as Record<string, unknown>)?.roles as string[]) || [],
+            ((claims.realm_access as Record<string, unknown>)
+              ?.roles as string[]) || [],
         };
       }
     }
@@ -160,35 +240,45 @@ export async function POST(request?: Request) {
     });
 
     if (newAccessToken) {
-      response.cookies.set('accessToken', newAccessToken, {
+      response.cookies.set("accessToken", newAccessToken, {
         httpOnly: true,
         secure: isSecure,
-        sameSite: 'lax',
+        sameSite: "lax",
         maxAge: ACCESS_TOKEN_MAX_AGE,
-        path: '/',
+        path: "/",
       });
     }
 
     if (newRefreshToken) {
-      response.cookies.set('refreshToken', newRefreshToken, {
+      response.cookies.set("refreshToken", newRefreshToken, {
         httpOnly: true,
         secure: isSecure,
-        sameSite: 'lax',
+        sameSite: "lax",
         maxAge: 604_800,
-        path: '/',
+        path: "/",
       });
     }
 
-    logger.info({ action: 'refresh', durationMs: Date.now() - startTime }, 'Token refresh successful');
+    logger.info(
+      { action: "refresh", durationMs: Date.now() - startTime },
+      "Token refresh successful",
+    );
 
     return response;
   } catch (error) {
     // Transient (network/timeout): NEVER clear cookies here. The existing
     // tokens are still valid until expiry and the client retries with
     // backoff — wiping them turns a blip into a forced logout.
-    logger.error({ action: 'refresh', err: error instanceof Error ? error : { message: String(error) }, durationMs: Date.now() - startTime }, 'Token refresh proxy error — session preserved');
+    logger.error(
+      {
+        action: "refresh",
+        err: error instanceof Error ? error : { message: String(error) },
+        durationMs: Date.now() - startTime,
+      },
+      "Token refresh proxy error — session preserved",
+    );
     return NextResponse.json(
-      { success: false, message: 'Token refresh failed' },
+      { success: false, message: "Token refresh failed" },
       { status: 503 },
     );
   }

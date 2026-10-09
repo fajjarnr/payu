@@ -70,29 +70,46 @@ function toAuditRow(report: AuditReport): ComplianceAuditRow {
 }
 
 export default function CompliancePage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [auditFilter, setAuditFilter] = useState<{
+    transactionId?: string;
+    merchantId?: string;
+  }>({});
   const {
     data: auditReportsData,
     isLoading,
     isError: auditError,
-  } = useAuditReports();
-  const { data: failedAccessData } = useFailedAccessAudits();
+  } = useAuditReports(auditFilter);
+  const { data: failedAccessData, isLoading: isFailedAccessLoading } =
+    useFailedAccessAudits();
 
-  const auditLogs = (
-    Array.isArray(auditReportsData) ? auditReportsData.map(toAuditRow) : []
-  ).filter((log) => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      log.user?.toLowerCase().includes(term) ||
-      log.ip?.toLowerCase().includes(term) ||
-      log.resource?.toLowerCase().includes(term)
+  const hasAuditFilter = Object.keys(auditFilter).length > 0;
+
+  // The search box accepts either identifier: a UUID-shaped value is a
+  // transaction ID, anything else is a merchant ID. Both map 1:1 onto the
+  // controller's search parameters.
+  const handleAuditSearch = (value: string) => {
+    const term = value.trim();
+    if (!term) {
+      setAuditFilter({});
+      return;
+    }
+    setAuditFilter(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        term,
+      )
+        ? { transactionId: term }
+        : { merchantId: term },
     );
-  });
+  };
 
+  const auditLogs = Array.isArray(auditReportsData)
+    ? auditReportsData.map(toAuditRow)
+    : [];
+
+  // No invented number while the failed-access stream is still loading.
   const highRiskCount = Array.isArray(failedAccessData)
     ? failedAccessData.length
-    : 4;
+    : 0;
 
   const handleExport = () => {
     const data = Array.isArray(auditReportsData) ? auditReportsData : [];
@@ -212,9 +229,10 @@ export default function CompliancePage() {
       <Card>
         <Flex gap={16} wrap align="center" justify="space-between">
           <Flex gap={16} wrap style={{ flex: 1 }}>
-            <Input
-              aria-label="Filter berdasarkan User, IP, atau Resource"
-              placeholder="Filter by User, IP, or Resource..."
+            <Input.Search
+              allowClear
+              aria-label="Cari audit berdasarkan Transaction ID atau Merchant ID"
+              placeholder="Cari Transaction ID atau Merchant ID..."
               prefix={
                 <Search
                   style={{
@@ -223,8 +241,7 @@ export default function CompliancePage() {
                   }}
                 />
               }
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onSearch={handleAuditSearch}
               style={{ flex: 1, minWidth: 200, maxWidth: 384 }}
             />
           </Flex>
@@ -248,9 +265,21 @@ export default function CompliancePage() {
           pagination={false}
           loading={isLoading}
           locale={{
-            emptyText: auditError
-              ? "Akses ditolak: butuh role COMPLIANCE_OFFICER atau ADMIN"
-              : "No audit logs found",
+            emptyText: auditError ? (
+              "Audit stream tidak tersedia — periksa koneksi gateway"
+            ) : !hasAuditFilter ? (
+              <Space direction="vertical" size={4} align="center">
+                <Typography.Text strong>
+                  Belum ada pencarian audit
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  Masukkan Transaction ID atau Merchant ID untuk mencari laporan
+                  audit
+                </Typography.Text>
+              </Space>
+            ) : (
+              "Tidak ada laporan audit untuk pencarian ini"
+            ),
           }}
         />
         <Divider style={{ margin: 0 }} />
@@ -268,7 +297,9 @@ export default function CompliancePage() {
           >
             {auditError
               ? "Audit stream tidak tersedia"
-              : "Real-time Audit Stream Active"}
+              : hasAuditFilter
+                ? "Audit Stream Active"
+                : "Audit Stream Idle — masukkan pencarian"}
           </Typography.Text>
         </Flex>
       </Card>

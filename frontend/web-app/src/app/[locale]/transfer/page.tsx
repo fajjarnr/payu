@@ -18,6 +18,7 @@ import {
   Form,
   Input,
   Card,
+  Modal,
   Space,
   Row,
   Col,
@@ -40,7 +41,10 @@ import { compareCurrency, parseCurrencyExact } from "@/lib/currency";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useBalance, useInitiateTransfer } from "@/hooks";
 import { useAuthStore } from "@/stores";
-import { useBeneficiaries } from "@/hooks/useBeneficiaries";
+import {
+  useBeneficiaries,
+  useCreateBeneficiary,
+} from "@/hooks/useBeneficiaries";
 import { useUIStore } from "@/stores";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
@@ -146,13 +150,38 @@ export function isVerifiedReviewContact(
   return contact !== undefined;
 }
 
+/**
+ * Values captured when the user opens the review step. The form branch
+ * unmounts at that point, so the review UI and the final submit read
+ * from this snapshot instead of the live AntD store.
+ */
+export interface TransferReviewSnapshot {
+  amount: string;
+  toAccountId: string;
+  description: string;
+  scheduleType: string;
+  scheduledAt?: string;
+  recurringDay?: number;
+  recurringMonth?: number;
+  fromAccountId: string;
+}
+
 export default function TransferPage() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [showReview, setShowReview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showBeneficiaryModal, setShowBeneficiaryModal] = useState(false);
+  const [beneficiaryNickname, setBeneficiaryNickname] = useState("");
+  const [beneficiaryAccountNumber, setBeneficiaryAccountNumber] = useState("");
+  // Snapshot of form values captured when the review step opens. The form
+  // branch unmounts on review, and the AntD store does not survive the
+  // swap reliably, so the review tree and submit read from this snapshot.
+  const [reviewSnapshot, setReviewSnapshot] =
+    useState<TransferReviewSnapshot | null>(null);
   const accountId = useAuthStore((state) => state.accountId);
   const addToast = useUIStore((state) => state.addToast);
   const transferMutation = useInitiateTransfer();
+  const createBeneficiary = useCreateBeneficiary(accountId ?? "");
   const router = useRouter();
 
   const { data: beneficiaries } = useBeneficiaries(accountId || undefined);
@@ -171,8 +200,13 @@ export default function TransferPage() {
 
   const [form] = Form.useForm<TransferRequest>();
   const rule = (field: string) => zodFieldRule(form, transferSchema, field);
+  // Review submit happens with the form branch unmounted, so the store is
+  // empty there; prefer the snapshot captured when review opened. Enter-key
+  // submit from the form branch still falls back to the store values.
   const onValid = (values: TransferRequest) =>
-    onSubmit(transferSchema.parse(values) as TransferRequest);
+    onSubmit(
+      (reviewSnapshot ?? transferSchema.parse(values)) as TransferRequest,
+    );
 
   const amount = Form.useWatch("amount", form) ?? "0";
   const transferType =
@@ -201,6 +235,30 @@ export default function TransferPage() {
     });
   };
 
+  const handleBeneficiarySubmit = () => {
+    const accountNumber = beneficiaryAccountNumber.trim();
+    if (!/^\d{10,20}$/.test(accountNumber)) {
+      addToast("Nomor rekening penerima harus 10-20 digit", "warning");
+      return;
+    }
+    createBeneficiary.mutate(
+      {
+        bankCode: "PAYU",
+        accountNumber,
+        nickname: beneficiaryNickname.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          addToast("Penerima berhasil ditambahkan", "success");
+          setBeneficiaryNickname("");
+          setBeneficiaryAccountNumber("");
+          setShowBeneficiaryModal(false);
+        },
+        onError: () => addToast("Gagal menambahkan penerima", "error"),
+      },
+    );
+  };
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, "");
     form.setFieldsValue({ amount: rawValue || "0" });
@@ -210,37 +268,30 @@ export default function TransferPage() {
     amount === "0" ? "" : formatCurrencyWithoutSymbol(amount);
 
   const onSubmit = (data: TransferRequest) => {
-    let scheduledAt = undefined;
-    let recurringDay = undefined;
-    let recurringMonth = undefined;
-
-    if (data.scheduleType === "SCHEDULED" && data.scheduledAt) {
-      scheduledAt = data.scheduledAt;
-    } else if (data.scheduleType === "RECURRING") {
-      recurringDay = data.recurringDay;
-      recurringMonth = data.recurringMonth;
-    }
-
+    const src = reviewSnapshot ?? data;
+    // Scheduled/recurring are handled by the dedicated scheduled-transfers
+    // endpoint; the transfer contract rejects those fields, so they are not
+    // forwarded here (scheduleType only drives the success message).
     transferMutation.mutate(
       {
-        senderAccountId: data.fromAccountId || accountId || "",
-        recipientAccountNumber: data.toAccountId,
-        amount: parseCurrencyExact(data.amount),
-        description: data.description || "",
+        senderAccountId: src.fromAccountId || accountId || "",
+        recipientAccountNumber: src.toAccountId,
+        amount: parseCurrencyExact(src.amount),
+        description: src.description || "",
         type: data.transferType || "INTERNAL_TRANSFER",
-        scheduledAt,
-        recurringDay,
-        recurringMonth,
       },
       {
         onSuccess: () => {
           const message =
-            data.scheduleType === "NOW"
+            src.scheduleType === "NOW"
               ? "Transfer berhasil!"
-              : data.scheduleType === "SCHEDULED"
+              : src.scheduleType === "SCHEDULED"
                 ? "Transfer terjadwal berhasil diset!"
                 : "Transfer berulang berhasil diset!";
           addToast(message, "success");
+          // The review branch renders before the success branch, so the
+          // review flag must be cleared or the success screen never shows.
+          setShowReview(false);
           setShowSuccess(true);
         },
         onError: () => {
@@ -299,6 +350,7 @@ export default function TransferPage() {
       return;
     }
 
+    setReviewSnapshot(formValues as TransferReviewSnapshot);
     setShowReview(true);
   }, [formValues, addToast]);
 
@@ -307,11 +359,21 @@ export default function TransferPage() {
   );
 
   if (showReview) {
-    const reviewAccountId = selectedContact ?? formValues.toAccountId ?? "";
+    const rv: TransferReviewSnapshot = reviewSnapshot ?? {
+      amount,
+      toAccountId: toAccountId ?? "",
+      description: description ?? "",
+      scheduleType,
+      scheduledAt,
+      recurringDay,
+      recurringMonth,
+      fromAccountId: accountId || "",
+    };
+    const reviewAccountId = selectedContact ?? rv.toAccountId ?? "";
     const selectedContactData = resolveReviewContact(
       recentContacts,
       selectedContact,
-      formValues.toAccountId,
+      rv.toAccountId,
     );
     const isRecipientVerified = isVerifiedReviewContact(selectedContactData);
     const selectedScheduleType = SCHEDULE_TYPES.find(
@@ -322,261 +384,243 @@ export default function TransferPage() {
     return (
       <DashboardLayout>
         <SkipLink href="#main-content" />
-        <main id="main-content" className="overflow-x-hidden">
-          <Space direction="vertical" size={16}>
-            <Space size={16}>
-              <Button
-                type="default"
-                data-testid="back-from-review-button"
-                onClick={() => setShowReview(false)}
-                size="large"
-                aria-label="Kembali"
-              >
-                <ChevronRight
-                  style={{ width: 24, height: 24, transform: "rotate(180deg)" }}
-                />
-              </Button>
-            </Space>
+        <Form
+          form={form}
+          onFinish={onValid}
+          layout="vertical"
+          style={{ width: "100%" }}
+        >
+          <main id="main-content" className="overflow-x-hidden">
+            <Space direction="vertical" size={16}>
+              <Space size={16}>
+                <Button
+                  type="default"
+                  data-testid="back-from-review-button"
+                  onClick={() => setShowReview(false)}
+                  size="large"
+                  aria-label="Kembali"
+                >
+                  <ChevronRight
+                    style={{
+                      width: 24,
+                      height: 24,
+                      transform: "rotate(180deg)",
+                    }}
+                  />
+                </Button>
+              </Space>
 
-            <Card>
-              <Row
-                gutter={[16, 16]}
-                justify="space-between"
-                align="middle"
-                style={{ marginBottom: 32, paddingBottom: 32 }}
-              >
-                <Col xs={24} md={12}>
-                  <Space size={16}>
-                    <div
-                      style={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: 16,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: "bold",
-                        fontSize: "1.875rem",
-                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                        ...(selectedContactData?.color
-                          ? {}
-                          : {
-                              backgroundColor: "hsl(var(--muted))",
-                              color: "hsl(var(--muted-foreground))",
-                            }),
-                      }}
-                      aria-hidden={!isRecipientVerified}
-                    >
-                      {selectedContactData?.initial ?? "?"}
-                    </div>
-                    <div>
-                      <Typography.Text
-                        type="secondary"
-                        strong
-                        style={{ display: "block", marginBottom: 4 }}
-                      >
-                        Kepada Penerima
-                      </Typography.Text>
-                      {isRecipientVerified ? (
-                        <>
-                          <Typography.Title
-                            level={3}
-                            style={{ marginBottom: 0 }}
-                          >
-                            {selectedContactData.name}
-                          </Typography.Title>
-                          <Typography.Text
-                            strong
-                            style={{ display: "block", marginTop: 4 }}
-                          >
-                            ID Akun: {reviewAccountId}
-                          </Typography.Text>
-                        </>
-                      ) : (
-                        <>
-                          <Typography.Title
-                            level={3}
-                            style={{ marginBottom: 0 }}
-                          >
-                            Penerima belum terverifikasi
-                          </Typography.Title>
-                          <Typography.Text
-                            strong
-                            type="danger"
-                            style={{ display: "block", marginTop: 4 }}
-                            id="recipient-verification-alert"
-                            role="alert"
-                          >
-                            ID Akun {reviewAccountId || "-"} tidak cocok dengan
-                            penerima tersimpan. Cek kembali nomornya atau
-                            tambahkan sebagai penerima favorit.
-                          </Typography.Text>
-                        </>
-                      )}
-                    </div>
-                  </Space>
-                </Col>
-                <Col xs={24} md={12} style={{ textAlign: "right" }}>
-                  <Typography.Text
-                    type="secondary"
-                    strong
-                    style={{ display: "block", marginBottom: 4 }}
-                  >
-                    Jumlah Transfer
-                  </Typography.Text>
-                  <Typography.Text
-                    strong
-                    style={{ display: "block", fontSize: "2.25rem" }}
-                    className="animate-amount-settle"
-                  >
-                    Rp {formatCurrencyWithoutSymbol(amount)}
-                  </Typography.Text>
-                  <Typography.Text
-                    type="secondary"
-                    strong
-                    style={{ display: "block", marginTop: 8 }}
-                  >
-                    Mata Uang IDR
-                  </Typography.Text>
-                </Col>
-              </Row>
-
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                <Col xs={24} md={8}>
-                  <Card>
-                    <Space
-                      size={8}
-                      style={{ display: "block", marginBottom: 8 }}
-                    >
-                      <TransferTypeIcon
+              <Card>
+                <Row
+                  gutter={[16, 16]}
+                  justify="space-between"
+                  align="middle"
+                  style={{ marginBottom: 32, paddingBottom: 32 }}
+                >
+                  <Col xs={24} md={12}>
+                    <Space size={16}>
+                      <div
                         style={{
-                          width: 16,
-                          height: 16,
-                          color: "hsl(var(--primary))",
+                          width: 80,
+                          height: 80,
+                          borderRadius: 16,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "bold",
+                          fontSize: "1.875rem",
+                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                          ...(selectedContactData?.color
+                            ? {}
+                            : {
+                                backgroundColor: "hsl(var(--muted))",
+                                color: "hsl(var(--muted-foreground))",
+                              }),
                         }}
-                      />
-                      <Typography.Text type="secondary" strong>
-                        Tipe Transfer
-                      </Typography.Text>
+                        aria-hidden={!isRecipientVerified}
+                      >
+                        {selectedContactData?.initial ?? "?"}
+                      </div>
+                      <div>
+                        <Typography.Text
+                          type="secondary"
+                          strong
+                          style={{ display: "block", marginBottom: 4 }}
+                        >
+                          Kepada Penerima
+                        </Typography.Text>
+                        {isRecipientVerified ? (
+                          <>
+                            <Typography.Title
+                              level={3}
+                              style={{ marginBottom: 0 }}
+                            >
+                              {selectedContactData.name}
+                            </Typography.Title>
+                            <Typography.Text
+                              strong
+                              style={{ display: "block", marginTop: 4 }}
+                            >
+                              ID Akun: {reviewAccountId}
+                            </Typography.Text>
+                          </>
+                        ) : (
+                          <>
+                            <Typography.Title
+                              level={3}
+                              style={{ marginBottom: 0 }}
+                            >
+                              Penerima belum terverifikasi
+                            </Typography.Title>
+                            <Typography.Text
+                              strong
+                              type="danger"
+                              style={{ display: "block", marginTop: 4 }}
+                              id="recipient-verification-alert"
+                              role="alert"
+                            >
+                              ID Akun {reviewAccountId || "-"} tidak cocok
+                              dengan penerima tersimpan. Cek kembali nomornya
+                              atau tambahkan sebagai penerima favorit.
+                            </Typography.Text>
+                          </>
+                        )}
+                      </div>
                     </Space>
-                    <Typography.Text
-                      strong
-                      style={{ display: "block", fontSize: "0.875rem" }}
-                    >
-                      {selectedTransferType?.label}
-                    </Typography.Text>
-                    <Typography.Text
-                      type="secondary"
-                      style={{
-                        display: "block",
-                        fontSize: "0.75rem",
-                        marginTop: 4,
-                      }}
-                    >
-                      {selectedTransferType?.processingTime}
-                    </Typography.Text>
-                  </Card>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Card>
+                  </Col>
+                  <Col xs={24} md={12} style={{ textAlign: "right" }}>
                     <Typography.Text
                       type="secondary"
                       strong
-                      style={{ display: "block", marginBottom: 8 }}
+                      style={{ display: "block", marginBottom: 4 }}
                     >
-                      Biaya Transfer
+                      Jumlah Transfer
                     </Typography.Text>
                     <Typography.Text
                       strong
-                      style={{ display: "block", fontSize: "0.875rem" }}
+                      style={{ display: "block", fontSize: "2.25rem" }}
+                      className="animate-amount-settle"
                     >
-                      {selectedTransferType?.fee}
+                      Rp {formatCurrencyWithoutSymbol(rv.amount)}
                     </Typography.Text>
-                  </Card>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Card>
-                    <Space
-                      size={8}
-                      style={{ display: "block", marginBottom: 8 }}
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{ display: "block", marginTop: 8 }}
                     >
-                      {scheduleType !== "NOW" && (
-                        <CalendarIcon
+                      Mata Uang IDR
+                    </Typography.Text>
+                  </Col>
+                </Row>
+
+                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                  <Col xs={24} md={8}>
+                    <Card>
+                      <Space
+                        size={8}
+                        style={{ display: "block", marginBottom: 8 }}
+                      >
+                        <TransferTypeIcon
                           style={{
                             width: 16,
                             height: 16,
                             color: "hsl(var(--primary))",
                           }}
                         />
+                        <Typography.Text type="secondary" strong>
+                          Tipe Transfer
+                        </Typography.Text>
+                      </Space>
+                      <Typography.Text
+                        strong
+                        style={{ display: "block", fontSize: "0.875rem" }}
+                      >
+                        {selectedTransferType?.label}
+                      </Typography.Text>
+                      <Typography.Text
+                        type="secondary"
+                        style={{
+                          display: "block",
+                          fontSize: "0.75rem",
+                          marginTop: 4,
+                        }}
+                      >
+                        {selectedTransferType?.processingTime}
+                      </Typography.Text>
+                    </Card>
+                  </Col>
+                  <Col xs={24} md={8}>
+                    <Card>
+                      <Typography.Text
+                        type="secondary"
+                        strong
+                        style={{ display: "block", marginBottom: 8 }}
+                      >
+                        Biaya Transfer
+                      </Typography.Text>
+                      <Typography.Text
+                        strong
+                        style={{ display: "block", fontSize: "0.875rem" }}
+                      >
+                        {selectedTransferType?.fee}
+                      </Typography.Text>
+                    </Card>
+                  </Col>
+                  <Col xs={24} md={8}>
+                    <Card>
+                      <Space
+                        size={8}
+                        style={{ display: "block", marginBottom: 8 }}
+                      >
+                        {scheduleType !== "NOW" && (
+                          <CalendarIcon
+                            style={{
+                              width: 16,
+                              height: 16,
+                              color: "hsl(var(--primary))",
+                            }}
+                          />
+                        )}
+                        <Typography.Text type="secondary" strong>
+                          Jadwal
+                        </Typography.Text>
+                      </Space>
+                      <Typography.Text
+                        strong
+                        style={{ display: "block", fontSize: "0.875rem" }}
+                      >
+                        {selectedScheduleType?.label}
+                      </Typography.Text>
+                      {scheduleType === "SCHEDULED" && scheduledAt && (
+                        <Typography.Text
+                          type="secondary"
+                          style={{
+                            display: "block",
+                            fontSize: "0.75rem",
+                            marginTop: 4,
+                          }}
+                        >
+                          {format(new Date(scheduledAt), "PPP", { locale: id })}
+                        </Typography.Text>
                       )}
-                      <Typography.Text type="secondary" strong>
-                        Jadwal
-                      </Typography.Text>
-                    </Space>
-                    <Typography.Text
-                      strong
-                      style={{ display: "block", fontSize: "0.875rem" }}
-                    >
-                      {selectedScheduleType?.label}
-                    </Typography.Text>
-                    {scheduleType === "SCHEDULED" && scheduledAt && (
-                      <Typography.Text
-                        type="secondary"
-                        style={{
-                          display: "block",
-                          fontSize: "0.75rem",
-                          marginTop: 4,
-                        }}
-                      >
-                        {format(new Date(scheduledAt), "PPP", { locale: id })}
-                      </Typography.Text>
-                    )}
-                    {scheduleType === "RECURRING" && (
-                      <Typography.Text
-                        type="secondary"
-                        style={{
-                          display: "block",
-                          fontSize: "0.75rem",
-                          marginTop: 4,
-                        }}
-                      >
-                        Tanggal {recurringDay || "-"}-
-                        {recurringMonth || "setiap bulan"}
-                      </Typography.Text>
-                    )}
-                  </Card>
-                </Col>
-              </Row>
+                      {scheduleType === "RECURRING" && (
+                        <Typography.Text
+                          type="secondary"
+                          style={{
+                            display: "block",
+                            fontSize: "0.75rem",
+                            marginTop: 4,
+                          }}
+                        >
+                          Tanggal {recurringDay || "-"}-
+                          {recurringMonth || "setiap bulan"}
+                        </Typography.Text>
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
 
-              <Row gutter={[16, 16]}>
-                <Col xs={24} md={12}>
-                  <Card>
-                    <Typography.Text
-                      type="secondary"
-                      strong
-                      style={{ display: "block", marginBottom: 8 }}
-                    >
-                      Kantong Sumber
-                    </Typography.Text>
-                    <Typography.Text
-                      strong
-                      style={{ display: "block", fontSize: "1.125rem" }}
-                    >
-                      Kantong Utama Cair
-                    </Typography.Text>
-                    <Typography.Text
-                      strong
-                      style={{
-                        display: "block",
-                        color: "hsl(var(--primary))",
-                        marginTop: 8,
-                      }}
-                    >
-                      Saldo: {balance ? `Rp ${balance.availableBalance}` : "—"}
-                    </Typography.Text>
-                  </Card>
-                </Col>
-                {description && (
+                <Row gutter={[16, 16]}>
                   <Col xs={24} md={12}>
                     <Card>
                       <Typography.Text
@@ -584,45 +628,78 @@ export default function TransferPage() {
                         strong
                         style={{ display: "block", marginBottom: 8 }}
                       >
-                        Pesan Konfirmasi
+                        Kantong Sumber
                       </Typography.Text>
                       <Typography.Text
                         strong
                         style={{ display: "block", fontSize: "1.125rem" }}
                       >
-                        &quot;{description}&quot;
+                        Kantong Utama Cair
+                      </Typography.Text>
+                      <Typography.Text
+                        strong
+                        style={{
+                          display: "block",
+                          color: "hsl(var(--primary))",
+                          marginTop: 8,
+                        }}
+                      >
+                        Saldo:{" "}
+                        {balance ? `Rp ${balance.availableBalance}` : "—"}
                       </Typography.Text>
                     </Card>
                   </Col>
-                )}
-              </Row>
-            </Card>
+                  {rv.description && (
+                    <Col xs={24} md={12}>
+                      <Card>
+                        <Typography.Text
+                          type="secondary"
+                          strong
+                          style={{ display: "block", marginBottom: 8 }}
+                        >
+                          Pesan Konfirmasi
+                        </Typography.Text>
+                        <Typography.Text
+                          strong
+                          style={{ display: "block", fontSize: "1.125rem" }}
+                        >
+                          &quot;{description}&quot;
+                        </Typography.Text>
+                      </Card>
+                    </Col>
+                  )}
+                </Row>
+              </Card>
 
-            <Button
-              type="primary"
-              onClick={() => form.submit()}
-              data-testid="confirm-transfer-button"
-              disabled={transferMutation.isPending || !isRecipientVerified}
-              aria-describedby={
-                isRecipientVerified ? undefined : "recipient-verification-alert"
-              }
-              block
-              size="large"
-            >
-              {transferMutation.isPending
-                ? "Memvalidasi Transaksi..."
-                : "Otorisasi Transfer Sekarang"}
-            </Button>
-          </Space>
-        </main>
+              <Button
+                type="primary"
+                htmlType="submit"
+                data-testid="confirm-transfer-button"
+                disabled={transferMutation.isPending || !isRecipientVerified}
+                aria-describedby={
+                  isRecipientVerified
+                    ? undefined
+                    : "recipient-verification-alert"
+                }
+                block
+                size="large"
+              >
+                {transferMutation.isPending
+                  ? "Memvalidasi Transaksi..."
+                  : "Otorisasi Transfer Sekarang"}
+              </Button>
+            </Space>
+          </main>
+        </Form>
       </DashboardLayout>
     );
   }
   if (showSuccess) {
+    const successSnapshot = reviewSnapshot;
     const successContact = resolveReviewContact(
       recentContacts,
       selectedContact,
-      formValues.toAccountId,
+      successSnapshot?.toAccountId ?? formValues.toAccountId,
     );
     const successSchedule = SCHEDULE_TYPES.find((s) => s.type === scheduleType);
     const now = new Date();
@@ -732,7 +809,7 @@ export default function TransferPage() {
                       type="secondary"
                       style={{ display: "block", fontSize: "0.75rem" }}
                     >
-                      {formValues.toAccountId || "-"}
+                      {successSnapshot?.toAccountId || "-"}
                     </Typography.Text>
                   </div>
                 </Space>
@@ -750,7 +827,10 @@ export default function TransferPage() {
                     style={{ display: "block", fontSize: "2.25rem" }}
                     className="animate-amount-settle"
                   >
-                    Rp {formatCurrencyWithoutSymbol(amount)}
+                    Rp{" "}
+                    {formatCurrencyWithoutSymbol(
+                      successSnapshot?.amount ?? "0",
+                    )}
                   </Typography.Text>
                 </div>
 
@@ -1597,6 +1677,9 @@ export default function TransferPage() {
                       <Button
                         type="text"
                         htmlType="button"
+                        onClick={() => setShowBeneficiaryModal(true)}
+                        aria-label="Tambah penerima"
+                        data-testid="add-beneficiary-button"
                         style={{
                           display: "flex",
                           flexDirection: "column",
@@ -1665,6 +1748,8 @@ export default function TransferPage() {
                         <Button
                           type="default"
                           htmlType="button"
+                          onClick={() => router.push("/support")}
+                          data-testid="contact-support-button"
                           style={{
                             fontSize: "0.75rem",
                             fontWeight: "bold",
@@ -1698,6 +1783,73 @@ export default function TransferPage() {
             </Col>
           </Row>
         </Space>
+        <Modal
+          title="Tambah Penerima"
+          open={showBeneficiaryModal}
+          onOk={handleBeneficiarySubmit}
+          onCancel={() => setShowBeneficiaryModal(false)}
+          confirmLoading={createBeneficiary.isPending}
+          okText="Simpan"
+          cancelText="Batal"
+          destroyOnHidden
+        >
+          <Space
+            direction="vertical"
+            size={16}
+            style={{ width: "100%", marginTop: 16 }}
+          >
+            <Space direction="vertical" size={4} style={{ width: "100%" }}>
+              <label
+                htmlFor="new-beneficiary-name"
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "var(--ant-color-text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                Nama Penerima (opsional)
+              </label>
+              <Input
+                id="new-beneficiary-name"
+                data-testid="new-beneficiary-name"
+                value={beneficiaryNickname}
+                onChange={(e) => setBeneficiaryNickname(e.target.value)}
+                placeholder="Nama panggilan"
+                maxLength={100}
+              />
+            </Space>
+            <Space direction="vertical" size={4} style={{ width: "100%" }}>
+              <label
+                htmlFor="new-beneficiary-account"
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "var(--ant-color-text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                Nomor Rekening
+              </label>
+              <Input
+                id="new-beneficiary-account"
+                data-testid="new-beneficiary-account"
+                value={beneficiaryAccountNumber}
+                onChange={(e) =>
+                  setBeneficiaryAccountNumber(e.target.value.replace(/\D/g, ""))
+                }
+                placeholder="1234567890"
+                inputMode="numeric"
+                maxLength={20}
+              />
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                Bank: PAYU — 10-20 digit
+              </Typography.Text>
+            </Space>
+          </Space>
+        </Modal>
       </main>
     </DashboardLayout>
   );

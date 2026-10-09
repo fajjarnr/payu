@@ -1,10 +1,11 @@
-import api from '@/lib/api';
+import api from "@/lib/api";
 
 // --- Interfaces matching backend ComplianceAuditController + GdprAuditController ---
 // XBUG-083 FIX: Aligned with actual backend DTOs (AuditReportResponse, AuditReportRequest)
 
-export type ComplianceStandard = 'PCI_DSS' | 'OJK' | 'AML' | 'CFT' | 'GDPR';
-export type ComplianceCheckResult = 'PASS' | 'FAIL' | 'WARNING' | 'NOT_APPLICABLE';
+export type ComplianceStandard = "PCI_DSS" | "OJK" | "AML" | "CFT" | "GDPR";
+export type ComplianceCheckResult =
+  "PASS" | "FAIL" | "WARNING" | "NOT_APPLICABLE";
 
 export interface ComplianceCheckItem {
   checkId: string;
@@ -30,7 +31,7 @@ export interface CreateAuditReportRequest {
   transactionId: string;
   merchantId: string;
   standard: ComplianceStandard;
-  checks: Omit<ComplianceCheckItem, 'checkedAt'>[];
+  checks: Omit<ComplianceCheckItem, "checkedAt">[];
 }
 
 export interface GdprAudit {
@@ -92,9 +93,11 @@ export interface RiskAssessment {
   lastAssessedAt: string;
 }
 
-export type ComplianceCheckType = 'AML' | 'CFT' | 'SANCTIONS' | 'PEP' | 'RISK_ASSESSMENT';
-export type ComplianceStatus = 'PENDING' | 'PASSED' | 'FAILED' | 'REVIEW_REQUIRED';
-export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type ComplianceCheckType =
+  "AML" | "CFT" | "SANCTIONS" | "PEP" | "RISK_ASSESSMENT";
+export type ComplianceStatus =
+  "PENDING" | "PASSED" | "FAILED" | "REVIEW_REQUIRED";
+export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 class ComplianceService {
   private static instance: ComplianceService;
@@ -107,8 +110,10 @@ class ComplianceService {
   }
 
   /** POST /compliance/audit-report — Create audit report */
-  async createAuditReport(request: CreateAuditReportRequest): Promise<AuditReport> {
-    const response = await api.post('/compliance/audit-report', request);
+  async createAuditReport(
+    request: CreateAuditReportRequest,
+  ): Promise<AuditReport> {
+    const response = await api.post("/compliance/audit-report", request);
     return response.data;
   }
 
@@ -126,13 +131,13 @@ class ComplianceService {
     fromDate?: string;
     toDate?: string;
   }): Promise<AuditReport[]> {
-    const response = await api.get('/compliance/audit-report', { params });
+    const response = await api.get("/compliance/audit-report", { params });
     return response.data;
   }
 
   /** POST /gdpr-audit — Create GDPR audit entry */
   async createGdprAudit(request: CreateGdprAuditRequest): Promise<GdprAudit> {
-    const response = await api.post('/gdpr-audit', request);
+    const response = await api.post("/gdpr-audit", request);
     return response.data;
   }
 
@@ -149,7 +154,11 @@ class ComplianceService {
   }
 
   /** GET /gdpr-audit/users/{userId}/date-range — Query by date range */
-  async getUserGdprAuditsByDateRange(userId: string, startDate: string, endDate: string): Promise<GdprAudit[]> {
+  async getUserGdprAuditsByDateRange(
+    userId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<GdprAudit[]> {
     const response = await api.get(`/gdpr-audit/users/${userId}/date-range`, {
       params: { startDate, endDate },
     });
@@ -180,15 +189,20 @@ class ComplianceService {
     return response.data;
   }
 
-  /** GET /gdpr-audit/failed-access — Get all failed access attempts */
-  async getFailedAccess(): Promise<GdprAudit[]> {
-    const response = await api.get('/gdpr-audit/failed-access');
+  /**
+   * GET /gdpr-audit/failed-access — failed access attempts since a date.
+   * `since` is a REQUIRED controller param (no bare list endpoint exists).
+   */
+  async getFailedAccess(since: Date): Promise<GdprAudit[]> {
+    const response = await api.get("/gdpr-audit/failed-access", {
+      params: { since: since.toISOString().slice(0, 19) },
+    });
     return response.data;
   }
 
   /** POST /gdpr-audit/search — Search GDPR audits */
   async searchGdprAudits(criteria: GdprSearchCriteria): Promise<GdprAudit[]> {
-    const response = await api.post('/gdpr-audit/search', criteria);
+    const response = await api.post("/gdpr-audit/search", criteria);
     return response.data;
   }
 

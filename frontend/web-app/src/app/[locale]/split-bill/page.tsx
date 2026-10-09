@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+import React, { useState } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
   Users,
   Plus,
@@ -12,24 +12,42 @@ import {
   UserPlus,
   Receipt,
   Loader2,
-} from '@/components/icons';
-import { Button, Card, Col, Input, Row, Space, Tag, Typography, Empty } from 'antd';
+} from "@/components/icons";
+import {
+  Button,
+  Card,
+  Col,
+  Input,
+  Row,
+  Space,
+  Tag,
+  Typography,
+  Empty,
+} from "antd";
 import {
   useSplitBills,
   useCreateSplitBill,
   useSettleSplitBill,
   useAddParticipant,
   useActivateSplitBill,
-} from '@/hooks';
-import { useAuthStore } from '@/stores/authStore';
-import { addCurrency, asMoney, divideCurrency, formatExactDecimal, parseCurrencyExact, type Money } from '@/lib/currency';
-import type { SplitBillParticipant } from '@/services/TransactionService';
+} from "@/hooks";
+import { useAuthStore } from "@/stores/authStore";
+import { notify as toast } from "@/lib/notify";
+import {
+  addCurrency,
+  asMoney,
+  divideCurrency,
+  formatExactDecimal,
+  parseCurrencyExact,
+  type Money,
+} from "@/lib/currency";
+import type { SplitBillParticipant } from "@/services/TransactionService";
 
 const { Title, Text } = Typography;
 
 export default function SplitBillPage() {
   const { accountId } = useAuthStore();
-  const acctId = accountId ?? '';
+  const acctId = accountId ?? "";
   const { data: splitBillsData, isLoading } = useSplitBills(acctId);
   const createSplitBill = useCreateSplitBill();
   const settleBill = useSettleSplitBill();
@@ -37,25 +55,36 @@ export default function SplitBillPage() {
   const activateBill = useActivateSplitBill();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newBillName, setNewBillName] = useState('');
-  const [newBillAmount, setNewBillAmount] = useState('');
-  const [participants, setParticipants] = useState<Array<{ accountId: string; accountNumber: string; accountName: string }>>([
-    { accountId: '', accountNumber: '', accountName: '' },
-  ]);
+  const [newBillName, setNewBillName] = useState("");
+  const [newBillAmount, setNewBillAmount] = useState("");
+  const [participants, setParticipants] = useState<
+    Array<{ accountId: string; accountNumber: string; accountName: string }>
+  >([{ accountId: "", accountNumber: "", accountName: "" }]);
 
-  const updateParticipant = (index: number, field: 'accountId' | 'accountNumber' | 'accountName', value: string) => {
-    setParticipants((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)));
+  const updateParticipant = (
+    index: number,
+    field: "accountId" | "accountNumber" | "accountName",
+    value: string,
+  ) => {
+    setParticipants((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
+    );
   };
 
   const addParticipantRow = () => {
-    setParticipants((prev) => [...prev, { accountId: '', accountNumber: '', accountName: '' }]);
+    setParticipants((prev) => [
+      ...prev,
+      { accountId: "", accountNumber: "", accountName: "" },
+    ]);
   };
 
   const removeParticipantRow = (index: number) => {
     setParticipants((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const splitBills = ((Array.isArray(splitBillsData) ? splitBillsData : []) as unknown as Array<{
+  const splitBills = (Array.isArray(splitBillsData)
+    ? splitBillsData
+    : []) as unknown as Array<{
     id: string;
     description: string;
     totalAmount: Money;
@@ -70,65 +99,120 @@ export default function SplitBillPage() {
       status: string;
       paidAmount: Money;
     }>;
-  }>);
+  }>;
 
   const formatCurrency = (amount: Money | number) =>
-    formatExactDecimal(amount, 0, 'id-ID');
+    formatExactDecimal(amount, 0, "id-ID");
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
-        return <Tag bordered={false} color="green">Aktif</Tag>;
-      case 'SETTLED':
-        return <Tag bordered={false} color="blue">Lunas</Tag>;
-      case 'PENDING':
-        return <Tag bordered={false} color="orange">Menunggu</Tag>;
-      case 'CANCELLED':
-        return <Tag bordered={false} color="red">Dibatalkan</Tag>;
+      case "ACTIVE":
+        return (
+          <Tag bordered={false} color="green">
+            Aktif
+          </Tag>
+        );
+      case "SETTLED":
+        return (
+          <Tag bordered={false} color="blue">
+            Lunas
+          </Tag>
+        );
+      case "PENDING":
+        return (
+          <Tag bordered={false} color="orange">
+            Menunggu
+          </Tag>
+        );
+      case "DRAFT":
+        return (
+          <Tag bordered={false} color="default">
+            Draf
+          </Tag>
+        );
+      case "CANCELLED":
+        return (
+          <Tag bordered={false} color="red">
+            Dibatalkan
+          </Tag>
+        );
       default:
         return <Tag bordered>{status}</Tag>;
     }
   };
 
   const handleCreate = () => {
-    if (!newBillName || !newBillAmount) return;
+    if (!newBillName.trim()) {
+      toast.warning("Masukkan nama/deskripsi split bill");
+      return;
+    }
+    if (!newBillAmount.trim()) {
+      toast.warning("Masukkan total tagihan");
+      return;
+    }
+    if (!acctId) {
+      toast.warning("Akun belum dimuat — silakan muat ulang halaman");
+      return;
+    }
     const validParticipants = participants
-      .map((p) => ({ ...p, accountId: p.accountId.trim(), accountNumber: p.accountNumber.trim(), accountName: p.accountName.trim() }))
+      .map((p) => ({
+        ...p,
+        accountId: p.accountId.trim(),
+        accountNumber: p.accountNumber.trim(),
+        accountName: p.accountName.trim(),
+      }))
       .filter((p) => p.accountId && p.accountNumber && p.accountName);
-    if (validParticipants.length === 0) return;
+    if (validParticipants.length === 0) {
+      toast.warning(
+        "Tambahkan minimal satu peserta dengan ID akun, nomor rekening, dan nama",
+      );
+      return;
+    }
     const totalAmount = parseCurrencyExact(newBillAmount);
     const perHead = divideCurrency(totalAmount, validParticipants.length);
     createSplitBill.mutate(
       {
         title: newBillName,
         totalAmount,
-        currency: 'IDR',
+        currency: "IDR",
         creatorAccountId: acctId,
-        splitType: 'EQUAL',
-        participants: validParticipants.map((p) => ({ ...p, amountOwed: perHead })),
+        splitType: "EQUAL",
+        participants: validParticipants.map((p) => ({
+          ...p,
+          amountOwed: perHead,
+        })),
       },
       {
         onSuccess: () => {
           setShowCreateModal(false);
-          setNewBillName('');
-          setNewBillAmount('');
-          setParticipants([{ accountId: '', accountNumber: '', accountName: '' }]);
+          setNewBillName("");
+          setNewBillAmount("");
+          setParticipants([
+            { accountId: "", accountNumber: "", accountName: "" },
+          ]);
         },
-      }
+      },
     );
   };
 
-  const activeBills = splitBills.filter((b) => b.status === 'ACTIVE' || b.status === 'PENDING');
-  const settledBills = splitBills.filter((b) => b.status === 'SETTLED');
+  // Newly created bills are stored as DRAFT; filtering them out hid them from
+  // the list entirely (the create form appeared to succeed with no result).
+  const activeBills = splitBills.filter(
+    (b) =>
+      b.status === "ACTIVE" || b.status === "PENDING" || b.status === "DRAFT",
+  );
+  const settledBills = splitBills.filter((b) => b.status === "SETTLED");
 
   return (
     <DashboardLayout>
-      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+      <Space direction="vertical" size={24} style={{ width: "100%" }}>
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
-            <Title level={2} style={{ margin: 0 }}>Split Bill</Title>
-            <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>
+            <Title level={2} style={{ margin: 0 }}>
+              Split Bill
+            </Title>
+            <Text type="secondary" style={{ display: "block", marginTop: 4 }}>
               Bagi tagihan dengan teman, keluarga, atau rekan kerja secara adil.
             </Text>
           </Col>
@@ -148,12 +232,40 @@ export default function SplitBillPage() {
           <Col xs={24} md={8}>
             <Card>
               <Space size={20}>
-                <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Receipt style={{ width: 24, height: 24, color: 'var(--ant-color-text-light-solid)' }} />
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    backgroundColor: "var(--ant-color-primary)",
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Receipt
+                    style={{
+                      width: 24,
+                      height: 24,
+                      color: "var(--ant-color-text-light-solid)",
+                    }}
+                  />
                 </div>
                 <div>
-                  <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Aktif</Text>
-                  <Title level={3} style={{ margin: '4px 0 0' }}>{activeBills.length}</Title>
+                  <Text
+                    type="secondary"
+                    strong
+                    style={{
+                      fontSize: 12,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    Aktif
+                  </Text>
+                  <Title level={3} style={{ margin: "4px 0 0" }}>
+                    {activeBills.length}
+                  </Title>
                 </div>
               </Space>
             </Card>
@@ -161,12 +273,40 @@ export default function SplitBillPage() {
           <Col xs={24} md={8}>
             <Card>
               <Space size={20}>
-                <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-text-light-solid)' }} />
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    backgroundColor: "var(--ant-color-primary)",
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <CheckCircle2
+                    style={{
+                      width: 24,
+                      height: 24,
+                      color: "var(--ant-color-text-light-solid)",
+                    }}
+                  />
                 </div>
                 <div>
-                  <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Lunas</Text>
-                  <Title level={3} style={{ margin: '4px 0 0' }}>{settledBills.length}</Title>
+                  <Text
+                    type="secondary"
+                    strong
+                    style={{
+                      fontSize: 12,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    Lunas
+                  </Text>
+                  <Title level={3} style={{ margin: "4px 0 0" }}>
+                    {settledBills.length}
+                  </Title>
                 </div>
               </Space>
             </Card>
@@ -174,13 +314,44 @@ export default function SplitBillPage() {
           <Col xs={24} md={8}>
             <Card>
               <Space size={20}>
-                <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-secondary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <DollarSign style={{ width: 24, height: 24, color: 'var(--ant-color-text-light-solid)' }} />
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    backgroundColor: "var(--ant-color-secondary)",
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <DollarSign
+                    style={{
+                      width: 24,
+                      height: 24,
+                      color: "var(--ant-color-text-light-solid)",
+                    }}
+                  />
                 </div>
                 <div>
-                  <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Total</Text>
-                  <Title level={3} style={{ margin: '4px 0 0' }}>
-                    {formatCurrency(splitBills.reduce((sum, b) => addCurrency(sum, b.totalAmount), asMoney('0')))}
+                  <Text
+                    type="secondary"
+                    strong
+                    style={{
+                      fontSize: 12,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    Total
+                  </Text>
+                  <Title level={3} style={{ margin: "4px 0 0" }}>
+                    {formatCurrency(
+                      splitBills.reduce(
+                        (sum, b) => addCurrency(sum, b.totalAmount),
+                        asMoney("0"),
+                      ),
+                    )}
                   </Title>
                 </div>
               </Space>
@@ -191,15 +362,31 @@ export default function SplitBillPage() {
         {/* Create Modal */}
         {showCreateModal && (
           <Card>
-            <Space direction="vertical" size={24} style={{ width: '100%' }}>
-              <Title level={3} style={{ margin: 0 }}>Buat Split Bill Baru</Title>
+            <Space direction="vertical" size={24} style={{ width: "100%" }}>
+              <Title level={3} style={{ margin: 0 }}>
+                Buat Split Bill Baru
+              </Title>
               <Row gutter={[24, 24]}>
                 <Col xs={24} md={12}>
-                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    <label htmlFor="splitbill-description" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  <Space
+                    direction="vertical"
+                    size={8}
+                    style={{ width: "100%" }}
+                  >
+                    <label
+                      htmlFor="splitbill-description"
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--ant-color-text-secondary)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                      }}
+                    >
                       Deskripsi
                     </label>
-                    <Input id="splitbill-description"
+                    <Input
+                      id="splitbill-description"
                       placeholder="Makan siang, nonton bareng..."
                       value={newBillName}
                       onChange={(e) => setNewBillName(e.target.value)}
@@ -207,11 +394,25 @@ export default function SplitBillPage() {
                   </Space>
                 </Col>
                 <Col xs={24} md={12}>
-                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    <label htmlFor="splitbill-amount" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  <Space
+                    direction="vertical"
+                    size={8}
+                    style={{ width: "100%" }}
+                  >
+                    <label
+                      htmlFor="splitbill-amount"
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--ant-color-text-secondary)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                      }}
+                    >
                       Total Tagihan
                     </label>
-                    <Input id="splitbill-amount"
+                    <Input
+                      id="splitbill-amount"
                       type="number"
                       placeholder="150000"
                       value={newBillAmount}
@@ -220,39 +421,61 @@ export default function SplitBillPage() {
                   </Space>
                 </Col>
               </Row>
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <Space direction="vertical" size={12} style={{ width: "100%" }}>
                 <Row justify="space-between" align="middle">
-                  <label htmlFor="splitbill-participant-accountId-0" style={{ fontSize: 12, fontWeight: 700, color: 'var(--ant-color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  <label
+                    htmlFor="splitbill-participant-accountId-0"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--ant-color-text-secondary)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
                     Peserta (min. 1)
                   </label>
-                  <Button htmlType="button" size="small" onClick={addParticipantRow}>
+                  <Button
+                    htmlType="button"
+                    size="small"
+                    onClick={addParticipantRow}
+                  >
                     <UserPlus style={{ marginRight: 4 }} /> Tambah Peserta
                   </Button>
                 </Row>
                 {participants.map((p, i) => (
                   <Row key={i} gutter={[12, 12]} align="middle">
                     <Col xs={24} md={6}>
-                      <Input id={`splitbill-participant-accountId-${i}`}
+                      <Input
+                        id={`splitbill-participant-accountId-${i}`}
                         aria-label={`ID akun peserta ${i + 1}`}
                         placeholder="Account ID"
                         value={p.accountId}
-                        onChange={(e) => updateParticipant(i, 'accountId', e.target.value)}
+                        onChange={(e) =>
+                          updateParticipant(i, "accountId", e.target.value)
+                        }
                       />
                     </Col>
                     <Col xs={24} md={6}>
-                      <Input id={`splitbill-participant-accountNumber-${i}`}
+                      <Input
+                        id={`splitbill-participant-accountNumber-${i}`}
                         aria-label={`Nomor rekening peserta ${i + 1}`}
                         placeholder="No. Rekening"
                         value={p.accountNumber}
-                        onChange={(e) => updateParticipant(i, 'accountNumber', e.target.value)}
+                        onChange={(e) =>
+                          updateParticipant(i, "accountNumber", e.target.value)
+                        }
                       />
                     </Col>
                     <Col xs={24} md={8}>
-                      <Input id={`splitbill-participant-accountName-${i}`}
+                      <Input
+                        id={`splitbill-participant-accountName-${i}`}
                         aria-label={`Nama peserta ${i + 1}`}
                         placeholder="Nama"
                         value={p.accountName}
-                        onChange={(e) => updateParticipant(i, 'accountName', e.target.value)}
+                        onChange={(e) =>
+                          updateParticipant(i, "accountName", e.target.value)
+                        }
                       />
                     </Col>
                     <Col xs={24} md={4}>
@@ -261,7 +484,7 @@ export default function SplitBillPage() {
                         size="small"
                         disabled={participants.length === 1}
                         onClick={() => removeParticipantRow(i)}
-                        style={{ color: 'var(--ant-color-error)' }}
+                        style={{ color: "var(--ant-color-error)" }}
                       >
                         Hapus
                       </Button>
@@ -273,13 +496,22 @@ export default function SplitBillPage() {
                 </Text>
               </Space>
               <Space size={16}>
-                <Button type="primary" onClick={handleCreate} disabled={createSplitBill.isPending}>
-                  {createSplitBill.isPending ? <Loader2 style={{ marginRight: 8, animation: 'spin 1s linear infinite' }} /> : null}
+                <Button
+                  type="primary"
+                  onClick={handleCreate}
+                  disabled={createSplitBill.isPending}
+                >
+                  {createSplitBill.isPending ? (
+                    <Loader2
+                      style={{
+                        marginRight: 8,
+                        animation: "spin 1s linear infinite",
+                      }}
+                    />
+                  ) : null}
                   Buat
                 </Button>
-                <Button onClick={() => setShowCreateModal(false)}>
-                  Batal
-                </Button>
+                <Button onClick={() => setShowCreateModal(false)}>Batal</Button>
               </Space>
             </Space>
           </Card>
@@ -287,22 +519,49 @@ export default function SplitBillPage() {
 
         {/* Active Split Bills */}
         {activeBills.length > 0 && (
-          <Space direction="vertical" size={24} style={{ width: '100%' }}>
-            <Title level={3} style={{ margin: 0 }}>Split Bill Aktif</Title>
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <Title level={3} style={{ margin: 0 }}>
+              Split Bill Aktif
+            </Title>
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
               {activeBills.map((bill) => (
                 <Card key={bill.id}>
                   <Row justify="space-between" align="middle" gutter={[16, 16]}>
                     <Col>
                       <Space size={16}>
-                        <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Users style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
+                        <div
+                          style={{
+                            width: 48,
+                            height: 48,
+                            backgroundColor: "var(--ant-color-primary-bg)",
+                            borderRadius: 12,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Users
+                            style={{
+                              width: 24,
+                              height: 24,
+                              color: "var(--ant-color-primary)",
+                            }}
+                          />
                         </div>
                         <div>
                           <Text strong>{bill.description}</Text>
                           <br />
-                          <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                            {new Date(bill.createdAt).toLocaleDateString(undefined)}
+                          <Text
+                            type="secondary"
+                            style={{
+                              fontSize: 12,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.1em",
+                            }}
+                          >
+                            {new Date(bill.createdAt).toLocaleDateString(
+                              undefined,
+                            )}
                           </Text>
                         </div>
                       </Space>
@@ -319,23 +578,67 @@ export default function SplitBillPage() {
 
                   {/* Participants */}
                   {bill.participants?.length > 0 && (
-                    <Space direction="vertical" size={8} style={{ width: '100%', marginTop: 16 }}>
+                    <Space
+                      direction="vertical"
+                      size={8}
+                      style={{ width: "100%", marginTop: 16 }}
+                    >
                       {bill.participants.map((p) => (
-                        <Row key={p.id} justify="space-between" align="middle" style={{ padding: '12px 16px', backgroundColor: 'var(--ant-color-fill-tertiary)', borderRadius: 12 }}>
+                        <Row
+                          key={p.id}
+                          justify="space-between"
+                          align="middle"
+                          style={{
+                            padding: "12px 16px",
+                            backgroundColor: "var(--ant-color-fill-tertiary)",
+                            borderRadius: 12,
+                          }}
+                        >
                           <Space size={12}>
-                            <div style={{ width: 32, height: 32, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--ant-color-primary)' }}>
-                              {p.name?.charAt(0) ?? '?'}
+                            <div
+                              style={{
+                                width: 32,
+                                height: 32,
+                                backgroundColor: "var(--ant-color-primary-bg)",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "var(--ant-color-primary)",
+                              }}
+                            >
+                              {p.name?.charAt(0) ?? "?"}
                             </div>
                             <Text>{p.name}</Text>
                           </Space>
                           <Space size={12} align="center">
                             <Text strong>{formatCurrency(p.amount)}</Text>
-                            {p.status === 'PAID' ? (
-                              <CheckCircle2 style={{ width: 16, height: 16, color: 'var(--ant-color-primary)' }} />
-                            ) : p.status === 'DECLINED' ? (
-                              <XCircle style={{ width: 16, height: 16, color: 'var(--ant-color-error)' }} />
+                            {p.status === "PAID" ? (
+                              <CheckCircle2
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  color: "var(--ant-color-primary)",
+                                }}
+                              />
+                            ) : p.status === "DECLINED" ? (
+                              <XCircle
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  color: "var(--ant-color-error)",
+                                }}
+                              />
                             ) : (
-                              <Clock style={{ width: 16, height: 16, color: 'var(--ant-color-warning)' }} />
+                              <Clock
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  color: "var(--ant-color-warning)",
+                                }}
+                              />
                             )}
                           </Space>
                         </Row>
@@ -350,13 +653,18 @@ export default function SplitBillPage() {
                       onClick={() =>
                         addParticipant.mutate({
                           id: bill.id,
-                          participant: { accountId: '', accountName: 'Teman Baru', amountOwed: divideCurrency(bill.totalAmount, 2), status: 'PENDING' } as SplitBillParticipant,
+                          participant: {
+                            accountId: "",
+                            accountName: "Teman Baru",
+                            amountOwed: divideCurrency(bill.totalAmount, 2),
+                            status: "PENDING",
+                          } as SplitBillParticipant,
                         })
                       }
                     >
                       <UserPlus style={{ marginRight: 4 }} /> Tambah Peserta
                     </Button>
-                    {bill.status === 'PENDING' && (
+                    {bill.status === "PENDING" && (
                       <Button
                         size="small"
                         type="primary"
@@ -380,28 +688,59 @@ export default function SplitBillPage() {
 
         {/* Settled Bills */}
         {settledBills.length > 0 && (
-          <Space direction="vertical" size={24} style={{ width: '100%' }}>
-            <Title level={3} style={{ margin: 0 }}>Riwayat</Title>
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <Title level={3} style={{ margin: 0 }}>
+              Riwayat
+            </Title>
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
               {settledBills.map((bill) => (
                 <Card key={bill.id} style={{ opacity: 0.8 }}>
                   <Row justify="space-between" align="middle" gutter={[16, 16]}>
                     <Col>
                       <Space size={16}>
-                        <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-fill-tertiary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-text-tertiary)' }} />
+                        <div
+                          style={{
+                            width: 48,
+                            height: 48,
+                            backgroundColor: "var(--ant-color-fill-tertiary)",
+                            borderRadius: 12,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <CheckCircle2
+                            style={{
+                              width: 24,
+                              height: 24,
+                              color: "var(--ant-color-text-tertiary)",
+                            }}
+                          />
                         </div>
                         <div>
                           <Text strong>{bill.description}</Text>
                           <br />
-                          <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                          <Text
+                            type="secondary"
+                            style={{
+                              fontSize: 12,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.1em",
+                            }}
+                          >
                             {bill.participants?.length ?? 0} peserta
                           </Text>
                         </div>
                       </Space>
                     </Col>
                     <Col>
-                      <Text strong style={{ fontSize: 18, color: 'var(--ant-color-text-tertiary)' }}>
+                      <Text
+                        strong
+                        style={{
+                          fontSize: 18,
+                          color: "var(--ant-color-text-tertiary)",
+                        }}
+                      >
                         {formatCurrency(bill.totalAmount)}
                       </Text>
                     </Col>
@@ -415,27 +754,44 @@ export default function SplitBillPage() {
         {/* Empty State */}
         {!isLoading && splitBills.length === 0 && (
           <Card>
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={
-            <Space direction="vertical" size={8}>
-              <Text strong style={{ fontSize: 16 }}>Belum ada Split Bill</Text>
-              <Text type="secondary">
-                Buat split bill pertama Anda untuk membagi tagihan bersama teman.
-              </Text>
-            </Space>
-          }
-        >
-          <Button type="primary" onClick={() => setShowCreateModal(true)}>
-            <Plus style={{ marginRight: 8 }} /> Mulai Split Bill
-          </Button>
-        </Empty>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <Space direction="vertical" size={8}>
+                  <Text strong style={{ fontSize: 16 }}>
+                    Belum ada Split Bill
+                  </Text>
+                  <Text type="secondary">
+                    Buat split bill pertama Anda untuk membagi tagihan bersama
+                    teman.
+                  </Text>
+                </Space>
+              }
+            >
+              <Button type="primary" onClick={() => setShowCreateModal(true)}>
+                <Plus style={{ marginRight: 8 }} /> Mulai Split Bill
+              </Button>
+            </Empty>
           </Card>
         )}
 
         {isLoading && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-            <Loader2 style={{ width: 32, height: 32, animation: 'spin 1s linear infinite', color: 'var(--ant-color-primary)' }} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 32,
+            }}
+          >
+            <Loader2
+              style={{
+                width: 32,
+                height: 32,
+                animation: "spin 1s linear infinite",
+                color: "var(--ant-color-primary)",
+              }}
+            />
           </div>
         )}
       </Space>
