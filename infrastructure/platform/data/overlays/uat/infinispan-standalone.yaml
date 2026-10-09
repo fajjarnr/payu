@@ -88,14 +88,12 @@ spec:
             - name: hotrod
               containerPort: 11222
           readinessProbe:
-            httpGet:
-              path: /rest/v2/cache-managers/default/health/status
+            tcpSocket:
               port: hotrod
             initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /rest/v2/cache-managers/default/health/status
+            tcpSocket:
               port: hotrod
             initialDelaySeconds: 25
             periodSeconds: 15

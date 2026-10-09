@@ -47,6 +47,10 @@ spec:
           description: Backoffice staff role
           composite: false
           clientRole: false
+        - name: COMPLIANCE_OFFICER
+          description: Compliance audit officer (audit reports + GDPR failed access)
+          composite: false
+          clientRole: false
         - name: KYC_VERIFIED
           description: User with completed KYC verification
           composite: false
@@ -149,6 +153,7 @@ spec:
             temporary: false
         realmRoles:
           - BACKOFFICE
+          - COMPLIANCE_OFFICER
           - USER
 
     clients:
