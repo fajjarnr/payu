@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 
 /**
  * SkipLink component for accessibility (WCAG 2.1 compliance)
@@ -9,12 +9,16 @@ import { useState, useEffect } from 'react';
  *
  * @see https://www.w3.org/WAI/WCAG21/Techniques/general/G1
  */
-export function SkipLink({ href = '#main-content', className = '', children }: {
+export function SkipLink({
+  href = "#main-content",
+  className = "",
+  children,
+}: {
   href?: string;
   className?: string;
   children?: React.ReactNode;
 }) {
-  const t = useTranslations('nav');
+  const t = useTranslations("nav");
   return (
     <a
       href={href}
@@ -26,59 +30,36 @@ export function SkipLink({ href = '#main-content', className = '', children }: {
         ${className}
       `}
     >
-      {children || t('skipToMain')}
+      {children || t("skipToMain")}
     </a>
   );
 }
 
 /**
- * Visually hidden class for screen-reader-only content
- * Usage: className="sr-only"
- */
-export const visuallyHidden = `
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-  }
-  .not-sr-only {
-    position: static;
-    width: auto;
-    height: auto;
-    padding: 0;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-  }
-`;
-
-/**
  * useFocusTrap hook to trap focus within a component (modals, dialogs)
  */
-export function useFocusTrap(active: boolean = true, containerRef?: React.RefObject<HTMLElement | null>) {
+export function useFocusTrap(
+  active: boolean = true,
+  containerRef?: React.RefObject<HTMLElement | null>,
+) {
   useEffect(() => {
     if (!active) return;
 
     const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
+      if (e.key !== "Tab") return;
 
       // Get focusable elements, scoped to container if provided
       const scope = containerRef?.current || document;
       const focusableElements = scope.querySelectorAll(
-        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
       );
 
       if (focusableElements.length === 0) return;
 
       const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+      const lastElement = focusableElements[
+        focusableElements.length - 1
+      ] as HTMLElement;
 
       if (e.shiftKey) {
         if (document.activeElement === firstElement) {
@@ -93,32 +74,9 @@ export function useFocusTrap(active: boolean = true, containerRef?: React.RefObj
       }
     };
 
-    document.addEventListener('keydown', handleTab);
-    return () => document.removeEventListener('keydown', handleTab);
+    document.addEventListener("keydown", handleTab);
+    return () => document.removeEventListener("keydown", handleTab);
   }, [active, containerRef]);
-}
-
-export function useA11yAnnouncer() {
-  const [announcement, setAnnouncement] = useState('');
-
-  const announce = (message: string) => {
-    setAnnouncement(message);
-  };
-
-  return {
-    announcement,
-    announce,
-    Announcer: () => (
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-      >
-        {announcement}
-      </div>
-    ),
-  };
 }
 
 export function getA11yProps(config: {
@@ -126,25 +84,32 @@ export function getA11yProps(config: {
   describedBy?: string;
   expanded?: boolean;
   pressed?: boolean;
-  hasPopup?: boolean | 'false' | 'true' | 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog';
+  hasPopup?:
+    | boolean
+    | "false"
+    | "true"
+    | "menu"
+    | "listbox"
+    | "tree"
+    | "grid"
+    | "dialog";
   current?: string | boolean;
   live?: string | boolean;
 }) {
   const props: Record<string, string | boolean> = {};
 
-  if (config.label) props['aria-label'] = config.label;
-  if (config.describedBy) props['aria-describedby'] = config.describedBy;
-  if (config.expanded !== undefined) props['aria-expanded'] = config.expanded;
-  if (config.pressed !== undefined) props['aria-pressed'] = config.pressed;
-  if (config.hasPopup !== undefined) props['aria-haspopup'] = config.hasPopup;
-  if (config.current !== undefined) props['aria-current'] = config.current;
-  if (config.live) props['aria-live'] = config.live;
+  if (config.label) props["aria-label"] = config.label;
+  if (config.describedBy) props["aria-describedby"] = config.describedBy;
+  if (config.expanded !== undefined) props["aria-expanded"] = config.expanded;
+  if (config.pressed !== undefined) props["aria-pressed"] = config.pressed;
+  if (config.hasPopup !== undefined) props["aria-haspopup"] = config.hasPopup;
+  if (config.current !== undefined) props["aria-current"] = config.current;
+  if (config.live) props["aria-live"] = config.live;
 
   return props;
 }
 
 export const a11yUtils = {
   useFocusTrap,
-  useA11yAnnouncer,
   getA11yProps,
 };

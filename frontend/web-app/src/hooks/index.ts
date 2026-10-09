@@ -1,7 +1,6 @@
 "use client";
 
 export { useLogout, useRefreshToken, useAuth } from "./useAuth";
-export { useAntdMessage } from "./useAntdMessage";
 export {
   useBalance,
   useReserveBalance,

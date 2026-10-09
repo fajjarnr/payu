@@ -13,34 +13,34 @@ export function validatePhoneNumber(phone: string | null | undefined): {
   normalized?: string;
 } {
   if (!phone) {
-    return { isValid: false, error: 'Nomor telepon wajib diisi' };
+    return { isValid: false, error: "Nomor telepon wajib diisi" };
   }
 
-  const cleaned = phone.replace(/\D/g, '');
+  const cleaned = phone.replace(/\D/g, "");
 
   // Check length: Indonesian mobile numbers are 10-13 digits total
   if (cleaned.length < 10 || cleaned.length > 13) {
-    return { isValid: false, error: 'Nomor telepon harus 10-13 digit' };
+    return { isValid: false, error: "Nomor telepon harus 10-13 digit" };
   }
 
   const hasValidPrefix =
-    cleaned.startsWith('08') ||
-    cleaned.startsWith('628') ||
-    cleaned.startsWith('6208');
+    cleaned.startsWith("08") ||
+    cleaned.startsWith("628") ||
+    cleaned.startsWith("6208");
 
   if (!hasValidPrefix) {
     return {
       isValid: false,
-      error: 'Nomor telepon harus dimulai dengan 08 atau +628',
+      error: "Nomor telepon harus dimulai dengan 08 atau +628",
     };
   }
 
   // Normalize to 08 format for storage
   let normalized = cleaned;
-  if (normalized.startsWith('628')) {
-    normalized = '0' + normalized.substring(2);
-  } else if (normalized.startsWith('6208')) {
-    normalized = '0' + normalized.substring(3);
+  if (normalized.startsWith("628")) {
+    normalized = "0" + normalized.substring(2);
+  } else if (normalized.startsWith("6208")) {
+    normalized = "0" + normalized.substring(3);
   }
 
   return { isValid: true, normalized };
@@ -53,41 +53,50 @@ export function validateEmail(email: string | null | undefined): {
   suggestion?: string;
 } {
   if (!email) {
-    return { isValid: false, error: 'Email wajib diisi' };
+    return { isValid: false, error: "Email wajib diisi" };
   }
 
   const trimmed = email.trim();
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(trimmed)) {
-    return { isValid: false, error: 'Format email tidak valid' };
+    return { isValid: false, error: "Format email tidak valid" };
   }
 
   if (/\.\./.test(trimmed)) {
-    return { isValid: false, error: 'Email tidak boleh mengandung titik beruntun' };
+    return {
+      isValid: false,
+      error: "Email tidak boleh mengandung titik beruntun",
+    };
   }
 
-  const localPart = trimmed.split('@')[0];
+  const localPart = trimmed.split("@")[0];
   if (localPart.length > 64) {
-    return { isValid: false, error: 'Bagian sebelum @ terlalu panjang (maksimal 64 karakter)' };
+    return {
+      isValid: false,
+      error: "Bagian sebelum @ terlalu panjang (maksimal 64 karakter)",
+    };
   }
 
   if (trimmed.length > 254) {
-    return { isValid: false, error: 'Email terlalu panjang (maksimal 254 karakter)' };
+    return {
+      isValid: false,
+      error: "Email terlalu panjang (maksimal 254 karakter)",
+    };
   }
 
   // BUG-FE-010: Check for common typos — but only suggest, don't block
   // yahoo.co.id is valid but yahoo.co alone is likely a typo for yahoo.com
-  const domain = trimmed.split('@')[1].toLowerCase();
+  const domain = trimmed.split("@")[1].toLowerCase();
   const typoSuggestions: Record<string, string> = {
-    'gmail.co': 'gmail.com',
-    'yahoo.co': 'yahoo.com',
-    'outlook.co': 'outlook.com',
-    'hotmail.co': 'hotmail.com',
-    'ymail.co': 'ymail.com',
+    "gmail.co": "gmail.com",
+    "yahoo.co": "yahoo.com",
+    "outlook.co": "outlook.com",
+    "hotmail.co": "hotmail.com",
+    "ymail.co": "ymail.com",
   };
 
-  // Only match exact domain (not subdomains like yahoo.co.id)  
+  // Only match exact domain (not subdomains like yahoo.co.id)
   const suggestion = typoSuggestions[domain];
   if (suggestion) {
     return {
@@ -110,27 +119,27 @@ export function validateNIK(nik: string | null | undefined): {
   masked?: string;
 } {
   if (!nik) {
-    return { isValid: false, error: 'NIK wajib diisi' };
+    return { isValid: false, error: "NIK wajib diisi" };
   }
 
-  const cleaned = nik.replace(/\D/g, '');
+  const cleaned = nik.replace(/\D/g, "");
 
   if (cleaned.length !== 16) {
-    return { isValid: false, error: 'NIK harus 16 digit' };
+    return { isValid: false, error: "NIK harus 16 digit" };
   }
 
   const provinceCode = parseInt(cleaned.substring(0, 2));
   if (provinceCode < 1 || provinceCode > 94) {
     // Special codes like 91-94 for foreign citizens
-    return { isValid: false, error: 'Kode provinsi tidak valid' };
+    return { isValid: false, error: "Kode provinsi tidak valid" };
   }
 
   if (/^(\d)\1{15}$/.test(cleaned)) {
-    return { isValid: false, error: 'NIK tidak valid' };
+    return { isValid: false, error: "NIK tidak valid" };
   }
 
   // Mask for display (show first 6 and last 4, mask middle 6)
-  const masked = cleaned.substring(0, 6) + '******' + cleaned.substring(12);
+  const masked = cleaned.substring(0, 6) + "******" + cleaned.substring(12);
 
   return { isValid: true, masked };
 }
@@ -141,26 +150,29 @@ export function validateAccountNumber(account: string | null | undefined): {
   masked?: string;
 } {
   if (!account) {
-    return { isValid: false, error: 'Nomor rekening wajib diisi' };
+    return { isValid: false, error: "Nomor rekening wajib diisi" };
   }
 
-  const cleaned = account.replace(/[\s-]/g, '');
+  const cleaned = account.replace(/[\s-]/g, "");
 
   // Check length (Indonesian accounts are typically 10-16 digits)
   if (cleaned.length < 10 || cleaned.length > 16) {
-    return { isValid: false, error: 'Nomor rekening harus 10-16 digit' };
+    return { isValid: false, error: "Nomor rekening harus 10-16 digit" };
   }
 
   if (!/^\d+$/.test(cleaned)) {
-    return { isValid: false, error: 'Nomor rekening hanya boleh berisi angka' };
+    return { isValid: false, error: "Nomor rekening hanya boleh berisi angka" };
   }
 
   if (/^(\d)\1{9,}$/.test(cleaned)) {
-    return { isValid: false, error: 'Nomor rekening tidak valid' };
+    return { isValid: false, error: "Nomor rekening tidak valid" };
   }
 
   // Mask for display (show first 4 and last 4)
-  const masked = cleaned.substring(0, 4) + '*'.repeat(cleaned.length - 8) + cleaned.substring(cleaned.length - 4);
+  const masked =
+    cleaned.substring(0, 4) +
+    "*".repeat(cleaned.length - 8) +
+    cleaned.substring(cleaned.length - 4);
 
   return { isValid: true, masked };
 }
@@ -170,19 +182,19 @@ export function validatePostalCode(code: string | null | undefined): {
   error?: string;
 } {
   if (!code) {
-    return { isValid: false, error: 'Kode pos wajib diisi' };
+    return { isValid: false, error: "Kode pos wajib diisi" };
   }
 
-  const cleaned = code.replace(/\D/g, '');
+  const cleaned = code.replace(/\D/g, "");
 
   // Indonesian postal codes are 5 digits
   if (cleaned.length !== 5) {
-    return { isValid: false, error: 'Kode pos harus 5 digit' };
+    return { isValid: false, error: "Kode pos harus 5 digit" };
   }
 
   const codeNum = parseInt(cleaned);
   if (codeNum < 10000 || codeNum > 99999) {
-    return { isValid: false, error: 'Kode pos tidak valid' };
+    return { isValid: false, error: "Kode pos tidak valid" };
   }
 
   return { isValid: true };
@@ -198,38 +210,38 @@ export function validateNPWP(npwp: string | null | undefined): {
   normalized?: string;
 } {
   if (!npwp) {
-    return { isValid: false, error: 'NPWP wajib diisi' };
+    return { isValid: false, error: "NPWP wajib diisi" };
   }
 
-  const cleaned = npwp.replace(/[\.\-]/g, '');
+  const cleaned = npwp.replace(/[\.\-]/g, "");
 
   // NPWP is 15 digits
   if (cleaned.length !== 15) {
-    return { isValid: false, error: 'NPWP harus 15 digit' };
+    return { isValid: false, error: "NPWP harus 15 digit" };
   }
 
   if (!/^\d+$/.test(cleaned)) {
-    return { isValid: false, error: 'NPWP hanya boleh berisi angka' };
+    return { isValid: false, error: "NPWP hanya boleh berisi angka" };
   }
 
   // Check tax office code (first 2 digits, 01-09)
   const taxOfficeCode = parseInt(cleaned.substring(0, 2));
   if (taxOfficeCode < 1 || taxOfficeCode > 9) {
-    return { isValid: false, error: 'Kode Kantor Pajak tidak valid' };
+    return { isValid: false, error: "Kode Kantor Pajak tidak valid" };
   }
 
   // Format as XX.XXX.XXX.X-XXX.XXX
   const normalized =
     cleaned.substring(0, 2) +
-    '.' +
+    "." +
     cleaned.substring(2, 5) +
-    '.' +
+    "." +
     cleaned.substring(5, 8) +
-    '.' +
+    "." +
     cleaned.substring(8, 9) +
-    '-' +
+    "-" +
     cleaned.substring(9, 12) +
-    '.' +
+    "." +
     cleaned.substring(12);
 
   return { isValid: true, normalized };
@@ -245,18 +257,18 @@ export function validateCreditCard(cardNumber: string | null | undefined): {
   masked?: string;
 } {
   if (!cardNumber) {
-    return { isValid: false, error: 'Nomor kartu wajib diisi' };
+    return { isValid: false, error: "Nomor kartu wajib diisi" };
   }
 
-  const cleaned = cardNumber.replace(/\s/g, '');
+  const cleaned = cardNumber.replace(/\s/g, "");
 
   // Check length (13-19 digits)
   if (cleaned.length < 13 || cleaned.length > 19) {
-    return { isValid: false, error: 'Nomor kartu tidak valid' };
+    return { isValid: false, error: "Nomor kartu tidak valid" };
   }
 
   if (!/^\d+$/.test(cleaned)) {
-    return { isValid: false, error: 'Nomor kartu hanya boleh berisi angka' };
+    return { isValid: false, error: "Nomor kartu hanya boleh berisi angka" };
   }
 
   // Luhn algorithm
@@ -278,39 +290,44 @@ export function validateCreditCard(cardNumber: string | null | undefined): {
   }
 
   if (sum % 10 !== 0) {
-    return { isValid: false, error: 'Nomor kartu tidak valid' };
+    return { isValid: false, error: "Nomor kartu tidak valid" };
   }
 
-  let type = 'Unknown';
+  let type = "Unknown";
   if (/^4/.test(cleaned)) {
-    type = 'Visa';
+    type = "Visa";
   } else if (/^5[1-5]/.test(cleaned)) {
-    type = 'Mastercard';
+    type = "Mastercard";
   } else if (/^3[47]/.test(cleaned)) {
-    type = 'American Express';
+    type = "American Express";
   } else if (/^6(?:011|5)/.test(cleaned)) {
-    type = 'Discover';
+    type = "Discover";
   }
 
   // Mask (show first 6 and last 4)
   const masked =
-    cleaned.substring(0, 6) + '*'.repeat(cleaned.length - 10) + cleaned.substring(cleaned.length - 4);
+    cleaned.substring(0, 6) +
+    "*".repeat(cleaned.length - 10) +
+    cleaned.substring(cleaned.length - 4);
 
   return { isValid: true, type, masked };
 }
 
-export function validateCVV(cvv: string | null | undefined, cardType?: string): {
+export function validateCVV(
+  cvv: string | null | undefined,
+  cardType?: string,
+): {
   isValid: boolean;
   error?: string;
 } {
   if (!cvv) {
-    return { isValid: false, error: 'CVV wajib diisi' };
+    return { isValid: false, error: "CVV wajib diisi" };
   }
 
-  const cleaned = cvv.replace(/\D/g, '');
+  const cleaned = cvv.replace(/\D/g, "");
 
   // Amex has 4 digits, others have 3
-  const requiredLength = cardType === 'American Express' ? 4 : 3;
+  const requiredLength = cardType === "American Express" ? 4 : 3;
 
   if (cleaned.length !== requiredLength) {
     return { isValid: false, error: `CVV harus ${requiredLength} digit` };
@@ -321,7 +338,7 @@ export function validateCVV(cvv: string | null | undefined, cardType?: string): 
 
 export function validatePassword(password: string | null | undefined): {
   isValid: boolean;
-  strength: 'weak' | 'medium' | 'strong';
+  strength: "weak" | "medium" | "strong";
   errors: string[];
 } {
   const errors: string[] = [];
@@ -329,33 +346,33 @@ export function validatePassword(password: string | null | undefined): {
   if (!password) {
     return {
       isValid: false,
-      strength: 'weak',
-      errors: ['Password wajib diisi'],
+      strength: "weak",
+      errors: ["Password wajib diisi"],
     };
   }
 
   if (password.length < 8) {
-    errors.push('Password minimal 8 karakter');
+    errors.push("Password minimal 8 karakter");
   }
 
   if (password.length > 128) {
-    errors.push('Password maksimal 128 karakter');
+    errors.push("Password maksimal 128 karakter");
   }
 
   if (!/[a-z]/.test(password)) {
-    errors.push('Password harus mengandung huruf kecil');
+    errors.push("Password harus mengandung huruf kecil");
   }
 
   if (!/[A-Z]/.test(password)) {
-    errors.push('Password harus mengandung huruf besar');
+    errors.push("Password harus mengandung huruf besar");
   }
 
   if (!/\d/.test(password)) {
-    errors.push('Password harus mengandung angka');
+    errors.push("Password harus mengandung angka");
   }
 
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    errors.push('Password harus mengandung karakter spesial');
+    errors.push("Password harus mengandung karakter spesial");
   }
 
   // BUG-FE-009: Calculate strength from boolean checks, not by filtering error strings
@@ -363,13 +380,15 @@ export function validatePassword(password: string | null | undefined): {
   const hasUpper = /[A-Z]/.test(password);
   const hasDigit = /\d/.test(password);
   const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-  const criteriaMet = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
+  const criteriaMet = [hasLower, hasUpper, hasDigit, hasSpecial].filter(
+    Boolean,
+  ).length;
 
-  let strength: 'weak' | 'medium' | 'strong' = 'weak';
+  let strength: "weak" | "medium" | "strong" = "weak";
   if (criteriaMet >= 4 && password.length >= 12) {
-    strength = 'strong';
+    strength = "strong";
   } else if (criteriaMet >= 3 && password.length >= 8) {
-    strength = 'medium';
+    strength = "medium";
   }
 
   return {
@@ -379,92 +398,84 @@ export function validatePassword(password: string | null | undefined): {
   };
 }
 
-
 export function validateName(name: string | null | undefined): {
   isValid: boolean;
   error?: string;
   normalized?: string;
 } {
   if (!name) {
-    return { isValid: false, error: 'Nama wajib diisi' };
+    return { isValid: false, error: "Nama wajib diisi" };
   }
 
   const trimmed = name.trim();
 
   if (trimmed.length < 2) {
-    return { isValid: false, error: 'Nama terlalu pendek' };
+    return { isValid: false, error: "Nama terlalu pendek" };
   }
 
   if (trimmed.length > 100) {
-    return { isValid: false, error: 'Nama terlalu panjang (maksimal 100 karakter)' };
+    return {
+      isValid: false,
+      error: "Nama terlalu panjang (maksimal 100 karakter)",
+    };
   }
 
   if (!/^[\p{L}\s.,\-']+$/u.test(trimmed)) {
-    return { isValid: false, error: 'Nama hanya boleh mengandung huruf dan karakter spesial tertentu' };
+    return {
+      isValid: false,
+      error: "Nama hanya boleh mengandung huruf dan karakter spesial tertentu",
+    };
   }
 
   if (/\s{2,}/.test(trimmed)) {
-    return { isValid: false, error: 'Nama tidak boleh mengandung spasi beruntun' };
+    return {
+      isValid: false,
+      error: "Nama tidak boleh mengandung spasi beruntun",
+    };
   }
 
   // Normalize: capitalize each word, remove extra spaces
   const normalized = trimmed
     .split(/\s+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 
   return { isValid: true, normalized };
 }
 
-export function validateOTP(otp: string | null | undefined, length: number = 6): {
+export function validateOTP(
+  otp: string | null | undefined,
+  length: number = 6,
+): {
   isValid: boolean;
   error?: string;
 } {
   if (!otp) {
-    return { isValid: false, error: 'OTP wajib diisi' };
+    return { isValid: false, error: "OTP wajib diisi" };
   }
 
-  const cleaned = otp.replace(/\s/g, '');
+  const cleaned = otp.replace(/\s/g, "");
 
   if (cleaned.length !== length) {
     return { isValid: false, error: `OTP harus ${length} digit` };
   }
 
   if (!/^\d+$/.test(cleaned)) {
-    return { isValid: false, error: 'OTP hanya boleh berisi angka' };
+    return { isValid: false, error: "OTP hanya boleh berisi angka" };
   }
 
   return { isValid: true };
 }
 
 // BUG-CROSS-002: UUID format validation for accountId and other UUID fields
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-7][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-/**
- * Validates that a string is a valid UUID format.
- * Backend expects UUID format for accountId, transactionId, etc.
- * Sending non-UUID values causes 500 errors instead of proper 400 validation errors.
- */
-export function validateUUID(value: string | null | undefined, fieldName: string = 'ID'): {
-  isValid: boolean;
-  error?: string;
-} {
-  if (!value) {
-    return { isValid: false, error: `${fieldName} wajib diisi` };
-  }
-
-  if (!UUID_REGEX.test(value)) {
-    return { isValid: false, error: `${fieldName} format tidak valid` };
-  }
-
-  return { isValid: true };
-}
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-7][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * Asserts that a value is a valid UUID, throwing an error if not.
  * Use in service methods before sending requests to backend.
  */
-export function assertUUID(value: string, fieldName: string = 'ID'): void {
+export function assertUUID(value: string, fieldName: string = "ID"): void {
   if (!UUID_REGEX.test(value)) {
     throw new Error(`Invalid ${fieldName} format: expected UUID`);
   }

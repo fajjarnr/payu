@@ -18,7 +18,6 @@ export {
   PercentageOutlined as BadgePercent,
   BarChartOutlined as BarChart3,
   BellOutlined as Bell,
-  NotificationOutlined as BellRing,
   BugOutlined as Bug,
   BankOutlined as Building2,
   BankOutlined as Bank,
@@ -60,7 +59,6 @@ export {
   HistoryOutlined as History,
   HomeOutlined as Home,
   PictureOutlined as Image,
-  InboxOutlined as Inbox,
   InfoCircleOutlined as Info,
   KeyOutlined as Key,
   BankOutlined as Landmark,
@@ -95,7 +93,6 @@ export {
   RotateLeftOutlined as RotateCcw,
   ScanOutlined as ScanFace,
   SearchOutlined as Search,
-  SendOutlined as Send,
   SettingOutlined as Settings,
   ShareAltOutlined as Share2,
   SafetyOutlined as Shield,
@@ -128,9 +125,12 @@ export {
   CloseOutlined as X,
   CloseCircleOutlined as XCircle,
   ThunderboltOutlined as Zap,
-} from '@ant-design/icons';
+} from "@ant-design/icons";
 
-import type { ComponentType, CSSProperties } from 'react';
+import type { ComponentType, CSSProperties } from "react";
 
 // Replacement for lucide's `LucideIcon` type.
-export type IconType = ComponentType<{ className?: string; style?: CSSProperties }>;
+export type IconType = ComponentType<{
+  className?: string;
+  style?: CSSProperties;
+}>;

@@ -8,13 +8,11 @@
  * @see providers.tsx - Global default is retry: 0 for all mutations
  */
 
-
-
 /**
  * Default retry delay calculation with exponential backoff
  * Max delay capped at 30 seconds
  */
-export const defaultRetryDelay = (attemptIndex: number): number => {
+const defaultRetryDelay = (attemptIndex: number): number => {
   return Math.min(1000 * 2 ** attemptIndex, 30000);
 };
 
@@ -25,7 +23,7 @@ export const defaultRetryDelay = (attemptIndex: number): number => {
  * Examples: transfers, payments, wallet credits, loan applications,
  * reservation commits, escrow operations
  */
-export const financialMutationConfig = {
+const financialMutationConfig = {
   retry: 0,
   // Financial mutations should fail fast - no retry
 } as const;
@@ -37,7 +35,7 @@ export const financialMutationConfig = {
  * Examples: user profile updates, notification reads, settings changes,
  * support tickets, KYC document uploads
  */
-export const nonFinancialMutationConfig = {
+const nonFinancialMutationConfig = {
   retry: 1,
   retryDelay: defaultRetryDelay,
 } as const;
@@ -48,7 +46,7 @@ export const nonFinancialMutationConfig = {
  *
  * Examples: pre-approval checks, validation calls, lookup operations
  */
-export const readOnlyMutationConfig = {
+const readOnlyMutationConfig = {
   retry: 2,
   retryDelay: defaultRetryDelay,
 } as const;
