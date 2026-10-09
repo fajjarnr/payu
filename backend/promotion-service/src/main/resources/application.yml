@@ -111,7 +111,7 @@ payu:
 app:
   kafka:
     topics:
-      transaction-completed: transaction.completed
+      transaction-completed: payu.transaction.completed.v1
       notifications: notifications
 
 ---

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import id.payu.transaction.exception.TransactionDomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
@@ -33,12 +35,12 @@ class RiskEvaluationAdapterTest {
         restTemplate = new RestTemplate();
         server = MockRestServiceServer.bindTo(restTemplate).build();
         adapter = new RiskEvaluationAdapter(restTemplate);
-        setUrl(adapter, "http://analytics-service:8082");
+        setUrl(adapter, "http://analytics-service:8080");
     }
 
     @Test
     void postsFraudScoreRequestAndMapsRiskScoreToInt() {
-        server.expect(requestTo("http://analytics-service:8082/api/v1/analytics/fraud/score"))
+        server.expect(requestTo("http://analytics-service:8080/api/v1/analytics/fraud/score"))
                 .andExpect(jsonPath("$.user_id").value("user-1"))
                 .andExpect(jsonPath("$.amount").value(250000))
                 .andExpect(jsonPath("$.currency").value("IDR"))
@@ -56,7 +58,7 @@ class RiskEvaluationAdapterTest {
 
     @Test
     void wrapsAnalyticsOutageAsRiskEvaluationUnavailable() {
-        server.expect(requestTo("http://analytics-service:8082/api/v1/analytics/fraud/score"))
+        server.expect(requestTo("http://analytics-service:8080/api/v1/analytics/fraud/score"))
                 .andRespond(withServerError());
 
         assertThatThrownBy(() -> adapter.score("user-1", new BigDecimal("100000"), "IDR"))
@@ -65,7 +67,7 @@ class RiskEvaluationAdapterTest {
 
     @Test
     void wrapsMalformedResponseAsRiskEvaluationUnavailable() {
-        server.expect(requestTo("http://analytics-service:8082/api/v1/analytics/fraud/score"))
+        server.expect(requestTo("http://analytics-service:8080/api/v1/analytics/fraud/score"))
                 .andRespond(withSuccess("{\"success\": false}", MediaType.APPLICATION_JSON));
 
         assertThatThrownBy(() -> adapter.score("user-1", new BigDecimal("100000"), "IDR"))
@@ -74,7 +76,7 @@ class RiskEvaluationAdapterTest {
 
     @Test
     void defaultsNullCurrencyToIdr() {
-        server.expect(requestTo("http://analytics-service:8082/api/v1/analytics/fraud/score"))
+        server.expect(requestTo("http://analytics-service:8080/api/v1/analytics/fraud/score"))
                 .andExpect(jsonPath("$.currency").value("IDR"))
                 .andRespond(withSuccess(
                         "{\"data\": {\"fraud_score\": {\"risk_score\": 15.0}}}",
@@ -91,7 +93,7 @@ class RiskEvaluationAdapterTest {
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
                 new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt));
         try {
-            server.expect(requestTo("http://analytics-service:8082/api/v1/analytics/fraud/score"))
+            server.expect(requestTo("http://analytics-service:8080/api/v1/analytics/fraud/score"))
                     .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.header("Authorization", "Bearer tok-123"))
                     .andRespond(withSuccess(
                             "{\"data\": {\"fraud_score\": {\"risk_score\": 10.0}}}",
@@ -101,6 +103,25 @@ class RiskEvaluationAdapterTest {
             server.verify();
         } finally {
             org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        }
+    }
+
+    /**
+     * RISK-EVAL-001: with no SERVICES_ANALYTICS_URL env var the adapter must
+     * resolve to the in-cluster analytics-service (port 8080), not localhost.
+     */
+    @Test
+    void defaultsToInClusterAnalyticsUrl() throws Exception {
+        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+            context.register(PropertySourcesPlaceholderConfigurer.class);
+            context.registerBean(RestTemplate.class);
+            context.registerBean(RiskEvaluationAdapter.class);
+            context.refresh();
+
+            Field field = RiskEvaluationAdapter.class.getDeclaredField("analyticsServiceUrl");
+            field.setAccessible(true);
+            assertThat(field.get(context.getBean(RiskEvaluationAdapter.class)))
+                    .isEqualTo("http://analytics-service:8080");
         }
     }
 

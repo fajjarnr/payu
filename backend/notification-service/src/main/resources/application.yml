@@ -125,6 +125,7 @@ mp:
         auto.offset.reset: earliest
         failure-strategy: dead-letter-queue
         dead-letter-queue.topic: payu.billing.payment-completed.v1.dlq
+        enabled: false
       split-bill-events:
         connector: smallrye-kafka
         topics:

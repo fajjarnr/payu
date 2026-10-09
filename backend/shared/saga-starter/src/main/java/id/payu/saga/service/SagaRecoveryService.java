@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -170,6 +171,7 @@ public class SagaRecoveryService {
 
     @SchedulerLock(name = "SagaRecoveryService_scheduledRecovery", lockAtLeastFor = "PT1S", lockAtMostFor = "PT5M")
     @Scheduled(fixedDelay = 300000) // Every 5 minutes
+    @Transactional
     public void scheduledRecovery() {
         if (!properties.isCompensationEnabled()) {
             return;

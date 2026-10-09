@@ -36,7 +36,7 @@ import java.util.UUID;
 @Component
 public class RiskEvaluationAdapter implements RiskEvaluationPort {
 
-    @Value("${services.analytics.url:http://localhost:8082}")
+    @Value("${services.analytics.url:http://analytics-service:8080}")
     private String analyticsServiceUrl;
 
     private final RestTemplate restTemplate;

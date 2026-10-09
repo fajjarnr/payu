@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -115,6 +116,7 @@ public class SagaAutoConfiguration {
         private final SagaProperties properties;
 
         @org.springframework.scheduling.annotation.Scheduled(cron = "${payu.saga.cleanup-schedule:0 0 2 * * ?}")
+        @Transactional
         public void cleanupOldSagas() {
             if (properties.isCleanupEnabled()) {
                 java.time.Instant threshold = java.time.Instant.now().minus(properties.getRetentionPeriod());

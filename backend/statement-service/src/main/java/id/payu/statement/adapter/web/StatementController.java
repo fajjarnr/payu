@@ -6,6 +6,7 @@ import id.payu.statement.application.service.StatementService;
 import id.payu.statement.interfaces.dto.ReceiptGenerationRequest;
 import id.payu.statement.interfaces.dto.ReceiptResponse;
 import id.payu.statement.interfaces.dto.StatementGenerationRequest;
+import id.payu.statement.interfaces.dto.StatementPageResponse;
 import id.payu.statement.interfaces.dto.StatementResponse;
 import id.payu.statement.adapter.persistence.entity.StatementEntity;
 import io.swagger.v3.oas.annotations.Operation;
@@ -95,7 +96,7 @@ public class StatementController extends BaseController {
             content = @Content(schema = @Schema(implementation = StatementResponse.class)))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<Page<StatementResponse>>> listStatements(
+    public ResponseEntity<ApiResponse<StatementPageResponse>> listStatements(
             @Parameter(description = "Pagination parameters") @PageableDefault(size = 12, sort = "statementPeriod", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication) {
 
@@ -103,7 +104,9 @@ public class StatementController extends BaseController {
         String customerId = jwt.getSubject();
 
         Page<StatementResponse> statements = statementService.listStatements(customerId, pageable);
-        return ok(statements, statements);
+        // STMT-SER-001: never serialize PageImpl as-is — convert to an explicit DTO
+        // (PagedModel/VIA_DTO would break the web client's flat shape).
+        return ok(StatementPageResponse.from(statements), statements);
     }
 
     @GetMapping("/latest")

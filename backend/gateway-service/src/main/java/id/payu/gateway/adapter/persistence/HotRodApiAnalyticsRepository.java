@@ -15,7 +15,9 @@ import jakarta.inject.Inject;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +46,14 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
     private static final String METRICS_KEY_PREFIX = "analytics:metrics:";
     private static final int DETAILED_RETENTION_DAYS = 90;
 
+    /**
+     * GW-CACHE-001: events per day are sharded across fixed-size {@code analytics:events:<date>:<shard>}
+     * keys, tracked by an {@code analytics:index:<date>} key. A single unbounded day list grew past
+     * the Hot Rod message limit, the server closed the connection (ISPN005064) and flushes were
+     * lost. 200 events x ~300 B is ~60 KB per shard value — wide margin below 10 MB.
+     */
+    private static final int MAX_EVENTS_PER_SHARD = 200;
+
     @Inject
     HotRodCacheClient cache;
 
@@ -59,9 +69,7 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
     public Uni<Void> save(ApiAnalyticsEvent event) {
         try {
             String json = objectMapper.writeValueAsString(event);
-            String key = buildDailyKey(event.getTimestamp());
-
-            return cache.appendToList(key, json, Duration.ofDays(DETAILED_RETENTION_DAYS));
+            return persistDay(dayOf(event.getTimestamp()), List.of(json));
         } catch (JsonProcessingException e) {
             Log.errorf(e, "Failed to serialize analytics event");
             return Uni.createFrom().failure(e);
@@ -74,13 +82,12 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
             return Uni.createFrom().voidItem();
         }
 
-        Map<String, List<String>> eventsByDay = new HashMap<>();
+        Map<String, List<String>> eventsByDay = new LinkedHashMap<>();
 
         for (ApiAnalyticsEvent event : events) {
             try {
                 String json = objectMapper.writeValueAsString(event);
-                String key = buildDailyKey(event.getTimestamp());
-                eventsByDay.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(json);
+                eventsByDay.computeIfAbsent(dayOf(event.getTimestamp()), k -> new ArrayList<>()).add(json);
             } catch (JsonProcessingException e) {
                 Log.warnf(e, "Failed to serialize event: %s", event.getId());
             }
@@ -89,11 +96,8 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
         Uni<Void> result = Uni.createFrom().voidItem();
 
         for (Map.Entry<String, List<String>> entry : eventsByDay.entrySet()) {
-            String key = entry.getKey();
-            List<String> jsonEvents = entry.getValue();
-
             result = result.chain(() ->
-                appendAll(key, jsonEvents)
+                persistDay(entry.getKey(), entry.getValue())
             );
         }
 
@@ -179,21 +183,16 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
     }
 
     private Multi<ApiAnalyticsEvent> findByTimeRange(Instant from, Instant to) {
-        List<String> keys = new java.util.ArrayList<>();
-        Instant current = from.truncatedTo(java.time.temporal.ChronoUnit.DAYS);
-
-        while (!current.isAfter(to)) {
-            keys.add(buildDailyKey(current));
-            current = current.plus(Duration.ofDays(1));
+        List<String> dates = new ArrayList<>();
+        LocalDate current = from.atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        LocalDate end = to.atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        while (!current.isAfter(end)) {
+            dates.add(current.toString());
+            current = current.plusDays(1);
         }
 
-        return Multi.createFrom().iterable(keys)
-            .onItem().transformToMultiAndConcatenate(key ->
-                cache.readList(key)
-                    .onItem().transformToMulti(list ->
-                        Multi.createFrom().iterable(list != null ? list : List.of())
-                    )
-            )
+        return Multi.createFrom().iterable(dates)
+            .onItem().transformToMultiAndConcatenate(this::readDayJson)
             .onItem().transform(this::parseEvent)
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -203,6 +202,120 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
             );
     }
 
+    /**
+     * Reads all events of one day by walking the day's shard index
+     * ({@code analytics:index:<date>}) and then every shard it references
+     * ({@code analytics:events:<date>:<nnnnnn>}).
+     */
+    private Multi<String> readDayJson(String date) {
+        return cache.readList(indexKey(date))
+            .onItem().transformToMulti(indexEntries ->
+                Multi.createFrom().iterable(shardIndices(indexEntries))
+                    .onItem().transformToUniAndConcatenate(shard -> cache.readList(shardKey(date, shard)))
+                    .onItem().transformToIterable(java.util.function.Function.identity())
+            );
+    }
+
+    /**
+     * GW-CACHE-001: appends events for one day across fixed-size shards and records the
+     * open shard + occupancy in the day index, so no single Hot Rod value grows past the
+     * ~10 MB message limit (the old single-list-per-day design broke the connection with
+     * ISPN005064 and dropped flushes). No batches are ever skipped — everything that does
+     * not fit in the open shard starts the next shard.
+     *
+     * <p>ponytail: flush is single-writer (scheduler lock) — if a racing writer ever
+     * overfills a shard, the value only exceeds the cap, the append still succeeds.
+     */
+    private Uni<Void> persistDay(String date, List<String> jsonEvents) {
+        List<List<String>> batches = partition(jsonEvents, MAX_EVENTS_PER_SHARD);
+        if (batches.size() > 1) {
+            Log.infof("Analytics day %s: %d events split into %d batches (max %d per batch)",
+                date, jsonEvents.size(), batches.size(), MAX_EVENTS_PER_SHARD);
+        }
+
+        return cache.readList(indexKey(date))
+            .chain(indexEntries -> {
+                int[] state = openShardState(indexEntries);
+                // per batch: {shard, countAfterWrite}
+                List<int[]> plans = new ArrayList<>();
+                for (List<String> batch : batches) {
+                    if (state[1] + batch.size() > MAX_EVENTS_PER_SHARD) {
+                        state[0]++;
+                        state[1] = 0;
+                    }
+                    state[1] += batch.size();
+                    plans.add(new int[] {state[0], state[1]});
+                }
+
+                Uni<Void> result = Uni.createFrom().voidItem();
+                for (int i = 0; i < batches.size(); i++) {
+                    final int[] plan = plans.get(i);
+                    final List<String> batch = batches.get(i);
+                    for (String json : batch) {
+                        result = result.chain(() ->
+                            cache.appendToList(shardKey(date, plan[0]), json,
+                                Duration.ofDays(DETAILED_RETENTION_DAYS)));
+                    }
+                    // last index line wins: it declares the open shard and its occupancy
+                    result = result.chain(() ->
+                        cache.appendToList(indexKey(date), plan[0] + ":" + plan[1],
+                            Duration.ofDays(DETAILED_RETENTION_DAYS)));
+                }
+                final int eventsWritten = jsonEvents.size();
+                final int totalShards = state[0] + 1;
+                return result.eventually(() ->
+                    Log.infof("Persisted %d analytics events for day %s (shards: %d)", eventsWritten, date, totalShards));
+            });
+    }
+
+    static List<List<String>> partition(List<String> events, int maxPerBatch) {
+        List<List<String>> batches = new ArrayList<>();
+        for (int i = 0; i < events.size(); i += maxPerBatch) {
+            batches.add(events.subList(i, Math.min(i + maxPerBatch, events.size())));
+        }
+        return batches;
+    }
+
+    static List<Integer> shardIndices(List<String> indexEntries) {
+        int[] state = openShardState(indexEntries);
+        List<Integer> shards = new ArrayList<>();
+        for (int i = 0; i <= state[0]; i++) {
+            shards.add(i);
+        }
+        return shards;
+    }
+
+    /** Index lines are {@code "<shard>:<count>"}; the last line is the open shard state. */
+    private static int[] openShardState(List<String> indexEntries) {
+        if (indexEntries == null || indexEntries.isEmpty()) {
+            return new int[] {0, 0};
+        }
+        String last = indexEntries.get(indexEntries.size() - 1);
+        int sep = last.lastIndexOf(':');
+        try {
+            return new int[] {
+                Integer.parseInt(last.substring(0, sep)),
+                Integer.parseInt(last.substring(sep + 1))
+            };
+        } catch (RuntimeException e) {
+            return new int[] {0, 0};
+        }
+    }
+
+    private static String shardKey(String date, int shard) {
+        return ANALYTICS_KEY_PREFIX + date + ":" + String.format("%06d", shard);
+    }
+
+    private static String indexKey(String date) {
+        return ANALYTICS_INDEX_PREFIX + date;
+    }
+
+    private static String dayOf(Instant timestamp) {
+        return timestamp.atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+            .toString();
+    }
+
     private Optional<ApiAnalyticsEvent> parseEvent(String json) {
         try {
             return Optional.of(objectMapper.readValue(json, ApiAnalyticsEvent.class));
@@ -210,21 +323,6 @@ public class HotRodApiAnalyticsRepository implements ApiAnalyticsRepository {
             Log.warnf(e, "Failed to parse analytics event");
             return Optional.empty();
         }
-    }
-
-    private Uni<Void> appendAll(String key, List<String> jsonEvents) {
-        Uni<Void> result = Uni.createFrom().voidItem();
-        for (String jsonEvent : jsonEvents) {
-            result = result.chain(() -> cache.appendToList(key, jsonEvent, Duration.ofDays(DETAILED_RETENTION_DAYS)));
-        }
-        return result;
-    }
-
-    private String buildDailyKey(Instant timestamp) {
-        String date = timestamp.atZone(java.time.ZoneId.systemDefault())
-            .toLocalDate()
-            .toString();
-        return ANALYTICS_KEY_PREFIX + date;
     }
 
     private PartnerMetrics calculatePartnerMetrics(String partnerId, List<ApiAnalyticsEvent> events) {

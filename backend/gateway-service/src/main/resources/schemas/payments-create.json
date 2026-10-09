@@ -2,18 +2,24 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://payu.id/schemas/payments-create.json",
   "title": "Create Payment Request",
-  "description": "Schema for bill payment requests",
+  "description": "Schema for bill payment requests (matches billing-service CreatePaymentRequest DTO)",
   "type": "object",
   "properties": {
-    "billerId": {
+    "accountId": {
       "type": "string",
       "minLength": 1,
-      "description": "Biller identifier"
+      "description": "Source account identifier"
     },
-    "customerNumber": {
+    "billerCode": {
       "type": "string",
       "minLength": 1,
       "maxLength": 50,
+      "description": "Biller code (e.g., PLN, PDAM)"
+    },
+    "customerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
       "description": "Customer number at the biller"
     },
     "amount": {
@@ -21,17 +27,8 @@
       "exclusiveMinimum": 0,
       "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
       "description": "Payment amount (strings must be canonical decimal, max 4dp)"
-    },
-    "sourceAccountId": {
-      "type": "string",
-      "minLength": 1
-    },
-    "period": {
-      "type": "string",
-      "maxLength": 20,
-      "description": "Billing period (e.g., 202601)"
     }
   },
-  "required": ["billerId", "customerNumber", "amount", "sourceAccountId"],
+  "required": ["accountId", "billerCode", "customerId", "amount"],
   "additionalProperties": false
 }

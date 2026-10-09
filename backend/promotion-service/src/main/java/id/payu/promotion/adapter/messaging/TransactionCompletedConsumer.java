@@ -29,7 +29,7 @@ public class TransactionCompletedConsumer {
      *
      */
     @KafkaListener(
-            topics = "${app.kafka.topics.transaction-completed:transaction.completed}",
+            topics = "${app.kafka.topics.transaction-completed:payu.transaction.completed.v1}",
             groupId = "${spring.kafka.consumer.group-id:promotion-service}",
             containerFactory = "kafkaListenerContainerFactory"
     )

@@ -4,6 +4,13 @@ quarkus:
     version: 1.0.0
   http:
     port: ${QUARKUS_HTTP_PORT:8080}
+    # PORTAL-LOG-001: access logging to the standard log facility (console/JSON handler),
+    # pattern carries no PII — no remote IP, user, user-agent, referer or query string.
+    access-log:
+      enabled: true
+      category: io.quarkus.http.access-log
+      pattern: "%t %m %U %s %b %Dms"
+      exclude-pattern: "/q/health.*"
     auth:
       permission:
         public-health:

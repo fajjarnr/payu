@@ -218,7 +218,7 @@ services:
   auth:
     url: ${SERVICES_AUTH_URL:http://localhost:8083}
   analytics:
-    url: ${SERVICES_ANALYTICS_URL:http://localhost:8082}
+    url: ${SERVICES_ANALYTICS_URL:http://analytics-service:8080}
   wallet:
     url: ${SERVICES_WALLET_URL:http://localhost:8084}
 
@@ -226,7 +226,6 @@ services:
 payu:
   step-up:
     amount-threshold: ${PAYU_STEP_UP_AMOUNT_THRESHOLD:10000000}
-
 
   disbursement:
     callback-url: ${PAYU_DISBURSEMENT_CALLBACK_URL:}
