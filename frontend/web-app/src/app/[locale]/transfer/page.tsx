@@ -38,7 +38,7 @@ import {
 import { zodFieldRule } from "@/lib/zodForm";
 import { compareCurrency, parseCurrencyExact } from "@/lib/currency";
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { useInitiateTransfer } from "@/hooks";
+import { useBalance, useInitiateTransfer } from "@/hooks";
 import { useAuthStore } from "@/stores";
 import { useBeneficiaries } from "@/hooks/useBeneficiaries";
 import { useUIStore } from "@/stores";
@@ -156,6 +156,7 @@ export default function TransferPage() {
   const router = useRouter();
 
   const { data: beneficiaries } = useBeneficiaries(accountId || undefined);
+  const { data: balance } = useBalance(accountId || undefined);
   const recentContacts: Array<{
     name: string;
     initial: string;
@@ -331,12 +332,19 @@ export default function TransferPage() {
                 size="large"
                 aria-label="Kembali"
               >
-                <ChevronRight style={{ width: 24, height: 24, transform: "rotate(180deg)" }} />
+                <ChevronRight
+                  style={{ width: 24, height: 24, transform: "rotate(180deg)" }}
+                />
               </Button>
             </Space>
 
             <Card>
-              <Row gutter={[16, 16]} justify="space-between" align="middle" style={{ marginBottom: 32, paddingBottom: 32 }}>
+              <Row
+                gutter={[16, 16]}
+                justify="space-between"
+                align="middle"
+                style={{ marginBottom: 32, paddingBottom: 32 }}
+              >
                 <Col xs={24} md={12}>
                   <Space size={16}>
                     <div
@@ -352,28 +360,44 @@ export default function TransferPage() {
                         boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
                         ...(selectedContactData?.color
                           ? {}
-                          : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }),
+                          : {
+                              backgroundColor: "hsl(var(--muted))",
+                              color: "hsl(var(--muted-foreground))",
+                            }),
                       }}
                       aria-hidden={!isRecipientVerified}
                     >
                       {selectedContactData?.initial ?? "?"}
                     </div>
                     <div>
-                      <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                      <Typography.Text
+                        type="secondary"
+                        strong
+                        style={{ display: "block", marginBottom: 4 }}
+                      >
                         Kepada Penerima
                       </Typography.Text>
                       {isRecipientVerified ? (
                         <>
-                          <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                          <Typography.Title
+                            level={3}
+                            style={{ marginBottom: 0 }}
+                          >
                             {selectedContactData.name}
                           </Typography.Title>
-                          <Typography.Text strong style={{ display: "block", marginTop: 4 }}>
+                          <Typography.Text
+                            strong
+                            style={{ display: "block", marginTop: 4 }}
+                          >
                             ID Akun: {reviewAccountId}
                           </Typography.Text>
                         </>
                       ) : (
                         <>
-                          <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                          <Typography.Title
+                            level={3}
+                            style={{ marginBottom: 0 }}
+                          >
                             Penerima belum terverifikasi
                           </Typography.Title>
                           <Typography.Text
@@ -393,13 +417,25 @@ export default function TransferPage() {
                   </Space>
                 </Col>
                 <Col xs={24} md={12} style={{ textAlign: "right" }}>
-                  <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                  <Typography.Text
+                    type="secondary"
+                    strong
+                    style={{ display: "block", marginBottom: 4 }}
+                  >
                     Jumlah Transfer
                   </Typography.Text>
-                  <Typography.Text strong style={{ display: "block", fontSize: "2.25rem" }} className="animate-amount-settle">
+                  <Typography.Text
+                    strong
+                    style={{ display: "block", fontSize: "2.25rem" }}
+                    className="animate-amount-settle"
+                  >
                     Rp {formatCurrencyWithoutSymbol(amount)}
                   </Typography.Text>
-                  <Typography.Text type="secondary" strong style={{ display: "block", marginTop: 8 }}>
+                  <Typography.Text
+                    type="secondary"
+                    strong
+                    style={{ display: "block", marginTop: 8 }}
+                  >
                     Mata Uang IDR
                   </Typography.Text>
                 </Col>
@@ -408,50 +444,102 @@ export default function TransferPage() {
               <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 <Col xs={24} md={8}>
                   <Card>
-                    <Space size={8} style={{ display: "block", marginBottom: 8 }}>
-                      <TransferTypeIcon style={{ width: 16, height: 16, color: "hsl(var(--primary))" }} />
+                    <Space
+                      size={8}
+                      style={{ display: "block", marginBottom: 8 }}
+                    >
+                      <TransferTypeIcon
+                        style={{
+                          width: 16,
+                          height: 16,
+                          color: "hsl(var(--primary))",
+                        }}
+                      />
                       <Typography.Text type="secondary" strong>
                         Tipe Transfer
                       </Typography.Text>
                     </Space>
-                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", fontSize: "0.875rem" }}
+                    >
                       {selectedTransferType?.label}
                     </Typography.Text>
-                    <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem", marginTop: 4 }}>
+                    <Typography.Text
+                      type="secondary"
+                      style={{
+                        display: "block",
+                        fontSize: "0.75rem",
+                        marginTop: 4,
+                      }}
+                    >
                       {selectedTransferType?.processingTime}
                     </Typography.Text>
                   </Card>
                 </Col>
                 <Col xs={24} md={8}>
                   <Card>
-                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 8 }}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{ display: "block", marginBottom: 8 }}
+                    >
                       Biaya Transfer
                     </Typography.Text>
-                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", fontSize: "0.875rem" }}
+                    >
                       {selectedTransferType?.fee}
                     </Typography.Text>
                   </Card>
                 </Col>
                 <Col xs={24} md={8}>
                   <Card>
-                    <Space size={8} style={{ display: "block", marginBottom: 8 }}>
+                    <Space
+                      size={8}
+                      style={{ display: "block", marginBottom: 8 }}
+                    >
                       {scheduleType !== "NOW" && (
-                        <CalendarIcon style={{ width: 16, height: 16, color: "hsl(var(--primary))" }} />
+                        <CalendarIcon
+                          style={{
+                            width: 16,
+                            height: 16,
+                            color: "hsl(var(--primary))",
+                          }}
+                        />
                       )}
                       <Typography.Text type="secondary" strong>
                         Jadwal
                       </Typography.Text>
                     </Space>
-                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", fontSize: "0.875rem" }}
+                    >
                       {selectedScheduleType?.label}
                     </Typography.Text>
                     {scheduleType === "SCHEDULED" && scheduledAt && (
-                      <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem", marginTop: 4 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{
+                          display: "block",
+                          fontSize: "0.75rem",
+                          marginTop: 4,
+                        }}
+                      >
                         {format(new Date(scheduledAt), "PPP", { locale: id })}
                       </Typography.Text>
                     )}
                     {scheduleType === "RECURRING" && (
-                      <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem", marginTop: 4 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{
+                          display: "block",
+                          fontSize: "0.75rem",
+                          marginTop: 4,
+                        }}
+                      >
                         Tanggal {recurringDay || "-"}-
                         {recurringMonth || "setiap bulan"}
                       </Typography.Text>
@@ -463,24 +551,45 @@ export default function TransferPage() {
               <Row gutter={[16, 16]}>
                 <Col xs={24} md={12}>
                   <Card>
-                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 8 }}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{ display: "block", marginBottom: 8 }}
+                    >
                       Kantong Sumber
                     </Typography.Text>
-                    <Typography.Text strong style={{ display: "block", fontSize: "1.125rem" }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", fontSize: "1.125rem" }}
+                    >
                       Kantong Utama Cair
                     </Typography.Text>
-                    <Typography.Text strong style={{ display: "block", color: "hsl(var(--primary))", marginTop: 8 }}>
-                      Saldo: Rp 86.353.000
+                    <Typography.Text
+                      strong
+                      style={{
+                        display: "block",
+                        color: "hsl(var(--primary))",
+                        marginTop: 8,
+                      }}
+                    >
+                      Saldo: {balance ? `Rp ${balance.availableBalance}` : "—"}
                     </Typography.Text>
                   </Card>
                 </Col>
                 {description && (
                   <Col xs={24} md={12}>
                     <Card>
-                      <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 8 }}>
+                      <Typography.Text
+                        type="secondary"
+                        strong
+                        style={{ display: "block", marginBottom: 8 }}
+                      >
                         Pesan Konfirmasi
                       </Typography.Text>
-                      <Typography.Text strong style={{ display: "block", fontSize: "1.125rem" }}>
+                      <Typography.Text
+                        strong
+                        style={{ display: "block", fontSize: "1.125rem" }}
+                      >
                         &quot;{description}&quot;
                       </Typography.Text>
                     </Card>
@@ -495,9 +604,7 @@ export default function TransferPage() {
               data-testid="confirm-transfer-button"
               disabled={transferMutation.isPending || !isRecipientVerified}
               aria-describedby={
-                isRecipientVerified
-                  ? undefined
-                  : "recipient-verification-alert"
+                isRecipientVerified ? undefined : "recipient-verification-alert"
               }
               block
               size="large"
@@ -530,17 +637,49 @@ export default function TransferPage() {
       <DashboardLayout>
         <SkipLink href="#main-content" />
         <main id="main-content" className="overflow-x-hidden">
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "48px 16px" }}>
-            <div className="animate-seal-lock will-change-transform" style={{ marginBottom: 32 }}>
-              <div style={{ width: 96, height: 96, borderRadius: "50%", backgroundColor: "hsl(var(--primary) / 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "60vh",
+              padding: "48px 16px",
+            }}
+          >
+            <div
+              className="animate-seal-lock will-change-transform"
+              style={{ marginBottom: 32 }}
+            >
+              <div
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: "50%",
+                  backgroundColor: "hsl(var(--primary) / 0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 <CheckCircle className="w-14 h-14 text-primary" />
               </div>
             </div>
 
-            <Typography.Title level={2} style={{ textAlign: "center", marginBottom: 8 }}>
+            <Typography.Title
+              level={2}
+              style={{ textAlign: "center", marginBottom: 8 }}
+            >
               Transfer Berhasil!
             </Typography.Title>
-            <Typography.Text type="secondary" style={{ textAlign: "center", display: "block", marginBottom: 32 }}>
+            <Typography.Text
+              type="secondary"
+              style={{
+                textAlign: "center",
+                display: "block",
+                marginBottom: 32,
+              }}
+            >
               {successSchedule?.label === "Sekarang"
                 ? "Dana telah dikirim ke penerima"
                 : successSchedule?.label === "Terjadwal"
@@ -548,7 +687,10 @@ export default function TransferPage() {
                   : "Transfer berulang telah diatur"}
             </Typography.Text>
 
-            <Card className="animate-receipt-unfold" style={{ width: "100%", maxWidth: 448 }}>
+            <Card
+              className="animate-receipt-unfold"
+              style={{ width: "100%", maxWidth: 448 }}
+            >
               <Space direction="vertical" size={16} style={{ width: "100%" }}>
                 <Space size={16} style={{ paddingBottom: 24 }}>
                   <div
@@ -564,47 +706,82 @@ export default function TransferPage() {
                       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                       ...(successContact?.color
                         ? {}
-                        : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }),
+                        : {
+                            backgroundColor: "hsl(var(--muted))",
+                            color: "hsl(var(--muted-foreground))",
+                          }),
                     }}
                   >
                     {successContact?.initial || "?"}
                   </div>
                   <div>
-                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{ display: "block", marginBottom: 4 }}
+                    >
                       Penerima
                     </Typography.Text>
-                    <Typography.Text strong style={{ display: "block", fontSize: "1.125rem" }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", fontSize: "1.125rem" }}
+                    >
                       {successContact?.name || "-"}
                     </Typography.Text>
-                    <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem" }}>
+                    <Typography.Text
+                      type="secondary"
+                      style={{ display: "block", fontSize: "0.75rem" }}
+                    >
                       {formValues.toAccountId || "-"}
                     </Typography.Text>
                   </div>
                 </Space>
 
                 <div style={{ textAlign: "center" }}>
-                  <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 8 }}>
+                  <Typography.Text
+                    type="secondary"
+                    strong
+                    style={{ display: "block", marginBottom: 8 }}
+                  >
                     Jumlah Transfer
                   </Typography.Text>
-                  <Typography.Text strong style={{ display: "block", fontSize: "2.25rem" }} className="animate-amount-settle">
+                  <Typography.Text
+                    strong
+                    style={{ display: "block", fontSize: "2.25rem" }}
+                    className="animate-amount-settle"
+                  >
                     Rp {formatCurrencyWithoutSymbol(amount)}
                   </Typography.Text>
                 </div>
 
                 <Row gutter={[16, 16]} style={{ paddingTop: 16 }}>
                   <Col span={12}>
-                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{ display: "block", marginBottom: 4 }}
+                    >
                       Tipe Transfer
                     </Typography.Text>
-                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", fontSize: "0.875rem" }}
+                    >
                       {selectedTransferType?.label || "-"}
                     </Typography.Text>
                   </Col>
                   <Col span={12} style={{ textAlign: "right" }}>
-                    <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 4 }}>
+                    <Typography.Text
+                      type="secondary"
+                      strong
+                      style={{ display: "block", marginBottom: 4 }}
+                    >
                       Waktu
                     </Typography.Text>
-                    <Typography.Text strong style={{ display: "block", fontSize: "0.875rem" }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", fontSize: "0.875rem" }}
+                    >
                       {format(now, "dd MMM yyyy, HH:mm", { locale: id })}
                     </Typography.Text>
                   </Col>
@@ -612,7 +789,11 @@ export default function TransferPage() {
               </Space>
             </Card>
 
-            <Space direction="vertical" size={16} style={{ width: "100%", maxWidth: 448, marginTop: 32 }}>
+            <Space
+              direction="vertical"
+              size={16}
+              style={{ width: "100%", maxWidth: 448, marginTop: 32 }}
+            >
               <Button
                 type="primary"
                 onClick={handleTransferAgain}
@@ -647,7 +828,10 @@ export default function TransferPage() {
             <Typography.Title level={1} style={{ marginBottom: 0 }}>
               Transfer Instan
             </Typography.Title>
-            <Typography.Text type="secondary" style={{ display: "block", marginTop: 4 }}>
+            <Typography.Text
+              type="secondary"
+              style={{ display: "block", marginTop: 4 }}
+            >
               Kirim dana secara aman dalam hitungan detik.
             </Typography.Text>
           </div>
@@ -687,10 +871,17 @@ export default function TransferPage() {
                     <Input type="hidden" />
                   </Form.Item>
                   <Card>
-                    <Typography.Text strong style={{ display: "block", marginBottom: 16 }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", marginBottom: 16 }}
+                    >
                       Pilih Metode Transfer
                     </Typography.Text>
-                    <Row gutter={[16, 16]} role="radiogroup" aria-label="Pilih Metode Transfer">
+                    <Row
+                      gutter={[16, 16]}
+                      role="radiogroup"
+                      aria-label="Pilih Metode Transfer"
+                    >
                       {TRANSFER_TYPES.map((t) => {
                         const Icon = t.icon;
                         const isSelected = transferType === t.type;
@@ -718,7 +909,12 @@ export default function TransferPage() {
                                   : "2px solid transparent",
                                 transition: "all 0.2s",
                                 ...(isSelected
-                                  ? { backgroundColor: "hsl(var(--primary) / 0.05)", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.1)" }
+                                  ? {
+                                      backgroundColor:
+                                        "hsl(var(--primary) / 0.05)",
+                                      boxShadow:
+                                        "0 10px 15px -3px hsl(var(--primary) / 0.1)",
+                                    }
                                   : { backgroundColor: "hsl(var(--muted))" }),
                               }}
                             >
@@ -731,23 +927,61 @@ export default function TransferPage() {
                                     display: "flex",
                                     alignItems: "center",
                                     ...(isSelected
-                                      ? { backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }
-                                      : { backgroundColor: "hsl(var(--muted) / 0.5)", color: "hsl(var(--muted-foreground))" }),
+                                      ? {
+                                          backgroundColor:
+                                            "hsl(var(--primary) / 0.1)",
+                                          color: "hsl(var(--primary))",
+                                        }
+                                      : {
+                                          backgroundColor:
+                                            "hsl(var(--muted) / 0.5)",
+                                          color: "hsl(var(--muted-foreground))",
+                                        }),
                                   }}
                                 >
-                                  <div style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <div
+                                    style={{
+                                      width: 24,
+                                      height: 24,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
                                     <Icon className="h-6 w-6" />
                                   </div>
                                 </div>
                                 {isSelected && (
-                                  <div style={{ width: 8, height: 8, backgroundColor: "hsl(var(--primary))", borderRadius: "50%" }} className="animate-pulse" />
+                                  <div
+                                    style={{
+                                      width: 8,
+                                      height: 8,
+                                      backgroundColor: "hsl(var(--primary))",
+                                      borderRadius: "50%",
+                                    }}
+                                    className="animate-pulse"
+                                  />
                                 )}
                               </Row>
                               <div style={{ textAlign: "left" }}>
-                                <Typography.Text strong style={{ display: "block", fontSize: "0.875rem", marginBottom: 4 }}>
+                                <Typography.Text
+                                  strong
+                                  style={{
+                                    display: "block",
+                                    fontSize: "0.875rem",
+                                    marginBottom: 4,
+                                  }}
+                                >
                                   {t.label}
                                 </Typography.Text>
-                                <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem", marginBottom: 8 }}>
+                                <Typography.Text
+                                  type="secondary"
+                                  style={{
+                                    display: "block",
+                                    fontSize: "0.75rem",
+                                    marginBottom: 8,
+                                  }}
+                                >
                                   {t.description}
                                 </Typography.Text>
                                 <Space size={8}>
@@ -763,10 +997,17 @@ export default function TransferPage() {
                   </Card>
 
                   <Card>
-                    <Typography.Text strong style={{ display: "block", marginBottom: 16 }}>
+                    <Typography.Text
+                      strong
+                      style={{ display: "block", marginBottom: 16 }}
+                    >
                       Jadwal Transfer
                     </Typography.Text>
-                    <Row gutter={[16, 16]} role="radiogroup" aria-label="Jadwal Transfer">
+                    <Row
+                      gutter={[16, 16]}
+                      role="radiogroup"
+                      aria-label="Jadwal Transfer"
+                    >
                       {SCHEDULE_TYPES.map((s) => {
                         const isSelected = scheduleType === s.type;
                         return (
@@ -793,7 +1034,12 @@ export default function TransferPage() {
                                   : "2px solid transparent",
                                 transition: "all 0.2s",
                                 ...(isSelected
-                                  ? { backgroundColor: "hsl(var(--primary) / 0.05)", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.1)" }
+                                  ? {
+                                      backgroundColor:
+                                        "hsl(var(--primary) / 0.05)",
+                                      boxShadow:
+                                        "0 10px 15px -3px hsl(var(--primary) / 0.1)",
+                                    }
                                   : { backgroundColor: "hsl(var(--muted))" }),
                               }}
                             >
@@ -808,26 +1054,61 @@ export default function TransferPage() {
                                       alignItems: "center",
                                       justifyContent: "center",
                                       ...(isSelected
-                                        ? { backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }
-                                        : { backgroundColor: "hsl(var(--muted) / 0.5)", color: "hsl(var(--muted-foreground))" }),
+                                        ? {
+                                            backgroundColor:
+                                              "hsl(var(--primary) / 0.1)",
+                                            color: "hsl(var(--primary))",
+                                          }
+                                        : {
+                                            backgroundColor:
+                                              "hsl(var(--muted) / 0.5)",
+                                            color:
+                                              "hsl(var(--muted-foreground))",
+                                          }),
                                     }}
                                   >
                                     {s.type === "SCHEDULED" ? (
-                                      <CalendarIcon style={{ width: 20, height: 20 }} />
+                                      <CalendarIcon
+                                        style={{ width: 20, height: 20 }}
+                                      />
                                     ) : (
-                                      <Clock style={{ width: 20, height: 20 }} />
+                                      <Clock
+                                        style={{ width: 20, height: 20 }}
+                                      />
                                     )}
                                   </div>
                                 )}
                                 {isSelected && (
-                                  <div style={{ marginLeft: "auto", width: 8, height: 8, backgroundColor: "hsl(var(--primary))", borderRadius: "50%" }} className="animate-pulse" />
+                                  <div
+                                    style={{
+                                      marginLeft: "auto",
+                                      width: 8,
+                                      height: 8,
+                                      backgroundColor: "hsl(var(--primary))",
+                                      borderRadius: "50%",
+                                    }}
+                                    className="animate-pulse"
+                                  />
                                 )}
                               </Row>
                               <div style={{ textAlign: "left" }}>
-                                <Typography.Text strong style={{ display: "block", fontSize: "0.875rem", marginBottom: 4 }}>
+                                <Typography.Text
+                                  strong
+                                  style={{
+                                    display: "block",
+                                    fontSize: "0.875rem",
+                                    marginBottom: 4,
+                                  }}
+                                >
                                   {s.label}
                                 </Typography.Text>
-                                <Typography.Text type="secondary" style={{ display: "block", fontSize: "0.75rem" }}>
+                                <Typography.Text
+                                  type="secondary"
+                                  style={{
+                                    display: "block",
+                                    fontSize: "0.75rem",
+                                  }}
+                                >
                                   {s.description}
                                 </Typography.Text>
                               </div>
@@ -847,7 +1128,15 @@ export default function TransferPage() {
                         label={
                           <label
                             htmlFor="transfer-scheduled-at"
-                            style={{ fontSize: "0.75rem", fontWeight: "bold", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12, display: "block" }}
+                            style={{
+                              fontSize: "0.75rem",
+                              fontWeight: "bold",
+                              color: "hsl(var(--muted-foreground))",
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                              marginBottom: 12,
+                              display: "block",
+                            }}
                           >
                             Tanggal Transfer
                           </label>
@@ -855,7 +1144,12 @@ export default function TransferPage() {
                       >
                         <DatePicker
                           id="transfer-scheduled-at"
-                          style={{ width: "100%", height: 64, borderRadius: 12, fontWeight: "bold" }}
+                          style={{
+                            width: "100%",
+                            height: 64,
+                            borderRadius: 12,
+                            fontWeight: "bold",
+                          }}
                           placeholder="Pilih Tanggal Transfer"
                           format="DD MMM YYYY"
                           disabledDate={(current) =>
@@ -874,9 +1168,19 @@ export default function TransferPage() {
                   )}
 
                   {scheduleType === "RECURRING" && (
-                    <Space direction="vertical" size={16} className="animate-fade-in" style={{ marginTop: 24 }}>
+                    <Space
+                      direction="vertical"
+                      size={16}
+                      className="animate-fade-in"
+                      style={{ marginTop: 24 }}
+                    >
                       <Space direction="vertical" size={16}>
-                        <Typography.Text type="secondary" strong style={{ display: "block", marginLeft: 8 }} id="recurring-day-label">
+                        <Typography.Text
+                          type="secondary"
+                          strong
+                          style={{ display: "block", marginLeft: 8 }}
+                          id="recurring-day-label"
+                        >
                           Pilih Tanggal Tagihan / Transfer
                         </Typography.Text>
                         <Form.Item
@@ -887,7 +1191,16 @@ export default function TransferPage() {
                         >
                           <Input type="hidden" />
                         </Form.Item>
-                        <Row gutter={[8, 8]} style={{ backgroundColor: "hsl(var(--muted) / 0.3)", padding: 16, borderRadius: 12, border: "1px solid hsl(var(--border))" }} aria-labelledby="recurring-day-label">
+                        <Row
+                          gutter={[8, 8]}
+                          style={{
+                            backgroundColor: "hsl(var(--muted) / 0.3)",
+                            padding: 16,
+                            borderRadius: 12,
+                            border: "1px solid hsl(var(--border))",
+                          }}
+                          aria-labelledby="recurring-day-label"
+                        >
                           {Array.from({ length: 31 }, (_, i) => i + 1).map(
                             (d) => (
                               <Col span={3} key={d}>
@@ -909,8 +1222,18 @@ export default function TransferPage() {
                                     fontSize: "0.875rem",
                                     transition: "all 0.2s",
                                     ...(recurringDay === d
-                                      ? { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--surface))", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.3)", transform: "scale(1.05)" }
-                                      : { backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground) / 0.6)" }),
+                                      ? {
+                                          backgroundColor:
+                                            "hsl(var(--primary))",
+                                          color: "hsl(var(--surface))",
+                                          boxShadow:
+                                            "0 10px 15px -3px hsl(var(--primary) / 0.3)",
+                                          transform: "scale(1.05)",
+                                        }
+                                      : {
+                                          backgroundColor: "hsl(var(--card))",
+                                          color: "hsl(var(--foreground) / 0.6)",
+                                        }),
                                   }}
                                 >
                                   {d}
@@ -922,8 +1245,16 @@ export default function TransferPage() {
                       </Space>
 
                       <Space direction="vertical" size={16}>
-                        <Row justify="space-between" align="middle" style={{ marginLeft: 8 }}>
-                          <Typography.Text type="secondary" strong id="recurring-month-label">
+                        <Row
+                          justify="space-between"
+                          align="middle"
+                          style={{ marginLeft: 8 }}
+                        >
+                          <Typography.Text
+                            type="secondary"
+                            strong
+                            id="recurring-month-label"
+                          >
                             Pilih Bulan (Opsional)
                           </Typography.Text>
                           <Button
@@ -932,7 +1263,13 @@ export default function TransferPage() {
                             onClick={() =>
                               form.setFieldsValue({ recurringMonth: undefined })
                             }
-                            style={{ fontSize: "0.75rem", fontWeight: "bold", color: "hsl(var(--primary-dark))", letterSpacing: "0.1em", textTransform: "uppercase" }}
+                            style={{
+                              fontSize: "0.75rem",
+                              fontWeight: "bold",
+                              color: "hsl(var(--primary-dark))",
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                            }}
                           >
                             Reset ke Setiap Bulan
                           </Button>
@@ -945,7 +1282,16 @@ export default function TransferPage() {
                         >
                           <Input type="hidden" />
                         </Form.Item>
-                        <Row gutter={[8, 8]} style={{ backgroundColor: "hsl(var(--muted) / 0.3)", padding: 16, borderRadius: 16, border: "1px solid hsl(var(--border))" }} aria-labelledby="recurring-month-label">
+                        <Row
+                          gutter={[8, 8]}
+                          style={{
+                            backgroundColor: "hsl(var(--muted) / 0.3)",
+                            padding: 16,
+                            borderRadius: 16,
+                            border: "1px solid hsl(var(--border))",
+                          }}
+                          aria-labelledby="recurring-month-label"
+                        >
                           {[
                             "JAN",
                             "FEB",
@@ -980,8 +1326,17 @@ export default function TransferPage() {
                                     letterSpacing: "0.1em",
                                     transition: "all 0.2s",
                                     ...(recurringMonth === val
-                                      ? { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--surface))", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.3)" }
-                                      : { backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground) / 0.6)" }),
+                                      ? {
+                                          backgroundColor:
+                                            "hsl(var(--primary))",
+                                          color: "hsl(var(--surface))",
+                                          boxShadow:
+                                            "0 10px 15px -3px hsl(var(--primary) / 0.3)",
+                                        }
+                                      : {
+                                          backgroundColor: "hsl(var(--card))",
+                                          color: "hsl(var(--foreground) / 0.6)",
+                                        }),
                                   }}
                                 >
                                   {m}
@@ -1005,29 +1360,94 @@ export default function TransferPage() {
                         data-testid="recipient-account-input"
                         type="text"
                         placeholder="Masukkan ID Akun atau Nomor Rekening"
-                        style={{ paddingLeft: 64, height: 64, fontSize: "1.125rem" }}
+                        style={{
+                          paddingLeft: 64,
+                          height: 64,
+                          fontSize: "1.125rem",
+                        }}
                         aria-label="Nomor Rekening Penerima"
                       />
                     </Form.Item>
-                    <Search style={{ position: "absolute", left: 24, top: "50%", transform: "translateY(-50%)", height: 24, width: 24, color: "hsl(var(--muted-foreground))", zIndex: 10, pointerEvents: "none" }} />
+                    <Search
+                      style={{
+                        position: "absolute",
+                        left: 24,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        height: 24,
+                        width: 24,
+                        color: "hsl(var(--muted-foreground))",
+                        zIndex: 10,
+                        pointerEvents: "none",
+                      }}
+                    />
                   </div>
 
                   <Card>
-                    <div style={{ position: "absolute", top: 0, right: 0, width: 192, height: 192, backgroundColor: "hsl(var(--primary) / 0.05)", borderRadius: "50%", filter: "blur(48px)", zIndex: 0 }} />
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        width: 192,
+                        height: 192,
+                        backgroundColor: "hsl(var(--primary) / 0.05)",
+                        borderRadius: "50%",
+                        filter: "blur(48px)",
+                        zIndex: 0,
+                      }}
+                    />
 
-                    <Row justify="space-between" align="middle" gutter={[8, 8]} style={{ marginBottom: 24, position: "relative", zIndex: 10 }}>
+                    <Row
+                      justify="space-between"
+                      align="middle"
+                      gutter={[8, 8]}
+                      style={{
+                        marginBottom: 24,
+                        position: "relative",
+                        zIndex: 10,
+                      }}
+                    >
                       <Typography.Text type="secondary" strong>
                         Nominal Transfer
                       </Typography.Text>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "hsl(var(--success-light))", padding: "6px 12px", borderRadius: "9999px", border: "1px solid hsl(var(--primary) / 0.1)", boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)", flexShrink: 0 }}>
-                        <div style={{ width: 6, height: 6, backgroundColor: "hsl(var(--primary))", borderRadius: "50%" }} className="animate-pulse" />
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          backgroundColor: "hsl(var(--success-light))",
+                          padding: "6px 12px",
+                          borderRadius: "9999px",
+                          border: "1px solid hsl(var(--primary) / 0.1)",
+                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 6,
+                            height: 6,
+                            backgroundColor: "hsl(var(--primary))",
+                            borderRadius: "50%",
+                          }}
+                          className="animate-pulse"
+                        />
                         <Typography.Text strong style={{ fontSize: "0.75rem" }}>
                           Secured IDR
                         </Typography.Text>
                       </div>
                     </Row>
 
-                    <Space size={16} style={{ marginBottom: 24, position: "relative", zIndex: 10, display: "block" }}>
+                    <Space
+                      size={16}
+                      style={{
+                        marginBottom: 24,
+                        position: "relative",
+                        zIndex: 10,
+                        display: "block",
+                      }}
+                    >
                       <Form.Item
                         name="amount"
                         rules={[rule("amount")]}
@@ -1041,13 +1461,25 @@ export default function TransferPage() {
                         onChange={handleAmountChange}
                         placeholder="0"
                         aria-label="Nominal Transfer"
-                        style={{ width: "100%", backgroundColor: "transparent", border: "none", padding: 0, fontSize: "2.25rem", fontWeight: "bold", color: "hsl(var(--foreground))" }}
+                        style={{
+                          width: "100%",
+                          backgroundColor: "transparent",
+                          border: "none",
+                          padding: 0,
+                          fontSize: "2.25rem",
+                          fontWeight: "bold",
+                          color: "hsl(var(--foreground))",
+                        }}
                         variant="borderless"
                       />
                     </Space>
 
                     <Card style={{ position: "relative", zIndex: 10 }}>
-                      <Typography.Text type="secondary" strong style={{ display: "block", marginBottom: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        strong
+                        style={{ display: "block", marginBottom: 12 }}
+                      >
                         Memo Transaksi
                       </Typography.Text>
                       <Form.Item
@@ -1060,7 +1492,14 @@ export default function TransferPage() {
                           data-testid="description-input"
                           type="text"
                           placeholder="Apa tujuan transfer ini?"
-                          style={{ width: "100%", fontSize: "1rem", fontWeight: "bold", backgroundColor: "transparent", border: "none", padding: 0 }}
+                          style={{
+                            width: "100%",
+                            fontSize: "1rem",
+                            fontWeight: "bold",
+                            backgroundColor: "transparent",
+                            border: "none",
+                            padding: 0,
+                          }}
                           aria-label="Memo Transaksi"
                         />
                       </Form.Item>
@@ -1076,7 +1515,9 @@ export default function TransferPage() {
                     size="large"
                   >
                     Tinjau Ringkasan Transfer
-                    <ArrowRight style={{ width: 20, height: 20, marginLeft: 8 }} />
+                    <ArrowRight
+                      style={{ width: 20, height: 20, marginLeft: 8 }}
+                    />
                   </Button>
                 </Form>
               </Space>
@@ -1085,11 +1526,20 @@ export default function TransferPage() {
             <Col xs={24} lg={8}>
               <Space direction="vertical" size={16}>
                 <Card>
-                  <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-                    <Typography.Text strong>
-                      Penerima Favorit
-                    </Typography.Text>
-                    <div style={{ height: 4, width: 32, backgroundColor: "hsl(var(--primary))", borderRadius: "9999px" }} />
+                  <Row
+                    justify="space-between"
+                    align="middle"
+                    style={{ marginBottom: 24 }}
+                  >
+                    <Typography.Text strong>Penerima Favorit</Typography.Text>
+                    <div
+                      style={{
+                        height: 4,
+                        width: 32,
+                        backgroundColor: "hsl(var(--primary))",
+                        borderRadius: "9999px",
+                      }}
+                    />
                   </Row>
 
                   <Row gutter={[16, 16]}>
@@ -1107,12 +1557,17 @@ export default function TransferPage() {
                             gap: 16,
                             padding: 24,
                             borderRadius: 12,
-                            border: selectedContact === c.accountId
-                              ? "1px solid hsl(var(--primary))"
-                              : "1px solid transparent",
+                            border:
+                              selectedContact === c.accountId
+                                ? "1px solid hsl(var(--primary))"
+                                : "1px solid transparent",
                             transition: "all 0.2s",
                             ...(selectedContact === c.accountId
-                              ? { backgroundColor: "hsl(var(--primary) / 0.05)", boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.1)" }
+                              ? {
+                                  backgroundColor: "hsl(var(--primary) / 0.05)",
+                                  boxShadow:
+                                    "0 10px 15px -3px hsl(var(--primary) / 0.1)",
+                                }
                               : { backgroundColor: "hsl(var(--muted))" }),
                           }}
                         >
@@ -1153,7 +1608,18 @@ export default function TransferPage() {
                           transition: "all 0.2s",
                         }}
                       >
-                        <div style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: "hsl(var(--muted))", display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))" }}>
+                        <div
+                          style={{
+                            width: 56,
+                            height: 56,
+                            borderRadius: 16,
+                            backgroundColor: "hsl(var(--muted))",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "hsl(var(--muted-foreground))",
+                          }}
+                        >
                           <PlusCircle style={{ width: 24, height: 24 }} />
                         </div>
                         <Typography.Text type="secondary" strong>
@@ -1164,23 +1630,67 @@ export default function TransferPage() {
                   </Row>
 
                   <div style={{ marginTop: "auto", paddingTop: 40 }}>
-                    <div style={{ background: "linear-gradient(135deg, hsl(var(--text-primary)), hsl(var(--text-primary)))", borderRadius: 12, padding: "20px 24px", color: "hsl(var(--surface))", position: "relative", overflow: "hidden", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}>
+                    <div
+                      style={{
+                        background:
+                          "linear-gradient(135deg, hsl(var(--text-primary)), hsl(var(--text-primary)))",
+                        borderRadius: 12,
+                        padding: "20px 24px",
+                        color: "hsl(var(--surface))",
+                        position: "relative",
+                        overflow: "hidden",
+                        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+                      }}
+                    >
                       <div style={{ position: "relative", zIndex: 10 }}>
-                        <Typography.Title level={4} style={{ marginBottom: 8, color: "hsl(var(--surface))" }}>
+                        <Typography.Title
+                          level={4}
+                          style={{
+                            marginBottom: 8,
+                            color: "hsl(var(--surface))",
+                          }}
+                        >
                           Bantuan?
                         </Typography.Title>
-                        <Typography.Text type="secondary" style={{ display: "block", marginBottom: 32, lineHeight: 1.5 }}>
+                        <Typography.Text
+                          type="secondary"
+                          style={{
+                            display: "block",
+                            marginBottom: 32,
+                            lineHeight: 1.5,
+                          }}
+                        >
                           Proteksi & panduan transaksi aman.
                         </Typography.Text>
                         <Button
                           type="default"
                           htmlType="button"
-                          style={{ fontSize: "0.75rem", fontWeight: "bold", letterSpacing: "0.1em", textTransform: "uppercase", backgroundColor: "hsl(var(--surface) / 0.1)", padding: "12px 24px", borderRadius: 12, border: "1px solid hsl(var(--surface) / 0.1)", color: "hsl(var(--surface))" }}
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: "bold",
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                            backgroundColor: "hsl(var(--surface) / 0.1)",
+                            padding: "12px 24px",
+                            borderRadius: 12,
+                            border: "1px solid hsl(var(--surface) / 0.1)",
+                            color: "hsl(var(--surface))",
+                          }}
                         >
                           Hubungi Kami
                         </Button>
                       </div>
-                      <LifeBuoy style={{ position: "absolute", bottom: -30, right: -30, height: 192, width: 192, color: "hsl(var(--surface) / 0.05)", transform: "rotate(12deg)" }} />
+                      <LifeBuoy
+                        style={{
+                          position: "absolute",
+                          bottom: -30,
+                          right: -30,
+                          height: 192,
+                          width: 192,
+                          color: "hsl(var(--surface) / 0.05)",
+                          transform: "rotate(12deg)",
+                        }}
+                      />
                     </div>
                   </div>
                 </Card>

@@ -60,7 +60,7 @@ describe("SecurityPage", () => {
 
   it("should render biometric MFA section", () => {
     render(<SecurityPage />, { wrapper: createWrapper() });
-    expect(screen.getByText("MFA Biometrik")).toBeInTheDocument();
+    expect(screen.getAllByText("MFA Biometrik").length).toBeGreaterThan(0);
   });
 
   it("should render device tokens section", () => {

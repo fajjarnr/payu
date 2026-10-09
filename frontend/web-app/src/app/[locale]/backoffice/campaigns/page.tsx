@@ -119,8 +119,8 @@ export default function CampaignsPage() {
       ),
     },
     {
-      key: "budget",
-      title: "Budget Spent",
+      key: "reward",
+      title: "Reward Value / Kuota",
       render: (_, cmp) => (
         <Space direction="vertical" size={8} style={{ minWidth: 128 }}>
           <Flex align="center" justify="space-between">
@@ -131,7 +131,7 @@ export default function CampaignsPage() {
               {cmp.value}
             </Typography.Text>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              / {cmp.maxClaims ?? "∞"}
+              / {cmp.maxClaims ?? "∞"} klaim
             </Typography.Text>
           </Flex>
           <Progress

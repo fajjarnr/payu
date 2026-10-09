@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
 import {
@@ -12,10 +12,17 @@ import {
   Info,
 } from "@/components/icons";
 import { notify as toast } from "@/lib/notify";
+import { useAuthStore } from "@/stores/authStore";
+import { useProcessQrisPayment, useTransactions } from "@/hooks";
+import { asMoney } from "@/lib/currency";
+import { Link } from "@/lib/navigation";
 import {
   Button,
   Card,
   Col,
+  Form,
+  Input,
+  Modal,
   Progress,
   Row,
   Space,
@@ -37,8 +44,24 @@ function _crc16X25(data: string): string {
 export default function QRISPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [showMyQr, setShowMyQr] = useState(false);
+  const [pendingScan, setPendingScan] = useState<string | null>(null);
+  const [amount, setAmount] = useState("");
+  const [form] = Form.useForm();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { token } = theme.useToken();
+  const { accountId } = useAuthStore();
+  const processQrisPayment = useProcessQrisPayment();
+
+  // QRIS payments are ordinary transactions tagged QRIS_PAYMENT; there is no
+  // separate history endpoint, so filter the account feed.
+  const { data: transactions } = useTransactions(accountId ?? undefined);
+  const qrisHistory = useMemo(
+    () =>
+      (transactions ?? [])
+        .filter((tx) => tx.type === "QRIS_PAYMENT")
+        .slice(0, 5),
+    [transactions],
+  );
 
   const handleToggleCamera = () => {
     setIsScanning(!isScanning);
@@ -47,22 +70,52 @@ export default function QRISPage() {
     }
   };
 
+  const qrisToday = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    return (transactions ?? []).filter(
+      (tx) => tx.type === "QRIS_PAYMENT" && new Date(tx.createdAt) >= start,
+    );
+  }, [transactions]);
+
+  const todayQrisSpend = useMemo(
+    () =>
+      qrisToday
+        .reduce((sum, tx) => sum + Number(tx.amount), 0)
+        .toLocaleString("id-ID"),
+    [qrisToday],
+  );
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setIsScanning(true);
-      // EMVCo TLV + CRC16 X25 check (tag 63) — placeholder until GET /accounts/{id}/qris live
-      // const payload = "000201...6304ABCD"; const crc = crc16X25(payload.slice(0, -4)); if (crc !== payload.slice(-4)) { toast.error('QRIS CRC invalid'); setIsScanning(false); return; }
-      setTimeout(() => {
-        setIsScanning(false);
-        toast.success(
-          `QR Code dari "${file.name}" terdeteksi: Merchant PayU Simulator`,
-        );
-      }, 1000);
+    if (!file) return;
+    setIsScanning(true);
+    // No QR decoder runs in the browser here, so the raw QR payload cannot be
+    // extracted from the image. Ask for it explicitly and send it to the real
+    // POST /transactions/qris/pay instead of faking a merchant match.
+    setPendingScan("");
+    setIsScanning(false);
+    e.target.value = "";
+  };
+
+  const handlePayQris = async () => {
+    if (!pendingScan || !amount) return;
+    try {
+      await processQrisPayment.mutateAsync({
+        qrCode: pendingScan,
+        amount: asMoney(amount),
+        accountId: accountId ?? "",
+      });
+      toast.success("Pembayaran QRIS diterima dan sedang diproses");
+      setPendingScan(null);
+      setAmount("");
+      form.resetFields();
+    } catch {
+      toast.error("Pembayaran QRIS gagal");
     }
   };
 
@@ -203,9 +256,7 @@ export default function QRISPage() {
                             boxShadow: token.boxShadowSecondary,
                             border: `1px solid ${token.colorBorder}`,
                             transition: "transform 0.5s",
-                            transform: isScanning
-                              ? "scale(1.1)"
-                              : undefined,
+                            transform: isScanning ? "scale(1.1)" : undefined,
                           }}
                         >
                           <Camera
@@ -343,7 +394,9 @@ export default function QRISPage() {
                       marginBottom: 24,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 12 }}
+                    >
                       <History
                         style={{
                           width: 20,
@@ -372,50 +425,75 @@ export default function QRISPage() {
                     </Button>
                   </div>
 
-                  <Space direction="vertical" size={16}>
-                    <div
-                      style={{
-                        padding: 32,
-                        textAlign: "center",
-                        backgroundColor: `${token.colorFillQuaternary}1a`,
-                        borderRadius: 12,
-                        border: `1px dashed ${token.colorBorder}80`,
-                      }}
-                    >
+                  <Space
+                    direction="vertical"
+                    size={16}
+                    style={{ width: "100%" }}
+                  >
+                    {qrisHistory.length === 0 ? (
                       <div
                         style={{
-                          width: 64,
-                          height: 64,
-                          backgroundColor: `${token.colorFillQuaternary}33`,
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          margin: "0 auto 16px",
-                          opacity: 0.3,
+                          padding: 32,
+                          textAlign: "center",
+                          backgroundColor: `${token.colorFillQuaternary}1a`,
+                          borderRadius: 12,
+                          border: `1px dashed ${token.colorBorder}80`,
                         }}
                       >
-                        <History
+                        <div
                           style={{
-                            width: 32,
-                            height: 32,
-                            color: token.colorText,
+                            width: 64,
+                            height: 64,
+                            backgroundColor: `${token.colorFillQuaternary}33`,
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "0 auto 16px",
+                            opacity: 0.3,
                           }}
-                        />
+                        >
+                          <History
+                            style={{
+                              width: 32,
+                              height: 32,
+                              color: token.colorText,
+                            }}
+                          />
+                        </div>
+                        <Typography.Text
+                          type="secondary"
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                            opacity: 0.4,
+                          }}
+                        >
+                          Belum ada riwayat transaksi QRIS
+                        </Typography.Text>
                       </div>
-                      <Typography.Text
-                        type="secondary"
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          opacity: 0.4,
-                        }}
-                      >
-                        Belum ada riwayat transaksi QRIS
-                      </Typography.Text>
-                    </div>
+                    ) : (
+                      qrisHistory.map((tx) => (
+                        <Row key={tx.id} justify="space-between" align="middle">
+                          <Space direction="vertical" size={0}>
+                            <Typography.Text strong>
+                              {tx.description ?? "Pembayaran QRIS"}
+                            </Typography.Text>
+                            <Typography.Text
+                              type="secondary"
+                              style={{ fontSize: 12 }}
+                            >
+                              {new Date(tx.createdAt).toLocaleString("id-ID")}
+                            </Typography.Text>
+                          </Space>
+                          <Typography.Text strong>
+                            Rp {tx.amount}
+                          </Typography.Text>
+                        </Row>
+                      ))
+                    )}
                   </Space>
                 </Card>
               </Space>
@@ -544,7 +622,10 @@ export default function QRISPage() {
                       <div>
                         <Typography.Title
                           level={4}
-                          style={{ marginBottom: 0, color: token.colorTextLightSolid }}
+                          style={{
+                            marginBottom: 0,
+                            color: token.colorTextLightSolid,
+                          }}
                         >
                           QRIS Personal
                         </Typography.Title>
@@ -674,14 +755,13 @@ export default function QRISPage() {
                         opacity: 0.6,
                       }}
                     >
-                      Limit Harian QRIS
+                      Pemakaian QRIS Hari Ini
                     </Typography.Text>
                     <Typography.Title level={2} style={{ marginBottom: 0 }}>
-                      Rp 10.000.000
+                      Rp {todayQrisSpend}
                     </Typography.Title>
                   </Space>
                   <Space direction="vertical" size={16}>
-                    <Progress percent={0} showInfo={false} />
                     <Typography.Text
                       strong
                       style={{
@@ -691,7 +771,7 @@ export default function QRISPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      0% Terpakai
+                      {qrisToday.length} transaksi hari ini
                     </Typography.Text>
                   </Space>
                 </Card>
@@ -699,6 +779,53 @@ export default function QRISPage() {
             </Col>
           </Row>
         </Space>
+
+        <Modal
+          open={pendingScan !== null}
+          onCancel={() => {
+            setPendingScan(null);
+            form.resetFields();
+          }}
+          onOk={handlePayQris}
+          okText="Bayar"
+          confirmLoading={processQrisPayment.isPending}
+          okButtonProps={{ disabled: !pendingScan || !amount }}
+          title="Bayar QRIS"
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item
+              label="Payload QR"
+              name="qrCode"
+              rules={[{ required: true, message: "Payload QR wajib diisi" }]}
+            >
+              <Input
+                aria-label="Payload QR"
+                placeholder="Tempel payload QRIS dari gambar yang diunggah"
+                value={pendingScan ?? ""}
+                onChange={(e) => setPendingScan(e.target.value)}
+              />
+            </Form.Item>
+            <Form.Item
+              label="Nominal (IDR)"
+              name="amount"
+              rules={[
+                {
+                  required: true,
+                  pattern: /^\d+(\.\d+)?$/,
+                  message: "Nominal harus angka",
+                },
+              ]}
+            >
+              <Input
+                aria-label="Nominal pembayaran"
+                inputMode="decimal"
+                placeholder="10000"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
       </main>
     </DashboardLayout>
   );

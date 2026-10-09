@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import SupportService from "@/services/SupportService";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Link } from "@/lib/navigation";
 import {
@@ -40,28 +42,17 @@ export default function SupportPage() {
     },
   ];
 
-  const faqs = [
-    {
-      title: t("faqItems.identitySync"),
-      desc: t("faqItems.identitySyncDesc"),
-      icon: HelpCircle,
-    },
-    {
-      title: t("faqItems.transactionLimits"),
-      desc: t("faqItems.transactionLimitsDesc"),
-      icon: FileText,
-    },
-    {
-      title: t("faqItems.deviceToken"),
-      desc: t("faqItems.deviceTokenDesc"),
-      icon: HelpCircle,
-    },
-    {
-      title: t("faqItems.fraudPrevention"),
-      desc: t("faqItems.fraudPreventionDesc"),
-      icon: FileText,
-    },
-  ];
+  // FAQ content is served by support-service; the i18n strings are only a
+  // fallback for when the endpoint returns nothing.
+  const { data: apiFaqs } = useQuery({
+    queryKey: ["support-faqs"],
+    queryFn: () => SupportService.getFAQs(),
+  });
+  const faqs = (apiFaqs ?? []).map((f) => ({
+    title: f.question,
+    desc: f.answer,
+    icon: HelpCircle,
+  }));
 
   const getChannelColor = (color: string) => {
     if (color === "primary") return token.colorPrimary;

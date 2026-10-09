@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SupportPage from "@/app/[locale]/support/page";
+
+vi.mock("@/services/SupportService", () => ({
+  default: { getFAQs: () => Promise.resolve([]) },
+}));
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
@@ -49,31 +54,71 @@ describe("SupportPage", () => {
   });
 
   it("should render within DashboardLayout", () => {
-    render(<SupportPage />);
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        }
+      >
+        <SupportPage />
+      </QueryClientProvider>,
+    );
     expect(screen.getByTestId("dashboard-layout")).toBeInTheDocument();
   });
 
   it("should render page title", () => {
-    render(<SupportPage />);
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        }
+      >
+        <SupportPage />
+      </QueryClientProvider>,
+    );
     expect(screen.getByText("Terminal Bantuan")).toBeInTheDocument();
   });
 
   it("should render the channels that actually exist", () => {
     // Phone support has no published number and live chat has no backend in this
     // deployment, so only the ticket form and the support mailbox are shown.
-    render(<SupportPage />);
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        }
+      >
+        <SupportPage />
+      </QueryClientProvider>,
+    );
     expect(screen.getByText("Bantuan Langsung")).toBeInTheDocument();
     expect(screen.getByText("Protokol Email")).toBeInTheDocument();
     expect(screen.queryByText("Panggilan Suara")).not.toBeInTheDocument();
   });
 
   it("should render knowledge repository", () => {
-    render(<SupportPage />);
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        }
+      >
+        <SupportPage />
+      </QueryClientProvider>,
+    );
     expect(screen.getByText("Repositori Inteligensi")).toBeInTheDocument();
   });
 
   it("should render system status", () => {
-    render(<SupportPage />);
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        }
+      >
+        <SupportPage />
+      </QueryClientProvider>,
+    );
     expect(screen.getByText("Gateway: —")).toBeInTheDocument();
     expect(screen.getByText("Backend: —")).toBeInTheDocument();
   });

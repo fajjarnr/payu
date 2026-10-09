@@ -133,14 +133,6 @@ export default function SecurityPage() {
     }
   };
 
-  const sessions: Array<{
-    device: string;
-    location: string;
-    status: string;
-    icon: typeof Monitor;
-    active: boolean;
-  }> = [];
-
   return (
     <DashboardLayout>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -165,7 +157,7 @@ export default function SecurityPage() {
                 padding: "10px 20px",
               }}
             >
-              Proteksi Level 4 Aktif
+              MFA Biometrik
             </Tag>
           </Col>
         </Row>
@@ -292,8 +284,6 @@ export default function SecurityPage() {
           title="Sesi Terautentikasi"
           extra={
             <Tag
-              color="warning"
-              icon={<ShieldAlert style={{ fontSize: 14 }} />}
               style={{
                 fontSize: 12,
                 fontWeight: 700,
@@ -301,72 +291,33 @@ export default function SecurityPage() {
                 letterSpacing: 2,
               }}
             >
-              Deteksi Sesi Tidak Normal
+              Belum Tersedia
             </Tag>
           }
         >
-          {sessions.length === 0 ? (
-            <Empty
-              image={
-                <Monitor
-                  style={{
-                    fontSize: 48,
-                    color: "var(--ant-color-text-quaternary)",
-                  }}
-                />
-              }
-              description={
-                <Text
-                  type="secondary"
-                  strong
-                  style={{
-                    fontSize: 12,
-                    textTransform: "uppercase",
-                    letterSpacing: 2,
-                  }}
-                >
-                  Tidak ada sesi aktif yang terdeteksi
-                </Text>
-              }
-            />
-          ) : (
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              {sessions.map((session, i) => (
-                <Card key={i} type="inner">
-                  <Row justify="space-between" align="middle" gutter={[16, 16]}>
-                    <Col xs={24} sm={16}>
-                      <Space size="middle" align="center">
-                        <Avatar
-                          size={56}
-                          icon={<session.icon style={{ fontSize: 24 }} />}
-                          style={{
-                            backgroundColor: "var(--ant-color-fill-secondary)",
-                            color: session.active
-                              ? "var(--ant-color-primary)"
-                              : "var(--ant-color-text-secondary)",
-                          }}
-                        />
-                        <Space direction="vertical" size={0}>
-                          <Text strong>{session.device}</Text>
-                          <Text
-                            type="secondary"
-                            style={{
-                              fontSize: 12,
-                              textTransform: "uppercase",
-                              letterSpacing: 2,
-                            }}
-                          >
-                            {session.location} • {session.status}
-                          </Text>
-                        </Space>
-                      </Space>
-                    </Col>
-                    <Col xs={24} sm={8}></Col>
-                  </Row>
-                </Card>
-              ))}
-            </Space>
-          )}
+          <Empty
+            image={
+              <Monitor
+                style={{
+                  fontSize: 48,
+                  color: "var(--ant-color-text-quaternary)",
+                }}
+              />
+            }
+            description={
+              <Text
+                type="secondary"
+                strong
+                style={{
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: 2,
+                }}
+              >
+                Daftar sesi belum tersedia di layanan ini
+              </Text>
+            }
+          />
         </Card>
 
         <Card
