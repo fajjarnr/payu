@@ -203,7 +203,7 @@ export default function CompliancePage() {
           },
           {
             label: "Regulatory Status",
-            value: "Compliant",
+            value: "—",
             icon: ClipboardCheck,
           },
         ]}

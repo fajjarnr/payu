@@ -45,13 +45,11 @@
     "history": "Riwayat Transaksi",
     "scheduled": "Transfer Terjadwal",
     "overview": "Dasbor",
-    "transactions": "Transaksi",
     "finance": "Keuangan",
     "splitBill": "Split Bill",
     "lending": "Lending",
     "notifications": "Notifikasi",
     "statements": "Laporan",
-    "exchange": "Valas",
     "toCurrency": "Ke Mata Uang",
     "aiForecaster": "Perkiraan Keuangan AI Aktif",
     "skipToMain": "Lewati ke konten utama",
@@ -367,13 +365,13 @@
     "oidcNote": "Anda akan diarahkan ke penyedia identitas aman kami. Kredensial Anda tidak pernah sampai ke PayU.",
     "or": "Atau",
     "branding": {
-      "tag": "Keamanan Tingkat Enterprise",
+      "tag": "Kontrol Keamanan",
       "title": "Platform Perbankan Digital Masa Depan.",
       "desc": "Kelola aset, investasi, dan transaksi harian Anda dalam satu ekosistem yang aman, terenkripsi, dan terintegrasi penuh.",
       "footer": "© 2026 PayU Financial Infrastructure. Secure Environment.",
       "features": {
-        "encryption": "Enkripsi End-to-End Standar Militer",
-        "monitoring": "Monitoring Transaksi Real-time AI",
+        "encryption": "Enkripsi AES-GCM di database",
+        "monitoring": "Audit akses & skor fraud otomatis",
         "qris": "Integrasi Pembayaran QRIS & BI-FAST"
       }
     },
@@ -710,8 +708,8 @@
       "badge": "Tanpa Batas",
       "title": "Akses Global",
       "titleHighlight": "Kapan Saja.",
-      "statsAnnual": "Transaksi Tahunan",
-      "statsTrusted": "Nasabah Percaya"
+      "statsAnnual": "Bayar QRIS & tagihan",
+      "statsTrusted": "Transfer BI-FAST & SNAP-BI"
     },
     "slide4": {
       "title": "Mulai Perjalanan",

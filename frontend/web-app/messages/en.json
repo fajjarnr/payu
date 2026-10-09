@@ -29,7 +29,7 @@
     "accounts": "Accounts",
     "transactions": "Transactions",
     "transfers": "Transfers",
-    "exchange": "Exchange",
+    "exchange": "Foreign Exchange",
     "bills": "Bills",
     "cards": "Cards",
     "investments": "Investments",
@@ -45,13 +45,11 @@
     "history": "Transaction History",
     "scheduled": "Scheduled Transfers",
     "overview": "Overview",
-    "transactions": "Transactions",
     "finance": "Finance",
     "splitBill": "Split Bill",
     "lending": "Lending",
     "notifications": "Notifications",
     "statements": "Statements",
-    "exchange": "Foreign Exchange",
     "toCurrency": "To Currency",
     "aiForecaster": "AI Financial Forecaster Active",
     "skipToMain": "Skip to main content",
@@ -367,13 +365,13 @@
     "oidcNote": "You will be redirected to our secure identity provider. Your credentials never reach PayU.",
     "or": "Or",
     "branding": {
-      "tag": "Enterprise Grade Security",
+      "tag": "Security Controls",
       "title": "Future Digital Banking Platform.",
       "desc": "Manage assets, investments, and daily transactions in one secure, encrypted, and fully integrated ecosystem.",
       "footer": "© 2026 PayU Financial Infrastructure. Secure Environment.",
       "features": {
-        "encryption": "Military Grade End-to-End Encryption",
-        "monitoring": "Real-time AI Transaction Monitoring",
+        "encryption": "AES-GCM encryption at rest",
+        "monitoring": "Access audit & automated fraud scoring",
         "qris": "QRIS & BI-FAST Payment Integration"
       }
     },
@@ -710,8 +708,8 @@
       "badge": "Limitless",
       "title": "Global Access",
       "titleHighlight": "Anytime.",
-      "statsAnnual": "Annual Transactions",
-      "statsTrusted": "Trusted Customers"
+      "statsAnnual": "QRIS & bill payments",
+      "statsTrusted": "BI-FAST & SNAP-BI transfers"
     },
     "slide4": {
       "title": "Start Your Journey",
