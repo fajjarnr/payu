@@ -20,7 +20,7 @@ patches:
         template:
           spec:
             containers:
-              - name: app
+              - name: biller-simulator
                 env:
                   - name: OIDC_ISSUER
                     value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"

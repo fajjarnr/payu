@@ -73,7 +73,7 @@ images:
     newTag: "1.18.103"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
-    newTag: "1.18.74"
+    newTag: "1.18.125"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
     newTag: "1.18.74"
@@ -97,7 +97,7 @@ images:
     newTag: "1.18.107"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
-    newTag: "1.18.76"
+    newTag: "1.18.125"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
     newTag: "1.18.74"
@@ -115,7 +115,7 @@ images:
     newTag: "1.18.74"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
-    newTag: "1.18.74"
+    newTag: "1.18.125"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
     newTag: "1.18.78"
@@ -124,22 +124,22 @@ images:
     newTag: "1.18.74"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
-    newTag: "1.18.98"
+    newTag: "1.18.126"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
-    newTag: "1.18.98"
+    newTag: "1.18.125"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
     newTag: "1.18.74"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-    newTag: "1.8.117"
+    newTag: "1.18.126"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-    newTag: "1.18.104"
+    newTag: "1.18.126"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-    newTag: "1.18.118"
+    newTag: "1.18.127"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
     newTag: "1.18.74"
@@ -237,6 +237,71 @@ patches:
           ingress.payu.io/class: shared
       spec:
         host: payu-dev.apps.fajjjar.my.id
+  # Convergence (2026-10-12): per-service overlay env for wallet-service (dev cache,
+  # RELAY-006 parity) and web-app (SPRINGDOC) were only in the per-service overlays,
+  # so a full root apply silently stripped them (guard: verify-overlay-drift.sh).
+  # Root now carries the same env so both deploy units converge.
+  - target:
+      kind: Deployment
+      name: wallet-service
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: wallet-service
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: PAYU_CACHE_REDIS_HOST
+                    value: payu-cache-resp
+                  - name: PAYU_CACHE_REDIS_PORT
+                    value: "11222"
+                  - name: PAYU_CACHE_REDIS_USERNAME
+                    value: developer
+                  - name: PAYU_CACHE_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-cache-credentials
+                        key: password
+                  - name: SPRING_DATA_REDIS_USERNAME
+                    value: developer
+                  - name: SPRING_DATA_REDIS_HOST
+                    value: payu-cache-resp
+                  - name: SPRING_DATA_REDIS_PORT
+                    value: "11222"
+                  - name: SPRING_DATA_REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-cache-credentials
+                        key: password
+                  - name: REDIS_HOST
+                    value: payu-cache-resp
+                  - name: REDIS_PORT
+                    value: "11222"
+                  - name: REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-cache-credentials
+                        key: password
+  - target:
+      kind: Deployment
+      name: web-app
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: web-app
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: SPRINGDOC_API_DOCS_ENABLED
+                    value: "true"
   # Replica count patches
   - target:
       kind: Deployment
