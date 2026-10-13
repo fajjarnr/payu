@@ -7436,3 +7436,11 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: (1) BFF `/api/ws-ticket` menandatangani HMAC (`base64url(payload).hex(hmac)`, TTL 60s, terikat accountId) dengan secret bersama `WS_TICKET_SECRET`; analytics memverifikasi + mencocokkan accountId di path; JWT `?token=` tetap didukung. (2) Debug: baca log uvicorn (`[accepted]` vs 403) — 403 pada upgrade = app menolak sebelum accept; jangan buru-buru menambahkan origin CORS. (3) Verifikasi E2E hanya saat single replica steady-state, atau tunggu rollout selesai (bandingkan jumlah pod).
 
 **Pelajaran**: (1) pola tiket BFF = cara baku mengauth WebSocket saat sesi berbasis cookie httpOnly; (2) Starlette: `close()` sebelum `accept()` = respons HTTP 403 di kabel, bukan kode WS yang diminta; (3) rollout + Kafka consumer group = jendela multi-consumer; test real-time harus stabil dulu; (4) tiket TTL pendek (60s) → tiket E2E yang basi terlihat seperti bug auth ("expired", bukan "invalid"); (5) `oc exec -o` menulis ke filesystem POD, bukan host — pakai stdout.
+
+## L-471: OTEL_ENDPOINT hilang di per-service overlay = simulator CrashLoop (SRCFG00011) (2026-10-13)
+
+**Context**: 3 simulator (bi-fast/qris/dukcapil) CrashLoopBackOff 203× saat deploy dari per-service overlay, padahal RS dari root overlay sehat. Log: `SRCFG00011: Could not expand value OTEL_ENDPOINT in property quarkus.otel.exporter.otlp.endpoint` (exit 1 Quarkus). Root overlay punya patch JSON6902 yang menambah `OTEL_ENDPOINT=http://localhost:4317` untuk ke-3 simulator; per-service overlay (render base saja) tidak membawanya → property expansion gagal walau `OTEL_SDK_DISABLED=true` (ekspansi config terjadi sebelum SDK mati).
+
+**Fix**: env `OTEL_ENDPOINT` ditambahkan ke ketiga per-service overlay (samakan dengan root) → pod baru Running, 0 restart, guard tetap `OK: no overlay drift`.
+
+**Pelajaran**: (1) kegagalan CRASH saat per-service apply tapi tidak saat root apply = hampir selalu env yang hanya ada di root overlay patch — diff render root vs per-service; (2) `OTEL_SDK_DISABLED` TIDAK melindungi dari expansion error properti otel (config diekspansi lebih dulu); (3) simulator pakai `otel.*` property names berbeda (`quarkus.otel.exporter.otlp.endpoint` membaca `${OTEL_ENDPOINT}`), sementara service lain pakai `QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT`.
