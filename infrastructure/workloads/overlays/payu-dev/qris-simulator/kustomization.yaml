@@ -24,3 +24,15 @@ patches:
                 env:
                   - name: OIDC_ISSUER
                     value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+  # OTEL_ENDPOINT must exist or the Quarkus config expansion of
+  # quarkus.otel.exporter.otlp.endpoint fails (SRCFG00011) — same env the
+  # root overlay adds; per-service apply must not strip it.
+  - target:
+      kind: Deployment
+      name: qris-simulator
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OTEL_ENDPOINT
+          value: "http://localhost:4317"
