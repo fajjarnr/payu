@@ -72,7 +72,7 @@ replicas:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
-    newTag: "1.18.103"
+    newTag: "1.18.128"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
     newTag: "1.18.125"
@@ -93,7 +93,7 @@ images:
     newTag: "1.18.74"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
-    newTag: "1.18.74"
+    newTag: "1.18.128"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
     newTag: "1.18.107"
@@ -120,7 +120,7 @@ images:
     newTag: "1.18.125"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
-    newTag: "1.18.78"
+    newTag: "1.18.128"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
     newTag: "1.18.74"
@@ -129,16 +129,16 @@ images:
     newTag: "1.18.126"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
-    newTag: "1.18.125"
+    newTag: "1.18.128"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
     newTag: "1.18.74"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-    newTag: "1.18.126"
+    newTag: "1.18.128"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-    newTag: "1.18.126"
+    newTag: "1.18.128"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newTag: "1.18.127"

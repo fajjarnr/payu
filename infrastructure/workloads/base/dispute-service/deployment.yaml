@@ -170,3 +170,9 @@ spec:
               name: dev-env-secrets
               key: WEBHOOK_SECRET
               optional: true
+        - name: PAYU_REFUND_EVENT_HMAC_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: REFUND_EVENT_HMAC_SECRET
+              optional: true
