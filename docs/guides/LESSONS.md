@@ -7452,3 +7452,11 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: Setiap edit diikuti `git diff <file> | grep "^-"` — harus kosong (murni aditif) kecuali diniatkan. Baris hilang dikembalikan segera; untuk penambahan murni selalu pakai `PUT <N:` (insert), bukan PUT range.
 
 **Pelajaran**: (1) Jangan percaya "applied cleanly" — git diff adalah verifikasi; (2) NPE/syntax error setelah edit = cek baris hilang dulu sebelum teori rumit (hemat 30 menit debugging hantu `save()`); (3) `PUT <N:` untuk insert, PUT range hanya bila body benar-benar mengganti semua baris range termasuk tetangganya.
+
+## L-473: Push registry 401 berulang = kredensial basi di auth.json, bukan RBAC (2026-10-13)
+
+**Context**: `podman push` ke OpenShift internal registry gagal `invalid username/password` walau login "Succeeded" dan SA punya `system:image-builder` (`can-i: yes`). Root cause: DUA entries di `auth.json` — entry path-spesifik (`registry/.../payu-dev`, token `oc create token` 600s yang kadaluwarsa) menimpa entry host (`<token>` + dockercfg long-lived).
+
+**Fix**: Hapus entry basi dari `auth.json`, push jalan (blob reuse + manifest write OK). Login dengan format dockercfg: username literal `<token>`, password JWT. Untuk push: `podman login -u '<token>'`.
+
+**Pelajaran**: (1) "Login Succeeded" tidak memvalidasi apa pun — kegagalan selalu muncul di push pertama; (2) saat 401 berulang, inspeksi `auth.json` untuk entri ganda/basi sebelum menyentuh RBAC; (3) `oc create token` berdurasi pendek tak cocok untuk sesi build panjang — pakai dockercfg secret SA; (4) deploy payu-dev via per-service overlays (`oc apply -k overlays/payu-dev/<svc>`), bukan hanya root — root apply tak selalu me-restart workload yang field-nya dikelola overlay lain (server-side apply ownership); verifikasi dengan `oc get deploy -o jsonpath` + pod age, jangan percaya rollout status saja.
