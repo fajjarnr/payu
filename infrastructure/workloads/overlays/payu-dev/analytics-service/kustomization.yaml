@@ -41,3 +41,10 @@ patches:
                   - name: KEYCLOAK_URL
                     value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080"
                     valueFrom: null
+                  # WEB-OS-008: verify BFF-issued WebSocket tickets with the
+                  # same shared secret the web-app signs with.
+                  - name: WS_TICKET_SECRET
+                    valueFrom:
+                      secretKeyRef:
+                        name: dev-env-secrets
+                        key: WS_TICKET_SECRET

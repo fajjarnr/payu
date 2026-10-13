@@ -17,6 +17,21 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
+      # WEB-OS-008: analytics real-time stream — browser connects to the
+      # dedicated WS route; the BFF signs tickets with the shared secret.
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: NEXT_PUBLIC_WS_URL
+          value: "wss://analytics-ws.apps.fajjjar.my.id"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: WS_TICKET_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-env-secrets
+              key: WS_TICKET_SECRET
   - target:
       kind: ConfigMap
       name: frontend-config

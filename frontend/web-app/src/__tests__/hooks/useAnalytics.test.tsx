@@ -25,6 +25,10 @@ describe('useAnalyticsWebSocket hook', () => {
       }
     });
     vi.clearAllMocks();
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ ticket: 'tk-1', accountId: 'test-account-id' }),
+    })) as unknown as typeof fetch);
   });
 
   it('should be defined', () => {
@@ -42,17 +46,17 @@ describe('useAnalyticsWebSocket hook', () => {
     expect(result.current.isConnected).toBe(false);
   });
 
-  it('should connect to WebSocket when accountId is provided', () => {
+  it('should connect to WebSocket when accountId is provided', async () => {
     mockUseWebSocket.mockReturnValue({});
 
     const accountId = 'test-account-id';
-    const expectedUrl = `wss://${window.location.host}/ws/analytics/${accountId}`;
+    const expectedUrl = `wss://${window.location.host}/ws/analytics/${accountId}?ticket=tk-1`;
 
     renderHook(() => useAnalyticsWebSocket(accountId), { wrapper });
 
-    expect(mockUseWebSocket).toHaveBeenCalledWith(expectedUrl, expect.objectContaining({
+    await waitFor(() => expect(mockUseWebSocket).toHaveBeenCalledWith(expectedUrl, expect.objectContaining({
       enabled: true
-    }));
+    })));
   });
 
   it('should not connect to WebSocket when accountId is undefined', () => {
@@ -61,10 +65,8 @@ describe('useAnalyticsWebSocket hook', () => {
     renderHook(() => useAnalyticsWebSocket(undefined), { wrapper });
 
     expect(mockUseWebSocket).toHaveBeenCalledWith(
-      expect.stringContaining(`wss://${window.location.host}/ws/analytics/`),
-      expect.objectContaining({
-        enabled: false
-      })
+      expect.any(String),
+      expect.objectContaining({ enabled: false })
     );
   });
 
@@ -115,7 +117,7 @@ describe('useAnalyticsWebSocket hook', () => {
     expect(result.current.isConnected).toBe(false);
   });
 
-  it('should update analytics data when BALANCE_UPDATE message is received', () => {
+  it('should update analytics data when WALLET_BALANCE_CHANGED message is received', () => {
      
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let capturedOptions: any = null;
@@ -145,7 +147,7 @@ describe('useAnalyticsWebSocket hook', () => {
     };
 
     act(() => {
-      capturedOptions?.onMessage?.({ type: 'BALANCE_UPDATE', data: mockAnalyticsData });
+      capturedOptions?.onMessage?.({ event_type: 'WALLET_BALANCE_CHANGED', data: mockAnalyticsData });
     });
 
     expect(result.current.analytics).toEqual(mockAnalyticsData);
@@ -178,7 +180,7 @@ describe('useAnalyticsWebSocket hook', () => {
     };
 
     act(() => {
-      capturedOptions?.onMessage?.({ type: 'OTHER_UPDATE', data: mockAnalyticsData });
+      capturedOptions?.onMessage?.({ event_type: 'OTHER_UPDATE', data: mockAnalyticsData });
     });
 
     expect(result.current.analytics).toBeNull();
@@ -223,19 +225,19 @@ describe('useAnalyticsWebSocket hook', () => {
     };
 
     act(() => {
-      capturedOptions?.onMessage?.({ type: 'BALANCE_UPDATE', data: firstUpdate });
+      capturedOptions?.onMessage?.({ event_type: 'WALLET_BALANCE_CHANGED', data: firstUpdate });
     });
 
     expect(result.current.analytics).toEqual(firstUpdate);
 
     act(() => {
-      capturedOptions?.onMessage?.({ type: 'BALANCE_UPDATE', data: secondUpdate });
+      capturedOptions?.onMessage?.({ event_type: 'WALLET_BALANCE_CHANGED', data: secondUpdate });
     });
 
     expect(result.current.analytics).toEqual(secondUpdate);
   });
 
-  it('should use custom WS_URL from environment when available', () => {
+  it('should use custom WS_URL from environment when available', async () => {
     const originalWsUrl = process.env.NEXT_PUBLIC_WS_URL;
     process.env.NEXT_PUBLIC_WS_URL = 'wss://custom.example.com';
 
@@ -243,10 +245,10 @@ describe('useAnalyticsWebSocket hook', () => {
 
     renderHook(() => useAnalyticsWebSocket('test-account-id'), { wrapper });
 
-    expect(mockUseWebSocket).toHaveBeenCalledWith(
-      'wss://custom.example.com/ws/analytics/test-account-id',
+    await waitFor(() => expect(mockUseWebSocket).toHaveBeenCalledWith(
+      'wss://custom.example.com/ws/analytics/test-account-id?ticket=tk-1',
       expect.any(Object)
-    );
+    ));
 
     if (originalWsUrl === undefined) {
       delete process.env.NEXT_PUBLIC_WS_URL;

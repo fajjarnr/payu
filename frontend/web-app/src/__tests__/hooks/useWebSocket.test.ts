@@ -1,5 +1,5 @@
 import { useWebSocket, useAnalyticsWebSocket } from '@/hooks';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 
 vi.mock('@/stores', () => ({
@@ -132,20 +132,28 @@ describe('useAnalyticsWebSocket hook', () => {
   beforeEach(() => {
     mockWebSocketInstances.length = 0;
     vi.clearAllMocks();
+    // WEB-OS-008: the BFF ticket must resolve before the hook opens the socket.
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ ticket: 'tk-ws-test', accountId: 'test-account-id' }),
+    })) as unknown as typeof fetch);
   });
 
   test('hook should be defined', () => {
     expect(useAnalyticsWebSocket).toBeDefined();
   });
 
-  test('hook should return analytics data when connected', () => {
+  test('hook should return analytics data when connected', async () => {
     const { result } = renderHook(() => useAnalyticsWebSocket('test-account-id'));
+
+    await waitFor(() => expect(mockWebSocketInstances.length).toBe(1));
 
     act(() => {
       const ws = mockWebSocketInstances[0];
       const mockEvent = new MessageEvent('message', {
         data: JSON.stringify({
-          type: 'BALANCE_UPDATE',
+          event_type: 'WALLET_BALANCE_CHANGED',
+          user_id: 'test-account-id',
           data: {
             totalIncome: 100000,
             totalExpenses: 50000,
@@ -175,11 +183,12 @@ describe('useAnalyticsWebSocket hook', () => {
     });
   });
 
-  test('hook should initialize with default values', () => {
+  test('hook should initialize with default values', async () => {
     const { result } = renderHook(() => useAnalyticsWebSocket('test-account-id'));
 
     expect(result.current.analytics).toBeNull();
-    expect(mockWebSocketInstances.length).toBe(1);
+    await waitFor(() => expect(mockWebSocketInstances.length).toBe(1));
+    expect(result.current.analytics).toBeNull();
   });
 
   test('hook should not connect without accountId', () => {

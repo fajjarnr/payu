@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     database_url: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://payu:${DB_PASSWORD}@localhost:5432/payu_analytics")
 
     kafka_bootstrap_servers: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+
+    # WEB-OS-008: shared secret for BFF-issued WebSocket tickets
+    # (HMAC-SHA256 over base64url payload). Must match the web-app BFF value.
+    ws_ticket_secret: str = os.getenv("WS_TICKET_SECRET", "")
     kafka_consumer_group: str = "analytics-service-group"
     kafka_topics: list[str] = [
         # ANA-TOPIC-001: standard payu.<domain>.<event-type>.v<n> names.

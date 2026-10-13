@@ -3,6 +3,8 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - payu-secrets.yaml
+  # WEB-OS-008: analytics real-time WebSocket route
+  - analytics-ws-route.yaml
   - namespace.yaml
   - ../../base
   - keycloak-client-secret-generator.yaml

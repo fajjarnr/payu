@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useWebSocket } from './useWebSocket';
 import AnalyticsService from '@/services/AnalyticsService';
@@ -51,23 +51,49 @@ export function useCashFlow(userId: string | undefined) {
 export function useAnalyticsWebSocket(accountId: string | undefined) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  // WEB-OS-008: page JS cannot read the httpOnly session cookie, so the BFF
+  // issues a short-lived ticket first and the handshake carries ?ticket=.
+  const [ticketParam, setTicketParam] = useState<string | null>(null);
 
-  const handleUpdate = (data: { type: string; data: AnalyticsData }) => {
-    if (data.type === 'BALANCE_UPDATE' && data.data) {
-      setAnalytics(data.data);
+  useEffect(() => {
+    if (!accountId) {
+      setTicketParam(null);
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/ws-ticket', { method: 'POST' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`ws-ticket ${res.status}`);
+        return res.json() as Promise<{ ticket: string }>;
+      })
+      .then((body) => {
+        if (!cancelled) setTicketParam(`?ticket=${encodeURIComponent(body.ticket)}`);
+      })
+      .catch(() => {
+        if (!cancelled) setTicketParam(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId]);
+
+  const handleUpdate = (message: { event_type?: string; data?: AnalyticsData }) => {
+    // Server contract = DashboardEvent dump (WALLET_BALANCE_CHANGED).
+    if (message?.event_type === 'WALLET_BALANCE_CHANGED' && message.data) {
+      setAnalytics(message.data);
     }
   };
 
   const handleOpen = () => setIsConnected(true);
   const handleClose = () => setIsConnected(false);
 
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ? `wss://${window.location.host}` : 'wss://localhost');
+  const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ? `wss://${window.location.host}` : 'wss://localhost');
 
-  useWebSocket(`${wsUrl}/ws/analytics/${accountId || ''}`, {
+  useWebSocket(ticketParam ? `${wsBaseUrl}/ws/analytics/${accountId || ''}${ticketParam}` : '', {
     onMessage: handleUpdate,
     onOpen: handleOpen,
     onClose: handleClose,
-    enabled: !!accountId
+    enabled: !!accountId && !!ticketParam
   });
 
   return {

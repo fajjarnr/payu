@@ -1,0 +1,19 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: analytics-ws
+  labels:
+    app.kubernetes.io/part-of: payu
+    payu.io/component: analytics-realtime
+spec:
+  # WEB-OS-008: dedicated TLS route for the analytics WebSocket stream
+  # (wss://analytics-ws.apps.fajjjar.my.id/ws/analytics/<accountId>?ticket=...).
+  host: analytics-ws.apps.fajjjar.my.id
+  to:
+    kind: Service
+    name: analytics-service
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
