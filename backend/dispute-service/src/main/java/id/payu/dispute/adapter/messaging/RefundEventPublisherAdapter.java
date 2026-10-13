@@ -20,6 +20,7 @@ public class RefundEventPublisherAdapter implements RefundEventPublisherPort {
     private static final String TOPIC_REFUND_REQUESTED = "payu.dispute.refund-requested.v1";
 
     private final OutboxService outboxService;
+    private final RefundEventSigner signer;
 
     @Override
     public void publishRefundRequested(Refund refund, TransactionDetails transaction) {
@@ -32,6 +33,7 @@ public class RefundEventPublisherAdapter implements RefundEventPublisherPort {
         payload.put("ledgerOperation", "REVERSAL");
         payload.put("senderAccountId", transaction.senderAccountId());
         payload.put("recipientAccountId", transaction.recipientAccountId());
+        payload.put("signature", signer.sign(refund, transaction));
         outboxService.createEvent(
                 "Refund",
                 refund.getId().toString(),

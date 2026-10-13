@@ -79,6 +79,28 @@ class PartnerStatementControllerTest {
     }
 
     @Test
+    void generateStatementRejectsForeignCustomerId() throws Exception {
+        org.springframework.security.oauth2.jwt.Jwt jwt = mock(org.springframework.security.oauth2.jwt.Jwt.class);
+        when(jwt.getSubject()).thenReturn("partner-a");
+        when(jwt.getClaimAsString("partner_id")).thenReturn("partner-a");
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        jwt, null,
+                        List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_PARTNER"))));
+        try {
+            jakarta.servlet.ServletException thrown = org.junit.jupiter.api.Assertions.assertThrows(
+                    jakarta.servlet.ServletException.class, () -> mvc.perform(post("/v1/partner/statements/generate")
+                            .contentType("application/json")
+                            .content("{\"customerId\":\"victim-cust\",\"accountNumber\":\"1234567890\",\"year\":2026,\"month\":3}")));
+            assertThat(thrown.getRootCause())
+                    .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+            verify(service, org.mockito.Mockito.never()).generateStatement(any());
+        } finally {
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
     void exportCsvViaExportEndpointReturnsValidCsv() throws Exception {
         doAnswer(inv -> {
             OutputStream out = inv.getArgument(3);

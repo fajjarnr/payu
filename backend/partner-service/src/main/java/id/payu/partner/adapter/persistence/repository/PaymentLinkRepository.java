@@ -27,7 +27,7 @@ public interface PaymentLinkRepository extends JpaRepository<PaymentLinkEntity, 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE PaymentLinkEntity pl SET pl.status = 'PAID', pl.paidAt = :paidAt, "
             + "pl.paymentMethod = :paymentMethod, pl.paymentReference = :paymentReference "
-            + "WHERE pl.slug = :slug AND pl.status = 'ACTIVE'")
+            + "WHERE pl.slug = :slug AND pl.status = 'ACTIVE' AND pl.expiresAt > :paidAt")
     int markPaidIfActive(@Param("slug") String slug, @Param("paidAt") LocalDateTime paidAt,
                          @Param("paymentMethod") String paymentMethod,
                          @Param("paymentReference") String paymentReference);
@@ -38,6 +38,8 @@ public interface PaymentLinkRepository extends JpaRepository<PaymentLinkEntity, 
     int markExpiredIfActive(@Param("id") Long id);
 
     boolean existsByPartnerIdAndExternalId(Long partnerId, String externalId);
+
+    boolean existsByPaymentReference(String paymentReference);
 
     Optional<PaymentLinkEntity> findByPartnerIdAndExternalId(Long partnerId, String externalId);
 

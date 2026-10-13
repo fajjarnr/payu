@@ -163,7 +163,12 @@ public class BatchDisbursementController {
     public ResponseEntity<BatchResponse> processBatch(
             @PathVariable @Parameter(description = "Batch ID") UUID id) {
 
-        BatchDisbursementEntity batch = batchUseCase.processBatch(id);
+        String userId = extractUserId();
+        BatchDisbursementEntity batch = batchUseCase.getBatch(id)
+                .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + id));
+        authorizationService.verifyAccountOwnership(batch.getSourceAccountId(), userId);
+
+        batch = batchUseCase.processBatch(id);
         return ResponseEntity.ok(BatchResponse.fromEntity(batch));
     }
 

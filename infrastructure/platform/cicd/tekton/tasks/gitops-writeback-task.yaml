@@ -102,6 +102,14 @@ spec:
         fi
 
         if [ -n "$(params.image-tag)" ]; then
+          # SEC-002: promoted environments are digest-only — a mutable tag must
+          # never rewrite (or replace) a digest pin in preprod/prod.
+          case "$(params.environment)" in
+            preprod|prod)
+              echo "[X] image-tag forbidden for $(params.environment): promotion is digest-only" >&2
+              exit 1
+              ;;
+          esac
           # Repo standard: SemVer image tag matching the git tag.
           if ! printf '%s' "$(params.image-tag)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$'; then
             echo "[X] image-tag must be SemVer (MAJOR.MINOR.PATCH)" >&2

@@ -21,6 +21,7 @@ public class RefundReversalExecutor {
 
     private final RefundReversalExecutionRepository executionRepository;
     private final WalletUseCase walletUseCase;
+    private final RefundEventSignatureVerifier signatureVerifier;
 
     public void execute(RefundRequestedEvent event) {
         RefundReversalExecutionEntity execution = claim(event);
@@ -29,6 +30,10 @@ public class RefundReversalExecutor {
         }
         if (!valid(event)) {
             markReconciliationRequired(execution, "Refund event lacks valid sender, recipient, amount, or currency");
+            return;
+        }
+        if (!signatureVerifier.isAuthentic(event)) {
+            markReconciliationRequired(execution, "Refund event signature mismatch or signing not configured");
             return;
         }
 
@@ -55,7 +60,7 @@ public class RefundReversalExecutor {
                 .forEach(execution -> execute(new RefundRequestedEvent(
                         execution.getRefundId(), execution.getTransactionId(), execution.getAmount(),
                         execution.getCurrency(), execution.getReason(), execution.getSenderAccountId(),
-                        execution.getRecipientAccountId())));
+                        execution.getRecipientAccountId(), execution.getSignature())));
     }
 
     private RefundReversalExecutionEntity claim(RefundRequestedEvent event) {
@@ -78,6 +83,7 @@ public class RefundReversalExecutor {
         execution.setAmount(event.amount());
         execution.setCurrency(event.currency());
         execution.setReason(event.reason());
+        execution.setSignature(event.signature());
         execution.setAttempts(0);
         return execution;
     }

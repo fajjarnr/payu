@@ -12,6 +12,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (remediasi audit run-2 2026-10-13 — 8 confirmed: 7 high + 1 medium)
+
+- **Statement generate ownership (medium)** — `POST /v1/partner/statements/generate` tak memanggil `verifyPartnerAccess` (list/export memanggil) → PARTNER mana pun generate untuk customerId mana pun. 1 baris: check yang sama sebelum delegasi; regression test JWT partner-a × victim-cust → AccessDenied + service never called. 6/6 test.
+- **Payment-link confirm self-attested (high)** — `POST /pay/{slug}/confirm` transisi ACTIVE→PAID bermodal 2 string tanpa cek expiry/dedup; predicate DB status-only. `confirmPayment` kini pre-check `isActive()` + tolak `paymentReference` duplikat (`existsByPaymentReference`); query `markPaidIfActive` tambah predicate `expiresAt > paidAt`. Regression: expired → tolak, dup-ref → tolak tanpa UPDATE.
+- **WS unbound subscription (high)** — `_validate_ws_token` buang identitas (bool) → socket terdaftar di path-key korban. Kini kembalikan `sub` terverifikasi; `dashboard_websocket` + cabang `?token=` analytics tolak mismatch (4001). Test accept dimutakhirkan (sub=ACCOUNT) + test mismatch baru.
+- **Kafka refund forged (high)** — `RefundReversalExecutor` percaya payload broker (shape-check saja). Event kini HMAC-SHA256 (`RefundEventSigner` di dispute, `RefundEventSignatureVerifier` di wallet, secret `payu.refund-event.hmac-secret`, fail-closed bila kosong); signature tersimpan di `refund_reversal_executions.signature` (V125) agar `reconcile()` tetap verifikasi. Regression: forged → RECONCILIATION_REQUIRED tanpa money move. Secret wajib diisi via Vault/ESO sebelum deploy (sementara semua event ditolak).
+- **Kafka batch trigger (high)** — `POST /{id}/process` `isAuthenticated()` saja → tambah `verifyAccountOwnership(batch.sourceAccountId)` (pola `createBatch`); consumer abaikan batch terminal (COMPLETED/PARTIAL/FAILED). Regression terminal-skip baru. SASL/ACL broker tetap needs_validation (config deploy).
+- **SNAP-BI unbound source (high)** — `createPayment` teruskan `sourceAccountNo` apa pun ke settlement platform-token. `PartnerEntity.settlement_account_id` baru (V24) + tolak `4032501` bila source ≠ settlement terikat (fail-closed bila tak ada). Regression unbound baru; 3 contract fixture diikat ke settlement-nya.
+- **HotRod plaintext promoted (high)** — strip patch dev (`USE_SSL false` + hapus auth/volume) tercopy ke sit/uat/preprod/prod → dihapus dari 4 overlay (dev tetap). Render: 23/23 Deployment prod `USE_SSL=true`, 0 `false` di promoted.
+- **ArgoCD autosync mutable tags (high)** — deny syncWindow `*-prod` di project `payu` + deny `*-preprod` di project `payu-preprod` (manual sync/UI tetap bisa); `gitops-writeback-task` tolak `image-tag` untuk preprod/prod (digest-only).
+
 ### Fixed (remediasi penuh audit 2026-10-09 — deployed 1.18.125-127, verifikasi live)
 
 - **Bills payment end-to-end (GW-PAY-SCHEMA-001)** — gateway `schemas/payments-create.json` minta field yang tak pernah dikirim billing-DTO/frontend (`billerId`/`customerNumber`/`sourceAccountId` vs `accountId`/`billerCode`/`customerId`/`amount`) → semua `POST /api/v1/payments` 400 di gateway. Schema diselaraskan ke DTO; live: UI bayar PLN → 200 PROCESSING + row `bill_payments` (75000+2500, PLN, customer uji). Gateway-service `:1.18.125` (deploy `:1.18.126`).

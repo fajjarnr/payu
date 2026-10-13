@@ -104,6 +104,7 @@ class SnapBiV10ContractTest {
         partner.setActive(true);
         partner.setClientId(clientKey);
         partner.setClientSecret(clientSecret);
+        partner.setSettlementAccountId("SRC-V10");
         partner.setWebhookUrl("https://partner.example.com/webhooks/payu");
         partner = partnerRepository.save(partner);
 

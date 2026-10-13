@@ -218,6 +218,14 @@ public class BatchDisbursementService implements BatchDisbursementUseCase {
         BatchDisbursementEntity batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found: " + batchId));
 
+        switch (batch.getStatus()) {
+            case COMPLETED, PARTIAL, FAILED -> {
+                log.warn("Ignoring {} event for batch {} in terminal status {}",
+                        TOPIC_BATCH, batchId, batch.getStatus());
+                return;
+            }
+            default -> { }
+        }
         List<DisbursementEntity> items = batch.getItems();
         int successCount = 0;
         int failCount = 0;

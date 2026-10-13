@@ -116,4 +116,23 @@ class BatchDisbursementServiceTest {
         verify(batchRepository, never()).findById(any(UUID.class));
         verify(disbursementService, never()).processDisbursement(any(UUID.class));
     }
+
+    @Test
+    void processBatchItemsSkipsTerminalBatch() throws Exception {
+        UUID batchId = UUID.randomUUID();
+        BatchDisbursementEntity batch = BatchDisbursementEntity.createWithIdempotencyKey(
+                UUID.randomUUID(), "batch", "batch-" + UUID.randomUUID());
+        batch.setId(batchId);
+        batch.setStatus(id.payu.transaction.domain.model.BatchDisbursementStatus.COMPLETED);
+
+        when(batchRepository.findById(batchId)).thenReturn(Optional.of(batch));
+
+        BatchDisbursementService service = newService();
+        ConsumerRecord<String, String> record =
+                new ConsumerRecord<>(TOPIC, 0, 0L, batchId.toString(), batchId.toString());
+
+        service.processBatchItems(record);
+
+        verify(disbursementService, never()).processDisbursement(any(UUID.class));
+    }
 }

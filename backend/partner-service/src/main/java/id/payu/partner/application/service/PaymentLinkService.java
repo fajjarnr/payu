@@ -145,6 +145,13 @@ public class PaymentLinkService {
         PaymentLinkEntity paymentLink = paymentLinkRepository.findBySlug(slug)
                 .orElseThrow(() -> new IllegalArgumentException("Payment link not found: " + slug));
 
+        if (!paymentLink.isActive()) {
+            throw new IllegalStateException("Payment link is not active or has expired");
+        }
+        if (paymentLinkRepository.existsByPaymentReference(paymentReference)) {
+            throw new IllegalStateException("Duplicate payment reference: " + paymentReference);
+        }
+
         int transitioned = paymentLinkRepository.markPaidIfActive(
                 slug, LocalDateTime.now(), paymentMethod, paymentReference);
 

@@ -80,6 +80,7 @@ class SnapBiTokoBapakContractTest {
         partner.setActive(true);
         partner.setClientId(TOKOBAPAK_CLIENT_ID);
         partner.setClientSecret(TOKOBAPAK_CLIENT_SECRET);
+        partner.setSettlementAccountId(SOURCE_ACC);
         partner.setWebhookUrl("http://tokobapak-notification-service:3009/v1/webhooks/payu");
         partner.setTenantId("tokobapak");
         partner = partnerRepository.save(partner);

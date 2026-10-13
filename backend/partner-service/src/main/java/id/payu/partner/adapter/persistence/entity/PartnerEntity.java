@@ -80,6 +80,14 @@ public class PartnerEntity {
     @Column(name = "tenant_id", length = 64)
     private String tenantId;
 
+    /**
+     * Wallet/account ID owned by this partner that SNAP-BI payments may debit.
+     * Null means the partner has no settlement account yet — payment requests
+     * are rejected until onboarding assigns one.
+     */
+    @Column(name = "settlement_account_id", length = 64)
+    private String settlementAccountId;
+
     // ADR-0035 dual-control columns
     @Column(name = "maker_id", length = 64)
     private String makerId;
@@ -144,6 +152,8 @@ public class PartnerEntity {
     public void setWebhookUrl(String webhookUrl) { this.webhookUrl = webhookUrl; }
     public String getTenantId() { return tenantId; }
     public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+    public String getSettlementAccountId() { return settlementAccountId; }
+    public void setSettlementAccountId(String settlementAccountId) { this.settlementAccountId = settlementAccountId; }
     public String getMakerId() { return makerId; }
     public void setMakerId(String makerId) { this.makerId = makerId; }
     public String getCheckerId() { return checkerId; }

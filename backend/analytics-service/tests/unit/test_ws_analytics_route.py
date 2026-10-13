@@ -97,12 +97,20 @@ def test_analytics_ws_accepts_valid_ticket_and_pings(ws_client, ticket_secret, r
 
 def test_analytics_ws_accepts_keycloak_token(ws_client, monkeypatch, reset_manager):
     async def _ok(token):
-        return {"sub": "kc-sub-1"}
+        return {"sub": ACCOUNT}
 
     monkeypatch.setattr("app.jwt_auth.verify_jwt", _ok)
     with ws_client.websocket_connect(f"/ws/analytics/{ACCOUNT}?token=fake.jwt.token") as ws:
         hello = ws.receive_json()
         assert hello["type"] == "connection_established"
+
+
+def test_analytics_ws_rejects_token_subject_mismatch(ws_client, monkeypatch):
+    async def _ok(token):
+        return {"sub": OTHER_ACCOUNT}
+
+    monkeypatch.setattr("app.jwt_auth.verify_jwt", _ok)
+    _expect_reject(ws_client, f"/ws/analytics/{ACCOUNT}?token=fake.jwt.token")
 
 
 def test_analytics_ws_receives_wallet_balance_changed(ws_client, ticket_secret, reset_manager):

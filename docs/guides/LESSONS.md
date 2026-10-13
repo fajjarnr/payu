@@ -7444,3 +7444,11 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: env `OTEL_ENDPOINT` ditambahkan ke ketiga per-service overlay (samakan dengan root) → pod baru Running, 0 restart, guard tetap `OK: no overlay drift`.
 
 **Pelajaran**: (1) kegagalan CRASH saat per-service apply tapi tidak saat root apply = hampir selalu env yang hanya ada di root overlay patch — diff render root vs per-service; (2) `OTEL_SDK_DISABLED` TIDAK melindungi dari expansion error properti otel (config diekspansi lebih dulu); (3) simulator pakai `otel.*` property names berbeda (`quarkus.otel.exporter.otlp.endpoint` membaca `${OTEL_ENDPOINT}`), sementara service lain pakai `QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT`.
+
+## L-472: PUT-range edit tool memakan baris tetangga; verifikasi via git diff (2026-10-13)
+
+**Context**: Remediasi 8 temuan audit — ~15 kejadian edit `PUT N-M:` dengan body sama panjang menghapus 1 baris tetangga (mock, deklarasi variabel, `save()`, entry CHANGELOG), menyebabkan NPE palsu (`partner.getId()` null karena `save()` hilang), syntax error, dan entry docs lenyap.
+
+**Fix**: Setiap edit diikuti `git diff <file> | grep "^-"` — harus kosong (murni aditif) kecuali diniatkan. Baris hilang dikembalikan segera; untuk penambahan murni selalu pakai `PUT <N:` (insert), bukan PUT range.
+
+**Pelajaran**: (1) Jangan percaya "applied cleanly" — git diff adalah verifikasi; (2) NPE/syntax error setelah edit = cek baris hilang dulu sebelum teori rumit (hemat 30 menit debugging hantu `save()`); (3) `PUT <N:` untuk insert, PUT range hanya bila body benar-benar mengganti semua baris range termasuk tetangganya.

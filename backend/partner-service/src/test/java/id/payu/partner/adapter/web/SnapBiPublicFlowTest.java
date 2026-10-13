@@ -106,9 +106,9 @@ class SnapBiPublicFlowTest {
         partner.setActive(true);
         partner.setClientId(clientKey);
         partner.setClientSecret(clientSecret);
+        partner.setSettlementAccountId("SRC-006");
         partner.setWebhookUrl("https://partner.example.com/webhooks/payu");
         partner = partnerRepository.save(partner);
-
         when(tokenService.generateAccessToken(clientKey, partner.getId().toString(), partner.getName()))
                 .thenReturn("fixture-token-" + partner.getId());
         when(tokenService.getClientIdFromToken("fixture-token-" + partner.getId()))

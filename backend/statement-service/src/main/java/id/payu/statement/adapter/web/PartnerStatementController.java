@@ -123,6 +123,7 @@ public class PartnerStatementController {
             description = "Asks statement-service to generate a statement for a customer period (ADR-0019).")
     public ResponseEntity<ApiResponse<StatementResponse>> generateStatement(
             @Valid @RequestBody StatementGenerationRequest request) {
+        verifyPartnerAccess(request.getCustomerId());
         log.info("Partner statement generation request: customerId={}", request.getCustomerId());
         statementService.generateStatement(request);
         return ResponseEntity.ok(ApiResponse.success(null));

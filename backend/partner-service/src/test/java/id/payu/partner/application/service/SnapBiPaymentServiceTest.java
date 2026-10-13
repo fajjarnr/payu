@@ -2,7 +2,9 @@ package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.SnapBiPaymentRepository;
 import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
+import id.payu.partner.adapter.persistence.repository.PartnerRepository;
 import id.payu.partner.adapter.persistence.entity.SnapBiPaymentEntity;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.domain.port.out.WalletSettlementPort;
 import id.payu.partner.interfaces.dto.snap.PaymentRequest;
 import id.payu.partner.interfaces.dto.snap.RefundRequest;
@@ -41,6 +43,9 @@ public class SnapBiPaymentServiceTest {
 
     @Mock
     private SnapBiRefundRepository refundRepository;
+
+    @Mock
+    private PartnerRepository partnerRepository;
 
     @Mock
     private WalletSettlementPort walletSettlementPort;
@@ -82,9 +87,17 @@ public class SnapBiPaymentServiceTest {
                 .thenAnswer(inv -> Optional.ofNullable(paymentsByPayuRef.get(inv.getArgument(0))));
     }
 
+    private void givenPartnerWithSettlementAccount(String partnerId, String settlementAccountId) {
+        PartnerEntity partner = new PartnerEntity("Test Partner", "BANK", "test@partner.id", "0811", "key");
+        partner.setId(Long.valueOf(partnerId));
+        partner.setSettlementAccountId(settlementAccountId);
+        when(partnerRepository.findById(Long.valueOf(partnerId))).thenReturn(Optional.of(partner));
+    }
+
     @Test
     public void testCreatePayment() {
         String partnerId = "123";
+        givenPartnerWithSettlementAccount(partnerId, "0987654321");
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-TEST-001";
         request.amount = new PaymentRequest.Amount();
@@ -106,6 +119,7 @@ public class SnapBiPaymentServiceTest {
 
     @Test
     public void testCreatePaymentSettlesFundsAndPublishesCompletedEvent() {
+        givenPartnerWithSettlementAccount("123", "source-001");
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-SETTLE-001";
         request.amount = new PaymentRequest.Amount();
@@ -148,6 +162,7 @@ public class SnapBiPaymentServiceTest {
     public void testCreatePaymentIdempotentReplay() {
         // MVP-004: replaying the same partnerReferenceNo must return the same payment, not a duplicate.
         String partnerId = "123";
+        givenPartnerWithSettlementAccount(partnerId, "0987654321");
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-IDEMPOTENT-001";
         request.amount = new PaymentRequest.Amount();
@@ -219,6 +234,7 @@ public class SnapBiPaymentServiceTest {
 
     @Test
     public void testGetPaymentStatus() {
+        givenPartnerWithSettlementAccount("123", "0987654321");
         String partnerId = "123";
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-TEST-002";
@@ -228,7 +244,6 @@ public class SnapBiPaymentServiceTest {
         request.beneficiaryAccountNo = "1234567890";
         request.beneficiaryBankCode = "014";
         request.sourceAccountNo = "0987654321";
-
         var createResponse = paymentService.createPayment(partnerId, request);
         var statusResponse = paymentService.getPaymentStatus(partnerId, createResponse.referenceNo);
 
@@ -242,6 +257,7 @@ public class SnapBiPaymentServiceTest {
     @Test
     public void testGetPaymentStatusByPartnerRef() {
         String partnerId = "123";
+        givenPartnerWithSettlementAccount(partnerId, "0987654321");
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-TEST-003";
         request.amount = new PaymentRequest.Amount();
@@ -271,6 +287,7 @@ public class SnapBiPaymentServiceTest {
     @Test
     public void testUpdatePaymentStatus() {
         String partnerId = "123";
+        givenPartnerWithSettlementAccount(partnerId, "0987654321");
         PaymentRequest request = new PaymentRequest();
         request.partnerReferenceNo = "REF-TEST-004";
         request.amount = new PaymentRequest.Amount();
@@ -286,5 +303,21 @@ public class SnapBiPaymentServiceTest {
 
         var statusResponse = paymentService.getPaymentStatus(partnerId, createResponse.referenceNo);
         assertEquals("COMPLETED", statusResponse.status);
+    }
+    @Test
+    public void testCreatePaymentRejectsUnboundSourceAccount() {
+        givenPartnerWithSettlementAccount("123", "source-001");
+        PaymentRequest request = new PaymentRequest();
+        request.partnerReferenceNo = "REF-UNBOUND-001";
+        request.amount = new PaymentRequest.Amount();
+        request.amount.value = new BigDecimal("10000.00");
+        request.amount.currency = "IDR";
+        request.beneficiaryAccountNo = "beneficiary-001";
+        request.sourceAccountNo = "victim-account";
+
+        var response = paymentService.createPayment("123", request);
+
+        assertEquals("4032501", response.responseCode);
+        verifyNoInteractions(walletSettlementPort);
     }
 }

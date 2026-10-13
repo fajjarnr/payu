@@ -30,13 +30,16 @@ class RefundReversalExecutorTest {
     private RefundReversalExecutionRepository executionRepository;
     @Mock
     private WalletUseCase walletUseCase;
+    @Mock
+    private RefundEventSignatureVerifier signatureVerifier;
 
     @Test
     void execute_shouldPersistCompletedReversalAfterWalletTransfer() {
-        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase);
+        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase, signatureVerifier);
         when(executionRepository.findByRefundId(REFUND_ID)).thenReturn(Optional.empty());
         when(executionRepository.saveAndFlush(any(RefundReversalExecutionEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(signatureVerifier.isAuthentic(any())).thenReturn(true);
         RefundRequestedEvent event = new RefundRequestedEvent(
                 REFUND_ID, TRANSACTION_ID, new BigDecimal("100.00"), "IDR", "customer refund", "sender", "recipient");
 
@@ -50,7 +53,7 @@ class RefundReversalExecutorTest {
 
     @Test
     void execute_replayAfterCompletion_doesNotReverseMoneyAgain() {
-        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase);
+        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase, signatureVerifier);
         RefundReversalExecutionEntity completed = new RefundReversalExecutionEntity();
         completed.setRefundId(REFUND_ID);
         completed.setTransactionId(TRANSACTION_ID);
@@ -68,13 +71,31 @@ class RefundReversalExecutorTest {
 
     @Test
     void execute_invalidEvent_marksReconciliationRequired() {
-        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase);
+        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase, signatureVerifier);
         when(executionRepository.findByRefundId(REFUND_ID)).thenReturn(Optional.empty());
         when(executionRepository.saveAndFlush(any(RefundReversalExecutionEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         RefundRequestedEvent event = new RefundRequestedEvent(
                 REFUND_ID, TRANSACTION_ID, null, "IDR", "reason", "sender", "recipient");
+
+        executor.execute(event);
+
+        verify(walletUseCase, never()).reverseTransfer(any(), any(), any(), any(), any(), any());
+        ArgumentCaptor<RefundReversalExecutionEntity> saved = ArgumentCaptor.forClass(RefundReversalExecutionEntity.class);
+        verify(executionRepository, atLeastOnce()).saveAndFlush(saved.capture());
+        assertThat(saved.getAllValues().get(saved.getAllValues().size() - 1).getStatus())
+                .isEqualTo(RefundReversalStatus.RECONCILIATION_REQUIRED);
+    }
+    @Test
+    void execute_forgedSignature_marksReconciliationRequiredWithoutMoneyMove() {
+        RefundReversalExecutor executor = new RefundReversalExecutor(executionRepository, walletUseCase, signatureVerifier);
+        when(executionRepository.findByRefundId(REFUND_ID)).thenReturn(Optional.empty());
+        when(executionRepository.saveAndFlush(any(RefundReversalExecutionEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(signatureVerifier.isAuthentic(any())).thenReturn(false);
+        RefundRequestedEvent event = new RefundRequestedEvent(
+                REFUND_ID, TRANSACTION_ID, new BigDecimal("100.00"), "IDR", "customer refund", "sender", "recipient");
 
         executor.execute(event);
 

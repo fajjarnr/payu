@@ -110,6 +110,12 @@ metadata:
     app.kubernetes.io/part-of: payu
 spec:
   description: "PayU Pre-Production (Production Mirror)"
+  syncWindows:
+    - kind: deny
+      schedule: "* * * * *"
+      duration: 1h
+      applications:
+        - "*-preprod"
   sourceRepos:
     - "https://github.com/fajjarnr/payu.git"
   destinations:
@@ -150,6 +156,7 @@ spec:
         - "data-prod"
         - "identity-prod"
         - "messaging-prod"
+        - "*-prod"
     - kind: allow
       schedule: "0 0 * * 0"
       duration: 6h

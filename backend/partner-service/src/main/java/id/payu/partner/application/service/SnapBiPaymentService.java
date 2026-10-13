@@ -1,6 +1,8 @@
 package id.payu.partner.application.service;
 
 import id.payu.partner.adapter.persistence.repository.SnapBiPaymentRepository;
+import id.payu.partner.adapter.persistence.repository.PartnerRepository;
+import id.payu.partner.adapter.persistence.entity.PartnerEntity;
 import id.payu.partner.adapter.persistence.repository.SnapBiRefundRepository;
 import id.payu.partner.adapter.persistence.entity.SnapBiPaymentEntity;
 import id.payu.partner.adapter.persistence.entity.SnapBiRefundEntity;
@@ -40,17 +42,20 @@ public class SnapBiPaymentService {
     private final WalletSettlementPort walletSettlementPort;
     private final WebhookDispatcherService webhookDispatcher;
     private final OutboxService outboxService;
+    private final PartnerRepository partnerRepository;
 
     public SnapBiPaymentService(SnapBiPaymentRepository paymentRepository,
                                 SnapBiRefundRepository refundRepository,
                                 WalletSettlementPort walletSettlementPort,
                                 WebhookDispatcherService webhookDispatcher,
-                                OutboxService outboxService) {
+                                OutboxService outboxService,
+                                PartnerRepository partnerRepository) {
         this.paymentRepository = paymentRepository;
         this.refundRepository = refundRepository;
         this.walletSettlementPort = walletSettlementPort;
         this.webhookDispatcher = webhookDispatcher;
         this.outboxService = outboxService;
+        this.partnerRepository = partnerRepository;
     }
 
     @Transactional
@@ -86,6 +91,17 @@ public class SnapBiPaymentService {
             return new PaymentResponse(
                     "4002501",
                     "Source and beneficiary accounts are required",
+                    request.partnerReferenceNo,
+                    null);
+        }
+
+        // SEC-001: source account MUST be the settlement account bound to the
+        // authenticated partner — a partner may never debit an arbitrary wallet.
+        if (!isBoundSettlementAccount(partnerId, request.sourceAccountNo)) {
+            LOG.warn("Rejecting SNAP-BI payment with unbound source account for partner {}", partnerId);
+            return new PaymentResponse(
+                    "4032501",
+                    "Source account is not bound to partner",
                     request.partnerReferenceNo,
                     null);
         }
@@ -382,5 +398,23 @@ public class SnapBiPaymentService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    /**
+     * SEC-001: the debit source MUST equal the settlement account bound to the
+     * authenticated partner at onboarding. Unknown partners, unparsable IDs,
+     * and partners without a settlement account are all rejected (fail-closed).
+     */
+    private boolean isBoundSettlementAccount(String partnerId, String sourceAccountNo) {
+        final Long id;
+        try {
+            id = Long.valueOf(partnerId);
+        } catch (NumberFormatException notParsable) {
+            return false;
+        }
+        return partnerRepository.findById(id)
+                .map(PartnerEntity::getSettlementAccountId)
+                .map(bound -> bound != null && bound.equals(sourceAccountNo))
+                .orElse(false);
     }
 }

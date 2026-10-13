@@ -23,11 +23,12 @@ websocket_router = APIRouter(prefix="/ws", tags=["WebSocket"])
 settings = get_settings()
 
 
-async def _validate_ws_token(websocket: WebSocket) -> bool:
+async def _validate_ws_token(websocket: WebSocket) -> str | None:
     """
     BUG-AUTH-021: Validate JWT/token on WebSocket connection.
     Expects a token as a query parameter or in the first message.
-    Returns True if valid, False otherwise.
+    Returns the verified subject on success, None otherwise — callers MUST
+    bind the returned subject to the path identity before connecting.
     """
     from jose.exceptions import JWTError
 
@@ -35,19 +36,19 @@ async def _validate_ws_token(websocket: WebSocket) -> bool:
 
     token = websocket.query_params.get("token")
     if not token:
-        return False
+        return None
 
     try:
         # Cryptographically verify against Keycloak JWKS (AI-AUTH-001):
         # never authorize on an unverified decode, even behind the gateway.
         payload = await verify_jwt(token)
-        return bool(payload.get("sub"))
+        return payload.get("sub") or None
     except JWTError as e:
         logger.warning("WebSocket token validation failed", error=str(e))
-        return False
+        return None
     except Exception as e:
         logger.warning("WebSocket token validation failed", error=str(e))
-        return False
+        return None
 
 
 def _b64url_decode(value: str) -> bytes:
@@ -94,7 +95,8 @@ async def dashboard_websocket(
     events: str = Query("all", description="Comma-separated list of event types to subscribe to")
 ):
     # BUG-AUTH-021: Validate token before accepting the connection
-    if not await _validate_ws_token(websocket):
+    subject = await _validate_ws_token(websocket)
+    if subject is None or subject != user_id:
         await websocket.close(code=4001, reason="Authentication required")
         logger.warning("WebSocket connection rejected — invalid or missing token", user_id=user_id)
         return
@@ -166,7 +168,8 @@ async def analytics_websocket(
     if ticket:
         authorized = await _validate_ws_ticket(ticket, account_id)
     elif token:
-        authorized = await _validate_ws_token(websocket)
+        subject = await _validate_ws_token(websocket)
+        authorized = subject is not None and subject == account_id
     else:
         authorized = False
     if not authorized:

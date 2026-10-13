@@ -35,6 +35,9 @@ public class RefundReversalExecutionEntity {
     @Column(name = "reason", length = 500)
     private String reason;
 
+    @Column(name = "signature", length = 128)
+    private String signature;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30, nullable = false)
     private RefundReversalStatus status;
@@ -80,6 +83,8 @@ public class RefundReversalExecutionEntity {
     public void setCurrency(String currency) { this.currency = currency; }
     public String getReason() { return reason; }
     public void setReason(String reason) { this.reason = reason; }
+    public String getSignature() { return signature; }
+    public void setSignature(String signature) { this.signature = signature; }
     public RefundReversalStatus getStatus() { return status; }
     public void setStatus(RefundReversalStatus status) { this.status = status; }
     public int getAttempts() { return attempts; }

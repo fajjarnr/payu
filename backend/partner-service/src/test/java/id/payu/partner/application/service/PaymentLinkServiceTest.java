@@ -243,14 +243,27 @@ class PaymentLinkServiceTest {
         }
 
         @Test
+        @DisplayName("should reject duplicate payment reference")
+        void shouldRejectDuplicatePaymentReference() {
+            PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
+                    "Test payment", LocalDateTime.now().plusHours(24));
+            link.setId(1L);
+
+            when(paymentLinkRepository.findBySlug("pay123")).thenReturn(Optional.of(link));
+            when(paymentLinkRepository.existsByPaymentReference("ref-dup")).thenReturn(true);
+
+            assertThrows(IllegalStateException.class,
+                    () -> paymentLinkService.confirmPayment("pay123", "WALLET", "ref-dup"));
+            verify(paymentLinkRepository, never()).markPaidIfActive(anyString(), any(), anyString(), anyString());
+        }
+
+        @Test
         @DisplayName("should fail for expired payment link")
         void shouldFailForExpiredPaymentLink() {
             PaymentLinkEntity link = new PaymentLinkEntity(activePartner, BigDecimal.valueOf(100000), "IDR",
                     "Test payment", LocalDateTime.now().minusHours(1));
             link.setId(1L);
 
-            when(paymentLinkRepository.markPaidIfActive(eq("expired"), any(LocalDateTime.class),
-                    eq("WALLET"), eq("ref-001"))).thenReturn(0);
             when(paymentLinkRepository.findBySlug("expired")).thenReturn(Optional.of(link));
 
             assertThrows(IllegalStateException.class,

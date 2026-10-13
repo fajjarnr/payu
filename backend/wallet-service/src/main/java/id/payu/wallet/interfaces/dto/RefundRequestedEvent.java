@@ -12,5 +12,13 @@ public record RefundRequestedEvent(
         String currency,
         String reason,
         String senderAccountId,
-        String recipientAccountId) {
+        String recipientAccountId,
+        String signature) {
+    /** Backwards-compatible constructor for callers that do not sign yet. */
+    public RefundRequestedEvent(
+            UUID refundId, UUID transactionId, BigDecimal amount, String currency,
+            String reason, String senderAccountId, String recipientAccountId) {
+        this(refundId, transactionId, amount, currency, reason,
+                senderAccountId, recipientAccountId, null);
+    }
 }
