@@ -7460,3 +7460,11 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: Hapus entry basi dari `auth.json`, push jalan (blob reuse + manifest write OK). Login dengan format dockercfg: username literal `<token>`, password JWT. Untuk push: `podman login -u '<token>'`.
 
 **Pelajaran**: (1) "Login Succeeded" tidak memvalidasi apa pun — kegagalan selalu muncul di push pertama; (2) saat 401 berulang, inspeksi `auth.json` untuk entri ganda/basi sebelum menyentuh RBAC; (3) `oc create token` berdurasi pendek tak cocok untuk sesi build panjang — pakai dockercfg secret SA; (4) deploy payu-dev via per-service overlays (`oc apply -k overlays/payu-dev/<svc>`), bukan hanya root — root apply tak selalu me-restart workload yang field-nya dikelola overlay lain (server-side apply ownership); verifikasi dengan `oc get deploy -o jsonpath` + pod age, jangan percaya rollout status saja.
+
+## L-474: E2E dev tanpa Keycloak realm = fokus ke yang bisa dibuktikan (2026-10-13)
+
+**Context**: E2E blackbox suite mengasumsikan `/api/v1/auth/login` publik + realm `payu` berisi user seed; live dev: login butuh JWT (tak publik) dan Keycloak hanya punya realm `master`. 16 test skipkit.
+
+**Fix**: E2E terarah per fix: (1) payment-link via DB seed langsung (kolom plaintext) + confirm lewat service port-forward — ACTIVE→PAID ✓, expired→409 ✓, dup-ref→409 ✓, state DB + 1 outbox event terverifikasi, fixture dihapus sesudahnya; (2) SNAP-BI negatif via gateway (timestamp → 4002508, tanpa idempotency → GAT_IDM_001); (3) WS tanpa token → HTTP 403 di kabel; (4) gateway `/pay/**` tak ter-route — confirm publik hanya lewat service langsung atau `/v1/pay` (authenticated); (5) insert DB wajib `tenant_id` sesuai konteks baca service (`default` untuk direct-call), bukan tenant bisnis.
+
+**Pelajaran**: (1) Seed DB untuk E2E harus tiru tenant + kolom yang dipakai filter baca; (2) Selalu hapus fixture E2E (DELETE) agar tak mencemari idempotency/dedup test berikutnya (payment_reference unik!); (3) port-forward per service untuk endpoint yang tak di-route gateway; (4) E2E positif SNAP-BI/statement-JWT butuh realm + user seed — angkat sebagai prasyarat infra (realm import `payu` di Keycloak dev).
