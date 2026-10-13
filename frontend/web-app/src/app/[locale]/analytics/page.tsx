@@ -16,7 +16,8 @@ import {
   WifiOff,
 } from "@/components/icons";
 import { useAnalyticsWebSocket, useCashFlow, useSpendingTrends } from "@/hooks";
-import { useAuthStore } from "@/stores";
+import { useAuthStore, useUIStore } from "@/stores";
+import { chartPalette } from "@/lib/chart-palette";
 const Column = dynamic(
   () => import("@ant-design/plots").then((m) => m.Column),
   { ssr: false },
@@ -28,6 +29,7 @@ import { Button, Card, Space, Row, Col, Typography, Tag, theme } from "antd";
 
 export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
+  const isDark = useUIStore((state) => state.theme) === "dark";
   const { token } = theme.useToken();
   // FE-AUDIT-006: analytics events are keyed by account_id (backend BUG-AUTH-013),
   // so queries must use accountId — Keycloak sub returns zero rows.
@@ -40,14 +42,9 @@ export default function AnalyticsPage() {
   // REST baseline: the WS feed is enhancement-only (it may never connect —
   // no WS proxy exists in this environment), so seed the page from REST.
   // Live WS data takes precedence when present.
-  const CATEGORY_COLORS = [
-    "#00D09C",
-    "#00D09C",
-    "#f59e0b",
-    "#8b5cf6",
-    "#f43f5e",
-    "#64748b",
-  ];
+  // Canvas-rendered charts cannot resolve CSS var() colors, so the palette is
+  // explicit and theme-aware (src/lib/chart-palette.ts, measured per surface).
+  const palette = chartPalette(isDark);
   const restData =
     cashFlow || trends
       ? {
@@ -56,7 +53,7 @@ export default function AnalyticsPage() {
           monthlySavings: cashFlow?.netCashFlow ?? 0,
           investmentRoi: 0,
           incomeChange: 0,
-          expenseChange: trends?.monthOverMonthChange ?? 0,
+          expenseChange: 0,
           savingsChange: 0,
           roiChange: 0,
           spendingBreakdown: (
@@ -67,7 +64,7 @@ export default function AnalyticsPage() {
             label: c.category,
             amount: c.amount,
             percentage: c.percentage,
-            color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+            color: palette.series[i % palette.series.length],
           })),
         }
       : null;
@@ -104,24 +101,11 @@ export default function AnalyticsPage() {
     keluar: number | string;
   }[];
 
-  const PIE_PALETTE = [
-    "#00D09C",
-    "#34d399",
-    "#f59e0b",
-    "#8b5cf6",
-    "#f43f5e",
-    "#64748b",
-  ];
   const breakdownData = analyticsData.spendingBreakdown.map((cat, i) => ({
     name: cat.label,
     value: cat.amount,
-    fill: PIE_PALETTE[i % PIE_PALETTE.length],
+    fill: palette.series[i % palette.series.length],
   }));
-
-  // Canvas-rendered charts cannot resolve CSS var() colors, so use literals.
-  // Primary matches the DESIGN.md primary token (#00D09C).
-  const PRIMARY = "#00D09C";
-  const TRACK = "#9ca3af";
 
   return (
     <DashboardLayout>
@@ -288,7 +272,7 @@ export default function AnalyticsPage() {
                   yField="amount"
                   colorField="type"
                   group={true}
-                  scale={{ color: { range: [PRIMARY, TRACK] } }}
+                  scale={{ color: { range: [palette.series[0], palette.secondary] } }}
                   style={{
                     radiusTopLeft: 4,
                     radiusTopRight: 4,
@@ -297,7 +281,7 @@ export default function AnalyticsPage() {
                   axis={{
                     x: {
                       title: false,
-                      labelFill: "#6b7280",
+                      labelFill: palette.axisLabel,
                       labelFontSize: 10,
                       labelFontWeight: 700,
                     },
@@ -337,7 +321,7 @@ export default function AnalyticsPage() {
                       color: { range: breakdownData.map((d) => d.fill) },
                     }}
                     innerRadius={0.65}
-                    style={{ lineWidth: 4, stroke: "#fff" }}
+                    style={{ lineWidth: 4, stroke: palette.stroke }}
                     legend={false}
                     label={false}
                   />

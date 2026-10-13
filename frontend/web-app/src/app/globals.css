@@ -14,7 +14,7 @@
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
-  --color-accent: #FF6B35;
+  --color-accent: #C2410C;
   --color-accent-foreground: #FFFFFF;
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
@@ -96,7 +96,7 @@
   --color-primary-dark: #00A87E;
   --color-primary-light: #E6FFF7;
   --color-secondary: #1A1A2E;
-  --color-accent: #FF6B35;
+  --color-accent: #C2410C;
   --color-success: #00D09C;
   --color-warning: #FFB800;
   --color-error: #FF4757;
@@ -106,6 +106,16 @@
   --color-text-secondary: #6B7280;
   --color-text-disabled: #B0B8C4;
   --color-border: #E5E7EB;
+
+  /* VIP tier colors (VIPBadge renders them as text on the card surface).
+     Measured 4.5:1+ on #FFFFFF; guard: src/__tests__/theme/tier-colors.test.ts */
+  --tier-bronze: #8C5A2B;
+  --tier-silver: #707070;
+  --tier-gold: #92700F;
+  --tier-platinum: #5F6B76;
+  --tier-diamond: #2E7D9A;
+  --tier-vip: #0B7A55;
+  --tier-standard: #6B7280;
 }
 
 .dark {
@@ -134,6 +144,15 @@
   --ring: 160 84% 55%;
   --warning: 45 93% 47%;
   --info: 199 89% 48%;
+
+  /* VIP tier colors, dark surface (#141414 container). Measured 4.5:1+. */
+  --tier-bronze: #D9A066;
+  --tier-silver: #C9CDD3;
+  --tier-gold: #FFD666;
+  --tier-platinum: #D8DEE6;
+  --tier-diamond: #9BE3F5;
+  --tier-vip: #00D09C;
+  --tier-standard: #9CA3AF;
 }
 
 /* High Contrast Mode Support */

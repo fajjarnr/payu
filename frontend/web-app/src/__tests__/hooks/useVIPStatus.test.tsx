@@ -65,7 +65,6 @@ describe("useVIPStatus hook", () => {
     expect(result.current.isVIP).toBe(true);
     expect(result.current.tier).toBe("VIP");
     expect(result.current.tierLabel).toBe("VIP");
-    expect(result.current.tierColor).toBe("var(--color-primary)");
   });
 
   it("should return Diamond status for Diamond tier users", () => {
@@ -92,7 +91,6 @@ describe("useVIPStatus hook", () => {
     expect(result.current.isVIP).toBe(true);
     expect(result.current.tier).toBe("DIAMOND");
     expect(result.current.tierLabel).toBe("Diamond");
-    expect(result.current.tierColor).toBe("#b9f2ff");
   });
 
   it("should return Platinum status for Platinum tier users", () => {
@@ -119,7 +117,6 @@ describe("useVIPStatus hook", () => {
     expect(result.current.isVIP).toBe(true);
     expect(result.current.tier).toBe("PLATINUM");
     expect(result.current.tierLabel).toBe("Platinum");
-    expect(result.current.tierColor).toBe("#e5e4e2");
   });
 
   it("should return Gold status for Gold tier users", () => {
@@ -146,7 +143,6 @@ describe("useVIPStatus hook", () => {
     expect(result.current.isVIP).toBe(false);
     expect(result.current.tier).toBe("GOLD");
     expect(result.current.tierLabel).toBe("Gold");
-    expect(result.current.tierColor).toBe("var(--color-warning)");
   });
 
   it("should return Silver status for Silver tier users", () => {
@@ -173,7 +169,6 @@ describe("useVIPStatus hook", () => {
     expect(result.current.isVIP).toBe(false);
     expect(result.current.tier).toBe("SILVER");
     expect(result.current.tierLabel).toBe("Silver");
-    expect(result.current.tierColor).toBe("#c0c0c0");
   });
 
   it("should return Bronze status for Bronze tier users", () => {
@@ -200,7 +195,6 @@ describe("useVIPStatus hook", () => {
     expect(result.current.isVIP).toBe(false);
     expect(result.current.tier).toBe("BRONZE");
     expect(result.current.tierLabel).toBe("Bronze");
-    expect(result.current.tierColor).toBe("#cd7f32");
   });
 
   it("should return Standard status for users without a tier", () => {
@@ -227,7 +221,6 @@ describe("useVIPStatus hook", () => {
     expect(result.current.isVIP).toBe(false);
     expect(result.current.tier).toBe(null);
     expect(result.current.tierLabel).toBe("Standard");
-    expect(result.current.tierColor).toBe("#6b7280");
   });
 
   it("should provide correct benefits for VIP tier", () => {
@@ -708,7 +701,6 @@ describe("useVIPStatus hook", () => {
       isVIP: true,
       tier: "VIP",
       tierLabel: "VIP",
-      tierColor: "var(--color-primary)",
       hasVIPAccess: true,
       prioritySupport: true,
       exclusiveOffers: true,

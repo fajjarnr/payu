@@ -2,10 +2,12 @@
 
 > Single source of truth for the web-app's antd v6 token layer and component rules.
 > All contrast ratios below are measured (WCAG 2.x relative luminance), not estimated.
-> Two guards enforce them, and any edit to `src/theme/tokens.ts` that breaks an
-> invariant fails CI:
-> - `src/__tests__/theme/tokens.test.ts` checks the configured values (light mode and unmapped dark aliases render verbatim).
-> - `src/__tests__/theme/antd-theme.test.tsx` extracts the CSS variables cssinjs actually generates for both algorithms and re-checks every pair, including generated aliases (hover/active steps, tints, borders) and button label tokens.
+Four guards enforce them, and any edit to `src/theme/tokens.ts` that breaks an
+invariant fails CI:
+- `src/__tests__/theme/tokens.test.ts` checks the configured values (light mode and unmapped dark aliases render verbatim).
+- `src/__tests__/theme/antd-theme.test.tsx` extracts the CSS variables cssinjs actually generates for both algorithms and re-checks every pair, including generated aliases (hover/active steps, tints, borders) and button label tokens.
+- `src/__tests__/theme/tier-colors.test.ts` parses `globals.css` and checks the `--tier-*` variables and the accent pair in both themes.
+- `src/__tests__/lib/chart-palette.test.ts` checks every chart color on both surfaces.
 
 ## 1. Context and goals
 
@@ -88,6 +90,16 @@ Dark mode (container `#141414`, values as rendered by the dark algorithm):
 - **Density:** `Button` heights 44 / 48 / 56 (`SM` / default / `LG`), `Input` height 48, radius 12. 48px controls satisfy the 24px WCAG minimum with touch headroom.
 - **Motion:** state feedback only (hover, focus, open/close), 120 to 240ms, `ease-out`. The `pulse 2s infinite` scan frame in `qris/page.tsx` is the only ambient animation, scoped to the scanning state. Respect `prefers-reduced-motion: reduce` for anything new.
 
+### 2.4 The CSS-variable layer (globals.css)
+
+Two roles live outside antd tokens because their consumers cannot read antd tokens:
+
+| Layer | Values | Guard |
+|:--|:--|:--|
+| VIP tier colors (`--tier-*`) | `VIPBadge` renders `tierColor` as text and icon color on the card surface. `useVIPStatus` returns `var(--tier-*)`, defined per theme in `globals.css`: light `#8C5A2B` / `#707070` / `#92700F` / `#5F6B76` / `#2E7D9A` / `#0B7A55` / `#6B7280` (4.62:1 to 5.81:1 on white), dark `#D9A066` / `#C9CDD3` / `#FFD666` / `#D8DEE6` / `#9BE3F5` / `#00D09C` / `#9CA3AF` (7.26:1 to 13.61:1 on `#141414`) | `src/__tests__/theme/tier-colors.test.ts` parses `globals.css` and checks both themes |
+| Chart palette (`src/lib/chart-palette.ts`) | Canvas plots cannot resolve `var()` at draw time, so the palette is explicit and theme-aware. Series: light `#0B7A55` / `#D97706` / `#7C3AED` / `#E11D48` / `#64748B` / `#0E7490`, dark `#00D09C` / `#34D399` / `#F59E0B` / `#8B5CF6` / `#F43F5E` / `#94A3B8`; marks need 3:1 (SC 1.4.11), axis labels 4.5:1 (`#6B7280` / `#ACACAC`) | `src/__tests__/lib/chart-palette.test.ts` |
+| `--color-accent` | `#C2410C` with `--color-accent-foreground: #FFFFFF` (5.18:1). No live consumer; the pair is sound if used | covered by the tier-colors test |
+
 ## 3. Component-level rules
 
 ### 3.1 Shared state matrix
@@ -154,7 +166,7 @@ Applies to every interactive component. Deviations must be written down in the c
 
 ## 6. Anti-patterns and migration notes
 
-**Done (this revision, 2026-10-13):** tokens extracted to `src/theme/tokens.ts` with explicit, measured values for every text, fill, tint, and border role in both themes and all interaction states; antd-generated steps that failed AA are overridden; dark mode keeps the vivid brand palette with ink or black button labels; two guards (`tokens.test.ts` config intent, `antd-theme.test.tsx` rendered-CSS invariants including generated aliases).
+**Done (this revision, 2026-10-13):** tokens extracted to `src/theme/tokens.ts` with explicit, measured values for every text, fill, tint, and border role in both themes and all interaction states; antd-generated steps that failed AA are overridden; dark mode keeps the vivid brand palette with ink or black button labels; VIP tier colors moved to per-theme CSS variables (4.62:1 to 13.61:1, both themes); the analytics chart palette moved to a measured, theme-aware module (marks 3:1, axis labels 4.5:1); `--color-accent` darkened to `#C2410C` (5.18:1). Guards: `tokens.test.ts` (config intent), `antd-theme.test.tsx` (rendered CSS variables, both algorithms), `tier-colors.test.ts`, `chart-palette.test.ts`.
 
 **Prohibited:**
 
@@ -167,18 +179,17 @@ Applies to every interactive component. Deviations must be written down in the c
 | Hover-only row actions | unreachable by keyboard | visible on hover and focus |
 | Placeholder as label | label vanishes; association lost | persistent visible label |
 | One-button label token across fills in dark mode | no single label color passes on both emerald and red fills | `Button.primaryColor` / `Button.dangerColor` |
+| Chart or tier colors as raw hex in components | canvas cannot read tokens and themes diverge | `src/lib/chart-palette.ts`, `--tier-*` CSS variables |
 
 **Findings, not yet fixed (each is a separate ticket):**
 
-1. `src/app/[locale]/analytics/page.tsx`: canvas chart literals (`#00D09C` at 2.00:1 on white, `#f59e0b`, `#8b5cf6`, `#f43f5e`, `#64748b`) fail the 3:1 non-text threshold for chart marks. The in-file comment states canvas cannot resolve CSS `var()`; the fix is a token-derived constant (read the computed style once) plus a measured series palette.
-2. `--color-accent: #FF6B35` (2.84:1) with `--color-accent-foreground: #FFFFFF`: white on accent fails 4.5:1 wherever that pair is used as a fill.
-3. `src/hooks/useVIPStatus.ts`: tier colors are unmeasured; `GOLD` maps to `var(--color-warning)` (`#FFB800`, 1.73:1 on white) when rendered as text.
-4. Pre-existing unit-test failures unrelated to theming: 7 files, 23 tests (`pages/StatementsPage`, `BillsPage`, `ExchangePage`, `CardsPage`, `QRISPage`, `MerchantPage`, `SettingsPage`) fail in `next-intl` provider setup; verified failing on a pristine tree before this change.
+1. Pre-existing unit-test failures unrelated to theming: 7 files, 23 tests (`pages/StatementsPage`, `BillsPage`, `ExchangePage`, `CardsPage`, `QRISPage`, `MerchantPage`, `SettingsPage`) fail in `next-intl` provider setup; verified failing on a pristine tree before this change.
+2. `useVIPStatus.test.tsx` keeps its label and tier-mapping assertions; exact tier-color pins were removed because the invariant lives in `tier-colors.test.ts`.
 
 ## 7. QA checklist (code review)
 
-- [ ] Color edits touch only `src/theme/tokens.ts`; no raw hex in components.
-- [ ] `npx vitest --run src/__tests__/theme` passes (config intent + rendered invariants, both themes).
+- [ ] Color edits touch only `src/theme/tokens.ts`, `globals.css` tier/accent vars, or `src/lib/chart-palette.ts`; no raw hex in components.
+- [ ] `npx vitest --run src/__tests__/theme src/__tests__/lib` passes (config intent, rendered invariants both themes, tier colors, chart palette).
 - [ ] New token usages (badges, tints, chart constants) appear in the allowlist with a measured ratio.
 - [ ] Buttons: one primary per screen, icon-only has `aria-label`, loading keeps the label, label tokens untouched.
 - [ ] Inputs: persistent label, placeholder is a hint, errors use the default association.

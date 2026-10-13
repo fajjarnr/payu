@@ -18,13 +18,16 @@ export interface VIPStatus {
   feeWaivers: boolean;
 }
 
+// Tier colors are CSS variables (globals.css, per theme) because VIPBadge
+// renders tierColor as text and icon color on the card surface, which must
+// pass 4.5:1 in both light and dark. Guard: tier-colors.test.ts.
 const TIER_CONFIG: Record<SegmentTier, { label: string; color: string }> = {
-  BRONZE: { label: 'Bronze', color: '#cd7f32' }, // No DESIGN.md match — metallic brown
-  SILVER: { label: 'Silver', color: '#c0c0c0' }, // No DESIGN.md match — metallic gray
-  GOLD: { label: 'Gold', color: 'var(--color-warning)' }, // Maps to DESIGN.md warning #FFB800
-  PLATINUM: { label: 'Platinum', color: '#e5e4e2' }, // No DESIGN.md match — metallic silver-white
-  DIAMOND: { label: 'Diamond', color: '#b9f2ff' }, // No DESIGN.md match — ice blue
-  VIP: { label: 'VIP', color: 'var(--color-primary)' }, // Maps to DESIGN.md primary #00D09C
+  BRONZE: { label: 'Bronze', color: 'var(--tier-bronze)' },
+  SILVER: { label: 'Silver', color: 'var(--tier-silver)' },
+  GOLD: { label: 'Gold', color: 'var(--tier-gold)' },
+  PLATINUM: { label: 'Platinum', color: 'var(--tier-platinum)' },
+  DIAMOND: { label: 'Diamond', color: 'var(--tier-diamond)' },
+  VIP: { label: 'VIP', color: 'var(--tier-vip)' },
 };
 
 const VIP_BENEFITS = {
@@ -68,7 +71,7 @@ export const useVIPStatus = (): VIPStatus => {
   const { currentTier, isVIP } = useUserSegment(user?.id);
 
   const tierConfig = useMemo(() => {
-    if (!currentTier) return { label: 'Standard', color: '#6b7280' };
+    if (!currentTier) return { label: 'Standard', color: 'var(--tier-standard)' };
     return TIER_CONFIG[currentTier] || TIER_CONFIG.BRONZE;
   }, [currentTier]);
 
