@@ -13,6 +13,9 @@ import id.payu.account.grpc.GetAccountByNumberRequest;
 import id.payu.account.grpc.VerifyAccountRequest;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import id.payu.grpc.starter.interceptor.GrpcAuthInterceptor;
+import io.grpc.Context;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +41,9 @@ class AccountGrpcServiceTest {
 
     @BeforeEach
     void setUp() {
+        Context.current().withValue(GrpcAuthInterceptor.AUTH_CONTEXT_KEY,
+                new UsernamePasswordAuthenticationToken("test-user", "token",
+                        java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_USER")))).attach();
         persistencePort = mock(AccountPersistencePort.class);
         userPersistencePort = mock(id.payu.account.domain.port.out.UserPersistencePort.class);
         service = new AccountGrpcService(persistencePort, userPersistencePort);
@@ -191,5 +197,20 @@ class AccountGrpcServiceTest {
 
         assertThat(observer.error).isNull();
         assertThat(observer.value.getAccountNumber()).isEqualTo("9911223344");
+    }
+
+    @Test
+    void anonymousReadIsRejectedUnauthenticated() {
+        io.grpc.Context detached = io.grpc.Context.current().withValue(
+                GrpcAuthInterceptor.AUTH_CONTEXT_KEY, null).attach();
+        try {
+            RecordingObserver<AccountResponse> observer = new RecordingObserver<>();
+            service.getAccount(GetAccountRequest.newBuilder().setAccountId(UUID.randomUUID().toString()).build(), observer);
+            assertThat(observer.error).isInstanceOf(StatusRuntimeException.class);
+            assertThat(((StatusRuntimeException) observer.error).getStatus().getCode())
+                    .isEqualTo(Status.Code.UNAUTHENTICATED);
+        } finally {
+            io.grpc.Context.current().detach(detached);
+        }
     }
 }

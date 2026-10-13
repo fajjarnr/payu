@@ -99,10 +99,10 @@ images:
     newTag: "1.18.107"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
-    newTag: "1.18.125"
+    newTag: "1.18.131"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
-    newTag: "1.18.74"
+    newTag: "1.18.131"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
     newTag: "1.18.98"
@@ -135,10 +135,10 @@ images:
     newTag: "1.18.74"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-    newTag: "1.18.128"
+    newTag: "1.18.131"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-    newTag: "1.18.128"
+    newTag: "1.18.131"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newTag: "1.18.127"
@@ -609,6 +609,9 @@ patches:
                 value: "false"
               - name: PAYU_INTEGRATION_OJK_MONTHLY_REPORT_ENABLED
                 value: "false"
+              # SEC-004: allowlisted egress hosts for dynamic SOAP/HTTP senders (fail-closed when empty)
+              - name: PAYU_INTEGRATION_EGRESS_ALLOWED_HOSTS
+                value: "bi-fast-simulator,biller-simulator,dukcapil-simulator,qris-simulator,va-simulator,swift-gateway.payu.fajjjar.my.id,reporting.ojk.go.id"
   - target:
       kind: Deployment
       name: investment-service

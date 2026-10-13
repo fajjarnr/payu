@@ -6,6 +6,7 @@ import id.payu.wallet.domain.model.Wallet;
 import id.payu.wallet.domain.model.WalletTransaction;
 import id.payu.wallet.grpc.*;
 import id.payu.grpc.common.*;
+import id.payu.grpc.starter.interceptor.GrpcCaller;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
 
     @Override
     public void getBalance(GetBalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             log.debug("gRPC getBalance - walletId: {}, accountId: {}",
                     request.getWalletId(), request.getAccountId());
@@ -77,6 +79,7 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
 
     @Override
     public void getAvailableBalance(GetBalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             log.debug("gRPC getAvailableBalance - walletId: {}, accountId: {}",
                     request.getWalletId(), request.getAccountId());
@@ -298,6 +301,7 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
 
     @Override
     public void getHistory(GetHistoryRequest request, StreamObserver<id.payu.wallet.grpc.LedgerEntry> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             log.debug("gRPC getHistory - walletId: {}, accountId: {}",
                     request.getWalletId(), request.getAccountId());
@@ -334,6 +338,7 @@ public class WalletGrpcService extends WalletServiceGrpc.WalletServiceImplBase {
 
     @Override
     public void getWallet(GetWalletRequest request, StreamObserver<WalletResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             log.debug("gRPC getWallet - walletId: {}, accountId: {}",
                     request.getWalletId(), request.getAccountId());

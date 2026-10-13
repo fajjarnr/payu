@@ -12,6 +12,7 @@ import id.payu.account.grpc.GetAccountByNumberRequest;
 import id.payu.account.grpc.GetAccountRequest;
 import id.payu.account.grpc.GetAccountsByUserRequest;
 import id.payu.account.grpc.VerifyAccountRequest;
+import id.payu.grpc.starter.interceptor.GrpcCaller;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.grpc.server.service.GrpcService;
@@ -41,6 +42,7 @@ public class AccountGrpcService extends AccountServiceGrpc.AccountServiceImplBas
     @Override
     public void getAccount(GetAccountRequest request,
                            StreamObserver<AccountResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             persistencePort.findById(UUID.fromString(request.getAccountId()))
                     .map(this::toResponse)
@@ -58,6 +60,7 @@ public class AccountGrpcService extends AccountServiceGrpc.AccountServiceImplBas
     @Override
     public void getAccountsByUser(GetAccountsByUserRequest request,
                                   StreamObserver<AccountResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             persistencePort.findByUserId(UUID.fromString(request.getUserId()))
                     .forEach(account -> responseObserver.onNext(toResponse(account)));
@@ -70,6 +73,7 @@ public class AccountGrpcService extends AccountServiceGrpc.AccountServiceImplBas
     @Override
     public void verifyAccount(VerifyAccountRequest request,
                               StreamObserver<AccountVerificationResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             UUID accountId = request.getAccountId() == null || request.getAccountId().isBlank()
                     ? null : UUID.fromString(request.getAccountId());
@@ -104,6 +108,7 @@ public class AccountGrpcService extends AccountServiceGrpc.AccountServiceImplBas
     @Override
     public void getAccountByNumber(GetAccountByNumberRequest request,
                                    StreamObserver<AccountResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             Account account = findByNumber(request.getAccountNumber());
             if (account == null) {
@@ -122,6 +127,7 @@ public class AccountGrpcService extends AccountServiceGrpc.AccountServiceImplBas
     @Override
     public void accountExists(AccountExistsRequest request,
                               StreamObserver<AccountExistsResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             Account account = persistencePort.findById(UUID.fromString(request.getAccountId())).orElse(null);
             responseObserver.onNext(AccountExistsResponse.newBuilder()
@@ -137,6 +143,7 @@ public class AccountGrpcService extends AccountServiceGrpc.AccountServiceImplBas
     @Override
     public void getUserProfile(id.payu.account.grpc.GetUserProfileRequest request,
                                StreamObserver<id.payu.account.grpc.UserProfileResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             id.payu.account.domain.model.User user = userPersistencePort
                     .findByExternalId(request.getUserId()).orElse(null);

@@ -14,8 +14,8 @@ import jakarta.ws.rs.ext.Provider;
  */
 @Provider
 @ApplicationScoped
+@jakarta.annotation.Priority(jakarta.ws.rs.Priorities.HEADER_DECORATOR)
 public class TenantFilter implements ContainerRequestFilter, ContainerResponseFilter {
-
     public static final String TENANT_ID_HEADER = "X-Tenant-Id";
     public static final String PARTNER_ID_HEADER = "X-Partner-Id";
     public static final String DEFAULT_TENANT_ID = "default";

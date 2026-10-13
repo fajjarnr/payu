@@ -3,6 +3,9 @@ package id.payu.wallet.adapter.grpc;
 import id.payu.wallet.application.service.WalletService;
 import id.payu.wallet.domain.model.EntryType;
 import id.payu.wallet.domain.model.LedgerEntry;
+import id.payu.grpc.starter.interceptor.GrpcAuthInterceptor;
+import io.grpc.Context;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,9 @@ class WalletGrpcServiceGetHistoryPagingTest {
 
     @BeforeEach
     void setUp() {
+        Context.current().withValue(GrpcAuthInterceptor.AUTH_CONTEXT_KEY,
+                new UsernamePasswordAuthenticationToken("test-user", "token",
+                        java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_USER")))).attach();
         walletService = mock(WalletService.class);
         service = new WalletGrpcService(walletService);
     }
@@ -111,5 +117,21 @@ class WalletGrpcServiceGetHistoryPagingTest {
 
         assertThat(observer.error).isNull();
         assertThat(observer.received).isEmpty();
+    }
+
+    @Test
+    void anonymousReadIsRejectedUnauthenticated() {
+        io.grpc.Context detached = io.grpc.Context.current().withValue(
+                GrpcAuthInterceptor.AUTH_CONTEXT_KEY, null).attach();
+        try {
+            RecordingObserver observer = new RecordingObserver();
+            service.getHistory(id.payu.wallet.grpc.GetHistoryRequest.newBuilder()
+                    .setAccountId("ACC-1").build(), observer);
+            assertThat(observer.error).isInstanceOf(io.grpc.StatusRuntimeException.class);
+            assertThat(((io.grpc.StatusRuntimeException) observer.error).getStatus().getCode())
+                    .isEqualTo(io.grpc.Status.Code.UNAUTHENTICATED);
+        } finally {
+            io.grpc.Context.current().detach(detached);
+        }
     }
 }

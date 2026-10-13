@@ -3,6 +3,7 @@ package id.payu.transaction.adapter.grpc;
 import id.payu.grpc.common.ErrorDetail;
 import id.payu.grpc.common.Money;
 import id.payu.grpc.common.Timestamp;
+import id.payu.grpc.starter.interceptor.GrpcCaller;
 import id.payu.transaction.adapter.persistence.entity.TransactionEntity;
 import id.payu.transaction.domain.port.out.TransactionPersistencePort;
 import id.payu.transaction.grpc.ExistsByReferenceRequest;
@@ -42,6 +43,7 @@ public class TransactionGrpcService extends TransactionServiceGrpc.TransactionSe
     @Override
     public void getTransaction(GetTransactionRequest request,
                                StreamObserver<TransactionResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             persistencePort.findById(UUID.fromString(request.getTransactionId()))
                     .map(this::toResponse)
@@ -59,6 +61,7 @@ public class TransactionGrpcService extends TransactionServiceGrpc.TransactionSe
     @Override
     public void getByReference(GetByReferenceRequest request,
                                StreamObserver<TransactionResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             persistencePort.findByReferenceNumber(request.getReferenceId())
                     .stream().findFirst()
@@ -77,6 +80,7 @@ public class TransactionGrpcService extends TransactionServiceGrpc.TransactionSe
     @Override
     public void getHistory(GetHistoryRequest request,
                            StreamObserver<TransactionResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             int page = request.hasPage() ? request.getPage().getPage() : 0;
             int size = request.hasPage() && request.getPage().getSize() > 0
@@ -92,6 +96,7 @@ public class TransactionGrpcService extends TransactionServiceGrpc.TransactionSe
     @Override
     public void getByAccount(GetByAccountRequest request,
                              StreamObserver<TransactionResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             int page = request.hasPage() ? request.getPage().getPage() : 0;
             int size = request.hasPage() && request.getPage().getSize() > 0
@@ -107,6 +112,7 @@ public class TransactionGrpcService extends TransactionServiceGrpc.TransactionSe
     @Override
     public void existsByReference(ExistsByReferenceRequest request,
                                   StreamObserver<ExistsByReferenceResponse> responseObserver) {
+        if (GrpcCaller.denyIfAnonymous(responseObserver)) return;
         try {
             boolean exists = persistencePort.findByReferenceNumber(request.getReferenceId())
                     .stream().findFirst().isPresent();

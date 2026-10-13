@@ -32,8 +32,8 @@ public class IntegrationService implements IntegrationUseCase {
 
     private final MessageProcessingService messageProcessingService;
     private final MessagePublisherPort messagePublisherPort;
+    private final EndpointAllowlist endpointAllowlist;
     // BUG-INT-HEX-001: ProducerTemplate moved to MessagePublisherAdapter. App uses port only.
-
     @Override
     @CircuitBreaker(name = "integration", fallbackMethod = "processSwiftMessageFallback")
     @Retry(name = "integration")
@@ -99,6 +99,7 @@ public class IntegrationService implements IntegrationUseCase {
     @Retry(name = "integration")
     @Transactional
     public String sendSoapRequest(String endpoint, String operation, String payload) {
+        endpointAllowlist.requireAllowed(endpoint);
         log.info("Sending SOAP request to: {} operation: {}", endpoint, operation);
 
         IntegrationMessage message = messageProcessingService.createMessage(
@@ -136,6 +137,7 @@ public class IntegrationService implements IntegrationUseCase {
     @Retry(name = "integration")
     @Transactional
     public String sendHttpRequest(String url, String method, Map<String, String> headers, String body) {
+        endpointAllowlist.requireAllowed(url);
         log.info("Sending HTTP {} request to: {}", method, url);
 
         IntegrationMessage message = messageProcessingService.createMessage(

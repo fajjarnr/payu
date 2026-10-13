@@ -46,6 +46,10 @@ public class GrpcErrorHandlingInterceptor {
                 public void onHalfClose() {
                     try {
                         super.onHalfClose();
+                    } catch (io.grpc.StatusRuntimeException statusException) {
+                        // Guard rejections (UNAUTHENTICATED etc.) already carry
+                        // the right status — forward untouched, never wrap.
+                        throw statusException;
                     } catch (IllegalArgumentException e) {
                         handleException(call, headers, e, Status.INVALID_ARGUMENT);
                     } catch (IllegalStateException e) {

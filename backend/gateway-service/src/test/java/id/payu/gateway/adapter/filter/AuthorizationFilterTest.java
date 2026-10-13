@@ -161,4 +161,17 @@ class AuthorizationFilterTest {
             .then()
             .statusCode(anyOf(is(401), is(503)));
     }
+
+    @Test
+    @DisplayName("Should strip spoofed tenant headers on public endpoints")
+    void testSpoofedTenantHeadersStripped() {
+        given()
+            .header("X-Tenant-Id", "victim-tenant")
+            .header("X-Partner-Id", "victim-partner")
+            .when()
+            .get("/health")
+            .then()
+            .statusCode(200)
+            .header("X-Tenant-Id", "default");
+    }
 }

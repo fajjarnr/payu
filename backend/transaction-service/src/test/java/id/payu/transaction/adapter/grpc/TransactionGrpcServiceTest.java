@@ -12,6 +12,9 @@ import id.payu.transaction.grpc.TransactionResponse;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import id.payu.grpc.starter.interceptor.GrpcAuthInterceptor;
+import io.grpc.Context;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +40,9 @@ class TransactionGrpcServiceTest {
 
     @BeforeEach
     void setUp() {
+        Context.current().withValue(GrpcAuthInterceptor.AUTH_CONTEXT_KEY,
+                new UsernamePasswordAuthenticationToken("test-user", "token",
+                        java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_USER")))).attach();
         persistencePort = mock(TransactionPersistencePort.class);
         service = new TransactionGrpcService(persistencePort);
     }
@@ -158,5 +164,20 @@ class TransactionGrpcServiceTest {
         assertThat(observer.error).isInstanceOf(StatusRuntimeException.class);
         assertThat(((StatusRuntimeException) observer.error).getStatus().getCode())
                 .isEqualTo(Status.Code.UNIMPLEMENTED);
+    }
+
+    @Test
+    void anonymousReadIsRejectedUnauthenticated() {
+        io.grpc.Context detached = io.grpc.Context.current().withValue(
+                GrpcAuthInterceptor.AUTH_CONTEXT_KEY, null).attach();
+        try {
+            RecordingObserver<TransactionResponse> observer = new RecordingObserver<>();
+            service.getTransaction(GetTransactionRequest.newBuilder().setTransactionId(UUID.randomUUID().toString()).build(), observer);
+            assertThat(observer.error).isInstanceOf(StatusRuntimeException.class);
+            assertThat(((StatusRuntimeException) observer.error).getStatus().getCode())
+                    .isEqualTo(Status.Code.UNAUTHENTICATED);
+        } finally {
+            io.grpc.Context.current().detach(detached);
+        }
     }
 }

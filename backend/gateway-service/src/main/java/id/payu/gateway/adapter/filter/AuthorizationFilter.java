@@ -45,13 +45,17 @@ import java.util.concurrent.TimeUnit;
 @Provider
 @ApplicationScoped
 @RunOnVirtualThread
+@jakarta.annotation.Priority(jakarta.ws.rs.Priorities.AUTHENTICATION)
 public class AuthorizationFilter implements ContainerRequestFilter {
-
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String USER_ID_HEADER = "X-User-Id";
     private static final String ACCOUNT_ID_HEADER = "X-Account-Id";
     private static final String ROLES_HEADER = "X-User-Roles";
+    private static final String TENANT_ID_HEADER = "X-Tenant-Id";
+    private static final String PARTNER_ID_HEADER = "X-Partner-Id";
+    private static final String TENANT_CLAIM = "tenant_id";
+    private static final String DEFAULT_TENANT_ID = "default";
 
     // Public endpoints that don't require authentication
     // BUG-AUTH-023: Tightened broad prefix patterns to specific endpoints
@@ -257,6 +261,11 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         
         if (isPublicEndpoint(path)) {
             Log.debugf("Skipping authorization for public endpoint: %s", path);
+            // SEC-005: strip client-supplied tenant headers on public paths too —
+            // downstream TenantFilters must never see an attacker-chosen tenant.
+            requestContext.getHeaders().remove(TENANT_ID_HEADER);
+            requestContext.getHeaders().remove(PARTNER_ID_HEADER);
+            requestContext.getHeaders().putSingle(TENANT_ID_HEADER, DEFAULT_TENANT_ID);
             return;
         }
 
@@ -284,6 +293,10 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             requestContext.getHeaders().putSingle(USER_ID_HEADER, userContext.userId);
             requestContext.getHeaders().putSingle(ACCOUNT_ID_HEADER, userContext.accountId);
             requestContext.getHeaders().putSingle(ROLES_HEADER, String.join(",", userContext.roles));
+            // SEC-005: tenant comes from the validated tenant_id claim, never from
+            // client headers; X-Partner-Id is dropped entirely on authenticated paths.
+            requestContext.getHeaders().remove(PARTNER_ID_HEADER);
+            requestContext.getHeaders().putSingle(TENANT_ID_HEADER, userContext.tenantId);
 
             Log.debugf("Authorization successful for user: %s on path: %s", userContext.userId, path);
 
@@ -380,6 +393,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                     .userId(userId)
                     .accountId(accountId)
                     .roles(roles)
+                    .tenantId(extractTenantId(claimsSet))
                     .build();
 
         } catch (Exception e) {
@@ -399,6 +413,19 @@ public class AuthorizationFilter implements ContainerRequestFilter {
             Log.warnf(e, "Failed to check token blacklist in Data Grid, continuing with JWT validation");
             return false;
         }
+    }
+
+    /**
+     * Extract tenant ID from the validated JWT tenant_id claim.
+     * Falls back to the default tenant when the claim is absent — never to a
+     * client-supplied header (SEC-005).
+     */
+    private String extractTenantId(JWTClaimsSet claimsSet) {
+        Object tenantClaim = claimsSet.getClaim(TENANT_CLAIM);
+        if (tenantClaim != null && !tenantClaim.toString().isBlank()) {
+            return tenantClaim.toString();
+        }
+        return DEFAULT_TENANT_ID;
     }
 
     /**
@@ -496,11 +523,13 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     private static class UserContext {
         private final String userId;
         private final String accountId;
+        private final String tenantId;
         private final java.util.List<String> roles;
 
         private UserContext(Builder builder) {
             this.userId = builder.userId;
             this.accountId = builder.accountId;
+            this.tenantId = builder.tenantId;
             this.roles = builder.roles;
         }
 
@@ -523,8 +552,8 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         static class Builder {
             private String userId;
             private String accountId;
+            private String tenantId;
             private java.util.List<String> roles = java.util.Collections.emptyList();
-
             Builder userId(String userId) {
                 this.userId = userId;
                 return this;
@@ -532,6 +561,11 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
             Builder accountId(String accountId) {
                 this.accountId = accountId;
+                return this;
+            }
+
+            Builder tenantId(String tenantId) {
+                this.tenantId = tenantId;
                 return this;
             }
 
