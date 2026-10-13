@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import type * as TanstackReactQuery from '@tanstack/react-query';
+import { renderWithIntl as render, screen } from '@/__tests__/utils/test-utils';
 import BillsPage from '@/app/[locale]/bills/page';
 
 vi.mock('@/components/DashboardLayout', () => ({
@@ -15,17 +16,21 @@ vi.mock('@/stores/uiStore', () => ({
   }),
 }));
 
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({
-    data: { content: [] },
-    isLoading: false,
-    error: null,
-  }),
-  useMutation: () => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
-  }),
-}));
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof TanstackReactQuery>();
+  return {
+    ...actual,
+    useQuery: () => ({
+      data: { content: [] },
+      isLoading: false,
+      error: null,
+    }),
+    useMutation: () => ({
+      mutateAsync: vi.fn(),
+      isPending: false,
+    }),
+  };
+});
 
 vi.mock('@/lib/api', () => ({
   default: {

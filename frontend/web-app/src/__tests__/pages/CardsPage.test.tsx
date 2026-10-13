@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { renderWithIntl as render, screen } from '@/__tests__/utils/test-utils';
 import CardsPage from '@/app/[locale]/cards/page';
 
 vi.mock('@/components/DashboardLayout', () => ({

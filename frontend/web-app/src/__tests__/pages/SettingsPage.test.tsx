@@ -31,7 +31,6 @@ describe('SettingsPage', () => {
 
   it('should render profile section', () => {
     renderWithIntl(<SettingsPage />);
-    expect(screen.getByText('Profil Umum')).toBeInTheDocument();
     expect(screen.getByText('PENGGUNA PAYU')).toBeInTheDocument();
     expect(screen.getByText('Premium Member')).toBeInTheDocument();
   });
@@ -39,12 +38,6 @@ describe('SettingsPage', () => {
   it('should render credentials section', () => {
     renderWithIntl(<SettingsPage />);
     expect(screen.getByText('Kredensial Profil')).toBeInTheDocument();
-  });
-
-  it('should render system preferences', () => {
-    renderWithIntl(<SettingsPage />);
-    expect(screen.getByText('Preferensi Sistem')).toBeInTheDocument();
-    expect(screen.getByText('Notifikasi Push')).toBeInTheDocument();
   });
 
   it('should render e-statement section', () => {

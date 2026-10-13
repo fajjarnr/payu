@@ -181,10 +181,7 @@ Applies to every interactive component. Deviations must be written down in the c
 | One-button label token across fills in dark mode | no single label color passes on both emerald and red fills | `Button.primaryColor` / `Button.dangerColor` |
 | Chart or tier colors as raw hex in components | canvas cannot read tokens and themes diverge | `src/lib/chart-palette.ts`, `--tier-*` CSS variables |
 
-**Findings, not yet fixed (each is a separate ticket):**
-
-1. Pre-existing unit-test failures unrelated to theming: 7 files, 23 tests (`pages/StatementsPage`, `BillsPage`, `ExchangePage`, `CardsPage`, `QRISPage`, `MerchantPage`, `SettingsPage`) fail in `next-intl` provider setup; verified failing on a pristine tree before this change.
-2. `useVIPStatus.test.tsx` keeps its label and tier-mapping assertions; exact tier-color pins were removed because the invariant lives in `tier-colors.test.ts`.
+**Findings, not yet fixed (each is a separate ticket):** none open as of 2026-10-13. The pre-existing 7-file / 23-test failure set (`pages/StatementsPage`, `BillsPage`, `ExchangePage`, `CardsPage`, `QRISPage`, `MerchantPage`, `SettingsPage`) was caused by tests rendering pages without the intl provider while those pages render `<SkipLink>` (`useTranslations`); fixed by routing them through `renderWithIntl`, making `BillsPage`'s react-query mock partial, and replacing stale copy/implementation pins (`Generator E-Statement` title that moved into the downloader component, `Profil Umum` / `Preferensi Sistem` sections that no longer render, `.animate-spin` class pin). Copy assertions that remain use `messages/id.json` as the source of truth.
 
 ## 7. QA checklist (code review)
 

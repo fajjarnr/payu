@@ -23,6 +23,10 @@ All notable changes to this project will be documented in this file.
 - **Palet chart analytics (2026-10-13)** — literal canvas di `analytics/page.tsx` gagal 3:1 untuk mark grafik (`#00D09C` 2.00:1, `#f59e0b` 2.1:1, kolom "Keluar" `#9ca3af` 2.54:1). Diganti `src/lib/chart-palette.ts` (eksplisit + theme-aware, canvas tak bisa baca `var()`), semua seri 3.19:1 sampai 9.58:1, axis label 4.83:1/8.12:1. Guard: `src/__tests__/lib/chart-palette.test.ts`.
 - **Token accent (2026-10-13)** — `--color-accent` `#FF6B35` (putih di atasnya 2.84:1) -> `#C2410C` (5.18:1). Tidak ada consumer live; pasangan kini sound bila dipakai.
 
+### Fixed (test page yang sudah merah sebelum pekerjaan ini — 2026-10-13)
+
+- **7 file page test, 23 test merah (2026-10-13)** — `StatementsPage`, `BillsPage`, `ExchangePage`, `CardsPage`, `QRISPage`, `MerchantPage`, `SettingsPage` memakai `render` polos padahal halaman merender `<SkipLink>` (`useTranslations`) tanpa `NextIntlClientProvider`. Diarahkan lewat `renderWithIntl`; mock `@tanstack/react-query` di `BillsPage` jadi partial (`importOriginal`); pin yang sudah basi diganti atau dihapus: judul `Generator E-Statement` (kini milik komponen downloader), section `Profil Umum`/`Preferensi Sistem` (tak lagi dirender), pin implementasi `.animate-spin` (jadinya assertion perilaku). Assertion copy yang tersisa memakai `messages/id.json` sebagai sumber. Suite: 102 file / 1167 test hijau, 1 skip; type-check bersih; lint di baseline (40 problem pre-existing).
+
 ### Fixed (remediasi audit run-2 2026-10-13 — 8 confirmed: 7 high + 1 medium)
 
 - **Statement generate ownership (medium)** — `POST /v1/partner/statements/generate` tak memanggil `verifyPartnerAccess` (list/export memanggil) → PARTNER mana pun generate untuk customerId mana pun. 1 baris: check yang sama sebelum delegasi; regression test JWT partner-a × victim-cust → AccessDenied + service never called. 6/6 test.

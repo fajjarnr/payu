@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { renderWithIntl as render, screen } from '@/__tests__/utils/test-utils';
 import ExchangePage from '@/app/[locale]/exchange/page';
+import messages from '../../../messages/id.json';
 
 vi.mock('@/components/DashboardLayout', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
@@ -48,11 +49,11 @@ describe('ExchangePage', () => {
 
   it('should render page title', () => {
     render(<ExchangePage />);
-    expect(screen.getByText('Currency Exchange')).toBeInTheDocument();
+    expect(screen.getByText(messages.nav.currencyExchange)).toBeInTheDocument();
   });
 
   it('should render exchange calculator section', () => {
     render(<ExchangePage />);
-    expect(screen.getByText('Exchange Calculator')).toBeInTheDocument();
+    expect(screen.getByText(messages.nav.exchangeCalculator)).toBeInTheDocument();
   });
 });

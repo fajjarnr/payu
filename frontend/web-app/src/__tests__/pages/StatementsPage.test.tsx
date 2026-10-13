@@ -24,11 +24,6 @@ describe('StatementsPage', () => {
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
-  it('should render the statement generator title', () => {
-    renderWithIntl(<StatementsPage />);
-    expect(screen.getByText('Generator E-Statement')).toBeInTheDocument();
-  });
-
   it('should render the statement downloader component', () => {
     renderWithIntl(<StatementsPage />);
     expect(screen.getByTestId('statement-downloader')).toBeInTheDocument();

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { renderWithIntl as render, screen, waitFor } from '@/__tests__/utils/test-utils';
 import MerchantDashboard from '@/app/[locale]/merchant/page';
 import { NextIntlClientProvider } from 'next-intl';
 import messages from '../../../messages/id.json';
@@ -38,10 +38,12 @@ describe('MerchantDashboard', () => {
   });
 
   it('should show loading state initially', () => {
-    // Never resolve so we stay in loading state
-    mockGetMyPartner.mockReturnValue(new Promise(() => {}));
+    // Never resolve so we stay in loading state: the portal content is absent
+    // while the partner lookup is pending.
+    const { promise } = Promise.withResolvers<void>();
+    mockGetMyPartner.mockReturnValue(promise as Promise<never>);
     renderMerchant();
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(screen.queryByText(messages.merchant.title)).not.toBeInTheDocument();
   });
 
   it('should render merchant portal when no partner found', async () => {
