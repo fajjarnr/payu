@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Reverted (keputusan produk 2026-10-14 — hijau brand dikembalikan)
+
+- **Hijau PayU `#00D09C` dikembalikan (2026-10-14)** — dua commit sebelumnya (`7774ca8d1`, `2347ded9e`) menggelapkan primary/link/success/info jadi `#0B7A55` demi WCAG AA; produk menolak tampilan itu dan hijau asli dikembalikan verbatim (riwayat: `#00D09C` dipakai sejak migrasi antd `7cd9f2abd`; sebelum migrasi app memakai `hsl(160 84% 26%)` = `#0a6b48` dari commit a11y `a94c5973c`). Yang dikembalikan: seed emerald, step hover/active, tint, border, label tombol primary (putih), palet chart (`#00D09C`/`#34D399`/`#F59E0B`/`#8B5CF6`/`#F43F5E`/`#64748B`, secondary `#9CA3AF`, axis `#6B7280`). Yang **tetap** dari perbaikan kemarin: error `#C62828` (5.62:1), warning `#B45309` (5.02:1), placeholder `#6B7280`, `Table.headerColor` `#6B7280`/`#ACACAC`, warna tier VIP, accent `#C2410C`. Konsekuensi yang diterima: emerald vivak 2.00:1 di putih, jadi teks/link/tag/label tombol primary kembali di bawah AA; exception-nya terdokumentasi bertanggal di `src/theme/tokens.ts` dan di guard `antd-theme.test.tsx` (bukan skip diam-diam). Verifikasi browser Chromium 2026-10-14: tombol primary landing `rgb(0, 208, 156)` label putih, `--ant-color-link: #00d09c`. Suite: 102 file / 1168 test hijau; type-check bersih; lint di baseline (40 problem pre-existing).
+
 ### Added (design system token + accessibility, 2026-10-13)
 
 - **Guideline design system web-app (2026-10-13)** — `docs/guides/ANT_DESIGN_SYSTEM.md`: rule layer untuk token antd v6 (sumber tunggal `src/theme/tokens.ts`), state matrix komponen, acceptance criteria WCAG 2.2 AA yang bisa dieksekusi, standar copy id/en, anti-pattern, dan QA checklist untuk code review.

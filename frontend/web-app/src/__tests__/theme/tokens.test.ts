@@ -10,16 +10,17 @@ import {
 // generated aliases) by antd-theme.test.tsx.
 
 describe('theme token configuration', () => {
-  it('light seeds are the measured AA-safe values', () => {
-    expect(lightTokens.colorPrimary).toBe('#0B7A55');
-    expect(lightTokens.colorSuccess).toBe('#0B7A55');
-    expect(lightTokens.colorInfo).toBe('#0B7A55');
-    expect(lightTokens.colorLink).toBe('#0B7A55');
+  it('light seeds are the brand emerald plus the measured error/warning fixes', () => {
+    // PRODUCT DECISION 2026-10-14: emerald restored to #00D09C (brand since
+    // the antd migration); known AA gap accepted, see tokens.ts header.
+    expect(lightTokens.colorPrimary).toBe('#00D09C');
+    expect(lightTokens.colorSuccess).toBe('#00D09C');
+    expect(lightTokens.colorInfo).toBe('#00D09C');
     expect(lightTokens.colorError).toBe('#C62828');
     expect(lightTokens.colorWarning).toBe('#B45309');
     expect(lightTokens.colorTextPlaceholder).toBe('#6B7280');
-    expect(lightTokens.colorPrimaryBg).toBe('#E6FFF7');
-    expect(lightTokens.colorErrorBg).toBe('#FEF2F2');
+    expect(lightTokens.colorPrimaryBg).toBeUndefined();
+    expect(lightTokens.colorPrimaryBorder).toBeUndefined();
   });
 
   it('keeps typography scale tokens (fontSize 14, headings 24/20/16/16/14)', () => {
@@ -40,20 +41,21 @@ describe('theme token configuration', () => {
     expect(lightComponentTokens.Input?.controlHeight).toBe(48);
     expect(lightComponentTokens.Table?.headerColor).toBe('#6B7280');
     expect(darkComponentTokens.Table?.headerColor).toBe('#ACACAC');
+    // Dark danger label only; primary keeps the antd default (brand look).
+    expect(darkComponentTokens.Button?.dangerColor).toBe('#000000');
+    expect(darkComponentTokens.Button?.primaryColor).toBeUndefined();
   });
 
-  it('dark mode overrides every role the algorithm would otherwise remap or derive', () => {
-    expect(darkTokens.colorTextLightSolid).toBe('#0A2E22');
-    expect(darkTokens.colorLinkHover).toBe('#22ca9a');
-    expect(darkTokens.colorLinkActive).toBe('#22ca9a');
+  it('dark mode keeps the error/warning measured fixes, no emerald overrides', () => {
     expect(darkTokens.colorErrorText).toBe('#ff9a9a');
     expect(darkTokens.colorWarningTextActive).toBe('#e8b727');
     expect(darkTokens.colorWarningBorder).toBe('#e8b727');
-    expect(darkTokens.colorPrimaryBg).toBe('#082F24');
     expect(darkTokens.colorErrorBorder).toBe('#ff8a8a');
-  });
-
-  it('light mode does not carry the dark-only ink label token', () => {
-    expect(lightTokens.colorTextLightSolid).toBeUndefined();
+    // No emerald-family overrides remain (antd generates them from #00D09C).
+    expect(darkTokens.colorPrimaryHover).toBeUndefined();
+    expect(darkTokens.colorPrimaryText).toBeUndefined();
+    expect(darkTokens.colorLinkHover).toBeUndefined();
+    expect(darkTokens.colorTextLightSolid).toBeUndefined();
+    expect(darkTokens.colorPrimaryBg).toBeUndefined();
   });
 });

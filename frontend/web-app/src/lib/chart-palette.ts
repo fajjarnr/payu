@@ -1,14 +1,16 @@
 /**
  * Explicit palette for canvas-rendered charts (analytics page).
  *
- * Canvas cannot resolve CSS var() at draw time, so the palette is explicit and
- * selected per theme. Every value is measured: chart marks (pie slices,
- * category dots, column bars) are graphical objects needing 3:1 (SC 1.4.11)
- * and axis labels are 10px text needing 4.5:1 (SC 1.4.3) on their surface.
+ * Canvas cannot resolve CSS var() at draw time, so the palette is explicit.
  *
- * Guard: src/__tests__/lib/chart-palette.test.ts fails if any value drops
- * below threshold on either surface (#FFFFFF light, #141414 dark).
+ * PRODUCT DECISION 2026-10-14: these are the pre-existing PayU chart colors,
+ * restored verbatim (vivid emerald #00D09C family and the original amber /
+ * violet / rose / slate). A previous revision darkened them for the 3:1
+ * non-text threshold; the product owner restored the original look. The
+ * known gap: on white, #00D09C (2.00:1), #34D399, #F59E0B, and the #9CA3AF
+ * secondary sit below 3:1; see the header of src/theme/tokens.ts.
  */
+
 export interface ChartPalette {
   /** Category series, in assignment order. */
   series: readonly string[];
@@ -20,20 +22,13 @@ export interface ChartPalette {
   stroke: string;
 }
 
-const LIGHT: ChartPalette = {
-  series: ['#0B7A55', '#D97706', '#7C3AED', '#E11D48', '#64748B', '#0E7490'],
-  secondary: '#64748B',
+const RESTORED: ChartPalette = {
+  series: ['#00D09C', '#34D399', '#F59E0B', '#8B5CF6', '#F43F5E', '#64748B'],
+  secondary: '#9CA3AF',
   axisLabel: '#6B7280',
   stroke: '#FFFFFF',
 };
 
-const DARK: ChartPalette = {
-  series: ['#00D09C', '#34D399', '#F59E0B', '#8B5CF6', '#F43F5E', '#94A3B8'],
-  secondary: '#94A3B8',
-  axisLabel: '#ACACAC',
-  stroke: '#141414',
-};
-
-export function chartPalette(isDark: boolean): ChartPalette {
-  return isDark ? DARK : LIGHT;
+export function chartPalette(_isDark: boolean): ChartPalette {
+  return RESTORED;
 }
