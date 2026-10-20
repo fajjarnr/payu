@@ -38,7 +38,8 @@ import {
 } from "@/types";
 import { zodFieldRule } from "@/lib/zodForm";
 import { compareCurrency, parseCurrencyExact } from "@/lib/currency";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { generateUUID } from "@/lib/utils";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useBalance, useInitiateTransfer } from "@/hooks";
 import { useAuthStore } from "@/stores";
 import {
@@ -178,6 +179,20 @@ export default function TransferPage() {
   // swap reliably, so the review tree and submit read from this snapshot.
   const [reviewSnapshot, setReviewSnapshot] =
     useState<TransferReviewSnapshot | null>(null);
+  // TRF-J-003: the confirm button is re-enabled for one frame once the
+  // mutation settles, so a second click could fire a second transfer POST.
+  // `isSubmittingRef` is the synchronous guard (isPending only flips on the
+  // next render, so two clicks in the same tick both pass a state check);
+  // `isSubmitLocked` mirrors it for the button's disabled state.
+  const isSubmittingRef = useRef(false);
+  const [isSubmitLocked, setIsSubmitLocked] = useState(false);
+  // One transfer attempt = one idempotency key, scoped to the payload: a
+  // duplicate submit of the same payload is deduped server-side, while a
+  // changed amount/recipient gets a fresh key (the server rejects a reused
+  // key with a different body).
+  const transferAttemptRef = useRef<{ key: string; fingerprint: string } | null>(
+    null,
+  );
   const accountId = useAuthStore((state) => state.accountId);
   const addToast = useUIStore((state) => state.addToast);
   const transferMutation = useInitiateTransfer();
@@ -268,17 +283,32 @@ export default function TransferPage() {
     amount === "0" ? "" : formatCurrencyWithoutSymbol(amount);
 
   const onSubmit = (data: TransferRequest) => {
+    // TRF-J-003: a second submit of the same attempt must never reach the API.
+    if (isSubmittingRef.current) return;
     const src = reviewSnapshot ?? data;
     // Scheduled/recurring are handled by the dedicated scheduled-transfers
     // endpoint; the transfer contract rejects those fields, so they are not
     // forwarded here (scheduleType only drives the success message).
+    const senderAccountId = src.fromAccountId || accountId || "";
+    const amount = parseCurrencyExact(src.amount);
+    const type = data.transferType || "INTERNAL_TRANSFER";
+    const fingerprint = `${senderAccountId}|${src.toAccountId}|${amount}|${type}`;
+    if (
+      !transferAttemptRef.current ||
+      transferAttemptRef.current.fingerprint !== fingerprint
+    ) {
+      transferAttemptRef.current = { key: generateUUID(), fingerprint };
+    }
+    isSubmittingRef.current = true;
+    setIsSubmitLocked(true);
     transferMutation.mutate(
       {
-        senderAccountId: src.fromAccountId || accountId || "",
+        senderAccountId,
         recipientAccountNumber: src.toAccountId,
-        amount: parseCurrencyExact(src.amount),
+        amount,
         description: src.description || "",
-        type: data.transferType || "INTERNAL_TRANSFER",
+        type,
+        idempotencyKey: transferAttemptRef.current.key,
       },
       {
         onSuccess: () => {
@@ -293,8 +323,15 @@ export default function TransferPage() {
           // review flag must be cleared or the success screen never shows.
           setShowReview(false);
           setShowSuccess(true);
+          // The attempt is done: the next transfer is a new logical operation
+          // and must get its own idempotency key.
+          transferAttemptRef.current = null;
         },
         onError: () => {
+          // Retry is allowed: the same key is reused, so a transfer that did
+          // reach the server is returned instead of executed twice.
+          isSubmittingRef.current = false;
+          setIsSubmitLocked(false);
           addToast("Transfer gagal. Silakan coba lagi.", "error");
         },
       },
@@ -675,7 +712,11 @@ export default function TransferPage() {
                 type="primary"
                 htmlType="submit"
                 data-testid="confirm-transfer-button"
-                disabled={transferMutation.isPending || !isRecipientVerified}
+                disabled={
+                  transferMutation.isPending ||
+                  isSubmitLocked ||
+                  !isRecipientVerified
+                }
                 aria-describedby={
                   isRecipientVerified
                     ? undefined
@@ -708,6 +749,9 @@ export default function TransferPage() {
       form.setFieldsValue({ amount: "0", description: "" });
       setSelectedContact(null);
       setShowSuccess(false);
+      isSubmittingRef.current = false;
+      setIsSubmitLocked(false);
+      transferAttemptRef.current = null;
     };
 
     return (

@@ -267,7 +267,7 @@ export default function SecurityPage() {
                   digital untuk login pada perangkat baru.
                 </Paragraph>
                 <a
-                  href="https://sso-dev.apps.fajjjar.my.id/realms/payu/account/#/security/signingin"
+                  href="https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/account/#/security/signingin"
                   target="_blank"
                   rel="noreferrer"
                 >

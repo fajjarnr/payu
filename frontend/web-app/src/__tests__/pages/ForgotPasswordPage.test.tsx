@@ -46,7 +46,7 @@ describe("ForgotPasswordPage", () => {
       set href(v: string) {
         assign(v);
       },
-      origin: "https://payu-dev.apps.fajjjar.my.id",
+      origin: "https://payu-dev.apps.payu.ocp.fajjjar.my.id",
     });
     renderWithIntl(<ForgotPasswordPage />);
     fireEvent.change(screen.getByLabelText("Email"), {

@@ -174,10 +174,10 @@ describe("POST /api/auth/refresh", () => {
     );
     const prevBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     // Env says http (insecure) but the request arrived via https behind the LB.
-    process.env.NEXT_PUBLIC_BASE_URL = "http://payu-dev.apps.fajjjar.my.id";
+    process.env.NEXT_PUBLIC_BASE_URL = "http://payu-dev.apps.payu.ocp.fajjjar.my.id";
     try {
       const req = new Request(
-        "https://payu-dev.apps.fajjjar.my.id/api/auth/refresh",
+        "https://payu-dev.apps.payu.ocp.fajjjar.my.id/api/auth/refresh",
         {
           method: "POST",
           headers: { "x-forwarded-proto": "https" },

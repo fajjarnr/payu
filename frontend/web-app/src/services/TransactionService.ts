@@ -52,8 +52,14 @@ export class TransactionService {
     // Money travels as a canonical decimal string end-to-end. The backend
     // binds it to BigDecimal (DECIMAL(19,4)), which coerces JSON strings
     // exactly — unlike float64, which cannot represent 4dp fractions.
+    // TRF-J-003: a caller-provided key keeps one logical transfer attempt on
+    // one idempotency key, so a duplicate submit is deduped server-side.
+    const headers = getFinancialMutationHeaders();
+    if (request.idempotencyKey) {
+      headers["X-Idempotency-Key"] = request.idempotencyKey;
+    }
     const response = await api.post<InitiateTransferResponse>('/transactions/transfer', request, {
-      headers: getFinancialMutationHeaders(),
+      headers,
     });
     return response.data;
   }

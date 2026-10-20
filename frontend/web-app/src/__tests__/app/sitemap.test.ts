@@ -20,11 +20,11 @@ describe("sitemap base URL (WEB-004)", () => {
   });
 
   it("uses NEXT_PUBLIC_BASE_URL when set", async () => {
-    process.env.NEXT_PUBLIC_BASE_URL = "https://payu-dev.apps.fajjjar.my.id";
+    process.env.NEXT_PUBLIC_BASE_URL = "https://payu-dev.apps.payu.ocp.fajjjar.my.id";
     const entries = await sitemap();
     expect(entries.length).toBeGreaterThan(0);
     expect(entries.every((entry) =>
-      entry.url.startsWith("https://payu-dev.apps.fajjjar.my.id/"),
+      entry.url.startsWith("https://payu-dev.apps.payu.ocp.fajjjar.my.id/"),
     )).toBe(true);
   });
 });

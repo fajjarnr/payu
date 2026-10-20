@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
  * Generate a UUID v4 for idempotency keys
  * Uses crypto.randomUUID() if available, falls back to manual generation
  */
-function generateUUID(): string {
+export function generateUUID(): string {
   if (
     typeof crypto !== "undefined" &&
     typeof crypto.randomUUID === "function"

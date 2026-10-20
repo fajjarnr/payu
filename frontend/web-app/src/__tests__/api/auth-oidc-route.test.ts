@@ -63,22 +63,22 @@ describe("GET /api/auth/authorize (OIDC PKCE start)", () => {
   it("keeps the cluster SSO host instead of the web-app host (https)", async () => {
     process.env = {
       ...originalEnv,
-      OIDC_ISSUER: "https://sso-dev.apps.fajjjar.my.id/realms/payu",
-      KEYCLOAK_URL: "https://sso-dev.apps.fajjjar.my.id",
+      OIDC_ISSUER: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu",
+      KEYCLOAK_URL: "https://sso-dev.apps.payu.ocp.fajjjar.my.id",
       KEYCLOAK_REALM: "payu",
-      NEXT_PUBLIC_BASE_URL: "https://payu-dev.apps.fajjjar.my.id",
+      NEXT_PUBLIC_BASE_URL: "https://payu-dev.apps.payu.ocp.fajjjar.my.id",
     };
     const response = await authorizeGet(
-      new Request("https://payu-dev.apps.fajjjar.my.id/api/auth/authorize"),
+      new Request("https://payu-dev.apps.payu.ocp.fajjjar.my.id/api/auth/authorize"),
     );
     expect(response.status).toBe(307);
     const location = response.headers.get("location") ?? "";
     const url = new URL(location);
     expect(url.origin + url.pathname).toBe(
-      "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/auth",
+      "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/auth",
     );
     expect(url.searchParams.get("redirect_uri")).toBe(
-      "https://payu-dev.apps.fajjjar.my.id/api/auth/callback",
+      "https://payu-dev.apps.payu.ocp.fajjjar.my.id/api/auth/callback",
     );
   });
 

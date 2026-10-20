@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
     }
     const issuer =
       process.env.NEXT_PUBLIC_OIDC_ISSUER ??
-      "https://sso-dev.apps.fajjjar.my.id/realms/payu";
+      "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu";
     window.location.href = `${issuer}/login-actions/reset-credentials`;
   };
 

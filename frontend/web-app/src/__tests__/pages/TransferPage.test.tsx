@@ -52,8 +52,13 @@ vi.mock("@/hooks/useBeneficiaries", () => ({
   }),
 }));
 
+// TRF-J-003: `settle = false` models the window between the POST leaving the
+// browser and the success screen replacing the review — the confirm button is
+// mounted and enabled again while the mutation is still in flight.
+const transferMock = { settle: true };
+
 const mutateMock = vi.fn((_vars: unknown, opts: { onSuccess?: () => void }) => {
-  opts.onSuccess?.();
+  if (transferMock.settle) opts.onSuccess?.();
 });
 
 vi.mock("@/hooks/useTransactions", () => ({
@@ -81,6 +86,7 @@ function renderWithIntl(ui: React.ReactNode) {
 describe("TransferPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    transferMock.settle = true;
   });
 
   it("should render within DashboardLayout", () => {
@@ -122,5 +128,31 @@ describe("TransferPage", () => {
     );
 
     expect(await screen.findByText("Transfer Berhasil!")).toBeInTheDocument();
+  });
+
+  it("fires a single transfer POST when confirm is double-clicked (TRF-J-003)", async () => {
+    const user = userEvent.setup();
+    // The mutation has not settled yet: the review screen is still mounted and
+    // the confirm button is enabled again for a frame.
+    transferMock.settle = false;
+
+    renderWithIntl(<TransferPage />);
+
+    await user.type(
+      screen.getByLabelText("Nomor Rekening Penerima"),
+      "1001001002",
+    );
+    const amount = screen.getByLabelText("Nominal Transfer");
+    await user.click(amount);
+    await user.keyboard("25000");
+    await user.click(screen.getByRole("button", { name: /Tinjau Ringkasan/ }));
+
+    const confirm = await screen.findByTestId("confirm-transfer-button");
+    // A second click inside the window where the confirm button is enabled
+    // again must not fire a second transfer POST.
+    await user.click(confirm);
+    await user.click(confirm);
+
+    expect(mutateMock).toHaveBeenCalledTimes(1);
   });
 });
