@@ -14,13 +14,39 @@ set -e
 GATEWAY_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
 ACCOUNT_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=account-service -o jsonpath='{.items[0].metadata.name}')
 TMPFILE=/tmp/r.json.host
-JWT=$(oc exec -n payu-dev "$GATEWAY_POD" -- cat /tmp/cust1-jwt.txt 2>/dev/null)
-[ -z "$JWT" ] && { echo "ERROR: no JWT at /tmp/cust1-jwt.txt in gateway-service pod"; exit 1; }
+# Generate fresh JWT via Keycloak (ran from host, not pod)
+refresh_jwt() {
+    local client_secret
+    client_secret=$(cat /tmp/client-secret.txt 2>/dev/null || echo "")
+    if [ -z "$client_secret" ]; then
+        echo "ERROR: /tmp/client-secret.txt not found" >&2
+        exit 1
+    fi
+    local result
+    result=$(curl -skS -X POST \
+        "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "client_id=payu-backend" \
+        -d "client_secret=${client_secret}" \
+        -d "grant_type=password" \
+        -d "username=customer1" \
+        -d "password=P@ssw0rd123" 2>/dev/null)
+    local token
+    token=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+    if [ -z "$token" ]; then
+        echo "ERROR: JWT generation failed: $result" >&2
+        exit 1
+    fi
+    echo "$token" > /tmp/cust1-jwt.txt
+    echo "$token"
+}
+
+JWT=$(refresh_jwt)
 
 # Use the INTERNAL account-service URL (port 8080, in-cluster DNS)
 ACCT_URL="http://account-service.payu-dev.svc.cluster.local:8080"
 USERKEY="${USERKEY:-04dc03f2e2a776bffcb9b16eb9f93796}"
-ACCT_ID="7753193d-b7e7-4e1e-bcb8-f9e4612e9207"
+ACCT_ID="750e8400-e29b-41d4-a716-446655440001"
 NIK="3201234567890001"
 
 run_test() {

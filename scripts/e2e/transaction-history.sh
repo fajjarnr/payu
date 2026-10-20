@@ -5,7 +5,7 @@
 #
 # Pre-reqs:
 #   1. Same as cards-crud.sh (JWT, user_key, customer1)
-#   2. wallet-service has wallet for accountId=7753193d... with
+#   2. wallet-service has wallet for accountId=750e8400-... with
 #      balance from wallet-bootstrap.sql
 #   3. For T5 (transfer POST): a second test account must exist
 #      with a known account number as recipient.
@@ -16,14 +16,42 @@ set -e
 
 USERKEY="${USERKEY:-9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed}"
 HOST="${HOST:-https://payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id}"
-ACCT="${ACCT:-7753193d-b7e7-4e1e-bcb8-f9e4612e9207}"
+ACCT="${ACCT:-750e8400-e29b-41d4-a716-446655440001}"
 RECIPIENT_ACCT="${RECIPIENT_ACCT:-}"
 TMPFILE=/tmp/r.json
 FAILED=0
 
 GATEWAY_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
-JWT=$(oc exec -n payu-dev "$GATEWAY_POD" -- cat /tmp/cust1-jwt.txt 2>/dev/null)
-[ -z "$JWT" ] && { echo "ERROR: no JWT at /tmp/cust1-jwt.txt in gateway-service pod"; exit 1; }
+# Generate fresh JWT via Keycloak (ran from host, not pod)
+refresh_jwt() {
+    local client_secret
+    client_secret=$(cat /tmp/client-secret.txt 2>/dev/null || echo "")
+    if [ -z "$client_secret" ]; then
+        echo "ERROR: /tmp/client-secret.txt not found — generate first with:" >&2
+        echo "  ADMIN_TOKEN=\$(cat /tmp/admin-master-jwt.txt)" >&2
+        echo "  curl -skS .../clients/PAYU_BACKEND_ID/client-secret -H 'Authorization: Bearer \$ADMIN_TOKEN' | ..." >&2
+        exit 1
+    fi
+    local result
+    result=$(curl -skS -X POST \
+        "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "client_id=payu-backend" \
+        -d "client_secret=${client_secret}" \
+        -d "grant_type=password" \
+        -d "username=customer1" \
+        -d "password=P@ssw0rd123" 2>/dev/null)
+    local token
+    token=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+    if [ -z "$token" ]; then
+        echo "ERROR: JWT generation failed: $result" >&2
+        exit 1
+    fi
+    echo "$token" > /tmp/cust1-jwt.txt
+    echo "$token"
+}
+
+JWT=$(refresh_jwt)
 
 
 assert_http() {
@@ -153,7 +181,7 @@ if [ -n "$RECIPIENT_ACCT" ]; then
             \"amount\":1000,
             \"currency\":\"IDR\",
             \"description\":\"E2E test transfer\",
-            \"type\":\"INTERNAL\"
+            \"type\":\"INTERNAL_TRANSFER\"
         }")
     assert_http "T5 transfer" "201" "$T5"
     assert_json "T5 success" "success" "True"
@@ -213,7 +241,7 @@ T11=$(run_test "T11: Transfer without idempotency key (400)" \
         \"amount\":1000,
         \"currency\":\"IDR\",
         \"description\":\"no idempotency\",
-        \"type\":\"INTERNAL\"
+        \"type\":\"INTERNAL_TRANSFER\"
     }")
 assert_http "T11 no idempotency" "400" "$T11"
 

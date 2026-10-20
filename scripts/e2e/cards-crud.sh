@@ -9,7 +9,7 @@
 #   apicast   - through 3scale APIcast external URL
 #
 # Pre-reqs wallet-service needs a wallet row with accountId =
-# customer1 Keycloak sub (7753193d-...)
+# customer1 Keycloak sub (750e8400-...)
 
 set -e
 
@@ -17,7 +17,7 @@ GATEWAY_MODE="${GATEWAY_MODE:-internal}"
 USERKEY="${USERKEY:-9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed}"
 HOST="${HOST:-https://payu-product-payu-apicast-production.apps.payu.ocp.fajjjar.my.id}"
 # accountId = Keycloak sub (customer1 user UUID)
-ACCT="${ACCT:-7753193d-b7e7-4e1e-bcb8-f9e4612e9207}"
+ACCT="${ACCT:-750e8400-e29b-41d4-a716-446655440001}"
 TMPFILE=/tmp/r.json
 FAILED=0
 
@@ -35,13 +35,13 @@ refresh_jwt() {
     fi
     local result
     result=$(curl -skS -X POST \
-        "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=payu-backend" \
         -d "client_secret=${client_secret}" \
         -d "grant_type=password" \
         -d "username=customer1" \
-        -d "password=Customer1-test" 2>/dev/null)
+        -d "password=P@ssw0rd123" 2>/dev/null)
     local token
     token=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
     if [ -z "$token" ]; then

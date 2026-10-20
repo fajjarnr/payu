@@ -15,7 +15,7 @@ oc get pods -n payu-dev | grep gateway-service
 #    (lihat section "JWT Bootstrap" di bawah)
 
 # 4. Test customer1 user exists in Keycloak payu realm
-#    password: Customer1-test
+#    password: P@ssw0rd123
 ```
 
 ## Quick Start
@@ -45,12 +45,12 @@ done
 
 ```bash
 ADMIN_TOKEN=$(curl -skS -X POST \
-  "https://sso-dev.apps.fajjjar.my.id/realms/master/protocol/openid-connect/token" \
+  "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/master/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "client_id=admin-cli" \
   -d "grant_type=password" \
   -d "username=admin" \
-  -d "password=payu-keycloak-admin-dev-only" | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))")
+  -d "password=admin-password-2026!" | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))")
 
 echo "$ADMIN_TOKEN" > /tmp/admin-master-jwt.txt
 ```
@@ -59,7 +59,7 @@ echo "$ADMIN_TOKEN" > /tmp/admin-master-jwt.txt
 
 ```bash
 CLIENT_SECRET=$(curl -skS \
-  "https://sso-dev.apps.fajjjar.my.id/admin/realms/payu/clients/42e4097d-fad7-4a98-9562-6880fbc49da7/client-secret" \
+  "https://sso-dev.apps.payu.ocp.fajjjar.my.id/admin/realms/payu/clients/358b45a2-b5d0-45c7-80fe-8926679fc231/client-secret" \
   -H "Authorization: Bearer $(cat /tmp/admin-master-jwt.txt)" | python3 -c "import json,sys; print(json.load(sys.stdin)['value'])")
 
 echo "$CLIENT_SECRET" > /tmp/client-secret.txt
@@ -69,13 +69,13 @@ echo "$CLIENT_SECRET" > /tmp/client-secret.txt
 
 ```bash
 curl -skS -X POST \
-  "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+  "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "client_id=payu-backend" \
   -d "client_secret=$(cat /tmp/client-secret.txt)" \
   -d "grant_type=password" \
   -d "username=customer1" \
-  -d "password=Customer1-test" | python3 -c "import json,sys; print('OK' if 'access_token' in json.load(sys.stdin) else 'FAIL')"
+  -d "password=P@ssw0rd123" | python3 -c "import json,sys; print('OK' if 'access_token' in json.load(sys.stdin) else 'FAIL')"
 ```
 
 ## Environment Variables
@@ -85,8 +85,8 @@ curl -skS -X POST \
 | `GATEWAY_MODE` | `internal` | `internal` (via oc exec) atau `apicast` (external URL) |
 | `USERKEY` | `9a3f2bf...` | 3scale user_key (Application key di payu-product) |
 | `HOST` | `https://payu-product-payu-apicast-production...` | APIcast production endpoint |
-| `ACCT` | `7753193d-...` | Account ID (Keycloak `sub` customer1) |
-| `WALLET_ID` | `33333333-...` | Wallet ID (untuk wallet-balance.sh) |
+| `ACCT` | `750e8400-...` | Account ID (Keycloak `sub` customer1) |
+| `WALLET_ID` | `750e8400-...` | Wallet ID (untuk wallet-balance.sh) |
 | `RECIPIENT_ACCT` | (kosong) | Recipient account number untuk transfer test |
 
 ## Test Scripts

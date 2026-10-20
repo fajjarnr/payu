@@ -9,7 +9,7 @@ set -euo pipefail
 
 EXPECTED() {
   case $1 in
-    payu-dev) echo "https://sso-dev.apps.fajjjar.my.id/realms/payu" ;;
+    payu-dev) echo "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu" ;;
     payu-sit) echo "https://sso-sit.apps.fajjjar.my.id/realms/payu" ;;
     payu-uat) echo "https://sso-uat.apps.fajjjar.my.id/realms/payu" ;;
     payu-preprod) echo "https://sso-preprod.apps.fajjjar.my.id/realms/payu" ;;

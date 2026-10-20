@@ -1,6 +1,12 @@
 #!/bin/bash
 # PayU Auth Service E2E Test
-# Login + JWT validation through gateway -> auth-service
+# Login (OIDC authorization-code exchange) + JWT validation through
+# gateway -> auth-service.
+#
+# NOTE: POST /api/v1/auth/login (credential login) was removed by LOGIN-003
+# (be378b84e) — credentials never reach auth-service. The live public login
+# entry point is POST /api/v1/auth/callback. A successful browser login is
+# covered by frontend/web-app/e2e/login-flow.spec.ts.
 #
 # Mode: GATEWAY_MODE=internal (default) or apicast
 
@@ -20,13 +26,13 @@ refresh_jwt() {
     [ -z "$client_secret" ] && { echo "ERROR: /tmp/client-secret.txt not found" >&2; exit 1; }
     local token
     token=$(curl -skS -X POST \
-        "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=payu-backend" \
         -d "client_secret=${client_secret}" \
         -d "grant_type=password" \
         -d "username=customer1" \
-        -d "password=Customer1-test" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+        -d "password=P@ssw0rd123" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
     [ -z "$token" ] && { echo "ERROR: JWT generation failed" >&2; exit 1; }
     echo "$token" > /tmp/cust1-jwt.txt
     echo "$token"
@@ -92,18 +98,20 @@ echo "MODE=$GATEWAY_MODE"
 echo
 echo "========== Auth Service =========="
 
-# T1: Login — auth-service delegates to Keycloak via gateway.
-# When Keycloak internal path is unreachable, returns 503 SERVICE_UNAVAILABLE.
-# This is a known infrastructure gap (auth-service needs direct KC connectivity).
-T1=$(run_test "T1: Login with valid credentials (POST /api/v1/auth/login)" \
-    -X POST "$BASE/api/v1/auth/login" \
+# T1: Login — LOGIN-003 (be378b84e) retired the credential endpoint
+# POST /api/v1/auth/login; the live public login entry point is the OIDC
+# authorization-code exchange POST /api/v1/auth/callback. A well-formed but
+# unknown code must be rejected by Keycloak with 400 (AUTH_BUS_009).
+# 503 = Keycloak unreachable from auth-service (known infra gap).
+T1=$(run_test "T1: OIDC callback rejects an unknown authorization code (POST /api/v1/auth/callback)" \
+    -X POST "$BASE/api/v1/auth/callback" \
     -H "Content-Type: application/json" \
-    -d '{"username":"customer1","password":"Customer1-test"}')
-# Accept 200 (OK) or 503 (SERVICE_UNAVAILABLE — Keycloak not reachable from auth-service)
-if [ "$T1" = "200" ] || [ "$T1" = "503" ]; then
-    printf "  ✅ T1 Login HTTP=%s (200=OK, 503=KC unreachable — known gap)\n" "$T1"
+    -d "{\"code\":\"e2e-invalid-authorization-code\",\"codeVerifier\":\"$(printf 'a%.0s' {1..50})\",\"redirectUri\":\"https://payu-dev.apps.payu.ocp.fajjjar.my.id/api/auth/callback\"}")
+# Accept 400 (invalid/expired code) or 503 (Keycloak not reachable from auth-service)
+if [ "$T1" = "400" ] || [ "$T1" = "503" ]; then
+    printf "  ✅ T1 OIDC callback HTTP=%s (400=invalid code, 503=KC unreachable — known gap)\n" "$T1"
 else
-    printf "  ❌ T1 Login expected HTTP=200 or 503 got HTTP=%s\n" "$T1"
+    printf "  ❌ T1 OIDC callback expected HTTP=400 or 503 got HTTP=%s\n" "$T1"
     FAILED=1
 fi
 
@@ -116,21 +124,16 @@ assert_json "T2 valid" "data.valid" "True"
 echo
 echo "========== Error Flows =========="
 
-# T3: Wrong password — auth-service delegates to Keycloak, may return 500 on
-# internal error rather than 401. Accept either.
-T3=$(run_test "T3: Login with wrong password (POST /api/v1/auth/login)" \
-    -X POST "$BASE/api/v1/auth/login" \
+# T3: Malformed OIDC callback body (code without codeVerifier) — request
+# validation must reject it with 400 before any Keycloak round-trip.
+T3=$(run_test "T3: OIDC callback with a malformed body (POST /api/v1/auth/callback)" \
+    -X POST "$BASE/api/v1/auth/callback" \
     -H "Content-Type: application/json" \
-    -d '{"username":"customer1","password":"wrongpass"}')
-if [ "$T3" = "401" ] || [ "$T3" = "500" ]; then
-    printf "  ✅ T3 Bad credentials HTTP=%s (401=expected, 500=KC error forwarded)\n" "$T3"
-else
-    printf "  ❌ T3 Bad credentials expected HTTP=401 or 500 got HTTP=%s\n" "$T3"
-    FAILED=1
-fi
+    -d '{"code":"e2e-invalid-authorization-code"}')
+assert_http "T3 validation" "400" "$T3"
 
-T4=$(run_test "T4: Login with empty body (400)" \
-    -X POST "$BASE/api/v1/auth/login" \
+T4=$(run_test "T4: OIDC callback with empty body (400)" \
+    -X POST "$BASE/api/v1/auth/callback" \
     -H "Content-Type: application/json" \
     -d '{}')
 assert_http "T4 validation" "400" "$T4"

@@ -5,11 +5,11 @@ TMPFILE=/tmp/r.json; FAILED=0
 POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
 P="http://partner-service.payu-dev.svc.cluster.local:8080"
 CS=$(tr -d '[:space:]' < /tmp/client-secret.txt)
-JWT=$(curl -skS -X POST "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+JWT=$(curl -skS -X POST "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --data-urlencode "client_id=payu-backend" --data-urlencode "client_secret=$CS" \
   --data-urlencode "grant_type=password" --data-urlencode "username=customer1" \
-  --data-urlencode "password=Customer1-test" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+  --data-urlencode "password=P@ssw0rd123" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
 [ ${#JWT} -lt 20 ] && { echo "FATAL: no JWT"; exit 1; }
 
 ok(){ [ "$3" = "$2" ] && echo "  ✅ $1 HTTP=$3" || { echo "  ❌ $1 exp=$2 got=$3"; FAILED=1; }; true; }
