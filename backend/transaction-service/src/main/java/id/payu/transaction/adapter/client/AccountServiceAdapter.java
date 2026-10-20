@@ -1,11 +1,14 @@
 package id.payu.transaction.adapter.client;
 
+import id.payu.grpc.starter.config.GrpcChannelFactory;
 import id.payu.grpc.starter.config.GrpcChannelSupport;
 import id.payu.transaction.domain.port.out.AccountServicePort;
 import id.payu.account.grpc.AccountResponse;
 import id.payu.account.grpc.AccountServiceGrpc;
 import id.payu.account.grpc.GetAccountByNumberRequest;
 import id.payu.account.grpc.GetAccountsByUserRequest;
+import id.payu.account.grpc.GetUserProfileRequest;
+import id.payu.account.grpc.UserProfileResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.grpc.ManagedChannel;
@@ -33,15 +36,21 @@ public class AccountServiceAdapter implements AccountServicePort {
     @Value("${payu.grpc.clients.account-service.address:static://account-service:9090}")
     private String accountServiceAddress;
 
+    // GRPC-AUTH-001: the raw channel carried no client interceptor, so the
+    // starter never attached the caller's bearer token and account-service
+    // rejected every lookup with UNAUTHENTICATED.
+    @org.springframework.beans.factory.annotation.Autowired
+    private GrpcChannelFactory channelFactory;
+
     private ManagedChannel channel;
     private AccountServiceGrpc.AccountServiceBlockingStub stub;
 
     @PostConstruct
     void init() {
-        channel = GrpcChannelSupport.channel(accountServiceAddress);
+        channel = channelFactory.channel(accountServiceAddress);
         // GRPC-012: deadline per call (see WalletGrpcAdapter) — a shared stub
         // freezes its deadline at creation and dies 30s after boot.
-        stub = AccountServiceGrpc.newBlockingStub(channel);
+        stub = channelFactory.interceptedStub(AccountServiceGrpc.newBlockingStub(channel));
     }
 
     @PreDestroy
@@ -66,13 +75,37 @@ public class AccountServiceAdapter implements AccountServicePort {
             List<UUID> accountIds = new ArrayList<>();
             stub.withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS)
                     .getAccountsByUser(GetAccountsByUserRequest.newBuilder()
-                    .setUserId(userId)
+                    .setUserId(resolveAccountServiceUserId(userId))
                     .build())
                     .forEachRemaining(account -> accountIds.add(UUID.fromString(account.getAccountId())));
             log.debug("Found {} accounts for user: {}", accountIds.size(), userId);
             return accountIds;
         } catch (StatusRuntimeException e) {
             log.error("Failed to fetch account IDs for user {}: {}", userId, e.getStatus());
+            throw e;
+        }
+    }
+
+    /**
+     * GRPC-AUTH-001 (R4): account-service keys accounts by its own user id
+     * (users.id), while the caller only knows the IAM subject
+     * (users.external_id = the token's {@code sub}). Resolve the subject to
+     * the account-service user id first; a value that is already an
+     * account-service user id is used as is.
+     */
+    private String resolveAccountServiceUserId(String userId) {
+        try {
+            UserProfileResponse profile = stub
+                    .withDeadlineAfter(GrpcChannelSupport.DEFAULT_DEADLINE_SECONDS, TimeUnit.SECONDS)
+                    .getUserProfile(GetUserProfileRequest.newBuilder()
+                            .setUserId(userId)
+                            .build());
+            return profile.getUserId();
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
+                // Not an IAM subject — treat it as an account-service user id.
+                return userId;
+            }
             throw e;
         }
     }

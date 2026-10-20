@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -238,9 +239,9 @@ public class GrpcAuthInterceptor {
                 @Override
                 public void start(Listener<RespT> responseListener, Metadata headers) {
                     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                    String token = extractToken(authentication);
 
-                    if (authentication != null && authentication.getCredentials() instanceof String) {
-                        String token = (String) authentication.getCredentials();
+                    if (token != null) {
                         headers.put(AUTHORIZATION_KEY, BEARER_PREFIX + token);
 
                         if (authentication.getName() != null) {
@@ -258,6 +259,43 @@ public class GrpcAuthInterceptor {
                     super.start(responseListener, headers);
                 }
             };
+        }
+
+        /**
+         * GRPC-AUTH-001: the resource-server filter authenticates with a
+         * {@link org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken},
+         * whose credentials are the {@link Jwt} object — not a String — so the
+         * bearer token used to be dropped and every authenticated call arrived
+         * as UNAUTHENTICATED. Fail closed: no authenticated principal means no
+         * token, never an invented one.
+         */
+        @SuppressWarnings("unchecked")
+        private static String extractToken(Authentication authentication) {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return null;
+            }
+            if (authentication instanceof AbstractOAuth2TokenAuthenticationToken<?> oauth
+                    && oauth.getToken() != null) {
+                Object token = oauth.getToken();
+                if (token instanceof Jwt jwt) {
+                    return blankToNull(jwt.getTokenValue());
+                }
+                if (token instanceof String value) {
+                    return blankToNull(value);
+                }
+            }
+            Object credentials = authentication.getCredentials();
+            if (credentials instanceof Jwt jwt) {
+                return blankToNull(jwt.getTokenValue());
+            }
+            if (credentials instanceof String value) {
+                return blankToNull(value);
+            }
+            return null;
+        }
+
+        private static String blankToNull(String value) {
+            return (value == null || value.isBlank()) ? null : value;
         }
     }
 }

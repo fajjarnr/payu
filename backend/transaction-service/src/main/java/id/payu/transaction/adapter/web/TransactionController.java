@@ -93,6 +93,28 @@ public class TransactionController extends BaseController {
     }
 
     /**
+     * GRPC-AUTH-001 (R4): the user scope of a read must be keyed by the IAM
+     * subject the token carries. account-service owns the mapping from that
+     * subject (users.external_id) to its own user id (users.id) and answers
+     * with the caller's accounts — the 'account_id' claim is an account id and
+     * never matches a user id.
+     *
+     * @return the IAM subject (Keycloak {@code sub}) of the caller
+     * @throws IllegalStateException if no authentication is present
+     */
+    private String extractUserScopeId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        String subject = jwt.getSubject();
+        if (subject == null || subject.isBlank()) {
+            throw new IllegalStateException("No valid JWT authentication found");
+        }
+        return subject;
+    }
+
+    /**
      * List transactions for the authenticated user or by accountId query parameter.
      */
     @GetMapping
@@ -124,8 +146,8 @@ public class TransactionController extends BaseController {
             @RequestParam(required = false) String endDate
     ) {
         try {
-            String userId = extractUserId();
-            UUID effectiveAccountId = accountId != null ? accountId : UUID.fromString(userId);
+            String userId = extractUserScopeId();
+            UUID effectiveAccountId = accountId != null ? accountId : UUID.fromString(extractUserId());
             var pageable = createPageable(page, size, sort, ApiConstants.DEFAULT_SORT_DIRECTION);
             List<TransactionEntity> transactions = transactionUseCase.getAccountTransactions(
                     effectiveAccountId, userId, pageable.getPageNumber(), pageable.getPageSize());
@@ -286,7 +308,7 @@ public class TransactionController extends BaseController {
             @PathVariable UUID transactionId
     ) {
         try {
-            String userId = extractUserId();
+            String userId = extractUserScopeId();
             TransactionEntity transaction = transactionUseCase.getTransaction(transactionId, userId);
             // BUG-BE-135 FIX: Return DTO instead of domain entity
             return ok(TransactionResponse.from(transaction));
@@ -360,7 +382,7 @@ public class TransactionController extends BaseController {
             @RequestParam(required = false) String endDate
     ) {
         try {
-            String userId = extractUserId();
+            String userId = extractUserScopeId();
 
             // BUG-BE-136: Verify the authenticated user owns this accountId
             // The UseCase handles the ownership validation via userId parameter,
@@ -415,7 +437,7 @@ public class TransactionController extends BaseController {
             @PathVariable UUID accountId
     ) {
         try {
-            String userId = extractUserId();
+            String userId = extractUserScopeId();
             return ResponseEntity.ok(ApiResponse.success(
                     accountTransactionSummaryService.summarize(accountId, userId)));
         } catch (BusinessException e) {
@@ -530,7 +552,7 @@ public class TransactionController extends BaseController {
             @Valid @RequestBody UpdateTransactionTagsRequest request
     ) {
         try {
-            String userId = extractUserId();
+            String userId = extractUserScopeId();
             TransactionEntity transaction = transactionUseCase.updateTransactionTags(transactionId, userId, request.getTags());
             return ok(TransactionResponse.from(transaction));
         } catch (BusinessException e) {
