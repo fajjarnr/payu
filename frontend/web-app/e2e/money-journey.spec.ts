@@ -37,6 +37,17 @@ async function readMainBalance(authPage: Page): Promise<number> {
   const body = JSON.parse(raw) as { data?: { balance?: string }; balance?: string };
   return extractCurrencyAmount(String(body.data?.balance ?? body.balance ?? '0'));
 }
+
+/** Counts the sender's transactions carrying the given description.
+ * Same in-page BFF fetch pattern as readMainBalance (no new API client). */
+async function countTransactionsByDescription(authPage: Page, description: string): Promise<number> {
+  const raw: string = await authPage.evaluate(async ({ id, description }) => {
+    const res = await fetch(`/api/v1/transactions?accountId=${id}`, { credentials: 'include' });
+    const body = (await res.json()) as { data?: Array<{ description?: string }> };
+    return String((body.data ?? []).filter((t) => t.description === description).length);
+  }, { id: SENDER, description });
+  return Number(raw);
+}
 test.describe.configure({ retries: 0 }); // transfers burn the 5tx/10min AML budget — no retry amplification
 
 test.describe('PayU E2E — full money journey (real)', () => {
@@ -124,12 +135,22 @@ test.describe('PayU E2E — full money journey (real)', () => {
   });
 
   test('double confirm fires a single transfer POST (TRF-J-003)', async ({ authPage }) => {
+    // TRF-J-003 needs a payload the gateway schema accepts: `description` is
+    // required with minLength 1, and a schema-rejected POST answers 400, which
+    // releases the submit latch in the page's onError handler — the second
+    // click then fired a second POST and the test turned flaky. With a valid
+    // description the first POST is accepted, the latch stays engaged, and
+    // exactly one transfer (one DEBIT + one CREDIT) is created.
+    const before = await readMainBalance(authPage);
+    const beforeCount = await countTransactionsByDescription(authPage, MEMO);
+
     await authPage.goto('/transfer');
     await waitForPageStable(authPage);
     await expect(authPage.locator('[data-testid="recipient-account-input"]')).toBeVisible({ timeout: 15000 });
 
     await authPage.locator('[data-testid="recipient-account-input"]').fill(RECIPIENT);
     await authPage.getByLabel('Nominal Transfer').fill('5000');
+    await authPage.locator('[data-testid="description-input"]').fill(MEMO).catch(() => {});
     await authPage.locator('[data-testid="review-transfer-button"]').click();
     await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible({ timeout: 10000 });
 
@@ -144,8 +165,16 @@ test.describe('PayU E2E — full money journey (real)', () => {
     const confirm = authPage.locator('[data-testid="confirm-transfer-button"]');
     await confirm.click();
     await confirm.click({ force: true }).catch(() => {});
-    await firstPost;
+    const response = await firstPost;
+    await skipOnInfra(response.status(), () => response.text().catch(() => ''));
     await authPage.waitForTimeout(1500);
     expect(posts).toBe(1);
+
+    // Server-side invariant: exactly ONE new transaction, and the money moved
+    // exactly once (the ledger holds one DEBIT + one CREDIT for it).
+    const afterCount = await countTransactionsByDescription(authPage, MEMO);
+    expect(afterCount - beforeCount).toBe(1);
+    const after = await readMainBalance(authPage);
+    expect(before - after).toBe(5000);
   });
 });
