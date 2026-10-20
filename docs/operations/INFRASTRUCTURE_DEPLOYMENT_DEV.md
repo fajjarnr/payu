@@ -57,6 +57,11 @@ Kontrak deployment (lihat `infrastructure/platform/api-management/3scale/`):
   `*.apps.fajjjar.my.id` (`shared-ingress-cert` via `letsencrypt-prod-issuer`);
   tanpa label, routes jatuh ke `router-default` (`*.apps.payu.ocp.fajjjar.my.id`)
   dan `Backend` gagal `x509: certificate is valid for *.apps.payu.ocp...`.
+  **Blokir 2026-10-20:** shared domain belum bisa dipakai sama sekali
+  (delegasi NS `apps.fajjjar.my.id` di parent Cloudflare masih menunjuk NS set
+  Route53 lama -> SERVFAIL, cert tak terbit, `router-shared-ingress` 0/3), jadi
+  3scale dev **belum bisa lolos** sampai `SHARED-DNS-001` diperbaiki. Setelah
+  delegasi diperbaiki, `shared-ingress-cert` terbit dan route 3scale ikut hidup.
 - `payu-partner-user-credentials` secret — `password` untuk `DeveloperUser`
   `payu-partner-admin` (referenced `payu-capabilities.yaml`). Buat manual
   `oc create secret generic payu-partner-user-credentials -n payu-api-management --from-literal=password=...`
@@ -162,13 +167,39 @@ sebelum apply.
 
 ## Apply dan GitOps
 
-Untuk bootstrap/dev recovery yang disetujui:
+Untuk bootstrap/dev recovery yang disetujui (urutan terverifikasi di cluster
+baru `payu-drrpz` 2026-10-20):
 
 ```bash
+# 1. data: tunggu CNPG ready=3/3 SEBELUM lanjut
 rtk oc apply --server-side -k infrastructure/platform/data/overlays/dev
+rtk oc get cluster.postgresql.cnpg.io payu-database -n payu-dev
+
+# 2. messaging, lalu amq-broker (size 1 harus menang setelah size 2)
 rtk oc apply --server-side -k infrastructure/platform/messaging/overlays/payu-dev
+rtk oc apply --server-side -k infrastructure/platform/amq-broker/overlays/dev
+
+# 3. identity: tunggu RHBK Ready=True dan job sync admin Complete
 rtk oc apply --server-side -k infrastructure/platform/identity/overlays/dev
-rtk oc apply --server-side -k infrastructure/workloads/overlays/payu-dev
+rtk oc get keycloak payu-keycloak -n payu-sso
+rtk oc get job keycloak-admin-password-sync -n payu-sso
+
+# 4. REALM payu = langkah MANUAL (dev overlay menghapus KeycloakRealmImport, L-377)
+#    + selaraskan client secret realm dengan nilai ESO. Lihat:
+#    docs/operations/runbooks/dev-seed.md bagian 4-5
+
+# 5. images (build + push), baru workload: ROOT DULU, PER-SERVICE TERAKHIR.
+#    Field manager root harus TERPISAH dari per-service, dan keduanya perlu
+#    --force-conflicts: root memegang kontrak OIDC (QUARKUS_OIDC_DISCOVERY_ENABLED,
+#    QUARKUS_OIDC_JWKS_PATH, QUARKUS_TLS_TRUST_ALL) yang ada HANYA di root overlay,
+#    sedangkan per-service memegang issuer publik + env per service. Tanpa
+#    pemisahan itu, apply per-service men-strip kontrak OIDC dan
+#    api-portal-service / notification-service gagal start dengan
+#    SSLHandshakeException (certificate_unknown) PKIX path building failed.
+rtk oc apply --server-side --force-conflicts --field-manager=payu-dev-root -k infrastructure/workloads/overlays/payu-dev
+for d in infrastructure/workloads/overlays/payu-dev/*/; do
+  [ -f "$d/kustomization.yaml" ] && rtk oc apply --server-side --force-conflicts -k "$d"
+done
 ```
 
 Setelah ApplicationSet aktif, perubahan workload normal harus melalui Git dan
@@ -179,6 +210,56 @@ rtk oc get applications.argoproj.io payu-dev -n openshift-gitops
 rtk oc get applications.argoproj.io identity-dev -n openshift-gitops
 rtk oc get events -n payu-dev --field-selector type=Warning --sort-by=.lastTimestamp | rtk tail -60
 ```
+
+### Jebakan bootstrap cluster baru (terverifikasi 2026-10-20)
+
+- **Root overlay dan per-service overlay adalah dua deploy unit berbeda.** Root
+  (`overlays/payu-dev`, 29 Deployment) men-strip env yang hanya ada di
+  per-service overlay (per-service punya 201 env ekstra per pod template), jadi
+  **root wajib di-apply lebih dulu, per-service terakhir**. `analytics-service`
+  bahkan tak bisa di-apply root sama sekali (`KEYCLOAK_URL` punya `value` +
+  `valueFrom` -> Deployment invalid). Live state sekarang adalah **union** dua
+  layer, yang **tidak reproducible oleh satu `oc apply -k`**. Guard drift
+  (`scripts/verify-overlay-drift.sh`) membandingkan live vs **per-service** saja.
+  Tiket: `docs/roadmap/TODOS.md` -> `OVERLAY-STRUCT-001`.
+- **Pod instance CNPG yang Pending bisa membawa anti-afinitas lawas.** Job
+  `payu-database-2-join` macet ~20 menit karena pod template-nya punya
+  **required** anti-afinitas zona dari generasi Cluster lama, padahal keempat node
+  ada di AZ `ap-southeast-1a` (`0/4 nodes are available: … 3 node(s) didn't match
+  pod anti-affinity rules`); `payu-database-1` membawa aturan sama sehingga
+  instance-2 ikut terblokir. Yang berhasil: hapus Job satu-shot + 2 PVC Pending
+  kosong (tanpa data) + pod primary yang membawa aturan lawas, biarkan operator
+  membuat ulang (render mengikuti spec `podAntiAffinityType: preferred`).
+  **Pod Pending yang membawa anti-afinitas lawas harus dibuat ulang, bukan di-wait.**
+- **ResourceQuota `secrets` bisa mengunci operator.** Ceiling lama 150 kena
+  150/150 saat rollout 30 workload, lalu CNPG operator gagal total
+  (`cannot create Cluster auxiliary objects: secrets "payu-database-pull" is
+  forbidden: exceeded quota`) -> instance tak bisa dibuat ulang, DB turun, dan 30
+  Deployment ikut mati. `payu-dev-quota` kini `secrets 150->300` (+ `pods
+  100->150`, `requests.cpu 16->24`, `requests.memory 32Gi->64Gi`, `limits.cpu
+  64->96`, `limits.memory 80Gi->120Gi`, `pvc 30->40`, `requests.storage
+  200Gi->400Gi`, `services 50->80`, `configmaps 100->200`).
+- **Ingress class: `spec.ingress.className` bukan nama IngressController.**
+  OpenShift me-prefix nama IC jadi `openshift-<nama>`; untuk IC `shared-ingress`
+  IngressClass-nya `openshift-shared-ingress`. Dengan class yang tak dikenal
+  (`shared-ingress`) Route **tidak pernah terbentuk** sama sekali, bukan
+  "terbentuk tapi gagal admit". Verifikasi dengan `oc get ingressclass`.
+- **Host/DNS reality (dev sekarang di domain cluster).** `apps.fajjjar.my.id`
+  **tak resolve**: parent zone `fajjjar.my.id` ada di Cloudflare
+  (`NS lovisa/clayton.ns.cloudflare.com`) dan delegasi `apps` masih menunjuk NS
+  set Route53 lama, sementara zone `Z05387333BISN5F64PPM5` dilayani
+  `ns-690.awsdns-22.net`, `ns-77.awsdns-09.com`, `ns-1500.awsdns-59.org`,
+  `ns-1712.awsdns-22.co.uk` -> SERVFAIL/REFUSED, challenge ACME DNS-01 tak
+  pernah tervalidasi, `router-shared-ingress` 0/3 dan `shared-ingress-cert` tak
+  terbit. AWS admin tak bisa memperbaiki (Route53 hanya bisa mendelegasikan
+  subdomain dari zone yang di-host-nya). Dev berjalan di domain cluster
+  `apps.payu.ocp.fajjjar.my.id`: web-app `payu-dev.apps.payu.ocp.fajjjar.my.id`,
+  analytics-ws `analytics-ws.apps.payu.ocp.fajjjar.my.id`, Keycloak hostname +
+  issuer `https://sso-dev.apps.payu.ocp.fajjjar.my.id`. Sertifikat dipercaya
+  comes dari `infrastructure/platform/security/cert-manager/letsencrypt/5-ingressController.yaml`
+  (IngressController `default`, `defaultCertificate: app-router-certs` ->
+  cert Let's Encrypt `CN=*.apps.payu.ocp.fajjjar.my.id`). Langkah manual +
+  verifikasi ada di `docs/roadmap/TODOS.md` -> `SHARED-DNS-001`.
 
 ## CI evidence sebelum SIT
 
@@ -200,11 +281,15 @@ promosikan `latest` atau tag mutable.
 ```bash
 rtk oc get cluster.postgresql.cnpg.io payu-database -n payu-dev
 rtk oc get kafka payu-kafka -n payu-dev
+rtk oc get kafkatopic -n payu-dev --no-headers | rtk wc -l      # 118
 rtk oc get infinispan payu-cache -n payu-dev
 rtk oc get activemqartemis payu-broker -n payu-dev
+rtk oc get keycloak payu-keycloak -n payu-sso
 rtk oc get deployments,pods -n payu-dev
 rtk oc get hpa -n payu-dev
+rtk oc get route -n payu-sso -o wide
 rtk env NAMESPACE=payu-dev scripts/deployment/verify-deployment.sh
+./scripts/verify-overlay-drift.sh payu-dev                       # OK: no overlay drift in payu-dev
 ```
 
 Pass criteria:
@@ -214,6 +299,17 @@ Pass criteria:
   restart berulang.
 - Test/build PipelineRun wajib `Succeeded` dan digest tercatat.
 - Warning event baru dan error log changed service sudah dijelaskan.
+- `keycloak-admin-password-sync` Job `Complete` dan `oc get secret
+  payu-keycloak-admin -n payu-sso` nilainya yang dipakai operator.
+- Realm `payu` ter-import: user `customer1`/`customer2`/`admin` punya `sub` yang
+  **sama** dengan `users.external_id` di DB, `accountId` terisi, dan
+  `unmanagedAttributePolicy=ENABLED`. Detail + perintahnya:
+  `docs/operations/runbooks/dev-seed.md` bagian 4-6.
+- Route SSO admitted (`status.ingress[0].routerName` non-empty) dan host-nya
+  sama dengan `spec.hostname.hostname` CR Keycloak, supaya issuer yang
+  dibaked ke token cocok dengan yang dilihat browser.
+- Drift guard `verify-overlay-drift.sh payu-dev` -> `OK: no overlay drift`.
+  Ingat guard ini membandingkan live vs **per-service** overlay saja.
 
 ## Abort criteria
 
