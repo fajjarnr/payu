@@ -17,12 +17,29 @@ resources:
   # Dev-only: standalone Redis for RESP clients (transaction VelocityGuard Lua,
   # gateway rate limiter) at payu-cache-resp:11222. Promoted envs use managed Redis.
   - redis-standalone.yaml
+  # Dev-only: the standalone cache pod template lacks the `app.kubernetes.io/part-of: payu`
+  # label `allow-intra-namespace` selects, so default-deny-all blocks its Hot Rod port.
+  - network-policy-cache-ingress.yaml
   # Promoted overlays (sit/uat/preprod/prod) use ../../base which includes the
   # operator-managed Infinispan CR with mTLS.
 
 # Dev cache stays reachable without Vault-provisioned server TLS/CA secrets.
 # Production overlays keep the base mTLS configuration.
 patches:
+  # Dev-only (L-454): the dev cluster is single-AZ (all 4 nodes in
+  # ap-southeast-1a), so REQUIRED zone anti-affinity blocks every replica
+  # after instance-1 (0/4 nodes available). Promote to "preferred" here so
+  # dev can pack replicas; the shared base (and every other env) keeps
+  # "required".
+  - target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: payu-database
+    patch: |-
+      - op: replace
+        path: /spec/affinity/podAntiAffinityType
+        value: preferred
   - target:
       group: infinispan.org
       version: v1

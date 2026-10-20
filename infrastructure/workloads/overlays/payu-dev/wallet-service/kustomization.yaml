@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
-    newTag: "1.18.131"
+    newTag: "1.18.133"
 patches:
   - target:
       kind: Deployment
@@ -33,10 +33,10 @@ patches:
               - name: app
                 env:
                   - name: OIDC_ISSUER
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                    value: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
                   - name: OIDC_JWK_SET_URI
                     value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
                   - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                    value: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
                   - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
                     value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"

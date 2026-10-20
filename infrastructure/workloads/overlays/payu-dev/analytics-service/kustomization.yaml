@@ -32,7 +32,7 @@ patches:
               - name: app
                 env:
                   - name: OIDC_ISSUER
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                    value: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
                   # RELAY-009: jwt_auth requires KEYCLOAK_URL for JWKS; without
                   # it every authenticated call 401s (fraud scoring included).
                   # In-cluster URL per L-408 (public route 503s from pods).

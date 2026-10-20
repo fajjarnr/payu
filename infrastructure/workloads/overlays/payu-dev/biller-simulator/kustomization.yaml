@@ -23,4 +23,4 @@ patches:
               - name: biller-simulator
                 env:
                   - name: OIDC_ISSUER
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                    value: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"

@@ -68,7 +68,7 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             for item in lending["spec"]["template"]["spec"]["containers"][0]["env"]
         }
         self.assertEqual(
-            "https://sso-dev.apps.fajjjar.my.id/realms/payu",
+            "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu",
             env["OIDC_ISSUER"],
         )
         self.assertEqual(
@@ -85,7 +85,7 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
             and document.get("metadata", {}).get("name") == "payu-keycloak"
         )
         self.assertEqual(
-            "https://sso-dev.apps.fajjjar.my.id",
+            "https://sso-dev.apps.payu.ocp.fajjjar.my.id",
             keycloak["spec"]["hostname"]["hostname"],
         )
 

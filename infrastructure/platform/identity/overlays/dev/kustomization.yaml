@@ -30,7 +30,7 @@ patches:
         value: payu-database-rw.payu-dev.svc.cluster.local
       - op: add
         path: /spec/hostname/hostname
-        value: https://sso-dev.apps.fajjjar.my.id
+        value: https://sso-dev.apps.payu.ocp.fajjjar.my.id
   - target:
       kind: KeycloakRealmImport
       name: payu-realm-import
@@ -45,15 +45,17 @@ patches:
         value:
           - http://localhost:3001/*
           - https://payu-dev.apps.payu.ocp.fajjjar.my.id/*
-          - http://payu-dev.apps.fajjjar.my.id/*
+          - http://payu-dev.apps.payu.ocp.fajjjar.my.id/*
           - https://payu-dev.apps.fajjjar.my.id/*
+          - http://payu-dev.apps.fajjjar.my.id/*
       - op: replace
         path: /spec/realm/clients/0/webOrigins
         value:
           - http://localhost:3001
           - https://payu-dev.apps.payu.ocp.fajjjar.my.id
-          - http://payu-dev.apps.fajjjar.my.id
+          - http://payu-dev.apps.payu.ocp.fajjjar.my.id
           - https://payu-dev.apps.fajjjar.my.id
+          - http://payu-dev.apps.fajjjar.my.id
           - "+"
 # payu-dev already has payu-dev-operatorgroup (pre-existing): adding a second
 # OperatorGroup breaks ALL OLM installs in the namespace. Use it, don't create.

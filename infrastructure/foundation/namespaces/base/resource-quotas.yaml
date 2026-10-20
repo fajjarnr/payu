@@ -8,17 +8,19 @@ metadata:
   namespace: payu-dev
 spec:
   hard:
-    requests.cpu: "16"
-    requests.memory: 32Gi
-    limits.cpu: "64"
-    limits.memory: 80Gi
-    persistentvolumeclaims: "30"
-    requests.storage: 200Gi
-    pods: "100"
-    services: "50"
-    secrets: "150"
-    configmaps: "100"
-    # ponytail: see comment above dev quota — secrets 100→150 for barman HA
+    requests.cpu: "24"
+    requests.memory: 64Gi
+    limits.cpu: "96"
+    limits.memory: 120Gi
+    persistentvolumeclaims: "40"
+    requests.storage: 400Gi
+    pods: "150"
+    services: "80"
+    secrets: "300"
+    configmaps: "200"
+    # ponytail: 30 app deployments + Kafka/Keycloak/3scale all share this namespace.
+    # secrets 150→300: observed peak 150/150 wedged the CNPG operator
+    # ("secrets payu-database-pull is forbidden: exceeded quota") on a fresh cluster.
 ---
 apiVersion: v1
 kind: ResourceQuota

@@ -9,7 +9,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
-    newTag: "1.18.131"
+    newTag: "1.18.133"
 
 patches:
   - target:
@@ -33,7 +33,7 @@ patches:
                   - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
                     value: "always"
                   - name: OIDC_ISSUER
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                    value: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
                   - name: OIDC_JWK_SET_URI
                     value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
   # WEB-CSP-001 issuer alignment: tokens carry the PUBLIC SSO issuer
@@ -51,4 +51,4 @@ patches:
               - name: app
                 env:
                   - name: OIDC_ISSUER
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                    value: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"

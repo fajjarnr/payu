@@ -164,11 +164,14 @@ spec:
         clientAuthenticatorType: client-secret
         secret: payu-web-secret-dev-2026!
         redirectUris:
+          - "https://payu-dev.apps.payu.ocp.fajjjar.my.id/api/auth/callback"
+          - "https://payu-dev.apps.payu.ocp.fajjjar.my.id/*"
           - "https://payu-dev.apps.fajjjar.my.id/api/auth/callback"
           - "https://payu-dev.apps.fajjjar.my.id/*"
           - "https://payu.fajjjar.my.id/*"
           - "http://localhost:3001/*"
         webOrigins:
+          - "https://payu-dev.apps.payu.ocp.fajjjar.my.id"
           - "https://payu-dev.apps.fajjjar.my.id"
           - "https://payu.fajjjar.my.id"
           - "http://localhost:3001"

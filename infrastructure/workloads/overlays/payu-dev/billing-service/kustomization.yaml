@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
-    newTag: "1.18.98"
+    newTag: "1.18.133"
 patches:
   - target:
       kind: Deployment
@@ -32,4 +32,4 @@ patches:
               - name: app
                 env:
                   - name: OIDC_ISSUER
-                    value: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
+                    value: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"

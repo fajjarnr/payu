@@ -1,0 +1,21 @@
+# The standalone payu-cache pod template does not carry `app.kubernetes.io/part-of: payu`,
+# the label `allow-intra-namespace` selects, so namespace default-deny-all blocks its Hot Rod port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-payucache-ingress
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: cache
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: payu-cache
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 11222

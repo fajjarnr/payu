@@ -6,7 +6,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
-    newTag: "1.18.127"
+    newTag: "1.18.128"
 patches:
   - target:
       kind: Deployment
@@ -23,7 +23,7 @@ patches:
         path: /spec/template/spec/containers/0/env/-
         value:
           name: NEXT_PUBLIC_WS_URL
-          value: "wss://analytics-ws.apps.fajjjar.my.id"
+          value: "wss://analytics-ws.apps.payu.ocp.fajjjar.my.id"
       - op: add
         path: /spec/template/spec/containers/0/env/-
         value:
@@ -41,7 +41,7 @@ patches:
       metadata:
         name: frontend-config
       data:
-        OIDC_ISSUER: "https://sso-dev.apps.fajjjar.my.id/realms/payu"
-        OIDC_JWK_SET_URI: "https://sso-dev.apps.fajjjar.my.id/realms/payu/protocol/openid-connect/certs"
-        KEYCLOAK_URL: "https://sso-dev.apps.fajjjar.my.id"
-        NEXT_PUBLIC_BASE_URL: "https://payu-dev.apps.fajjjar.my.id"
+        OIDC_ISSUER: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
+        OIDC_JWK_SET_URI: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu/protocol/openid-connect/certs"
+        KEYCLOAK_URL: "https://sso-dev.apps.payu.ocp.fajjjar.my.id"
+        NEXT_PUBLIC_BASE_URL: "https://payu-dev.apps.payu.ocp.fajjjar.my.id"

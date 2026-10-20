@@ -101,6 +101,10 @@ spec:
   affinity:
     enablePodAntiAffinity: true
     topologyKey: topology.kubernetes.io/zone
+    # Shared base: zone anti-affinity is REQUIRED so replicas are spread
+    # across failure domains. Envs that cannot satisfy it (single-AZ dev
+    # clusters, L-454) must opt out with a DEV-ONLY overlay patch - see
+    # infrastructure/platform/data/overlays/dev/kustomization.yaml.
     podAntiAffinityType: required
 
   monitoring:

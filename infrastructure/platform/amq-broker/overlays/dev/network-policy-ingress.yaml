@@ -1,0 +1,25 @@
+# The AMQ Broker operator pods do not carry `app.kubernetes.io/part-of: payu`, the label
+# `allow-intra-namespace` selects, so namespace default-deny-all blocks their broker ports.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-artemis-ingress
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: messaging
+spec:
+  podSelector:
+    matchLabels:
+      ActiveMQArtemis: payu-broker
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 61616
+        - protocol: TCP
+          port: 5672
+        - protocol: TCP
+          port: 8161

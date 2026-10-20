@@ -7,8 +7,8 @@ metadata:
     payu.io/component: analytics-realtime
 spec:
   # WEB-OS-008: dedicated TLS route for the analytics WebSocket stream
-  # (wss://analytics-ws.apps.fajjjar.my.id/ws/analytics/<accountId>?ticket=...).
-  host: analytics-ws.apps.fajjjar.my.id
+  # (wss://analytics-ws.apps.payu.ocp.fajjjar.my.id/ws/analytics/<accountId>?ticket=...).
+  host: analytics-ws.apps.payu.ocp.fajjjar.my.id
   to:
     kind: Service
     name: analytics-service

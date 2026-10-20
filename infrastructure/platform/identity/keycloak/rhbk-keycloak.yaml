@@ -45,7 +45,7 @@ spec:
     httpsPort: 8443
 
   hostname:
-    hostname: https://sso-dev.apps.fajjjar.my.id
+    hostname: https://sso-dev.apps.payu.ocp.fajjjar.my.id
     strict: true
     backchannelDynamic: false
 
