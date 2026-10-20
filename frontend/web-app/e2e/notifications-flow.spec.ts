@@ -26,10 +26,16 @@ test.describe('Notifications Flow', () => {
   });
 
   test('should display filter buttons', async ({ authPage: page }) => {
-    await expect(page.getByRole('button', { name: 'Semua', exact: true })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Belum Dibaca')).toBeVisible();
-    await expect(page.locator('button').filter({ hasText: 'PROMO' })).toBeVisible();
-    await expect(page.locator('button').filter({ hasText: 'SECURITY' })).toBeVisible();
+    // The type filter is an AntD <Segmented> (role=radiogroup), which renders one
+    // radio per option (Semua / Belum Dibaca / Promo / Keamanan) — not buttons.
+    // Scope to the radiogroup: the dashboard menu also has a "Keamanan" entry.
+    const filters = page.getByRole('radiogroup');
+    await expect(filters.getByText('Semua', { exact: true })).toBeVisible({ timeout: 10000 });
+    await expect(filters.getByText('Belum Dibaca', { exact: true })).toBeVisible();
+    await expect(filters.getByText('Promo', { exact: true })).toBeVisible();
+    await expect(filters.getByText('Keamanan', { exact: true })).toBeVisible();
+    // ALL is the default selection
+    await expect(page.getByRole('radio', { name: 'Semua', exact: true })).toBeChecked();
   });
 
   test('should show notifications or empty state', async ({ authPage: page }) => {
@@ -39,9 +45,12 @@ test.describe('Notifications Flow', () => {
   });
 
   test('should filter notifications by type', async ({ authPage: page }) => {
-    const promoBtn = page.locator('button').filter({ hasText: 'PROMO' });
-    await promoBtn.click();
+    // Filter by PROMO: pick the Segmented option, then assert the selection took
+    // effect and that no other notification type survives the filter.
+    await page.getByRole('radiogroup').getByText('Promo', { exact: true }).click();
     await waitForAnimations(page);
-    await expect(promoBtn).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Promo', exact: true })).toBeChecked();
+    // Remaining rows carry their raw type as a tag (PROMO / SECURITY / ALERT / INFO)
+    await expect(page.getByText(/^(SECURITY|ALERT|INFO)$/)).toHaveCount(0);
   });
 });

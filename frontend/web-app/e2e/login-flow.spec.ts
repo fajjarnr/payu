@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures';
+import { test, expect, E2E_PASSWORD } from './fixtures';
 
 test.describe('Login Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,9 +13,14 @@ test.describe('Login Flow', () => {
   });
 
   test('should have branding panel on desktop', async ({ page }) => {
-    const brandingPanel = page.locator('aside[aria-label="Branding"]');
-    await expect(brandingPanel).toBeVisible();
-    await expect(page.getByText('Platform Perbankan Digital Masa Depan')).toBeVisible();
+    // The branding column is an AntD <Col> (a plain div) with no landmark role and
+    // no aria-label — target the heading it renders instead of a CSS selector.
+    // Copy: messages/id.json -> auth.branding.title
+    const brandingTitle = page.getByRole('heading', {
+      level: 1,
+      name: /Platform Perbankan Digital Masa Depan/,
+    });
+    await expect(brandingTitle).toBeVisible();
   });
 
   test('should render the OIDC sign-in button and NO local password form (LOGIN-003)', async ({ page }) => {
@@ -50,9 +55,11 @@ test.describe('Login Flow', () => {
   });
 
   test('should display security features on branding panel', async ({ page }) => {
-    await expect(page.getByText('Keamanan Tingkat Enterprise')).toBeVisible();
-    await expect(page.getByText('Enkripsi End-to-End Standar Militer')).toBeVisible();
-    await expect(page.getByText('Monitoring Transaksi Real-time AI')).toBeVisible();
+    // Copy: messages/id.json -> auth.branding.tag / auth.branding.features.*
+    await expect(page.getByText('Kontrol Keamanan')).toBeVisible();
+    await expect(page.getByText('Enkripsi AES-GCM di database')).toBeVisible();
+    await expect(page.getByText('Audit akses & skor fraud otomatis')).toBeVisible();
+    await expect(page.getByText('Integrasi Pembayaran QRIS & BI-FAST')).toBeVisible();
   });
 
   test('should have "or" divider between sign-in and register link', async ({ page }) => {
@@ -110,7 +117,7 @@ test.describe('Login Flow - OIDC PKCE journey (LOGIN-003)', () => {
 
     if (await page.getByRole('button', { name: 'Sign In' }).isVisible().catch(() => false)) {
       await page.getByRole('textbox', { name: 'Username or email' }).fill('customer1');
-      await page.getByRole('textbox', { name: 'Password' }).fill('P@ssw0rd12345');
+      await page.getByRole('textbox', { name: 'Password' }).fill(E2E_PASSWORD);
       await page.getByRole('button', { name: 'Sign In' }).click();
     }
 

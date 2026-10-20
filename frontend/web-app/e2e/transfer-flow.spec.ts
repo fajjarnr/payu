@@ -10,7 +10,10 @@ test.describe('Transfer Flow', () => {
   test('should display transfer page correctly', async ({ authPage: page }) => {
     // Title is "Transfer Instan" from layout.tsx metadata, not "PayU"
     await expect(page).toHaveTitle(/Transfer/);
-    await expect(page.locator('h2').filter({ hasText: 'Transfer Instan' })).toBeVisible({ timeout: 10000 });
+    // "Transfer Instan" is a Typography.Title level={1} (an <h1>), not an <h2>
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Transfer Instan' }),
+    ).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Kirim dana secara aman dalam hitungan detik')).toBeVisible({ timeout: 10000 });
   });
 
@@ -42,8 +45,9 @@ test.describe('Transfer Flow', () => {
   test('should show date picker when scheduled transfer selected', async ({ authPage: page }) => {
     await page.click('button:has-text("Terjadwal")');
     await waitForAnimations(page);
-    // "Tanggal Transfer" appears as label + placeholder — use label element
-    await expect(page.locator('label').filter({ hasText: 'Tanggal Transfer' })).toBeVisible({ timeout: 10000 });
+    // "Tanggal Transfer" is the <label for="transfer-scheduled-at">; the placeholder
+    // repeats the wording, so target the labelled control instead of a text match.
+    await expect(page.getByLabel('Tanggal Transfer', { exact: true })).toBeVisible({ timeout: 10000 });
   });
 
   test('should show recurring inputs when recurring transfer selected', async ({ authPage: page }) => {
@@ -56,23 +60,40 @@ test.describe('Transfer Flow', () => {
   });
 
   test('should display favorite contacts', async ({ authPage: page }) => {
+    // Favorites are the account-service beneficiary list, not mock data: the
+    // section and its "add contact" affordance are always rendered, the saved
+    // contacts themselves depend on what the account has stored.
     await expect(page.getByText('Penerima Favorit')).toBeVisible();
-    await expect(page.getByText('Anya')).toBeVisible();
-    await expect(page.getByText('Budi')).toBeVisible();
-    await expect(page.getByText('Citra')).toBeVisible();
-    await expect(page.getByText('Dodi')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Tambah penerima' })).toBeVisible();
   });
 
   test('should select contact from favorites', async ({ authPage: page }) => {
-    await page.click('text=Anya');
+    // No contact is pre-seeded for customer1, so save one through the UI (the
+    // favorites list is the account-service beneficiary list). A contact saved by
+    // an earlier run is reused — the account number is unique per user, so
+    // re-adding it would be rejected with 409.
+    const nickname = 'E2E Favorite';
+    const accountNumber = '1001001003';
+    const contact = page.getByText(nickname, { exact: true });
+    if (!(await contact.isVisible().catch(() => false))) {
+      await page.locator('[data-testid="add-beneficiary-button"]').click();
+      await page.getByLabel('Nama Penerima (opsional)', { exact: true }).fill(nickname);
+      await page.getByLabel('Nomor Rekening', { exact: true }).fill(accountNumber);
+      await page.getByRole('button', { name: 'Simpan' }).click();
+    }
+    await expect(contact).toBeVisible({ timeout: 15000 });
+    await contact.click();
     await waitForAnimations(page);
     const input = page.getByPlaceholder('Masukkan ID Akun atau Nomor Rekening');
-    await expect(input).toHaveValue('acc-any123');
+    await expect(input).toHaveValue(accountNumber);
   });
 
   test('should display transfer fee information', async ({ authPage: page }) => {
     await page.click('button:has-text("BI-FAST")');
-    await expect(page.getByText('Rp 5.000')).toBeVisible();
+    // Every transfer type is free: the fee shows as a "Gratis" tag on the type
+    // card (the "Biaya Transfer" summary card only exists in the review view).
+    const bifastCard = page.locator('[data-testid="transfer-type-bifast_transfer"]');
+    await expect(bifastCard.getByText('Gratis', { exact: true })).toBeVisible();
   });
 
   test('should allow adding memo to transaction', async ({ authPage: page }) => {
@@ -106,8 +127,10 @@ test.describe('Transfer Flow', () => {
     await page.goto('/transfer');
     await waitForPageStable(page);
 
-    // Use h2 to target the heading specifically (button also has "Transfer Instan")
-    await expect(page.locator('h2').filter({ hasText: 'Transfer Instan' })).toBeVisible();
+    // "Transfer Instan" is the page <h1>; the transfer-type button carries the same label
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Transfer Instan' }),
+    ).toBeVisible();
     await expect(page.getByPlaceholder('Masukkan ID Akun atau Nomor Rekening')).toBeVisible();
 
     await page.screenshot({
@@ -162,8 +185,9 @@ test.describe('Transfer Flow - Schedule Selection', () => {
   test('should select scheduled transfer', async ({ authPage: page }) => {
     await page.click('button:has-text("Terjadwal")');
     await waitForAnimations(page);
-    // "Tanggal Transfer" appears multiple times — use label element
-    await expect(page.locator('label').filter({ hasText: 'Tanggal Transfer' })).toBeVisible({ timeout: 10000 });
+    // "Tanggal Transfer" is the <label for="transfer-scheduled-at">; the placeholder
+    // repeats the wording, so target the labelled control instead of a text match.
+    await expect(page.getByLabel('Tanggal Transfer', { exact: true })).toBeVisible({ timeout: 10000 });
   });
 
   test('should select recurring transfer', async ({ authPage: page }) => {
@@ -212,15 +236,8 @@ test.describe('Transfer Flow - Favorite Contacts', () => {
     await expect(page.getByText('Penerima Favorit')).toBeVisible();
   });
 
-  test('should click on favorite contact', async ({ authPage: page }) => {
-    await page.click('text=Anya');
-    await waitForAnimations(page);
-    const input = page.getByPlaceholder('Masukkan ID Akun atau Nomor Rekening');
-    await expect(input).toHaveValue('acc-any123');
-  });
-
   test('should display add contact button', async ({ authPage: page }) => {
-    await expect(page.getByText('Tambah')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Tambah penerima' })).toBeVisible();
   });
 });
 
@@ -247,9 +264,11 @@ test.describe('Transfer Flow - Accessibility', () => {
   });
 
   test('should have proper heading hierarchy', async ({ authPage: page }) => {
-    const h2 = page.locator('h2').first();
-    await expect(h2).toBeVisible({ timeout: 10000 });
-    await expect(h2).toContainText('Transfer', { timeout: 5000 });
+    // The page heading is a Typography.Title level={1}; the only <h2> lives in the
+    // post-transfer success view, which is not mounted on load.
+    const h1 = page.getByRole('heading', { level: 1 });
+    await expect(h1).toBeVisible({ timeout: 10000 });
+    await expect(h1).toContainText('Transfer Instan', { timeout: 5000 });
   });
 
   test('should support keyboard navigation', async ({ authPage: page }) => {

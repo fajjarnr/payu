@@ -55,7 +55,9 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await page.getByPlaceholder(/nama@email.com/).fill('test@example.com');
     await page.getByPlaceholder(/unik & mudah diingat/).fill('testuser');
     await page.click('button:has-text("Konfirmasi Pendaftaran")');
-    await expect(page.locator('.text-red-500').first()).toBeVisible({ timeout: 10000 });
+    // AntD renders the zod validation message under the field (not a .text-red-500
+    // span). Message source: src/types/index.ts -> nik rule.
+    await expect(page.getByText('NIK must be exactly 16 digits')).toBeVisible({ timeout: 10000 });
   });
 
   test('login lands on dashboard with balance card (LOGIN-J-001)', async ({ authPage }) => {
@@ -72,10 +74,11 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await expect(authPage.locator('[data-testid="recipient-account-input"]')).toBeVisible({ timeout: 15000 });
 
     await authPage.locator('[data-testid="recipient-account-input"]').fill(RECIPIENT);
-    await authPage.locator('[data-testid="amount-input"]').fill(String(AMOUNT));
+    await authPage.getByLabel('Nominal Transfer').fill(String(AMOUNT));
     await authPage.locator('[data-testid="description-input"]').fill(MEMO).catch(() => {});
     await authPage.locator('[data-testid="review-transfer-button"]').click();
-    await expect(authPage.getByText('Tinjau Transfer')).toBeVisible({ timeout: 10000 });
+    // The review view has no "Tinjau Transfer" title; it shows the amount summary
+    await expect(authPage.getByText('Jumlah Transfer')).toBeVisible({ timeout: 10000 });
     await expect(authPage.getByText(/Rp\s*10\.000/)).toBeVisible({ timeout: 10000 });
 
     const post = authPage.waitForResponse(
@@ -87,9 +90,12 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await skipOnInfra(response.status(), () => response.text().catch(() => ''));
     expect(response.status()).toBeLessThan(300);
 
-    // onSuccess closes the review (setShowReview(false)) — deterministic proof
-    // the mutation succeeded; toast text is transient by design.
-    await expect(authPage.locator('[data-testid="review-transfer-button"]')).toBeVisible({ timeout: 15000 });
+    // A settled mutation swaps the review view for the success screen
+    // (h2 "Transfer Berhasil!"), it does not return to the review form.
+    await expect(
+      authPage.getByRole('heading', { name: 'Transfer Berhasil!' }),
+    ).toBeVisible({ timeout: 15000 });
+    // The balance delta is the real proof that the money moved.
     const after = await readMainBalance(authPage);
     expect(before - after).toBe(AMOUNT);
   });
@@ -99,7 +105,7 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await authPage.goto('/transfer');
     await waitForPageStable(authPage);
     await authPage.locator('[data-testid="recipient-account-input"]').fill(RECIPIENT);
-    await authPage.locator('[data-testid="amount-input"]').fill('5000');
+    await authPage.getByLabel('Nominal Transfer').fill('5000');
     await authPage.locator('[data-testid="description-input"]').fill(memo).catch(() => {});
     await authPage.locator('[data-testid="review-transfer-button"]').click();
     await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible({ timeout: 10000 });
@@ -123,7 +129,7 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await expect(authPage.locator('[data-testid="recipient-account-input"]')).toBeVisible({ timeout: 15000 });
 
     await authPage.locator('[data-testid="recipient-account-input"]').fill(RECIPIENT);
-    await authPage.locator('[data-testid="amount-input"]').fill('5000');
+    await authPage.getByLabel('Nominal Transfer').fill('5000');
     await authPage.locator('[data-testid="review-transfer-button"]').click();
     await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible({ timeout: 10000 });
 

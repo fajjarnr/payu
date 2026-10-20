@@ -3,12 +3,12 @@ import { Page, BrowserContext, expect } from '@playwright/test';
 /**
  * Real authentication - no mocks, hits Keycloak via OIDC PKCE.
  * Requires running: postgres + keycloak (8099) + auth-service + gateway + web-app (3001) + DB with users customer1/admin.
- * Users: customer1 / P@ssw0rd12345, admin / AdminP@ss12345 (see payu-realm-export.json / kcadm.sh).
+ * Users: customer1 / P@ssw0rd123, admin / AdminP@ss12345 (see payu-realm-export.json / kcadm.sh).
  * Override per environment: E2E_USERNAME / E2E_PASSWORD (dev cluster uses P@ssw0rd123).
  */
 
 export const E2E_USERNAME = process.env.E2E_USERNAME ?? 'customer1';
-export const E2E_PASSWORD = process.env.E2E_PASSWORD ?? 'P@ssw0rd12345';
+export const E2E_PASSWORD = process.env.E2E_PASSWORD ?? 'P@ssw0rd123';
 
 export async function performRealLogin(page: Page, username = E2E_USERNAME, password = E2E_PASSWORD) {
   await page.goto('/login');
