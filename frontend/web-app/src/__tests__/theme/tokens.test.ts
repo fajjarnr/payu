@@ -21,6 +21,11 @@ describe('theme token configuration', () => {
     expect(lightTokens.colorTextPlaceholder).toBe('#6B7280');
     expect(lightTokens.colorPrimaryBg).toBeUndefined();
     expect(lightTokens.colorPrimaryBorder).toBeUndefined();
+    // Text roles are pinned to the deep brand green (the emerald stays a fill).
+    expect(lightTokens.colorLink).toBe('#0B7A55');
+    expect(lightTokens.colorPrimaryText).toBe('#0B7A55');
+    expect(lightTokens.colorSuccessText).toBe('#0B7A55');
+    expect(lightTokens.colorTextDescription).toBe('#626975');
   });
 
   it('keeps typography scale tokens (fontSize 14, headings 24/20/16/16/14)', () => {
@@ -52,11 +57,17 @@ describe('theme token configuration', () => {
     expect(darkTokens.colorWarningTextActive).toBe('#e8b727');
     expect(darkTokens.colorWarningBorder).toBe('#e8b727');
     expect(darkTokens.colorErrorBorder).toBe('#ff8a8a');
-    // No emerald-family overrides remain (antd generates them from #00D09C).
+    // No emerald-family FILL overrides remain (antd generates them from
+    // #00D09C).
     expect(darkTokens.colorPrimaryHover).toBeUndefined();
-    expect(darkTokens.colorPrimaryText).toBeUndefined();
     expect(darkTokens.colorLinkHover).toBeUndefined();
     expect(darkTokens.colorTextLightSolid).toBeUndefined();
     expect(darkTokens.colorPrimaryBg).toBeUndefined();
+    // The emerald stays a fill colour; roles that render as TEXT are pinned to
+    // the brand green so they clear AA (see docs/ANT_GUIDELINES.md §2.2).
+    expect(darkTokens.colorPrimaryText).toBe('#35D6A0');
+    expect(darkTokens.colorLink).toBe('#35D6A0');
+    expect(darkTokens.colorSuccessText).toBe('#35D6A0');
+    expect(darkTokens.colorTextDescription).toBe('#A6A6A6');
   });
 });

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { Space, Typography } from 'antd';
+import { Space } from 'antd';
 import DashboardLayout from '@/components/DashboardLayout';
 import PageHeader from '@/components/PageHeader';
 import StatementDownloader from '@/components/settings/statement-downloader';

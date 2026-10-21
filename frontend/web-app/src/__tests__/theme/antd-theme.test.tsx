@@ -63,6 +63,33 @@ function assertTheme(vars: Record<string, string>, mode: string) {
     `${mode}: --ant-color-text-secondary (${vars['ant-color-text-secondary']} -> ${secondary}) on ${bg} is ${secondaryRatio.toFixed(2)}:1`,
   ).toBeGreaterThanOrEqual(4.5);
 
+  // antd v6 paints "secondary" typography, menu group titles and card
+  // subtitles with colorTextDescription — its default (rgba(0,0,0,0.45))
+  // measures 3.36:1 on white, so the theme pins an AA value.
+  const description = toHex(vars['ant-color-text-description'], bg);
+  const descriptionRatio = contrast(description, bg);
+  expect(
+    descriptionRatio,
+    `${mode}: --ant-color-text-description (${vars['ant-color-text-description']} -> ${description}) on ${bg} is ${descriptionRatio.toFixed(2)}:1`,
+  ).toBeGreaterThanOrEqual(4.5);
+
+  // Brand-green TEXT roles (link, primary-text, success-text) are the deep
+  // brand green — the vivid emerald stays on fills only, so every label that
+  // reads as text clears AA.
+  for (const name of [
+    'ant-color-link',
+    'ant-color-primary-text',
+    'ant-color-success-text',
+  ]) {
+    const value = vars[name];
+    if (!value) continue;
+    const ratio = contrast(toHex(value, bg), bg);
+    expect(
+      ratio,
+      `${mode}: --${name} (${value}) on ${bg} is ${ratio.toFixed(2)}:1, needs 4.5:1`,
+    ).toBeGreaterThanOrEqual(4.5);
+  }
+
   // Placeholder is text.
   const placeholderRatio = contrast(toHex(vars['ant-color-text-placeholder'], bg), bg);
   expect(placeholderRatio, `${mode}: placeholder on ${bg}`).toBeGreaterThanOrEqual(4.5);

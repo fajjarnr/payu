@@ -28,7 +28,7 @@ export default function PrivacyPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Eye style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>1. Pengumpulan Informasi</Title>
+                <Title level={2} style={{ margin: 0 }}>1. Pengumpulan Informasi</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kami mengumpulkan informasi yang Anda berikan secara langsung, termasuk data pribadi, informasi keuangan,
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Database style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>2. Penggunaan Informasi</Title>
+                <Title level={2} style={{ margin: 0 }}>2. Penggunaan Informasi</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Informasi yang dikumpulkan digunakan untuk menyediakan, meningkatkan, dan mengamankan layanan kami.
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Lock style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>3. Keamanan Data</Title>
+                <Title level={2} style={{ margin: 0 }}>3. Keamanan Data</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kami menerapkan standar keamanan industri yang ketat untuk melindungi data Anda. Semua data dienkripsi
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Shield style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>4. Berbagi Informasi</Title>
+                <Title level={2} style={{ margin: 0 }}>4. Berbagi Informasi</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kami tidak menjual data Anda kepada pihak ketiga. Informasi hanya dibagikan dengan pihak ketiga yang
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <RefreshCw style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>5. Hak Pengguna</Title>
+                <Title level={2} style={{ margin: 0 }}>5. Hak Pengguna</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Anda berhak mengakses, memperbaiki, menghapus, atau membatasi pemrosesan data pribadi Anda.
@@ -83,7 +83,7 @@ export default function PrivacyPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>6. Kepatuhan Regulasi</Title>
+                <Title level={2} style={{ margin: 0 }}>6. Kepatuhan Regulasi</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kebijakan privasi ini dirancang untuk mematuhi regulasi perlindungan data yang berlaku, termasuk

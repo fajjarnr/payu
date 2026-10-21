@@ -41,6 +41,16 @@ describe('shared atoms (foundation)', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it('RouteError is localized and offers back + home next to the retry', async () => {
+    renderWithIntl(<RouteError error={new Error('boom')} reset={() => {}} />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Terjadi kesalahan' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /coba lagi/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /kembali/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /beranda/i })).toBeInTheDocument();
+    // Localized copy only — the English boilerplate it replaced is gone.
+    expect(screen.queryByText(/something went wrong/i)).not.toBeInTheDocument();
+  });
+
   it('LoadingState renders skeleton and spinner variants', async () => {
     const { container: skeleton } = renderWithIntl(<LoadingState variant="skeleton" />);
     expect(skeleton.querySelector('[aria-busy="true"]')).toBeInTheDocument();

@@ -28,7 +28,7 @@ export default function TermsPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Shield style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>1. Penerimaan Ketentuan</Title>
+                <Title level={2} style={{ margin: 0 }}>1. Penerimaan Ketentuan</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Dengan mengakses dan menggunakan layanan PayU, Anda setuju untuk terikat oleh syarat dan ketentuan ini.
@@ -39,7 +39,7 @@ export default function TermsPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <AlertCircle style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>2. Deskripsi Layanan</Title>
+                <Title level={2} style={{ margin: 0 }}>2. Deskripsi Layanan</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 PayU menyediakan platform perbankan digital yang mencakup layanan manajemen rekening, transfer dana,
@@ -51,7 +51,7 @@ export default function TermsPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>3. Tanggung Jawab Pengguna</Title>
+                <Title level={2} style={{ margin: 0 }}>3. Tanggung Jawab Pengguna</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Pengguna bertanggung jawab untuk menjaga kerahasiaan kredensial akun dan semua aktivitas yang terjadi
@@ -62,7 +62,7 @@ export default function TermsPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Shield style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>4. Privasi dan Keamanan</Title>
+                <Title level={2} style={{ margin: 0 }}>4. Privasi dan Keamanan</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kami berkomitmen untuk melindungi privasi dan keamanan data pengguna sesuai dengan Kebijakan Privasi
@@ -73,7 +73,7 @@ export default function TermsPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <AlertCircle style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>5. Batasan Tanggung Jawab</Title>
+                <Title level={2} style={{ margin: 0 }}>5. Batasan Tanggung Jawab</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 PayU tidak bertanggung jawab atas kerugian langsung, tidak langsung, insidental, atau konsekuensial
@@ -84,7 +84,7 @@ export default function TermsPage() {
             <Space direction="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={3} style={{ margin: 0 }}>6. Perubahan Ketentuan</Title>
+                <Title level={2} style={{ margin: 0 }}>6. Perubahan Ketentuan</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kami berhak mengubah syarat dan ketentuan ini kapan saja dengan memberikan pemberitahuan kepada

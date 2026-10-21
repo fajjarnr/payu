@@ -172,7 +172,7 @@ export default function StatementDownloader() {
               <FileText style={{ width: 24, height: 24, color: token.colorPrimary }} />
             </div>
             <div>
-              <Title level={3} style={{ margin: 0 }}>{t('generator.title')}</Title>
+              <Title level={2} style={{ margin: 0 }}>{t('generator.title')}</Title>
               <Text type="secondary">{t('generator.subtitle')}</Text>
             </div>
           </Space>
@@ -260,7 +260,7 @@ export default function StatementDownloader() {
               <Calendar style={{ width: 24, height: 24, color: token.colorPrimary }} />
             </div>
             <div>
-              <Title level={3} style={{ margin: 0 }}>{t('history.title')}</Title>
+              <Title level={2} style={{ margin: 0 }}>{t('history.title')}</Title>
               <Text type="secondary">{t('history.subtitle')}</Text>
             </div>
           </Space>

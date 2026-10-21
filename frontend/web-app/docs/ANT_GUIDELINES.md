@@ -33,6 +33,17 @@ Rules:
 
 `tokens.ts:9-27` records PRODUCT DECISION 2026-10-14: vivid `#00D09C` kept at **2.00:1 on white** with an accepted AA failure. Adopting Ant primary `#1677ff` (or any AA-safe green) is a **product decision** — this file flags it, never sneaks it in. Until decided, §4 F-01 constrains *usage* (ink labels, no emerald small text), not the seed.
 
+**Usage rule (2026-10-21, enforced):** the emerald is a **fill**, never a text colour.
+
+| Role | Token | Value | Contrast |
+|---|---|---|---|
+| Fill (buttons, tags, charts) | `colorPrimary` | `#00D09C` | 1.99:1 — fills only, ink label required |
+| Text (links, accent labels, success amounts) | `colorLink` / `colorPrimaryText` / `colorSuccessText` | `#0B7A55` | 5.3:1 on white, 4.7:1 on `#E6FFF4` |
+| Label on an emerald fill | `INK_ON_EMERALD` (`tokens.ts`) | `#06281F` | 7.9:1 |
+| Secondary typography, menu group titles, card subtitles | `colorTextDescription` | `#626975` | 5.5:1 on white, 4.65:1 on `#ebebeb` |
+
+antd v6 paints "secondary" typography with `colorTextDescription` = `rgba(0,0,0,0.45)` (**3.36:1**) and derives links from the seed colour — the theme pins both, because the defaults fail AA on every surface the app renders them on.
+
 ### 2.3 Typography
 
 Inter everywhere: `FONT_FAMILY` (`tokens.ts:6`), `--font-sans/heading/mono` all resolve to Inter (`globals.css:53-55`) — no Plus Jakarta Sans, no JetBrains Mono. Declared scale is partial: base 14, headings 24/20/16/16/14 (`tokens.ts:61-67`); 12px eyebrows and 32px icons are ad-hoc per component.
@@ -58,13 +69,14 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 - Input: sidebar items navigate via `onClick → router.push` (`:173-176`) — **must** become real links (keyboard: Enter works, but no new-tab/context-menu semantics).
 - Token usage: exemplary (`token.colorBgContainer/BorderSecondary/BgLayout/PrimaryBg`, `:244-245,270-271,348-349,362`).
 - Edge: duplicate `aria-label="Pencarian cerdas"` on desktop + mobile inputs (`:303,402`) — **must** disambiguate (`…desktop` / `…mobile`).
+- Landmarks (2026-10-21): the skip link **must** render inside `<Content>` (antd renders it as `<main>`) — outside it, the skip link was the only page content outside a landmark (axe `region`). The wordmark **must** set `color: token.colorText` — an `<a>` inherits antd's link colour, which put 1.99:1 emerald on the brand name.
 
 ### 3.2 KPI header — `dashboard/BalanceCard.tsx:42-134, 399-477`
-
 - Anatomy: `Row/Col` grid; primary-balance + net-worth `Card`s; `Title level={2}` tabular with `overflowWrap: break-word` (`:91-103`); `Tag success` delta; `--` fallback (`:115-119`).
 - States: `isLoading` prop declared (`:22,35`) but no skeleton branch in body — **must** wire loading UI before reuse.
 - Token usage: `var(--ant-color-*)` inline — good; eyebrow in `colorPrimary` (`:56`) inherits F-01 — **must** switch eyebrow text to secondary ink.
 - Decorative 8px dot (`:79-87`) **must** be `aria-hidden`.
+- Card art (2026-10-21): the debit-card illustration **must** take its gradient from `CARD_ART_GRADIENT` (`theme/tokens.ts`), never from a raw `hsl()` in `globals.css`; text on it **must not** stack `opacity` (0.8/0.6 dimming put the holder label at 2.58:1) — use the solid ink role and keep hierarchy in size/weight; the holder name **must** come from `t("cardHolderName")`.
 
 ### 3.3 Action grid — `dashboard/QuickActions.tsx:36-309`
 
@@ -93,6 +105,7 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 - Input: delete is global `deleteMut.isPending` — **must** scope loading per row; delete hit area ~32px — **should** pad to 44px.
 - Layout: `Col span 8/16` (`:137-152`) never stacks — **must** add `xs=24` stacking at 360px.
 - Labels: `Typography.Text` as visual labels (`:140,147,154`) — **must** become `<label htmlFor>` (§4 F-04).
+- States (2026-10-21): a failed list load **must** render an error + retry (`isError`/`refetch`), never the empty state — a load failure that renders "no recipients yet" is a lie (§4 R-06). Per-row actions **must** name their row (`t('useFor', { name })`, `t('delete', { name })`) — N identical "Use" buttons are indistinguishable to a screen reader (§4 A-03).
 
 ### 3.7 Promo hero — `cms/BannerCarousel.tsx:62-200`
 
@@ -100,18 +113,21 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 - States: skeleton (`:88-94`) ✅; error/empty returns `null` (`:96-98`) — **must** add error UI (§4 R-06).
 - Input: slide has no accessible name (image `alt=title` duplicates `h3`, `:136,153`) — **must** give one `aria-label`; autoplay `setInterval` (`:63-70`) with no pause — **must** add pause-on-hover/focus + `prefers-reduced-motion` (§4 F-07); arrows `hidden sm:block` + hover-reveal (`:166-167`) — **must** keep arrows focus-visible on all viewports.
 - Token usage: worst offender — `bg-bank-green/90` (`:149`), `bg-bank-green` dot (`:191`), `shadow-bank-green` (`:121`), `bg-muted/50` (`:91`) — **must** migrate per §6.
+- Focus + motion (2026-10-21): the slide is a custom `role=button`, so it **must** carry the same ≥2px focus ring as the arrows (`.cms-slide:focus-visible`); the pagination dot width transition **must** be gated by `reducedMotion`; the "PROMO" badge **must** come from `t('promoBadge')`.
 
 ### 3.8 Auto modal — `cms/PromoPopup.tsx:51, 126-311`
 
 - Anatomy: antd `Modal` 512 centered, mask `rgba(0,0,0,0.8)` (`:201`); sr-only title (`:206-209`) + visible `h3` (`:249`); claim/dismiss row (`:260-277`); dot divs (`:283-291`); validity line (`:297-306`).
 - Behavior: auto-opens on 2s timer (`:127-140`) — **must not** steal focus; announce via polite region or require user trigger (§4 F-03). Pagination dots are `div`s — **must** be buttons.
 - Token usage: `bg-bank-green/hover:bg-bank-emerald/text-surface` (`:265`), `border-border hover:bg-muted` (`:273`) — **must** migrate per §6.
+- Dismissal (2026-10-21): "Don't show again" **must** update the eligibility state, not only storage — the filter reads state, so a storage-only write left the promo on screen and reopenable. The dismissal **must** be announced (`role="status"`, `cms.promoDismissed`), and the claim CTA **must** be hidden when the promo has no `actionUrl` (a no-op button is a dead control, §6 A-04).
 
 ### 3.9 Alert banner — `cms/EmergencyAlert.tsx:79-167`
 
 - Anatomy: antd `Alert` list; icon+title (`:126-131`); `line-clamp-2` desc (`:134-136`); 44px dismiss (`:145-153`) ✅.
 - Defects: wrapper focusable only when `actionUrl` (`:121`) but `onClick` always (`:160`) — **must** align (focusable ⟺ clickable); WARNING renders info-type `Alert` with warning wrapper (`:100-110,125`) — **must** map severity 1:1; clickable `Alert` wrapping dismiss `Button` nests interactives — **must** stopPropagation on dismiss.
 - Missing: loading/empty return `null` (`:96-98`) — **must** stay silent for zero alerts but log errors.
+- Nested interactive (2026-10-21): the dismiss button lives inside the `role="link"` wrapper, so its key events bubble — the wrapper **must** ignore events whose target is not itself (`e.target !== e.currentTarget`), otherwise Space cancels the button activation and Enter navigates away. The wrapper **must** carry a ≥2px focus ring, the dismissal **must** be announced (`role="status"`, `cms.alertDismissed`), and every dismiss button **must** name its alert (`cms.dismissAlertNamed`).
 
 ### 3.10 Feedback — `feedback/FeedbackWidget.tsx:53-315`
 
@@ -131,13 +147,20 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 
 - `App component={false}` keeps DOM clean ✅; Button heights 48/56/44 bake in the touch floor ✅; danger-label black override (`tokens.ts:119-123`) is dark-only — **must** verify light-mode primary label contrast per F-01.
 
+### 3.13 Route states — `src/app/[locale]/**/{error,loading}.tsx`
+
+- Every route segment **must** delegate to the shared atoms: `error.tsx` → `export { default } from '@/components/RouteError'`, `loading.tsx` → `<LoadingState variant="spinner|skeleton" />`. Per-route copies are banned (35 error files were four English variants of the same screen; 34 loading files were a Tailwind spinner with an English "Loading..." label).
+- `RouteError` **must** stay localized (`common.error*`) — the copies it replaced were English in an Indonesian-default app — and **must** offer retry + back + home; technical detail is development-only.
+- `LoadingState` skeleton **must** use the shell's content box (1200px, 16/24px padding) so the page does not jump when the data arrives.
+- Guard: `src/__tests__/app/route-states.test.ts` asserts the delegation and the A-01 stem ban for every route file.
+
 ## 4. Accessibility requirements and testable acceptance criteria
 
 Baseline: `.a11yrc.json:1-4` targets **WCAG 2.2 AA**; `.a11y-baseline.json:1-8` has zero tracked violations with WEB-CSP-001/002 as P1 gate. Playwright covers chromium + firefox + webkit + Mobile Chrome (`playwright.config.ts:38-65`); `test:a11y` runs the a11y dir, incl. production-component coverage (`package.json:17`).
 
 | ID | Criterion (testable) | Maps |
 |---|---|---|
-| F-01 | Small text and button labels **must** measure ≥4.5:1. `#00D09C` at 2.00:1 (`tokens.ts:15,27`) **must not** render as text or under white labels: no `colorPrimary` eyebrow (`BalanceCard.tsx:56`), no `colorPrimary` credit amounts (`TransferActivity.tsx:187-189`), white-on-emerald pills (`BannerCarousel.tsx:149`, `PromoPopup.tsx:246`) **must** use ink-on-tint or darker text token. Test: axe `color-contrast` on every story. | WCAG 1.4.3 |
+| F-01 | Small text and button labels **must** measure ≥4.5:1. `#00D09C` at 2.00:1 (`tokens.ts:15,27`) **must not** render as text or under white labels: no `colorPrimary` eyebrow (`BalanceCard.tsx:56`), no `colorPrimary` credit amounts (`TransferActivity.tsx:187-189`), white-on-emerald pills (`BannerCarousel.tsx:149`, `PromoPopup.tsx:246`) **must** use ink-on-tint or darker text token. **Text roles are pinned by the theme** (§2.2): `colorLink` / `colorPrimaryText` / `colorSuccessText` = `#0B7A55`, `colorTextDescription` = `#626975`; a component **must not** restate those colours as literals. Test: axe `color-contrast` on every story; the token guard asserts all four roles. | WCAG 1.4.3 |
 | F-02 | Every interactive surface **must** show a ≥2px visible focus indicator. QuickAction tiles (`QuickActions.tsx:252`, transition only) and carousel arrows (`BannerCarousel.tsx:167,170`, hover-reveal) fail today. Test: keyboard-walk each component, screenshot `:focus-visible`. | WCAG 2.4.7 / 2.4.13 |
 | F-03 | No focus theft, no unfocusable click targets. Promo auto-open (`PromoPopup.tsx:127-140`) **must not** move focus; dots **must** be buttons (`:283-291`); EmergencyAlert focusable ⟺ clickable (`EmergencyAlert.tsx:121,160`). Test: open app idle 5s → `document.activeElement` unchanged; all click handlers reachable by Tab. | WCAG 2.1.1 / 4.1.2 / 3.2.1 |
 | F-04 | Every input **must** have a programmatic label. `Typography.Text` pseudo-labels (`BeneficiaryManager.tsx:140,147,154`) **must** become `<label htmlFor>` matching input ids; submit gating (`FeedbackWidget.tsx:303`) **must** pair with exposed error text (today only `console.error :153-154`). Test: axe `label` rule; submit empty → error announced. | WCAG 3.2.2 / 3.3.1 |
@@ -178,14 +201,19 @@ Ambiguous-label fixes (before → after):
 
 - [ ] Tokens: zero new `bg-bank-*` / `bg-muted` / `text-muted-foreground` / `border-border` classes; colors resolve to `tokens.ts` seeds.
 - [ ] Contrast: body ≥4.5:1, no emerald small text or white-on-emerald labels (F-01); muted text solid, no `opacity-60` stacking (F-06).
+- [ ] Brand text roles: links, accent labels and success amounts use `colorLink` / `colorPrimaryText` / `colorSuccessText` (#0B7A55 / #35D6A0), never `colorPrimary`; "secondary" text uses `colorTextDescription` — no component restates those colours as literals (§2.2).
 - [ ] Focus: Tab-walk shows ≥2px `:focus-visible` on every control, tiles, slides, arrows (F-02); no hover-only affordances.
-- [ ] Keyboard: all click targets Tab-reachable; no timer focus theft; dots/buttons real `<button>`s (F-03); arrows work in edit-mode grid.
+- [ ] Keyboard: all click targets Tab-reachable; no timer focus theft; dots/buttons real `<button>`s (F-03); arrows work in edit-mode grid; a key press inside a nested control never triggers the wrapper action (F-03).
 - [ ] Labels: inputs have `<label htmlFor>` (F-04); repeated rows carry unique names (§5); locale strings via next-intl, no English strays.
 - [ ] Targets: icon-only ≥24px, CTAs/nav ≥44px at 360px and desktop (F-05); FAB clears MobileNav; dismiss clears content.
 - [ ] Motion: autoplay pausable + reduced-motion off (F-07); announcements polite for submit/cancel/dismiss (F-08).
-- [ ] States: loading skeleton, shared empty, and error+retry all render — no silent `null` on failure (R-06).
+- [ ] States: loading skeleton, shared empty, and error+retry all render — no silent `null` on failure (R-06); a failed load never renders the empty state.
+- [ ] Route states: every `error.tsx` / `loading.tsx` delegates to `RouteError` / `LoadingState` (§3.13) — no per-route copy.
+- [ ] Landmarks + headings: skip link inside `<main>`; one `h1` per page, no skipped levels (axe `landmark-one-main`, `region`, `heading-order`).
 - [ ] Responsive: beneficiary form stacks `xs=24`; tile/description truncation verified with longest `id` strings; desktop+mobile ledger parity.
 - [ ] i18n/theme: `id` + `en` strings present; antd locale synced (`antd-locale.ts:9-20`); light + dark screenshots attached.
 
 ---
 *Skipped: e2e spec bodies, `__tests__/a11y` assertions, `globals.css` dark block, `lib/a11y.tsx`, stores. Risk: contrast ratios cited from `tokens.ts` comments, not re-measured; dark-mode emerald and antd v6 focus-ring defaults unverified live.*
+
+**Verified live (2026-10-21).** Production build (`npm run build` → `npm start`) + axe 4.13 on `/`, `/statements`, `/legal/terms`, `/legal/privacy`, `/login`: **0 violations** on every page (before this pass: landing 23 contrast + 1 definition-list + 2 heading-order, statements 10 contrast + heading-order + region, legal 1 heading-order). Token ratios re-measured in the browser, not copied from comments. Still unverified live: the authenticated surfaces (dashboard, transfer, cards) — no session in the local environment — and the dark theme on those routes.

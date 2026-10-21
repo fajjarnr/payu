@@ -31,6 +31,7 @@ import {
   Typography,
 } from "antd";
 import { Fragment, useState } from "react";
+import { INK_ON_EMERALD } from "@/theme/tokens";
 
 const { Title, Text } = Typography;
 
@@ -46,7 +47,10 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const rawHeroTitle = t.raw("heroTitle") as string;
 
-  const onPrimary = { color: token.colorTextLightSolid };
+  // Ink on the emerald fill: white measures 1.99:1 there (and is invisible on
+  // the white surfaces this style is also applied to). Same ink the primary
+  // button label uses (theme/tokens.ts).
+  const onPrimary = { color: INK_ON_EMERALD };
   const mutedSurface = { background: token.colorFillTertiary };
 
   const handleNavClick = (e: React.MouseEvent, targetId: string) => {
@@ -452,10 +456,10 @@ export default function LandingPage() {
                       }}
                     >
                       ✓
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {t("slide3.statsAnnual")}
+                      </Text>
                     </dd>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {t("slide3.statsAnnual")}
-                    </Text>
                   </div>
                   <div>
                     <dt className="sr-only">{t("slide3.statsTrusted")}</dt>
@@ -469,10 +473,10 @@ export default function LandingPage() {
                       }}
                     >
                       ✓
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {t("slide3.statsTrusted")}
+                      </Text>
                     </dd>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {t("slide3.statsTrusted")}
-                    </Text>
                   </div>
                   <div style={{ display: isSm ? "block" : "none" }}>
                     <dt className="sr-only">{t("secure.item3")}</dt>
@@ -492,10 +496,10 @@ export default function LandingPage() {
                         aria-hidden="true"
                         style={{ fontSize: 20, color: token.colorPrimary }}
                       />
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {t("secure.item3")}
+                      </Text>
                     </dd>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {t("secure.item3")}
-                    </Text>
                   </div>
                 </Flex>
               </div>
@@ -598,7 +602,7 @@ export default function LandingPage() {
                           boxShadow: token.boxShadowSecondary,
                         }}
                       >
-                        <p style={{ margin: 0, fontSize: 12, opacity: 0.7 }}>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 600 }}>
                           Total Saldo
                         </p>
                         <p
@@ -618,7 +622,6 @@ export default function LandingPage() {
                             marginTop: 12,
                             fontSize: 12,
                             fontWeight: 500,
-                            opacity: 0.7,
                           }}
                         >
                           •••• 4682
@@ -802,7 +805,7 @@ export default function LandingPage() {
                       <Icon style={{ fontSize: 20 }} />
                     </Flex>
                     <Title
-                      level={4}
+                      level={3}
                       style={{
                         marginTop: 20,
                         marginBottom: 0,
@@ -882,14 +885,13 @@ export default function LandingPage() {
                         fontSize: 48,
                         fontWeight: 800,
                         letterSpacing: "-0.05em",
-                        color: token.colorPrimary,
-                        opacity: 0.25,
+                        color: token.colorPrimaryText,
                       }}
                     >
                       0{n}
                     </span>
                     <Title
-                      level={4}
+                      level={3}
                       style={{
                         marginTop: 12,
                         marginBottom: 0,
@@ -1001,9 +1003,7 @@ export default function LandingPage() {
                       }}
                     >
                       {t("slide3.title")}{" "}
-                      <span style={{ opacity: 0.7 }}>
-                        {t("slide3.titleHighlight")}
-                      </span>
+                      <span>{t("slide3.titleHighlight")}</span>
                     </Title>
                     <Text
                       style={{
@@ -1011,7 +1011,6 @@ export default function LandingPage() {
                         marginTop: 16,
                         maxWidth: 448,
                         lineHeight: 1.6,
-                        opacity: 0.8,
                         ...onPrimary,
                       }}
                     >
@@ -1088,7 +1087,6 @@ export default function LandingPage() {
                       display: "block",
                       marginTop: 4,
                       fontSize: 14,
-                      opacity: 0.7,
                       ...onPrimary,
                     }}
                   >
@@ -1112,7 +1110,6 @@ export default function LandingPage() {
                       display: "block",
                       marginTop: 4,
                       fontSize: 14,
-                      opacity: 0.7,
                       ...onPrimary,
                     }}
                   >
@@ -1216,7 +1213,7 @@ export default function LandingPage() {
                   fontSize: 12,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
-                  color: token.colorTextTertiary,
+                  color: token.colorTextDescription,
                 }}
               >
                 Legal

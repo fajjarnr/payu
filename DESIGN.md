@@ -24,8 +24,10 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `primary` | `#00D09C` | Brand color — buttons, links, active states |
+| `primary` | `#00D09C` | Brand color — buttons, fills, active states (never text) |
 | `primary-dark` | `#00A87E` | Hover/active state for primary |
+| `primary-text` | `#0B7A55` | Brand green **as text** — links, accent labels, success amounts (5.3:1) |
+| `primary-text-dark` | `#35D6A0` | Brand green as text, dark mode (10:1 on `#141414`) |
 | `primary-light` | `#E6FFF7` | Subtle backgrounds, highlights |
 | `secondary` | `#1A1A2E` | Dark navy — headings, dark surfaces |
 | `accent` | `#C2410C` | Accent — notifications, badges, CTAs |
@@ -35,7 +37,7 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
 | `surface` | `#FFFFFF` | Card backgrounds, modals |
 | `surface-dim` | `#F8F9FA` | Page background, subtle sections |
 | `text-primary` | `#1A1A2E` | Body text, headings |
-| `text-secondary` | `#6B7280` | Captions, metadata, placeholders |
+| `text-secondary` | `#626975` | Captions, metadata, placeholders, "secondary" typography (AA on light surfaces) |
 | `text-disabled` | `#B0B8C4` | Disabled states |
 | `border` | `#E5E7EB` | Dividers, card borders |
 
@@ -185,6 +187,8 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
 
 - **WCAG 2.2 AA** compliance required
 - **Color contrast**: 4.5:1 minimum for text, 3:1 for large text; focus indicator ≥2px at 3:1 (2.4.11/2.4.13); targets ≥24px (2.5.8)
+- **Emerald is a fill, never a text color**: `#00D09C` measures 1.99:1 on white, so text that carries the brand (links, accent labels, success amounts) uses `primary-text` `#0B7A55` (5.3:1). Labels on an emerald fill use ink `#06281F` (7.9:1) — the same ink the primary button label uses.
+- **Never stack opacity on text**: `opacity` on a text element compounds with its colour; use a solid AA token instead of dimming with opacity.
 - **Focus indicators**: 2px `primary` outline, 2px offset
 - **Screen reader**: Semantic HTML, ARIA labels, live regions for dynamic content
 - **Keyboard**: All interactive elements focusable, logical tab order

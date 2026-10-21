@@ -39,6 +39,22 @@ export const lightTokens: SeedTokens = {
   colorError: RED,
   colorWarning: AMBER,
   colorTextPlaceholder: '#6B7280', // 4.83:1; antd default rgba(0,0,0,0.25) is ~2.3:1
+  // antd v6 paints "secondary" typography and menu group titles with
+  // colorTextDescription = rgba(0,0,0,0.45) -> 3.36:1 on white (fails AA).
+  // Darker than DESIGN.md text-secondary (#6B7280) so secondary text also
+  // clears AA on the layout (#f5f5f5) and on the landing page's tinted cards:
+  // 4.65:1 on #ebebeb, 5.1:1 on #f5f5f5, 5.5:1 on white.
+  colorTextDescription: '#626975',
+  // Brand green as TEXT: the vivid emerald measures 1.99:1 on white, so every
+  // link / accent / success label uses the deep brand green (5.3:1). The
+  // emerald stays on fills (buttons, tags, charts) per the product decision.
+  colorLink: '#0B7A55',
+  colorPrimaryText: '#0B7A55',
+  colorPrimaryTextHover: '#095F43',
+  colorPrimaryTextActive: '#074A34',
+  colorSuccessText: '#0B7A55',
+  colorSuccessTextHover: '#095F43',
+  colorSuccessTextActive: '#074A34',
   colorErrorHover: RED_HOVER,
   colorErrorActive: RED_ACTIVE,
   colorWarningHover: AMBER_HOVER,
@@ -92,6 +108,15 @@ export const darkTokens: SeedTokens = {
   colorWarningBg: '#2c2211',
   colorErrorBg: '#2c1a1b',
   colorTextPlaceholder: '#9CA3AF', // 7.26:1 on #141414
+  colorTextDescription: '#A6A6A6', // 7.58:1 on #141414 (dark secondary ink)
+  // Dark mode needs a lighter brand green for text (10:1 on #141414).
+  colorLink: '#35D6A0',
+  colorPrimaryText: '#35D6A0',
+  colorPrimaryTextHover: '#6FE3BC',
+  colorPrimaryTextActive: '#4BD9A8',
+  colorSuccessText: '#35D6A0',
+  colorSuccessTextHover: '#6FE3BC',
+  colorSuccessTextActive: '#4BD9A8',
 };
 
 export const INK_ON_EMERALD = '#06281F'; // ~8:1 on #00D09C; ink labels on primary fills (F-01, per usage)

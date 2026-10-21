@@ -22,7 +22,6 @@ import {
   History,
   Gift,
   Landmark,
-  FileText,
   Bank,
   FileSearch,
   Partition,
@@ -240,7 +239,7 @@ export default function DashboardLayout({
             aria-label={t("homeBrand")}
           >
             {logoMark}
-            <span className="text-2xl font-bold uppercase tracking-tighter">
+            <span className="text-2xl font-bold uppercase tracking-tighter" style={{ color: token.colorText }}>
               PayU
             </span>
           </Link>
@@ -344,7 +343,6 @@ export default function DashboardLayout({
             </div>
           </Header>
 
-          <SkipLink href="#main-content" />
           <Content
             id="main-content"
             style={{
@@ -354,6 +352,9 @@ export default function DashboardLayout({
               background: token.colorBgLayout,
             }}
           >
+            {/* Inside the main landmark: outside it the skip link was the one
+                piece of page content not contained by a landmark (axe region). */}
+            <SkipLink href="#main-content" />
             <div className="payu-content-inner mx-auto w-full max-w-[1200px] px-4 py-4 sm:px-6 sm:py-6">
               {children}
             </div>

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { theme, Alert, Button, Card, Space, Typography } from 'antd';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/navigation';
 import { ArrowLeft, Home, RefreshCw } from '@/components/icons';
 
 export interface RouteErrorProps {
@@ -18,8 +19,8 @@ export interface RouteErrorProps {
 export default function RouteError({ error, reset }: RouteErrorProps) {
   const { token } = theme.useToken();
   const t = useTranslations('common');
+  const router = useRouter();
   useEffect(() => {
-    // eslint-disable-next-line no-console
     console.error('[RouteError]', error);
   }, [error]);
 
@@ -75,11 +76,7 @@ export default function RouteError({ error, reset }: RouteErrorProps) {
             </Button>
             <Button
               block
-              onClick={() => {
-                const pathLocale = window.location.pathname.match(/^\/(en|id)(\/|$)/);
-                const locale = pathLocale ? pathLocale[1] : 'id';
-                window.location.href = `/${locale}/dashboard`;
-              }}
+              onClick={() => router.push('/dashboard')}
             >
               <Home style={{ marginRight: 8 }} aria-hidden="true" />
               {t('home')}
