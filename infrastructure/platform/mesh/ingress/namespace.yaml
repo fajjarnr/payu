@@ -1,0 +1,18 @@
+# Dedicated namespace for the Istio ingress gateway that fronts the dev API
+# on the shared domain apps.fajjjar.my.id.
+#
+# The shared OpenShift IngressController (shared-ingress) only admits Routes
+# from namespaces labelled payu.fajjjar.my.id/ingress: shared. The gateway
+# namespace carries that label; payu-dev and istio-system deliberately do NOT,
+# so the live web-app/analytics Routes stay on the default IngressController.
+#
+# app.kubernetes.io/part-of: payu is the label the Gateway listener's
+# allowedRoutes namespace selector matches on.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-mesh-gateway
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+    payu.fajjjar.my.id/ingress: shared

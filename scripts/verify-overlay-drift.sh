@@ -7,14 +7,47 @@
 # per-service overlays (a root apply must never downgrade a service).
 # Catches: unapplied env patches (auth WEB secret, tx Redis, analytics
 # KEYCLOAK_URL), missing registry tags (tx 1.8.115), dropped Service ports.
+#
+# The mesh packages are applied as whole kustomizations, not as per-service
+# overlays, so their drift check is the server-side dry run of the package:
+# every resource must come back "unchanged" (see mesh_pkg_drift below).
+#
 # Usage: ./scripts/verify-overlay-drift.sh [payu-dev]
 set -euo pipefail
 NS="${1:-payu-dev}"
 OVERLAY="infrastructure/workloads/overlays/payu-dev"
+MESH="infrastructure/platform/mesh"
 FAIL=0
 
 say() { printf '%s\n' "$*"; }
 flag() { printf 'DRIFT: %s\n' "$*"; FAIL=1; }
+
+# The mesh packages are applied as whole kustomizations, so they are compared
+# against their rendered package: a server-side dry run must report every
+# resource as "unchanged". CRD-guarded - a cluster without the operator
+# skips the package instead of reporting a false drift.
+mesh_pkg_drift() {
+  local pkg="$1" crd="${2:-}" mode="${3:--k}"
+  local out line
+  if [ -n "$crd" ] && ! oc get crd "$crd" >/dev/null 2>&1; then
+    say "SKIP: mesh package $pkg (CRD $crd absent)"
+    return
+  fi
+  if ! out="$(oc apply --dry-run=server "$mode" "$pkg" 2>&1)"; then
+    flag "mesh package $pkg: server dry-run failed: $out"
+    return
+  fi
+  while IFS= read -r line; do
+    case "$line" in
+      *"(server dry run)") ;;
+      *) continue ;;
+    esac
+    case "$line" in
+      *"unchanged (server dry run)") ;;
+      *) flag "mesh package $pkg: $line" ;;
+    esac
+  done <<<"$out"
+}
 
 command -v oc >/dev/null || { echo "no oc"; exit 2; }
 command -v python3 >/dev/null || { echo "no python3"; exit 2; }
@@ -78,6 +111,25 @@ while IFS= read -r img; do
   name="${repo#*/}"
   oc get istag "$name:$tag" -n "$NS" -o name >/dev/null 2>&1 || flag "registry tag missing: $img"
 done < <(oc kustomize "$OVERLAY" 2>/dev/null | grep -E '^[[:space:]]*image: ' | awk '{print $2}' | sort -u | grep -v '^docker.io\|quay.io\|registry.access\|ghcr.io')
+
+# Mesh packages: the control plane, the console CRs, the per-environment
+# policy overlay and the dev-scoped ingress/telemetry packages.
+say "Checking mesh packages..."
+mesh_pkg_drift "$MESH" istios.sailoperator.io
+mesh_pkg_drift "$MESH/base/kiali.yaml" ossmconsoles.kiali.io "-f"
+case "$NS" in
+  payu-dev)
+    mesh_pkg_drift "$MESH/overlays/payu-dev" peerauthentications.security.istio.io
+    mesh_pkg_drift "$MESH/ingress" gateways.gateway.networking.k8s.io
+    mesh_pkg_drift "$MESH/telemetry" servicemonitors.monitoring.coreos.com
+    ;;
+  payu-sit|payu-uat|payu-preprod)
+    mesh_pkg_drift "$MESH/overlays/$NS" peerauthentications.security.istio.io
+    ;;
+  *)
+    say "SKIP: no applied mesh overlay for namespace $NS (the prod overlay is not applied yet)"
+    ;;
+esac
 
 [ "$FAIL" -eq 0 ] && say "OK: no overlay drift in $NS" || say "FAIL: drift found above"
 exit "$FAIL"

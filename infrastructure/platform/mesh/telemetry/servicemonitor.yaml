@@ -1,0 +1,60 @@
+# ServiceMonitors for the PayU dev mesh telemetry.
+#
+# Sidecars: every meshed workload answers Envoy metrics on port 15090 at
+# /stats/prometheus. That port is excluded from the Istio iptables capture
+# list (istio-proxy runs with -d 15090,15021,15020), so it answers on the
+# pod IP and can be scraped from outside the pod. The workloads publish it
+# through their Service, but a Service port is the app port (http/grpc) and
+# the pods declare no 15090 containerPort, so the scrape port is set by
+# relabeling the discovered endpoint address to 15090.
+#
+# The Kiali service graph is built from istio_requests_total, which the
+# Envoy stats filter writes on that endpoint with the source_workload,
+# destination_workload and connection_security_policy labels.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: payu-mesh-sidecars
+  namespace: payu-mesh-telemetry
+spec:
+  namespaceSelector:
+    matchNames:
+      - payu-dev
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+      sidecar.istio.io/inject: "true"
+  endpoints:
+    - port: http
+      path: /stats/prometheus
+      scheme: http
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # podIP:<app port> -> podIP:15090 (the Envoy metrics port).
+        - sourceLabels:
+            - __address__
+          regex: '([^:]+):[0-9]+'
+          replacement: '${1}:15090'
+          targetLabel: __address__
+          action: replace
+---
+# istiod control-plane metrics (Service port http-monitoring, 15014).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: payu-mesh-istiod
+  namespace: payu-mesh-telemetry
+spec:
+  namespaceSelector:
+    matchNames:
+      - istio-system
+  selector:
+    matchLabels:
+      app: istiod
+  endpoints:
+    - port: http-monitoring
+      path: /metrics
+      scheme: http
+      interval: 30s
+      scrapeTimeout: 10s

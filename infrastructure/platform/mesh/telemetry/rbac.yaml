@@ -1,0 +1,85 @@
+# Discovery permissions for the OpenShift cluster Prometheus.
+#
+# The cluster Prometheus resolves ServiceMonitor targets through the
+# Kubernetes API, so its service account must read services, endpoints and
+# pods in the namespaces that hold the scrape targets. The stock
+# prometheus-k8s role of the monitoring operator covers the openshift-*
+# namespaces only, so payu-dev and istio-system each need an explicit
+# read-only Role. No write verbs, no other subjects.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: payu-mesh-telemetry-discovery
+  namespace: payu-dev
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-mesh-telemetry-discovery
+  namespace: payu-dev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: payu-mesh-telemetry-discovery
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-k8s
+    namespace: openshift-monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: payu-mesh-telemetry-discovery
+  namespace: istio-system
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payu-mesh-telemetry-discovery
+  namespace: istio-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: payu-mesh-telemetry-discovery
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-k8s
+    namespace: openshift-monitoring

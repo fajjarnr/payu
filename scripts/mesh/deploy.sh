@@ -7,6 +7,16 @@
 # infrastructure/platform/mesh/base; per-environment mesh policy lives in
 # infrastructure/platform/mesh/overlays/<env>.
 #
+# Steps:
+#   1 control plane     infrastructure/platform/mesh            (cluster-wide)
+#   2 mesh policy       infrastructure/platform/mesh/overlays/<env>
+#   3 dev ingress       infrastructure/platform/mesh/ingress     (dev only)
+#   4 mesh telemetry    infrastructure/platform/mesh/telemetry  (dev only)
+#
+# The ingress/ and telemetry/ packages are dev-scoped: the gateway
+# namespace, the HTTPRoute and the telemetry RBAC/NetworkPolicy all target
+# payu-dev, so they are skipped for the other environments.
+#
 # The legacy Maistra-era prod-ingress assets (base/gateway.yaml,
 # base/destination-rules.yaml, base/peer-authentication.yaml) are NOT applied
 # here: they target the prod namespaces and the prod ingress gateway, and
@@ -39,7 +49,10 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Environment -> mesh overlay directory (only payu-dev exists today)
+# Namespace the dev-scoped mesh packages (ingress/, telemetry/) write into.
+DEV_NAMESPACE="payu-dev"
+
+# Environment -> mesh overlay directory
 overlay_dir() {
     case "$1" in
         dev) echo "payu-dev" ;;
@@ -127,6 +140,48 @@ deploy_mesh_policy() {
     apply "$MESH_DIR/overlays/$overlay"
 }
 
+require_namespace() {
+    local ns=$1
+    if ! oc get namespace "$ns" &> /dev/null; then
+        log_error "Namespace $ns not found - apply the environment namespace first."
+        exit 1
+    fi
+}
+
+deploy_ingress() {
+    if [ "$ENV" != "dev" ]; then
+        log_warn "The ingress/ package is dev-scoped - skipping for $ENV."
+        return
+    fi
+
+    require_namespace "$DEV_NAMESPACE"
+
+    log_info "Deploying the dev ingress on the shared domain..."
+    apply "$MESH_DIR/ingress"
+
+    if [ "$DRY_RUN" = "true" ]; then
+        return
+    fi
+
+    log_info "Waiting for the ingress gateway to be ready..."
+    oc wait --for=create pod -l gateway.networking.k8s.io/gateway-name=payu-public-gateway \
+        -n payu-mesh-gateway --timeout=300s
+    oc wait --for=condition=ready pod -l gateway.networking.k8s.io/gateway-name=payu-public-gateway \
+        -n payu-mesh-gateway --timeout=300s
+}
+
+deploy_telemetry() {
+    if [ "$ENV" != "dev" ]; then
+        log_warn "The telemetry/ package is dev-scoped - skipping for $ENV."
+        return
+    fi
+
+    require_namespace "$DEV_NAMESPACE"
+
+    log_info "Deploying the mesh telemetry (ServiceMonitors + discovery RBAC)..."
+    apply "$MESH_DIR/telemetry"
+}
+
 verify_deployment() {
     log_info "Verifying Service Mesh deployment..."
 
@@ -140,6 +195,15 @@ verify_deployment() {
 
     log_info "Checking PeerAuthentication resources..."
     oc get peerauthentication -A
+
+    if [ "$ENV" = "dev" ]; then
+        log_info "Checking the dev ingress..."
+        oc get gateway -n payu-mesh-gateway
+        oc get httproute -n "$DEV_NAMESPACE"
+
+        log_info "Checking the mesh telemetry..."
+        oc get servicemonitor -n payu-mesh-telemetry
+    fi
 }
 
 print_next_steps() {
@@ -152,6 +216,9 @@ print_next_steps() {
     echo "   oc rollout restart deployment/account-service -n payu-dev"
     echo "3. Verify the sidecar is present (istio-proxy initContainer):"
     echo "   oc get pods -n payu-dev -o jsonpath='{range .items[*]}{.metadata.name}{'  '}{.spec.initContainers[*].name}{'\\n'}{end}'"
+    echo "4. Apply the environment workloads - the sidecars and the telemetry"
+    echo "   scrape targets exist only after that:"
+    echo "   oc apply -k infrastructure/workloads/overlays/payu-dev"
 }
 
 print_usage() {
@@ -161,12 +228,14 @@ print_usage() {
     echo "  -e, --environment ENV   Target environment (dev, sit, uat, preprod, prod) [default: dev]"
     echo "  -n, --namespace NS      Control plane namespace [default: istio-system]"
     echo "  -d, --dry-run           Show what would be applied without applying"
-    echo "  -s, --step STEP         Deploy specific step (1-2)"
+    echo "  -s, --step STEP         Deploy specific step (1-4)"
     echo "  -h, --help              Show this help message"
     echo ""
     echo "Steps:"
     echo "  1 - Deploy control plane (Istio + IstioCNI CRs)"
     echo "  2 - Deploy mesh policy for the environment"
+    echo "  3 - Deploy the dev ingress on the shared domain (dev only)"
+    echo "  4 - Deploy the mesh telemetry (dev only)"
     echo ""
     echo "Examples:"
     echo "  $0                          # Deploy all steps"
@@ -220,6 +289,14 @@ main() {
 
     if [ -z "$STEP" ] || [ "$STEP" = "2" ]; then
         deploy_mesh_policy
+    fi
+
+    if [ -z "$STEP" ] || [ "$STEP" = "3" ]; then
+        deploy_ingress
+    fi
+
+    if [ -z "$STEP" ] || [ "$STEP" = "4" ]; then
+        deploy_telemetry
     fi
 
     if [ -z "$STEP" ] && [ "$DRY_RUN" = "false" ]; then

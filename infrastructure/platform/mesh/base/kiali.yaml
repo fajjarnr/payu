@@ -1,19 +1,95 @@
+# Service mesh console for the PayU dev mesh (OSSM 3.4 / Sail Operator).
+#
+# Validated on cluster payu-drrpz against the live CRDs of kiali-operator
+# v2.27.5 (2026-10-21): group kiali.io, version v1alpha1, kinds Kiali and
+# OSSMConsole. The OSSMConsole CRD exposes no auth, Prometheus or namespace
+# settings, so the console configuration lives in the Kiali CR and the
+# OSSMConsole CR points the OpenShift console plugin at that Kiali service.
+# This replaces the Maistra-era `kind: Kiali` CR that used to sit here.
 apiVersion: kiali.io/v1alpha1
 kind: Kiali
 metadata:
   name: payu-kiali
   namespace: istio-system
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
 spec:
   auth:
     strategy: openshift
   deployment:
     namespace: istio-system
+    replicas: 1
+    # Declarative statement of scope; deprecated in the CRD and ignored by
+    # kiali-operator v2.27.5, which enforces the scope through
+    # discovery_selectors below.
     accessible_namespaces:
       - payu-dev
+    cluster_wide_access: false
+    discovery_selectors:
+      default:
+        - matchLabels:
+            kubernetes.io/metadata.name: payu-dev
+    ingress:
+      enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
   external_services:
     prometheus:
-      url: "https://thanos-querier.openshift-monitoring.svc.cluster.local:9091"
+      # prometheus-operated:9090 is blocked by the openshift-monitoring
+      # NetworkPolicy; thanos-querier:9091 is the only Prometheus reachable
+      # from other namespaces. It answers only for a token holding the
+      # cluster-monitoring-view role (ClusterRoleBinding at the end of this file).
+      url: https://thanos-querier.openshift-monitoring.svc:9091
+      auth:
+        type: bearer
+        use_kiali_token: true
     grafana:
       enabled: false
     istio:
       root_namespace: istio-system
+  server:
+    observability:
+      metrics:
+        enabled: true
+      tracing:
+        # No tracing backend in the cluster.
+        enabled: false
+---
+apiVersion: kiali.io/v1alpha1
+kind: OSSMConsole
+metadata:
+  name: payu-ossmconsole
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  version: default
+  kiali:
+    # The Kiali service and Route are created by the Kiali CR above in the
+    # same namespace, so the console plugin discovers them from the Route.
+    autoDiscover: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: payu-kiali-monitoring-view
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-monitoring-view
+subjects:
+  # The operator names the service account after the instance name, which
+  # defaults to "kiali" regardless of the CR name.
+  - kind: ServiceAccount
+    name: kiali-service-account
+    namespace: istio-system

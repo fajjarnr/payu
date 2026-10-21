@@ -1,6 +1,12 @@
 # Gateway Configuration for PayU Digital Banking Platform
 # This manifest configures the Istio Ingress Gateway for external traffic
 #
+# SUPERSEDED by infrastructure/platform/mesh/ingress/ — this Maistra-era file
+# targets `istio: ingressgateway` pods that do not exist on OSSM 3.4, uses
+# hostnames under `payu.fajjjar.my.id` (not the shared domain
+# `apps.fajjjar.my.id`) and a certificate `payu-ingress-cert` that is not
+# issued. Not applied. See ADR-0073.
+#
 # Resources:
 # - Gateway: Defines the ingress gateway with TLS termination
 # - VirtualServices: Route external traffic to internal services

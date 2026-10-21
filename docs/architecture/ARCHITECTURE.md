@@ -1200,7 +1200,8 @@ C4Component
 > (`servicemeshoperator3.v3.4.3`, CRD `sailoperator.io/v1`: `Istio` + `IstioCNI`, **bukan** CRD Maistra 2.x
 > `ServiceMeshControlPlane`/`ServiceMeshMemberRoll`). Manifest control plane:
 > `infrastructure/platform/mesh/base/` (namespace `istio-system` = mesh root + `istio-cni`, `IstioCNI` CR,
-> `Istio` CR `spec.version: v1.30.5`); policy per env: `infrastructure/platform/mesh/overlays/payu-dev/`.
+> `Istio` CR `spec.version: v1.30.5`); policy per env: `infrastructure/platform/mesh/overlays/<env>/`
+> (`payu-dev`, `payu-sit`, `payu-uat`, `payu-preprod`, `payu`).
 > Lihat [ADR-0072](../adr/0072-openshift-service-mesh-3-4-sail-operator-dev-rollout.md).
 >
 > - `payu-dev`: **24 service app-tier sudah di-mesh** (injection opt-in per deployment lewat label
@@ -1209,7 +1210,40 @@ C4Component
 >   mesh-to-mesh ke **mutual TLS**: `connection_security_policy="mutual_tls"` pada `istio_requests_total`
 >   (23 `mutual_tls` + 2 `none` dari sumber non-mesh: probe kubelet & OpenShift router).
 > - **STRICT mTLS + `AuthorizationPolicy` dari `payu-uat` ke atas** (`payu-uat`, `payu-preprod`, `payu`);
->   `payu-sit` PERMISSIVE. Dev **tidak punya Istio ingress gateway** — trafik eksternal dilayani OpenShift router.
+>   `payu-sit` PERMISSIVE. Trafik eksternal **tetap** dilayani OpenShift router; Istio gateway tidak pernah
+>   memiliki domain (lihat bullet berikutnya).
+> - **Posture mTLS per env (live 2026-10-21)** — tiap `PeerAuthentication` **namespace-scoped**, **tanpa selector**,
+>   dan **tidak ada** policy mesh-wide di root namespace `istio-system` (objek STRICT di root akan mengikat
+>   namespace dev/sit/uat di cluster yang sama):
+>   - `payu-dev` — **PERMISSIVE** (`permissive-mtls`) — `overlays/payu-dev/peer-authentication.yaml` — **di-apply**
+>   - `payu-sit` — **PERMISSIVE** (`permissive-mtls`) — `overlays/payu-sit/peer-authentication.yaml` — **di-apply**
+>   - `payu-uat` — **STRICT** (`strict-mtls`) — `overlays/payu-uat/peer-authentication.yaml` — **di-apply**
+>   - `payu-preprod` — **STRICT** (`strict-mtls`) — `overlays/payu-preprod/peer-authentication.yaml` — **di-apply**
+>   - `payu` (prod) — **STRICT** (`strict-mtls`) — `overlays/payu/peer-authentication.yaml` — **repo-only**, ikut
+>     promosi prod (namespace `payu` ada di cluster tapi belum carries workload prod)
+>
+>   Bukti live: `oc get peerauthentication -A` = **tepat 4 objek** (nol di `istio-system`, nol di `payu`); dev
+>   terbukti tak terganggu (`connection_security_policy="mutual_tls"` 134/489 di sidecar `account-service`, istiod
+>   Healthy, `./scripts/verify-overlay-drift.sh payu-dev` -> `OK: no overlay drift in payu-dev`, 0 pod non-Running,
+>   namespace sit/uat tanpa event warning).
+> - **Kiali console + telemetry mesh (live 2026-10-21)**: console = CR `Kiali` `payu-kiali` **dan** CR `OSSMConsole`
+>   `payu-ossmconsole` (keduanya `kiali.io/v1alpha1`, ns `istio-system`; CR `OSSMConsole` tidak punya field
+>   auth/Prometheus/namespace, jadi dua-duanya wajib), scope `payu-dev` (`cluster_wide_access: false` +
+>   `discovery_selectors`), auth `openshift`, Prometheus `https://thanos-querier.openshift-monitoring.svc:9091`,
+>   Route `kiali` -> `kiali-istio-system.apps.payu.ocp.fajjjar.my.id`. Scrape Envoy lewat **cluster Prometheus**
+>   (`openshift-monitoring/k8s`) lewat ServiceMonitor `payu-mesh-sidecars` + `payu-mesh-istiod` di
+>   `infrastructure/platform/mesh/telemetry/` (namespace `payu-mesh-telemetry`, label
+>   `openshift.io/cluster-monitoring: "true"`). Service graph Kiali: **0 node / 0 edge** -> **31 node / 70 edge**;
+>   `count(istio_requests_total)` = 72, `count(istio_requests_total{connection_security_policy="mutual_tls"})` = 25,
+>   25 scrape target up.
+> - **Ingress dev di shared domain (live 2026-10-21)**: `apps.fajjjar.my.id` dimiliki **satu tier** — OpenShift
+>   IngressController `shared-ingress` (TLS `shared-ingress-cert`, wildcard `*.apps.fajjjar.my.id`) di depan AWS
+>   NLB. Istio gateway **tidak memiliki domain**: dia **backend** di belakang router, Service `ClusterIP`
+>   (`networking.istio.io/service-type=ClusterIP`, tanpa NLB kedua), namespace `payu-mesh-gateway`
+>   (label `payu.fajjjar.my.id/ingress: shared`). Jalur: `https://api-dev.apps.fajjjar.my.id/api/v1/*` (TLS edge di
+>   router) → Istio gateway (Gateway API `HTTPRoute`, mTLS) → `gateway-service:8080`. `payu-dev` & `istio-system`
+>   **tidak** diberi label shared, jadi Route web-app/analytics tetap di router default. Lihat
+>   [ADR-0073](../adr/0073-istio-ingress-gateway-and-shared-domain-ownership.md).
 > - `DestinationRule` circuit breaker untuk `*.payu.svc.cluster.local` (lihat YAML di bawah) kini **legacy asset**:
 >   tidak lagi dirujuk `base/kustomization.yaml` dan belum di-apply; harus di-rework untuk OSSM 3.4.
 
@@ -1253,6 +1287,13 @@ spec:
 ### 7.3 Red Hat 3scale API Management (Tier 1 Partner Gateway)
 
 > **Status**: **ACTIVE & ENFORCED**. The public OpenShift `Route` for `gateway-service` has been removed to eliminate backdoor bypasses of API keys, rate limits, and analytics. All public ingress (such as `/v1/partner/*` and `/api/v1/*`) is routed exclusively through 3scale APIcast, which forwards requests internally to `gateway-service`.
+>
+> **Dev exception (2026-10-21, `payu-dev` only)**: 3scale **tidak** ter-deploy di `payu-dev`, jadi dev punya satu
+> jalur publik di shared domain `https://api-dev.apps.fajjjar.my.id/api/v1/*` → OpenShift shared router (TLS edge)
+> → Istio gateway (`payu-mesh-gateway`, Gateway API `HTTPRoute`) → `gateway-service:8080`. Jalur ini **bypass
+> APIcast** (tanpa API key per-partner, rate plan, dan analytics 3scale) — **dev-only exception**, bukan preseden.
+> **Aturan prod tidak berubah**: seluruh ingress publik tetap lewat APIcast; mesh gateway **bukan** edge publik prod.
+> Lihat [ADR-0073](../adr/0073-istio-ingress-gateway-and-shared-domain-ownership.md).
 
 #### 7.3.1 2-Tier Partner Gateway Architecture
 

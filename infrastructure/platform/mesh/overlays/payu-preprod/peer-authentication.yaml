@@ -1,0 +1,17 @@
+# Pre-production mesh posture: STRICT mTLS for payu-preprod.
+#
+# STRICT from UAT upward per ADR-0037
+# (docs/adr/0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md)
+# and docs/architecture/DEVSECOPS_ARCHITECTURE.md.
+#
+# Namespace-scoped on purpose: a mesh-wide (istio-system) STRICT policy would
+# also bind the sibling payu-dev / payu-sit / payu-uat namespaces on this same
+# cluster.
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-mtls
+  namespace: payu-preprod
+spec:
+  mtls:
+    mode: STRICT

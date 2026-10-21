@@ -1,0 +1,17 @@
+# SIT mesh posture: PERMISSIVE mTLS for payu-sit.
+#
+# SIT mirrors the dev posture: PERMISSIVE keeps the plain-text path usable for
+# the non-mesh sources (OpenShift router, kubelet probes); STRICT starts at UAT.
+# See ADR-0037 and docs/architecture/DEVSECOPS_ARCHITECTURE.md.
+#
+# Namespace-scoped on purpose: a mesh-wide (istio-system) STRICT policy would
+# also bind the sibling payu-dev / payu-uat / payu-preprod namespaces on this
+# same cluster.
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: permissive-mtls
+  namespace: payu-sit
+spec:
+  mtls:
+    mode: PERMISSIVE

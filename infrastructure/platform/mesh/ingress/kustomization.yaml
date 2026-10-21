@@ -1,0 +1,26 @@
+# Optional package: apply separately from ../kustomization.yaml.
+#
+#   oc apply -k infrastructure/platform/mesh/ingress
+#
+# It installs the dev ingress path on the shared domain:
+#   shared OpenShift router (TLS) -> Istio gateway -> gateway-service
+#
+# Not referenced from ../kustomization.yaml: the shared router only admits
+# Routes from namespaces labelled payu.fajjjar.my.id/ingress: shared, and
+# this package must not change how the control plane is installed.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - gateway.yaml
+  - route.yaml
+  - http-route.yaml
+  - network-policies.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: payu
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/component: service-mesh
+    includeSelectors: false

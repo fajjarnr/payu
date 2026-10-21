@@ -1,0 +1,51 @@
+# Mesh routing for the dev API.
+#
+# The route lives in payu-dev (namespace of the backend) so the backendRef
+# needs no ReferenceGrant; the gateway lives in payu-mesh-gateway and its
+# listener only admits namespaces labelled app.kubernetes.io/part-of: payu.
+#
+# Only the public API prefixes are routed. Management endpoints of
+# gateway-service (/q/metrics, /q/openapi, /q/swagger-ui, /actuator) stay
+# unreachable from the internet: the shared router forwards everything under
+# the host, the mesh gateway answers 404 for anything not matched here.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: payu-gateway-dev
+  namespace: payu-dev
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: payu-public-gateway
+      namespace: payu-mesh-gateway
+      sectionName: http
+  hostnames:
+    - api-dev.apps.fajjjar.my.id
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/v1
+        - path:
+            type: PathPrefix
+            value: /v1/partner
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-PayU-Environment
+                value: dev
+              - name: X-PayU-Ingress
+                value: gateway-api
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: gateway-service
+          port: 8080
+          # explicit: the API server defaults weight to 1, so without this
+          # every `oc apply` reports the object as changed
+          weight: 1

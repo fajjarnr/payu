@@ -12,6 +12,21 @@
 # alongside payu-sit/payu-uat, applying it would bind those sibling namespaces
 # to STRICT as well. It is not part of the dev control-plane apply path.
 #
+# SUPERSEDED (PeerAuthentication only): the per-namespace PeerAuthentication
+# objects for payu-sit, payu-uat, payu-preprod and payu below are superseded by
+# the per-env overlays in infrastructure/platform/mesh/overlays/payu-sit,
+# overlays/payu-uat, overlays/payu-preprod and overlays/payu. Apply those
+# overlays instead; do not mix both sources for the same namespace.
+#
+# The root-namespace `mesh-wide-mtls` (STRICT) object must never be applied on
+# a cluster hosting dev/sit/uat together.
+#
+# NOT MIGRATED (AuthorizationPolicy / RequestAuthentication): the prod
+# AuthorizationPolicy and RequestAuthentication objects below were not
+# migrated to the overlays. Their selectors use `app:` labels, which never
+# match the real `app.kubernetes.io/name:` labels, so they select nothing and
+# still need rework before prod (MESH-001, MESH-003).
+#
 # Resources:
 # - PeerAuthentication: Enforces mTLS modes (STRICT, PERMISSIVE, DISABLE)
 # - AuthorizationPolicy: Defines who can access what

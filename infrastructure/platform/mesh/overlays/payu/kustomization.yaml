@@ -1,0 +1,17 @@
+# Production overlay for the OpenShift Service Mesh 3.4 control plane.
+#
+# Deliberately does NOT include ../../base: the `namespace: payu`
+# transformer below would move the cluster-scoped `Istio` CR out of
+# istio-system and break the control plane.
+#
+# The control plane itself is applied from
+# infrastructure/platform/mesh/base (istio-system + istio-cni namespaces,
+# IstioCNI CR, Istio CR). This overlay only carries the prod-specific mesh
+# policy.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: payu
+
+resources:
+  - peer-authentication.yaml

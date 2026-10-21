@@ -372,9 +372,52 @@ graph LR
 > `istio_requests_total{connection_security_policy="mutual_tls"}` (23 `mutual_tls` + 2 `none` dari sumber
 > non-mesh: probe kubelet + OpenShift router). **STRICT mTLS + `AuthorizationPolicy` dari `payu-uat` ke atas**
 > belum dieksekusi di env tsb (env sit/uat/preprod/prod belum di-bootstrap).
-> **Tidak ada Istio ingress gateway di dev** — trafik eksternal dilayani OpenShift shared router (cluster tak
-> punya node ber-label router). **Kiali belum di-deploy** (service graph dari UI belum tersedia; metrik tetap
-> ada via Prometheus). Referensi: [ADR-0072](../adr/0072-openshift-service-mesh-3-4-sail-operator-dev-rollout.md).
+> **Tidak ada Istio ingress gateway yang memiliki domain di dev** — trafik eksternal dilayani OpenShift shared
+> router. ~~**Kiali belum di-deploy** (service graph dari UI belum tersedia; metrik tetap
+> ada via Prometheus).~~ **Kini sudah live** untuk `payu-dev` — lihat update kedua di bawah.
+> Referensi: [ADR-0072](../adr/0072-openshift-service-mesh-3-4-sail-operator-dev-rollout.md).
+>
+> **Update 2026-10-21**: dev **kini punya** satu Istio ingress gateway di `payu-mesh-gateway` (Gateway API
+> `Gateway` + `HTTPRoute`, Service `ClusterIP`) sebagai **backend** di belakang OpenShift shared router pada domain
+> shared `apps.fajjjar.my.id` (`https://api-dev.apps.fajjjar.my.id/api/v1/*`); TLS tetap diterminasi router
+> (`shared-ingress-cert`, wildcard `*.apps.fajjjar.my.id`), mTLS mesh di hop gateway → `gateway-service` terbukti
+> `connection_security_policy="mutual_tls"`. Gateway **tidak memiliki domain** dan **bukan** edge publik prod
+> (prod tetap APIcast-only). Referensi:
+> [ADR-0073](../adr/0073-istio-ingress-gateway-and-shared-domain-ownership.md).
+>
+> **Update 2026-10-21 (policy mesh per env + console + telemetry)**: posture mTLS **per environment** kini ada
+> di repo sebagai `infrastructure/platform/mesh/overlays/<env>/` — `payu-dev` + `payu-sit` **PERMISSIVE**
+> (`PeerAuthentication` `permissive-mtls`), `payu-uat` + `payu-preprod` **STRICT** (`PeerAuthentication`
+> `strict-mtls`), `payu` (prod) **STRICT** repo-only — namespace `payu` ada di cluster tapi **belum** carries
+> workload prod, jadi overlay prod ikut bagian **promosi prod**, belum di-apply. Semua objek **namespace-scoped**,
+> **tanpa selector**, dan **tidak ada** `PeerAuthentication` mesh-wide (root namespace `istio-system`) — objek
+> STRICT di root namespace akan mengikat namespace dev/sit/uat di cluster yang sama. Bukti live:
+> `oc get peerauthentication -A` = **tepat 4 objek** (`payu-dev/permissive-mtls` PERMISSIVE,
+> `payu-sit/permissive-mtls` PERMISSIVE, `payu-uat/strict-mtls` STRICT, `payu-preprod/strict-mtls` STRICT), nol
+> di `istio-system`, nol di `payu`; dev terbukti tak terganggu (`connection_security_policy="mutual_tls"` tetap
+> 134/489 di sidecar `account-service`, istiod tetap Healthy, `./scripts/verify-overlay-drift.sh payu-dev` ->
+> `OK: no overlay drift in payu-dev`, 0 pod non-Running, namespace sit/uat tanpa event warning).
+> **Kiali console live untuk `payu-dev`** — `Kiali` CR `payu-kiali` + `OSSMConsole` CR `payu-ossmconsole`
+> (keduanya `kiali.io/v1alpha1` di `istio-system`) + ClusterRoleBinding `payu-kiali-monitoring-view` (SA
+> `kiali-service-account` -> ClusterRole `cluster-monitoring-view`); Route `kiali` ->
+> `kiali-istio-system.apps.payu.ocp.fajjjar.my.id` Admitted=True; plugin console OpenShift "OpenShift Service Mesh
+> Console" terdaftar. **Dua CR wajib** — CRD `OSSMConsole` tidak punya field auth/Prometheus/namespace (itu ada di CR
+> `Kiali`), jadi console saja akan terpasang tanpa integrasi Kiali dan tanpa service graph. Auth `openshift`;
+> Prometheus `https://thanos-querier.openshift-monitoring.svc:9091` (`auth.type: bearer`,
+> `use_kiali_token: true`) karena endpoint `prometheus-operated:9090` diblok NetworkPolicy `openshift-monitoring`;
+> scope `payu-dev` saja (`deployment.cluster_wide_access: false` + `discovery_selectors`).
+> **Scrape telemetry mesh live** — `infrastructure/platform/mesh/telemetry/` (namespace `payu-mesh-telemetry` berlabel
+> `openshift.io/cluster-monitoring: "true"`), ServiceMonitor `payu-mesh-sidecars` + `payu-mesh-istiod`, RBAC read-only
+> namespaced untuk SA `system:serviceaccount:openshift-monitoring:prometheus-k8s` (services/endpoints/pods/
+> endpointslices di `payu-dev` + `istio-system`), dan NetworkPolicy di `payu-dev` yang membuka ingress 15090 dari
+> `openshift-monitoring`. Mekanismenya **cluster Prometheus** (`openshift-monitoring/k8s`, lewat
+> `serviceMonitorNamespaceSelector = openshift.io/cluster-monitoring=true`) — cluster ini tidak punya
+> user-workload Prometheus, dan Kiali dikunci ke thanos-querier -> cluster Prometheus, jadi metrik yang di-scrape di
+> tempat lain tak akan pernah sampai ke graph. Bukti before/after: `istio_requests_total` dan
+> `envoy_cluster_upstream_cx_total` kosong (`{"result":[]}`), sekarang `count(istio_requests_total)` = **72**,
+> `count(istio_requests_total{connection_security_policy="mutual_tls"})` = **25**,
+> `count(envoy_cluster_upstream_cx_total)` = **24**, **25** scrape target up (24 sidecar + istiod di 15014), dan
+> service graph Kiali dari **0 node / 0 edge** -> **31 node / 70 edge**.
 
 - **OpenShift Service Mesh (OSSM/Istio)** — mTLS mandatory antar semua service di `payu-uat` ke atas
 - `PeerAuthentication: STRICT` mode di namespace `payu-uat`, `payu-preprod`, `payu`

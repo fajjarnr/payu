@@ -1,0 +1,22 @@
+# Production mesh posture: STRICT mTLS for the payu namespace.
+#
+# STRICT from UAT upward per ADR-0037
+# (docs/adr/0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md)
+# and docs/architecture/DEVSECOPS_ARCHITECTURE.md.
+#
+# Not applied live yet: the payu namespace exists on payu-drrpz but carries no
+# prod workloads, so this overlay is applied as part of the prod promotion,
+# after the prod control plane and workloads are bootstrapped. The server
+# dry-run against the existing namespace is accepted, so the manifest is valid.
+#
+# Namespace-scoped on purpose: a mesh-wide (istio-system) STRICT policy would
+# also bind the sibling payu-dev / payu-sit / payu-uat namespaces on this same
+# cluster.
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-mtls
+  namespace: payu
+spec:
+  mtls:
+    mode: STRICT

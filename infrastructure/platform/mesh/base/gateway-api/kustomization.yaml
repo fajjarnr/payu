@@ -1,6 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# SUPERSEDED by infrastructure/platform/mesh/ingress/ — this Maistra-era package
+# points at a non-existent `istio-ingressgateway.istio-system.svc.cluster.local`
+# service and uses hostnames under `payu.fajjjar.my.id`, not the shared domain
+# `apps.fajjjar.my.id` (ADR-0073). Not applied.
+#
 # Optional package: apply separately from ../kustomization.yaml.
 # This avoids hostname conflicts with the legacy networking.istio.io Gateway.
 resources:

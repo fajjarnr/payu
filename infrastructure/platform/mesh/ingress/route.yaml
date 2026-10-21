@@ -1,0 +1,32 @@
+# Public entry point for the dev API on the shared domain.
+#
+# TLS is terminated by the shared OpenShift IngressController
+# (shared-ingress, domain apps.fajjjar.my.id) using its default certificate
+# shared-ingress-cert — a Let's Encrypt wildcard for *.apps.fajjjar.my.id.
+# The hostname must therefore be ONE label below the domain: api-dev is
+# covered, api.dev is not.
+#
+# edge termination (router terminates TLS, plain HTTP to the backend) is
+# used because the Istio gateway has no certificate of its own: a reencrypt
+# or passthrough route would need one, and the gateway is an internal
+# ClusterIP Service by design (ADR-0073).
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: api-dev
+  namespace: payu-mesh-gateway
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  host: api-dev.apps.fajjjar.my.id
+  path: /
+  to:
+    kind: Service
+    name: payu-public-gateway-istio
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+  wildcardPolicy: None

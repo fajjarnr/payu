@@ -1,0 +1,27 @@
+# Ingress allowance for the cluster Prometheus scrape.
+#
+# payu-dev denies all ingress by default (default-deny-all) and only opens
+# intra-namespace traffic, so the cluster Prometheus cannot reach the
+# sidecar metrics port. Ingress is opened for port 15090 only, and only for
+# pods of the openshift-monitoring namespace. The istiod endpoint in
+# istio-system is not restricted, so it needs no policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cluster-prometheus-mesh-metrics
+  namespace: payu-dev
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+      sidecar.istio.io/inject: "true"
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-monitoring
+      ports:
+        - port: 15090
+          protocol: TCP

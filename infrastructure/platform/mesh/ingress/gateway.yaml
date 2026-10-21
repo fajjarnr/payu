@@ -1,0 +1,39 @@
+# Istio ingress gateway for the dev API on the shared domain.
+#
+# OSSM 3.4 (Sail Operator) reconciles a gateway.networking.k8s.io/v1 Gateway
+# with gatewayClassName: istio into an istio-proxy Deployment + Service named
+# <gateway>-istio in the Gateway's own namespace — the Gateway API is the
+# supported way to run a gateway outside istio-system on this operator
+# version (the classic gateways.istio-ingressgateway Helm value always
+# installs into istio-system).
+#
+# networking.istio.io/service-type: ClusterIP keeps the generated Service
+# internal: the shared OpenShift router is the only public entry point, so no
+# second AWS NLB is provisioned (the default LoadBalancer Service does).
+#
+# The gateway never owns the domain: it is a backend behind the shared
+# router (ADR-0073).
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: payu-public-gateway
+  namespace: payu-mesh-gateway
+  annotations:
+    networking.istio.io/service-type: ClusterIP
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  gatewayClassName: istio
+  listeners:
+    # The shared router terminates TLS (edge) and forwards plain HTTP here,
+    # so the gateway listener is HTTP only — no certificate is needed here.
+    - name: http
+      port: 8080
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              app.kubernetes.io/part-of: payu

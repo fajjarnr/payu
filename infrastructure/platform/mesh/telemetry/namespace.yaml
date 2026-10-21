@@ -1,0 +1,13 @@
+# Namespace holding the mesh telemetry ServiceMonitors.
+#
+# The cluster Prometheus only picks up ServiceMonitors from namespaces
+# labelled openshift.io/cluster-monitoring=true. The label lives on a
+# dedicated namespace so the scrape configuration stays out of the app
+# namespace and the mesh control-plane namespace, whose Namespace objects
+# are managed elsewhere in this repository.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-mesh-telemetry
+  labels:
+    openshift.io/cluster-monitoring: "true"

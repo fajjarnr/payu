@@ -1,0 +1,146 @@
+# Network policy for the Istio ingress gateway namespace.
+#
+# Ingress: only the shared OpenShift router may reach the gateway, and only
+# on the gateway port. The router pods are matched by their own label so
+# the default IngressController (router-default) cannot reach it.
+#
+# Egress: the gateway needs istiod (xDS 15012, webhook 15017), the payu-dev
+# service ports (8080 HTTP, 9090 gRPC) and DNS. It needs no other egress:
+# the router is the only client and the APIcast edge does not exist in dev.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: payu-mesh-gateway
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-openshift-router
+  namespace: payu-mesh-gateway
+spec:
+  podSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: payu-public-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+          podSelector:
+            matchLabels:
+              ingresscontroller.operator.openshift.io/deployment-ingresscontroller: shared-ingress
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 15021
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-istiod
+  namespace: payu-mesh-gateway
+spec:
+  podSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: payu-public-gateway
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+          podSelector:
+            matchLabels:
+              app: istiod
+      ports:
+        - protocol: TCP
+          port: 15012
+        - protocol: TCP
+          port: 15017
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-payu-dev
+  namespace: payu-mesh-gateway
+spec:
+  podSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: payu-public-gateway
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-dev
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 9090
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: payu-mesh-gateway
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        # The `dns-default` Service exposes 53 but its endpoints listen on the
+        # target port 5353, and a NetworkPolicy is evaluated after the DNAT —
+        # allowing only 53 silently drops every DNS query (the proxy then
+        # fails to resolve istiod.istio-system.svc and crash-loops).
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# The backend side of the same path: payu-dev denies ingress by default, and
+# its allow-intra-namespace rule only covers pods inside payu-dev. Without
+# this rule the gateway's connection to gateway-service is dropped (silently,
+# no TCP RST) and the request hangs until the route timeout.
+#
+# Additive and narrow: only gateway-service pods, only from the gateway
+# namespace, only on the HTTP port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mesh-gateway-ingress
+  namespace: payu-dev
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gateway-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-mesh-gateway
+      ports:
+        - protocol: TCP
+          port: 8080

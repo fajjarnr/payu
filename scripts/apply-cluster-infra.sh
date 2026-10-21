@@ -44,12 +44,13 @@ echo "[8/8] Service Mesh, Istio CNI, Kiali, GitOps, Pipelines, RHDH..."
 oc apply -f "$BASE_DIR/mesh/base/namespace.yaml"
 oc apply -f "$BASE_DIR/mesh/base/istio-cni.yaml"
 oc apply -f "$BASE_DIR/mesh/base/service-mesh.yaml"
-# Legacy Kiali CR — the CRD comes from the separate kiali-operator
-# subscription, not from OSSM 3.4, so skip it when the operator is absent.
-if oc get crd kialis.kiali.io &> /dev/null; then
+# Kiali console CRs (Kiali + OSSMConsole + monitoring RBAC) — the CRDs come
+# from the separate kiali-operator subscription, not from OSSM 3.4, so skip
+# them when the operator is absent.
+if oc get crd ossmconsoles.kiali.io &> /dev/null; then
     oc apply -f "$BASE_DIR/mesh/base/kiali.yaml"
 else
-    echo "     kiali-operator CRD not found - skipping Kiali CR"
+    echo "     ossmconsoles.kiali.io CRD not found - skipping Kiali console CRs"
 fi
 # Dev-scoped mesh policy (PERMISSIVE mTLS in payu-dev)
 if oc get namespace payu-dev &> /dev/null; then
