@@ -20,16 +20,30 @@ spec:
   deployment:
     namespace: istio-system
     replicas: 1
-    # Declarative statement of scope; deprecated in the CRD and ignored by
+    # Scope of the console. Three namespaces, each for a reason:
+    #   payu-dev         - the app tier (workloads, Istio config)
+    #   payu-mesh-gateway - the ingress gateway the dev HTTPRoute points at;
+    #     without it Kiali cannot resolve the parentRef and reports KIA1401
+    #     ("Route is pointing to a non-existent or inaccessible K8s gateway")
+    #   istio-system     - the control plane, so the console can report the
+    #     health of istiod and the control plane configuration
+    # accessible_namespaces is deprecated in the CRD and ignored by
     # kiali-operator v2.27.5, which enforces the scope through
     # discovery_selectors below.
     accessible_namespaces:
       - payu-dev
+      - payu-mesh-gateway
+      - istio-system
     cluster_wide_access: false
     discovery_selectors:
       default:
-        - matchLabels:
-            kubernetes.io/metadata.name: payu-dev
+        - matchExpressions:
+            - key: kubernetes.io/metadata.name
+              operator: In
+              values:
+                - payu-dev
+                - payu-mesh-gateway
+                - istio-system
     ingress:
       enabled: true
     resources:

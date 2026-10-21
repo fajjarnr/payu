@@ -14,7 +14,7 @@ and no `ServiceMeshMemberRoll`; the control plane is created by a
 | Control plane | `istios.sailoperator.io/v1` `Istio` | `default` | `istio-system` | Installs istiod (and, when configured, gateways) |
 | CNI plugin | `istiocnis.sailoperator.io/v1` `IstioCNI` | `default` | `istio-cni` | Installs the CNI plugin that redirects sidecar traffic without a privileged init container |
 | Dev ingress | `gateway.networking.k8s.io/v1` `Gateway` | `payu-public-gateway` | `payu-mesh-gateway` | Gateway API ingress behind the shared router, published on `apps.fajjjar.my.id` |
-| Console | `kiali.io/v1alpha1` `Kiali` | `payu-kiali` | `istio-system` | Kiali console, scoped to `payu-dev` |
+| Console | `kiali.io/v1alpha1` `Kiali` | `payu-kiali` | `istio-system` | Kiali console, scoped to `payu-dev`, `payu-mesh-gateway`, `istio-system` |
 | Console plugin | `kiali.io/v1alpha1` `OSSMConsole` | `payu-ossmconsole` | `istio-system` | "OpenShift Service Mesh Console" plugin, proxying the Kiali API |
 | Sidecar telemetry | `monitoring.coreos.com/v1` `ServiceMonitor` | `payu-mesh-sidecars` | `payu-mesh-telemetry` | Scrapes the Envoy metrics of the 24 meshed workloads in `payu-dev` (port 15090) |
 | Control-plane telemetry | `monitoring.coreos.com/v1` `ServiceMonitor` | `payu-mesh-istiod` | `payu-mesh-telemetry` | Scrapes the istiod metrics (port 15014) |
@@ -253,10 +253,16 @@ oc apply -f infrastructure/platform/mesh/base/kiali.yaml
 cluster-scoped install and skips it when the `ossmconsoles.kiali.io` CRD is
 absent.
 
-The console is scoped to `payu-dev` only: `deployment.accessible_namespaces`
-lists `payu-dev` (deprecated in the CRD) and the scope is actually enforced by
-`deployment.cluster_wide_access: false` plus a `discovery_selectors` match on
-`kubernetes.io/metadata.name=payu-dev`. It authenticates with OpenShift OAuth
+The console is scoped to three namespaces: `payu-dev` (the app tier),
+`payu-mesh-gateway` (the ingress gateway the dev `HTTPRoute` points at) and
+`istio-system` (the control plane). `deployment.accessible_namespaces` lists
+them (deprecated in the CRD) and the scope is actually enforced by
+`deployment.cluster_wide_access: false` plus a `discovery_selectors`
+`matchExpressions` on `kubernetes.io/metadata.name In (payu-dev,
+payu-mesh-gateway, istio-system)`. The gateway namespace must stay in scope:
+without it Kiali cannot resolve the `HTTPRoute` parentRef and flags the route
+with KIA1401 "Route is pointing to a non-existent or inaccessible K8s gateway"
+in the Istio Config view. It authenticates with OpenShift OAuth
 (`auth.strategy: openshift`) and reads metrics from the in-cluster Thanos
 querier — the only Prometheus reachable from other namespaces, since
 `prometheus-operated:9090` is blocked by the `openshift-monitoring`
@@ -317,6 +323,23 @@ Two Istio 1.30 specifics worth knowing:
 - **The sidecar runs with the namespace UID range** (`runAsUser: 1000759999`),
   not the legacy hardcoded `1337`, which is what keeps injected pods compliant
   with the `restricted-v2` SCC.
+
+#### Sidecar mode vs ambient mode
+
+The mesh runs in **sidecar mode** (`spec.profile: default`): one Envoy per
+pod, injected by the webhook. A native sidecar is still a sidecar — the
+implementation changed (initContainer with `restartPolicy: Always`), not the
+architecture.
+
+**Ambient mode** (sidecarless: a node-level `ztunnel` for L4 mTLS plus optional
+per-service `waypoint` proxies for L7) is **GA in OSSM 3.4** — the operator in
+this cluster already ships the `ztunnels.sailoperator.io` CRD and the ztunnel
+image. It is a different data plane, not a newer version of this one; the
+migration is a separate decision, tracked as `MESH-006` in
+`docs/roadmap/TODOS.md`. Ambient does not support the VirtualService features
+that the chaos strategy needs (`HTTPFaultInjection`, JWT claim-based routing,
+Delegate rules, rate limiting, `ignoreCase`), so those workloads must stay on
+sidecars either way.
 
 ### Dev ingress on the shared domain (`ingress/`)
 
@@ -546,10 +569,11 @@ oc logs deployment/<service> -n payu-dev -c istio-proxy
   reworked.
 - **Simulators, `web-app`, Keycloak and the data plane are not in the mesh.**
   They carry no `sidecar.istio.io/inject` label.
-- **Kiali is deployed for `payu-dev` only; Jaeger/tracing is not wired up.**
+- **Kiali is deployed for the dev mesh only; Jaeger/tracing is not wired up.**
   The console CRs live in `base/kiali.yaml` and the console is restricted to
-  `payu-dev`, but there is no tracing backend in the cluster, so
-  `spec.server.observability.tracing.enabled` stays `false`.
+  `payu-dev`, `payu-mesh-gateway` and `istio-system`, but there is no tracing
+  backend in the cluster, so `spec.server.observability.tracing.enabled` stays
+  `false`.
 - **The traffic graph is populated, but only for dev.** `telemetry/` scrapes
   the 24 sidecars and istiod into the cluster Prometheus, so
   `istio_requests_total` is no longer empty and the Kiali graph renders
