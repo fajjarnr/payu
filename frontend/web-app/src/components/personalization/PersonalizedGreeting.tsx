@@ -6,6 +6,7 @@ import { useUserSegment } from '@/hooks/useUserSegment';
 import { useAuthStore } from '@/stores';
 import clsx from 'clsx';
 import { useTranslations } from 'next-intl';
+import { INK_ON_EMERALD } from '@/theme/tokens';
 interface PersonalizedGreetingProps {
   showTimeBased?: boolean;
   showSegment?: boolean;
@@ -77,7 +78,7 @@ export default function PersonalizedGreeting({
 
         {showSegment && isVIP && (
           <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full shadow-lg"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full shadow-lg"
             style={{ background: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`, color: '#06281F' }}
           >
             <Crown className="h-3.5 w-3.5" aria-hidden="true" />
@@ -97,29 +98,36 @@ interface PersonalizedWelcomeBannerProps {
 
 export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBannerProps) {
   const { token } = theme.useToken();
+  const t = useTranslations('dashboard');
+  const tc = useTranslations('common');
   const user = useAuthStore((state) => state.user);
   const { currentTier, isVIP, progressToNext, nextTier } = useUserSegment(user?.id);
+  const firstName = user?.fullName?.split(' ')[0];
   const getWelcomeMessage = () => {
     if (isVIP) {
       return {
-        title: `Welcome back, ${user?.fullName?.split(' ')[0] || 'VIP Member'}!`,
-        subtitle: 'Enjoy your exclusive benefits and premium services',
+        title: t('welcomeBack', { name: firstName || t('tier_vip') }),
+        subtitle: t('welcomeVipSubtitle'),
         gradient: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`,
+        // White on amber/red passes AA; the emerald branch needs ink (F-06).
+        onColor: '#FFFFFF',
       };
     }
     if (currentTier === 'GOLD') {
       return {
-        title: `Hello, ${user?.fullName?.split(' ')[0] || 'Gold Member'}!`,
-        subtitle: 'You are enjoying premium benefits',
+        title: t('welcomeHello', { name: firstName || t('tier_gold') }),
+        subtitle: t('welcomeGoldSubtitle'),
         gradient: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorWarningActive})`,
+        onColor: '#FFFFFF',
       };
     }
     return {
-      title: `Welcome, ${user?.fullName?.split(' ')[0] || 'Pengguna'}!`,
+      title: t('welcomeGeneric', { name: firstName || tc('user') }),
       subtitle: progressToNext && nextTier
-        ? `You're ${progressToNext.toFixed(0)}% away from ${nextTier} status!`
-        : 'Discover personalized offers for you',
+        ? t('welcomeProgress', { percent: progressToNext.toFixed(0), tier: nextTier })
+        : t('welcomeOffers'),
       gradient: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+      onColor: INK_ON_EMERALD,
     };
   };
 
@@ -128,30 +136,26 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
   return (
     <div
       className={clsx('rounded-2xl p-6 relative overflow-hidden', className)}
-      style={{ background: welcome.gradient, color: token.colorWhite }}
+      style={{ background: welcome.gradient, color: welcome.onColor }}
     >
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }} aria-hidden="true" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} aria-hidden="true" />
-
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4" />
-          <Typography.Text style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: token.colorWhite }}>
-            PERSONALIZED EXPERIENCE
+          <Typography.Text style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: welcome.onColor }}>
+            {t('personalizedExperience')}
           </Typography.Text>
         </div>
 
         <Typography.Title
           level={2}
           className="text-xl sm:text-2xl font-bold"
-          style={{ margin: '0 0 8px', color: token.colorWhite }}
+          style={{ margin: '0 0 8px', color: welcome.onColor }}
         >
           {welcome.title}
         </Typography.Title>
 
         <Typography.Paragraph
-          style={{ marginBottom: 16, fontSize: 14, maxWidth: 576, color: token.colorWhite }}
+          style={{ marginBottom: 16, fontSize: 14, maxWidth: 576, color: welcome.onColor }}
         >
           {welcome.subtitle}
         </Typography.Paragraph>
@@ -159,10 +163,10 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         {progressToNext && nextTier && !isVIP && (
           <div className="max-w-md">
             <div className="flex items-center justify-between mb-2">
-              <Typography.Text style={{ fontSize: 12, fontWeight: 700, color: token.colorWhite }}>
-                Progress to {nextTier}
+              <Typography.Text style={{ fontSize: 12, fontWeight: 700, color: welcome.onColor }}>
+                {t('progressTo', { tier: nextTier })}
               </Typography.Text>
-              <Typography.Text style={{ fontSize: 12, fontWeight: 700, color: token.colorWhite }}>
+              <Typography.Text style={{ fontSize: 12, fontWeight: 700, color: welcome.onColor }}>
                 {progressToNext.toFixed(0)}%
               </Typography.Text>
             </div>

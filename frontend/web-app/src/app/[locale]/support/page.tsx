@@ -67,7 +67,7 @@ export default function SupportPage() {
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         {/* Header */}
         <Space direction="vertical" size={4}>
-          <Typography.Title level={2} style={{ marginBottom: 0 }}>
+          <Typography.Title level={1} style={{ marginBottom: 0 }}>
             {t("title")}
           </Typography.Title>
           <Typography.Text type="secondary">{t("subtitle")}</Typography.Text>

@@ -140,7 +140,7 @@ export default function SecurityPage() {
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         <Row justify="space-between" align="middle" gutter={[16, 16]}>
           <Col xs={24} md={16}>
-            <Title level={2} style={{ marginBottom: 4 }}>
+            <Title level={1} style={{ marginBottom: 4 }}>
               Keamanan & Tata Kelola
             </Title>
             <Text type="secondary">

@@ -4,16 +4,11 @@ import { describe, expect, it } from "vitest";
 import { renderWithIntl } from "../utils/test-utils";
 import { SkipLink } from "@/lib/a11y";
 
-// Files owned by AntSweepShell. The four dashboard/login/pockets/transactions
-// error pages are covered here too: they are already pure antd (no legacy
-// classes), so the assertion documents that state.
+// Files owned by AntSweepShell. The per-route error pages are covered by
+// src/__tests__/app/route-states.test.ts (they now delegate to RouteError).
 const SHELL_FILES = [
   "src/app/global-error.tsx",
   "src/app/[locale]/layout.tsx",
-  "src/app/[locale]/dashboard/error.tsx",
-  "src/app/[locale]/login/error.tsx",
-  "src/app/[locale]/pockets/error.tsx",
-  "src/app/[locale]/transactions/error.tsx",
   "src/services/StatementService.ts",
   "src/components/DashboardLayout.tsx",
   "src/components/personalization/PersonalizedGreeting.tsx",

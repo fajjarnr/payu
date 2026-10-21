@@ -20,7 +20,9 @@ export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const { token } = theme.useToken();
 
-  const switchLocale = (newLocale: string) => {
+  // Canonical path for a locale: the locale prefix is replaced (not added on
+  // top), the default locale stays unprefixed (localePrefix: 'as-needed').
+  const localePath = (newLocale: string) => {
     const localeCodes = locales.map((l) => l.code);
     const localePattern = new RegExp(`^/(${localeCodes.join('|')})(/|$)`);
 
@@ -43,10 +45,15 @@ export default function LanguageSwitcher() {
       newPath = newPath.slice(0, -1);
     }
 
-    // BUG-FE-068: Preserve query string when switching locale
-    const queryString = typeof window !== 'undefined' ? window.location.search : '';
+    return newPath || '/';
+  };
+
+  // BUG-FE-068: Preserve query string when switching locale
+  const queryString = typeof window !== 'undefined' ? window.location.search : '';
+
+  const switchLocale = (newLocale: string) => {
     // Use router.push for client-side navigation with locale preservation
-    router.push((newPath || '/') + queryString);
+    router.push(localePath(newLocale) + queryString);
     setIsOpen(false);
   };
 
@@ -54,13 +61,21 @@ export default function LanguageSwitcher() {
 
   const items: MenuProps['items'] = locales.map((loc) => ({
     key: loc.code,
+    // A-04: a real link — the browser can open it in a new tab and assistive
+    // tech announces a link, not a menu item that navigates via the router.
     label: (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, minHeight: 24 }}>
+      <a
+        href={localePath(loc.code) + queryString}
+        onClick={(e) => {
+          e.preventDefault();
+          switchLocale(loc.code);
+        }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 12, minHeight: 24 }}
+      >
         <span aria-hidden="true">{loc.flag}</span>
         <span>{loc.label}</span>
-      </span>
+      </a>
     ),
-    onClick: () => switchLocale(loc.code),
   }));
 
   return (
@@ -80,7 +95,7 @@ export default function LanguageSwitcher() {
           display: 'inline-flex',
           alignItems: 'center',
           gap: 8,
-          padding: '10px 16px',
+          padding: '8px 16px',
           borderRadius: token.borderRadius,
           minHeight: 44,
           minWidth: 44,
@@ -97,11 +112,11 @@ export default function LanguageSwitcher() {
         <span style={{ textTransform: 'uppercase' }}>{currentLocale.code}</span>
         <ChevronDown
           aria-hidden="true"
+          className="motion-safe:transition-transform duration-200"
           style={{
             width: 12,
             height: 12,
             transform: isOpen ? 'rotate(180deg)' : undefined,
-            transition: 'transform 0.2s',
           }}
         />
       </Button>

@@ -94,7 +94,14 @@ export const darkTokens: SeedTokens = {
   colorTextPlaceholder: '#9CA3AF', // 7.26:1 on #141414
 };
 
-const INK_ON_EMERALD = '#06281F'; // ~8:1 on #00D09C; ink labels on primary fills (F-01, per usage)
+export const INK_ON_EMERALD = '#06281F'; // ~8:1 on #00D09C; ink labels on primary fills (F-01, per usage)
+
+// Card art (the debit-card metaphor on the dashboard). It is a fixed brand
+// artifact — the physical card looks the same in light and dark mode — so it
+// lives here with the other brand literals instead of a raw hsl() in
+// globals.css (A-01: every colour comes from the theme module).
+export const CARD_ART_GRADIENT =
+  'linear-gradient(135deg, #1A7440 0%, #1F5C38 50%, #145233 100%)';
 const sharedButtonTokens = {
   // White on the vivid emerald fill is 2.00:1 (accepted brand gap); ink
   // labels on primary fills restore AA without a palette swap.

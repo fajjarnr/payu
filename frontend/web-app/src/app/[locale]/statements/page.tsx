@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Space, Typography } from 'antd';
 import DashboardLayout from '@/components/DashboardLayout';
+import PageHeader from '@/components/PageHeader';
 import StatementDownloader from '@/components/settings/statement-downloader';
 import { SkipLink } from "@/lib/a11y";
 
@@ -19,6 +20,7 @@ export default function StatementsPage() {
     <DashboardLayout>
       <SkipLink />
       <Space direction="vertical" size={16} style={{ maxWidth: 1024, margin: '0 auto', padding: '32px 16px', width: '100%' }}>
+        <PageHeader title={t('pageTitle')} subtitle={t('pageSubtitle')} />
         <StatementDownloader />
       </Space>
     </DashboardLayout>

@@ -208,7 +208,7 @@ export default function SplitBillPage() {
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
-            <Title level={2} style={{ margin: 0 }}>
+            <Title level={1} style={{ margin: 0 }}>
               Split Bill
             </Title>
             <Text type="secondary" style={{ display: "block", marginTop: 4 }}>

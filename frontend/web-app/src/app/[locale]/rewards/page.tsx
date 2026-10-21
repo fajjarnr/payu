@@ -234,7 +234,7 @@ export default function RewardsPage() {
       <SkipLink />
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         <Space direction="vertical" size={4}>
-          <Typography.Title level={2} style={{ margin: 0 }}>
+          <Typography.Title level={1} style={{ margin: 0 }}>
             Rewards &amp; Gamifikasi
           </Typography.Title>
           <Typography.Text type="secondary">

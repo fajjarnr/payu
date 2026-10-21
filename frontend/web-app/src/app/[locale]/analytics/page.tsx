@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         <Row justify="space-between" align="bottom">
           <div>
-            <Typography.Title level={2} style={{ marginBottom: 0 }}>
+            <Typography.Title level={1} style={{ marginBottom: 0 }}>
               Intelijen Keuangan
             </Typography.Title>
             <Typography.Text type="secondary">

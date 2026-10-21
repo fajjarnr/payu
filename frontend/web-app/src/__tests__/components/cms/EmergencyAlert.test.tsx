@@ -103,7 +103,7 @@ describe('EmergencyAlert', () => {
   it('should dismiss alert when dismiss button is clicked', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButton = screen.getAllByLabelText('Tutup peringatan')[0];
+    const dismissButton = screen.getAllByLabelText(/^Tutup peringatan/)[0];
     fireEvent.click(dismissButton);
 
     expect(mockLocalStorage.setItem).toHaveBeenCalled();
@@ -112,7 +112,7 @@ describe('EmergencyAlert', () => {
   it('should save dismissed alerts to localStorage', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButton = screen.getAllByLabelText('Tutup peringatan')[0];
+    const dismissButton = screen.getAllByLabelText(/^Tutup peringatan/)[0];
     fireEvent.click(dismissButton);
 
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
@@ -173,7 +173,7 @@ describe('EmergencyAlert', () => {
   it('should have proper ARIA attributes', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButtons = screen.getAllByLabelText('Tutup peringatan');
+    const dismissButtons = screen.getAllByLabelText(/^Tutup peringatan/);
     dismissButtons.forEach((button) => {
       expect(button).toBeInTheDocument();
     });
@@ -195,7 +195,7 @@ describe('EmergencyAlert', () => {
   it('should use custom storage key', () => {
     renderWithIntl(<EmergencyAlert storageKey="custom-storage" />);
 
-    const dismissButton = screen.getAllByLabelText('Tutup peringatan')[0];
+    const dismissButton = screen.getAllByLabelText(/^Tutup peringatan/)[0];
     fireEvent.click(dismissButton);
 
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
@@ -233,7 +233,7 @@ describe('EmergencyAlert', () => {
 
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButton = screen.getAllByLabelText('Tutup peringatan')[0];
+    const dismissButton = screen.getAllByLabelText(/^Tutup peringatan/)[0];
     fireEvent.click(dismissButton);
 
     expect(consoleSpy).toHaveBeenCalled();

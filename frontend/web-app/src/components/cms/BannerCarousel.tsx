@@ -110,8 +110,10 @@ export default function BannerCarousel({
   }
 
   // Why: arrows keep focus-visible ring on all viewports (no hover-only reveal).
+  // The slide is a custom button (not an antd component), so it needs its own
+  // ring — the UA default is below the 2px floor.
   const arrowRing = `
-    .cms-arrow:focus-visible { outline: 3px solid ${token.colorPrimaryBorder}; outline-offset: 2px; }
+    .cms-arrow:focus-visible, .cms-slide:focus-visible { outline: 3px solid ${token.colorPrimaryBorder}; outline-offset: 2px; }
   `;
 
   return (
@@ -133,7 +135,7 @@ export default function BannerCarousel({
           {banners.map((banner) => (
             <div key={banner.id} className="pl-0">
               <div
-                className="relative overflow-hidden rounded-2xl cursor-pointer group/item"
+                className="cms-slide relative overflow-hidden rounded-2xl cursor-pointer group/item"
                 style={{ aspectRatio: '1.8/1', boxShadow: token.boxShadowSecondary }}
                 onClick={() => handleBannerClick(banner)}
                 role="button"
@@ -161,10 +163,10 @@ export default function BannerCarousel({
                 </div>
 
                 {/* Content */}
-                <div className="relative z-10 h-full flex flex-col justify-center p-5 sm:p-8 lg:p-10">
+                <div className="relative z-10 h-full flex flex-col justify-center p-4 sm:p-6 lg:p-8">
                   <div className="max-w-xl">
                     <Tag color="success" style={{ marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                      PROMO
+                      {t('promoBadge')}
                     </Tag>
                     <Typography.Title level={3} style={{ color: '#fff', marginBottom: 12, textTransform: 'uppercase' }}>
                       {banner.title}
@@ -223,7 +225,7 @@ export default function BannerCarousel({
             >
               <span
                 aria-hidden="true"
-                className={cn('h-2 rounded-full transition-all', index === current ? 'w-8' : 'w-2')}
+                className={cn('h-2 rounded-full', !reducedMotion && 'transition-all', index === current ? 'w-8' : 'w-2')}
                 style={{ background: index === current ? token.colorPrimary : token.colorTextQuaternary }}
               />
             </Button>

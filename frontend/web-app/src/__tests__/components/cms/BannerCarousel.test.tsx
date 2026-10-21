@@ -244,7 +244,7 @@ describe('BannerCarousel', () => {
   it('should display PROMO badge on banners', () => {
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    expect(screen.getAllByText('PROMO').length).toBeGreaterThanOrEqual(mockBanners.length);
+    expect(screen.getAllByText(/^promo$/i).length).toBeGreaterThanOrEqual(mockBanners.length);
   });
 
   it('should apply hover effect on banner', () => {

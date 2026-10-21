@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Trash2, Building2, CreditCard, Plus } from '@/components/icons';
 import { useTranslations } from 'next-intl';
-import { Button, Card, Col, Divider, Empty, Input, List, Popconfirm, Row, Skeleton, Space, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Col, Divider, Empty, Input, List, Popconfirm, Row, Skeleton, Space, Tag, Typography } from 'antd';
 
 import { useBeneficiaries, useCreateBeneficiary, useDeleteBeneficiary } from '@/hooks/useBeneficiaries';
 import { notify as toast } from '@/lib/notify';
@@ -15,7 +15,8 @@ interface BeneficiaryManagerProps {
 
 export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryManagerProps) {
   const t = useTranslations('beneficiaries');
-  const { data: beneficiaries, isLoading } = useBeneficiaries(accountId);
+  const tc = useTranslations('common');
+  const { data: beneficiaries, isLoading, isError, refetch } = useBeneficiaries(accountId);
   const createMut = useCreateBeneficiary(accountId);
   const deleteMut = useDeleteBeneficiary(accountId);
 
@@ -84,6 +85,18 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
         <Typography.Text type="secondary">{t('description')}</Typography.Text>
         {isLoading ? (
           <Skeleton active paragraph={{ rows: 2 }} aria-busy="true" />
+        ) : isError ? (
+          // R-06: a failed load must not masquerade as an empty list.
+          <Alert
+            type="error"
+            showIcon
+            message={t('loadError')}
+            action={
+              <Button size="small" onClick={() => refetch()}>
+                {tc('retry')}
+              </Button>
+            }
+          />
         ) : !beneficiaries || beneficiaries.length === 0 ? (
           <Empty description={t('empty')} data-testid="beneficiary-empty" />
         ) : (
@@ -97,7 +110,7 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
                 data-testid={`beneficiary-${b.id}`}
                 actions={[
                   ...(onSelect
-                    ? [<Button key="use" type="link" size="small" onClick={() => onSelect(b.accountNumber)} data-testid={`beneficiary-select-${b.id}`}>{t('use')}</Button>]
+                    ? [<Button key="use" type="link" size="small" onClick={() => onSelect(b.accountNumber)} aria-label={t('useFor', { name: b.nickname || b.accountNumber })} data-testid={`beneficiary-select-${b.id}`}>{t('use')}</Button>]
                     : []),
                   <Popconfirm
                     key="delete-confirm"

@@ -58,7 +58,7 @@ export default function MerchantDashboard() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, textAlign: 'center' }}>
           <Space direction="vertical" size={24} style={{ alignItems: 'center' }}>
             <Building2 style={{ width: 64, height: 64, color: 'var(--ant-color-text-tertiary)' }} />
-            <Typography.Title level={2} style={{ margin: 0 }}>{t('title')}</Typography.Title>
+            <Typography.Title level={1} style={{ margin: 0 }}>{t('title')}</Typography.Title>
             <Typography.Text type="secondary">{t('notRegistered')}</Typography.Text>
             <Link
               href="/merchant/register"
@@ -91,7 +91,7 @@ export default function MerchantDashboard() {
       <SkipLink />
       <Space direction="vertical" size={24} style={{ width: '100%' }}>
         <Space direction="vertical" size={4}>
-          <Typography.Title level={2} style={{ margin: 0 }}>{t('dashboard')}</Typography.Title>
+          <Typography.Title level={1} style={{ margin: 0 }}>{t('dashboard')}</Typography.Title>
           <Typography.Text type="secondary">{t('subtitle')}</Typography.Text>
         </Space>
 

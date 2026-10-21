@@ -4,8 +4,9 @@ import React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowUpRight, ArrowDownRight } from "@/components/icons";
 import VIPBadge from "@/components/personalization/VIPBadge";
-import { Card, Col, Row, Skeleton, Space, Tag, Typography } from "antd";
+import { Card, Col, Row, Skeleton, Space, Tag, Typography, theme } from "antd";
 import { formatCurrency } from "@/lib/currency";
+import { CARD_ART_GRADIENT } from "@/theme/tokens";
 
 const { Title, Text } = Typography;
 
@@ -36,6 +37,7 @@ export default function BalanceCard({
 }: BalanceCardProps) {
   const locale = useLocale();
   const t = useTranslations("dashboard");
+  const { token } = theme.useToken();
   const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
 
   if (isLoading) {
@@ -255,13 +257,13 @@ export default function BalanceCard({
       {/* Col 2: Visual Card Representation (supporting art) */}
       <Col xs={24} xl={6}>
         <Card
-          className="card-gradient"
           style={{
             height: "100%",
             minHeight: 320,
             overflow: "hidden",
             position: "relative",
             border: "none",
+            background: CARD_ART_GRADIENT,
           }}
           styles={{
             body: {
@@ -309,10 +311,9 @@ export default function BalanceCard({
                 fontSize: 12,
                 letterSpacing: "0.1em",
                 color: "var(--ant-color-text-light-solid)",
-                opacity: 0.8,
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
                 border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: 8,
+                borderRadius: token.borderRadius,
                 padding: "4px 12px",
               }}
             >
@@ -341,7 +342,6 @@ export default function BalanceCard({
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     color: "var(--ant-color-text-light-solid)",
-                    opacity: 0.6,
                   }}
                 >
                   {t("cardHolder")}
@@ -356,7 +356,7 @@ export default function BalanceCard({
                     color: "var(--ant-color-text-light-solid)",
                   }}
                 >
-                  PENGGUNA PAYU
+                  {t("cardHolderName")}
                 </Text>
               </Space>
               <div style={{ display: "flex", flexShrink: 0 }}>

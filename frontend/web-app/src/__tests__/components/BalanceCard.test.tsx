@@ -47,7 +47,7 @@ describe('BalanceCard', () => {
    renderWithIntl(<BalanceCard balance={5000000} />);
 
    expect(screen.getByText('PayU')).toBeInTheDocument();
-   expect(screen.getByText('PENGGUNA PAYU')).toBeInTheDocument();
+   expect(screen.getByText('Pengguna PayU')).toBeInTheDocument();
    expect(screen.getByText(/•••/)).toBeInTheDocument();
  });
 

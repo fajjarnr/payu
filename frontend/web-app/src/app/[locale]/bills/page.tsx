@@ -240,7 +240,7 @@ export default function BillsPage() {
                 <CheckCircle2 style={{ fontSize: 40 }} />
               </Flex>
 
-              <Typography.Title level={2} style={{ marginBottom: 8 }}>
+              <Typography.Title level={1} style={{ marginBottom: 8 }}>
                 Pembayaran Berhasil!
               </Typography.Title>
               <Typography.Text
@@ -573,7 +573,7 @@ export default function BillsPage() {
             gap={16}
           >
             <div>
-              <Typography.Title level={2} style={{ marginBottom: 0 }}>
+              <Typography.Title level={1} style={{ marginBottom: 0 }}>
                 Tagihan & Top-up
               </Typography.Title>
               <Typography.Text type="secondary" strong style={{ fontSize: 14 }}>

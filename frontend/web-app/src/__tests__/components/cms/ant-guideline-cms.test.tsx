@@ -350,6 +350,33 @@ describe('PromoPopup ANT fixes', () => {
     fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
     expectNoLegacyClasses(container);
   });
+
+  it('A-04: "Jangan Tampilkan Lagi" removes the promo instead of re-offering it', () => {
+    popupsState.data = [mockPopups[0]];
+    renderWithIntl(<PromoPopup delay={0} />);
+    advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Jangan Tampilkan Lagi/i }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Lihat Promo/ })).not.toBeInTheDocument();
+  });
+
+  it('F-08: the dismissal is announced politely', () => {
+    popupsState.data = [mockPopups[0]];
+    renderWithIntl(<PromoPopup delay={0} />);
+    advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Jangan Tampilkan Lagi/i }));
+    expect(screen.getByRole('status')).toHaveTextContent('Promo ditutup: Special Offer');
+  });
+
+  it('A-04: the claim CTA is hidden when the promo has no target', () => {
+    popupsState.data = [{ ...mockPopups[0], actionUrl: undefined }];
+    renderWithIntl(<PromoPopup delay={0} />);
+    advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
+    expect(screen.queryByRole('button', { name: /Klaim Sekarang/i })).not.toBeInTheDocument();
+  });
 });
 
 describe('EmergencyAlert ANT fixes', () => {
@@ -406,7 +433,7 @@ describe('EmergencyAlert ANT fixes', () => {
 
   it('dismiss stops propagation (no nested-interactive navigation)', () => {
     renderWithIntl(<EmergencyAlert />);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Tutup peringatan' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /^Tutup peringatan/ })[0]);
     expect(mockLocalStorage.setItem).toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
     expect(global.open).not.toHaveBeenCalled();
@@ -414,12 +441,44 @@ describe('EmergencyAlert ANT fixes', () => {
 
   it('A-05: dismiss and validity strings are localized', () => {
     renderWithIntl(<EmergencyAlert />);
-    expect(screen.getAllByRole('button', { name: 'Tutup peringatan' })).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: /^Tutup peringatan/ })).toHaveLength(3);
     expect(screen.getAllByText(/Berlaku hingga/)).toHaveLength(3);
   });
 
   it('A-01: no legacy token-bypass classes in output', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
     expectNoLegacyClasses(container);
+  });
+
+  it('F-03: keys on the dismiss button never trigger the alert link', () => {
+    renderWithIntl(<EmergencyAlert />);
+    const dismiss = screen.getAllByRole('button', { name: /^Tutup peringatan/ })[0];
+    fireEvent.keyDown(dismiss, { key: 'Enter' });
+    fireEvent.keyDown(dismiss, { key: ' ' });
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(global.open).not.toHaveBeenCalled();
+  });
+
+  it('F-03: the alert link still activates from the keyboard', () => {
+    renderWithIntl(<EmergencyAlert />);
+    const link = screen.getByText('System Maintenance').closest('[role="link"]') as HTMLElement;
+    fireEvent.keyDown(link, { key: 'Enter' });
+    expect(mockPush).toHaveBeenCalledWith('/maintenance');
+  });
+
+  it('F-08: the dismissal is announced politely', () => {
+    renderWithIntl(<EmergencyAlert />);
+    fireEvent.click(screen.getAllByRole('button', { name: /^Tutup peringatan/ })[0]);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Peringatan ditutup: System Maintenance'
+    );
+  });
+
+  it('A-03: every dismiss button names its own alert', () => {
+    renderWithIntl(<EmergencyAlert />);
+    const labels = screen
+      .getAllByRole('button', { name: /^Tutup peringatan/ })
+      .map((button) => button.getAttribute('aria-label'));
+    expect(new Set(labels).size).toBe(labels.length);
   });
 });

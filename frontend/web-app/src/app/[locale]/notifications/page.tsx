@@ -128,9 +128,8 @@ export default function NotificationsPage() {
             <Col>
               <Space direction="vertical" size={4}>
                 <Title
-                  level={2}
+                  level={1}
                   style={{
-                    fontSize: 24,
                     fontWeight: 700,
                     letterSpacing: "-0.025em",
                     margin: 0,

@@ -47,13 +47,16 @@ export default function MobileNav() {
     <nav
       data-testid="mobile-nav"
       aria-label={t("mobileNavigation")}
-      className="fixed bottom-0 left-0 right-0 z-50 border-t px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] rounded-t-2xl sm:rounded-t-3xl sm:px-4 lg:hidden"
+      className="payu-mobile-nav fixed bottom-0 left-0 right-0 z-50 border-t px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] rounded-t-2xl sm:px-4 lg:hidden"
       style={{
         backgroundColor: token.colorBgContainer,
         borderTopColor: token.colorBorderSecondary,
         boxShadow: "0 -8px 30px rgba(0,0,0,0.12)",
       }}
     >
+      {/* F-02: the tabs are plain links, so they need their own focus ring —
+          the antd default does not cover them. */}
+      <style>{`.payu-mobile-nav a:focus-visible{outline:3px solid ${token.colorPrimaryBorder};outline-offset:2px;}`}</style>
       <ul
         className="flex w-full"
         style={{ maxWidth: 512, margin: "0 auto", listStyle: "none", padding: 0 }}
@@ -93,7 +96,7 @@ export default function MobileNav() {
                   aria-hidden="true"
                 />
                 <span
-                  className="w-full truncate px-0.5 text-center text-xs uppercase leading-none tracking-[0.08em] sm:tracking-[0.12em]"
+                  className="w-full truncate px-1 text-center text-xs uppercase leading-none tracking-[0.08em] sm:tracking-[0.12em]"
                   style={{ fontWeight: active ? 800 : 700 }}
                 >
                   {label}

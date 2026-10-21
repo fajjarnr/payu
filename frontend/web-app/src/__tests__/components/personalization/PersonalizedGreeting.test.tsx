@@ -75,12 +75,14 @@ describe('PersonalizedWelcomeBanner', () => {
     // Component uses Indonesian greeting text
     expect(container.textContent).toMatch(/(Selamat|Welcome)/);
     expect(container.textContent).toContain('Test');
-    expect(container.textContent).toContain('PERSONALIZED EXPERIENCE');
+    expect(container.textContent).toContain('PENGALAMAN TERPREFERENSIASI');
   });
 
   it('should render VIP benefits message', () => {
     const { container } = renderWithIntl(<PersonalizedWelcomeBanner />);
 
-    expect(container.textContent).toContain('Discover personalized offers for you');
+    expect(container.textContent).toContain(
+      'Temukan penawaran yang dipersonalisasi untuk Anda'
+    );
   });
 });

@@ -141,7 +141,7 @@ export default function ScheduledTransfersPage() {
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
-            <Title level={2} style={{ margin: 0 }}>Transfer Terjadwal</Title>
+            <Title level={1} style={{ margin: 0 }}>Transfer Terjadwal</Title>
             <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>
               Kelola dan pantau transfer berulang Anda.
             </Text>

@@ -53,6 +53,9 @@ export default function EmergencyAlert({
   // Initialize from localStorage lazily (avoids cascading render warning).
   // Server returns empty Set; first client render also returns empty Set to
   // match SSR. The actual localStorage value is then read on mount.
+  // F-08: the dismissal outcome must be announced; the alert list itself is
+  // not a live region (removing a row would re-announce every other row).
+  const [status, setStatus] = useState('');
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(() => {
     if (typeof window === 'undefined') return new Set();
     try {
@@ -94,9 +97,10 @@ export default function EmergencyAlert({
     }
   };
 
-  const handleDismiss = (alertId: string, e: React.MouseEvent) => {
+  const handleDismiss = (alert: Content, e: React.MouseEvent) => {
     e.stopPropagation();
-    saveDismissedAlert(alertId);
+    saveDismissedAlert(alert.id);
+    setStatus(t('alertDismissed', { title: alert.title }));
   };
 
   const handleAlertClick = (alert: Content) => {
@@ -131,34 +135,46 @@ export default function EmergencyAlert({
   const activeAlerts = alerts?.filter((alert) => !dismissedAlerts.has(alert.id)) ?? [];
 
   if (isLoading || activeAlerts.length === 0) {
-    return null;
+    // The announcer must outlive the last alert, otherwise the dismissal
+    // confirmation is removed from the DOM before it is announced.
+    return status ? (
+      <span role="status" aria-live="polite" className="sr-only">
+        {status}
+      </span>
+    ) : null;
   }
 
   return (
-    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {activeAlerts.map((alert) => {
-        const alertType = toAlertType(alert);
-        const Icon = ALERT_ICONS[alert.metadata?.alertType as string] || ALERT_ICONS.DEFAULT;
-        const clickable = Boolean(alert.actionUrl);
+    <>
+      <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {activeAlerts.map((alert) => {
+          const alertType = toAlertType(alert);
+          const Icon = ALERT_ICONS[alert.metadata?.alertType as string] || ALERT_ICONS.DEFAULT;
+          const clickable = Boolean(alert.actionUrl);
 
-        return (
-          <div
-            key={alert.id}
-            // F-03: focusable ⟺ clickable — inert alerts stay out of the tab order.
-            {...(clickable
-              ? {
-                  tabIndex: 0,
-                  role: 'link' as const,
-                  onClick: () => handleAlertClick(alert),
-                  onKeyDown: (e: React.KeyboardEvent) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleAlertClick(alert);
-                    }
-                  },
-                }
-              : {})}
-          >
+          return (
+            <div
+              key={alert.id}
+              className={clickable ? 'payu-alert-row' : undefined}
+              // F-03: focusable ⟺ clickable — inert alerts stay out of the tab order.
+              {...(clickable
+                ? {
+                    tabIndex: 0,
+                    role: 'link' as const,
+                    onClick: () => handleAlertClick(alert),
+                    onKeyDown: (e: React.KeyboardEvent) => {
+                      // The dismiss button lives inside this wrapper: its key
+                      // events bubble here, and handling them would cancel the
+                      // button activation (Space) or navigate away (Enter).
+                      if (e.target !== e.currentTarget) return;
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleAlertClick(alert);
+                      }
+                    },
+                  }
+                : {})}
+            >
             <Alert
               type={alertType}
               showIcon
@@ -191,21 +207,26 @@ export default function EmergencyAlert({
                   shape="circle"
                   className="absolute top-2 right-2"
                   style={{ width: 44, height: 44, color: token.colorText }}
-                  onClick={(e) => handleDismiss(alert.id, e)}
-                  aria-label={t('dismissAlert')}
+                  onClick={(e) => handleDismiss(alert, e)}
+                  aria-label={t('dismissAlertNamed', { title: alert.title })}
                   icon={<X className="h-4 w-4" />}
                 />
               }
-              className="relative p-4 pr-12 rounded-2xl"
+              className="relative p-4 pr-16 rounded-2xl"
               style={
                 clickable
                   ? { background: token.colorBgContainer, border: `1px solid ${token.colorBorderSecondary}`, cursor: 'pointer' }
                   : { background: token.colorBgContainer, border: `1px solid ${token.colorBorderSecondary}` }
               }
             />
-          </div>
-        );
-      })}
-    </div>
+            </div>
+          );
+        })}
+      </div>
+      <style>{`.payu-alert-row:focus-visible{outline:3px solid ${token.colorPrimaryBorder};outline-offset:2px;}`}</style>
+      <span role="status" aria-live="polite" className="sr-only">
+        {status}
+      </span>
+    </>
   );
 }

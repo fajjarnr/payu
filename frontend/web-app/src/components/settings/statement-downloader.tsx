@@ -20,7 +20,10 @@ export default function StatementDownloader() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // A-04/F-08: one shared error string made a generation failure render the
+  // "failed to load the list" alert too — the same failure shown (and
+  // announced) twice. The scope decides which card owns the message.
+  const [error, setError] = useState<{ scope: 'generator' | 'list' | 'download'; message: string } | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   // Decision (monthly-only): the backend generate contract is StatementGenerationRequest
@@ -55,7 +58,7 @@ export default function StatementDownloader() {
       setHasMore(!result.last && result.totalPages > pageNum + 1);
     } catch (err) {
       console.error('Failed to load statements:', err instanceof Error ? err.message : 'Unknown error');
-      setError(t('history.errorLoad'));
+      setError({ scope: 'list', message: t('history.errorLoad') });
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +93,10 @@ export default function StatementDownloader() {
       await loadStatements();
     } catch (err) {
       console.error('Failed to generate statement:', err);
-      setError(err instanceof Error ? err.message : t('generator.errorGen'));
+      setError({
+        scope: 'generator',
+        message: err instanceof Error ? err.message : t('generator.errorGen'),
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -98,7 +104,7 @@ export default function StatementDownloader() {
 
   const handleDownload = useCallback(async (statement: Statement) => {
     if (statement.status !== 'COMPLETED') {
-      setError(t('history.notReady'));
+      setError({ scope: 'download', message: t('history.notReady') });
       return;
     }
     if (isDownloading) return;
@@ -112,7 +118,7 @@ export default function StatementDownloader() {
       setSuccess(t('generator.success'));
     } catch (err) {
       console.error('Failed to download statement:', err);
-      setError(t('history.errorDownload'));
+      setError({ scope: 'download', message: t('history.errorDownload') });
     } finally {
       setIsDownloading(null);
     }
@@ -173,12 +179,12 @@ export default function StatementDownloader() {
 
           {/* Success Message */}
           {success && (
-            <Alert type="success" showIcon message={t('generator.successLabel')} description={success} />
+            <Alert type="success" showIcon role="status" message={t('generator.successLabel')} description={success} />
           )}
 
-          {/* Error Message */}
-          {error && (
-            <Alert type="error" showIcon message={t('generator.errorLabel')} description={error} />
+          {/* Error Message — generation only; list/download errors belong to the history card */}
+          {error?.scope === 'generator' && (
+            <Alert type="error" showIcon message={t('generator.errorLabel')} description={error.message} />
           )}
 
           {/* Generator Form */}
@@ -260,14 +266,16 @@ export default function StatementDownloader() {
           </Space>
 
           {/* Statements List */}
-          {!isLoading && error && statements.length === 0 && (
+          {!isLoading && error?.scope === 'list' && (
             <Alert
               type="error"
               showIcon
               message={t('history.errorLoad')}
-              description={error !== t('history.errorLoad') ? error : undefined}
               action={<Button size="small" onClick={() => loadStatements(0)}>{t('history.retry')}</Button>}
             />
+          )}
+          {error?.scope === 'download' && (
+            <Alert type="error" showIcon message={error.message} />
           )}
           <Space direction="vertical" size={12} style={{ width: '100%' }}>
             {isLoading ? (

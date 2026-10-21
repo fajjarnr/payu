@@ -18,7 +18,7 @@ export default function PrivacyPage() {
             <Shield style={{ width: 28, height: 28, color: 'var(--ant-color-text-light-solid)' }} />
           </div>
           <div>
-            <Title level={2} style={{ margin: 0 }}>Kebijakan Privasi</Title>
+            <Title level={1} style={{ margin: 0 }}>Kebijakan Privasi</Title>
             <Text type="secondary">Versi 1.0 - Terakhir diperbarui: Januari 2026</Text>
           </div>
         </Space>
