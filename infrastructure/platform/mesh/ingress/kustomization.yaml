@@ -17,6 +17,7 @@ resources:
   - route.yaml
   - http-route.yaml
   - network-policies.yaml
+  - authorization-policy-simulator-deny.yaml
 
 labels:
   - pairs:

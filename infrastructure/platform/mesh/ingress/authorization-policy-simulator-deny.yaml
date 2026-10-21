@@ -1,0 +1,36 @@
+# Deny the simulator proxy paths at the public mesh gateway.
+#
+# The gateway-service AuthorizationFilter lists
+# /api/v1/simulator/dukcapil/verify as a PUBLIC endpoint because that path
+# was designed for the internal account-service -> gateway-service ->
+# simulator hop. The public dev route (host api-dev.apps.fajjjar.my.id)
+# forwards the /api/v1 prefix to the same gateway-service, so the simulator
+# proxy (mock citizen data: name, birth place/date, NIK) was reachable from
+# the internet without a JWT.
+#
+# Scope: this deny is attached to the mesh gateway workload only (the public
+# internet door). The legitimate internal hop does not traverse the mesh
+# gateway — it goes account-service -> gateway-service directly (source
+# principal spiffe://payu.local/ns/payu-dev/sa/account-service), so the deny
+# does not break the internal simulator call.
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-public-simulator-paths
+  namespace: payu-mesh-gateway
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  action: DENY
+  selector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: payu-public-gateway
+  rules:
+    - to:
+        - operation:
+            ports:
+              - "8080"
+            paths:
+              - /api/v1/simulator
+              - /api/v1/simulator/*

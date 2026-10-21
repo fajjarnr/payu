@@ -363,6 +363,7 @@ client -> AWS NLB (shared) -> OpenShift router (TLS, shared-ingress-cert)
 | `payu-public-gateway` | `gateway.networking.k8s.io/v1` `Gateway` | `payu-mesh-gateway` | `gatewayClassName: istio`; istiod reconciles it into Deployment+Service `payu-public-gateway-istio` |
 | `api-dev` | `route.openshift.io/v1` `Route` | `payu-mesh-gateway` | host `api-dev.apps.fajjjar.my.id`, TLS `edge` termination by the shared router |
 | `payu-gateway-dev` | `gateway.networking.k8s.io/v1` `HTTPRoute` | `payu-dev` | routes `/api/v1` and `/v1/partner` to `gateway-service:8080` |
+| `deny-public-simulator-paths` | `security.istio.io/v1beta1` `AuthorizationPolicy` | `payu-mesh-gateway` | DENY `/api/v1/simulator*` on the gateway workload — the gateway's `AuthorizationFilter` treats that path as public for the internal `account-service` hop, and the public route forwards the whole `/api/v1` prefix |
 
 The shared router owns the domain end to end (DNS, NLB, TLS certificate); the
 Istio gateway is a backend behind it and never owns the domain. The hostname
@@ -584,3 +585,18 @@ oc logs deployment/<service> -n payu-dev -c istio-proxy
   those environments are not bootstrapped on `payu-drrpz` — they carry no
   workloads, so STRICT mTLS has never been exercised. The prod overlay
   (`overlays/payu`) is not applied at all.
+- **STRICT namespaces need their public ingress through a mesh gateway.** The
+  OpenShift router is not a mesh member, so its plain-text traffic is rejected
+  by a STRICT `PeerAuthentication` — the two `connection_security_policy="none"`
+  series seen in `payu-dev` come from the kubelet probe and the router. Before
+  `payu-uat` / `payu-preprod` are promoted to STRICT, their public route has to
+  be fronted by a mesh gateway the way `ingress/` does in dev. Kubelet probes
+  are unaffected: Istio rewrites them to the agent port.
+- **The simulator path is closed by mesh policy, not by the gateway.** The
+  gateway's `AuthorizationFilter` lists `/api/v1/simulator/dukcapil/verify` as
+  public for the internal `account-service` hop, and the public route forwards
+  the whole `/api/v1` prefix, so `AuthorizationPolicy`
+  `deny-public-simulator-paths` denies `/api/v1/simulator*` at the gateway
+  workload. The internal hop never traverses the gateway and keeps working;
+  narrowing the gateway's own `PUBLIC_ENDPOINTS` list is still open.
+
