@@ -43,9 +43,8 @@ export default defineConfig({
         viewport: { width: 1280, height: 720 },
       },
     },
-    // Temporarily disable other browsers to focus on Chromium first
-    // Uncomment after Chromium tests pass
-    /*
+    // WCAG 2.2 adoption: cross-browser + Mobile Chrome coverage (F-02/F-05);
+    // Mobile Safari stays parked until its touch-target pass is scheduled.
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
@@ -58,6 +57,7 @@ export default defineConfig({
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
     },
+    /*
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },

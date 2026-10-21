@@ -97,12 +97,9 @@ describe("MobileNav", () => {
     const navContainer = container.querySelector(
       ".fixed.bottom-0.left-0.right-0",
     );
-    expect(navContainer).toHaveClass(
-      "bg-card/95",
-      "border-t",
-      "border-border",
-      "z-50",
-    );
+    expect(navContainer).toHaveClass("border-t", "z-50");
+    // Token-driven shell (A-01): no legacy bypass classes.
+    expect(navContainer).not.toHaveClass("bg-card/95", "border-border");
   });
 
   it("should hide on desktop screens", () => {
@@ -129,10 +126,9 @@ describe("MobileNav", () => {
   it("should have proper spacing between navigation items", () => {
     const { container } = renderWithIntl(<MobileNav />);
 
-    const navContainer = container.querySelector(".flex.items-center");
-    expect(navContainer).toBeInTheDocument();
-    // Responsive uses justify-around on mobile, justify-between on sm+
-    expect(navContainer).toHaveClass("flex");
+    const list = container.querySelector('[data-testid="mobile-nav"] ul');
+    expect(list).toBeInTheDocument();
+    expect(list).toHaveClass("flex");
   });
   it("should apply active styling with accent background", () => {
     mockPathname = "/qris";

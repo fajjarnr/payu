@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
 import {
   Search,
-  ChevronDown,
   MoreHorizontal,
   RotateCcw,
   ArrowRight,
@@ -16,7 +15,7 @@ import {
   MoreHorizontal as MoreIcon,
   X,
 } from "@/components/icons";
-import { Button, Card, Col, Divider, Dropdown, Row, Skeleton, Space, Table, Tag, Typography } from "antd";
+import { Alert, Button, Card, Col, Divider, Dropdown, Row, Skeleton, Space, Table, Tag, Typography } from "antd";
 import type { TableColumnsType } from "antd";
 
 const { Title, Text } = Typography;
@@ -50,35 +49,75 @@ const QUICK_CATEGORIES = [
   { icon: MoreIcon, label: "Lain" },
 ];
 
+export function TransferEmpty({ title, hint }: { title: string; hint: string }) {
+  return (
+    <Space
+      direction="vertical"
+      size={8}
+      align="center"
+      style={{ width: "100%", textAlign: "center", padding: "48px 0" }}
+      data-testid="transfer-empty"
+    >
+      <div
+        aria-hidden="true"
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "var(--ant-color-fill-tertiary)",
+        }}
+      >
+        <ReceiptText
+          style={{
+            width: 32,
+            height: 32,
+            color: "var(--ant-color-text-tertiary)",
+          }}
+        />
+      </div>
+      <Title level={4} style={{ margin: 0 }}>
+        {title}
+      </Title>
+      <Text type="secondary">{hint}</Text>
+    </Space>
+  );
+}
+
 export default function TransferActivity({
   className = "",
 }: TransferActivityProps) {
-  // BUG-FE-008 FIX: Use dynamic locale instead of hardcoded 'id-ID'
   const locale = useLocale();
+  const t = useTranslations("dashboard");
   const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
   const accountId = useAuthStore((state) => state.accountId);
-  const { data: transactions, isLoading } = useTransactions(
-    accountId || undefined,
-    0,
-    5,
-  );
+  const {
+    data: transactions,
+    isLoading,
+    isError,
+    refetch,
+  } = useTransactions(accountId || undefined, 0, 5);
   const cancelTransaction = useCancelTransaction();
+  const [cancelAnnouncement, setCancelAnnouncement] = React.useState("");
 
   const handleCancel = async (transactionId: string) => {
     try {
       await cancelTransaction.mutateAsync(transactionId);
-      toast.success("Transaksi berhasil dibatalkan");
+      toast.success(t("cancelSuccess"));
+      // F-08: antd message toasts are not live-regions; mirror the outcome
+      // into a polite announcer so SR users hear cancel results.
+      setCancelAnnouncement(t("cancelAnnouncement", { status: t("cancelSuccess") }));
     } catch {
-      toast.error("Gagal membatalkan transaksi");
+      toast.error(t("cancelFailed"));
+      setCancelAnnouncement(t("cancelAnnouncement", { status: t("cancelFailed") }));
     }
   };
 
   const canCancel = (status: string) =>
     status === "PENDING" || status === "PROCESSING";
 
-  // Wire data can carry DECIMAL as a JSON number; formatCurrency already
-  // normalizes number input. Keep the string path byte-identical (direction
-  // sign is rendered by the caller from transaction type).
   const formatAmount = (amount: string | number) => {
     const unsigned =
       typeof amount === "string" ? amount.replace(/^-/, "") : amount;
@@ -126,6 +165,7 @@ export default function TransferActivity({
       render: (_, item) => (
         <Space size={16} align="center">
           <div
+            aria-hidden="true"
             style={{
               width: 48,
               height: 48,
@@ -185,7 +225,7 @@ export default function TransferActivity({
             fontSize: 14,
             fontVariantNumeric: "tabular-nums",
             color: isCreditType(item.type)
-              ? "var(--ant-color-primary)"
+              ? "var(--ant-color-success-text-active)"
               : undefined,
           }}
         >
@@ -204,7 +244,7 @@ export default function TransferActivity({
             items: [
               {
                 key: "detail",
-                label: "Lihat Detail",
+                label: t("txDetail"),
               },
               ...(canCancel(item.status)
                 ? [
@@ -214,7 +254,7 @@ export default function TransferActivity({
                       label: (
                         <Space size={8} align="center">
                           <X style={{ width: 16, height: 16 }} />
-                          Batalkan
+                          {t("txCancelShort")}
                         </Space>
                       ),
                       onClick: () => handleCancel(item.id),
@@ -228,8 +268,9 @@ export default function TransferActivity({
         >
           <Button
             type="text"
-            aria-label="Opsi transaksi"
+            aria-label={t("txOptions", { description: item.description })}
             icon={<MoreHorizontal style={{ width: 16, height: 16 }} />}
+            style={{ minWidth: 44, minHeight: 44 }}
           />
         </Dropdown>
       ),
@@ -244,17 +285,21 @@ export default function TransferActivity({
       data-testid="transfer-activity-section"
       className={className || undefined}
     >
+      <span role="status" aria-live="polite" data-testid="transfer-cancel-announcement">
+        {cancelAnnouncement}
+      </span>
       {/* Quick Transfer strip */}
       <Card data-testid="quick-transfer-card">
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
           <Row justify="space-between" align="middle">
             <Title level={4} style={{ margin: 0 }}>
-              Kirim Cepat
+              {t("quickTransfer")}
             </Title>
             <Button
               type="text"
-              aria-label="Cari transfer"
+              aria-label={t("searchTransfer")}
               icon={<Search style={{ width: 20, height: 20 }} />}
+              style={{ minWidth: 44, minHeight: 44 }}
             />
           </Row>
 
@@ -270,7 +315,7 @@ export default function TransferActivity({
                 display: "block",
               }}
             >
-              Kategori Favorit
+              {t("favoriteCategory")}
             </Text>
             <Row gutter={[16, 16]}>
               {QUICK_CATEGORIES.map((item) => (
@@ -278,10 +323,11 @@ export default function TransferActivity({
                   <Button
                     type="text"
                     data-testid={`quick-transfer-category-${item.label.toLowerCase()}`}
-                    style={{ height: "auto", width: "100%", padding: 8 }}
+                    style={{ height: "auto", width: "100%", padding: 8, minHeight: 44 }}
                   >
                     <Space direction="vertical" size={8} align="center">
                       <div
+                        aria-hidden="true"
                         style={{
                           width: 56,
                           height: 56,
@@ -316,40 +362,6 @@ export default function TransferActivity({
             </Row>
           </Space>
 
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
-            <Text
-              type="secondary"
-              strong
-              style={{
-                fontSize: 12,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                textAlign: "center",
-                display: "block",
-              }}
-            >
-              Kontak Terbaru
-            </Text>
-            <Row justify="space-between">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Button
-                  key={i}
-                  aria-label={`Kontak ${i}`}
-                  icon={
-                    <User
-                      style={{
-                        width: 24,
-                        height: 24,
-                        color: "var(--ant-color-primary)",
-                      }}
-                    />
-                  }
-                  style={{ width: 52, height: 52, borderRadius: 16 }}
-                />
-              ))}
-            </Row>
-          </Space>
-
           <Button
             data-testid="quick-transfer-send-button"
             type="primary"
@@ -373,29 +385,8 @@ export default function TransferActivity({
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
           <Row justify="space-between" align="middle">
             <Title level={4} style={{ margin: 0 }}>
-              Aktivitas Terakhir
+              {t("recentActivity")}
             </Title>
-            <Button
-              type="default"
-              size="small"
-              aria-label="Pilih bulan"
-              style={{ minHeight: 44 }}
-            >
-              <Space size={8} align="center">
-                <Text
-                  type="secondary"
-                  strong
-                  style={{
-                    fontSize: 12,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Januari
-                </Text>
-                <ChevronDown style={{ width: 16, height: 16 }} />
-              </Space>
-            </Button>
           </Row>
 
           {isLoading ? (
@@ -409,6 +400,18 @@ export default function TransferActivity({
                 />
               ))}
             </Space>
+          ) : isError ? (
+            <Alert
+              type="error"
+              showIcon
+              data-testid="transfer-error"
+              message={t("transferLoadError")}
+              action={
+                <Button size="small" onClick={() => refetch()}>
+                  {t("retryAction")}
+                </Button>
+              }
+            />
           ) : (
             <>
               <div className="hidden md:block">
@@ -418,7 +421,11 @@ export default function TransferActivity({
                   rowKey="id"
                   pagination={false}
                   loading={isLoading}
-                  locale={{ emptyText: "Belum ada transaksi" }}
+                  locale={{
+                    emptyText: (
+                      <TransferEmpty title={t("transferEmpty")} hint={t("transferEmptyHint")} />
+                    ),
+                  }}
                   onRow={(record) =>
                     ({
                       "data-testid": `transfer-row-${record.id}`,
@@ -430,7 +437,10 @@ export default function TransferActivity({
               {/* Mobile Card Layout */}
               <div className="md:hidden">
                 <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                  {displayTransactions.map((item: Transaction) => (
+                  {displayTransactions.length === 0 ? (
+                    <TransferEmpty title={t("transferEmpty")} hint={t("transferEmptyHint")} />
+                  ) : (
+                    displayTransactions.map((item: Transaction) => (
                     <Card
                       key={item.id}
                       size="small"
@@ -444,6 +454,7 @@ export default function TransferActivity({
                         <Row justify="space-between" align="middle">
                           <Space size={12} align="center">
                             <div
+                              aria-hidden="true"
                               style={{
                                 width: 40,
                                 height: 40,
@@ -506,56 +517,26 @@ export default function TransferActivity({
                             {canCancel(item.status) && (
                               <Button
                                 type="text"
-                                aria-label="Batalkan transaksi"
+                                aria-label={t("txCancel", {
+                                  description: item.description,
+                                  amount: formatAmount(item.amount),
+                                })}
                                 danger
                                 icon={
                                   <X style={{ width: 16, height: 16 }} />
                                 }
                                 onClick={() => handleCancel(item.id)}
+                                style={{ minWidth: 44, minHeight: 44 }}
                               />
                             )}
                           </Space>
                         </Row>
                       </Space>
                     </Card>
-                  ))}
+                    ))
+                  )}
                 </Space>
               </div>
-
-              {!displayTransactions.length && (
-                <Space
-                  direction="vertical"
-                  size={8}
-                  align="center"
-                  style={{ width: "100%", textAlign: "center", padding: "48px 0" }}
-                >
-                  <div
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: "var(--ant-color-fill-tertiary)",
-                    }}
-                  >
-                    <ReceiptText
-                      style={{
-                        width: 32,
-                        height: 32,
-                        color: "var(--ant-color-text-tertiary)",
-                      }}
-                    />
-                  </div>
-                  <Title level={4} style={{ margin: 0 }}>
-                    Belum Ada Transaksi
-                  </Title>
-                  <Text type="secondary">
-                    Transaksi Anda akan muncul di sini
-                  </Text>
-                </Space>
-              )}
 
               <Divider style={{ margin: 0 }} />
               <Row justify="space-between" align="middle">

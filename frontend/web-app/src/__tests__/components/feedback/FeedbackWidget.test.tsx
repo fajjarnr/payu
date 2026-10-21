@@ -44,7 +44,7 @@ describe('FeedbackWidget', () => {
 
     const floatingButton = screen.getByLabelText('Kirim Feedback');
     expect(floatingButton).toBeInTheDocument();
-    expect(floatingButton).toHaveClass('bg-bank-green', 'text-surface');
+    expect(floatingButton.className).not.toMatch(/bg-bank-green|text-surface/);
   });
 
   it('should open modal when floating button is clicked', async () => {
@@ -66,7 +66,7 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    const closeButtons = screen.getAllByRole('button', { name: 'Close' });
+    const closeButtons = screen.getAllByRole('button', { name: 'Tutup' });
     expect(closeButtons.length).toBeGreaterThan(0);
     await act(async () => {
       fireEvent.click(closeButtons[0]);
@@ -119,9 +119,9 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    expect(screen.getByText('Laporan Bug')).toBeInTheDocument();
-    expect(screen.getByText('Saran Fitur')).toBeInTheDocument();
-    expect(screen.getByText('Lainnya')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Laporan Bug/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Saran Fitur/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Lainnya/ })).toBeInTheDocument();
   });
 
   it('should select category when clicked', async () => {
@@ -132,12 +132,12 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    const bugCategory = screen.getByText('Laporan Bug').closest('button');
+    const bugCategory = screen.getByRole('button', { name: /Laporan Bug/ }).closest('button');
     if (bugCategory) {
       await act(async () => {
         fireEvent.click(bugCategory);
       });
-      expect(bugCategory).toHaveClass('border-bank-green');
+      expect(bugCategory).toHaveAttribute('aria-pressed', 'true');
     }
   });
 
@@ -162,7 +162,7 @@ describe('FeedbackWidget', () => {
     });
 
     const subjectInput = screen.getByLabelText('Subjek');
-    const messageInput = screen.getByLabelText('Pesan');
+    const messageInput = screen.getByLabelText('Pesan Detail');
 
     await act(async () => {
       await userEvent.type(subjectInput, 'Test bug report');
@@ -184,7 +184,7 @@ describe('FeedbackWidget', () => {
     });
 
     const subjectInput = screen.getByLabelText('Subjek');
-    const messageInput = screen.getByLabelText('Pesan');
+    const messageInput = screen.getByLabelText('Pesan Detail');
 
     await act(async () => {
       await userEvent.type(subjectInput, 'Test bug report');
@@ -221,7 +221,7 @@ describe('FeedbackWidget', () => {
     });
 
     const subjectInput = screen.getByLabelText('Subjek');
-    const messageInput = screen.getByLabelText('Pesan');
+    const messageInput = screen.getByLabelText('Pesan Detail');
 
     await act(async () => {
       await userEvent.type(subjectInput, 'Test bug report');
@@ -251,7 +251,7 @@ describe('FeedbackWidget', () => {
     });
 
     fireEvent.change(screen.getByLabelText('Subjek'), { target: { value: 'Test' } });
-    fireEvent.change(screen.getByLabelText('Pesan'), { target: { value: 'Test message' } });
+    fireEvent.change(screen.getByLabelText('Pesan Detail'), { target: { value: 'Test message' } });
     fireEvent.click(screen.getByRole('button', { name: 'Kirim Sekarang' }));
 
     await waitFor(() => {
@@ -279,7 +279,7 @@ describe('FeedbackWidget', () => {
     });
 
     const subjectInput = screen.getByLabelText('Subjek');
-    const messageInput = screen.getByLabelText('Pesan');
+    const messageInput = screen.getByLabelText('Pesan Detail');
 
     await act(async () => {
       await userEvent.type(subjectInput, 'Test bug report');
@@ -301,10 +301,23 @@ describe('FeedbackWidget', () => {
       vi.advanceTimersByTime(3000);
     });
 
-    await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: 'Kirim Feedback' })).not.toBeInTheDocument();
-    });
-
+    // Auto-dismiss fires at 3s; antd Modal then plays its leave animation
+    // (instant in real browsers, never-ending in jsdom), so also complete
+    // the transition explicitly like the close-button test above.
+    for (let i = 0; i < 10; i++) {
+      let gone = false;
+      await act(async () => {
+        const dialog = screen.queryByRole('dialog');
+        if (dialog) {
+          fireEvent.transitionEnd(dialog);
+          fireEvent.animationEnd(dialog);
+        }
+        await new Promise((r) => setTimeout(r, 200));
+        gone = screen.queryByRole('dialog') === null;
+      });
+      if (gone) break;
+    }
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     vi.useRealTimers();
   });
 
@@ -316,7 +329,7 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    const messageInput = screen.getByLabelText('Pesan');
+    const messageInput = screen.getByLabelText('Pesan Detail');
     await act(async () => {
       await userEvent.type(messageInput, 'Test');
     });
@@ -344,7 +357,7 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    const messageInput = screen.getByLabelText('Pesan') as HTMLTextAreaElement;
+    const messageInput = screen.getByLabelText('Pesan Detail') as HTMLTextAreaElement;
     expect(messageInput).toHaveAttribute('maxLength', '1000');
   });
 
@@ -449,7 +462,7 @@ describe('FeedbackWidget', () => {
     });
 
     const subjectInput = screen.getByLabelText('Subjek');
-    const messageInput = screen.getByLabelText('Pesan');
+    const messageInput = screen.getByLabelText('Pesan Detail');
 
     await act(async () => {
       await userEvent.type(subjectInput, 'Test');
@@ -484,8 +497,8 @@ describe('FeedbackWidget', () => {
       fireEvent.click(floatingButton);
     });
 
-    expect(screen.getByText('Report Bug')).toBeInTheDocument();
-    expect(screen.getByText('Request Feature')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Report Bug/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Request Feature/ })).toBeInTheDocument();
     expect(screen.queryByText('Lainnya')).not.toBeInTheDocument();
   });
 
@@ -500,7 +513,7 @@ describe('FeedbackWidget', () => {
     });
 
     const subjectInput = screen.getByLabelText('Subjek');
-    const messageInput = screen.getByLabelText('Pesan');
+    const messageInput = screen.getByLabelText('Pesan Detail');
 
     await act(async () => {
       await userEvent.type(subjectInput, 'Test');
@@ -529,7 +542,7 @@ describe('FeedbackWidget', () => {
     });
 
     const subjectInput = screen.getByLabelText('Subjek');
-    const messageInput = screen.getByLabelText('Pesan');
+    const messageInput = screen.getByLabelText('Pesan Detail');
 
     await act(async () => {
       await userEvent.type(subjectInput, 'Test');
@@ -577,7 +590,7 @@ describe('FeedbackWidget', () => {
     });
 
     const subjectInput = screen.getByLabelText('Subjek') as HTMLInputElement;
-    const messageInput = screen.getByLabelText('Pesan') as HTMLTextAreaElement;
+    const messageInput = screen.getByLabelText('Pesan Detail') as HTMLTextAreaElement;
 
     await act(async () => {
       await userEvent.type(subjectInput, 'Test subject');
@@ -610,7 +623,7 @@ describe('FeedbackWidget', () => {
     });
 
     const newSubjectInput = screen.getByLabelText('Subjek') as HTMLInputElement;
-    const newMessageInput = screen.getByLabelText('Pesan') as HTMLTextAreaElement;
+    const newMessageInput = screen.getByLabelText('Pesan Detail') as HTMLTextAreaElement;
 
     expect(newSubjectInput.value).toBe('');
     expect(newMessageInput.value).toBe('');

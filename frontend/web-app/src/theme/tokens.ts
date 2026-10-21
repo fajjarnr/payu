@@ -88,12 +88,20 @@ export const darkTokens: SeedTokens = {
   colorTextPlaceholder: '#9CA3AF', // 7.26:1 on #141414
 };
 
+const INK_ON_EMERALD = '#06281F'; // ~8:1 on #00D09C; ink labels on primary fills (F-01, per usage)
+const sharedButtonTokens = {
+  // White on the vivid emerald fill is 2.00:1 (accepted brand gap); ink
+  // labels on primary fills restore AA without a palette swap.
+  primaryColor: INK_ON_EMERALD,
+};
+
 const sharedComponentTokens: ComponentTokens = {
   Button: {
     controlHeight: 48,
     controlHeightLG: 56,
     controlHeightSM: 44,
     fontWeight: 700,
+    ...sharedButtonTokens,
   },
   Card: {
     borderRadiusLG: 16,
@@ -117,8 +125,9 @@ export const lightComponentTokens: ComponentTokens = {
 export const darkComponentTokens: ComponentTokens = {
   ...sharedComponentTokens,
   Button: {
+    ...sharedButtonTokens,
     // Danger labels only. White on the dark-mapped red fill (#dc5e5e) is
-    // 3.62:1; black is 5.8:1. Primary buttons keep the antd default label.
+    // 3.62:1; black is 5.8:1. Primary buttons keep ink labels per F-01.
     dangerColor: '#000000',
   },
   Table: {

@@ -226,17 +226,6 @@ export class StatementService {
     return statuses[status] || status;
   }
 
-  /**
-   * Get status badge color class
-   */
-  getStatusColor(status: StatementStatus): string {
-    const colors: Record<StatementStatus, string> = {
-      GENERATING: 'bg-warning/10 text-warning border-warning/20',
-      COMPLETED: 'bg-primary/10 text-primary border-primary/20',
-      FAILED: 'bg-destructive/10 text-destructive border-destructive/20'
-    };
-    return colors[status] || 'bg-muted/10 text-muted-foreground border-border';
-  }
 }
 
 export default StatementService.getInstance();

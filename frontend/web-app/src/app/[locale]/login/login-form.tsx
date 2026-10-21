@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/lib/navigation";
 import Image from "next/image";
-import { Button, Space, Row, Col, Typography } from "antd";
+import { Button, Space, Row, Col, Typography, theme } from "antd";
 import {
   CheckCircle2,
   ShieldCheck,
@@ -83,6 +83,7 @@ function LoginSkeleton() {
  * never touch the web-app or auth-service — Keycloak authenticates the user.
  */
 function LoginForm() {
+  const { token } = theme.useToken();
   const t = useTranslations("auth");
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
@@ -133,7 +134,7 @@ function LoginForm() {
               width: 600,
               height: 600,
               background:
-                "color-mix(in srgb, var(--color-bank-green) 90%, transparent)",
+                "color-mix(in srgb, var(--ant-color-primary) 90%, transparent)",
               borderRadius: "50%",
               filter: "blur(100px)",
               transform: "translate(-25%, 50%)",
@@ -417,7 +418,9 @@ function LoginForm() {
                   data-testid="register-link"
                   style={{
                     fontWeight: 700,
-                    color: "var(--color-primary-dark)",
+                    color: token.colorText,
+                    textDecoration: "underline",
+                    textUnderlineOffset: 3,
                     display: "inline-flex",
                     alignItems: "center",
                   }}

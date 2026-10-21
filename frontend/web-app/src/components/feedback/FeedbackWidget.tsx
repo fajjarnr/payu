@@ -1,13 +1,9 @@
-
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Camera, AlertCircle, CheckCircle, Bug, Lightbulb } from '@/components/icons';
-import { a11yUtils } from '@/lib/a11y';
-import { Button, Checkbox, Input, Modal } from 'antd';
-
-
-
+import { Alert, Button, Checkbox, Input, Modal, Typography, theme } from 'antd';
 
 const { TextArea } = Input;
 
@@ -44,31 +40,26 @@ interface FeedbackWidgetProps {
 export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
   apiEndpoint = '/api/v1/feedback',
   autoCapture = true,
-  categories = [
-    { value: 'bug', label: 'Laporan Bug', icon: <Bug className="w-5 h-5" /> },
-    { value: 'feature', label: 'Saran Fitur', icon: <Lightbulb className="w-5 h-5" /> },
-    { value: 'other', label: 'Lainnya', icon: <AlertCircle className="w-5 h-5" /> },
-  ],
+  categories,
 }) => {
+  const t = useTranslations('feedback');
+  const { token } = theme.useToken();
+  const defaultCategories = [
+    { value: 'bug', label: t('categoryBug'), icon: <Bug className="w-5 h-5" /> },
+    { value: 'feature', label: t('categoryFeature'), icon: <Lightbulb className="w-5 h-5" /> },
+    { value: 'other', label: t('categoryOther'), icon: <AlertCircle className="w-5 h-5" /> },
+  ];
+  const resolvedCategories = categories ?? defaultCategories;
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState('');
   const [category, setCategory] = useState<'bug' | 'feature' | 'other'>('bug');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [includeScreenshot, setIncludeScreenshot] = useState(true);
-
-  const modalRef = useRef<HTMLDivElement>(null);
-  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  a11yUtils.useFocusTrap(isOpen, modalRef);
-
-  useEffect(() => () => {
-    if (successTimeoutRef.current !== null) {
-      clearTimeout(successTimeoutRef.current);
-    }
-  }, []);
-
   // Capture screenshot using modern Screen Capture API
   const captureScreenshot = async () => {
     try {
@@ -119,6 +110,7 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
     if (!subject.trim() || !message.trim()) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
 
     const feedbackData: FeedbackData = {
       category,
@@ -143,15 +135,9 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
       }
 
       setSubmitted(true);
-
-      successTimeoutRef.current = setTimeout(() => {
-        successTimeoutRef.current = null;
-        setSubmitted(false);
-        setIsOpen(false);
-        resetForm();
-      }, 3000);
-    } catch (error) {
-      console.error('Feedback submission error:', error);
+      setAnnouncement(t('successAnnouncement'));
+    } catch {
+      setSubmitError(t('submitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -163,151 +149,205 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
     setMessage('');
     setScreenshot(null);
     setIncludeScreenshot(true);
+    setSubmitError(null);
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+    setSubmitted(false);
+    setAnnouncement('');
+    resetForm();
+  };
+
+  // Auto-dismiss the success panel; the polite live region above announces
+  // the outcome first so SR users do not miss it (F-08).
+  useEffect(() => {
+    if (!submitted) return;
+    const id = setTimeout(() => {
+      setSubmitted(false);
+      setIsOpen(false);
+      resetForm();
+    }, 3000);
+    return () => clearTimeout(id);
+  }, [submitted]);
   return (
     <>
       <Button
         type="primary"
         shape="circle"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-40 shadow-2xl bg-bank-green hover:bg-bank-emerald text-surface animate-in slide-in-from-bottom-10"
-        style={{ width: 56, height: 56 }}
-        aria-label="Kirim Feedback"
-        icon={<Camera className="w-6 h-6" />}
+        className="fixed right-4 md:right-8 z-40"
+        style={{ width: 56, height: 56, bottom: 96 }}
+        aria-label={t('title')}
+        icon={<Camera className="w-6 h-6" aria-hidden="true" />}
       />
 
       <Modal
         open={isOpen}
-        onCancel={() => setIsOpen(false)}
+        onCancel={handleClose}
         footer={null}
         centered
         width={512}
-        styles={{ body: { padding: 0 }, mask: { background: 'rgba(0,0,0,0.8)' }, container: { background: 'transparent', boxShadow: 'none', padding: 0, borderRadius: 0, overflow: 'visible' }, root: { background: 'transparent', boxShadow: 'none' } }}
-        className="max-w-lg"
-        aria-modal="true"
+        destroyOnHidden
       >
-        <div ref={modalRef} className="relative z-50 mx-auto grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg max-w-lg bg-card rounded-3xl p-0 overflow-hidden border-border/10 shadow-3xl">
-          <button type="button" onClick={() => setIsOpen(false)} aria-label="Close" className="absolute right-4 top-4 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-            <span className="sr-only">Close</span>
-          </button>
-          <div className="flex flex-col space-y-1.5 text-center sm:text-left p-8 pb-4 border-b border-border/5">
-            <div className="text-lg font-semibold leading-none tracking-tight text-xl font-bold uppercase tracking-tight">Kirim Feedback</div>
-            <div className="text-sm text-muted-foreground text-xs font-bold uppercase tracking-[0.2em] opacity-60">
-              Bantu kami meningkatkan layanan PayU
+        <div style={{ display: 'grid', gap: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+            <div style={{ display: 'grid', gap: 4 }}>
+              <Typography.Title level={4} style={{ margin: 0 }}>{t('title')}</Typography.Title>
+              <Typography.Text type="secondary">{t('subtitle')}</Typography.Text>
             </div>
+            <Button
+              type="text"
+              onClick={handleClose}
+              aria-label={t('close')}
+              style={{ minWidth: 44, minHeight: 44 }}
+            >
+              {t('close')}
+            </Button>
           </div>
 
-          <div className="p-8 pt-6">
-            {submitted ? (
-              <div className="text-center py-12 animate-in fade-in zoom-in duration-500">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-bank-green/10 rounded-3xl mb-6">
-                  <CheckCircle className="w-10 h-10 text-bank-green" />
-                </div>
-                <h3 className="font-bold text-2xl mb-3 uppercase tracking-tight">Terima Kasih!</h3>
-                <p className="text-muted-foreground font-medium">
-                  Feedback Anda sangat berharga bagi pengembangan platform kami.
-                </p>
+          {/* F-08: polite live region announces auto-dismiss success before it closes. */}
+          <span role="status" aria-live="polite" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
+            {announcement}
+          </span>
+
+          {submitted ? (
+            <div role="status" style={{ textAlign: 'center', padding: '48px 0' }}>
+              <div
+                aria-hidden="true"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 80,
+                  height: 80,
+                  borderRadius: token.borderRadiusLG,
+                  marginBottom: 24,
+                  backgroundColor: token.colorSuccessBg,
+                  border: `1px solid ${token.colorSuccessBorder}`,
+                }}
+              >
+                <CheckCircle style={{ width: 40, height: 40, color: token.colorSuccessText }} />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-8">
-                <div>
-                  <label htmlFor="feedback-category" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-[0.2em] mb-4 block opacity-70">
-                    Kategori Feedback
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {categories.map((cat) => (
+              <Typography.Title level={3} style={{ margin: '0 0 12px' }}>{t('successTitle')}</Typography.Title>
+              <Typography.Text type="secondary">{t('successBody')}</Typography.Text>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 32 }}>
+              {submitError && (
+                <Alert
+                  role="alert"
+                  type="error"
+                  message={submitError}
+                  action={
+                    <Button size="small" type="link" onClick={() => setSubmitError(null)}>
+                      {t('dismiss')}
+                    </Button>
+                  }
+                  showIcon
+                />
+              )}
+              <div>
+                <Typography.Text strong id="feedback-category" style={{ display: 'block', marginBottom: 16 }}>
+                  {t('categoryLabel')}
+                </Typography.Text>
+                <div role="group" aria-labelledby="feedback-category" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                  {resolvedCategories.map((cat) => {
+                    const selected = category === cat.value;
+                    return (
                       <Button
                         key={cat.value}
-                        type={category === cat.value ? 'primary' : 'default'}
+                        type={selected ? 'primary' : 'default'}
                         size="large"
+                        aria-pressed={selected}
                         onClick={() => setCategory(cat.value as FeedbackData['category'])}
-                        className={`h-24 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 transition-all ${
-                          category === cat.value
-                            ? 'bg-bank-green/10 text-bank-green border-bank-green shadow-lg shadow-bank-green/10'
-                            : 'border-border/50 opacity-60 hover:opacity-100'
-                        }`}
+                        style={{
+                          height: 96,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 12,
+                          borderRadius: token.borderRadiusLG,
+                          borderWidth: 2,
+                          borderColor: selected ? token.colorPrimary : token.colorBorderSecondary,
+                          fontWeight: 700,
+                        }}
+                        icon={cat.icon}
                       >
-                        {cat.icon}
-                        <span className="text-xs font-bold uppercase tracking-widest">{cat.label}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                          {selected ? `✓ ${cat.label}` : cat.label}
+                        </span>
                       </Button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
+              </div>
 
-                <div className="space-y-3">
-                  <label htmlFor="feedback-subject" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-[0.2em] opacity-70">
-                    Subjek
-                  </label>
-                  <Input
-                    id="feedback-subject"
-                    aria-label="Subjek"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Masalah atau saran singkat..."
-                    className="flex h-14 min-h-[44px] w-full rounded-xl border border-border bg-muted/20 px-6 py-3 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 h-14 rounded-xl font-bold bg-muted/30 border-border/50 focus:border-bank-green/50 transition-all px-5"
-                    required
-                    maxLength={100}
-                  />
-                </div>
+              <div style={{ display: 'grid', gap: 12 }}>
+                <label htmlFor="feedback-subject">{t('subjectLabel')}</label>
+                <Input
+                  id="feedback-subject"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder={t('subjectPlaceholder')}
+                  required
+                  maxLength={100}
+                />
+              </div>
 
-                <div className="space-y-3">
-                  <label htmlFor="feedback-message" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs font-bold uppercase tracking-[0.2em] opacity-70">
-                    Pesan Detail
-                  </label>
-                  <TextArea
-                    id="feedback-message"
-                    aria-label="Pesan"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Ceritakan detail lebih lanjut..."
-                    className="flex min-h-[120px] w-full rounded-xl border border-border bg-muted/20 px-6 py-4 text-sm font-bold text-foreground transition-all shadow-sm placeholder:text-muted-foreground/40 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none disabled:cursor-not-allowed disabled:opacity-50 rounded-xl font-bold bg-muted/30 border-border/50 focus:border-bank-green/50 transition-all p-5 min-h-[120px]"
-                    required
-                    maxLength={1000}
-                  />
-                  <p className="text-right text-xs text-muted-foreground" aria-live="polite">
-                    {message.length} / 1000
-                  </p>
-                </div>
+              <div style={{ display: 'grid', gap: 12 }}>
+                <label htmlFor="feedback-message">{t('messageLabel')}</label>
+                <TextArea
+                  id="feedback-message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={t('messagePlaceholder')}
+                  required
+                  maxLength={1000}
+                  autoSize={{ minRows: 4 }}
+                />
+                <Typography.Text type="secondary" style={{ textAlign: 'right', fontSize: 12 }} aria-live="polite">
+                  {message.length} / 1000
+                </Typography.Text>
+              </div>
 
-                <div className="flex items-center space-x-3 p-4 bg-muted/20 rounded-xl border border-border/5">
-                  <Checkbox
-                    id="include-screenshot"
-                    aria-label="Sertakan tangkapan layar otomatis"
-                    checked={includeScreenshot}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setIncludeScreenshot(checked);
-                      if (checked && !screenshot) captureScreenshot();
-                    }}
-                  />
-                  <label htmlFor="include-screenshot" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 text-xs font-bold cursor-pointer opacity-80">
-                    Sertakan tangkapan layar otomatis
-                  </label>
-                  {screenshot && (
-                    <div className="text-xs font-bold text-bank-green flex items-center gap-1.5 uppercase tracking-widest">
-                      <div className="h-1.5 w-1.5 bg-bank-green rounded-full animate-pulse" />
-                      Captured
-                    </div>
-                  )}
-                </div>
-
-                <p className="text-xs text-muted-foreground">
-                  Informasi perangkat dan log error disertakan untuk membantu diagnosis.
-                </p>
-
-                <Button
-                  htmlType="submit"
-                  type="primary"
-                  size="large"
-                  disabled={isSubmitting || !subject.trim() || !message.trim()}
-                  className="w-full h-16 bg-bank-green hover:bg-bank-emerald text-surface font-bold uppercase tracking-[0.25em] text-xs rounded-2xl shadow-xl shadow-bank-green/20"
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, borderRadius: token.borderRadiusLG, border: `1px solid ${token.colorBorderSecondary}`, backgroundColor: token.colorFillTertiary }}>
+                <Checkbox
+                  id="include-screenshot"
+                  checked={includeScreenshot}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIncludeScreenshot(checked);
+                    if (checked && !screenshot) captureScreenshot();
+                  }}
                 >
-                  {isSubmitting ? 'Mengirim Data...' : 'Kirim Sekarang'}
-                </Button>
-              </form>
-            )}
-          </div>
+                  {t('screenshotLabel')}
+                </Checkbox>
+                {screenshot && (
+                  <Typography.Text strong style={{ fontSize: 12, color: token.colorSuccessText }}>
+                    {t('screenshotCaptured')}
+                  </Typography.Text>
+                )}
+              </div>
+
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {t('deviceNote')}
+              </Typography.Text>
+
+              <Button
+                htmlType="submit"
+                type="primary"
+                size="large"
+                block
+                loading={isSubmitting}
+                disabled={isSubmitting || !subject.trim() || !message.trim()}
+                style={{ height: 56, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12 }}
+              >
+                {isSubmitting ? t('submitting') : t('submit')}
+              </Button>
+            </form>
+          )}
         </div>
       </Modal>
     </>

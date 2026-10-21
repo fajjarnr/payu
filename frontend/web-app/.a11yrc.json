@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/dequelabs/axe-core/master/doc/axe-schema.json",
-  "description": "Accessibility rules configuration for PayU Web App - WCAG 2.1 Level AA compliance",
+  "description": "Accessibility rules configuration for PayU Web App - WCAG 2.2 Level AA compliance",
   "rules": {
     "color-contrast": {
       "enabled": true,
@@ -151,12 +151,28 @@
       "enabled": true,
       "description": "Ensures input buttons have discernible text",
       "impact": "serious"
+    },
+    "target-size": {
+      "enabled": true,
+      "description": "WCAG 2.2 SC 2.5.8: touch targets are >=24px or have sufficient spacing",
+      "impact": "serious"
+    },
+    "focus-appearance": {
+      "enabled": false,
+      "description": "WCAG 2.2 SC 2.4.11/2.4.13: >=2px focus indicator with 3:1 contrast (manual screenshot review until axe ships the rule)",
+      "impact": "serious"
+    },
+    "dragging-movements": {
+      "enabled": false,
+      "description": "WCAG 2.2 SC 2.5.7: dragging actions have a single-pointer alternative (manual review until axe ships the rule)",
+      "impact": "moderate"
     }
   },
   "tags": [
     "wcag2a",
     "wcag2aa",
     "wcag21aa",
+    "wcag22aa",
     "best-practice"
   ],
   "exclude": [

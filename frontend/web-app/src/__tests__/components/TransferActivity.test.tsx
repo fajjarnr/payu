@@ -15,7 +15,7 @@ describe("TransferActivity", () => {
   it("renders empty transaction state when account is unavailable", () => {
     renderWithIntl(<TransferActivity />);
 
-    expect(screen.getByText("Belum Ada Transaksi")).toBeInTheDocument();
+    expect(screen.getAllByText("Belum Ada Transaksi").length).toBeGreaterThanOrEqual(1);
   });
 
   it("does not fabricate transaction amounts", () => {
@@ -58,13 +58,11 @@ describe("TransferActivity", () => {
     expect(screen.getByText("Kirim Sekarang")).toBeInTheDocument();
   });
 
-  it("renders transfer recent contacts in quick transfer", () => {
+  it("does not render ambiguous numbered contacts (A-03)", () => {
     renderWithIntl(<TransferActivity />);
 
-    expect(screen.getByText("Kontak Terbaru")).toBeInTheDocument();
-
-    const contactButtons = screen.getAllByRole("button", { name: /Kontak \d/ });
-    expect(contactButtons.length).toBeGreaterThan(0);
+    expect(screen.queryByText("Kontak Terbaru")).not.toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: /Kontak \d/ })).toHaveLength(0);
   });
 
   it("displays transfer categories", () => {

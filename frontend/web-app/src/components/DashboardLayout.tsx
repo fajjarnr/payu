@@ -131,49 +131,23 @@ export default function DashboardLayout({
     )
     .map((item) => item.href);
 
-  const menuItems: MenuProps["items"] = [
-    {
-      type: "group",
-      label: t("overview"),
-      children: overviewMenu.map(({ href, icon: Icon, label }) => ({
-        key: href,
-        icon: <Icon className="h-5 w-5" aria-hidden="true" />,
-        label,
-      })),
-    },
-    {
-      type: "group",
-      label: t("transactions"),
-      children: transactionMenu.map(({ href, icon: Icon, label }) => ({
-        key: href,
-        icon: <Icon className="h-5 w-5" aria-hidden="true" />,
-        label,
-      })),
-    },
-    {
-      type: "group",
-      label: t("finance"),
-      children: financeMenu.map(({ href, icon: Icon, label }) => ({
-        key: href,
-        icon: <Icon className="h-5 w-5" aria-hidden="true" />,
-        label,
-      })),
-    },
-    {
-      type: "group",
-      label: t("others"),
-      children: otherMenu.map(({ href, icon: Icon, label }) => ({
-        key: href,
-        icon: <Icon className="h-5 w-5" aria-hidden="true" />,
-        label,
-      })),
-    },
-  ];
+  const toMenuItems = (entries: { href: string; icon: React.ElementType; label: string }[]) =>
+    entries.map(({ href, icon: Icon, label }) => ({
+      key: href,
+      icon: <Icon className="h-5 w-5" aria-hidden="true" />,
+      label: (
+        <Link href={href} onClick={() => setDrawerOpen(false)}>
+          {label}
+        </Link>
+      ),
+    }));
 
-  const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
-    setDrawerOpen(false);
-    router.push(`/${locale}${key}`);
-  };
+  const menuItems: MenuProps["items"] = [
+    { type: "group", label: t("overview"), children: toMenuItems(overviewMenu) },
+    { type: "group", label: t("transactions"), children: toMenuItems(transactionMenu) },
+    { type: "group", label: t("finance"), children: toMenuItems(financeMenu) },
+    { type: "group", label: t("others"), children: toMenuItems(otherMenu) },
+  ];
 
   const profileItems: MenuProps["items"] = [
     {
@@ -181,7 +155,7 @@ export default function DashboardLayout({
       disabled: true,
       label: (
         <div className="py-1">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.3em] text-primary/50">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--ant-color-text-tertiary)" }}>
             Authenticated User
           </p>
           <p className="truncate text-lg font-bold uppercase tracking-tight">
@@ -201,7 +175,10 @@ export default function DashboardLayout({
   ];
 
   const logoMark = (
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-surface shadow-lg">
+    <div
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl font-bold shadow-lg"
+      style={{ backgroundColor: "var(--ant-color-primary)", color: "#06281F" }}
+    >
       U
     </div>
   );
@@ -211,7 +188,7 @@ export default function DashboardLayout({
       mode="inline"
       selectedKeys={selectedKeys}
       items={menuItems}
-      onClick={handleMenuClick}
+      onClick={() => setDrawerOpen(false)}
       style={{ borderInlineEnd: "none", background: "transparent" }}
     />
   );
@@ -248,7 +225,7 @@ export default function DashboardLayout({
           <Link
             href="/"
             className="flex items-center gap-4 px-2 py-4"
-            aria-label="PayU"
+            aria-label={t("homeBrand")}
           >
             {logoMark}
             <span className="text-2xl font-bold uppercase tracking-tighter">
@@ -280,7 +257,7 @@ export default function DashboardLayout({
                 className="lg:hidden"
                 icon={<MenuIcon className="h-5 w-5" aria-hidden="true" />}
                 onClick={() => setDrawerOpen(true)}
-                aria-label="Buka menu navigasi"
+                aria-label={t("openMenu")}
                 data-testid="mobile-menu-trigger"
               />
               <div className="hidden flex-col justify-center sm:flex">
@@ -289,7 +266,7 @@ export default function DashboardLayout({
                   showSegment={true}
                   className="text-lg font-bold leading-tight"
                 />
-                <p className="ml-0.5 mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-60">
+                <p className="ml-0.5 mt-1 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: token.colorTextSecondary }}>
                   {t("aiForecaster")}
                 </p>
               </div>
@@ -300,7 +277,7 @@ export default function DashboardLayout({
               <LanguageSwitcher />
 
               <Input.Search
-                aria-label="Pencarian cerdas"
+                aria-label={t("smartSearchDesktop")}
                 data-testid="search-input"
                 placeholder="Pencarian cerdas..."
                 allowClear
@@ -314,7 +291,7 @@ export default function DashboardLayout({
                 className="xl:hidden"
                 data-testid="search-trigger"
                 icon={<Search className="h-5 w-5" aria-hidden="true" />}
-                aria-label="Buka pencarian"
+                aria-label={t("openSearch")}
                 onClick={() => setSearchOpen(true)}
                 style={{ width: 44, height: 44 }}
               />
@@ -324,7 +301,7 @@ export default function DashboardLayout({
                   type="text"
                   data-testid="notification-button"
                   icon={<Bell className="h-5 w-5" aria-hidden="true" />}
-                  aria-label="Notifikasi"
+                  aria-label={t("notificationsLabel")}
                   onClick={() => router.push(`/${locale}/notifications`)}
                   style={{ width: 44, height: 44 }}
                 />
@@ -338,7 +315,7 @@ export default function DashboardLayout({
                 <Button
                   type="text"
                   data-testid="profile-menu-trigger"
-                  aria-label="Menu profil pengguna"
+                  aria-label={t("profileMenu")}
                   style={{ width: 48, height: 48, padding: 0 }}
                 >
                   <Avatar
@@ -377,7 +354,7 @@ export default function DashboardLayout({
             <Link
               href="/"
               className="flex items-center gap-4 px-2 py-4"
-              aria-label="PayU"
+              aria-label={t("homeBrand")}
             >
               {logoMark}
             </Link>
@@ -399,7 +376,7 @@ export default function DashboardLayout({
           styles={{ body: { padding: 16 } }}
         >
           <Input.Search
-            aria-label="Pencarian cerdas"
+            aria-label={t("smartSearchMobile")}
             data-testid="search-input-mobile"
             placeholder="Pencarian cerdas..."
             allowClear

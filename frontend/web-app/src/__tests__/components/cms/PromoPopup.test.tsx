@@ -77,18 +77,18 @@ describe('PromoPopup', () => {
     vi.useRealTimers();
   });
 
-  it('should not render popup immediately', () => {
+  it('should announce promo politely without auto-opening the dialog', () => {
     renderWithIntl(<PromoPopup delay={2000} />);
 
     expect(screen.queryByText('Special Offer')).not.toBeInTheDocument();
-  });
-
-  it('should render popup after delay', () => {
-    renderWithIntl(<PromoPopup delay={2000} />);
 
     advanceTimers(2000);
 
-    expect(screen.getAllByText('Special Offer')).toHaveLength(2);
+    // F-03: timer announces via polite region; dialog opens only via user trigger.
+    expect(screen.getByRole('status')).toHaveTextContent('Special Offer');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
+    expect(screen.getAllByText('Special Offer').length).toBeGreaterThan(0);
   });
 
   it('should not render when loading', () => {
@@ -141,8 +141,9 @@ describe('PromoPopup', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
     advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
 
-    const closeButton = screen.getByLabelText('Close popup');
+    const closeButton = screen.getByLabelText('Tutup promo');
     fireEvent.click(closeButton);
 
     expect(mockSessionStorage.setItem).toHaveBeenCalled();
@@ -152,6 +153,7 @@ describe('PromoPopup', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
     advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
 
     const dontShowButton = screen.getByText('Jangan Tampilkan Lagi');
     fireEvent.click(dontShowButton);
@@ -166,6 +168,7 @@ describe('PromoPopup', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
     advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
 
     const claimButton = screen.getByText('Klaim Sekarang');
     fireEvent.click(claimButton);
@@ -193,8 +196,9 @@ describe('PromoPopup', () => {
     );
 
     advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
 
-    const closeButton = screen.getByLabelText('Close popup');
+    const closeButton = screen.getByLabelText('Tutup promo');
     fireEvent.click(closeButton);
 
     expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
@@ -207,10 +211,10 @@ describe('PromoPopup', () => {
     renderWithIntl(<PromoPopup delay={5000} />);
 
     advanceTimers(3000);
-    expect(screen.queryByText('Special Offer')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     advanceTimers(2000);
-    expect(screen.getAllByText('Special Offer')).toHaveLength(2);
+    expect(screen.getByRole('status')).toHaveTextContent('Special Offer');
   });
 
   it('should handle segment, location, and device props', () => {
@@ -224,14 +228,16 @@ describe('PromoPopup', () => {
     );
 
     advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
 
-    expect(screen.getAllByText('Special Offer')).toHaveLength(2);
+    expect(screen.getAllByText('Special Offer').length).toBeGreaterThan(0);
   });
 
   it('should display SPECIAL OFFER badge', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
     advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
 
     expect(screen.getByText('Penawaran Spesial')).toBeInTheDocument();
   });
@@ -240,8 +246,9 @@ describe('PromoPopup', () => {
     renderWithIntl(<PromoPopup delay={0} />);
 
     advanceTimers(100);
+    fireEvent.click(screen.getByRole('button', { name: /Lihat Promo/ }));
 
-    const closeButton = screen.getByLabelText('Close popup');
+    const closeButton = screen.getByLabelText('Tutup promo');
     expect(closeButton).toBeInTheDocument();
   });
 });

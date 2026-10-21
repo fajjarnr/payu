@@ -15,8 +15,6 @@ describe('QuickActions', () => {
       label: 'Transfer',
       icon: ArrowRightLeft,
       href: '/transfer',
-      color: 'text-primary',
-      bgColor: 'bg-success-light',
       description: 'Kirim uang instan',
       ariaLabel: 'Transfer uang ke akun lain',
     },
@@ -25,8 +23,6 @@ describe('QuickActions', () => {
       label: 'QRIS',
       icon: QrCode,
       href: '/qris',
-      color: 'text-primary',
-      bgColor: 'bg-chart-2',
       description: 'Scan QR untuk bayar',
       ariaLabel: 'Pembayaran QRIS',
     },
@@ -151,11 +147,10 @@ describe('QuickActions', () => {
     expect(dragHint.closest('[aria-live="polite"]')).toBeInTheDocument();
   });
 
-  it('should have accessible view all link', () => {
-    renderWithIntl(<QuickActions actions={mockActions} />);
+  it('has no dead view-all footer (wired or removed, A-04)', () => {
+    const { container } = renderWithIntl(<QuickActions actions={mockActions} />);
 
-    const viewAllButton = screen.getByLabelText('Lihat semua fitur');
-    expect(viewAllButton).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="view-all-features-button"]')).toBeNull();
   });
 
   it('should be keyboard navigable', () => {

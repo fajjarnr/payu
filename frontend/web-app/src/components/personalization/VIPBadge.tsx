@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Badge } from 'antd';
+import { Badge, Typography, theme } from 'antd';
 import { Crown, Shield, Sparkles, type IconType } from '@/components/icons';
 import { useVIPStatus } from '@/hooks/useVIPStatus';
 import clsx from 'clsx';
@@ -29,7 +29,10 @@ export default function VIPBadge({
   className,
 }: VIPBadgeProps) {
   const { isVIP, tier, tierLabel, tierColor } = useVIPStatus();
+  const { token } = theme.useToken();
 
+  // Absence is the empty state: non-VIP users see nothing (no skeleton,
+  // no placeholder badge), so the layout collapses cleanly without a gap.
   if (!isVIP || !tier) {
     return null;
   }
@@ -39,24 +42,31 @@ export default function VIPBadge({
   if (variant === 'card') {
     return (
       <div
-        className={clsx(
-          'bg-gradient-to-br from-warning/10 to-accent/10 border border-warning/20 rounded-xl p-4',
-          className
-        )}
+        className={clsx('rounded-xl p-4 border', className)}
+        style={{
+          background: `linear-gradient(135deg, ${token.colorWarningBg}, ${token.colorErrorBg})`,
+          borderColor: token.colorWarningBorder,
+        }}
       >
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-warning to-accent flex items-center justify-center">
-              <Icon className="h-5 w-5 text-surface" />
+            <div
+              className="h-10 w-10 rounded-full flex items-center justify-center"
+              style={{ background: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})` }}
+            >
+              <Icon className="h-5 w-5" style={{ color: token.colorWhite }} aria-hidden="true" />
             </div>
-            <div className="absolute -top-1 -right-1 h-3 w-3 bg-success rounded-full border-2 border-card animate-pulse" />
+            <div
+              className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 animate-pulse"
+              style={{ backgroundColor: token.colorSuccess, borderColor: token.colorBgContainer }}
+            />
           </div>
 
           <div>
-            <p className="text-xs text-muted-foreground font-bold tracking-widest">
+            <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em' }}>
               STATUS MEMBER
-            </p>
-            <p className="text-sm font-bold text-foreground">
+            </Typography.Text>
+            <p className="text-sm font-bold" style={{ color: token.colorText }}>
               {tierLabel}
             </p>
           </div>
@@ -89,13 +99,14 @@ export default function VIPBadge({
   return (
     <Badge
       className={clsx(
-        'bg-gradient-to-r from-warning to-accent hover:from-warning hover:to-accent text-surface border-none shadow-lg shadow-warning/20 font-bold tracking-widest uppercase py-1',
+        'border-none shadow-lg font-bold tracking-widest uppercase py-1',
         size === 'sm' ? 'px-2 h-6 text-xs' : size === 'md' ? 'px-3 h-8 text-xs' : 'px-4 h-10 text-xs',
         className
       )}
+      style={{ background: `linear-gradient(90deg, ${token.colorWarning}, ${token.colorError})`, color: token.colorWhite }}
     >
       <div className="flex items-center gap-2">
-        {showIcon && <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} />}
+        {showIcon && <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} aria-hidden="true" />}
         {showLabel && <span>{tierLabel}</span>}
       </div>
     </Badge>
@@ -125,16 +136,17 @@ export function VIPStatusIndicator({ showTier = true, showBenefits = false, clas
 
       {showBenefits && benefits.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-bold text-muted-foreground tracking-wider">
+          <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.05em' }}>
             BENEFIT EKSKLUSIF
-          </p>
+          </Typography.Text>
           <ul className="space-y-1.5">
             {benefits.slice(0, 3).map((benefit, index) => (
               <li
                 key={index}
-                className="text-xs text-foreground font-medium flex items-start gap-2"
+                className="text-xs font-medium flex items-start gap-2"
+                style={{ color: 'var(--ant-color-text)' }}
               >
-                <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                <div className="h-1.5 w-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: 'var(--ant-color-primary)' }} aria-hidden="true" />
                 {benefit}
               </li>
             ))}

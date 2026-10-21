@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { X, AlertTriangle, Info, AlertCircle } from '@/components/icons';
-import clsx from 'clsx';
 import { useRouter } from '@/lib/navigation';
 import { useEmergencyAlerts } from '@/hooks';
+import { useTranslations } from 'next-intl';
 import type { Content } from '@/services/CMSService';
-import { Alert, Button } from 'antd';
+import { theme, Alert, Button, Typography } from 'antd';
 
 interface EmergencyAlertProps {
   className?: string;
@@ -23,6 +23,22 @@ const ALERT_ICONS: Record<string, React.ElementType> = {
   DEFAULT: AlertCircle,
 };
 
+// WARNING → warning, ERROR → error, INFO/else → info. Must stay 1:1.
+const SEVERITY_TO_ALERT_TYPE = {
+  WARNING: 'warning',
+  ERROR: 'error',
+  INFO: 'info',
+} as const;
+
+type AntdAlertType = 'warning' | 'error' | 'info';
+
+function toAlertType(alert: Content): AntdAlertType {
+  const severity = alert.metadata?.alertType as string | undefined;
+  return (severity && severity in SEVERITY_TO_ALERT_TYPE
+    ? SEVERITY_TO_ALERT_TYPE[severity as keyof typeof SEVERITY_TO_ALERT_TYPE]
+    : 'info') as AntdAlertType;
+}
+
 export default function EmergencyAlert({
   className,
   segment,
@@ -31,7 +47,9 @@ export default function EmergencyAlert({
   storageKey = 'dismissed-alerts',
 }: EmergencyAlertProps) {
   const router = useRouter();
-  const { data: alerts, isLoading } = useEmergencyAlerts({ segment, location, device });
+  const t = useTranslations('cms');
+  const { token } = theme.useToken();
+  const { data: alerts, isLoading, error, refetch } = useEmergencyAlerts({ segment, location, device });
   // Initialize from localStorage lazily (avoids cascading render warning).
   // Server returns empty Set; first client render also returns empty Set to
   // match SSR. The actual localStorage value is then read on mount.
@@ -70,8 +88,8 @@ export default function EmergencyAlert({
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(storageKey, JSON.stringify([...updated]));
-      } catch (error) {
-        console.error('Failed to save dismissed alert:', error);
+      } catch (err) {
+        console.error('[EmergencyAlert] Failed to save dismissed alert:', err);
       }
     }
   };
@@ -91,53 +109,79 @@ export default function EmergencyAlert({
     }
   };
 
+  // R-06: fetch failure logs + renders error UI with retry; zero alerts stays silent.
+  if (error) {
+    console.error('[EmergencyAlert] Failed to load alerts:', error);
+    return (
+      <div className={className}>
+        <Alert
+          type="error"
+          showIcon
+          message={t('alertLoadError')}
+          action={
+            <Button size="small" onClick={() => refetch()}>
+              {t('retry')}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   const activeAlerts = alerts?.filter((alert) => !dismissedAlerts.has(alert.id)) ?? [];
 
   if (isLoading || activeAlerts.length === 0) {
     return null;
   }
 
-  const getAlertType = (alert: Content): "default" | "destructive" => {
-    const type = alert.metadata?.alertType as string;
-    return type === 'ERROR' ? 'destructive' : 'default';
-  };
-
-  const getAlertClasses = (alert: Content) => {
-    const type = alert.metadata?.alertType as string;
-    if (type === 'WARNING') return 'bg-warning dark:bg-warning/30 border-warning';
-    if (type === 'INFO') return 'bg-primary-light dark:bg-secondary/30 border-primary';
-    return '';
-  };
-
   return (
-    <div className={clsx("w-full space-y-2", className)}>
+    <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {activeAlerts.map((alert) => {
-        const alertType = getAlertType(alert);
+        const alertType = toAlertType(alert);
         const Icon = ALERT_ICONS[alert.metadata?.alertType as string] || ALERT_ICONS.DEFAULT;
+        const clickable = Boolean(alert.actionUrl);
 
         return (
           <div
             key={alert.id}
-            tabIndex={alert.actionUrl ? 0 : undefined}
-            onKeyDown={alert.actionUrl ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAlertClick(alert); } } : undefined}
+            // F-03: focusable ⟺ clickable — inert alerts stay out of the tab order.
+            {...(clickable
+              ? {
+                  tabIndex: 0,
+                  role: 'link' as const,
+                  onClick: () => handleAlertClick(alert),
+                  onKeyDown: (e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleAlertClick(alert);
+                    }
+                  },
+                }
+              : {})}
           >
             <Alert
-              type={alertType === 'destructive' ? 'error' : 'info'}
-              title={
+              type={alertType}
+              showIcon
+              icon={<Icon className="h-4 w-4" aria-hidden="true" />}
+              message={
                 <span className="inline-flex items-center gap-2 font-bold uppercase tracking-tight text-xs mb-1">
-                  <Icon className="h-4 w-4" />
                   {alert.title}
                 </span>
               }
               description={
                 <>
-                  <span className="text-xs font-medium opacity-80 line-clamp-2">
+                  <Typography.Text className="text-xs font-medium line-clamp-2">
                     {alert.description}
-                  </span>
+                  </Typography.Text>
                   {alert.endDate && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Valid until {new Date(alert.endDate).toLocaleDateString()}
-                    </p>
+                    <Typography.Text type="secondary" className="block mt-2 text-xs">
+                      {t('alertValidUntil', {
+                        date: new Date(alert.endDate).toLocaleDateString(
+                          undefined,
+                          { day: 'numeric', month: 'long', year: 'numeric' }
+                        ),
+                      })}
+                    </Typography.Text>
                   )}
                 </>
               }
@@ -145,19 +189,19 @@ export default function EmergencyAlert({
                 <Button
                   type="text"
                   shape="circle"
-                  className="absolute top-2 right-2 hover:bg-secondary/5 dark:hover:bg-surface/5"
-                  style={{ width: 44, height: 44 }}
+                  className="absolute top-2 right-2"
+                  style={{ width: 44, height: 44, color: token.colorText }}
                   onClick={(e) => handleDismiss(alert.id, e)}
-                  aria-label="Dismiss alert"
+                  aria-label={t('dismissAlert')}
                   icon={<X className="h-4 w-4" />}
                 />
               }
-              className={clsx(
-                "relative p-4 pr-12 cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 bg-background/50 border-b-2",
-                getAlertClasses(alert),
-                alertType === 'default' && "border-primary/20"
-              )}
-              onClick={() => handleAlertClick(alert)}
+              className="relative p-4 pr-12 rounded-2xl"
+              style={
+                clickable
+                  ? { background: token.colorBgContainer, border: `1px solid ${token.colorBorderSecondary}`, cursor: 'pointer' }
+                  : { background: token.colorBgContainer, border: `1px solid ${token.colorBorderSecondary}` }
+              }
             />
           </div>
         );

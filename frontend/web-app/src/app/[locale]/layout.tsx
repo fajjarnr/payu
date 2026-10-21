@@ -66,7 +66,7 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="antialiased bg-background overflow-x-hidden">
+      <body className="antialiased overflow-x-hidden" style={{ backgroundColor: "var(--ant-color-bg-layout)" }}>
         <NextIntlClientProvider messages={messages} locale={locale}>
           <ErrorBoundary>
             <Providers>

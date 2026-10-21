@@ -49,11 +49,11 @@ export default function BalanceCard({
                 <Space direction="vertical" size={4}>
                   <Text
                     strong
+                    type="secondary"
                     style={{
                       fontSize: 12,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
-                      color: "var(--ant-color-primary)",
                     }}
                   >
                     {t("primaryBalance")}
@@ -77,6 +77,7 @@ export default function BalanceCard({
                 <Space size={8} align="center">
                   <VIPBadge size="sm" variant="badge" />
                   <div
+                    aria-hidden="true"
                     style={{
                       width: 8,
                       height: 8,

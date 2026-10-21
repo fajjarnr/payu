@@ -1,12 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Tag, TrendingUp, Star, ArrowRight } from '@/components/icons';
+import { Tag as TagIcon, TrendingUp, Star, ArrowRight } from '@/components/icons';
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
 import { useAuthStore } from '@/stores';
-import { Skeleton } from 'antd';
-import clsx from 'clsx';
-import { cn } from '@/lib/utils';
+import { Card, Skeleton, Space, Tag, Typography, theme } from 'antd';
 import type { SegmentedOffer } from '@/services/SegmentationService';
 
 interface TargetedPromosProps {
@@ -18,6 +16,7 @@ interface TargetedPromosProps {
 export default function TargetedPromos({ offerType, className, maxPromos = 2 }: TargetedPromosProps) {
   const user = useAuthStore((state) => state.user);
   const { offers, isLoading, error } = useSegmentedOffers(user?.id);
+  const { token } = theme.useToken();
 
   const filteredOffers = React.useMemo(() => {
     const filtered = offerType
@@ -32,8 +31,8 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2 }: 
 
   if (isLoading) {
     return (
-      <div className={clsx('space-y-3', className)}>
-        <Skeleton title={false} paragraph={false} className={cn('block animate-pulse rounded-xl bg-muted/50', 'h-32 rounded-xl')} />
+      <div className={className}>
+        <Skeleton title={false} paragraph={false} active style={{ height: 128, borderRadius: 12 }} />
       </div>
     );
   }
@@ -43,18 +42,20 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2 }: 
   }
 
   return (
-    <div className={clsx('space-y-3', className)}>
-      <div className="flex items-center gap-2 mb-4">
-        <Tag className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-bold text-foreground">Promo Untuk Anda</h3>
-      </div>
+    <Space direction="vertical" size={12} style={{ width: '100%' }} className={className}>
+      <Space size={8}>
+        <TagIcon style={{ height: 16, width: 16, color: token.colorPrimary }} aria-hidden="true" />
+        <Typography.Title level={5} style={{ margin: 0 }}>
+          Promo Untuk Anda
+        </Typography.Title>
+      </Space>
 
-      <div className="space-y-3">
+      <Space direction="vertical" size={12} style={{ width: '100%' }}>
         {filteredOffers.map((promo) => (
           <PromoItem key={promo.id} promo={promo} />
         ))}
-      </div>
-    </div>
+      </Space>
+    </Space>
   );
 }
 
@@ -63,6 +64,7 @@ interface PromoItemProps {
 }
 
 function PromoItem({ promo }: PromoItemProps) {
+  const { token } = theme.useToken();
   const daysLeft = Math.ceil((new Date(promo.validUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
   const isExpiringSoon = daysLeft <= 3;
 
@@ -77,66 +79,75 @@ function PromoItem({ promo }: PromoItemProps) {
   };
 
   return (
-    <div className="group relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <Card size="small" style={{ borderRadius: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div
+          style={{
+            height: 40,
+            width: 40,
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            backgroundColor: isExpiringSoon ? token.colorWarningBg : token.colorPrimaryBg,
+          }}
+        >
+          <Star
+            style={{
+              height: 20,
+              width: 20,
+              color: isExpiringSoon ? token.colorWarningText : token.colorPrimaryText,
+            }}
+            aria-hidden="true"
+          />
+        </div>
 
-      <div className="relative bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-all duration-300">
-        <div className="flex items-start gap-3">
-          <div className={clsx(
-            'h-10 w-10 rounded-lg flex items-center justify-center shrink-0',
-            isExpiringSoon ? 'bg-accent/10' : 'bg-primary/10'
-          )}>
-            <Star className={clsx(
-              'h-5 w-5',
-              isExpiringSoon ? 'text-accent' : 'text-primary'
-            )} />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 className="text-sm font-bold text-foreground truncate">
-                {promo.title}
-              </h4>
-              {promo.promoCode && (
-                <span className="text-xs px-2 py-0.5 rounded-md bg-muted font-mono font-bold shrink-0">
-                  {promo.promoCode}
-                </span>
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
-              {promo.description}
-            </p>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">
-                  {promo.offerType.replace('_', ' ').toLowerCase()}
-                </p>
-                <p className="text-sm font-bold text-primary">
-                  {getValueDisplay()}
-                </p>
-              </div>
-
-              <div className="text-right">
-                <p className={clsx(
-                  'text-xs font-bold',
-                  isExpiringSoon ? 'text-accent' : 'text-muted-foreground'
-                )}>
-                  {isExpiringSoon ? `Berakhir dalam ${daysLeft} hari` : `${daysLeft} hari lagi`}
-                </p>
-              </div>
-            </div>
-
-            {promo.minTransaction && (
-              <p className="text-xs text-muted-foreground mt-2 font-medium">
-                Min. transaksi: Rp {promo.minTransaction.toLocaleString('id-ID')}
-              </p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+            <Typography.Text strong ellipsis style={{ fontSize: 14 }}>
+              {promo.title}
+            </Typography.Text>
+            {promo.promoCode && (
+              <Tag style={{ fontFamily: 'monospace', fontWeight: 700, flexShrink: 0, marginInlineEnd: 0 }}>
+                {promo.promoCode}
+              </Tag>
             )}
           </div>
+
+          <Typography.Paragraph type="secondary" ellipsis={{ rows: 1 }} style={{ fontSize: 12, marginBottom: 8 }}>
+            {promo.description}
+          </Typography.Paragraph>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                {promo.offerType.replace('_', ' ').toLowerCase()}
+              </Typography.Text>
+              <Typography.Text strong style={{ fontSize: 14, color: token.colorPrimaryText }}>
+                {getValueDisplay()}
+              </Typography.Text>
+            </div>
+
+            <Typography.Text
+              strong
+              style={{
+                fontSize: 12,
+                color: isExpiringSoon ? token.colorWarningText : token.colorTextSecondary,
+              }}
+            >
+              {isExpiringSoon ? `Berakhir dalam ${daysLeft} hari` : `${daysLeft} hari lagi`}
+            </Typography.Text>
+          </div>
+
+          {promo.minTransaction && (
+            <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+              Min. transaksi: Rp {promo.minTransaction.toLocaleString('id-ID')}
+            </Typography.Text>
+          )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -147,7 +158,7 @@ interface QuickPromoBannerProps {
 export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
   const user = useAuthStore((state) => state.user);
   const { cashbackOffers, isLoading } = useSegmentedOffers(user?.id);
-
+  const { token } = theme.useToken();
   const topPromo = cashbackOffers[0];
 
   if (isLoading || !topPromo) {
@@ -155,33 +166,38 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
   }
 
   return (
-    <div
-      className={clsx(
-        'bg-gradient-to-r from-primary to-primary-dark rounded-xl p-4 text-surface relative overflow-hidden',
-        className
-      )}
+    <Card
+      className={className}
+      style={{
+        borderRadius: 12,
+        background: `linear-gradient(to right, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+        border: 'none',
+      }}
+      styles={{ body: { padding: 16 } }}
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-surface/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-
-      <div className="relative z-10 flex items-center justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="h-4 w-4" />
-            <p className="text-xs font-bold tracking-wider opacity-80">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Space size={8} style={{ marginBottom: 4 }}>
+            <TrendingUp style={{ height: 16, width: 16, color: token.colorWhite }} aria-hidden="true" />
+            <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.05em', color: token.colorWhite }}>
               PROMO SPESIAL
-            </p>
-          </div>
-          <h3 className="text-base font-bold mb-1">{topPromo.title}</h3>
-          <p className="text-xs opacity-80 line-clamp-1">{topPromo.description}</p>
+            </Typography.Text>
+          </Space>
+          <Typography.Title level={5} style={{ margin: '0 0 4px', color: token.colorWhite }} ellipsis>
+            {topPromo.title}
+          </Typography.Title>
+          <Typography.Paragraph style={{ fontSize: 12, margin: 0, color: token.colorWhite }} ellipsis={{ rows: 1 }}>
+            {topPromo.description}
+          </Typography.Paragraph>
         </div>
 
-        <button
-          className="h-11 px-4 bg-surface text-primary rounded-lg font-bold text-xs tracking-wider flex items-center gap-2 shadow-lg transition-transform hover:scale-105 active:scale-95"
-        >
-          Klaim
-          <ArrowRight className="h-4 w-4" />
-        </button>
+        <Space size={8} style={{ flexShrink: 0 }}>
+          <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.05em', color: token.colorWhite }}>
+            Klaim
+          </Typography.Text>
+          <ArrowRight style={{ height: 16, width: 16, color: token.colorWhite }} aria-hidden="true" />
+        </Space>
       </div>
-    </div>
+    </Card>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Progress } from "antd";
+import { Button, Card, Progress, Skeleton, Space, Tag, Typography, theme } from "antd";
 import {
   Gift,
   Percent,
@@ -12,9 +12,7 @@ import {
 } from "@/components/icons";
 import { useSegmentedOffers } from "@/hooks/useSegmentedOffers";
 import { useAuthStore } from "@/stores";
-import { Skeleton } from "antd";
 import clsx from "clsx";
-import { cn } from "@/lib/utils";
 import type { SegmentedOffer } from "@/services/SegmentationService";
 
 interface SegmentedOffersProps {
@@ -30,19 +28,13 @@ const OFFER_ICONS = {
   BONUS_INTEREST: Ticket,
 };
 
-const OFFER_STYLES = {
-  CASHBACK: "from-warning to-accent",
-  DISCOUNT: "from-primary to-secondary",
-  REWARD_POINTS: "from-accent to-accent",
-  FREE_TRANSFER: "from-success to-primary-dark",
-  BONUS_INTEREST: "from-primary to-primary-dark",
-};
 
 export default function SegmentedOffers({
   className,
   maxOffers = 3,
 }: SegmentedOffersProps) {
   const user = useAuthStore((state) => state.user);
+  const { token } = theme.useToken();
   const { offers, isLoading, error } = useSegmentedOffers(
     user?.id,
     0,
@@ -55,10 +47,8 @@ export default function SegmentedOffers({
         <Skeleton
           title={false}
           paragraph={false}
-          className={cn(
-            "block animate-pulse rounded-xl bg-muted/50",
-            "h-48 rounded-xl",
-          )}
+          active
+          style={{ height: 192, borderRadius: 12 }}
         />
       </div>
     );
@@ -69,19 +59,19 @@ export default function SegmentedOffers({
   }
 
   return (
-    <div className={clsx("space-y-4", className)}>
-      <div className="flex items-center justify-between">
+    <Space direction="vertical" size={16} style={{ width: "100%" }} className={className}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <h3 className="text-lg font-bold text-foreground">
+          <Typography.Title level={4} style={{ margin: 0 }}>
             Penawaran Spesial Untuk Anda
-          </h3>
-          <p className="text-xs text-muted-foreground font-medium tracking-wider">
+          </Typography.Title>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             Berdasarkan status akun Anda
-          </p>
+          </Typography.Text>
         </div>
-        <span className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary font-bold">
+        <Tag color="success" style={{ marginInlineEnd: 0 }}>
           {offers.length} Tersedia
-        </span>
+        </Tag>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -89,7 +79,7 @@ export default function SegmentedOffers({
           <OfferCard key={offer.id} offer={offer} />
         ))}
       </div>
-    </div>
+    </Space>
   );
 }
 
@@ -98,8 +88,8 @@ interface OfferCardProps {
 }
 
 function OfferCard({ offer }: OfferCardProps) {
+  const { token } = theme.useToken();
   const Icon = OFFER_ICONS[offer.offerType] || Gift;
-  const gradientStyle = OFFER_STYLES[offer.offerType] || OFFER_STYLES.CASHBACK;
 
   const formatValue = () => {
     if (offer.percentage) {
@@ -115,110 +105,102 @@ function OfferCard({ offer }: OfferCardProps) {
   };
 
   const isValid = new Date(offer.validUntil) > new Date();
-
+  const validityPercent = Math.max(
+    0,
+    Math.min(
+      100,
+      ((new Date(offer.validUntil).getTime() - new Date().getTime()) /
+        (new Date(offer.validUntil).getTime() -
+          new Date(offer.validFrom).getTime())) *
+        100,
+    ),
+  );
   return (
-    <div className="group relative">
-      <div
-        className={clsx(
-          "absolute inset-0 bg-gradient-to-br rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-          gradientStyle,
-        )}
-      />
-
-      <div className="relative bg-card border border-border rounded-2xl p-6 h-full group-hover:shadow-xl transition-all duration-300">
-        <div className="flex items-start justify-between mb-4">
+    <Card style={{ borderRadius: 16, height: "100%" }}>
+      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div
-            className={clsx(
-              "h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
-              gradientStyle,
-            )}
+            style={{
+              height: 48,
+              width: 48,
+              borderRadius: 12,
+              backgroundColor: token.colorPrimaryBg,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <Icon className="h-6 w-6 text-surface" />
+            <Icon style={{ height: 24, width: 24, color: token.colorPrimaryText }} aria-hidden="true" />
           </div>
 
           {offer.promoCode && (
-            <span className="text-xs px-2 py-1 rounded-md bg-muted font-mono font-bold tracking-wider">
+            <Tag style={{ fontFamily: "monospace", fontWeight: 700, marginInlineEnd: 0 }}>
               {offer.promoCode}
-            </span>
+            </Tag>
           )}
         </div>
 
-        <h4 className="text-base font-bold text-foreground mb-2 line-clamp-2">
+        <Typography.Title level={5} style={{ margin: 0 }} ellipsis={{ rows: 2 }}>
           {offer.title}
-        </h4>
+        </Typography.Title>
 
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2 min-h-[40px]">
+        <Typography.Paragraph type="secondary" style={{ margin: 0, minHeight: 40 }} ellipsis={{ rows: 2 }}>
           {offer.description}
-        </p>
+        </Typography.Paragraph>
 
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          <div>
-            <p className="text-xs text-muted-foreground font-medium tracking-wider">
-              {offer.offerType.replace("_", " ")}
-            </p>
-            <p className="text-lg font-bold text-primary">{formatValue()}</p>
-          </div>
-        </div>
-
-        <button
-          disabled={!isValid}
-          className={clsx(
-            "min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95",
-            isValid
-              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-              : "bg-muted text-muted-foreground cursor-not-allowed",
-          )}
-          aria-label="Lihat selengkapnya"
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingTop: 16,
+            borderTop: `1px solid ${token.colorBorderSecondary}`,
+          }}
         >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+          <div>
+            <Typography.Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+              {offer.offerType.replace("_", " ")}
+            </Typography.Text>
+            <Typography.Text strong style={{ fontSize: 18, color: token.colorPrimaryText }}>
+              {formatValue()}
+            </Typography.Text>
+          </div>
+
+          <Button
+            type="primary"
+            shape="circle"
+            disabled={!isValid}
+            aria-label="Lihat selengkapnya"
+            icon={<ChevronRight style={{ height: 20, width: 20 }} aria-hidden="true" />}
+            style={{ minHeight: 44, minWidth: 44 }}
+          />
+        </div>
 
         {offer.minTransaction && (
-          <p className="text-xs text-muted-foreground mt-3 font-medium">
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             Min. transaksi: Rp {offer.minTransaction.toLocaleString("id-ID")}
-          </p>
+          </Typography.Text>
         )}
 
-        <div className="mt-3 flex items-center gap-1.5">
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Progress
-            percent={Math.max(
-              0,
-              Math.min(
-                100,
-                ((new Date(offer.validUntil).getTime() - new Date().getTime()) /
-                  (new Date(offer.validUntil).getTime() -
-                    new Date(offer.validFrom).getTime())) *
-                  100,
-              ),
-            )}
+            percent={validityPercent}
             showInfo={false}
-            railColor="transparent"
-            className={cn(
-              "relative h-2 w-full overflow-hidden rounded-full bg-muted/50",
-              "h-1.5 flex-1",
-            )}
-            classNames={{
-              track: cn(
-                "bg-primary transition-all duration-500 ease-in-out",
-                clsx("bg-gradient-to-r", gradientStyle),
-              ),
-            }}
-            styles={{
-              body: { height: "100%" },
-              rail: { height: "100%" },
-              track: { height: "100%" },
-            }}
+            strokeColor={token.colorPrimary}
+            trailColor={token.colorFillSecondary}
+            style={{ flex: 1 }}
           />
-          <span
-            className={clsx(
-              "text-xs font-bold",
-              isValid ? "text-primary" : "text-destructive",
-            )}
+          <Typography.Text
+            strong
+            style={{
+              fontSize: 12,
+              color: isValid ? token.colorPrimaryText : token.colorErrorText,
+            }}
           >
             {isValid ? "Berlaku" : "Kedaluwarsa"}
-          </span>
+          </Typography.Text>
         </div>
-      </div>
-    </div>
+      </Space>
+    </Card>
   );
 }

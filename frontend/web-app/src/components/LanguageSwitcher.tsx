@@ -4,9 +4,8 @@ import React, { useState } from 'react';
 import { useRouter, usePathname } from '@/lib/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Languages, ChevronDown } from '@/components/icons';
-import { Button, Dropdown } from 'antd';
+import { Button, Dropdown, theme } from 'antd';
 import type { MenuProps } from 'antd';
-import clsx from 'clsx';
 
 const locales = [
   { code: 'id', label: 'Indonesia', flag: '🇮🇩' },
@@ -19,6 +18,7 @@ export default function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { token } = theme.useToken();
 
   const switchLocale = (newLocale: string) => {
     const localeCodes = locales.map((l) => l.code);
@@ -55,10 +55,8 @@ export default function LanguageSwitcher() {
   const items: MenuProps['items'] = locales.map((loc) => ({
     key: loc.code,
     label: (
-      <span className="flex items-center gap-3">
-        <span className="text-lg" aria-hidden="true">
-          {loc.flag}
-        </span>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, minHeight: 24 }}>
+        <span aria-hidden="true">{loc.flag}</span>
         <span>{loc.label}</span>
       </span>
     ),
@@ -78,20 +76,33 @@ export default function LanguageSwitcher() {
         aria-label={t('changeLanguage')}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className={clsx(
-          'flex items-center gap-2 px-4 py-2.5 rounded-xl min-h-[44px] min-w-[44px]',
-          'text-xs font-bold tracking-widest border border-primary/10 bg-card shadow-md',
-          'hover:bg-primary/5 hover:border-primary/30 text-foreground',
-          'focus:outline-none focus:ring-4 focus:ring-primary/10',
-        )}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 16px',
+          borderRadius: token.borderRadius,
+          minHeight: 44,
+          minWidth: 44,
+          border: `1px solid ${token.colorBorderSecondary}`,
+          backgroundColor: token.colorBgContainer,
+          color: token.colorText,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+        }}
       >
-        <Languages className="h-4 w-4" />
-        <span className="hidden sm:inline" aria-hidden="true">
-          {currentLocale.flag}
-        </span>
-        <span className="hidden sm:inline uppercase">{currentLocale.code}</span>
+        <Languages style={{ width: 16, height: 16 }} aria-hidden="true" />
+        <span aria-hidden="true">{currentLocale.flag}</span>
+        <span style={{ textTransform: 'uppercase' }}>{currentLocale.code}</span>
         <ChevronDown
-          className={clsx('h-3 w-3 transition-transform', isOpen ? 'rotate-180' : '')}
+          aria-hidden="true"
+          style={{
+            width: 12,
+            height: 12,
+            transform: isOpen ? 'rotate(180deg)' : undefined,
+            transition: 'transform 0.2s',
+          }}
         />
       </Button>
     </Dropdown>

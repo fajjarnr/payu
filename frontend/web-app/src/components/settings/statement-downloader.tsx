@@ -3,15 +3,18 @@
 /* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Download, FileText, Calendar, RefreshCw, AlertCircle, CheckCircle2, Clock } from '@/components/icons';
+import { Download, FileText, Calendar, RefreshCw } from '@/components/icons';
 import { useTranslations } from 'next-intl';
-import clsx from 'clsx';
-import StatementService, { Statement, PeriodType, StatementStatus } from '@/services/StatementService';
+import { Alert, Button, Card, Select, Space, Tag, Typography, theme } from 'antd';
+import StatementService, { Statement, PeriodType } from '@/services/StatementService';
 import { getA11yProps } from '@/lib/a11y';
 import { useAuthStore } from '@/stores/authStore';
 
+const { Title, Text, Paragraph } = Typography;
+
 export default function StatementDownloader() {
   const t = useTranslations('settings.statements');
+  const { token } = theme.useToken();
   const accountId = useAuthStore((state) => state.accountId);
   const [statements, setStatements] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,6 +30,7 @@ export default function StatementDownloader() {
   const [hasMore, setHasMore] = useState<boolean>(false);
 
   const currentYear = new Date().getFullYear();
+
   const years = Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i);
 
   const loadStatements = useCallback(async (pageNum: number = 0) => {
@@ -104,322 +108,267 @@ export default function StatementDownloader() {
     }
   }, [t]);
 
-  const getStatusIcon = (status: StatementStatus) => {
+  const statusTagColor = (status: Statement['status']): 'success' | 'processing' | 'error' => {
     switch (status) {
       case 'COMPLETED':
-        return <CheckCircle2 className="h-4 w-4" />;
+        return 'success';
       case 'GENERATING':
-        return <Clock className="h-4 w-4" />;
+        return 'processing';
       case 'FAILED':
-        return <AlertCircle className="h-4 w-4" />;
+        return 'error';
+      default:
+        return 'processing';
     }
   };
-
   return (
-    <div className="space-y-8">
+    <Space direction="vertical" size={24} style={{ width: '100%' }}>
       {/* Statement Generator Section */}
-      <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-8 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+      <Card>
+        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+          {/* Section Header */}
+          <Space size={16} align="start">
+            <div
+              aria-hidden="true"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: token.borderRadius,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: token.colorPrimaryBg,
+                border: `1px solid ${token.colorPrimaryBorder}`,
+              }}
+            >
+              <FileText style={{ width: 24, height: 24, color: token.colorPrimary }} />
+            </div>
+            <div>
+              <Title level={3} style={{ margin: 0 }}>{t('generator.title')}</Title>
+              <Text type="secondary">{t('generator.subtitle')}</Text>
+            </div>
+          </Space>
 
-      {/* Section Header */}
-      <div className="flex items-center gap-4 relative z-10">
-        <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
-          <FileText className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-foreground">{t('generator.title')}</h3>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight mt-0.5">
-            {t('generator.subtitle')}
-          </p>
-        </div>
-      </div>
+          {/* Success Message */}
+          {success && (
+            <Alert type="success" showIcon message={t('generator.successLabel')} description={success} />
+          )}
 
-      {/* Success Message */}
-      {success && (
-        <div className="relative z-10 bg-success-light/10 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
-          <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-bold text-foreground">Berhasil</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{success}</p>
-          </div>
-        </div>
-      )}
+          {/* Error Message */}
+          {error && (
+            <Alert type="error" showIcon message={t('generator.errorLabel')} description={error} />
+          )}
 
-      {/* Error Message */}
-      {error && (
-        <div className="relative z-10 bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-bold text-destructive">Error</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{error}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Generator Form */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-        {/* Period Type Selector */}
-        <div className="space-y-3">
-          <span className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-            {t('generator.periodType')}
-          </span>
-          <div className="grid grid-cols-3 gap-2">
-            {(['monthly', 'quarterly', 'annually'] as PeriodType[]).map((period) => (
-              <button
-                key={period}
-                onClick={() => setSelectedPeriod(period)}
-                className={clsx(
-                  'min-h-[44px] px-3 py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition-all border',
-                  selectedPeriod === period
-                    ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
-                    : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground'
-                )}
-                aria-pressed={selectedPeriod === period}
-                {...getA11yProps({ label: `Pilih periode ${StatementService.formatPeriodType(period)}` })}
-              >
-                {period === 'monthly' ? t('generator.monthly') : period === 'quarterly' ? t('generator.quarterly') : t('generator.annually')}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Year Selector */}
-        <div className="space-y-3">
-          <label htmlFor="statement-year" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-            {t('generator.year')}
-          </label>
-          <select
-            id="statement-year"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="w-full rounded-xl border border-border bg-muted/30 p-4 text-sm font-bold text-foreground outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
-            {...getA11yProps({ label: 'Pilih tahun statement' })}
-          >
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Month Selector (for monthly/quarterly) */}
-        {selectedPeriod !== 'annually' && (
-          <div className="space-y-3">
-            <label htmlFor="statement-month" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-1">
-              {selectedPeriod === 'quarterly' ? t('generator.quarter') : t('generator.month')}
-            </label>
-            {selectedPeriod === 'monthly' ? (
-              <select
-                id="statement-month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="w-full rounded-xl border border-border bg-muted/30 p-4 text-sm font-bold text-foreground outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
-                {...getA11yProps({ label: 'Pilih bulan statement' })}
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                  <option key={month} value={month}>
-                    {t(`months.${month}`)}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {[1, 2, 3, 4].map((quarter) => (
-                  <button
-                    key={quarter}
-                    onClick={() => setSelectedMonth(quarter * 3)}
-                    className={clsx(
-                      'min-h-[44px] px-3 py-3 rounded-xl text-xs font-bold transition-all border',
-                      selectedMonth === quarter * 3
-                        ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
-                        : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground'
-                    )}
-                    aria-pressed={selectedMonth === quarter * 3}
-                    {...getA11yProps({ label: `Pilih kuartal ${quarter}` })}
+          {/* Generator Form */}
+          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            {/* Period Type Selector */}
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                {t('generator.periodType')}
+              </Text>
+              <Space size={8} style={{ width: '100%' }}>
+                {(['monthly', 'quarterly', 'annually'] as PeriodType[]).map((period) => (
+                  <Button
+                    key={period}
+                    type={selectedPeriod === period ? 'primary' : 'default'}
+                    onClick={() => setSelectedPeriod(period)}
+                    style={{ minHeight: 44, flex: 1, fontWeight: 700, fontSize: 12, textTransform: 'uppercase' }}
+                    aria-pressed={selectedPeriod === period}
+                    {...getA11yProps({ label: `Pilih periode ${StatementService.formatPeriodType(period)}` })}
                   >
-                    Q{quarter}
-                  </button>
+                    {period === 'monthly' ? t('generator.monthly') : period === 'quarterly' ? t('generator.quarterly') : t('generator.annually')}
+                  </Button>
                 ))}
+              </Space>
+            </div>
+
+            {/* Year Selector */}
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                <label htmlFor="statement-year">{t('generator.year')}</label>
+              </Text>
+              <Select
+                id="statement-year"
+                value={selectedYear}
+                onChange={(value) => setSelectedYear(Number(value))}
+                options={years.map((year) => ({ value: year, label: String(year) }))}
+                style={{ width: '100%' }}
+                {...getA11yProps({ label: 'Pilih tahun statement' })}
+              />
+            </div>
+
+            {/* Month Selector (for monthly/quarterly) */}
+            {selectedPeriod !== 'annually' && (
+              <div>
+                <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                  <label htmlFor={selectedPeriod === 'monthly' ? 'statement-month' : undefined}>
+                    {selectedPeriod === 'quarterly' ? t('generator.quarter') : t('generator.month')}
+                  </label>
+                </Text>
+                {selectedPeriod === 'monthly' ? (
+                  <Select
+                    id="statement-month"
+                    value={selectedMonth}
+                    onChange={(value) => setSelectedMonth(Number(value))}
+                    options={Array.from({ length: 12 }, (_, i) => i + 1).map((month) => ({
+                      value: month,
+                      label: t(`months.${month}`),
+                    }))}
+                    style={{ width: '100%' }}
+                    {...getA11yProps({ label: 'Pilih bulan statement' })}
+                  />
+                ) : (
+                  <Space size={8} style={{ width: '100%' }} role="group" aria-label={t('generator.quarter')}>
+                    {[1, 2, 3, 4].map((quarter) => (
+                      <Button
+                        key={quarter}
+                        type={selectedMonth === quarter * 3 ? 'primary' : 'default'}
+                        onClick={() => setSelectedMonth(quarter * 3)}
+                        style={{ minHeight: 44, flex: 1, fontWeight: 700 }}
+                        aria-pressed={selectedMonth === quarter * 3}
+                        {...getA11yProps({ label: `Pilih kuartal ${quarter}` })}
+                      >
+                        Q{quarter}
+                      </Button>
+                    ))}
+                  </Space>
+                )}
               </div>
             )}
-          </div>
-        )}
-      </div>
+          </Space>
 
-      {/* Generate Button */}
-      <div className="relative z-10">
-        <button
-          onClick={handleGenerateStatement}
-          disabled={isGenerating}
-          className={clsx(
-            'w-full flex items-center justify-center gap-3 py-5 rounded-xl font-bold text-xs tracking-widest uppercase transition-all',
-            isGenerating
-              ? 'bg-muted text-muted-foreground cursor-not-allowed'
-              : 'bg-primary text-primary-foreground hover:bg-bank-emerald shadow-xl shadow-primary/20'
-          )}
-          {...getA11yProps({ label: 'Buat dan unduh e-statement' })}
-        >
-          {isGenerating ? (
-            <>
-              <RefreshCw className="h-5 w-5 animate-spin" />
-              <span>{t('generator.processing')}</span>
-            </>
-          ) : (
-            <>
-              <FileText className="h-5 w-5" />
-              <span>{t('generator.generate')}</span>
-            </>
-          )}
-        </button>
-      </div>
-      </div>
-
-      {/* Statement History Section */}
-      <div className="bg-card rounded-xl p-5 sm:p-6 lg:p-8 border border-border shadow-card space-y-6 relative overflow-hidden">
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
-
-      {/* Section Header */}
-      <div className="flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/10">
-            <Calendar className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-foreground">{t('history.title')}</h3>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight mt-0.5">
-              {t('history.subtitle')}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Statements List */}
-      <div className="relative z-10 space-y-3">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 text-primary animate-spin" />
-          </div>
-        ) : statements.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-sm text-muted-foreground font-medium">{t('history.empty')}</p>
-            <p className="text-xs text-muted-foreground mt-1">{t('history.emptyDesc')}</p>
-          </div>
-        ) : (
-          statements.map((statement) => (
-            <div
-              key={statement.id}
-              className="group bg-muted/20 rounded-xl p-5 border border-border hover:border-primary/30 transition-all"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div
-                    className={clsx(
-                      'h-10 w-10 rounded-lg flex items-center justify-center border transition-all',
-                      StatementService.getStatusColor(statement.status)
-                    )}
-                  >
-                    {getStatusIcon(statement.status)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">
-                      {statement.periodFormatted}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span
-                        className={clsx(
-                          'text-xs px-2 py-0.5 rounded-full font-medium border',
-                          StatementService.getStatusColor(statement.status)
-                        )}
-                      >
-                        {StatementService.formatStatementStatus(statement.status)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {t('history.transactionCount', { count: statement.transactionCount })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {statement.status === 'COMPLETED' && (
-                    <div className="text-right hidden sm:block">
-                      <p className="text-sm font-bold text-foreground">
-                        {statement.closingBalanceFormatted}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{t('history.closingBalance')}</p>
-                    </div>
-                  )}
-                  <button
-                    onClick={() => handleDownload(statement)}
-                    disabled={statement.status !== 'COMPLETED' || isDownloading === statement.id}
-                    className={clsx(
-                      'h-11 px-4 rounded-lg flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-all',
-                      statement.status === 'COMPLETED' && !isDownloading
-                        ? 'bg-primary text-primary-foreground hover:bg-bank-emerald shadow-md hover:shadow-lg'
-                        : 'bg-muted text-muted-foreground cursor-not-allowed'
-                    )}
-                    aria-label={`Download e-statement ${statement.periodFormatted}`}
-                    {...getA11yProps({ label: `Download e-statement ${statement.periodFormatted}` })}
-                  >
-                    {isDownloading === statement.id ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
-                    <span className="hidden sm:inline">{t('history.download')}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Transaction Summary (expandable on mobile) */}
-              {statement.status === 'COMPLETED' && (
-                <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('history.openingBalance')}</p>
-                    <p className="text-sm font-bold text-foreground mt-1">
-                      {statement.openingBalanceFormatted}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('history.totalCredits')}</p>
-                    <p className="text-sm font-bold text-primary mt-1">
-                      +{statement.totalCreditsFormatted}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('history.totalDebits')}</p>
-                    <p className="text-sm font-bold text-destructive mt-1">
-                      -{statement.totalDebitsFormatted}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('history.closingBalance')}</p>
-                    <p className="text-sm font-bold text-foreground mt-1">
-                      {statement.closingBalanceFormatted}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Load More Button */}
-      {!isLoading && statements.length > 0 && hasMore && (
-        <div className="relative z-10 pt-4 border-t border-border">
-          <button
-            onClick={() => loadStatements(page + 1)}
-            className="w-full py-4 text-center text-xs font-bold text-primary hover:text-bank-emerald transition-all uppercase tracking-wider"
-            {...getA11yProps({ label: 'Muat lebih banyak e-statement' })}
+          {/* Generate Button */}
+          <Button
+            type="primary"
+            size="large"
+            block
+            loading={isGenerating}
+            onClick={handleGenerateStatement}
+            icon={isGenerating ? <RefreshCw style={{ width: 20, height: 20 }} /> : <FileText style={{ width: 20, height: 20 }} />}
+            style={{ minHeight: 56, fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+            {...getA11yProps({ label: 'Buat dan unduh e-statement' })}
           >
-            {t('history.loadMore')}
-          </button>
-        </div>
-      )}
-      </div>
-    </div>
+            {isGenerating ? t('generator.processing') : t('generator.generate')}
+          </Button>
+        </Space>
+      </Card>
+      {/* Statement History Section */}
+      <Card>
+        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+          {/* Section Header */}
+          <Space size={16} align="start">
+            <div
+              aria-hidden="true"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: token.borderRadius,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: token.colorPrimaryBg,
+                border: `1px solid ${token.colorPrimaryBorder}`,
+              }}
+            >
+              <Calendar style={{ width: 24, height: 24, color: token.colorPrimary }} />
+            </div>
+            <div>
+              <Title level={3} style={{ margin: 0 }}>{t('history.title')}</Title>
+              <Text type="secondary">{t('history.subtitle')}</Text>
+            </div>
+          </Space>
+
+          {/* Statements List */}
+          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            {isLoading ? (
+              <Card loading style={{ width: '100%' }} />
+            ) : statements.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <FileText aria-hidden="true" style={{ width: 48, height: 48, color: token.colorTextTertiary }} />
+                <Paragraph type="secondary" strong>{t('history.empty')}</Paragraph>
+                <Text type="secondary">{t('history.emptyDesc')}</Text>
+              </div>
+            ) : (
+              statements.map((statement) => (
+                <Card key={statement.id} size="small">
+                  <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                    <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
+                      <Space size={12}>
+                        <Text strong>{statement.periodFormatted}</Text>
+                        <Tag color={statusTagColor(statement.status)}>
+                          {StatementService.formatStatementStatus(statement.status)}
+                        </Tag>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {t('history.transactionCount', { count: statement.transactionCount })}
+                        </Text>
+                      </Space>
+                      <Space size={12} align="center">
+                        {statement.status === 'COMPLETED' && (
+                          <div style={{ textAlign: 'right' }}>
+                            <Text strong>{statement.closingBalanceFormatted}</Text>
+                            <br />
+                            <Text type="secondary" style={{ fontSize: 12 }}>{t('history.closingBalance')}</Text>
+                          </div>
+                        )}
+                        <Button
+                          type="primary"
+                          size="middle"
+                          onClick={() => handleDownload(statement)}
+                          disabled={statement.status !== 'COMPLETED' || isDownloading === statement.id}
+                          loading={isDownloading === statement.id}
+                          icon={<Download style={{ width: 16, height: 16 }} aria-hidden="true" />}
+                          style={{ minHeight: 44 }}
+                          {...getA11yProps({ label: `Download e-statement ${statement.periodFormatted}` })}
+                        >
+                          {t('history.download')}
+                        </Button>
+                      </Space>
+                    </Space>
+
+                    {/* Transaction Summary */}
+                    {statement.status === 'COMPLETED' && (
+                      <Space size={16} wrap style={{ width: '100%' }}>
+                        <div>
+                          <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase' }}>{t('history.openingBalance')}</Text>
+                          <br />
+                          <Text strong>{statement.openingBalanceFormatted}</Text>
+                        </div>
+                        <div>
+                          <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase' }}>{t('history.totalCredits')}</Text>
+                          <br />
+                          <Text strong style={{ color: token.colorSuccessText }}>+{statement.totalCreditsFormatted}</Text>
+                        </div>
+                        <div>
+                          <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase' }}>{t('history.totalDebits')}</Text>
+                          <br />
+                          <Text strong style={{ color: token.colorErrorText }}>-{statement.totalDebitsFormatted}</Text>
+                        </div>
+                        <div>
+                          <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase' }}>{t('history.closingBalance')}</Text>
+                          <br />
+                          <Text strong>{statement.closingBalanceFormatted}</Text>
+                        </div>
+                      </Space>
+                    )}
+                  </Space>
+                </Card>
+              ))
+            )}
+          </Space>
+
+          {/* Load More Button */}
+          {!isLoading && statements.length > 0 && hasMore && (
+            <Button
+              type="link"
+              block
+              onClick={() => loadStatements(page + 1)}
+              style={{ minHeight: 44, fontWeight: 700, fontSize: 12, textTransform: 'uppercase' }}
+              {...getA11yProps({ label: 'Muat lebih banyak e-statement' })}
+            >
+              {t('history.loadMore')}
+            </Button>
+          )}
+        </Space>
+      </Card>
+    </Space>
   );
 }

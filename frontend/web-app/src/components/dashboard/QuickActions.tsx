@@ -6,12 +6,10 @@ import {
   Wallet,
   CreditCard,
   Smartphone,
-  MoreHorizontal,
   GripVertical,
-  ChevronRight,
 } from "@/components/icons";
 import { useTranslations } from "next-intl";
-import { Button, Card, Col, Divider, Flex, Row, Space, Typography } from "antd";
+import { Button, Card, Col, Empty, Row, Space, Typography } from "antd";
 
 const { Title, Text } = Typography;
 
@@ -20,8 +18,6 @@ interface QuickAction {
   label: string;
   icon: React.ElementType;
   href: string;
-  color: string;
-  bgColor: string;
   description?: string;
   ariaLabel: string;
 }
@@ -39,8 +35,6 @@ const defaultActions: QuickAction[] = [
     label: "Transfer",
     icon: ArrowRightLeft,
     href: "/transfer",
-    color: "text-primary",
-    bgColor: "bg-success-light",
     description: "Kirim uang instan",
     ariaLabel: "Transfer uang ke akun lain",
   },
@@ -49,8 +43,6 @@ const defaultActions: QuickAction[] = [
     label: "QRIS",
     icon: QrCode,
     href: "/qris",
-    color: "text-primary",
-    bgColor: "bg-chart-2",
     description: "Scan QR untuk bayar",
     ariaLabel: "Pembayaran QRIS",
   },
@@ -59,8 +51,6 @@ const defaultActions: QuickAction[] = [
     label: "Tagihan",
     icon: Receipt,
     href: "/bills",
-    color: "text-primary",
-    bgColor: "bg-chart-3",
     description: "Bayar tagihan & isi ulang",
     ariaLabel: "Bayar tagihan dan isi ulang",
   },
@@ -69,8 +59,6 @@ const defaultActions: QuickAction[] = [
     label: "Kantong",
     icon: Wallet,
     href: "/pockets",
-    color: "text-primary",
-    bgColor: "bg-chart-green1",
     description: "Kelola kantong uang",
     ariaLabel: "Kelola kantong",
   },
@@ -79,8 +67,6 @@ const defaultActions: QuickAction[] = [
     label: "Kartu",
     icon: CreditCard,
     href: "/cards",
-    color: "text-primary",
-    bgColor: "bg-chart-green2",
     description: "Kartu virtual",
     ariaLabel: "Kelola kartu virtual",
   },
@@ -89,8 +75,6 @@ const defaultActions: QuickAction[] = [
     label: "Isi Ulang",
     icon: Smartphone,
     href: "/bills?category=pulsa",
-    color: "text-primary",
-    bgColor: "bg-chart-green3",
     description: "Isi pulsa & paket data",
     ariaLabel: "Isi ulang pulsa",
   },
@@ -142,12 +126,10 @@ export default function QuickActions({
             size="small"
             data-testid="edit-quick-actions-button"
             onClick={() => setIsEditMode(!isEditMode)}
-            aria-label={
-              isEditMode ? "Selesai mengedit" : "Edit urutan aksi cepat"
-            }
+            aria-label={isEditMode ? t("doneEditingLabel") : t("editActionsLabel")}
             aria-pressed={isEditMode}
           >
-            {isEditMode ? "Selesai" : "Edit"}
+            {isEditMode ? t("doneEditing") : t("editActions")}
           </Button>
         </Row>
 
@@ -165,35 +147,24 @@ export default function QuickActions({
         )}
 
         {/* Actions Grid */}
-        <Row gutter={[24, 24]}>
-          {items.map((action, index) => (
-            <Col xs={12} sm={6} lg={6} xl={4} key={action.id}>
-              <QuickActionItem
-                action={action}
-                isEditMode={isEditMode}
-                isFirst={index === 0}
-                isLast={index === items.length - 1}
-                onMoveUp={() => moveItem(action.id, -1)}
-                onMoveDown={() => moveItem(action.id, 1)}
-              />
-            </Col>
-          ))}
-        </Row>
-
-        {/* More Actions Link */}
-        <Divider style={{ margin: "32px 0 0" }} />
-        <Button
-          type="text"
-          data-testid="view-all-features-button"
-          aria-label="Lihat semua fitur"
-          block
-        >
-          <Space size={12}>
-            <MoreHorizontal style={{ width: 20, height: 20 }} aria-hidden="true" />
-            <Text strong style={{ fontSize: 14 }}>Lihat Semua Fitur</Text>
-            <ChevronRight style={{ width: 20, height: 20 }} aria-hidden="true" />
-          </Space>
-        </Button>
+        {items.length === 0 ? (
+          <Empty description={t("transferEmptyHint")} data-testid="quick-actions-empty" />
+        ) : (
+          <Row gutter={[24, 24]}>
+            {items.map((action, index) => (
+              <Col xs={12} sm={6} lg={6} xl={4} key={action.id}>
+                <QuickActionItem
+                  action={action}
+                  isEditMode={isEditMode}
+                  isFirst={index === 0}
+                  isLast={index === items.length - 1}
+                  onMoveUp={() => moveItem(action.id, -1)}
+                  onMoveDown={() => moveItem(action.id, 1)}
+                />
+              </Col>
+            ))}
+          </Row>
+        )}
       </Space>
     </Card>
   );
@@ -229,8 +200,11 @@ function QuickActionItem({
   };
 
   return (
+    <>
+      <style>{`.payu-qa-tile:focus-visible{outline:3px solid var(--ant-color-primary);outline-offset:2px;box-shadow:0 0 0 4px var(--ant-color-primary-bg);}`}</style>
     <Space direction="vertical" size={8} style={{ width: "100%" }}>
       <a
+        className="payu-qa-tile"
         href={action.href}
         data-testid={`quick-action-${action.id}`}
         onKeyDown={handleKeyDown}
@@ -305,5 +279,6 @@ function QuickActionItem({
         </Space>
       )}
     </Space>
+    </>
   );
 }

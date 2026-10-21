@@ -66,8 +66,9 @@ describe('VIPBadge', () => {
       { wrapper: createWrapper() }
     );
 
-    const card = container.querySelector('.bg-gradient-to-br');
+    const card = container.querySelector('.rounded-xl.p-4');
     expect(card).toBeTruthy();
+    expect((card as HTMLElement).style.background).toMatch(/linear-gradient/);
   });
 
   it('should render VIP badge in inline variant', () => {

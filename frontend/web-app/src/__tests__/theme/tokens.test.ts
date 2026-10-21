@@ -41,9 +41,10 @@ describe('theme token configuration', () => {
     expect(lightComponentTokens.Input?.controlHeight).toBe(48);
     expect(lightComponentTokens.Table?.headerColor).toBe('#6B7280');
     expect(darkComponentTokens.Table?.headerColor).toBe('#ACACAC');
-    // Dark danger label only; primary keeps the antd default (brand look).
+    // Ink labels on primary fills (F-01): AA on the vivid emerald without a palette swap.
     expect(darkComponentTokens.Button?.dangerColor).toBe('#000000');
-    expect(darkComponentTokens.Button?.primaryColor).toBeUndefined();
+    expect(lightComponentTokens.Button?.primaryColor).toBe('#06281F');
+    expect(darkComponentTokens.Button?.primaryColor).toBe('#06281F');
   });
 
   it('dark mode keeps the error/warning measured fixes, no emerald overrides', () => {

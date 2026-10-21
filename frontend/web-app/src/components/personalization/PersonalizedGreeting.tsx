@@ -1,12 +1,11 @@
 'use client';
 
-import { Progress, Typography } from 'antd';
+import { Progress, Typography, theme } from 'antd';
 import { Sun, Moon, Sparkles, Crown } from '@/components/icons';
 import { useUserSegment } from '@/hooks/useUserSegment';
 import { useAuthStore } from '@/stores';
 import clsx from 'clsx';
 import { useTranslations } from 'next-intl';
-
 interface PersonalizedGreetingProps {
   showTimeBased?: boolean;
   showSegment?: boolean;
@@ -20,6 +19,7 @@ export default function PersonalizedGreeting({
 }: PersonalizedGreetingProps) {
   const t = useTranslations('dashboard');
   const user = useAuthStore((state) => state.user);
+  const { token } = theme.useToken();
   const { currentTier, isVIP } = useUserSegment(user?.id);
 
   const getTimeBasedGreeting = () => {
@@ -55,8 +55,8 @@ export default function PersonalizedGreeting({
       >
         {showTimeBased && (
           <>
-            <TimeIcon className="h-4 w-4 text-primary" />
-            <Typography.Text className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
+            <TimeIcon className="h-4 w-4" style={{ color: token.colorTextSecondary }} aria-hidden="true" />
+            <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               {timeGreeting.text}
             </Typography.Text>
           </>
@@ -67,7 +67,8 @@ export default function PersonalizedGreeting({
         className="flex items-center gap-3 flex-wrap"
       >
         <div
-          className="text-2xl font-bold text-foreground tracking-tight"
+          className="text-2xl font-bold tracking-tight"
+          style={{ color: token.colorText }}
           role="text"
           aria-label={`${user?.fullName?.split(' ')[0] || 'User'}!`}
         >
@@ -76,10 +77,11 @@ export default function PersonalizedGreeting({
 
         {showSegment && isVIP && (
           <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-warning to-accent shadow-lg shadow-warning/20"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full shadow-lg"
+            style={{ background: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`, color: '#06281F' }}
           >
-            <Crown className="h-3.5 w-3.5 text-surface" />
-            <span className="text-xs font-bold tracking-[0.1em] text-surface uppercase">
+            <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="text-xs font-bold tracking-[0.1em] uppercase">
               {segmentGreeting}
             </span>
           </span>
@@ -94,22 +96,22 @@ interface PersonalizedWelcomeBannerProps {
 }
 
 export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBannerProps) {
+  const { token } = theme.useToken();
   const user = useAuthStore((state) => state.user);
   const { currentTier, isVIP, progressToNext, nextTier } = useUserSegment(user?.id);
-
   const getWelcomeMessage = () => {
     if (isVIP) {
       return {
         title: `Welcome back, ${user?.fullName?.split(' ')[0] || 'VIP Member'}!`,
         subtitle: 'Enjoy your exclusive benefits and premium services',
-        gradient: 'from-warning to-accent',
+        gradient: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`,
       };
     }
     if (currentTier === 'GOLD') {
       return {
         title: `Hello, ${user?.fullName?.split(' ')[0] || 'Gold Member'}!`,
         subtitle: 'You are enjoying premium benefits',
-        gradient: 'from-warning to-warning',
+        gradient: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorWarningActive})`,
       };
     }
     return {
@@ -117,7 +119,7 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
       subtitle: progressToNext && nextTier
         ? `You're ${progressToNext.toFixed(0)}% away from ${nextTier} status!`
         : 'Discover personalized offers for you',
-      gradient: 'from-primary to-primary-dark',
+      gradient: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
     };
   };
 
@@ -125,35 +127,31 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
 
   return (
     <div
-      className={clsx(
-        'bg-gradient-to-br rounded-2xl p-6 text-surface relative overflow-hidden',
-        welcome.gradient,
-        className
-      )}
+      className={clsx('rounded-2xl p-6 relative overflow-hidden', className)}
+      style={{ background: welcome.gradient, color: token.colorWhite }}
     >
       {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-surface/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 bg-surface/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }} aria-hidden="true" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} aria-hidden="true" />
 
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4" />
-          <Typography.Text className="text-xs font-bold tracking-widest opacity-80 text-surface">
+          <Typography.Text style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: token.colorWhite }}>
             PERSONALIZED EXPERIENCE
           </Typography.Text>
         </div>
 
         <Typography.Title
           level={2}
-          className="text-xl sm:text-2xl font-bold text-surface"
-          style={{ margin: '0 0 8px' }}
+          className="text-xl sm:text-2xl font-bold"
+          style={{ margin: '0 0 8px', color: token.colorWhite }}
         >
           {welcome.title}
         </Typography.Title>
 
         <Typography.Paragraph
-          className="text-sm opacity-90 max-w-xl text-surface"
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, fontSize: 14, maxWidth: 576, color: token.colorWhite }}
         >
           {welcome.subtitle}
         </Typography.Paragraph>
@@ -161,18 +159,18 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         {progressToNext && nextTier && !isVIP && (
           <div className="max-w-md">
             <div className="flex items-center justify-between mb-2">
-              <Typography.Text className="text-xs font-bold opacity-80 text-surface">
+              <Typography.Text style={{ fontSize: 12, fontWeight: 700, color: token.colorWhite }}>
                 Progress to {nextTier}
               </Typography.Text>
-              <Typography.Text className="text-xs font-bold text-surface">
+              <Typography.Text style={{ fontSize: 12, fontWeight: 700, color: token.colorWhite }}>
                 {progressToNext.toFixed(0)}%
               </Typography.Text>
             </div>
             <Progress
               percent={progressToNext}
               showInfo={false}
-              strokeColor="#ffffff"
-              railColor="rgba(255,255,255,0.2)"
+              strokeColor={token.colorBgElevated}
+              trailColor={token.colorFillSecondary}
               size={['100%', 8]}
             />
           </div>

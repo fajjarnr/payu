@@ -2,6 +2,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, ArrowLeft } from '@/components/icons';
+import { Alert, Button, Card, Space, Typography } from 'antd';
 
 interface Props {
  children: ReactNode;
@@ -49,65 +50,67 @@ export class ErrorBoundary extends Component<Props, State> {
    }
 
    return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-     <div className="max-w-md w-full bg-card rounded-[3rem] p-10 border border-border shadow-sm text-center relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-48 h-48 bg-error/5 rounded-full blur-3xl" />
-
-      <div className="relative z-10">
-       <div className="h-20 w-20 bg-error dark:bg-error/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-8 border border-error dark:border-error/20">
-        <AlertTriangle className="h-10 w-10 text-error" />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+     <Card style={{ maxWidth: 448, width: '100%', borderRadius: 16, textAlign: 'center' }}>
+      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+       <div style={{ height: 80, width: 80, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', backgroundColor: 'var(--ant-color-error-bg)', border: '1px solid var(--ant-color-error-border)' }}>
+        <AlertTriangle style={{ height: 40, width: 40, color: 'var(--ant-color-error)' }} aria-hidden="true" />
        </div>
 
-       <h2 className="text-2xl font-bold text-foreground  mb-4">
+       <Typography.Title level={2} style={{ margin: 0 }}>
         Terjadi Kesalahan
-       </h2>
-       
-       <p className="text-sm text-text-secondary font-medium mb-8 leading-relaxed">
+       </Typography.Title>
+
+       <Typography.Text type="secondary">
         Maaf, terjadi kesalahan yang tidak terduga. Kami telah mencatat masalah ini dan sedang mengatasinya.
-       </p>
+       </Typography.Text>
 
        {process.env.NODE_ENV === 'development' && this.state.error && (
-        <div className="bg-error dark:bg-error/10 rounded-2xl p-4 mb-8 text-left border border-error dark:border-error/20">
-         <p className="text-xs font-bold text-text-disabled tracking-widest mb-2">Detail Teknis</p>
-         <p className="text-xs text-error dark:text-error font-mono break-words">
-          {this.state.error.message}
-         </p>
-        </div>
+        <Alert
+         type="error"
+         showIcon
+         message="Detail Teknis"
+         description={<span style={{ fontFamily: 'monospace', wordBreak: 'break-word' }}>{this.state.error.message}</span>}
+        />
        )}
 
-       <div className="space-y-3">
-        <button
+       <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Button
+         type="primary"
+         block
+         size="large"
+         icon={<RefreshCw style={{ height: 16, width: 16 }} aria-hidden="true" />}
          onClick={this.handleRefresh}
-         className="w-full bg-foreground text-background py-5 rounded-[1.25rem] font-bold text-xs tracking-[0.2em] hover:bg-bank-green hover:text-surface transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 cursor-pointer"
         >
-         <RefreshCw className="h-4 w-4" />
          Muat Ulang Halaman
-        </button>
-        
-        <div className="flex gap-3">
-         <button
-          onClick={this.handleGoBack}
-          className="flex-1 bg-surface-dim dark:bg-text-primary py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-surface-dim dark:hover:bg-text-primary transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-         >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali
-         </button>
-         
-         <button
-          onClick={this.handleGoHome}
-          className="flex-1 bg-surface-dim dark:bg-text-primary py-4 rounded-[1.25rem] font-bold text-xs tracking-widest border border-border hover:bg-surface-dim dark:hover:bg-text-primary transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-         >
-          <Home className="h-4 w-4" />
-          Beranda
-         </button>
-        </div>
-       </div>
+        </Button>
 
-       <p className="text-xs text-text-disabled font-bold tracking-widest mt-8">
+        <Space size={12} style={{ width: '100%' }}>
+         <Button
+          block
+          size="large"
+          icon={<ArrowLeft style={{ height: 16, width: 16 }} aria-hidden="true" />}
+          onClick={this.handleGoBack}
+         >
+          Kembali
+         </Button>
+
+         <Button
+          block
+          size="large"
+          icon={<Home style={{ height: 16, width: 16 }} aria-hidden="true" />}
+          onClick={this.handleGoHome}
+         >
+          Beranda
+         </Button>
+        </Space>
+       </Space>
+
+       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
         Masalah berlanjut? Hubungi tim dukungan kami.
-       </p>
-      </div>
-     </div>
+       </Typography.Text>
+      </Space>
+     </Card>
     </div>
    );
   }

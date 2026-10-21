@@ -103,7 +103,7 @@ describe('EmergencyAlert', () => {
   it('should dismiss alert when dismiss button is clicked', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButton = screen.getAllByLabelText('Dismiss alert')[0];
+    const dismissButton = screen.getAllByLabelText('Tutup peringatan')[0];
     fireEvent.click(dismissButton);
 
     expect(mockLocalStorage.setItem).toHaveBeenCalled();
@@ -112,7 +112,7 @@ describe('EmergencyAlert', () => {
   it('should save dismissed alerts to localStorage', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButton = screen.getAllByLabelText('Dismiss alert')[0];
+    const dismissButton = screen.getAllByLabelText('Tutup peringatan')[0];
     fireEvent.click(dismissButton);
 
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
@@ -144,9 +144,7 @@ describe('EmergencyAlert', () => {
   it('should display correct styling for WARNING alert type', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
 
-    const warningAlert = container.textContent?.includes('System Maintenance')
-      ? container.querySelector('.bg-warning')
-      : null;
+    const warningAlert = container.querySelector('.ant-alert-warning');
 
     expect(warningAlert).toBeInTheDocument();
   });
@@ -154,33 +152,28 @@ describe('EmergencyAlert', () => {
   it('should display correct styling for INFO alert type', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
 
-    const infoAlert = container.textContent?.includes('New Feature Available')
-      ? container.querySelector('.bg-primary-light')
-      : null;
+    const infoAlert = container.querySelector('.ant-alert-info');
 
     expect(infoAlert).toBeInTheDocument();
   });
 
   it('should display correct icon for WARNING alert', () => {
-    renderWithIntl(<EmergencyAlert />);
+    const { container } = renderWithIntl(<EmergencyAlert />);
 
-    const warningIcon = screen.getByText('System Maintenance')
-      .closest('div')
-      ?.querySelector('svg');
-
-    expect(warningIcon).toBeInTheDocument();
+    const warningAlert = container.querySelector('.ant-alert-warning');
+    expect(warningAlert?.querySelector('svg')).toBeInTheDocument();
   });
 
   it('should display end date if available', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    expect(screen.getAllByText(/Valid until/)).toHaveLength(mockAlerts.length);
+    expect(screen.getAllByText(/Berlaku hingga/)).toHaveLength(mockAlerts.length);
   });
 
   it('should have proper ARIA attributes', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButtons = screen.getAllByLabelText('Dismiss alert');
+    const dismissButtons = screen.getAllByLabelText('Tutup peringatan');
     dismissButtons.forEach((button) => {
       expect(button).toBeInTheDocument();
     });
@@ -202,7 +195,7 @@ describe('EmergencyAlert', () => {
   it('should use custom storage key', () => {
     renderWithIntl(<EmergencyAlert storageKey="custom-storage" />);
 
-    const dismissButton = screen.getAllByLabelText('Dismiss alert')[0];
+    const dismissButton = screen.getAllByLabelText('Tutup peringatan')[0];
     fireEvent.click(dismissButton);
 
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
@@ -240,7 +233,7 @@ describe('EmergencyAlert', () => {
 
     renderWithIntl(<EmergencyAlert />);
 
-    const dismissButton = screen.getAllByLabelText('Dismiss alert')[0];
+    const dismissButton = screen.getAllByLabelText('Tutup peringatan')[0];
     fireEvent.click(dismissButton);
 
     expect(consoleSpy).toHaveBeenCalled();
@@ -260,24 +253,22 @@ describe('EmergencyAlert', () => {
     expect(screen.getAllByRole('alert')).toHaveLength(mockAlerts.length);
   });
 
-  it('should have semi-transparent background', () => {
+  it('should render alerts on the default container background token', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
 
-    const alertContainer = container.querySelector('.bg-background\\/50');
-    expect(alertContainer).toBeInTheDocument();
+    expect(container.querySelector('.ant-alert')).toBeInTheDocument();
   });
 
-  it('should apply correct border styling', () => {
+  it('should render alerts with the shared card radius', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
 
-    const alertBorder = container.querySelector('.border-b-2');
-    expect(alertBorder).toBeInTheDocument();
+    expect(container.querySelector('.rounded-2xl')).toBeInTheDocument();
   });
 
   it('should format end date correctly', () => {
     renderWithIntl(<EmergencyAlert />);
 
-    const dateText = screen.getAllByText((content) => content.startsWith('Valid until'));
+    const dateText = screen.getAllByText((content) => content.startsWith('Berlaku hingga'));
     expect(dateText).toHaveLength(mockAlerts.length);
   });
 });

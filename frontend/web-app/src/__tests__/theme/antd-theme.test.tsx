@@ -9,13 +9,10 @@ import { contrast, toHex } from './wcag';
 // #00D09C into #03b488). So the wiring is asserted on the CSS variables
 // cssinjs actually generates from the ConfigProvider tokens: that stylesheet
 // is what the browser applies, whatever the algorithm derives.
-//
-// PRODUCT OVERRIDE 2026-10-14: the brand emerald (#00D09C, the roles that
-// share it: success, info, and the link color antd derives from the primary
-// seed, including its generated hover/active steps) is exempt from the 4.5:1
-// text gate and the 3:1 boundary gate. The product owner rejected the darker
-// AA variant; see the header of src/theme/tokens.ts. Everything else stays
-// enforced, and these exceptions are the only silent skips in this file.
+// Ink labels on the emerald primary fill (F-01, per usage): the seed stays
+// #00D09C per product decision, but Button primaryColor is ink (#06281F),
+// so the light-mode fill/label pair is AA. Dark-mode emerald is remapped
+// by the antd algorithm, so only light fills are asserted below.
 
 const EMERALD_ROLES = ['primary', 'success', 'info', 'link'] as const;
 
@@ -71,8 +68,7 @@ function assertTheme(vars: Record<string, string>, mode: string) {
   expect(placeholderRatio, `${mode}: placeholder on ${bg}`).toBeGreaterThanOrEqual(4.5);
 
   // Solid fill labels (primary and danger buttons), all interaction states.
-  // Primary is emerald: white on the vivid fill is the brand look and is
-  // exempt per the product override; danger stays enforced.
+  // Primary labels are ink-on-emerald per usage (F-01): AA without a palette swap.
   const labels: Record<string, string> = {
     primary: 'ant-button-primary-color',
     error: 'ant-button-danger-color',
@@ -83,8 +79,8 @@ function assertTheme(vars: Record<string, string>, mode: string) {
       const name = `ant-color-${fillRole}${state}`;
       const fill = toHex(vars[name], bg);
       const ratio = contrast(label, fill);
-      if (fillRole === 'primary') {
-        continue; // product override: emerald fill labels (brand look)
+      if (mode === 'dark' && fillRole === 'primary') {
+        continue; // dark algorithm remaps the emerald; per-usage ink verified in light mode
       }
       expect(
         ratio,

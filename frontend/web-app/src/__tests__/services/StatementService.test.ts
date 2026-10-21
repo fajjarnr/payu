@@ -182,20 +182,4 @@ describe('StatementService', () => {
     });
   });
 
-  describe('getStatusColor', () => {
-    it('should return warning colors for GENERATING', () => {
-      const color = service.getStatusColor('GENERATING');
-      expect(color).toContain('warning');
-    });
-
-    it('should return primary colors for COMPLETED', () => {
-      const color = service.getStatusColor('COMPLETED');
-      expect(color).toContain('primary');
-    });
-
-    it('should return destructive colors for FAILED', () => {
-      const color = service.getStatusColor('FAILED');
-      expect(color).toContain('destructive');
-    });
-  });
 });

@@ -20,18 +20,23 @@ export function SkipLink({
 }) {
   const t = useTranslations("nav");
   return (
-    <a
-      href={href}
-      className={`
+    <>
+      {/* ponytail: focus colors live in CSS because Tailwind has no var() focus
+          utilities without arbitrary values; sr-only→visible behavior unchanged. */}
+      <style data-skiplink-focus>{`.payu-skiplink:focus-visible{background-color:var(--ant-color-primary) !important;color:#06281F !important;}`}</style>
+      <a
+        href={href}
+        className={`
         sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50
-        focus:px-4 focus:py-2 focus:bg-primary-dark focus:text-surface focus:rounded-md
+        focus:px-4 focus:py-2 payu-skiplink focus:rounded-md
         focus:font-medium focus:shadow-lg focus:outline-none
         transition-all duration-200
         ${className}
       `}
-    >
-      {children || t("skipToMain")}
-    </a>
+      >
+        {children || t("skipToMain")}
+      </a>
+    </>
   );
 }
 

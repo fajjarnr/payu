@@ -85,13 +85,14 @@ describe('BannerCarousel', () => {
     expect(screen.queryByText('Summer Sale')).not.toBeInTheDocument();
   });
 
-  it('should return null when there is an error', () => {
+  it('should render error UI with retry when there is an error', () => {
     mockBannersData = null;
     mockError = new Error('Failed to fetch');
 
     const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    expect(container.firstChild).toBeNull();
+    expect(container.firstChild).not.toBeNull();
+    expect(screen.getByText('Gagal memuat banner')).toBeInTheDocument();
   });
 
   it('should return null when there are no banners', () => {
@@ -105,14 +106,14 @@ describe('BannerCarousel', () => {
   it('should display navigation arrows when there are multiple banners', () => {
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    expect(screen.getByLabelText('Previous banner')).toBeInTheDocument();
-    expect(screen.getByLabelText('Next banner')).toBeInTheDocument();
+    expect(screen.getByLabelText('Banner sebelumnya')).toBeInTheDocument();
+    expect(screen.getByLabelText('Banner berikutnya')).toBeInTheDocument();
   });
 
   it('should navigate to next banner when next button is clicked', () => {
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    const nextButton = screen.getByLabelText('Next banner');
+    const nextButton = screen.getByLabelText('Banner berikutnya');
     fireEvent.click(nextButton);
 
     expect(screen.getAllByText('New Arrival').length).toBeGreaterThan(0);
@@ -121,10 +122,10 @@ describe('BannerCarousel', () => {
   it('should navigate to previous banner when previous button is clicked', () => {
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    const nextButton = screen.getByLabelText('Next banner');
+    const nextButton = screen.getByLabelText('Banner berikutnya');
     fireEvent.click(nextButton);
 
-    const previousButton = screen.getByLabelText('Previous banner');
+    const previousButton = screen.getByLabelText('Banner sebelumnya');
     fireEvent.click(previousButton);
 
     expect(screen.getAllByText('Summer Sale').length).toBeGreaterThan(0);
@@ -134,7 +135,7 @@ describe('BannerCarousel', () => {
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
     const indicators = screen.getAllByRole('button').filter(
-      (button) => button.getAttribute('aria-label')?.includes('Go to banner')
+      (button) => button.getAttribute('aria-label')?.includes('Ke banner')
     );
 
     if (indicators.length > 1) {
@@ -168,14 +169,14 @@ describe('BannerCarousel', () => {
   it('should display indicators for multiple banners', () => {
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    const indicators = screen.getAllByRole('button', { name: /Go to banner/ });
+    const indicators = screen.getAllByRole('button', { name: /Ke banner/ });
     expect(indicators.length).toBe(mockBanners.length);
   });
 
   it('should highlight current banner indicator', () => {
     const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    const activeIndicator = container.querySelector('.w-8.bg-bank-green');
+    const activeIndicator = container.querySelector('[aria-current="true"] .w-8');
     expect(activeIndicator).toBeInTheDocument();
   });
 
@@ -198,14 +199,14 @@ describe('BannerCarousel', () => {
 
     const { container } = renderWithIntl(<BannerCarousel {...defaultProps} autoPlayInterval={1000} />);
 
-    const banner = container.querySelector('.group');
-    if (banner) {
-      fireEvent.mouseEnter(banner);
+    const banner = container.firstChild as HTMLElement;
+    fireEvent.mouseEnter(banner);
 
-      vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2000);
 
-      expect(screen.getByText('Summer Sale')).toBeInTheDocument();
-    }
+    expect(container.querySelector('[aria-current="true"]')?.getAttribute('aria-label')).toBe(
+      'Ke banner 1'
+    );
 
     vi.useRealTimers();
   });
@@ -213,7 +214,7 @@ describe('BannerCarousel', () => {
   it('should have correct aspect ratio for responsive design', () => {
     const { container } = renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    const carousel = container.querySelector('.aspect-\\[1\\.8\\/1\\]');
+    const carousel = container.querySelector('[style*="aspect-ratio"]');
     expect(carousel).toBeInTheDocument();
   });
 
@@ -236,8 +237,8 @@ describe('BannerCarousel', () => {
 
     renderWithIntl(<BannerCarousel {...defaultProps} />);
 
-    expect(screen.queryByLabelText('Previous banner')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Next banner')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Banner sebelumnya')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Banner berikutnya')).not.toBeInTheDocument();
   });
 
   it('should display PROMO badge on banners', () => {

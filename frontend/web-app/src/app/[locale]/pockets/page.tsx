@@ -265,7 +265,7 @@ export default function PocketsPage() {
       name: p.name,
       target: String(pocketTarget(p) ?? p.balance),
       current: String(p.balance),
-      color: idx === 0 ? "bank-green" : "bank-emerald",
+      color: idx === 0 ? "primary" : "success",
       icon: idx === 0 ? Target : Lock,
       isShared: false,
       locked: idx === 1,
@@ -796,7 +796,7 @@ export default function PocketsPage() {
                       (Number(goal.current) / Number(goal.target)) * 100,
                     );
                     const Icon = goal.icon;
-                    const isGreen = goal.color === "bank-green";
+                    const isPrimary = goal.color === "primary";
                     return (
                       <Col key={goal.id} xs={24} sm={12}>
                         <Card style={{ height: "100%" }}>
@@ -808,15 +808,15 @@ export default function PocketsPage() {
                                 width: 48,
                                 height: 48,
                                 borderRadius: 12,
-                                background: isGreen
+                                background: isPrimary
                                   ? `${token.colorPrimary}1A`
-                                  : "hsl(145 50% 35% / 0.1)",
-                                border: isGreen
+                                  : `${token.colorSuccess}1A`,
+                                border: isPrimary
                                   ? `1px solid ${token.colorPrimary}1A`
-                                  : "1px solid hsl(145 50% 35% / 0.1)",
-                                color: isGreen
+                                  : `1px solid ${token.colorSuccess}1A`,
+                                color: isPrimary
                                   ? token.colorPrimary
-                                  : "hsl(145 50% 35%)",
+                                  : token.colorSuccess,
                               }}
                             >
                               <Icon />
@@ -1279,7 +1279,7 @@ export default function PocketsPage() {
                                       member.role === "OWNER"
                                         ? token.colorPrimary
                                         : member.role === "ADMIN"
-                                          ? "hsl(145 50% 35%)"
+                                          ? token.colorSuccess
                                           : token.colorFill
                                     }
                                     style={{

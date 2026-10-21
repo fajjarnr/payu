@@ -210,20 +210,14 @@ describe('DashboardLayout', () => {
     expect(results).toHaveNoViolations();
   });
 
-  it('should navigate to the correct route when a sidebar menu item is clicked', () => {
+  it('renders sidebar items as real links to the correct routes', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Dasbor' }));
-    expect(mockPush).toHaveBeenCalledWith('/id/dashboard');
-
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Akun' }));
-    expect(mockPush).toHaveBeenCalledWith('/id/pockets');
-
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Transfer' }));
-    expect(mockPush).toHaveBeenCalledWith('/id/transfer');
-
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Bayar QRIS' }));
-    expect(mockPush).toHaveBeenCalledWith('/id/qris');
+    for (const [name, href] of [['Dasbor', '/dashboard'], ['Akun', '/pockets'], ['Transfer', '/transfer'], ['Bayar QRIS', '/qris']] as const) {
+      const item = screen.getByRole('menuitem', { name });
+      const link = item.querySelector('a') ?? item.closest('a');
+      expect(link?.getAttribute('href')).toMatch(new RegExp(`${href}$`));
+    }
   });
 
   it('should show notification badge indicator', () => {
