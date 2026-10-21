@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
 import {
@@ -42,6 +43,9 @@ function _crc16X25(data: string): string {
 }
 
 export default function QRISPage() {
+  const t = useTranslations("qris");
+  const locale = useLocale();
+  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
   const [isScanning, setIsScanning] = useState(false);
   const [showMyQr, setShowMyQr] = useState(false);
   const [pendingScan, setPendingScan] = useState<string | null>(null);
@@ -66,7 +70,7 @@ export default function QRISPage() {
   const handleToggleCamera = () => {
     setIsScanning(!isScanning);
     if (!isScanning) {
-      toast.info("Kamera aktif — arahkan ke kode QRIS");
+      toast.info(t("cameraActive"));
     }
   };
 
@@ -111,12 +115,12 @@ export default function QRISPage() {
         amount: asMoney(amount),
         accountId: accountId ?? "",
       });
-      toast.success("Pembayaran QRIS diterima dan sedang diproses");
+      toast.success(t("paymentProcessing"));
       setPendingScan(null);
       setAmount("");
       form.resetFields();
     } catch {
-      toast.error("Pembayaran QRIS gagal");
+      toast.error(t("paymentFailed"));
     }
   };
 
@@ -131,18 +135,16 @@ export default function QRISPage() {
             ref={fileInputRef}
             onChange={handleFileChange}
             accept="image/*"
-            aria-label="Unggah file"
+            aria-label={t("uploadFile")}
             style={{ display: "none" }}
           />
 
           {/* Header */}
           <Space direction="vertical" size={4}>
             <Typography.Title level={1} style={{ marginBottom: 0 }}>
-              Pembayaran QRIS
+              {t("title")}
             </Typography.Title>
-            <Typography.Text type="secondary">
-              Pindai kode QRIS merchant atau P2P untuk membayar secara instan.
-            </Typography.Text>
+            <Typography.Text type="secondary">{t("subtitle")}</Typography.Text>
           </Space>
 
           <Row gutter={[16, 16]}>
@@ -282,8 +284,8 @@ export default function QRISPage() {
                           }}
                         >
                           {isScanning
-                            ? "Kamera Aktif — Mengarahkan ke QR..."
-                            : "Memindai Kode QRIS..."}
+                            ? t("cameraActiveHint")
+                            : t("scanningHint")}
                         </Typography.Text>
                       </div>
 
@@ -358,7 +360,7 @@ export default function QRISPage() {
                         }}
                       >
                         <Camera style={{ width: 16, height: 16 }} />{" "}
-                        {isScanning ? "Tutup Kamera" : "Buka Kamera"}
+                        {isScanning ? t("closeCamera") : t("openCamera")}
                       </Button>
                       <Button
                         onClick={handleUploadClick}
@@ -382,7 +384,7 @@ export default function QRISPage() {
                             color: token.colorPrimary,
                           }}
                         />{" "}
-                        Unggah Foto
+                        {t("uploadPhoto")}
                       </Button>
                     </Space>
                   </div>
@@ -409,14 +411,12 @@ export default function QRISPage() {
                         }}
                       />
                       <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                        Aktivitas Terakhir
+                        {t("recentActivity")}
                       </Typography.Title>
                     </div>
                     <Button
                       type="link"
-                      onClick={() =>
-                        toast.info("Menampilkan semua transaksi QRIS")
-                      }
+                      onClick={() => toast.info(t("showingAllTransactions"))}
                       style={{
                         fontSize: 12,
                         fontWeight: 700,
@@ -425,7 +425,7 @@ export default function QRISPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      Lihat Semua
+                      {t("viewAll")}
                     </Button>
                   </div>
 
@@ -475,7 +475,7 @@ export default function QRISPage() {
                             opacity: 0.4,
                           }}
                         >
-                          Belum ada riwayat transaksi QRIS
+                          {t("noHistory")}
                         </Typography.Text>
                       </div>
                     ) : (
@@ -483,20 +483,24 @@ export default function QRISPage() {
                         <Row key={tx.id} justify="space-between" align="middle">
                           <Space direction="vertical" size={0}>
                             <Typography.Text strong>
-                              {tx.description ?? "Pembayaran QRIS"}
+                              {tx.description ?? t("paymentLabel")}
                             </Typography.Text>
                             <Typography.Text
                               type="secondary"
                               style={{ fontSize: 12 }}
                             >
-                              {new Date(tx.createdAt).toLocaleString("id-ID")}
+                              {new Date(tx.createdAt).toLocaleString(
+                                bcp47Locale,
+                              )}
                             </Typography.Text>
                           </Space>
                           <Typography.Text
                             strong
                             style={{ fontVariantNumeric: "tabular-nums" }}
                           >
-                            {formatCurrency(tx.amount)}
+                            {formatCurrency(tx.amount, {
+                              locale: bcp47Locale,
+                            })}
                           </Typography.Text>
                         </Row>
                       ))
@@ -523,7 +527,7 @@ export default function QRISPage() {
                       marginBottom: 24,
                     }}
                   >
-                    Protokol Keamanan
+                    {t("securityProtocol")}
                   </Typography.Text>
                   <Space direction="vertical" size={24}>
                     <div style={{ display: "flex", gap: 16 }}>
@@ -550,7 +554,7 @@ export default function QRISPage() {
                       </div>
                       <div>
                         <Typography.Text strong style={{ fontSize: 12 }}>
-                          Enkripsi RESP-V3
+                          {t("respV3Encryption")}
                         </Typography.Text>
                         <Typography.Text
                           type="secondary"
@@ -561,8 +565,7 @@ export default function QRISPage() {
                             opacity: 0.7,
                           }}
                         >
-                          Token dinamik di-hash per transaksi untuk keamanan
-                          maksimal.
+                          {t("dynamicTokenDescription")}
                         </Typography.Text>
                       </div>
                     </div>
@@ -590,7 +593,7 @@ export default function QRISPage() {
                       </div>
                       <div>
                         <Typography.Text strong style={{ fontSize: 12 }}>
-                          Lisensi ASPI/BI
+                          {t("aspiLicense")}
                         </Typography.Text>
                         <Typography.Text
                           type="secondary"
@@ -601,7 +604,7 @@ export default function QRISPage() {
                             opacity: 0.7,
                           }}
                         >
-                          Sistem pembayaran tunduk pada regulasi QRIS Nasional.
+                          {t("qrisRegulationDescription")}
                         </Typography.Text>
                       </div>
                     </div>
@@ -634,7 +637,7 @@ export default function QRISPage() {
                             color: token.colorTextLightSolid,
                           }}
                         >
-                          QRIS Personal
+                          {t("personalQris")}
                         </Typography.Title>
                         <Typography.Text
                           strong
@@ -645,7 +648,7 @@ export default function QRISPage() {
                             textTransform: "uppercase",
                           }}
                         >
-                          E-Wallet Access
+                          {t("eWalletAccess")}
                         </Typography.Text>
                       </div>
                       <QrCode
@@ -700,7 +703,7 @@ export default function QRISPage() {
                               transform: "rotate(-12deg)",
                             }}
                           >
-                            Authorized Only
+                            {t("authorizedOnly")}
                           </Typography.Text>
                         </div>
                       )}
@@ -723,7 +726,7 @@ export default function QRISPage() {
                         border: `1px solid ${token.colorPrimary}4d`,
                       }}
                     >
-                      {showMyQr ? "Sembunyikan Kode" : "Tampilkan Kode Saya"}
+                      {showMyQr ? t("hideCode") : t("showMyCode")}
                     </Button>
                   </div>
                   <div
@@ -763,13 +766,15 @@ export default function QRISPage() {
                         opacity: 0.6,
                       }}
                     >
-                      Pemakaian QRIS Hari Ini
+                      {t("todayUsage")}
                     </Typography.Text>
                     <Typography.Title
                       level={2}
                       style={{ marginBottom: 0, fontVariantNumeric: "tabular-nums" }}
                     >
-                      {formatCurrency(todayQrisSpend)}
+                      {formatCurrency(todayQrisSpend, {
+                        locale: bcp47Locale,
+                      })}
                     </Typography.Title>
                   </Space>
                   <Space direction="vertical" size={16}>
@@ -782,7 +787,7 @@ export default function QRISPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {qrisToday.length} transaksi hari ini
+                      {t("todayTransactions", { count: qrisToday.length })}
                     </Typography.Text>
                   </Space>
                 </Card>
@@ -798,37 +803,37 @@ export default function QRISPage() {
             form.resetFields();
           }}
           onOk={handlePayQris}
-          okText="Bayar"
+          okText={t("pay")}
           confirmLoading={processQrisPayment.isPending}
           okButtonProps={{ disabled: !pendingScan || !amount }}
-          title="Bayar QRIS"
+          title={t("payTitle")}
         >
           <Form form={form} layout="vertical">
             <Form.Item
-              label="Payload QR"
+              label={t("qrPayload")}
               name="qrCode"
-              rules={[{ required: true, message: "Payload QR wajib diisi" }]}
+              rules={[{ required: true, message: t("qrPayloadRequired") }]}
             >
               <Input
-                aria-label="Payload QR"
-                placeholder="Tempel payload QRIS dari gambar yang diunggah"
+                aria-label={t("qrPayload")}
+                placeholder={t("qrPayloadPlaceholder")}
                 value={pendingScan ?? ""}
                 onChange={(e) => setPendingScan(e.target.value)}
               />
             </Form.Item>
             <Form.Item
-              label="Nominal (IDR)"
+              label={t("amountLabel")}
               name="amount"
               rules={[
                 {
                   required: true,
                   pattern: /^\d+(\.\d+)?$/,
-                  message: "Nominal harus angka",
+                  message: t("amountMustBeNumber"),
                 },
               ]}
             >
               <Input
-                aria-label="Nominal pembayaran"
+                aria-label={t("amountAriaLabel")}
                 inputMode="decimal"
                 placeholder="10000"
                 value={amount}

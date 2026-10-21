@@ -196,6 +196,8 @@ Ambiguous-label fixes (before → after):
 - **A-03 ambiguous labels (High).** §5 table is the fix list; **must** unique-per-context accessible names for repeated rows.
 - **A-04 mixed metaphors / dead controls (Medium).** **Don't**: Menu-as-router (`DashboardLayout.tsx:138-176`) — do links; unclickable `Lihat Semua Fitur` (`QuickActions.tsx:185-196`) and month button (`TransferActivity.tsx:378-398`) — wire or delete; embla-shaped `CarouselApi` shim over antd Carousel (`BannerCarousel.tsx:13-19,47-60,184`); double focus-trap (`FeedbackWidget.tsx:64` + Modal `:180`); double `Empty` description (`BeneficiaryManager.tsx:85-86`).
 - **A-05 hardcoded locale strings (Medium).** `'Selesai'/'Edit'` (`QuickActions.tsx:145-151`), `'Kirim Cepat'/'Kategori Favorit'` (`TransferActivity.tsx:251-266,331,366`), toast strings (`:70,72`) bypass next-intl while siblings use `t()`. **Must** externalize; flag-emoji locales (`LanguageSwitcher.tsx:12-13`) need `aria-hidden` verification.
+- **A-06 half-translated pages (Medium, 2026-10-21).** A page **must** be fully Indonesian or fully bilingual — a translated heading over Indonesian body copy is worse than either. Rule: every user-facing string on a customer route goes through `t()`; the catalog (`messages/id.json` + `messages/en.json`) stays at key parity (`npm run check:i18n`). API-supplied values (statuses, reference numbers, CMS content, enum values) stay untranslated — they are data, not copy. Exception, documented on purpose: `legal/terms` and `legal/privacy` stay fully Indonesian (legal text needs legal review, not machine translation).
+- **A-07 money rendering (Medium, 2026-10-21).** Amounts **must** render through `formatCurrency` / `MoneyText` with the active locale — never `Rp ${raw}`, never a hand-rolled `toLocaleString('id-ID')`. A limit or a mock card art may use a compact form, but the symbol and the grouping come from the helper.
 
 ## 7. QA checklist (executable in code review)
 
@@ -212,6 +214,8 @@ Ambiguous-label fixes (before → after):
 - [ ] Landmarks + headings: skip link inside `<main>`; one `h1` per page, no skipped levels (axe `landmark-one-main`, `region`, `heading-order`).
 - [ ] Responsive: beneficiary form stacks `xs=24`; tile/description truncation verified with longest `id` strings; desktop+mobile ledger parity.
 - [ ] i18n/theme: `id` + `en` strings present; antd locale synced (`antd-locale.ts:9-20`); light + dark screenshots attached.
+- [ ] i18n: a customer page has **no** hardcoded user-facing string (A-05/A-06); `npm run check:i18n` reports key parity; API values stay untranslated.
+- [ ] Money: every amount renders through `formatCurrency`/`MoneyText` with the active locale (A-07) — no `Rp ${raw}`, no hand-rolled `toLocaleString`.
 
 ---
 *Skipped: e2e spec bodies, `__tests__/a11y` assertions, `globals.css` dark block, `lib/a11y.tsx`, stores. Risk: contrast ratios cited from `tokens.ts` comments, not re-measured; dark-mode emerald and antd v6 focus-ring defaults unverified live.*

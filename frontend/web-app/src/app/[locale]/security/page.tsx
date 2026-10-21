@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Link } from "@/lib/navigation";
 import {
@@ -32,10 +33,12 @@ import { useAuthStore } from "@/stores/authStore";
 import { notify as toast } from "@/lib/notify";
 import { AuthService } from "@/services/AuthService";
 import { SkipLink } from "@/lib/a11y";
+import { formatCurrency } from "@/lib/currency";
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function SecurityPage() {
+  const t = useTranslations("security");
   const { user } = useAuthStore();
   const username = user?.username ?? "";
   const { data: biometricRegs } = useBiometricRegistrations(username);
@@ -49,13 +52,13 @@ export default function SecurityPage() {
       // FE-SEC-001: guard empty challengeId/credential — fetch challenge and create WebAuthn credential properly
       // ponytail: minimal WebAuthn, no polyfill, fail gracefully if api or navigator.credentials unavailable
       if (!username) {
-        toast.error("Username tidak tersedia");
+        toast.error(t("usernameUnavailable"));
         return;
       }
       try {
         const ch = await AuthService.getInstance().getBiometricChallenge();
         if (!ch?.challengeId || !ch?.challenge) {
-          toast.error("Gagal mendapatkan challenge biometrik");
+          toast.error(t("biometricChallengeFailed"));
           return;
         }
         let credential = "";
@@ -119,17 +122,17 @@ export default function SecurityPage() {
             deviceName: "web-browser",
           },
           {
-            onSuccess: () => toast.success("Biometrik berhasil diaktifkan"),
-            onError: () => toast.error("Gagal mengaktifkan biometrik"),
+            onSuccess: () => toast.success(t("biometricEnabled")),
+            onError: () => toast.error(t("biometricEnableFailed")),
           },
         );
       } catch (e) {
         console.error("Biometric activation failed", e);
-        toast.error("Gagal mengaktifkan biometrik");
+        toast.error(t("biometricEnableFailed"));
       }
     } else if (biometricRegs?.[0]?.registrationId) {
       revokeBiometric.mutate(biometricRegs[0].registrationId, {
-        onError: () => toast.error("Gagal menonaktifkan biometrik"),
+        onError: () => toast.error(t("biometricDisableFailed")),
       });
     }
   };
@@ -141,11 +144,9 @@ export default function SecurityPage() {
         <Row justify="space-between" align="middle" gutter={[16, 16]}>
           <Col xs={24} md={16}>
             <Title level={1} style={{ marginBottom: 4 }}>
-              Keamanan & Tata Kelola
+              {t("title")}
             </Title>
-            <Text type="secondary">
-              Proteksi aset dengan sistem enkripsi dan pemantauan aktif.
-            </Text>
+            <Text type="secondary">{t("subtitle")}</Text>
           </Col>
           <Col xs={24} md={8}>
             <Tag
@@ -159,7 +160,7 @@ export default function SecurityPage() {
                 padding: "10px 20px",
               }}
             >
-              MFA Biometrik
+              {t("mfaBiometric")}
             </Tag>
           </Col>
         </Row>
@@ -183,7 +184,7 @@ export default function SecurityPage() {
                   />
                   <Space direction="vertical" size={0}>
                     <Text strong style={{ fontSize: 20 }}>
-                      MFA Biometrik
+                      {t("mfaBiometric")}
                     </Text>
                     <Text
                       type="secondary"
@@ -194,14 +195,14 @@ export default function SecurityPage() {
                         letterSpacing: 2,
                       }}
                     >
-                      Autentikasi Dua Faktor
+                      {t("twoFactorAuth")}
                     </Text>
                   </Space>
                 </Space>
 
                 <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                  Wajibkan sidik jari atau FaceID untuk setiap transaksi di atas{" "}
-                  <Text strong>Rp 1.000.000</Text>.
+                  {t("biometricThresholdPrefix")}{" "}
+                  <Text strong>{formatCurrency(1000000)}</Text>.
                 </Paragraph>
                 <Card type="inner">
                   <Row justify="space-between" align="middle" gutter={[12, 12]}>
@@ -214,14 +215,18 @@ export default function SecurityPage() {
                           letterSpacing: 2,
                         }}
                       >
-                        Status Keamanan: {hasBiometric ? "Aktif" : "Non-aktif"}
+                        {t("securityStatus", {
+                          status: hasBiometric
+                            ? t("statusActive")
+                            : t("statusInactive"),
+                        })}
                       </Text>
                     </Col>
                     <Col>
                       <Switch
                         checked={hasBiometric}
                         onChange={handleBiometricToggle}
-                        aria-label="Status Keamanan Biometrik"
+                        aria-label={t("biometricSwitchLabel")}
                       />
                     </Col>
                   </Row>
@@ -248,7 +253,7 @@ export default function SecurityPage() {
                   />
                   <Space direction="vertical" size={0}>
                     <Text strong style={{ fontSize: 20 }}>
-                      Token Perangkat
+                      {t("deviceToken")}
                     </Text>
                     <Text
                       type="secondary"
@@ -259,14 +264,13 @@ export default function SecurityPage() {
                         letterSpacing: 2,
                       }}
                     >
-                      Enkripsi Hardware
+                      {t("hardwareEncryption")}
                     </Text>
                   </Space>
                 </Space>
 
                 <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                  Gunakan kunci keamanan fisik atau aplikasi autentikator
-                  digital untuk login pada perangkat baru.
+                  {t("deviceTokenDescription")}
                 </Paragraph>
                 <a
                   href="https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/account/#/security/signingin"
@@ -274,7 +278,7 @@ export default function SecurityPage() {
                   rel="noreferrer"
                 >
                   <Button type="primary" block style={{ height: 56 }}>
-                    Atur Autentikator di SSO
+                    {t("setupSsoAuthenticator")}
                   </Button>
                 </a>
               </Space>
@@ -283,7 +287,7 @@ export default function SecurityPage() {
         </Row>
 
         <Card
-          title="Sesi Terautentikasi"
+          title={t("authenticatedSessions")}
           extra={
             <Tag
               style={{
@@ -293,7 +297,7 @@ export default function SecurityPage() {
                 letterSpacing: 2,
               }}
             >
-              Belum Tersedia
+              {t("notAvailable")}
             </Tag>
           }
         >
@@ -316,7 +320,7 @@ export default function SecurityPage() {
                   letterSpacing: 2,
                 }}
               >
-                Daftar sesi belum tersedia di layanan ini
+                {t("sessionsUnavailable")}
               </Text>
             }
           />
@@ -341,7 +345,7 @@ export default function SecurityPage() {
                       marginBottom: 0,
                     }}
                   >
-                    Protokol Panic.
+                    {t("panicProtocol")}
                   </Title>
                   <Paragraph
                     style={{
@@ -350,9 +354,7 @@ export default function SecurityPage() {
                       marginBottom: 0,
                     }}
                   >
-                    Pembekuan darurat dompet, kartu, dan sesi dijalankan tim
-                    operasional setelah verifikasi identitas. Hubungi dukungan
-                    24/7 bila akun Anda dalam bahaya.
+                    {t("panicProtocolDescription")}
                   </Paragraph>
                 </Space>
               </Col>
@@ -368,7 +370,7 @@ export default function SecurityPage() {
                       fontWeight: 700,
                     }}
                   >
-                    Hubungi Dukungan Darurat
+                    {t("contactEmergencySupport")}
                   </Button>
                 </Link>
               </Col>

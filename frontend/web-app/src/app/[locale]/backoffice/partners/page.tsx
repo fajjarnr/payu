@@ -31,6 +31,7 @@ import { usePartners, useRegisterPartner } from "@/hooks";
 import type { Partner } from "@/services";
 import { notify } from "@/lib/notify";
 import StatCards from "../_components/StatCards";
+import PageHeader from "@/components/PageHeader";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
@@ -169,6 +170,7 @@ export default function PartnersPage() {
 
   return (
     <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <PageHeader title="Partners" subtitle="Partner registry and onboarding" />
       <StatCards
         stats={[
           {

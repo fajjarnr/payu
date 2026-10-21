@@ -18,6 +18,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreatePaymentRequest, PaymentResponse } from "@/types";
 import api from "@/lib/api";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
@@ -62,6 +63,7 @@ interface PaymentSuccess {
 }
 
 export default function BillsPage() {
+  const t = useTranslations("bills");
   const router = useRouter();
   const { addToast } = useUIStore();
   const { accountId: authAccountId } = useAuthStore();
@@ -77,56 +79,56 @@ export default function BillsPage() {
 
   const billers: Biller[] = [
     {
-      name: "Pulsa",
+      name: t("billerTypes.pulsa"),
       icon: Smartphone,
       bg: token.colorPrimaryBg,
       fg: token.colorPrimaryText,
       code: "PULSA",
     },
     {
-      name: "Listrik (PLN)",
+      name: t("billerTypes.pln"),
       icon: Zap,
       bg: token.colorWarningBg,
       fg: token.colorWarningText,
       code: "PLN",
     },
     {
-      name: "Air (PDAM)",
+      name: t("billerTypes.pdam"),
       icon: Droplets,
       bg: token.colorPrimaryBg,
       fg: token.colorPrimaryTextActive,
       code: "PDAM",
     },
     {
-      name: "Internet/TV",
+      name: t("billerTypes.internet"),
       icon: Wifi,
       bg: token.geekblue6,
       fg: token.colorTextLightSolid,
       code: "INTERNET",
     },
     {
-      name: "Saldo Kartu",
+      name: t("billerTypes.cards"),
       icon: CreditCard,
       bg: token.orange6,
       fg: token.colorTextLightSolid,
       code: "CARDS",
     },
     {
-      name: "BPJS",
+      name: t("billerTypes.bpjs"),
       icon: Heart,
       bg: token.colorSuccess,
       fg: token.colorTextLightSolid,
       code: "BPJS",
     },
     {
-      name: "TV Kabel",
+      name: t("billerTypes.tv"),
       icon: Tv,
       bg: token.magenta6,
       fg: token.colorTextLightSolid,
       code: "TV",
     },
     {
-      name: "Game Voucher",
+      name: t("billerTypes.voucher"),
       icon: Gamepad2,
       bg: token.purple6,
       fg: token.colorTextLightSolid,
@@ -160,7 +162,10 @@ export default function BillsPage() {
     },
     onSuccess: () => {
       addToast(
-        `Pembayaran ${selectedBiller?.name} sebesar ${formatCurrency(amount)} telah diproses.`,
+        t("paymentSuccessToast", {
+          biller: selectedBiller?.name ?? "",
+          amount: formatCurrency(amount),
+        }),
         "success",
       );
       setSuccessData({
@@ -179,10 +184,7 @@ export default function BillsPage() {
     },
     onError: (error) => {
       console.error("Pembayaran gagal:", error);
-      addToast(
-        "Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.",
-        "error",
-      );
+      addToast(t("paymentErrorToast"), "error");
     },
   });
 
@@ -193,7 +195,7 @@ export default function BillsPage() {
       !amount ||
       parseCurrencyExact(amount) === "0"
     ) {
-      toast.warning("Silakan isi semua bidang yang diperlukan");
+      toast.warning(t("fillAllFields"));
       return;
     }
 
@@ -241,14 +243,14 @@ export default function BillsPage() {
               </Flex>
 
               <Typography.Title level={1} style={{ marginBottom: 8 }}>
-                Pembayaran Berhasil!
+                {t("successTitle")}
               </Typography.Title>
               <Typography.Text
                 type="secondary"
                 strong
                 style={{ display: "block", marginBottom: 40, fontSize: 14 }}
               >
-                Transaksi Anda telah diproses dengan aman.
+                {t("successSubtitle")}
               </Typography.Text>
 
               <Card style={{ width: "100%", maxWidth: 448, marginBottom: 40 }}>
@@ -279,7 +281,7 @@ export default function BillsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      Penyedia Layanan
+                      {t("serviceProvider")}
                     </Typography.Text>
                     <Typography.Title level={4} style={{ margin: 0 }}>
                       {successData.billerName}
@@ -300,7 +302,7 @@ export default function BillsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      ID Pelanggan
+                      {t("customerId")}
                     </Typography.Text>
                     <Typography.Text strong style={{ fontSize: 14 }}>
                       {successData.customerId}
@@ -316,7 +318,7 @@ export default function BillsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      Jumlah
+                      {t("amount")}
                     </Typography.Text>
                     <Typography.Title
                       level={3}
@@ -335,7 +337,7 @@ export default function BillsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      Waktu
+                      {t("timeLabel")}
                     </Typography.Text>
                     <Typography.Text strong style={{ fontSize: 14 }}>
                       {successData.timestamp.toLocaleString("id-ID", {
@@ -363,14 +365,14 @@ export default function BillsPage() {
                   }}
                   style={{ flex: isSm ? 1 : undefined, height: 56 }}
                 >
-                  Bayar Lagi
+                  {t("payAgain")}
                 </Button>
                 <Button
                   type="default"
                   onClick={() => router.push("/dashboard")}
                   style={{ flex: isSm ? 1 : undefined, height: 56 }}
                 >
-                  Kembali ke Dashboard
+                  {t("backToDashboard")}
                 </Button>
               </Flex>
             </Flex>
@@ -388,7 +390,7 @@ export default function BillsPage() {
             <Button
               type="default"
               onClick={() => setSelectedBiller(null)}
-              aria-label="Kembali"
+              aria-label={t("back")}
               icon={
                 <ChevronRight
                   style={{ fontSize: 24, transform: "rotate(180deg)" }}
@@ -445,7 +447,7 @@ export default function BillsPage() {
                       color: token.colorTextQuaternary,
                     }}
                   >
-                    Penyedia Layanan
+                    {t("serviceProvider")}
                   </Typography.Text>
                   <Typography.Title level={3} style={{ margin: 0 }}>
                     {selectedBiller.name}
@@ -458,7 +460,7 @@ export default function BillsPage() {
                       color: token.colorSuccessText,
                     }}
                   >
-                    Mitra Pembayaran Resmi
+                    {t("officialPartner")}
                   </Typography.Text>
                 </div>
               </Flex>
@@ -481,14 +483,14 @@ export default function BillsPage() {
                       color: token.colorTextSecondary,
                     }}
                   >
-                    ID Pelanggan / Nomor Rekening
+                    {t("customerIdOrAccount")}
                   </label>
                   <Input
                     id="bills-customer-id"
                     type="text"
                     value={customerId}
                     onChange={(e) => setCustomerId(e.target.value)}
-                    placeholder="Masukkan ID unik Anda"
+                    placeholder={t("enterCustomerIdPlaceholder")}
                     style={{ height: 64, fontSize: 20 }}
                   />
                 </Flex>
@@ -504,7 +506,7 @@ export default function BillsPage() {
                       color: token.colorTextSecondary,
                     }}
                   >
-                    Jumlah Pembayaran (IDR)
+                    {t("paymentAmountLabel")}
                   </label>
                   <Input
                     id="bills-amount"
@@ -538,8 +540,8 @@ export default function BillsPage() {
                 style={{ height: 64 }}
               >
                 {paymentMutation.isPending
-                  ? "Sedang Memproses..."
-                  : "Konfirmasi & Bayar Sekarang"}
+                  ? t("processingShort")
+                  : t("confirmAndPay")}
               </Button>
               <Typography.Text
                 type="secondary"
@@ -553,7 +555,7 @@ export default function BillsPage() {
                   opacity: 0.6,
                 }}
               >
-                Transaksi aman terenkripsi oleh Infrastruktur Protokol PayU
+                {t("encryptedTransactionNote")}
               </Typography.Text>
             </Flex>
           </Space>
@@ -574,11 +576,10 @@ export default function BillsPage() {
           >
             <div>
               <Typography.Title level={1} style={{ marginBottom: 0 }}>
-                Tagihan & Top-up
+                {t("title")}
               </Typography.Title>
               <Typography.Text type="secondary" strong style={{ fontSize: 14 }}>
-                Bayar tagihan utilitas dan top up dompet digital Anda secara
-                instan.
+                {t("subtitle")}
               </Typography.Text>
             </div>
             {isMd && (
@@ -595,7 +596,7 @@ export default function BillsPage() {
                   textTransform: "uppercase",
                 }}
               >
-                Penyelesaian Real-time 24/7
+                {t("realtimeSettlement")}
               </Tag>
             )}
           </Flex>
@@ -628,7 +629,7 @@ export default function BillsPage() {
                 opacity: 0.6,
               }}
             >
-              Kategori Layanan
+              {t("serviceCategory")}
             </Typography.Text>
             <Row gutter={[24, 24]} style={{ position: "relative", zIndex: 1 }}>
               {billers.map((item) => (
@@ -676,7 +677,7 @@ export default function BillsPage() {
 
           <Space direction="vertical" size={24} style={{ width: "100%" }}>
             <Typography.Title level={4} style={{ margin: 0 }}>
-              Aktivitas Terakhir
+              {t("recentActivity")}
             </Typography.Title>
             {!isLoading && recentBills.length > 0 ? (
               <Row gutter={[24, 24]}>
@@ -721,7 +722,9 @@ export default function BillsPage() {
                                 textTransform: "uppercase",
                               }}
                             >
-                              Ref: {bill.referenceNumber.slice(0, 10)}...
+                              {t("referenceLabel", {
+                                reference: `${bill.referenceNumber.slice(0, 10)}...`,
+                              })}
                             </Typography.Text>
                           </div>
                         </Flex>
@@ -776,7 +779,7 @@ export default function BillsPage() {
                       opacity: 0.6,
                     }}
                   >
-                    Pembayaran tagihan terakhir Anda akan muncul di sini.
+                    {t("noRecentPayments")}
                   </Typography.Text>
                 </Flex>
               </Card>

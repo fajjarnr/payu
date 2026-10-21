@@ -38,6 +38,7 @@ import type { Promotion, CreatePromotionRequest, RewardType } from "@/services";
 import { useActivePromotions, useCreatePromotion } from "@/hooks/useRewards";
 import { notify } from "@/lib/notify";
 import StatCards from "../_components/StatCards";
+import PageHeader from "@/components/PageHeader";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
@@ -166,6 +167,7 @@ export default function CampaignsPage() {
 
   return (
     <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <PageHeader title="Campaigns" subtitle="Marketing campaigns and claims" />
       <StatCards
         stats={[
           {

@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BackofficeService, FraudCaseStatus, FraudRiskLevel } from '@/services';
 import type { FraudCaseResponse } from '@/services';
 import { Link } from '@/lib/navigation';
+import { formatCurrency } from '@/lib/currency';
 import { Search, ChevronLeft, ChevronRight, Eye } from '@/components/icons';
 import { Button, Card, Divider, Flex, Input, Select, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
@@ -32,7 +33,7 @@ import type { TableColumnsType } from 'antd';
       ),
     },
     { key: 'type', title: 'Tipe Kecurangan', render: (_, c) => <Typography.Text strong>{c.fraudType}</Typography.Text> },
-    { key: 'amount', title: 'Jumlah', render: (_, c) => <Typography.Text strong style={{ fontVariantNumeric: 'tabular-nums' }}>Rp {Number(c.amount).toLocaleString('id-ID')}</Typography.Text> },
+    { key: 'amount', title: 'Jumlah', render: (_, c) => <Typography.Text strong style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(c.amount, { locale: 'id-ID' })}</Typography.Text> },
     {
       key: 'status',
       title: 'Status',
@@ -65,7 +66,7 @@ import type { TableColumnsType } from 'antd';
   <Space direction="vertical" size={24} style={{ width: '100%' }}>
     <Flex align="flex-start" justify="space-between" gap={24} wrap>
       <Space direction="vertical" size={4}>
-        <Typography.Title level={2} style={{ margin: 0 }}>Fraud Monitoring</Typography.Title>
+        <Typography.Title level={1} style={{ margin: 0 }}>Fraud Monitoring</Typography.Title>
         <Typography.Text type="secondary">Sistem deteksi risiko dan investigasi kecurangan transaksi.</Typography.Text>
       </Space>
       <Tag color="red">Kritis: {isLoading ? '…' : criticalCount}</Tag>

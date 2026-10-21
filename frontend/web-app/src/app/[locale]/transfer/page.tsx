@@ -12,7 +12,7 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "@/components/icons";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Button,
   DatePicker,
@@ -50,7 +50,8 @@ import { useUIStore } from "@/stores";
 import DashboardLayout from "@/components/DashboardLayout";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { formatCurrencyWithoutSymbol } from "@/lib/currency";
+import { formatCurrency, formatCurrencyWithoutSymbol } from "@/lib/currency";
+import { INK_ON_EMERALD } from "@/theme/tokens";
 import { useRouter } from "@/lib/navigation";
 
 type TransferTypeMeta = {
@@ -157,6 +158,8 @@ export interface TransferReviewSnapshot {
 
 export default function TransferPage() {
   const t = useTranslations("transfers");
+  const locale = useLocale();
+  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
   const { token } = theme.useToken();
   const TRANSFER_TYPES = TRANSFER_TYPE_META.map((m) => ({
     ...m,
@@ -557,7 +560,7 @@ export default function TransferPage() {
                           style={{
                             width: 16,
                             height: 16,
-                            color: "hsl(var(--primary))",
+                            color: token.colorPrimary,
                           }}
                         />
                         <Typography.Text type="secondary" strong>
@@ -610,7 +613,7 @@ export default function TransferPage() {
                             style={{
                               width: 16,
                               height: 16,
-                              color: "hsl(var(--primary))",
+                              color: token.colorPrimary,
                             }}
                           />
                         )}
@@ -673,12 +676,16 @@ export default function TransferPage() {
                         strong
                         style={{
                           display: "block",
-                          color: "hsl(var(--primary))",
+                          color: token.colorPrimaryText,
                           marginTop: 8,
                         }}
                       >
                         Saldo:{" "}
-                        {balance ? `Rp ${balance.availableBalance}` : "—"}
+                        {balance
+                          ? formatCurrency(balance.availableBalance, {
+                              locale: bcp47Locale,
+                            })
+                          : "—"}
                       </Typography.Text>
                     </Card>
                   </Col>
@@ -1008,7 +1015,7 @@ export default function TransferPage() {
                                 width: "100%",
                                 height: "auto",
                                 border: isSelected
-                                  ? "2px solid hsl(var(--primary))"
+                                  ? `2px solid ${token.colorPrimary}`
                                   : "2px solid transparent",
                                 transition: "all 0.2s",
                                 ...(isSelected
@@ -1031,9 +1038,8 @@ export default function TransferPage() {
                                     alignItems: "center",
                                     ...(isSelected
                                       ? {
-                                          backgroundColor:
-                                            "hsl(var(--primary) / 0.1)",
-                                          color: "hsl(var(--primary))",
+                                          backgroundColor: token.colorPrimaryBg,
+                                          color: token.colorPrimaryText,
                                         }
                                       : {
                                           backgroundColor:
@@ -1059,7 +1065,7 @@ export default function TransferPage() {
                                     style={{
                                       width: 8,
                                       height: 8,
-                                      backgroundColor: "hsl(var(--primary))",
+                                      backgroundColor: token.colorPrimary,
                                       borderRadius: "50%",
                                     }}
                                     className="animate-pulse"
@@ -1133,7 +1139,7 @@ export default function TransferPage() {
                                 width: "100%",
                                 height: "auto",
                                 border: isSelected
-                                  ? "2px solid hsl(var(--primary))"
+                                  ? `2px solid ${token.colorPrimary}`
                                   : "2px solid transparent",
                                 transition: "all 0.2s",
                                 ...(isSelected
@@ -1158,9 +1164,8 @@ export default function TransferPage() {
                                       justifyContent: "center",
                                       ...(isSelected
                                         ? {
-                                            backgroundColor:
-                                              "hsl(var(--primary) / 0.1)",
-                                            color: "hsl(var(--primary))",
+                                            backgroundColor: token.colorPrimaryBg,
+                                            color: token.colorPrimaryText,
                                           }
                                         : {
                                             backgroundColor:
@@ -1187,7 +1192,7 @@ export default function TransferPage() {
                                       marginLeft: "auto",
                                       width: 8,
                                       height: 8,
-                                      backgroundColor: "hsl(var(--primary))",
+                                      backgroundColor: token.colorPrimary,
                                       borderRadius: "50%",
                                     }}
                                     className="animate-pulse"
@@ -1334,8 +1339,8 @@ export default function TransferPage() {
                                   fontSize: "0.875rem",
                                   ...(recurringDay === d
                                     ? {
-                                        backgroundColor: "hsl(var(--primary))",
-                                        color: "hsl(var(--surface))",
+                                        backgroundColor: token.colorPrimary,
+                                        color: INK_ON_EMERALD,
                                         boxShadow:
                                           "0 10px 15px -3px hsl(var(--primary) / 0.3)",
                                       }
@@ -1441,8 +1446,8 @@ export default function TransferPage() {
                                   letterSpacing: "0.1em",
                                   ...(recurringMonth === val
                                     ? {
-                                        backgroundColor: "hsl(var(--primary))",
-                                        color: "hsl(var(--surface))",
+                                        backgroundColor: token.colorPrimary,
+                                        color: INK_ON_EMERALD,
                                         boxShadow:
                                           "0 10px 15px -3px hsl(var(--primary) / 0.3)",
                                       }
@@ -1518,7 +1523,7 @@ export default function TransferPage() {
                           style={{
                             width: 6,
                             height: 6,
-                            backgroundColor: "hsl(var(--primary))",
+                            backgroundColor: token.colorPrimary,
                             borderRadius: "50%",
                           }}
                           className="animate-pulse"
@@ -1627,7 +1632,7 @@ export default function TransferPage() {
                       style={{
                         height: 4,
                         width: 32,
-                        backgroundColor: "hsl(var(--primary))",
+                        backgroundColor: token.colorPrimary,
                         borderRadius: "9999px",
                       }}
                     />
@@ -1650,7 +1655,7 @@ export default function TransferPage() {
                             borderRadius: 12,
                             border:
                               selectedContact === c.accountId
-                                ? "1px solid hsl(var(--primary))"
+                                ? `1px solid ${token.colorPrimary}`
                                 : "1px solid transparent",
                             transition: "all 0.2s",
                             ...(selectedContact === c.accountId

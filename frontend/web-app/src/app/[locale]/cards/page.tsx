@@ -3,6 +3,7 @@
 /* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Link } from "@/lib/navigation";
 import {
@@ -65,6 +66,7 @@ interface CardData {
 }
 
 export default function CardsPage() {
+  const t = useTranslations("cards");
   const { token } = theme.useToken();
   const { accountId: authAccountId, user } = useAuthStore();
   const [showFullDetails, setShowFullDetails] = useState(false);
@@ -148,32 +150,32 @@ export default function CardsPage() {
 
   const operations = [
     {
-      label: "Transaksi Online",
-      desc: "Situs web & retail",
+      label: t("operationOnline"),
+      desc: t("operationOnlineDescription"),
       icon: Zap,
       status: extendedPrimary?.onlineEnabled ?? false,
-      tag: "REKOMENDASI",
+      tag: t("tagRecommended"),
     },
     {
-      label: "Internasional",
-      desc: "Transaksi lintas negara",
+      label: t("operationInternational"),
+      desc: t("operationInternationalDescription"),
       icon: ShieldCheck,
       status: extendedPrimary?.internationalEnabled ?? false,
-      tag: "AMAN",
+      tag: t("tagSafe"),
     },
     {
-      label: "Langganan",
-      desc: "Merchant & auto-debit",
+      label: t("operationSubscription"),
+      desc: t("operationSubscriptionDescription"),
       icon: RefreshCw,
       status: extendedPrimary?.subscriptionEnabled ?? false,
-      tag: "AKTIF",
+      tag: t("tagActive"),
     },
     {
-      label: "Penarikan ATM",
-      desc: "Izin tarik tunai fisik",
+      label: t("operationAtm"),
+      desc: t("operationAtmDescription"),
       icon: Sliders,
       status: extendedPrimary?.atmEnabled ?? false,
-      tag: "BLOKIR",
+      tag: t("tagBlocked"),
     },
   ];
 
@@ -185,10 +187,10 @@ export default function CardsPage() {
           <Flex justify="space-between" align="flex-end" gap={16} wrap>
             <div>
               <Typography.Title level={1} style={{ marginBottom: 4 }}>
-                Kartu Virtual
+                {t("title")}
               </Typography.Title>
               <Typography.Text type="secondary">
-                Pembayaran online yang aman dengan rincian kartu instan.
+                {t("pageSubtitle")}
               </Typography.Text>
             </div>
             <Button
@@ -203,7 +205,7 @@ export default function CardsPage() {
               disabled={createCard.isPending}
               icon={createCard.isPending ? <Loader2 spin /> : <Plus />}
             >
-              Kartu Baru
+              {t("newCard")}
             </Button>
           </Flex>
 
@@ -308,7 +310,7 @@ export default function CardsPage() {
                                 textTransform: "uppercase",
                               }}
                             >
-                              Owner
+                              {t("cardOwnerLabel")}
                             </Typography.Text>
                             <Typography.Text
                               ellipsis
@@ -334,7 +336,7 @@ export default function CardsPage() {
                                 textTransform: "uppercase",
                               }}
                             >
-                              Exp
+                              {t("cardExpiryLabel")}
                             </Typography.Text>
                             <Typography.Text
                               style={{
@@ -366,11 +368,11 @@ export default function CardsPage() {
                         aria-pressed={showFullDetails}
                         aria-label={
                           showFullDetails
-                            ? "Sembunyikan detail kartu"
-                            : "Tampilkan detail kartu"
+                            ? t("hideDetailsAria")
+                            : t("showDetailsAria")
                         }
                       >
-                        Detail Kartu
+                        {t("cardDetails")}
                       </Button>
                     </Col>
                     <Col xs={24} sm={12}>
@@ -384,7 +386,7 @@ export default function CardsPage() {
                         }
                         icon={<Lock />}
                       >
-                        {isFrozen ? "Aktifkan" : "Bekukan"}
+                        {isFrozen ? t("activate") : t("freeze")}
                       </Button>
                     </Col>
                     <Col xs={24} sm={12}>
@@ -393,7 +395,7 @@ export default function CardsPage() {
                         onClick={handleOpenLimitModal}
                         icon={<Settings />}
                       >
-                        Ubah Limit
+                        {t("changeLimit")}
                       </Button>
                     </Col>
                     <Col xs={24} sm={12}>
@@ -406,7 +408,7 @@ export default function CardsPage() {
                           deleteCard.isPending ? <Loader2 spin /> : <Trash2 />
                         }
                       >
-                        Hapus Kartu
+                        {t("deleteCard")}
                       </Button>
                     </Col>
                   </Row>
@@ -426,7 +428,7 @@ export default function CardsPage() {
                     level={4}
                     style={{ marginBottom: 0 }}
                   >
-                    Limit Harian
+                    {t("dailyLimit")}
                   </Typography.Title>
                   <Button
                     shape="circle"
@@ -435,7 +437,7 @@ export default function CardsPage() {
                       minHeight: 44,
                     }}
                     onClick={handleOpenLimitModal}
-                    aria-label="Pengaturan kartu"
+                    aria-label={t("cardSettingsAria")}
                     icon={<Sliders />}
                   />
                 </Flex>
@@ -456,7 +458,7 @@ export default function CardsPage() {
                         marginBottom: 8,
                       }}
                     >
-                      Terpakai Hari Ini
+                      {t("spentToday")}
                     </Typography.Text>
                     <Typography.Text
                       strong
@@ -499,7 +501,7 @@ export default function CardsPage() {
                           fontSize: 12,
                         }}
                       >
-                        Status Aktif
+                        {t("activeStatus")}
                       </Typography.Text>
                       <Typography.Text
                         type="secondary"
@@ -507,7 +509,7 @@ export default function CardsPage() {
                           fontSize: 12,
                         }}
                       >
-                        Terlindungi Protokol Keamanan
+                        {t("protectedBySecurity")}
                       </Typography.Text>
                     </div>
                   </Flex>
@@ -529,7 +531,7 @@ export default function CardsPage() {
                           fontSize: 12,
                         }}
                       >
-                        {rawPercent}% Terpakai
+                        {t("percentUsed", { percent: rawPercent })}
                       </Typography.Text>
                       <Typography.Text
                         type="secondary"
@@ -538,15 +540,16 @@ export default function CardsPage() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        Limit: Rp {(limitForm.dailyLimit / 1000000).toFixed(1)}{" "}
-                        jt
+                        {t("limitSummary", {
+                          amount: (limitForm.dailyLimit / 1000000).toFixed(1),
+                        })}
                       </Typography.Text>
                     </Flex>
                     <Button
                       block
                       onClick={handleOpenLimitModal}
                     >
-                      Ubah Batas Transaksi
+                      {t("changeTransactionLimit")}
                     </Button>
                   </Space>
                 </Space>
@@ -557,7 +560,7 @@ export default function CardsPage() {
           {/* Mid Section: Catalog Style Operations */}
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <Typography.Title level={3} style={{ marginBottom: 0 }}>
-              Kontrol Operasional
+              {t("operationalControls")}
             </Typography.Title>
             <Row gutter={[16, 16]}>
               {operations.map((item, i) => (
@@ -616,7 +619,7 @@ export default function CardsPage() {
                         }}
                         type="secondary"
                       >
-                        {item.status ? "Aktif" : "Non-aktif"}
+                        {item.status ? t("active") : t("inactive")}
                       </Typography.Text>
                       <Typography.Text strong>{item.label}</Typography.Text>
                       <Typography.Text
@@ -644,11 +647,11 @@ export default function CardsPage() {
                           color: token.colorPrimary,
                         }}
                       >
-                        Atur Izin
+                        {t("managePermission")}
                       </Typography.Text>
                       <Switch
                         defaultChecked={item.status}
-                        aria-label={`Atur Izin ${item.label}`}
+                        aria-label={t("managePermissionFor", { name: item.label })}
                       />
                     </Flex>
                   </Card>
@@ -683,18 +686,16 @@ export default function CardsPage() {
                 </Flex>
                 <div style={{ maxWidth: 640 }}>
                   <Typography.Title level={4} style={{ marginBottom: 4 }}>
-                    Protokol Keamanan Aktif.
+                    {t("securityProtocolActive")}
                   </Typography.Title>
                   <Typography.Text type="secondary">
-                    Sistem AI kami mendeteksi aktivitas mencurigakan secara
-                    real-time. Upgrade ke Premium untuk perlindungan asuransi
-                    saldo hingga Rp 50.000.000.
+                    {t("securityProtocolDescription")}
                   </Typography.Text>
                 </div>
               </Flex>
               <Link href="/settings">
                 <Button type="primary" size="large">
-                  Upgrade Sekarang
+                  {t("upgradeNow")}
                 </Button>
               </Link>
             </Flex>
@@ -709,20 +710,20 @@ export default function CardsPage() {
             width={512}
             title={
               <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                Ubah Batas Transaksi
+                {t("changeTransactionLimit")}
               </Typography.Title>
             }
           >
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
-                Sesuaikan limit harian dan bulanan untuk kartu {cardLast4}.
+                {t("adjustLimitsForCard", { last4: cardLast4 })}
               </Typography.Text>
 
               {updateCard.isError && (
                 <Alert
                   type="error"
                   showIcon
-                  message="Gagal mengubah limit. Silakan coba lagi."
+                  message={t("limitUpdateError")}
                 />
               )}
 
@@ -736,7 +737,7 @@ export default function CardsPage() {
                     strong
                     style={{ display: "block", marginBottom: 8 }}
                   >
-                    <label htmlFor="card-daily-limit">Limit Harian (IDR)</label>
+                    <label htmlFor="card-daily-limit">{t("dailyLimitIdr")}</label>
                   </Typography.Text>
                   <Input
                     id="card-daily-limit"
@@ -751,7 +752,7 @@ export default function CardsPage() {
                     placeholder="25000000"
                   />
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    Maksimum transaksi per hari
+                    {t("maxPerDay")}
                   </Typography.Text>
                 </div>
                 <div>
@@ -760,7 +761,7 @@ export default function CardsPage() {
                     style={{ display: "block", marginBottom: 8 }}
                   >
                     <label htmlFor="card-monthly-limit">
-                      Limit Bulanan (IDR)
+                      {t("monthlyLimitIdr")}
                     </label>
                   </Typography.Text>
                   <Input
@@ -776,14 +777,14 @@ export default function CardsPage() {
                     placeholder="100000000"
                   />
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    Maksimum transaksi per bulan
+                    {t("maxPerMonth")}
                   </Typography.Text>
                 </div>
               </Space>
 
               <Flex justify="flex-end" gap={8}>
                 <Button onClick={() => setIsLimitModalOpen(false)}>
-                  Batal
+                  {t("cancel")}
                 </Button>
                 <Button
                   type="primary"
@@ -791,7 +792,7 @@ export default function CardsPage() {
                   disabled={updateCard.isPending}
                   icon={updateCard.isPending ? <Loader2 spin /> : undefined}
                 >
-                  Simpan Perubahan
+                  {t("saveChanges")}
                 </Button>
               </Flex>
             </Space>
@@ -809,27 +810,26 @@ export default function CardsPage() {
                 level={4}
                 style={{ marginBottom: 0, color: token.colorError }}
               >
-                Hapus Kartu
+                {t("deleteCard")}
               </Typography.Title>
             }
           >
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
-                Apakah Anda yakin ingin menghapus kartu berakhiran {cardLast4}?
-                Tindakan ini tidak dapat dibatalkan.
+                {t("deleteCardConfirm", { last4: cardLast4 })}
               </Typography.Text>
 
               {deleteCard.isError && (
                 <Alert
                   type="error"
                   showIcon
-                  message="Gagal menghapus kartu. Silakan coba lagi."
+                  message={t("deleteCardError")}
                 />
               )}
 
               <Flex justify="flex-end" gap={8}>
                 <Button onClick={() => setIsDeleteModalOpen(false)}>
-                  Batal
+                  {t("cancel")}
                 </Button>
                 <Button
                   danger
@@ -838,7 +838,7 @@ export default function CardsPage() {
                   disabled={deleteCard.isPending}
                   icon={deleteCard.isPending ? <Loader2 spin /> : <Trash2 />}
                 >
-                  Hapus Kartu
+                  {t("deleteCard")}
                 </Button>
               </Flex>
             </Space>

@@ -26,6 +26,7 @@ import type { TableColumnsType } from "antd";
 import type { FxRateResponse } from "@/services";
 import { useAllFxRates } from "@/hooks/useFx";
 import StatCards from "../_components/StatCards";
+import PageHeader from "@/components/PageHeader";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
@@ -117,6 +118,7 @@ export default function FxRatesAdminPage() {
   ];
   return (
     <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <PageHeader title="FX Rates" subtitle="Live currency rates and manual overrides" />
       <StatCards
         stats={[
           {

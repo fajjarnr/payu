@@ -39,6 +39,7 @@ import type { MenuProps, TableColumnsType } from "antd";
 import type { Content } from "@/services";
 import { useActiveContent } from "@/hooks/useCMS";
 import { notify as toast } from "@/lib/notify";
+import PageHeader from "@/components/PageHeader";
 import { MutationPresets } from "@/lib/mutation-config";
 import CMSService from "@/services/CMSService";
 import StatCards from "../_components/StatCards";
@@ -596,6 +597,7 @@ export default function CMSPage() {
 
   return (
     <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <PageHeader title="CMS Content" subtitle="Banners, promos and dynamic content" />
       <StatCards
         stats={[
           {

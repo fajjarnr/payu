@@ -22,7 +22,7 @@ import {
   TriangleAlert,
 } from "@/components/icons";
 import { useQuery } from "@tanstack/react-query";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { BalanceResponse, WalletTransaction, Pocket } from "@/types";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -90,6 +90,7 @@ function pocketTarget(p: Pocket): string | undefined {
 type PocketWithGoal = Pocket & { target?: number; type?: string };
 
 export default function PocketsPage() {
+  const t = useTranslations("accounts");
   const { token } = theme.useToken();
   // SECURITY: Get accountId from auth store, NOT localStorage
   const accountId = useAuthStore((state) => state.accountId) || "";
@@ -143,7 +144,7 @@ export default function PocketsPage() {
 
   const handleCreatePocket = async () => {
     if (!newPocketName.trim()) {
-      toast.error("Nama kantong wajib diisi");
+      toast.error(t("nameRequired"));
       return;
     }
 
@@ -154,12 +155,12 @@ export default function PocketsPage() {
         currency: "IDR",
         description: newPocketTarget ? `Target: ${newPocketTarget}` : undefined,
       });
-      toast.success("Kantong berhasil dibuat");
+      toast.success(t("createSuccess"));
       setIsCreateModalOpen(false);
       setNewPocketName("");
       setNewPocketTarget("");
     } catch {
-      toast.error("Gagal membuat kantong");
+      toast.error(t("createError"));
     }
   };
 
@@ -177,12 +178,12 @@ export default function PocketsPage() {
         amount: parseCurrencyExact(amount),
         description: "Top up pocket",
       });
-      toast.success("Berhasil menambah dana");
+      toast.success(t("creditSuccess"));
       setIsCreditModalOpen(false);
       setAmount("");
       setSelectedPocketForAction(null);
     } catch {
-      toast.error("Gagal menambah dana");
+      toast.error(t("creditError"));
     }
   };
 
@@ -200,30 +201,30 @@ export default function PocketsPage() {
         amount: parseCurrencyExact(amount),
         description: "Withdraw from pocket",
       });
-      toast.success("Berhasil mengambil dana");
+      toast.success(t("debitSuccess"));
       setIsDebitModalOpen(false);
       setAmount("");
       setSelectedPocketForAction(null);
     } catch {
-      toast.error("Gagal mengambil dana");
+      toast.error(t("debitError"));
     }
   };
 
   const handleFreeze = async (pocketId: string) => {
     try {
       await freezePocket.mutateAsync(pocketId);
-      toast.success("Kantong berhasil dibekukan");
+      toast.success(t("freezeSuccess"));
     } catch {
-      toast.error("Gagal membekukan kantong");
+      toast.error(t("freezeError"));
     }
   };
 
   const handleUnfreeze = async (pocketId: string) => {
     try {
       await unfreezePocket.mutateAsync(pocketId);
-      toast.success("Kantong berhasil diaktifkan kembali");
+      toast.success(t("unfreezeSuccess"));
     } catch {
-      toast.error("Gagal mengaktifkan kantong");
+      toast.error(t("unfreezeError"));
     }
   };
 
@@ -232,11 +233,11 @@ export default function PocketsPage() {
 
     try {
       await closePocket.mutateAsync(selectedPocketForAction.id);
-      toast.success("Kantong berhasil ditutup");
+      toast.success(t("closeSuccess"));
       setIsCloseModalOpen(false);
       setSelectedPocketForAction(null);
     } catch {
-      toast.error("Gagal menutup kantong");
+      toast.error(t("closeError"));
     }
   };
 
@@ -268,7 +269,7 @@ export default function PocketsPage() {
       icon: idx === 0 ? Target : Lock,
       isShared: false,
       locked: idx === 1,
-      interestRate: idx === 1 ? "4.5% p.a" : undefined,
+      interestRate: idx === 1 ? "4.5" : undefined,
     }));
 
   const sharedPockets: SharedPocket[] = (pocketsData ?? [])
@@ -309,10 +310,10 @@ export default function PocketsPage() {
           <Flex justify="space-between" align="flex-end" gap={16} wrap>
             <div>
               <Typography.Title level={1} style={{ marginBottom: 4 }}>
-                Manajemen Kantong
+                {t("title")}
               </Typography.Title>
               <Typography.Text type="secondary">
-                Kelola dan alokasikan dana Anda dengan presisi tinggi.
+                {t("subtitle")}
               </Typography.Text>
             </div>
             <Flex gap={12}>
@@ -324,14 +325,14 @@ export default function PocketsPage() {
                     ?.scrollIntoView({ behavior: "smooth" })
                 }
               >
-                Kantong Bersama
+                {t("sharedPocketsSection")}
               </Button>
               <Button
                 type="primary"
                 icon={<Plus />}
                 onClick={() => setIsCreateModalOpen(true)}
               >
-                Tambah Kantong
+                {t("addPocket")}
               </Button>
             </Flex>
           </Flex>
@@ -365,11 +366,11 @@ export default function PocketsPage() {
                         <Typography.Text
                           style={{ ...labelStyle, color: token.colorPrimary }}
                         >
-                          Dompet Aktif
+                          {t("activeWallet")}
                         </Typography.Text>
                       </Flex>
                       <Typography.Title level={3} style={{ marginBottom: 0 }}>
-                        Kantong Utama Cair
+                        {t("mainPocket")}
                       </Typography.Title>
                     </div>
                     <Flex
@@ -393,7 +394,7 @@ export default function PocketsPage() {
                       type="secondary"
                       style={{ ...labelStyle, opacity: 0.6 }}
                     >
-                      Likuiditas Tersedia
+                      {t("availableLiquidity")}
                     </Typography.Text>
                     <Typography.Title
                       level={2}
@@ -418,7 +419,7 @@ export default function PocketsPage() {
 
                 <Button
                   type="text"
-                  aria-label="Buka detail"
+                  aria-label={t("openDetails")}
                   icon={<ArrowUpRight />}
                   onClick={() =>
                     document
@@ -443,7 +444,7 @@ export default function PocketsPage() {
                     type="secondary"
                     style={{ ...labelStyle, opacity: 0.6 }}
                   >
-                    Protokol Cadangan
+                    {t("reserveProtocol")}
                   </Typography.Text>
                   <Typography.Title
                     level={3}
@@ -491,19 +492,19 @@ export default function PocketsPage() {
                     </Flex>
                     <div>
                       <Typography.Text strong style={{ display: "block" }}>
-                        Dana Terproteksi
+                        {t("protectedFunds")}
                       </Typography.Text>
                       <Typography.Text type="secondary" style={{ ...labelStyle }}>
-                        Enkripsi aktif
+                        {t("encryptionActive")}
                       </Typography.Text>
                     </div>
                   </Flex>
                   <div style={{ marginTop: 24 }}>
                     <Typography.Text type="secondary" style={{ ...labelStyle }}>
-                      Status
+                      {t("status")}
                     </Typography.Text>
                     <Typography.Text strong style={{ display: "block", fontSize: 12 }}>
-                      Aktif
+                      {t("active")}
                     </Typography.Text>
                   </div>
                 </Card>
@@ -515,12 +516,13 @@ export default function PocketsPage() {
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <Flex justify="space-between" align="center">
               <Typography.Title level={3} style={{ marginBottom: 0 }}>
-                Kantong Saya
+                {t("myPockets")}
               </Typography.Title>
               <Tag bordered style={{ fontFamily: "monospace" }}>
-                Total:{" "}
-                {formatCurrency(totalBalance?.totalBalance ?? "0", {
-                  locale: bcp47Locale,
+                {t("total", {
+                  amount: formatCurrency(totalBalance?.totalBalance ?? "0", {
+                    locale: bcp47Locale,
+                  }),
                 })}
               </Tag>
             </Flex>
@@ -588,7 +590,7 @@ export default function PocketsPage() {
                                       <ArrowDownLeft
                                         style={{ color: token.colorPrimary }}
                                       />
-                                      Tambah Dana
+                                      {t("addFunds")}
                                     </Flex>
                                   ),
                                   onClick: () => openCreditModal(pocket),
@@ -600,7 +602,7 @@ export default function PocketsPage() {
                                       <ArrowUpRight
                                         style={{ color: token.colorPrimary }}
                                       />
-                                      Ambil Dana
+                                      {t("withdrawFunds")}
                                     </Flex>
                                   ),
                                   onClick: () => openDebitModal(pocket),
@@ -615,7 +617,7 @@ export default function PocketsPage() {
                                               color: token.colorWarning,
                                             }}
                                           />
-                                          Bekukan
+                                          {t("freezePocket")}
                                         </Flex>
                                       ),
                                       onClick: () => handleFreeze(pocket.id),
@@ -629,7 +631,7 @@ export default function PocketsPage() {
                                               color: token.colorPrimary,
                                             }}
                                           />
-                                          Aktifkan
+                                          {t("activatePocket")}
                                         </Flex>
                                       ),
                                       onClick: () => handleUnfreeze(pocket.id),
@@ -640,7 +642,7 @@ export default function PocketsPage() {
                                   label: (
                                     <Flex align="center" gap={8}>
                                       <Trash2 />
-                                      Tutup Kantong
+                                      {t("closePocketAction")}
                                     </Flex>
                                   ),
                                   onClick: () => openCloseModal(pocket),
@@ -650,7 +652,7 @@ export default function PocketsPage() {
                           >
                             <Button
                               type="text"
-                              aria-label="Opsi kantong"
+                              aria-label={t("pocketOptions")}
                               icon={<MoreVertical />}
                               style={{ minWidth: 44, minHeight: 44 }}
                             />
@@ -722,11 +724,10 @@ export default function PocketsPage() {
                   description={
                     <Space direction="vertical" size={4}>
                       <Typography.Text strong style={{ fontSize: 16 }}>
-                        Belum Ada Kantong
+                        {t("emptyPocketsTitle")}
                       </Typography.Text>
                       <Typography.Text type="secondary">
-                        Buat kantong pertama Anda untuk mulai mengalokasikan
-                        dana
+                        {t("emptyPocketsDescription")}
                       </Typography.Text>
                     </Space>
                   }
@@ -736,7 +737,7 @@ export default function PocketsPage() {
                     icon={<Plus />}
                     onClick={() => setIsCreateModalOpen(true)}
                   >
-                    Buat Kantong
+                    {t("createPocketAction")}
                   </Button>
                 </Empty>
               </Card>
@@ -749,10 +750,10 @@ export default function PocketsPage() {
               <Space direction="vertical" size={16} style={{ width: "100%" }}>
                 <Flex justify="space-between" align="center">
                   <Typography.Title level={3} style={{ marginBottom: 0 }}>
-                    Tujuan Khusus
+                    {t("specialGoals")}
                   </Typography.Title>
                   <Link href="/investments">
-                    <Button type="link">Kelola Portofolio</Button>
+                    <Button type="link">{t("managePortfolio")}</Button>
                   </Link>
                 </Flex>
 
@@ -795,9 +796,10 @@ export default function PocketsPage() {
                                 type="secondary"
                                 style={labelStyle}
                               >
-                                Target:{" "}
-                                {formatCurrency(goal.target, {
-                                  locale: bcp47Locale,
+                                {t("targetLabel", {
+                                  amount: formatCurrency(goal.target, {
+                                    locale: bcp47Locale,
+                                  }),
                                 })}
                               </Typography.Text>
                             </div>
@@ -823,7 +825,9 @@ export default function PocketsPage() {
                                   color={token.colorPrimary}
                                   style={{ borderRadius: 999, fontWeight: 700 }}
                                 >
-                                  {goal.interestRate}
+                                  {t("interestRate", {
+                                    rate: goal.interestRate ?? "",
+                                  })}
                                 </Tag>
                               ) : (
                                 <Typography.Text
@@ -844,7 +848,7 @@ export default function PocketsPage() {
                                   color: token.colorPrimary,
                                 }}
                               >
-                                <Lock /> Dana Terkunci & Dijamin
+                                <Lock /> {t("lockedAndGuaranteed")}
                               </Typography.Text>
                             ) : (
                               <>
@@ -859,14 +863,15 @@ export default function PocketsPage() {
                                   type="secondary"
                                   style={{ ...labelStyle, textAlign: "right" }}
                                 >
-                                  Sisa:{" "}
-                                  {formatCurrency(
-                                    addCurrency(
-                                      goal.target,
-                                      `-${goal.current}`,
+                                  {t("remaining", {
+                                    amount: formatCurrency(
+                                      addCurrency(
+                                        goal.target,
+                                        `-${goal.current}`,
+                                      ),
+                                      { locale: bcp47Locale },
                                     ),
-                                    { locale: bcp47Locale },
-                                  )}
+                                  })}
                                 </Typography.Text>
                               </>
                             )}
@@ -883,7 +888,7 @@ export default function PocketsPage() {
               <Space direction="vertical" size={16} style={{ width: "100%" }}>
                 <Flex justify="space-between" align="center">
                   <Typography.Title level={3} style={{ marginBottom: 0 }}>
-                    Buku Besar Terakhir
+                    {t("recentLedger")}
                   </Typography.Title>
                   <Flex
                     align="center"
@@ -943,13 +948,13 @@ export default function PocketsPage() {
                           >
                             <History style={{ fontSize: 48, opacity: 0.2 }} />
                             <Typography.Text strong type="secondary">
-                              Tidak Ada Aktivitas
+                              {t("noActivity")}
                             </Typography.Text>
                             <Typography.Text
                               type="secondary"
                               style={{ ...labelStyle, opacity: 0.6 }}
                             >
-                              Aktivitas keuangan Anda akan muncul di sini
+                              {t("noActivityDescription")}
                             </Typography.Text>
                           </Flex>
                         ),
@@ -1005,7 +1010,10 @@ export default function PocketsPage() {
                                       undefined,
                                       { day: "2-digit", month: "short" },
                                     )}{" "}
-                                    • {isCredit ? "Masuk" : "Keluar"}
+                                    •{" "}
+                                    {isCredit
+                                      ? t("transactionIn")
+                                      : t("transactionOut")}
                                   </Typography.Text>
                                 </div>
                               </Flex>
@@ -1030,7 +1038,7 @@ export default function PocketsPage() {
                   )}
                   <div style={{ marginTop: "auto", paddingTop: 24 }}>
                     <Link href="/statements">
-                      <Button block>Lihat Rekening Koran</Button>
+                      <Button block>{t("viewStatement")}</Button>
                     </Link>
                   </div>
                 </Card>
@@ -1049,14 +1057,14 @@ export default function PocketsPage() {
               <Flex align="center" gap={12}>
                 <Users style={{ color: token.colorPrimary }} />
                 <Typography.Title level={3} style={{ marginBottom: 0 }}>
-                  Kantong Bersama
+                  {t("sharedPocketsSection")}
                 </Typography.Title>
               </Flex>
               <Button
                 icon={<UserPlus />}
                 onClick={() => setIsCreateModalOpen(true)}
               >
-                Buat Kantong Baru
+                {t("newPocketTitle")}
               </Button>
             </Flex>
 
@@ -1110,7 +1118,9 @@ export default function PocketsPage() {
                                 type="secondary"
                                 style={labelStyle}
                               >
-                                {pocket.sharedMembers?.length} Anggota
+                                {t("memberCount", {
+                                  count: pocket.sharedMembers?.length ?? 0,
+                                })}
                               </Typography.Text>
                             </div>
                           </Flex>
@@ -1160,9 +1170,10 @@ export default function PocketsPage() {
                               type="secondary"
                               style={{ ...labelStyle, textAlign: "right" }}
                             >
-                              Target:{" "}
-                              {formatCurrency(pocket.target, {
-                                locale: bcp47Locale,
+                              {t("targetLabel", {
+                                amount: formatCurrency(pocket.target, {
+                                  locale: bcp47Locale,
+                                }),
                               })}
                             </Typography.Text>
                           )}
@@ -1182,19 +1193,15 @@ export default function PocketsPage() {
                               type="secondary"
                               style={labelStyle}
                             >
-                              Anggota
+                              {t("members")}
                             </Typography.Text>
                             <Button
                               type="link"
                               icon={<UserPlus />}
-                              onClick={() =>
-                                toast.info(
-                                  "Undangan anggota kantong bersama belum tersedia",
-                                )
-                              }
+                              onClick={() => toast.info(t("inviteUnavailable"))}
                               style={{ padding: 0 }}
                             >
-                              Undang
+                              {t("invite")}
                             </Button>
                           </Flex>
                           <Space
@@ -1258,11 +1265,9 @@ export default function PocketsPage() {
                                     type="text"
                                     icon={<MoreVertical />}
                                     onClick={() =>
-                                      toast.info(
-                                        "Kelola anggota kantong bersama belum tersedia",
-                                      )
+                                      toast.info(t("manageMembersUnavailable"))
                                     }
-                                    aria-label="Aksi lainnya"
+                                    aria-label={t("moreActions")}
                                     style={{ minWidth: 44, minHeight: 44 }}
                                   />
                                 </Flex>
@@ -1301,17 +1306,16 @@ export default function PocketsPage() {
                     level={3}
                     style={{ marginBottom: 0 }}
                   >
-                    Akselerasi Kekayaan Anda.
+                    {t("wealthTitle")}
                   </Typography.Title>
                 </Flex>
                 <Typography.Text type="secondary" style={{ fontSize: 14 }}>
-                  Pindahkan dana mengendap dari kantong ke reksa dana atau
-                  emas digital.
+                  {t("wealthDescription")}
                 </Typography.Text>
               </Space>
               <Link href="/investments">
                 <Button type="primary" size="large">
-                  Jelajahi Marketplace
+                  {t("exploreMarketplace")}
                 </Button>
               </Link>
             </Flex>
@@ -1330,10 +1334,10 @@ export default function PocketsPage() {
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <div>
               <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                Buat Kantong Baru
+                {t("newPocketTitle")}
               </Typography.Title>
               <Typography.Text type="secondary">
-                Buat kantong untuk mengalokasikan dana sesuai tujuan Anda
+                {t("newPocketSubtitle")}
               </Typography.Text>
             </div>
             <Space
@@ -1346,11 +1350,11 @@ export default function PocketsPage() {
                   strong
                   style={{ display: "block", marginBottom: 8 }}
                 >
-                  <label htmlFor="name">Nama Kantong</label>
+                  <label htmlFor="name">{t("pocketNameLabel")}</label>
                 </Typography.Text>
                 <Input
                   id="name"
-                  placeholder="Contoh: Dana Darurat, Liburan"
+                  placeholder={t("pocketNamePlaceholder")}
                   value={newPocketName}
                   onChange={(e) => setNewPocketName(e.target.value)}
                 />
@@ -1360,7 +1364,7 @@ export default function PocketsPage() {
                   strong
                   style={{ display: "block", marginBottom: 8 }}
                 >
-                  <label htmlFor="target">Target Dana (Opsional)</label>
+                  <label htmlFor="target">{t("targetAmountLabel")}</label>
                 </Typography.Text>
                 <Input
                   id="target"
@@ -1375,7 +1379,7 @@ export default function PocketsPage() {
                   strong
                   style={{ display: "block", marginBottom: 8 }}
                 >
-                  Tipe Kantong
+                  {t("pocketTypeLabel")}
                 </Typography.Text>
                 <Flex gap={8}>
                   <Button
@@ -1385,7 +1389,7 @@ export default function PocketsPage() {
                     icon={<Wallet />}
                     onClick={() => setNewPocketType("SAVINGS")}
                   >
-                    Tabungan
+                    {t("savingsType")}
                   </Button>
                   <Button
                     htmlType="button"
@@ -1394,19 +1398,23 @@ export default function PocketsPage() {
                     icon={<Target />}
                     onClick={() => setNewPocketType("GOAL")}
                   >
-                    Target
+                    {t("goalType")}
                   </Button>
                 </Flex>
               </div>
             </Space>
             <Flex justify="flex-end" gap={8}>
-              <Button onClick={() => setIsCreateModalOpen(false)}>Batal</Button>
+              <Button onClick={() => setIsCreateModalOpen(false)}>
+                {t("cancel")}
+              </Button>
               <Button
                 type="primary"
                 onClick={handleCreatePocket}
                 disabled={createPocket.isPending || !newPocketName.trim()}
               >
-                {createPocket.isPending ? "Membuat..." : "Buat Kantong"}
+                {createPocket.isPending
+                  ? t("creating")
+                  : t("createPocketAction")}
               </Button>
             </Flex>
           </Space>
@@ -1424,10 +1432,12 @@ export default function PocketsPage() {
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <div>
               <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                Tambah Dana
+                {t("addFunds")}
               </Typography.Title>
               <Typography.Text type="secondary">
-                Tambahkan dana ke {selectedPocketForAction?.name}
+                {t("addFundsDescription", {
+                  name: selectedPocketForAction?.name ?? "",
+                })}
               </Typography.Text>
             </div>
             <Space
@@ -1440,7 +1450,7 @@ export default function PocketsPage() {
                 style={{ background: token.colorFillQuaternary }}
               >
                 <Typography.Text type="secondary">
-                  Saldo Saat Ini
+                  {t("currentBalance")}
                 </Typography.Text>
                 <Typography.Title level={3} style={{ marginBottom: 0 }}>
                   {formatCurrency(selectedPocketForAction?.balance ?? "0", {
@@ -1453,7 +1463,7 @@ export default function PocketsPage() {
                   strong
                   style={{ display: "block", marginBottom: 8 }}
                 >
-                  <label htmlFor="amount">Jumlah Dana</label>
+                  <label htmlFor="amount">{t("amountLabel")}</label>
                 </Typography.Text>
                 <Input
                   id="amount"
@@ -1465,13 +1475,15 @@ export default function PocketsPage() {
               </div>
             </Space>
             <Flex justify="flex-end" gap={8}>
-              <Button onClick={() => setIsCreditModalOpen(false)}>Batal</Button>
+              <Button onClick={() => setIsCreditModalOpen(false)}>
+                {t("cancel")}
+              </Button>
               <Button
                 type="primary"
                 onClick={handleCredit}
                 disabled={creditPocket.isPending || !amount}
               >
-                {creditPocket.isPending ? "Memproses..." : "Tambah Dana"}
+                {creditPocket.isPending ? t("processing") : t("addFunds")}
               </Button>
             </Flex>
           </Space>
@@ -1489,10 +1501,12 @@ export default function PocketsPage() {
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <div>
               <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                Ambil Dana
+                {t("withdrawFunds")}
               </Typography.Title>
               <Typography.Text type="secondary">
-                Ambil dana dari {selectedPocketForAction?.name}
+                {t("withdrawDescription", {
+                  name: selectedPocketForAction?.name ?? "",
+                })}
               </Typography.Text>
             </div>
             <Space
@@ -1505,7 +1519,7 @@ export default function PocketsPage() {
                 style={{ background: token.colorFillQuaternary }}
               >
                 <Typography.Text type="secondary">
-                  Saldo Tersedia
+                  {t("availableBalance")}
                 </Typography.Text>
                 <Typography.Title level={3} style={{ marginBottom: 0 }}>
                   {formatCurrency(selectedPocketForAction?.balance ?? "0", {
@@ -1518,7 +1532,7 @@ export default function PocketsPage() {
                   strong
                   style={{ display: "block", marginBottom: 8 }}
                 >
-                  <label htmlFor="debit-amount">Jumlah Dana</label>
+                  <label htmlFor="debit-amount">{t("amountLabel")}</label>
                 </Typography.Text>
                 <Input
                   id="debit-amount"
@@ -1530,14 +1544,16 @@ export default function PocketsPage() {
               </div>
             </Space>
             <Flex justify="flex-end" gap={8}>
-              <Button onClick={() => setIsDebitModalOpen(false)}>Batal</Button>
+              <Button onClick={() => setIsDebitModalOpen(false)}>
+                {t("cancel")}
+              </Button>
               <Button
                 onClick={handleDebit}
                 disabled={debitPocket.isPending || !amount}
                 danger
                 type="primary"
               >
-                {debitPocket.isPending ? "Memproses..." : "Ambil Dana"}
+                {debitPocket.isPending ? t("processing") : t("withdrawFunds")}
               </Button>
             </Flex>
           </Space>
@@ -1560,13 +1576,13 @@ export default function PocketsPage() {
               >
                 <Flex align="center" gap={8}>
                   <Trash2 />
-                  Tutup Kantong?
+                  {t("closePocketTitle")}
                 </Flex>
               </Typography.Title>
               <Typography.Text type="secondary">
-                Apakah Anda yakin ingin menutup kantong &ldquo;
-                {selectedPocketForAction?.name}&rdquo;? Dana yang tersisa akan
-                dikembalikan ke dompet utama.
+                {t("closePocketConfirm", {
+                  name: selectedPocketForAction?.name ?? "",
+                })}
               </Typography.Text>
             </div>
             <Card
@@ -1583,20 +1599,21 @@ export default function PocketsPage() {
                 }}
               >
                 <Flex align="center" gap={8}>
-                  <TriangleAlert aria-hidden="true" /> Tindakan ini tidak dapat
-                  dibatalkan
+                  <TriangleAlert aria-hidden="true" /> {t("irreversibleAction")}
                 </Flex>
               </Typography.Text>
             </Card>
             <Flex justify="flex-end" gap={8}>
-              <Button onClick={() => setIsCloseModalOpen(false)}>Batal</Button>
+              <Button onClick={() => setIsCloseModalOpen(false)}>
+                {t("cancel")}
+              </Button>
               <Button
                 onClick={handleClose}
                 disabled={closePocket.isPending}
                 danger
                 type="primary"
               >
-                {closePocket.isPending ? "Menutup..." : "Ya, Tutup Kantong"}
+                {closePocket.isPending ? t("closing") : t("confirmClosePocket")}
               </Button>
             </Flex>
           </Space>

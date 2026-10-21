@@ -56,7 +56,7 @@ export default function BackofficeDashboard() {
   return (
     <Space direction="vertical" size={32} style={{ width: '100%', paddingBottom: 48 }}>
       <div>
-        <Typography.Title level={2} style={{ margin: 0 }}>Command Center</Typography.Title>
+        <Typography.Title level={1} style={{ margin: 0 }}>Command Center</Typography.Title>
         <Typography.Text type="secondary">Sistem orkestrasi internal PayU Digital Banking.</Typography.Text>
       </div>
 

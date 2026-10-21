@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useAuthStore } from '@/stores';
 import { useTransactions, useCancelTransaction } from '@/hooks';
@@ -26,27 +26,27 @@ import { addCurrency, formatCurrency } from '@/lib/currency';
 import type { Transaction, TransactionFilters, TransactionStatus, TransactionType } from '@/types';
 import { SkipLink } from "@/lib/a11y";
 
-const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  PENDING: { label: 'Menunggu', color: 'warning', icon: Clock },
-  VALIDATING: { label: 'Divalidasi', color: 'warning', icon: Clock },
-  PROCESSING: { label: 'Diproses', color: 'processing', icon: RotateCcw },
-  COMPLETED: { label: 'Selesai', color: 'success', icon: CheckCircle2 },
-  FAILED: { label: 'Gagal', color: 'error', icon: XCircle },
-  CANCELLED: { label: 'Dibatalkan', color: 'default', icon: X },
+const statusConfig: Record<string, { labelKey: string; color: string; icon: typeof Clock }> = {
+  PENDING: { labelKey: 'statusPending', color: 'warning', icon: Clock },
+  VALIDATING: { labelKey: 'statusValidating', color: 'warning', icon: Clock },
+  PROCESSING: { labelKey: 'statusProcessing', color: 'processing', icon: RotateCcw },
+  COMPLETED: { labelKey: 'statusCompleted', color: 'success', icon: CheckCircle2 },
+  FAILED: { labelKey: 'statusFailed', color: 'error', icon: XCircle },
+  CANCELLED: { labelKey: 'statusCancelled', color: 'default', icon: X },
   // RELAY-014: enum gained these (ADR-0028/0030) — missing entries crashed the
   // whole page (reading 'icon' of undefined) on any held/step-up row.
-  PENDING_COMPLIANCE_REVIEW: { label: 'Tinjauan AML', color: 'warning', icon: AlertCircle },
-  PENDING_STEP_UP: { label: 'Butuh Verifikasi', color: 'warning', icon: AlertCircle },
+  PENDING_COMPLIANCE_REVIEW: { labelKey: 'statusComplianceReview', color: 'warning', icon: AlertCircle },
+  PENDING_STEP_UP: { labelKey: 'statusStepUp', color: 'warning', icon: AlertCircle },
 };
 
-const typeConfig: Record<string, { label: string; icon: typeof ArrowLeftRight }> = {
-  INTERNAL_TRANSFER: { label: 'Transfer', icon: ArrowLeftRight },
-  BIFAST_TRANSFER: { label: 'BI-FAST', icon: ArrowUpRight },
-  SKN_TRANSFER: { label: 'SKN', icon: ArrowUpRight },
-  RTGS_TRANSFER: { label: 'RTGS', icon: ArrowUpRight },
-  QRIS_PAYMENT: { label: 'QRIS', icon: ArrowUpRight },
-  BILL_PAYMENT: { label: 'Pembayaran', icon: ArrowUpRight },
-  TOP_UP: { label: 'Top Up', icon: ArrowDownLeft },
+const typeConfig: Record<string, { labelKey: string; icon: typeof ArrowLeftRight }> = {
+  INTERNAL_TRANSFER: { labelKey: 'typeTransfer', icon: ArrowLeftRight },
+  BIFAST_TRANSFER: { labelKey: 'typeBiFast', icon: ArrowUpRight },
+  SKN_TRANSFER: { labelKey: 'typeSkn', icon: ArrowUpRight },
+  RTGS_TRANSFER: { labelKey: 'typeRtgs', icon: ArrowUpRight },
+  QRIS_PAYMENT: { labelKey: 'typeQris', icon: ArrowUpRight },
+  BILL_PAYMENT: { labelKey: 'typeBillPayment', icon: ArrowUpRight },
+  TOP_UP: { labelKey: 'typeTopUp', icon: ArrowDownLeft },
 };
 
 // Helper to check if transaction is a credit (income) for current account
@@ -57,6 +57,7 @@ const isCreditType = (type: string, t?: Transaction, currentAccountId?: string |
 };
 
 export default function TransactionsPage() {
+  const t = useTranslations('transactions');
   const { token } = theme.useToken();
   const accountId = useAuthStore((state) => state.accountId);
   const [page, setPage] = useState(0);
@@ -85,11 +86,11 @@ export default function TransactionsPage() {
 
     try {
       await cancelTransaction.mutateAsync(selectedTransaction.id);
-      toast.success('Transaksi berhasil dibatalkan');
+      toast.success(t('cancelSuccess'));
       setIsCancelDialogOpen(false);
       setSelectedTransaction(null);
     } catch {
-      toast.error('Gagal membatalkan transaksi');
+      toast.error(t('cancelError'));
     }
   };
 
@@ -114,7 +115,7 @@ export default function TransactionsPage() {
   const columns: TableColumnsType<Transaction> = [
     {
       key: 'date',
-      title: 'Tanggal',
+      title: t('date'),
       render: (_, transaction) => (
         <div>
           <Typography.Text strong>{formatDate(transaction.createdAt)}</Typography.Text>
@@ -126,7 +127,7 @@ export default function TransactionsPage() {
     },
     {
       key: 'type',
-      title: 'Tipe',
+      title: t('type'),
       render: (_, transaction) => {
         const type = typeConfig[transaction.type] || typeConfig.INTERNAL_TRANSFER;
         const TypeIcon = type.icon;
@@ -148,14 +149,14 @@ export default function TransactionsPage() {
             }}>
               <TypeIcon style={{ width: 20, height: 20, color: credit ? token.colorPrimary : token.colorTextTertiary }} />
             </div>
-            <Typography.Text strong>{type.label}</Typography.Text>
+            <Typography.Text strong>{t(type.labelKey)}</Typography.Text>
           </Space>
         );
       },
     },
     {
       key: 'description',
-      title: 'Deskripsi',
+      title: t('description'),
       render: (_, transaction) => (
         <Typography.Text ellipsis={{ tooltip: transaction.description }} style={{ maxWidth: 200 }}>
           {transaction.description}
@@ -164,7 +165,7 @@ export default function TransactionsPage() {
     },
     {
       key: 'status',
-      title: 'Status',
+      title: t('status'),
       align: 'center',
       render: (_, transaction) => {
         const status = statusConfig[transaction.status];
@@ -172,14 +173,14 @@ export default function TransactionsPage() {
         return (
           <Tag bordered={false} color={status.color} className="font-bold text-xs">
             <StatusIcon style={{ width: 12, height: 12, marginRight: 4 }} />
-            {status.label}
+            {t(status.labelKey)}
           </Tag>
         );
       },
     },
     {
       key: 'amount',
-      title: 'Jumlah',
+      title: t('amount'),
       align: 'right',
       render: (_, transaction) => {
         const credit = isCreditType(transaction.type, transaction, accountId);
@@ -200,14 +201,14 @@ export default function TransactionsPage() {
           placement="bottomRight"
           menu={{
             items: [
-              { key: 'detail', label: 'Lihat Detail' },
+              { key: 'detail', label: t('viewDetails') },
               ...(canCancel(transaction.status)
-                ? [{ key: 'cancel', danger: true, label: 'Batalkan Transaksi', onClick: () => handleCancelClick(transaction) }]
+                ? [{ key: 'cancel', danger: true, label: t('cancelTransaction'), onClick: () => handleCancelClick(transaction) }]
                 : []),
             ],
           }}
         >
-          <Button type="text" shape="circle" style={{ minWidth: 44, minHeight: 44, borderRadius: 12 }} icon={<MoreHorizontal style={{ width: 16, height: 16 }} />} aria-label="Opsi transaksi" />
+          <Button type="text" shape="circle" style={{ minWidth: 44, minHeight: 44, borderRadius: 12 }} icon={<MoreHorizontal style={{ width: 16, height: 16 }} />} aria-label={t('transactionOptionsAria')} />
         </Dropdown>
       ),
     },
@@ -221,8 +222,8 @@ export default function TransactionsPage() {
         <Row gutter={[16, 16]} align="middle" justify="space-between">
           <Col>
             <Space direction="vertical" size={4}>
-              <Typography.Title level={1} style={{ margin: 0 }}>Riwayat Transaksi</Typography.Title>
-              <Typography.Text type="secondary">Kelola dan pantau semua aktivitas transaksi Anda</Typography.Text>
+              <Typography.Title level={1} style={{ margin: 0 }}>{t('transactionHistory')}</Typography.Title>
+              <Typography.Text type="secondary">{t('pageSubtitle')}</Typography.Text>
             </Space>
           </Col>
           <Col>
@@ -234,7 +235,7 @@ export default function TransactionsPage() {
                   onClick={() => setFilters({})}
                   className="text-xs font-bold"
                 >
-                  Hapus Filter
+                  {t('clearFilters')}
                 </Button>
               )}
               <Dropdown
@@ -243,10 +244,10 @@ export default function TransactionsPage() {
                 menu={{
                   selectedKeys: filters.status ? [filters.status] : [],
                   items: [
-                    { key: 'all', label: 'Semua Status', onClick: () => setFilters({ ...filters, status: undefined }) },
+                    { key: 'all', label: t('allStatuses'), onClick: () => setFilters({ ...filters, status: undefined }) },
                     ...Object.keys(statusConfig).map((status) => ({
                       key: status,
-                      label: statusConfig[status].label,
+                      label: t(statusConfig[status].labelKey),
                       onClick: () => setFilters({ ...filters, status: status as TransactionStatus }),
                     })),
                   ],
@@ -255,7 +256,7 @@ export default function TransactionsPage() {
                 <Button>
                   <Space size={8}>
                     <Filter style={{ width: 16, height: 16 }} />
-                    {filters.status ? statusConfig[filters.status].label : 'Status'}
+                    {filters.status ? t(statusConfig[filters.status].labelKey) : t('status')}
                   </Space>
                 </Button>
               </Dropdown>
@@ -266,10 +267,10 @@ export default function TransactionsPage() {
                 menu={{
                   selectedKeys: filters.type ? [filters.type] : [],
                   items: [
-                    { key: 'all', label: 'Semua Tipe', onClick: () => setFilters({ ...filters, type: undefined }) },
+                    { key: 'all', label: t('allTypes'), onClick: () => setFilters({ ...filters, type: undefined }) },
                     ...Object.keys(typeConfig).map((type) => ({
                       key: type,
-                      label: typeConfig[type].label,
+                      label: t(typeConfig[type].labelKey),
                       onClick: () => setFilters({ ...filters, type: type as TransactionType }),
                     })),
                   ],
@@ -278,7 +279,7 @@ export default function TransactionsPage() {
                 <Button>
                   <Space size={8}>
                     <ArrowLeftRight style={{ width: 16, height: 16 }} />
-                    {filters.type ? typeConfig[filters.type]?.label : 'Tipe'}
+                    {filters.type ? t(typeConfig[filters.type]?.labelKey ?? 'typeTransfer') : t('type')}
                   </Space>
                 </Button>
               </Dropdown>
@@ -304,7 +305,7 @@ export default function TransactionsPage() {
                   <ArrowDownLeft style={{ width: 24, height: 24, color: token.colorPrimary }} />
                 </div>
                 <div>
-                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Total Masuk</Typography.Text>
+                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">{t('totalIn')}</Typography.Text>
                   <Typography.Title level={2} style={{ margin: 0, fontVariantNumeric: "tabular-nums" }}>
                     {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : formatAmount(totalIn, 'IDR')}
                   </Typography.Title>
@@ -327,7 +328,7 @@ export default function TransactionsPage() {
                   <ArrowUpRight style={{ width: 24, height: 24, color: token.colorError }} />
                 </div>
                 <div>
-                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Total Keluar</Typography.Text>
+                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">{t('totalOut')}</Typography.Text>
                   <Typography.Title level={2} style={{ margin: 0, fontVariantNumeric: "tabular-nums" }}>
                     {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : formatAmount(totalOut, 'IDR')}
                   </Typography.Title>
@@ -350,7 +351,7 @@ export default function TransactionsPage() {
                   <Clock style={{ width: 24, height: 24, color: token.colorPrimary }} />
                 </div>
                 <div>
-                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Menunggu</Typography.Text>
+                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">{t('statusPending')}</Typography.Text>
                   <Typography.Title level={2} style={{ margin: 0 }}>
                     {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : String(pendingCount)}
                   </Typography.Title>
@@ -373,7 +374,7 @@ export default function TransactionsPage() {
                   <CheckCircle2 style={{ width: 24, height: 24, color: token.colorInfo }} />
                 </div>
                 <div>
-                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Selesai</Typography.Text>
+                  <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">{t('statusCompleted')}</Typography.Text>
                   <Typography.Title level={2} style={{ margin: 0 }}>
                     {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : String(completedCount)}
                   </Typography.Title>
@@ -385,8 +386,8 @@ export default function TransactionsPage() {
 
         {/* Transactions Table */}
         <Card
-          title={<Typography.Text strong className="text-lg tracking-widest uppercase">Daftar Transaksi</Typography.Text>}
-          extra={<Tag bordered className="font-mono">Halaman {page + 1}</Tag>}
+          title={<Typography.Text strong className="text-lg tracking-widest uppercase">{t('transactionList')}</Typography.Text>}
+          extra={<Tag bordered className="font-mono">{t('pageNumber', { page: page + 1 })}</Tag>}
         >
           {isLoading ? (
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -403,7 +404,7 @@ export default function TransactionsPage() {
                   rowKey="id"
                   pagination={false}
                   loading={isLoading}
-                  locale={{ emptyText: 'Tidak ada transaksi' }}
+                  locale={{ emptyText: t('emptyTable') }}
                 />
               </div>
 
@@ -440,7 +441,7 @@ export default function TransactionsPage() {
                                 }} />
                               </div>
                               <div>
-                                <Typography.Text strong>{type.label}</Typography.Text>
+                                <Typography.Text strong>{t(type.labelKey)}</Typography.Text>
                                 <div>
                                   <Typography.Text type="secondary" className="text-xs">{formatDate(transaction.createdAt)}</Typography.Text>
                                 </div>
@@ -448,7 +449,7 @@ export default function TransactionsPage() {
                             </Space>
                             <Tag bordered={false} color={status.color} className="font-bold text-xs">
                               <StatusIcon style={{ width: 12, height: 12, marginRight: 4 }} />
-                              {status.label}
+                              {t(status.labelKey)}
                             </Tag>
                           </Row>
                           <Divider style={{ margin: 0 }} />
@@ -472,7 +473,7 @@ export default function TransactionsPage() {
                               >
                                 <Space size={8}>
                                   <X style={{ width: 16, height: 16 }} />
-                                  Batalkan Transaksi
+                                  {t('cancelTransaction')}
                                 </Space>
                               </Button>
                             </>
@@ -498,9 +499,9 @@ export default function TransactionsPage() {
                   }}>
                     <AlertCircle style={{ width: 32, height: 32, color: token.colorTextTertiary }} />
                   </div>
-                  <Typography.Title level={3} style={{ margin: 0 }}>Tidak Ada Transaksi</Typography.Title>
+                  <Typography.Title level={3} style={{ margin: 0 }}>{t('emptyTitle')}</Typography.Title>
                   <Typography.Text type="secondary">
-                    Anda belum memiliki transaksi. Mulai lakukan transfer atau pembayaran.
+                    {t('emptyDescription')}
                   </Typography.Text>
                 </div>
               ) : null}
@@ -515,17 +516,17 @@ export default function TransactionsPage() {
                       onClick={() => setPage((p) => Math.max(0, p - 1))}
                       disabled={page === 0}
                     >
-                      Sebelumnya
+                      {t('previousPage')}
                     </Button>
                     <Typography.Text type="secondary">
-                      Halaman {page + 1}
+                      {t('pageNumber', { page: page + 1 })}
                     </Typography.Text>
                     <Button
                       size="small"
                       onClick={() => setPage((p) => p + 1)}
                       disabled={!transactions || transactions.length < 20}
                     >
-                      Selanjutnya
+                      {t('nextPage')}
                     </Button>
                   </Row>
                 </>
@@ -536,24 +537,24 @@ export default function TransactionsPage() {
       </Space>
 
       {/* Cancel Confirmation Dialog */}
-      <Modal open={isCancelDialogOpen} onCancel={() => setIsCancelDialogOpen(false)} footer={null} centered width={512} title={<Typography.Title level={4} style={{ marginBottom: 4 }}><Space size={8}><AlertCircle style={{ width: 20, height: 20, color: token.colorError }} />Batalkan Transaksi?</Space></Typography.Title>}>
+      <Modal open={isCancelDialogOpen} onCancel={() => setIsCancelDialogOpen(false)} footer={null} centered width={512} title={<Typography.Title level={4} style={{ marginBottom: 4 }}><Space size={8}><AlertCircle style={{ width: 20, height: 20, color: token.colorError }} />{t('cancelTransactionTitle')}</Space></Typography.Title>}>
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Typography.Text type="secondary">
-            Apakah Anda yakin ingin membatalkan transaksi ini? Tindakan ini tidak dapat dibatalkan.
+            {t('cancelConfirm')}
           </Typography.Text>
           {selectedTransaction && (
             <Card size="small">
               <Space direction="vertical" size={8} style={{ width: '100%' }}>
                 <Row justify="space-between">
-                  <Typography.Text type="secondary">Referensi</Typography.Text>
+                  <Typography.Text type="secondary">{t('reference')}</Typography.Text>
                   <Typography.Text className="font-mono">{selectedTransaction.referenceNumber}</Typography.Text>
                 </Row>
                 <Row justify="space-between">
-                  <Typography.Text type="secondary">Deskripsi</Typography.Text>
+                  <Typography.Text type="secondary">{t('description')}</Typography.Text>
                   <Typography.Text ellipsis={{ tooltip: selectedTransaction.description }} style={{ maxWidth: 150 }}>{selectedTransaction.description}</Typography.Text>
                 </Row>
                 <Row justify="space-between">
-                  <Typography.Text type="secondary">Jumlah</Typography.Text>
+                  <Typography.Text type="secondary">{t('amount')}</Typography.Text>
                   <Typography.Text strong style={{ fontVariantNumeric: "tabular-nums" }}>
                     {formatAmount(selectedTransaction.amount, selectedTransaction.currency)}
                   </Typography.Text>
@@ -564,7 +565,7 @@ export default function TransactionsPage() {
           <Row justify="end" gutter={8}>
             <Col>
               <Button onClick={() => setIsCancelDialogOpen(false)}>
-                Batal
+                {t('cancel')}
               </Button>
             </Col>
             <Col>
@@ -574,7 +575,7 @@ export default function TransactionsPage() {
                 onClick={handleConfirmCancel}
                 disabled={cancelTransaction.isPending}
               >
-                {cancelTransaction.isPending ? 'Membatalkan...' : 'Ya, Batalkan'}
+                {cancelTransaction.isPending ? t('cancelling') : t('yesCancel')}
               </Button>
             </Col>
           </Row>

@@ -90,7 +90,7 @@ export default function KycReviewsPage() {
   <Space direction="vertical" size={24} style={{ width: '100%' }}>
     <Flex align="flex-start" justify="space-between" gap={24} wrap>
       <Space direction="vertical" size={4}>
-        <Typography.Title level={2} style={{ margin: 0 }}>KYC Reviews</Typography.Title>
+        <Typography.Title level={1} style={{ margin: 0 }}>KYC Reviews</Typography.Title>
         <Typography.Text type="secondary">Review verifikasi identitas dan dokumen nasabah.</Typography.Text>
       </Space>
       <Tag color="gold">Tertunda: {isLoading ? '…' : pendingCount}</Tag>

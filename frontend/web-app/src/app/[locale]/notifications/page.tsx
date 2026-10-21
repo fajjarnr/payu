@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Search,
   Trash2,
@@ -33,6 +34,7 @@ import { SkipLink } from "@/lib/a11y";
 const { Title, Text } = Typography;
 
 export default function NotificationsPage() {
+  const t = useTranslations("notifications");
   const { user } = useAuthStore();
   const router = useRouter();
   const userId = user?.id ?? "";
@@ -79,14 +81,14 @@ export default function NotificationsPage() {
 
   const handleMarkAllRead = () => {
     notifications.filter((n) => !n.read).forEach((n) => markRead.mutate(n.id));
-    toast.success("Semua notifikasi telah ditandai dibaca");
+    toast.success(t("allMarkedRead"));
   };
 
   const removeNotification = (id: string) => setHidden((prev) => [...prev, id]);
 
   const handleClearAll = () => {
     setHidden((prev) => [...prev, ...filteredNotifs.map((n) => n.id)]);
-    toast.info("Riwayat notifikasi telah dibersihkan");
+    toast.info(t("historyCleared"));
   };
 
   const getIcon = (type: string) => {
@@ -135,13 +137,13 @@ export default function NotificationsPage() {
                     margin: 0,
                   }}
                 >
-                  Kotak Masuk
+                  {t("title")}
                 </Title>
                 <Text
                   type="secondary"
                   style={{ fontSize: 14, fontWeight: 500 }}
                 >
-                  Kelola notifikasi, promo, dan peringatan keamanan Anda.
+                  {t("subtitle")}
                 </Text>
               </Space>
             </Col>
@@ -157,7 +159,7 @@ export default function NotificationsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Tandai Semua Dibaca
+                  {t("markAllRead")}
                 </Button>
                 <Button
                   type="text"
@@ -170,7 +172,7 @@ export default function NotificationsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Hapus Semua
+                  {t("clearAll")}
                 </Button>
               </Space>
             </Col>
@@ -182,8 +184,8 @@ export default function NotificationsPage() {
           <Row gutter={[16, 16]} align="middle">
             <Col flex="auto">
               <Input
-                aria-label="Cari notifikasi"
-                placeholder="Cari notifikasi..."
+                aria-label={t("searchLabel")}
+                placeholder={t("searchPlaceholder")}
                 prefix={
                   <Search
                     style={{
@@ -208,10 +210,10 @@ export default function NotificationsPage() {
                 value={filter}
                 onChange={(value) => setFilter(value as string)}
                 options={[
-                  { label: "Semua", value: "ALL" },
-                  { label: "Belum Dibaca", value: "UNREAD" },
-                  { label: "Promo", value: "PROMO" },
-                  { label: "Keamanan", value: "SECURITY" },
+                  { label: t("filterAll"), value: "ALL" },
+                  { label: t("filterUnread"), value: "UNREAD" },
+                  { label: t("filterPromo"), value: "PROMO" },
+                  { label: t("filterSecurity"), value: "SECURITY" },
                 ]}
               />
             </Col>
@@ -233,7 +235,7 @@ export default function NotificationsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Tidak ada notifikasi
+                  {t("emptyState")}
                 </Text>
               }
             />
@@ -275,7 +277,7 @@ export default function NotificationsPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    {n.read ? "Sudah Dibaca" : "Tandai Dibaca"}
+                    {n.read ? t("alreadyRead") : t("markRead")}
                   </Button>,
                   <Button
                     key="delete"
@@ -285,10 +287,10 @@ export default function NotificationsPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       removeNotification(n.id);
-                      toast.success("Notifikasi dihapus");
+                      toast.success(t("notificationDeleted"));
                     }}
                     icon={<Trash2 style={{ width: 16, height: 16 }} />}
-                    aria-label="Hapus notifikasi"
+                    aria-label={t("deleteLabel")}
                   />,
                 ]}
               >

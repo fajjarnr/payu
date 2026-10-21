@@ -72,7 +72,7 @@ export default function CustomerCasesPage() {
     <Space direction="vertical" size={24} style={{ width: '100%' }}>
       <Flex align="flex-start" justify="space-between" gap={24} wrap>
         <Space direction="vertical" size={4}>
-          <Typography.Title level={2} style={{ margin: 0 }}>Customer Operations</Typography.Title>
+          <Typography.Title level={1} style={{ margin: 0 }}>Customer Operations</Typography.Title>
           <Typography.Text type="secondary">Kelola tiket dukungan, keluhan, dan bantuan nasabah.</Typography.Text>
         </Space>
         <Tag color="blue">Open: {isLoading ? '…' : openCount}</Tag>

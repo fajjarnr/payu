@@ -3,6 +3,7 @@
 /* eslint-disable no-restricted-syntax -- display percentage uses Number for chart width, not Money arithmetic (ADR-0047 display only) */
 
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import React from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Link } from "@/lib/navigation";
@@ -30,6 +31,7 @@ import { formatCurrency } from "@/lib/currency";
 import { SkipLink } from "@/lib/a11y";
 
 export default function AnalyticsPage() {
+  const t = useTranslations("analytics");
   const accountId = useAuthStore((state) => state.accountId);
   const isDark = useUIStore((state) => state.theme) === "dark";
   const { token } = theme.useToken();
@@ -73,7 +75,7 @@ export default function AnalyticsPage() {
 
   // The hooks query a fixed 30-day window; label the window that was actually
   // queried instead of a hardcoded month name.
-  const periodLabel = "30 hari terakhir";
+  const periodLabel = t("last30Days");
   // BUG-FE-062: Replace hardcoded fallback data with zeros/empty state
   const analyticsData = analytics ??
     restData ?? {
@@ -116,12 +118,9 @@ export default function AnalyticsPage() {
         <Row justify="space-between" align="bottom">
           <div>
             <Typography.Title level={1} style={{ marginBottom: 0 }}>
-              Intelijen Keuangan
+              {t("title")}
             </Typography.Title>
-            <Typography.Text type="secondary">
-              Wawasan mendalam tentang kebiasaan pengeluaran dan pertumbuhan
-              kekayaan Anda.
-            </Typography.Text>
+            <Typography.Text type="secondary">{t("subtitle")}</Typography.Text>
           </div>
           <Space size={16}>
             <Tag color={isConnected ? "success" : "default"}>
@@ -131,7 +130,7 @@ export default function AnalyticsPage() {
                 <WifiOff style={{ width: 16, height: 16 }} />
               )}
               <Typography.Text strong>
-                {isConnected ? "Live Update" : "Offline"}
+                {isConnected ? t("liveUpdate") : t("offline")}
               </Typography.Text>
             </Tag>
             <Tag bordered={false}>
@@ -143,28 +142,28 @@ export default function AnalyticsPage() {
         <Row gutter={[16, 16]}>
           {[
             {
-              label: "Total Pemasukan",
+              label: t("totalIncome"),
               amount: analyticsData.totalIncome,
               change: analyticsData.incomeChange,
               isPos: true,
               icon: TrendingUp,
             },
             {
-              label: "Total Pengeluaran",
+              label: t("totalExpenses"),
               amount: analyticsData.totalExpenses,
               change: analyticsData.expenseChange,
               isPos: false,
               icon: TrendingDown,
             },
             {
-              label: "Tabungan Bulanan",
+              label: t("monthlySavings"),
               amount: analyticsData.monthlySavings,
               change: analyticsData.savingsChange,
               isPos: true,
               icon: Activity,
             },
             {
-              label: "ROI Investasi",
+              label: t("investmentRoi"),
               amount: analyticsData.investmentRoi,
               change: analyticsData.roiChange,
               isPos: true,
@@ -228,10 +227,10 @@ export default function AnalyticsPage() {
               <Row justify="space-between" align="middle">
                 <div>
                   <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                    Trajektori Pengeluaran
+                    {t("spendingTrajectory")}
                   </Typography.Title>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    Analisis arus kas harian periode ini
+                    {t("cashFlowAnalysis")}
                   </Typography.Text>
                 </div>
                 <Space size={16}>
@@ -247,7 +246,7 @@ export default function AnalyticsPage() {
                       }}
                     />
                     <Typography.Text strong style={{ fontSize: 12 }}>
-                      Masuk
+                      {t("inflow")}
                     </Typography.Text>
                   </Tag>
                   <Tag>
@@ -262,7 +261,7 @@ export default function AnalyticsPage() {
                       }}
                     />
                     <Typography.Text strong style={{ fontSize: 12 }}>
-                      Keluar
+                      {t("outflow")}
                     </Typography.Text>
                   </Tag>
                 </Space>
@@ -271,8 +270,12 @@ export default function AnalyticsPage() {
               <div style={{ height: 400, marginTop: 24 }}>
                 <Column
                   data={trajectoryData.flatMap((d) => [
-                    { day: d.day, type: "Masuk", amount: Number(d.masuk) },
-                    { day: d.day, type: "Keluar", amount: Number(d.keluar) },
+                    { day: d.day, type: t("inflow"), amount: Number(d.masuk) },
+                    {
+                      day: d.day,
+                      type: t("outflow"),
+                      amount: Number(d.keluar),
+                    },
                   ])}
                   xField="day"
                   yField="amount"
@@ -302,7 +305,7 @@ export default function AnalyticsPage() {
           <Col xs={24} md={12} lg={8}>
             <Card>
               <Typography.Title level={4} style={{ marginBottom: 0 }}>
-                Rincian Pengeluaran
+                {t("spendingBreakdown")}
               </Typography.Title>
 
               <div
@@ -347,7 +350,7 @@ export default function AnalyticsPage() {
                     strong
                     style={{ fontSize: 12, letterSpacing: "0.1em" }}
                   >
-                    Total Keluar
+                    {t("totalSpending")}
                   </Typography.Text>
                   <Typography.Title
                     level={3}
@@ -402,19 +405,18 @@ export default function AnalyticsPage() {
           <Row gutter={[16, 16]} align="middle" justify="space-between">
             <div>
               <Typography.Title level={3} style={{ marginBottom: 0 }}>
-                Siap untuk menabung otomatis?
+                {t("savingsCtaTitle")}
               </Typography.Title>
               <Typography.Text type="secondary">
-                Sistem AI kami mendeteksi Anda dapat menabung tambahan{" "}
+                {t("savingsCtaPrefix")}{" "}
                 <Typography.Text strong style={{ color: token.colorPrimary }}>
-                  Rp 2.500.000
+                  {formatCurrency(2500000)}
                 </Typography.Text>{" "}
-                setiap bulan dengan mengoptimalkan tagihan utilitas dan
-                langganan berulang Anda.
+                {t("savingsCtaSuffix")}
               </Typography.Text>
             </div>
             <Link href="/transactions">
-              <Button type="primary">Terapkan Optimasi</Button>
+              <Button type="primary">{t("applyOptimization")}</Button>
             </Link>
           </Row>
         </Card>

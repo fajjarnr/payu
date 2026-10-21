@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   Users,
@@ -47,6 +48,7 @@ import { SkipLink } from "@/lib/a11y";
 const { Title, Text } = Typography;
 
 export default function SplitBillPage() {
+  const t = useTranslations("splitBill");
   const { accountId } = useAuthStore();
   const acctId = accountId ?? "";
   const { data: splitBillsData, isLoading } = useSplitBills(acctId);
@@ -107,31 +109,31 @@ export default function SplitBillPage() {
       case "ACTIVE":
         return (
           <Tag bordered={false} color="green">
-            Aktif
+            {t("statusActive")}
           </Tag>
         );
       case "SETTLED":
         return (
           <Tag bordered={false} color="blue">
-            Lunas
+            {t("statusSettled")}
           </Tag>
         );
       case "PENDING":
         return (
           <Tag bordered={false} color="orange">
-            Menunggu
+            {t("statusPending")}
           </Tag>
         );
       case "DRAFT":
         return (
           <Tag bordered={false} color="default">
-            Draf
+            {t("statusDraft")}
           </Tag>
         );
       case "CANCELLED":
         return (
           <Tag bordered={false} color="red">
-            Dibatalkan
+            {t("statusCancelled")}
           </Tag>
         );
       default:
@@ -141,15 +143,15 @@ export default function SplitBillPage() {
 
   const handleCreate = () => {
     if (!newBillName.trim()) {
-      toast.warning("Masukkan nama/deskripsi split bill");
+      toast.warning(t("validationNameRequired"));
       return;
     }
     if (!newBillAmount.trim()) {
-      toast.warning("Masukkan total tagihan");
+      toast.warning(t("validationAmountRequired"));
       return;
     }
     if (!acctId) {
-      toast.warning("Akun belum dimuat — silakan muat ulang halaman");
+      toast.warning(t("validationAccountNotLoaded"));
       return;
     }
     const validParticipants = participants
@@ -161,9 +163,7 @@ export default function SplitBillPage() {
       }))
       .filter((p) => p.accountId && p.accountNumber && p.accountName);
     if (validParticipants.length === 0) {
-      toast.warning(
-        "Tambahkan minimal satu peserta dengan ID akun, nomor rekening, dan nama",
-      );
+      toast.warning(t("validationParticipantRequired"));
       return;
     }
     const totalAmount = parseCurrencyExact(newBillAmount);
@@ -209,10 +209,10 @@ export default function SplitBillPage() {
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
             <Title level={1} style={{ margin: 0 }}>
-              Split Bill
+              {t("title")}
             </Title>
-            <Text type="secondary" style={{ display: "block", marginTop: 4 }}>
-              Bagi tagihan dengan teman, keluarga, atau rekan kerja secara adil.
+            <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>
+              {t("subtitle")}
             </Text>
           </Col>
           <Col>
@@ -221,7 +221,7 @@ export default function SplitBillPage() {
               size="large"
               onClick={() => setShowCreateModal(true)}
             >
-              <Plus style={{ marginRight: 8 }} /> Split Bill Baru
+              <Plus style={{ marginRight: 8 }} /> {t("newSplitBill")}
             </Button>
           </Col>
         </Row>
@@ -260,7 +260,7 @@ export default function SplitBillPage() {
                       letterSpacing: "0.1em",
                     }}
                   >
-                    Aktif
+                    {t("statActive")}
                   </Text>
                   <Title level={3} style={{ margin: "4px 0 0" }}>
                     {activeBills.length}
@@ -301,7 +301,7 @@ export default function SplitBillPage() {
                       letterSpacing: "0.1em",
                     }}
                   >
-                    Lunas
+                    {t("statSettled")}
                   </Text>
                   <Title level={3} style={{ margin: "4px 0 0" }}>
                     {settledBills.length}
@@ -342,7 +342,7 @@ export default function SplitBillPage() {
                       letterSpacing: "0.1em",
                     }}
                   >
-                    Total
+                    {t("statTotal")}
                   </Text>
                   <Title level={3} style={{ margin: "4px 0 0" }}>
                     {formatCurrency(
@@ -363,7 +363,7 @@ export default function SplitBillPage() {
           <Card>
             <Space direction="vertical" size={24} style={{ width: "100%" }}>
               <Title level={3} style={{ margin: 0 }}>
-                Buat Split Bill Baru
+                {t("createTitle")}
               </Title>
               <Row gutter={[24, 24]}>
                 <Col xs={24} md={12}>
@@ -382,11 +382,11 @@ export default function SplitBillPage() {
                         letterSpacing: "0.1em",
                       }}
                     >
-                      Deskripsi
+                      {t("descriptionLabel")}
                     </label>
                     <Input
                       id="splitbill-description"
-                      placeholder="Makan siang, nonton bareng..."
+                      placeholder={t("descriptionPlaceholder")}
                       value={newBillName}
                       onChange={(e) => setNewBillName(e.target.value)}
                     />
@@ -408,7 +408,7 @@ export default function SplitBillPage() {
                         letterSpacing: "0.1em",
                       }}
                     >
-                      Total Tagihan
+                      {t("totalLabel")}
                     </label>
                     <Input
                       id="splitbill-amount"
@@ -432,14 +432,14 @@ export default function SplitBillPage() {
                       letterSpacing: "0.1em",
                     }}
                   >
-                    Peserta (min. 1)
+                    {t("participantsLabel")}
                   </label>
                   <Button
                     htmlType="button"
                     size="small"
                     onClick={addParticipantRow}
                   >
-                    <UserPlus style={{ marginRight: 4 }} /> Tambah Peserta
+                    <UserPlus style={{ marginRight: 4 }} /> {t("addParticipant")}
                   </Button>
                 </Row>
                 {participants.map((p, i) => (
@@ -447,8 +447,8 @@ export default function SplitBillPage() {
                     <Col xs={24} md={6}>
                       <Input
                         id={`splitbill-participant-accountId-${i}`}
-                        aria-label={`ID akun peserta ${i + 1}`}
-                        placeholder="Account ID"
+                        aria-label={t("participantAccountIdLabel", { index: i + 1 })}
+                        placeholder={t("accountIdPlaceholder")}
                         value={p.accountId}
                         onChange={(e) =>
                           updateParticipant(i, "accountId", e.target.value)
@@ -458,8 +458,8 @@ export default function SplitBillPage() {
                     <Col xs={24} md={6}>
                       <Input
                         id={`splitbill-participant-accountNumber-${i}`}
-                        aria-label={`Nomor rekening peserta ${i + 1}`}
-                        placeholder="No. Rekening"
+                        aria-label={t("participantAccountNumberLabel", { index: i + 1 })}
+                        placeholder={t("accountNumberPlaceholder")}
                         value={p.accountNumber}
                         onChange={(e) =>
                           updateParticipant(i, "accountNumber", e.target.value)
@@ -469,8 +469,8 @@ export default function SplitBillPage() {
                     <Col xs={24} md={8}>
                       <Input
                         id={`splitbill-participant-accountName-${i}`}
-                        aria-label={`Nama peserta ${i + 1}`}
-                        placeholder="Nama"
+                        aria-label={t("participantAccountNameLabel", { index: i + 1 })}
+                        placeholder={t("namePlaceholder")}
                         value={p.accountName}
                         onChange={(e) =>
                           updateParticipant(i, "accountName", e.target.value)
@@ -485,13 +485,13 @@ export default function SplitBillPage() {
                         onClick={() => removeParticipantRow(i)}
                         style={{ color: "var(--ant-color-error)" }}
                       >
-                        Hapus
+                        {t("removeParticipant")}
                       </Button>
                     </Col>
                   </Row>
                 ))}
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                  Jumlah tiap peserta dibagi rata (split rata).
+                  {t("equalSplitNote")}
                 </Text>
               </Space>
               <Space size={16}>
@@ -508,9 +508,9 @@ export default function SplitBillPage() {
                       }}
                     />
                   ) : null}
-                  Buat
+                  {t("createButton")}
                 </Button>
-                <Button onClick={() => setShowCreateModal(false)}>Batal</Button>
+                <Button onClick={() => setShowCreateModal(false)}>{t("cancelButton")}</Button>
               </Space>
             </Space>
           </Card>
@@ -520,7 +520,7 @@ export default function SplitBillPage() {
         {activeBills.length > 0 && (
           <Space direction="vertical" size={24} style={{ width: "100%" }}>
             <Title level={3} style={{ margin: 0 }}>
-              Split Bill Aktif
+              {t("activeBillsTitle")}
             </Title>
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               {activeBills.map((bill) => (
@@ -654,14 +654,14 @@ export default function SplitBillPage() {
                           id: bill.id,
                           participant: {
                             accountId: "",
-                            accountName: "Teman Baru",
+                            accountName: t("defaultParticipantName"),
                             amountOwed: divideCurrency(bill.totalAmount, 2),
                             status: "PENDING",
                           } as SplitBillParticipant,
                         })
                       }
                     >
-                      <UserPlus style={{ marginRight: 4 }} /> Tambah Peserta
+                      <UserPlus style={{ marginRight: 4 }} /> {t("addParticipant")}
                     </Button>
                     {bill.status === "PENDING" && (
                       <Button
@@ -669,14 +669,14 @@ export default function SplitBillPage() {
                         type="primary"
                         onClick={() => activateBill.mutate(bill.id)}
                       >
-                        Aktifkan
+                        {t("activateButton")}
                       </Button>
                     )}
                     <Button
                       size="small"
                       onClick={() => settleBill.mutate(bill.id)}
                     >
-                      Selesaikan
+                      {t("settleButton")}
                     </Button>
                   </Space>
                 </Card>
@@ -689,7 +689,7 @@ export default function SplitBillPage() {
         {settledBills.length > 0 && (
           <Space direction="vertical" size={24} style={{ width: "100%" }}>
             <Title level={3} style={{ margin: 0 }}>
-              Riwayat
+              {t("historyTitle")}
             </Title>
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               {settledBills.map((bill) => (
@@ -727,7 +727,9 @@ export default function SplitBillPage() {
                               letterSpacing: "0.1em",
                             }}
                           >
-                            {bill.participants?.length ?? 0} peserta
+                            {t("participantCount", {
+                              count: bill.participants?.length ?? 0,
+                            })}
                           </Text>
                         </div>
                       </Space>
@@ -758,17 +760,16 @@ export default function SplitBillPage() {
               description={
                 <Space direction="vertical" size={8}>
                   <Text strong style={{ fontSize: 16 }}>
-                    Belum ada Split Bill
+                    {t("emptyTitle")}
                   </Text>
                   <Text type="secondary">
-                    Buat split bill pertama Anda untuk membagi tagihan bersama
-                    teman.
+                    {t("emptyDescription")}
                   </Text>
                 </Space>
               }
             >
               <Button type="primary" onClick={() => setShowCreateModal(true)}>
-                <Plus style={{ marginRight: 8 }} /> Mulai Split Bill
+                <Plus style={{ marginRight: 8 }} /> {t("startSplitBill")}
               </Button>
             </Empty>
           </Card>

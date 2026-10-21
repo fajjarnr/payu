@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import type { CSSProperties } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
@@ -80,6 +81,7 @@ const iconBoxStyle = (
 });
 
 export default function RewardsPage() {
+  const t = useTranslations("rewards");
   const { accountId } = useAuthStore();
   const acctId = accountId ?? "";
   const { data: loyaltyData } = useLoyaltyBalance(acctId);
@@ -138,9 +140,9 @@ export default function RewardsPage() {
   const handleCopyReferralCode = async () => {
     try {
       await navigator.clipboard.writeText(referralStats.code);
-      toast.success("Kode referral disalin");
+      toast.success(t("referralCodeCopied"));
     } catch {
-      toast.error("Gagal menyalin kode referral");
+      toast.error(t("referralCodeCopyFailed"));
     }
   };
 
@@ -149,13 +151,13 @@ export default function RewardsPage() {
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({
           title: "PayU",
-          text: "Gabung ke PayU dengan kode referral saya",
+          text: t("shareReferralText"),
           url: referralLink,
         });
         return;
       }
       await navigator.clipboard.writeText(referralLink);
-      toast.success("Link referral disalin");
+      toast.success(t("referralLinkCopied"));
     } catch {
       // User dismissed the share sheet; nothing to report.
     }
@@ -178,24 +180,23 @@ export default function RewardsPage() {
   }> = [
     {
       Icon: Zap,
-      title: "Transaksi Rutin",
-      description: "Dapatkan 1 poin untuk setiap Rp 10.000 transaksi",
+      title: t("earnRoutineTitle"),
+      description: t("earnRoutineDescription"),
     },
     {
       Icon: Calendar,
-      title: "Login Harian",
-      description: "Dapatkan 10-100 poin untuk login setiap hari",
+      title: t("earnDailyTitle"),
+      description: t("earnDailyDescription"),
     },
     {
       Icon: Share2,
-      title: "Referral Teman",
-      description:
-        "Dapatkan 1000 poin untuk setiap teman yang berhasil bergabung",
+      title: t("earnReferralTitle"),
+      description: t("earnReferralDescription"),
     },
     {
       Icon: Award,
-      title: "Event Khusus",
-      description: "Bonus poin untuk event dan promosi tertentu",
+      title: t("earnEventTitle"),
+      description: t("earnEventDescription"),
     },
   ];
 
@@ -210,22 +211,28 @@ export default function RewardsPage() {
       Icon: CheckCircle,
       iconColor: "var(--ant-color-primary)",
       iconBg: "var(--ant-color-primary-bg)",
-      title: "Berhasil Bergabung",
-      description: `${referralStats.completedReferrals} teman telah berhasil bergabung`,
+      title: t("joinedSuccessfully"),
+      description: t("joinedDescription", {
+        count: referralStats.completedReferrals,
+      }),
     },
     {
       Icon: Clock,
       iconColor: "var(--ant-color-warning)",
       iconBg: "var(--ant-color-warning-bg)",
-      title: "Menunggu Konfirmasi",
-      description: `${referralStats.pendingReferrals} teman dalam proses verifikasi`,
+      title: t("pendingTitle"),
+      description: t("pendingDescription", {
+        count: referralStats.pendingReferrals,
+      }),
     },
     {
       Icon: Trophy,
       iconColor: "var(--ant-color-success)",
       iconBg: "var(--ant-color-success-bg)",
-      title: "Total Penghasilan",
-      description: `${referralStats.totalEarnings.toLocaleString()} poin dari referral`,
+      title: t("earningsTitle"),
+      description: t("earningsDescription", {
+        points: referralStats.totalEarnings.toLocaleString(),
+      }),
     },
   ];
 
@@ -235,11 +242,9 @@ export default function RewardsPage() {
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         <Space direction="vertical" size={4}>
           <Typography.Title level={1} style={{ margin: 0 }}>
-            Rewards &amp; Gamifikasi
+            {t("title")}
           </Typography.Title>
-          <Typography.Text type="secondary">
-            Kumpulkan poin, dapatkan cashback, dan raih lebih banyak keuntungan.
-          </Typography.Text>
+          <Typography.Text type="secondary">{t("subtitle")}</Typography.Text>
         </Space>
         <Tabs
           defaultActiveKey="points"
@@ -249,7 +254,7 @@ export default function RewardsPage() {
               label: (
                 <Space size={8}>
                   <Coins style={{ width: 16, height: 16 }} />
-                  Poin Loyalty
+                  {t("pointsTab")}
                 </Space>
               ),
               children: (
@@ -295,7 +300,7 @@ export default function RewardsPage() {
                                 strong
                                 style={{ ...lightLabelStyle, display: "block" }}
                               >
-                                Saldo Poin
+                                {t("pointsBalance")}
                               </Typography.Text>
                               <Typography.Title
                                 level={3}
@@ -314,7 +319,7 @@ export default function RewardsPage() {
                               fontSize: 14,
                             }}
                           >
-                            Tukarkan poin Anda untuk berbagai hadiah menarik
+                            {t("redeemPointsHint")}
                           </Typography.Text>
                           <Row gutter={24}>
                             <Col span={12}>
@@ -326,7 +331,7 @@ export default function RewardsPage() {
                                   marginBottom: 4,
                                 }}
                               >
-                                Total Diperoleh
+                                {t("totalEarned")}
                               </Typography.Text>
                               <Typography.Title
                                 level={4}
@@ -347,7 +352,7 @@ export default function RewardsPage() {
                                   marginBottom: 4,
                                 }}
                               >
-                                Total Ditukar
+                                {t("totalRedeemed")}
                               </Typography.Text>
                               <Typography.Title
                                 level={4}
@@ -385,7 +390,7 @@ export default function RewardsPage() {
                                       display: "block",
                                     }}
                                   >
-                                    Poin Akan Kadaluarsa
+                                    {t("pointsExpiring")}
                                   </Typography.Text>
                                   <Typography.Text
                                     strong
@@ -394,8 +399,11 @@ export default function RewardsPage() {
                                         "var(--ant-color-text-light-solid)",
                                     }}
                                   >
-                                    {loyaltyStats.pointsExpiring.toLocaleString()}{" "}
-                                    poin - {loyaltyStats.expiryDate}
+                                    {t("pointsExpiringValue", {
+                                      points:
+                                        loyaltyStats.pointsExpiring.toLocaleString(),
+                                      date: loyaltyStats.expiryDate,
+                                    })}
                                   </Typography.Text>
                                 </Space>
                               </Space>
@@ -423,7 +431,7 @@ export default function RewardsPage() {
                           level={4}
                           style={{ marginTop: 0, marginBottom: 24 }}
                         >
-                          Cara Mendapatkan Poin
+                          {t("howToEarnPoints")}
                         </Typography.Title>
                         <Space
                           direction="vertical"
@@ -470,7 +478,7 @@ export default function RewardsPage() {
                     style={{ width: "100%" }}
                   >
                     <Typography.Title level={4} style={{ margin: 0 }}>
-                      Riwayat Poin
+                      {t("history")}
                     </Typography.Title>
                     <Card styles={{ body: { padding: 0 } }}>
                       <List
@@ -544,7 +552,7 @@ export default function RewardsPage() {
               label: (
                 <Space size={8}>
                   <DollarSign style={{ width: 16, height: 16 }} />
-                  Cashback
+                  {t("cashback")}
                 </Space>
               ),
               children: (
@@ -585,7 +593,7 @@ export default function RewardsPage() {
                                 strong
                                 style={{ ...lightLabelStyle, display: "block" }}
                               >
-                                Total Cashback
+                                {t("totalCashback")}
                               </Typography.Text>
                               <Typography.Title
                                 level={3}
@@ -618,7 +626,7 @@ export default function RewardsPage() {
                                   color: "rgba(255, 255, 255, 0.65)",
                                 }}
                               >
-                                Dikreditkan
+                                {t("credited")}
                               </Typography.Text>
                               <Typography.Text strong type="success">
                                 {formatCurrency(cashbackCredited)}
@@ -639,7 +647,7 @@ export default function RewardsPage() {
                                   color: "rgba(255, 255, 255, 0.65)",
                                 }}
                               >
-                                Menunggu
+                                {t("pending")}
                               </Typography.Text>
                               <Typography.Text strong type="warning">
                                 {formatCurrency(cashbackPending)}
@@ -656,7 +664,7 @@ export default function RewardsPage() {
                                   color: "rgba(255, 255, 255, 0.65)",
                                 }}
                               >
-                                Kadaluarsa
+                                {t("expired")}
                               </Typography.Text>
                               <Typography.Text strong type="danger">
                                 {formatCurrency(asMoney("0"))}
@@ -673,7 +681,7 @@ export default function RewardsPage() {
                           level={4}
                           style={{ marginTop: 0, marginBottom: 24 }}
                         >
-                          Promosi Aktif
+                          {t("activePromotions")}
                         </Typography.Title>
                         <Space
                           direction="vertical"
@@ -732,7 +740,7 @@ export default function RewardsPage() {
                                     strong
                                     style={{ ...labelStyle, fontSize: 11 }}
                                   >
-                                    Berakhir: {promo.endDate}
+                                    {t("endsAt", { date: promo.endDate })}
                                   </Typography.Text>
                                 </Space>
                               </Row>
@@ -749,7 +757,7 @@ export default function RewardsPage() {
                     style={{ width: "100%" }}
                   >
                     <Typography.Title level={4} style={{ margin: 0 }}>
-                      Riwayat Cashback
+                      {t("cashbackHistory")}
                     </Typography.Title>
                     <Card styles={{ body: { padding: 0 } }}>
                       <List
@@ -807,8 +815,8 @@ export default function RewardsPage() {
                                       }
                                     >
                                       {cb.status === "credited"
-                                        ? "Dikreditkan"
-                                        : "Menunggu"}
+                                        ? t("credited")
+                                        : t("pending")}
                                     </Tag>
                                   </Space>
                                   <Typography.Text
@@ -836,7 +844,7 @@ export default function RewardsPage() {
               label: (
                 <Space size={8}>
                   <Share2 style={{ width: 16, height: 16 }} />
-                  Referral
+                  {t("referral")}
                 </Space>
               ),
               children: (
@@ -864,7 +872,7 @@ export default function RewardsPage() {
                             color: "var(--ant-color-text-light-solid)",
                           }}
                         >
-                          Kode Referral Anda
+                          {t("yourReferralCode")}
                         </Typography.Title>
                         <div
                           style={iconBoxStyle(48, "rgba(255, 255, 255, 0.1)")}
@@ -907,7 +915,7 @@ export default function RewardsPage() {
                               height: 48,
                               color: "var(--ant-color-text-light-solid)",
                             }}
-                            aria-label="Salin kode"
+                            aria-label={t("copyCode")}
                             icon={<Copy style={{ width: 24, height: 24 }} />}
                           />
                         </Row>
@@ -919,9 +927,9 @@ export default function RewardsPage() {
                             color: "rgba(255, 255, 255, 0.8)",
                           }}
                         >
-                          Bagikan kode ini kepada teman dan dapatkan{" "}
-                          {referralStats.rewardPerReferral} poin untuk setiap
-                          teman yang berhasil bergabung
+                          {t("shareCodeHint", {
+                            points: referralStats.rewardPerReferral,
+                          })}
                         </Typography.Text>
                       </Card>
 
@@ -935,7 +943,7 @@ export default function RewardsPage() {
                               marginBottom: 4,
                             }}
                           >
-                            Total Teman
+                            {t("totalFriends")}
                           </Typography.Text>
                           <Typography.Title
                             level={4}
@@ -956,7 +964,7 @@ export default function RewardsPage() {
                               marginBottom: 4,
                             }}
                           >
-                            Berhasil Bergabung
+                            {t("joinedSuccessfully")}
                           </Typography.Text>
                           <Typography.Text
                             strong
@@ -987,7 +995,7 @@ export default function RewardsPage() {
                       level={4}
                       style={{ marginTop: 0, marginBottom: 24 }}
                     >
-                      Ringkasan Referral
+                      {t("referralSummary")}
                     </Typography.Title>
                     <Space
                       direction="vertical"
@@ -1027,7 +1035,7 @@ export default function RewardsPage() {
                       style={{ marginTop: 32, height: 56 }}
                     >
                       <Space size={8}>
-                        Bagikan Link Referral
+                        {t("shareReferralLink")}
                         <ArrowRight style={{ width: 16, height: 16 }} />
                       </Space>
                     </Button>

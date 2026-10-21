@@ -31,6 +31,7 @@ import { useAuditReports, useFailedAccessAudits } from "@/hooks";
 import type { AuditReport } from "@/services";
 import { notify } from "@/lib/notify";
 import StatCards from "../_components/StatCards";
+import PageHeader from "@/components/PageHeader";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
@@ -205,6 +206,7 @@ export default function CompliancePage() {
 
   return (
     <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <PageHeader title="Compliance" subtitle="Audit logs and security posture" />
       <StatCards
         stats={[
           { label: "Security Score", value: "—", icon: Shield },

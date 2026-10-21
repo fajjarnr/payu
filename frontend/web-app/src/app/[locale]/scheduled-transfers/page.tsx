@@ -18,7 +18,7 @@ import {
   CheckCircle2,
   Repeat
 } from '@/components/icons';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/lib/navigation';
 import { Alert, Button, Card, Col, Empty, Input, List, Modal, Row, Select, Space, Tag, Typography } from 'antd';
 import {
@@ -36,6 +36,7 @@ import { SkipLink } from "@/lib/a11y";
 const { Title, Text } = Typography;
 
 export default function ScheduledTransfersPage() {
+  const t = useTranslations("scheduledTransfers");
   const { accountId: storeAccountId } = useAuthStore();
   const accountId = storeAccountId ?? '';
   const locale = useLocale();
@@ -125,11 +126,11 @@ export default function ScheduledTransfersPage() {
 
   const getScheduleTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      ONE_TIME: 'Sekali',
-      RECURRING_DAILY: 'Harian',
-      RECURRING_WEEKLY: 'Mingguan',
-      RECURRING_MONTHLY: 'Bulanan',
-      RECURRING_CUSTOM: 'Kustom',
+      ONE_TIME: t('scheduleTypeOneTime'),
+      RECURRING_DAILY: t('scheduleTypeDaily'),
+      RECURRING_WEEKLY: t('scheduleTypeWeekly'),
+      RECURRING_MONTHLY: t('scheduleTypeMonthly'),
+      RECURRING_CUSTOM: t('scheduleTypeCustom'),
     };
     return labels[type] || type;
   };
@@ -141,15 +142,15 @@ export default function ScheduledTransfersPage() {
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
-            <Title level={1} style={{ margin: 0 }}>Transfer Terjadwal</Title>
+            <Title level={1} style={{ margin: 0 }}>{t("title")}</Title>
             <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>
-              Kelola dan pantau transfer berulang Anda.
+              {t("subtitle")}
             </Text>
           </Col>
           <Col>
             <Link href="/transfer">
               <Button type="primary">
-                <Plus style={{ marginRight: 8 }} /> Transfer Baru
+                <Plus style={{ marginRight: 8 }} /> {t('newTransfer')}
               </Button>
             </Link>
           </Col>
@@ -159,28 +160,28 @@ export default function ScheduledTransfersPage() {
         <Row gutter={[16, 16]}>
           {[
             {
-              label: 'Total Transfer',
+              label: t('statTotalTransfer'),
               value: transfers?.length || 0,
               icon: ArrowRightLeft,
               color: 'var(--ant-color-primary-bg)',
               iconColor: 'var(--ant-color-primary)',
             },
             {
-              label: 'Aktif',
+              label: t('statActive'),
               value: transfers?.filter((t) => t.status === 'ACTIVE').length || 0,
               icon: CheckCircle2,
               color: 'var(--ant-color-primary-bg)',
               iconColor: 'var(--ant-color-primary)',
             },
             {
-              label: 'Dijeda',
+              label: t('statPaused'),
               value: transfers?.filter((t) => t.status === 'PAUSED').length || 0,
               icon: Pause,
               color: 'var(--ant-color-warning-bg)',
               iconColor: 'var(--ant-color-warning)',
             },
             {
-              label: 'Selesai',
+              label: t('statCompleted'),
               value: transfers?.filter((t) => t.status === 'COMPLETED').length || 0,
               icon: Calendar,
               color: 'var(--ant-color-fill-tertiary)',
@@ -205,7 +206,7 @@ export default function ScheduledTransfersPage() {
 
         {/* Transfers List */}
         <Card>
-          <Title level={3} style={{ margin: '0 0 16px' }}>Daftar Transfer Terjadwal</Title>
+          <Title level={3} style={{ margin: '0 0 16px' }}>{t('listTitle')}</Title>
 
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
@@ -216,9 +217,9 @@ export default function ScheduledTransfersPage() {
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <Space direction="vertical" size={8}>
-                  <Text type="secondary">Belum ada transfer terjadwal</Text>
+                  <Text type="secondary">{t('emptyTitle')}</Text>
                   <Link href="/transfer">
-                    <Button type="primary" size="small">Buat Transfer Terjadwal</Button>
+                    <Button type="primary" size="small">{t('emptyAction')}</Button>
                   </Link>
                 </Space>
               }
@@ -236,7 +237,7 @@ export default function ScheduledTransfersPage() {
                         size="small"
                         onClick={() => handlePause(transfer)}
                         disabled={pauseTransfer.isPending}
-                        aria-label="Jeda transfer terjadwal"
+                        aria-label={t('ariaPause')}
                       >
                         {pauseTransfer.isPending ? (
                           <Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />
@@ -250,7 +251,7 @@ export default function ScheduledTransfersPage() {
                         size="small"
                         onClick={() => handleOpenEditModal(transfer)}
                         disabled={updateTransfer.isPending}
-                        aria-label="Edit transfer terjadwal"
+                        aria-label={t('ariaEdit')}
                       >
                         <Edit3 style={{ width: 16, height: 16 }} />
                       </Button>
@@ -260,7 +261,7 @@ export default function ScheduledTransfersPage() {
                         size="small"
                         onClick={() => handleResume(transfer)}
                         disabled={resumeTransfer.isPending}
-                        aria-label="Lanjutkan transfer terjadwal"
+                        aria-label={t('ariaResume')}
                       >
                         {resumeTransfer.isPending ? (
                           <Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />
@@ -275,7 +276,7 @@ export default function ScheduledTransfersPage() {
                         size="small"
                         onClick={() => handleOpenCancelModal(transfer)}
                         disabled={cancelTransfer.isPending}
-                        aria-label="Hapus transfer terjadwal"
+                        aria-label={t('ariaDelete')}
                       >
                         {cancelTransfer.isPending ? (
                           <Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />
@@ -294,7 +295,7 @@ export default function ScheduledTransfersPage() {
                     }
                     title={
                       <Space size={8}>
-                        <Text strong>{transfer.description || 'Transfer Terjadwal'}</Text>
+                        <Text strong>{transfer.description || t('defaultDescription')}</Text>
                         {getStatusBadge(transfer.status)}
                       </Space>
                     }
@@ -323,10 +324,10 @@ export default function ScheduledTransfersPage() {
       </Space>
 
       {/* Edit Modal */}
-      <Modal open={isEditModalOpen} onCancel={() => setIsEditModalOpen(false)} footer={null} centered width={512} title={<Title level={4} style={{ marginBottom: 4 }}>Edit Transfer Terjadwal</Title>}>
+      <Modal open={isEditModalOpen} onCancel={() => setIsEditModalOpen(false)} footer={null} centered width={512} title={<Title level={4} style={{ marginBottom: 4 }}>{t('editModalTitle')}</Title>}>
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Text type="secondary">
-            Ubah detail transfer terjadwal Anda.
+            {t('editModalDescription')}
           </Text>
 
           {updateTransfer.isError && (
@@ -334,13 +335,13 @@ export default function ScheduledTransfersPage() {
               type="error"
               showIcon
               icon={<AlertCircle style={{ width: 16, height: 16, color: 'var(--ant-color-error)' }} />}
-              description={<Text type="danger">Gagal memperbarui transfer. Silakan coba lagi.</Text>}
+              description={<Text type="danger">{t('editError')}</Text>}
             />
           )}
 
           <Space direction="vertical" size={16} style={{ width: '100%' }}>
             <Space direction="vertical" size={8} style={{ width: '100%' }}>
-              <label htmlFor="scheduled-amount" style={{ fontSize: 14, fontWeight: 500 }}>Jumlah (IDR)</label>
+              <label htmlFor="scheduled-amount" style={{ fontSize: 14, fontWeight: 500 }}>{t('amountLabel')}</label>
               <Input id="scheduled-amount"
                 type="number"
                 step="any"
@@ -351,26 +352,26 @@ export default function ScheduledTransfersPage() {
             </Space>
 
             <Space direction="vertical" size={8} style={{ width: '100%' }}>
-              <label htmlFor="scheduled-description" style={{ fontSize: 14, fontWeight: 500 }}>Deskripsi</label>
+              <label htmlFor="scheduled-description" style={{ fontSize: 14, fontWeight: 500 }}>{t('descriptionLabel')}</label>
               <Input id="scheduled-description"
                 type="text"
                 value={editForm.description}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="Deskripsi transfer"
+                placeholder={t('descriptionPlaceholder')}
               />
             </Space>
 
             <Space direction="vertical" size={8} style={{ width: '100%' }}>
-              <label htmlFor="scheduled-type" style={{ fontSize: 14, fontWeight: 500 }}>Tipe Jadwal</label>
+              <label htmlFor="scheduled-type" style={{ fontSize: 14, fontWeight: 500 }}>{t('scheduleTypeLabel')}</label>
               <Select id="scheduled-type"
                 style={{ width: '100%' }}
                 value={editForm.scheduleType}
                 onChange={(value: string) => setEditForm((prev) => ({ ...prev, scheduleType: value as typeof prev.scheduleType }))}
                 options={[
-                  { value: 'ONE_TIME', label: 'Sekali' },
-                  { value: 'RECURRING_DAILY', label: 'Harian' },
-                  { value: 'RECURRING_WEEKLY', label: 'Mingguan' },
-                  { value: 'RECURRING_MONTHLY', label: 'Bulanan' },
+                  { value: 'ONE_TIME', label: t('scheduleTypeOneTime') },
+                  { value: 'RECURRING_DAILY', label: t('scheduleTypeDaily') },
+                  { value: 'RECURRING_WEEKLY', label: t('scheduleTypeWeekly') },
+                  { value: 'RECURRING_MONTHLY', label: t('scheduleTypeMonthly') },
                 ]}
               />
             </Space>
@@ -379,7 +380,7 @@ export default function ScheduledTransfersPage() {
           <Row justify="end" gutter={8}>
             <Col>
               <Button onClick={() => setIsEditModalOpen(false)}>
-                Batal
+                {t('cancelButton')}
               </Button>
             </Col>
             <Col>
@@ -387,7 +388,7 @@ export default function ScheduledTransfersPage() {
                 {updateTransfer.isPending ? (
                   <Loader2 style={{ width: 16, height: 16, marginRight: 8, animation: 'spin 1s linear infinite' }} />
                 ) : null}
-                Simpan Perubahan
+                {t('saveChanges')}
               </Button>
             </Col>
           </Row>
@@ -395,10 +396,10 @@ export default function ScheduledTransfersPage() {
       </Modal>
 
       {/* Cancel Confirmation Modal */}
-      <Modal open={isCancelModalOpen} onCancel={() => setIsCancelModalOpen(false)} footer={null} centered width={512} title={<Title level={4} style={{ marginBottom: 4, color: 'var(--ant-color-error)' }}>Batalkan Transfer</Title>}>
+      <Modal open={isCancelModalOpen} onCancel={() => setIsCancelModalOpen(false)} footer={null} centered width={512} title={<Title level={4} style={{ marginBottom: 4, color: 'var(--ant-color-error)' }}>{t('cancelModalTitle')}</Title>}>
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Text type="secondary">
-            Apakah Anda yakin ingin membatalkan transfer terjadwal ini? Tindakan ini tidak dapat dibatalkan.
+            {t('cancelModalDescription')}
           </Text>
 
           {cancelTransfer.isError && (
@@ -406,14 +407,14 @@ export default function ScheduledTransfersPage() {
               type="error"
               showIcon
               icon={<AlertCircle style={{ width: 16, height: 16, color: 'var(--ant-color-error)' }} />}
-              description={<Text type="danger">Gagal membatalkan transfer. Silakan coba lagi.</Text>}
+              description={<Text type="danger">{t('cancelError')}</Text>}
             />
           )}
 
           <Row justify="end" gutter={8}>
             <Col>
               <Button onClick={() => setIsCancelModalOpen(false)}>
-                Batal
+                {t('cancelButton')}
               </Button>
             </Col>
             <Col>
@@ -428,7 +429,7 @@ export default function ScheduledTransfersPage() {
                 ) : (
                   <Trash2 style={{ width: 16, height: 16, marginRight: 8 }} />
                 )}
-                Batalkan Transfer
+                {t('cancelConfirm')}
               </Button>
             </Col>
           </Row>
