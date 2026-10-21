@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
 
 /**
  * SkipLink component for accessibility (WCAG 2.1 compliance)
@@ -40,50 +39,6 @@ export function SkipLink({
   );
 }
 
-/**
- * useFocusTrap hook to trap focus within a component (modals, dialogs)
- */
-export function useFocusTrap(
-  active: boolean = true,
-  containerRef?: React.RefObject<HTMLElement | null>,
-) {
-  useEffect(() => {
-    if (!active) return;
-
-    const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-
-      // Get focusable elements, scoped to container if provided
-      const scope = containerRef?.current || document;
-      const focusableElements = scope.querySelectorAll(
-        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
-
-      if (focusableElements.length === 0) return;
-
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[
-        focusableElements.length - 1
-      ] as HTMLElement;
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          lastElement?.focus();
-          e.preventDefault();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          firstElement?.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleTab);
-    return () => document.removeEventListener("keydown", handleTab);
-  }, [active, containerRef]);
-}
-
 export function getA11yProps(config: {
   label?: string;
   describedBy?: string;
@@ -115,6 +70,5 @@ export function getA11yProps(config: {
 }
 
 export const a11yUtils = {
-  useFocusTrap,
   getA11yProps,
 };

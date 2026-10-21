@@ -19,7 +19,7 @@ vi.mock("@/lib/a11y", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...(actual as object),
-    a11yUtils: { useFocusTrap: vi.fn() },
+    a11yUtils: { getA11yProps: vi.fn() },
   };
 });
 

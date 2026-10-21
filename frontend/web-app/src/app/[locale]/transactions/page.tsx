@@ -24,6 +24,7 @@ import { notify as toast } from '@/lib/notify';
 import clsx from 'clsx';
 import { addCurrency, formatCurrency } from '@/lib/currency';
 import type { Transaction, TransactionFilters, TransactionStatus, TransactionType } from '@/types';
+import { SkipLink } from "@/lib/a11y";
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
   PENDING: { label: 'Menunggu', color: 'warning', icon: Clock },
@@ -214,6 +215,7 @@ export default function TransactionsPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
         {/* Header */}
         <Row gutter={[16, 16]} align="middle" justify="space-between">
@@ -303,7 +305,7 @@ export default function TransactionsPage() {
                 </div>
                 <div>
                   <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Total Masuk</Typography.Text>
-                  <Typography.Title level={2} style={{ margin: 0 }}>
+                  <Typography.Title level={2} style={{ margin: 0, fontVariantNumeric: "tabular-nums" }}>
                     {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : formatAmount(totalIn, 'IDR')}
                   </Typography.Title>
                 </div>
@@ -326,7 +328,7 @@ export default function TransactionsPage() {
                 </div>
                 <div>
                   <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">Total Keluar</Typography.Text>
-                  <Typography.Title level={2} style={{ margin: 0 }}>
+                  <Typography.Title level={2} style={{ margin: 0, fontVariantNumeric: "tabular-nums" }}>
                     {isLoading ? <Skeleton.Input active size="small" style={{ height: 28, width: 96 }} /> : formatAmount(totalOut, 'IDR')}
                   </Typography.Title>
                 </div>
@@ -415,7 +417,7 @@ export default function TransactionsPage() {
                     const TypeIcon = type.icon;
 
                     return (
-                      <Card key={transaction.id} size="small">
+                      <div key={transaction.id} style={{ borderBottom: "1px solid var(--ant-color-border-secondary)", paddingBottom: 16 }}>
                         <Space direction="vertical" size={12} style={{ width: '100%' }}>
                           <Row justify="space-between" align="middle">
                             <Space size={12}>
@@ -476,7 +478,7 @@ export default function TransactionsPage() {
                             </>
                           )}
                         </Space>
-                      </Card>
+                      </div>
                     );
                   })}
                 </Space>
@@ -552,7 +554,7 @@ export default function TransactionsPage() {
                 </Row>
                 <Row justify="space-between">
                   <Typography.Text type="secondary">Jumlah</Typography.Text>
-                  <Typography.Text strong>
+                  <Typography.Text strong style={{ fontVariantNumeric: "tabular-nums" }}>
                     {formatAmount(selectedTransaction.amount, selectedTransaction.currency)}
                   </Typography.Text>
                 </Row>

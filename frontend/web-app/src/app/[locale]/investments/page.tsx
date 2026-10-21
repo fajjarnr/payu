@@ -6,6 +6,7 @@ import { useInvestmentAccount, useBuyDeposit, useSellInvestment, useCreateInvest
 import { useTranslations } from 'next-intl';
 import { asMoney, formatCurrency } from '@/lib/currency';
 import { notify as toast } from '@/lib/notify';
+import { SkipLink } from "@/lib/a11y";
 
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
@@ -45,9 +46,10 @@ export default function InvestmentsPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
         <div>
-          <Typography.Title level={2} style={{ marginBottom: 4 }}>{t('title')}</Typography.Title>
+          <Typography.Title level={1} style={{ marginBottom: 4 }}>{t('title')}</Typography.Title>
           <Typography.Text type="secondary">{t('subtitle')}</Typography.Text>
         </div>
 

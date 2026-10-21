@@ -20,7 +20,6 @@ import api from "@/lib/api";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/DashboardLayout";
-import { SkipLink } from "@/lib/a11y";
 import {
   Button,
   Card,
@@ -214,8 +213,7 @@ export default function BillsPage() {
     const SuccessIcon = successData.billerIcon;
     return (
       <DashboardLayout>
-        <SkipLink href="#main-content" />
-        <main id="main-content" style={{ overflowX: "hidden" }}>
+        <div className="overflow-x-hidden">
           <Flex
             vertical
             align="center"
@@ -377,7 +375,7 @@ export default function BillsPage() {
               </Flex>
             </Flex>
           </Flex>
-        </main>
+        </div>
       </DashboardLayout>
     );
   }
@@ -385,8 +383,7 @@ export default function BillsPage() {
   if (selectedBiller) {
     return (
       <DashboardLayout>
-        <SkipLink href="#main-content" />
-        <main id="main-content" style={{ overflowX: "hidden" }}>
+        <div className="overflow-x-hidden">
           <Space direction="vertical" size={24} style={{ width: "100%" }}>
             <Button
               type="default"
@@ -408,6 +405,7 @@ export default function BillsPage() {
                   top: 0,
                   right: 0,
                   width: 256,
+                  maxWidth: "100%",
                   height: 256,
                   borderRadius: "50%",
                   background: selectedBiller.bg,
@@ -559,15 +557,14 @@ export default function BillsPage() {
               </Typography.Text>
             </Flex>
           </Space>
-        </main>
+        </div>
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      <SkipLink href="#main-content" />
-      <main id="main-content" style={{ overflowX: "hidden" }}>
+      <div className="overflow-x-hidden">
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
           <Flex
             vertical={!isSm}
@@ -611,6 +608,7 @@ export default function BillsPage() {
                 top: 0,
                 right: 0,
                 width: 256,
+                maxWidth: "100%",
                 height: 256,
                 borderRadius: "50%",
                 background: token.colorPrimaryBg,
@@ -785,7 +783,7 @@ export default function BillsPage() {
             )}
           </Space>
         </Space>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

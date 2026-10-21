@@ -177,6 +177,6 @@
   ],
   "exclude": [
     ["#storybook-root"],
-    ["[data-testid]"]
+    ["[data-testid=\"chart-canvas-fallback\"]"]
   ]
 }

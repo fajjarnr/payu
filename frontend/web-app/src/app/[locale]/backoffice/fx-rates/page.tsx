@@ -160,6 +160,7 @@ export default function FxRatesAdminPage() {
 
       <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
         <Table<FxRateResponse>
+          scroll={{ x: "max-content" }}
           columns={columns}
           dataSource={filteredRates}
           rowKey="id"

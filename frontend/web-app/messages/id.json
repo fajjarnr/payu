@@ -44,7 +44,7 @@
     "others": "Lainnya",
     "history": "Riwayat Transaksi",
     "scheduled": "Transfer Terjadwal",
-    "overview": "Dasbor",
+    "overview": "Ringkasan",
     "finance": "Keuangan",
     "splitBill": "Split Bill",
     "lending": "Lending",
@@ -65,8 +65,12 @@
     "homeBrand": "PayU — beranda",
     "openMenu": "Buka menu navigasi",
     "openSearch": "Buka pencarian",
-    "notificationsLabel": "Notifikasi",
-    "profileMenu": "Menu profil pengguna"
+    "notificationsLabel": "Notifikasi (buka)",
+    "profileMenu": "Menu profil pengguna",
+    "sidebarNav": "Navigasi utama",
+    "notificationsMenu": "Notifikasi (menu)",
+    "exchangeHistoryEmpty": "Tidak ada riwayat penukaran",
+    "exchangeHistoryEmptyDesc": "Penukaran yang Anda lakukan akan muncul di sini."
   },
   "dashboard": {
     "welcome_morning": "Selamat Pagi",
@@ -84,7 +88,7 @@
     "totalBalance": "Total Saldo",
     "income": "Pemasukan",
     "expense": "Pengeluaran",
-    "recentActivity": "Aktivitas Terbaru",
+    "recentActivity": "Aktivitas Terakhir",
     "quickActions": "Aksi Cepat",
     "futureTitle": "Masa Depan Finansial Anda.",
     "futureDesc": "Bangun portofolio investasi yang kuat langsung dari satu aplikasi. Dari reksa dana hingga emas digital, kami menyediakan instrumen terbaik untuk pertumbuhan aset Anda.",
@@ -122,7 +126,6 @@
     "doneEditingLabel": "Selesai mengedit",
     "quickTransfer": "Kirim Cepat",
     "favoriteCategory": "Kategori Favorit",
-    "recentActivity": "Aktivitas Terakhir",
     "txOptions": "Opsi untuk {description}",
     "txCancel": "Batalkan {description} ({amount})",
     "txCancelShort": "Batalkan",
@@ -179,7 +182,11 @@
     "deleteFailed": "Gagal menghapus",
     "errBankCode": "Kode bank 1-10 karakter",
     "errAccount": "10-20 digit",
-    "errNickname": "Maks 100 karakter"
+    "errNickname": "Maks 100 karakter",
+    "deleteConfirmTitle": "Hapus penerima ini?",
+    "deleteConfirmDesc": "Hapus {name} dari daftar penerima tersimpan? Tindakan ini tidak dapat dibatalkan.",
+    "confirm": "Hapus",
+    "cancel": "Batal"
   },
   "cms": {
     "bannerLoadError": "Gagal memuat banner",
@@ -190,6 +197,8 @@
     "nextBanner": "Banner berikutnya",
     "goToBanner": "Ke banner {index}",
     "bannerPagination": "Paginasi banner",
+    "pauseAutoplay": "Jeda putar otomatis banner",
+    "resumeAutoplay": "Lanjutkan putar otomatis banner",
     "promoAnnouncement": "Promo tersedia: {title}",
     "viewPromo": "Lihat Promo: {title}",
     "goToPromo": "Ke promo {index}: {title}",
@@ -256,7 +265,38 @@
     "failed": "Transfer Gagal",
     "insufficientBalance": "Saldo tidak mencukupi",
     "invalidAccount": "Nomor akun tidak valid",
-    "dailyLimit": "Batas harian tercapai"
+    "dailyLimit": "Batas harian tercapai",
+    "typeInternalLabel": "Transfer Instan",
+    "typeInternalDesc": "Transfer antar rekening PayU seketika",
+    "typeBifastLabel": "BI-FAST",
+    "typeBifastDesc": "Transfer real-time antar bank nasional",
+    "typeSknLabel": "SKN",
+    "typeSknDesc": "Transfer kliring nasional",
+    "typeRtgsLabel": "RTGS",
+    "typeRtgsDesc": "Transfer real-time gross settlement",
+    "typeFeeFree": "Gratis",
+    "typeTimeInstant": "Seketika",
+    "typeTimeBusinessDay": "Hari kerja",
+    "scheduleNowLabel": "Sekarang",
+    "scheduleNowDesc": "Proses transfer segera",
+    "scheduleScheduledLabel": "Terjadwal",
+    "scheduleScheduledDesc": "Tentukan tanggal pengiriman",
+    "scheduleRecurringLabel": "Berulang",
+    "scheduleRecurringDesc": "Pengiriman rutin bulanan",
+    "reviewButton": "Tinjau Ringkasan Transfer",
+    "confirmButton": "Otorisasi Transfer Sekarang",
+    "validating": "Memvalidasi Transaksi...",
+    "toastRecipientAmountRequired": "Silakan pilih penerima dan masukkan jumlah transfer",
+    "toastDateRequired": "Silakan tentukan tanggal transfer",
+    "toastRecurringRequired": "Silakan tentukan tanggal dan bulan transfer",
+    "toastSuccessNow": "Transfer berhasil!",
+    "toastSuccessScheduled": "Transfer terjadwal berhasil diset!",
+    "toastSuccessRecurring": "Transfer berulang berhasil diset!",
+    "toastFailed": "Transfer gagal. Silakan coba lagi.",
+    "toastBeneficiaryInvalid": "Nomor rekening penerima harus 10-20 digit",
+    "toastBeneficiaryAdded": "Penerima berhasil ditambahkan",
+    "toastBeneficiaryAddFailed": "Gagal menambahkan penerima",
+    "securedIdr": "IDR Aman"
   },
   "bills": {
     "title": "Tagihan & Isi Ulang",
@@ -460,6 +500,11 @@
     "mfaRequired": "MFA Diperlukan: Terdeteksi pola login mencurigakan.",
     "invalidResponse": "Login gagal: Respon server tidak valid",
     "loginFailed": "Login gagal. Silakan periksa kredensial Anda.",
+    "resetSubtitle": "Masukkan email Anda untuk menerima instruksi reset password.",
+    "sendInstructions": "Kirim Instruksi",
+    "backToLogin": "Kembali ke login",
+    "emailRequired": "Email wajib diisi",
+    "issuerMissing": "Layanan login belum dikonfigurasi. Silakan coba lagi nanti.",
     "onboarding": {
       "title": "Selamat Datang di PayU",
       "subtitle": "Platform perbankan digital masa depan",
@@ -628,7 +673,12 @@
         "errorLoad": "Gagal memuat daftar e-statement.",
         "loadError": "Gagal memuat daftar e-statement.",
         "errorDownload": "Gagal mengunduh e-statement. Silakan coba lagi.",
-        "downloadError": "Gagal mengunduh e-statement. Silakan coba lagi."
+        "downloadError": "Gagal mengunduh e-statement. Silakan coba lagi.",
+        "retry": "Coba lagi",
+        "loadMore": "Muat Lebih Banyak Laporan",
+        "statusGenerating": "Sedang Dibuat",
+        "statusCompleted": "Siap Diunduh",
+        "statusFailed": "Gagal"
       },
       "months": {
         "1": "Januari",
@@ -643,6 +693,13 @@
         "10": "Oktober",
         "11": "November",
         "12": "Desember"
+      },
+      "a11y": {
+        "selectYear": "Pilih tahun statement",
+        "selectMonth": "Pilih bulan statement",
+        "generateButton": "Buat dan unduh e-statement",
+        "downloadStatement": "Unduh e-statement {period}",
+        "loadMore": "Muat lebih banyak e-statement"
       }
     }
   },

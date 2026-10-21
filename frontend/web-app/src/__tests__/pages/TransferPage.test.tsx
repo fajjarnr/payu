@@ -112,11 +112,8 @@ describe("TransferPage", () => {
     const user = userEvent.setup();
     renderWithIntl(<TransferPage />);
 
-    await user.type(
-      screen.getByLabelText("Nomor Rekening Penerima"),
-      "1001001002",
-    );
-    const amount = screen.getByLabelText("Nominal Transfer");
+    await user.type(screen.getByLabelText("Akun Penerima"), "1001001002");
+    const amount = screen.getByLabelText("Jumlah");
     await user.click(amount);
     await user.keyboard("25000");
 
@@ -138,11 +135,8 @@ describe("TransferPage", () => {
 
     renderWithIntl(<TransferPage />);
 
-    await user.type(
-      screen.getByLabelText("Nomor Rekening Penerima"),
-      "1001001002",
-    );
-    const amount = screen.getByLabelText("Nominal Transfer");
+    await user.type(screen.getByLabelText("Akun Penerima"), "1001001002");
+    const amount = screen.getByLabelText("Jumlah");
     await user.click(amount);
     await user.keyboard("25000");
     await user.click(screen.getByRole("button", { name: /Tinjau Ringkasan/ }));

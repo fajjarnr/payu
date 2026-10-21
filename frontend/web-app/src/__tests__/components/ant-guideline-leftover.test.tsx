@@ -3,7 +3,7 @@ import type * as NavigationModule from "@/lib/navigation";
 import { screen } from "@testing-library/react";
 import { vi } from "vitest";
 import { renderWithIntl } from "@/__tests__/utils/test-utils";
-import MobileHeader from "@/components/MobileHeader";
+import MobileNav from "@/components/MobileNav";
 import TargetedPromos, { QuickPromoBanner } from "@/components/personalization/TargetedPromos";
 import SegmentedOffers from "@/components/personalization/SegmentedOffers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -11,7 +11,13 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 vi.mock("@/lib/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof NavigationModule>()),
   useRouter: () => ({ back: vi.fn() }),
+  usePathname: () => "/dashboard",
 }));
+
+vi.mock("@/stores", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/stores")>();
+  return { ...actual, useIsAuthenticated: () => true };
+});
 
 vi.mock("@/hooks/useSegmentedOffers", () => ({
   useSegmentedOffers: () => ({
@@ -71,8 +77,8 @@ function Thrower(): React.ReactNode {
 }
 
 describe("ANT leftover A-01 migration", () => {
-  it("MobileHeader renders no legacy token-bypass classes", () => {
-    const { container } = renderWithIntl(<MobileHeader title="Test" />);
+  it("MobileNav renders no legacy token-bypass classes", () => {
+    const { container } = renderWithIntl(<MobileNav />);
     expectNoLegacy(container);
   });
 

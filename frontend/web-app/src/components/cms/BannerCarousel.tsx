@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { theme, Button, Carousel, Skeleton, Typography, Tag, Alert } from 'antd';
-import { ChevronLeft, ChevronRight } from '@/components/icons';
+import { ChevronLeft, ChevronRight, Pause, Play } from '@/components/icons';
 import type { CarouselRef } from 'antd/es/carousel';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
@@ -36,7 +36,10 @@ export default function BannerCarousel({
   const isNavigating = useRef(false);
   const carouselRef = useRef<CarouselRef>(null);
   const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  // Transient hover/focus pause vs the user's explicit toggle (touch users get
+  // no hover — the toggle must stick after pointer/focus leaves).
+  const [userPaused, setUserPaused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const { token } = theme.useToken();
 
@@ -49,7 +52,7 @@ export default function BannerCarousel({
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  // ponytail: native autoplay via controlled index — replaces embla-autoplay 8.6, 0 deps
+  const isPaused = isHovered || userPaused;
   const autoplayOn = !reducedMotion && !isPaused;
   useEffect(() => {
     if (!autoplayOn || !banners || banners.length <= 1) return;
@@ -114,10 +117,10 @@ export default function BannerCarousel({
   return (
     <div
       className={cn('relative w-full', className)}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onFocus={() => setIsPaused(true)}
-      onBlur={() => setIsPaused(false)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
     >
       <style>{arrowRing}</style>
       <div className="relative w-full">
@@ -193,6 +196,16 @@ export default function BannerCarousel({
               aria-label={t('nextBanner')}
               onClick={(e) => { e.preventDefault(); setCurrent((p) => (p + 1) % banners.length); carouselRef.current?.next(); }}
               className="cms-arrow absolute right-2 top-1/2 z-10 -translate-y-1/2 h-12 w-12"
+            />
+            {/* Touch users get no hover/focus pause — explicit toggle (WCAG 2.2.2). */}
+            <Button
+              type="default"
+              shape="circle"
+              icon={autoplayOn ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              aria-label={t(autoplayOn ? 'pauseAutoplay' : 'resumeAutoplay')}
+              aria-pressed={!autoplayOn}
+              onClick={(e) => { e.preventDefault(); setUserPaused((p) => !p); }}
+              className="cms-arrow absolute bottom-2 right-2 z-10 h-11 w-11"
             />
           </>
         )}

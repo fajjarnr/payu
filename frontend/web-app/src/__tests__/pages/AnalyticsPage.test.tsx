@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import idMessages from "../../../messages/id.json";
 import AnalyticsPage from "@/app/[locale]/analytics/page";
 
 vi.mock("@/lib/navigation", async (importOriginal) => ({
@@ -66,23 +68,30 @@ vi.mock("@ant-design/plots", () => ({
   ),
 }));
 
+const renderWithProviders = (ui: React.ReactElement) =>
+  render(
+    <NextIntlClientProvider locale="id" messages={idMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+
 describe("AnalyticsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should render within DashboardLayout", () => {
-    render(<AnalyticsPage />);
+    renderWithProviders(<AnalyticsPage />);
     expect(screen.getByTestId("dashboard-layout")).toBeInTheDocument();
   });
 
   it("should render page title", () => {
-    render(<AnalyticsPage />);
+    renderWithProviders(<AnalyticsPage />);
     expect(screen.getByText("Intelijen Keuangan")).toBeInTheDocument();
   });
 
   it("should render financial summary cards", () => {
-    render(<AnalyticsPage />);
+    renderWithProviders(<AnalyticsPage />);
     expect(screen.getByText("Total Pemasukan")).toBeInTheDocument();
     expect(screen.getByText("Total Pengeluaran")).toBeInTheDocument();
     expect(screen.getByText("Tabungan Bulanan")).toBeInTheDocument();
@@ -90,13 +99,13 @@ describe("AnalyticsPage", () => {
   });
 
   it("should render chart sections", () => {
-    render(<AnalyticsPage />);
+    renderWithProviders(<AnalyticsPage />);
     expect(screen.getByText("Trajektori Pengeluaran")).toBeInTheDocument();
     expect(screen.getByText("Rincian Pengeluaran")).toBeInTheDocument();
   });
 
   it("should show live connection status", () => {
-    render(<AnalyticsPage />);
+    renderWithProviders(<AnalyticsPage />);
     expect(screen.getByText("Live Update")).toBeInTheDocument();
   });
 
@@ -116,13 +125,13 @@ describe("AnalyticsPage", () => {
       },
       isLoading: false,
     });
-    render(<AnalyticsPage />);
+    renderWithProviders(<AnalyticsPage />);
     expect(screen.getByText("Rp 5.000.000")).toBeInTheDocument();
     expect(screen.getByText("Makanan")).toBeInTheDocument();
   });
 
   it("queries analytics by accountId, the event key (FE-AUDIT-006)", () => {
-    render(<AnalyticsPage />);
+    renderWithProviders(<AnalyticsPage />);
     // Transaction/wallet events are keyed by account_id (backend BUG-AUTH-013);
     // querying by Keycloak sub returns zero rows.
     expect(cashFlowMock).toHaveBeenCalledWith("acct_1");

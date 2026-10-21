@@ -61,7 +61,6 @@ import { notify as toast } from "@/lib/notify";
 import {
   addCurrency,
   formatCurrency,
-  formatCurrencyWithoutSymbol,
   parseCurrencyExact,
 } from "@/lib/currency";
 
@@ -297,20 +296,19 @@ export default function PocketsPage() {
   const labelStyle: React.CSSProperties = {
     display: "block",
     fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: "0.1em",
+    fontWeight: 600,
     textTransform: "uppercase",
   };
 
   return (
     <DashboardLayout>
       <SkipLink href="#main-content" />
-      <main id="main-content">
+      <div>
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
           {/* Header */}
           <Flex justify="space-between" align="flex-end" gap={16} wrap>
             <div>
-              <Typography.Title level={2} style={{ marginBottom: 4 }}>
+              <Typography.Title level={1} style={{ marginBottom: 4 }}>
                 Manajemen Kantong
               </Typography.Title>
               <Typography.Text type="secondary">
@@ -398,7 +396,7 @@ export default function PocketsPage() {
                       Likuiditas Tersedia
                     </Typography.Text>
                     <Typography.Title
-                      level={1}
+                      level={2}
                       style={{
                         marginBottom: 0,
                         fontVariantNumeric: "tabular-nums",
@@ -476,11 +474,7 @@ export default function PocketsPage() {
                       overflow: "hidden",
                     },
                   }}
-                  style={{
-                    background: token.colorText,
-                    color: token.colorBgContainer,
-                    border: "none",
-                  }}
+                  style={{}}
                 >
                   <Flex align="center" gap={16}>
                     <Flex
@@ -489,54 +483,27 @@ export default function PocketsPage() {
                       style={{
                         width: 48,
                         height: 48,
-                        borderRadius: 12,
-                        background: `${token.colorBgContainer}1A`,
-                        border: `1px solid ${token.colorBgContainer}1A`,
-                        color: token.colorBgContainer,
+                        background: token.colorPrimaryBg,
+                        color: token.colorPrimary,
                       }}
                     >
                       <ShieldCheck />
                     </Flex>
                     <div>
-                      <Typography.Text
-                        strong
-                        style={{
-                          display: "block",
-                          color: token.colorBgContainer,
-                        }}
-                      >
-                        Keamanan Tier-1
+                      <Typography.Text strong style={{ display: "block" }}>
+                        Dana Terproteksi
                       </Typography.Text>
-                      <Typography.Text
-                        style={{
-                          ...labelStyle,
-                          color: token.colorBgContainer,
-                          opacity: 0.6,
-                        }}
-                      >
-                        OJK & ASPI Compliant
+                      <Typography.Text type="secondary" style={{ ...labelStyle }}>
+                        Enkripsi aktif
                       </Typography.Text>
                     </div>
                   </Flex>
                   <div style={{ marginTop: 24 }}>
-                    <Typography.Text
-                      style={{
-                        ...labelStyle,
-                        color: token.colorBgContainer,
-                        opacity: 0.3,
-                      }}
-                    >
-                      Status Enkripsi
+                    <Typography.Text type="secondary" style={{ ...labelStyle }}>
+                      Status
                     </Typography.Text>
-                    <Typography.Text
-                      style={{
-                        display: "block",
-                        fontFamily: "monospace",
-                        fontSize: 12,
-                        color: `${token.colorBgContainer}B3`,
-                      }}
-                    >
-                      RESP-V3 ACTIVE
+                    <Typography.Text strong style={{ display: "block", fontSize: 12 }}>
+                      Aktif
                     </Typography.Text>
                   </div>
                 </Card>
@@ -700,8 +667,7 @@ export default function PocketsPage() {
                               level={3}
                               style={{ marginBottom: 0 }}
                             >
-                              Rp{" "}
-                              {formatCurrencyWithoutSymbol(pocket.balance, {
+                              {formatCurrency(pocket.balance, {
                                 locale: bcp47Locale,
                               })}
                             </Typography.Title>
@@ -1168,8 +1134,7 @@ export default function PocketsPage() {
                               level={3}
                               style={{ marginBottom: 0 }}
                             >
-                              Rp{" "}
-                              {formatCurrencyWithoutSymbol(pocket.balance, {
+                              {formatCurrency(pocket.balance, {
                                 locale: bcp47Locale,
                               })}
                             </Typography.Title>
@@ -1284,7 +1249,7 @@ export default function PocketsPage() {
                                     }
                                     style={{
                                       ...labelStyle,
-                                      borderRadius: 4,
+                                      borderRadius: 12,
                                     }}
                                   >
                                     {member.role}
@@ -1315,11 +1280,6 @@ export default function PocketsPage() {
 
           {/* Bottom banner */}
           <Card
-            style={{
-              background: token.colorText,
-              color: token.colorBgContainer,
-              border: "none",
-            }}
           >
             <Flex justify="space-between" align="center" gap={24} wrap>
               <Space direction="vertical" size={16} style={{ maxWidth: 640 }}>
@@ -1331,33 +1291,22 @@ export default function PocketsPage() {
                       width: 48,
                       height: 48,
                       borderRadius: 12,
-                      background: token.colorPrimary,
-                      color: token.colorBgContainer,
+                      background: token.colorPrimaryBg,
+                      color: token.colorPrimary,
                     }}
                   >
                     <TrendingUp />
                   </Flex>
                   <Typography.Title
                     level={3}
-                    style={{ marginBottom: 0, color: token.colorBgContainer }}
+                    style={{ marginBottom: 0 }}
                   >
                     Akselerasi Kekayaan Anda.
                   </Typography.Title>
                 </Flex>
-                <Typography.Text
-                  style={{
-                    color: token.colorBgContainer,
-                    opacity: 0.5,
-                    fontSize: 14,
-                  }}
-                >
-                  Pindahkan dana mengendap dari kantong ke reksa dana yield
-                  tinggi atau emas digital. AI kami menyarankan Anda bisa
-                  berhemat hingga{" "}
-                  <Typography.Text strong style={{ color: token.colorPrimary }}>
-                    Rp 12,5 Juta
-                  </Typography.Text>{" "}
-                  lebih per tahun.
+                <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                  Pindahkan dana mengendap dari kantong ke reksa dana atau
+                  emas digital.
                 </Typography.Text>
               </Space>
               <Link href="/investments">
@@ -1652,7 +1601,7 @@ export default function PocketsPage() {
             </Flex>
           </Space>
         </Modal>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

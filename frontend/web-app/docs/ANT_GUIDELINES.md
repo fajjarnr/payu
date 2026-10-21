@@ -133,7 +133,7 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 
 ## 4. Accessibility requirements and testable acceptance criteria
 
-Baseline: `.a11yrc.json:1-4` targets **WCAG 2.1 AA**; `.a11y-baseline.json:1-8` has zero tracked violations with WEB-CSP-001/002 as P1 gate. Playwright covers Desktop Chrome 1280×720 only (`playwright.config.ts:38-65`); `test:a11y` covers dashboard components only (`package.json:17`).
+Baseline: `.a11yrc.json:1-4` targets **WCAG 2.2 AA**; `.a11y-baseline.json:1-8` has zero tracked violations with WEB-CSP-001/002 as P1 gate. Playwright covers chromium + firefox + webkit + Mobile Chrome (`playwright.config.ts:38-65`); `test:a11y` runs the a11y dir, incl. production-component coverage (`package.json:17`).
 
 | ID | Criterion (testable) | Maps |
 |---|---|---|
@@ -147,7 +147,7 @@ Baseline: `.a11yrc.json:1-4` targets **WCAG 2.1 AA**; `.a11y-baseline.json:1-8` 
 | F-08 | Status changes **must** announce. Keep `aria-live` count (`FeedbackWidget.tsx:268-270`) and `role=status` hint (`QuickActions.tsx:156`); auto-dismiss (`FeedbackWidget.tsx:147-152`), cancel toasts (`TransferActivity.tsx:67-74`), silent CMS nulls **should** add polite announcements. Test: SR walk of submit/cancel/dismiss flows. | WCAG 4.1.3 |
 | R-06 | Data fetch **must** resolve to content, skeleton, empty, or error — never silent `null` on failure (`BannerCarousel.tsx:96-98`; `EmergencyAlert.tsx:96-98`; `PromoPopup.tsx:187-192`). Test: error stub → visible error + retry. | — |
 
-**WCAG 2.2 AA upgrade path:** `.a11yrc.json` (2.1) lacks 2.4.11/2.4.13 focus-appearance, 2.5.7 dragging, 2.5.8 target-size. **Must**: add F-02/F-05 criteria above to the config now; **should**: enable Playwright firefox/webkit + Mobile Chrome projects (currently commented, `playwright.config.ts:48-65`) and widen `test:a11y` beyond dashboard (`package.json:17`) when adopting 2.2 formally.
+**WCAG 2.2 AA adopted:** `.a11yrc.json` covers 2.4.11/2.4.13 focus-appearance, 2.5.7 dragging, 2.5.8 target-size via F-02/F-05 above; Playwright runs firefox/webkit + Mobile Chrome (`playwright.config.ts:48-65`) and `test:a11y` covers production components (`package.json:17`, `src/__tests__/a11y/production-components.test.tsx`).
 
 ## 5. Content and tone standards with examples
 

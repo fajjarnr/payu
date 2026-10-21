@@ -192,6 +192,8 @@ export default function BackofficeLayout({
           <Flex
             align="center"
             justify="space-between"
+            wrap
+            gap={16}
             style={{ height: "100%" }}
           >
             <Flex align="center" gap={24}>
@@ -231,7 +233,7 @@ export default function BackofficeLayout({
                     }}
                   />
                 }
-                style={{ width: 320 }}
+                style={{ width: "100%", maxWidth: 320, minWidth: 200 }}
               />
               <Badge dot>
                 <Button
@@ -286,7 +288,7 @@ export default function BackofficeLayout({
           </Flex>
         </Layout.Header>
 
-        <Layout.Content style={{ padding: 32, overflowY: "auto" }}>
+        <Layout.Content id="main-content" style={{ padding: 32, overflowY: "auto" }}>
           {children}
         </Layout.Content>
       </Layout>

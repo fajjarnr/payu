@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NextIntlClientProvider } from 'next-intl';
+import idMessages from '../../../messages/id.json';
 import RewardsPage from '@/app/[locale]/rewards/page';
 
 const createWrapper = () => {
@@ -8,7 +10,11 @@ const createWrapper = () => {
     defaultOptions: { queries: { retry: false } },
   });
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextIntlClientProvider locale="id" messages={idMessages}>
+        {children}
+      </NextIntlClientProvider>
+    </QueryClientProvider>
   );
   wrapper.displayName = "TestWrapper";
   return wrapper;

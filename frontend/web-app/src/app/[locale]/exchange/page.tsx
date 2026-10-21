@@ -7,7 +7,6 @@ import {
   Button,
   Card,
   Col,
-  Empty,
   Form,
   Input,
   Row,
@@ -17,6 +16,7 @@ import {
   Tag,
   Typography,
 } from "antd";
+import EmptyState from "@/components/EmptyState";
 import { zodFieldRule } from "@/lib/zodForm";
 import {
   ArrowRightLeft,
@@ -35,6 +35,7 @@ import { useAuthStore, useUIStore } from "@/stores";
 import { SUPPORTED_CURRENCIES } from "@/services/FxService";
 import {
   compareCurrency,
+  formatCurrency as formatMoney,
   formatExactDecimal,
   parseCurrencyExact,
   type Money,
@@ -42,6 +43,7 @@ import {
 import DashboardLayout from "@/components/DashboardLayout";
 import { Link } from "@/lib/navigation";
 import { useTranslations } from "next-intl";
+import { SkipLink } from "@/lib/a11y";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
@@ -128,11 +130,16 @@ export default function ExchangePage() {
 
   const displayAmount = estimatedAmount;
 
-  const formatCurrency = (value: Money | number, currencyCode: string) => {
+  // Per-currency symbol + decimals via the shared helper (SUPPORTED_CURRENCIES
+  // holds the symbol/decimal lookup; lib owns the grouping/rounding).
+  const formatFxAmount = (value: Money | number, currencyCode: string) => {
     const currency = SUPPORTED_CURRENCIES[currencyCode];
     if (!currency) return `${value} ${currencyCode}`;
 
-    return `${currency.symbol}${formatExactDecimal(value, currency.decimalPlaces)}`;
+    return formatMoney(value, {
+      symbol: currency.symbol,
+      withDecimals: currency.decimalPlaces > 0,
+    });
   };
 
   const onValid = (values: ExchangeRequest) => {
@@ -158,7 +165,7 @@ export default function ExchangePage() {
       {
         onSuccess: () => {
           addToast(
-            `Successfully exchanged ${formatCurrency(parseCurrencyExact(data.amount), data.fromCurrency)} to ${data.toCurrency}`,
+            `Successfully exchanged ${formatFxAmount(parseCurrencyExact(data.amount), data.fromCurrency)} to ${data.toCurrency}`,
             "success",
           );
           form.setFieldsValue({ amount: "" });
@@ -186,9 +193,10 @@ export default function ExchangePage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         <div>
-          <Typography.Title level={2} style={{ marginTop: 0, marginBottom: 4 }}>
+          <Typography.Title level={1} style={{ marginTop: 0, marginBottom: 4 }}>
             {t("currencyExchange")}
           </Typography.Title>
           <Typography.Text type="secondary">
@@ -207,6 +215,7 @@ export default function ExchangePage() {
                   top: 0,
                   right: 0,
                   width: 384,
+                  maxWidth: "100%",
                   height: 384,
                   backgroundColor: "var(--ant-color-primary-bg)",
                   borderRadius: "50%",
@@ -491,7 +500,7 @@ export default function ExchangePage() {
                             You will receive
                           </Typography.Text>
                           <Typography.Title level={3} style={{ margin: 0 }}>
-                            {formatCurrency(displayAmount, toCurrency)}
+                            {formatFxAmount(displayAmount, toCurrency)}
                           </Typography.Title>
                         </div>
                         <div
@@ -664,9 +673,9 @@ export default function ExchangePage() {
                     <Spin />
                   </div>
                 ) : recentConversions.length === 0 ? (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No exchange history yet"
+                  <EmptyState
+                    title={t("exchangeHistoryEmpty")}
+                    description={t("exchangeHistoryEmptyDesc")}
                   />
                 ) : (
                   <Space

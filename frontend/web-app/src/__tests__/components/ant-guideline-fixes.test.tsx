@@ -270,7 +270,7 @@ describe("ANT guideline fixes", () => {
       </DashboardLayout>,
     );
     expect(screen.getByTestId("search-trigger").getAttribute("aria-label")).toBe("Buka pencarian");
-    expect(screen.getByTestId("notification-button").getAttribute("aria-label")).toBe("Notifikasi");
+    expect(screen.getByTestId("notification-button").getAttribute("aria-label")).toBe("Notifikasi (buka)");
     expect(screen.getByTestId("mobile-menu-trigger").getAttribute("aria-label")).toBe("Buka menu navigasi");
     expect(screen.getByTestId("profile-menu-trigger").getAttribute("aria-label")).toBe("Menu profil pengguna");
   });
@@ -307,6 +307,8 @@ describe("ANT guideline fixes", () => {
     expect(await screen.findByText("Audit Penerima")).toBeInTheDocument();
     const delBtn = screen.getByTestId("beneficiary-delete-ben_1");
     fireEvent.click(delBtn);
+    // Delete now requires Popconfirm confirmation.
+    fireEvent.click(await screen.findByText("Hapus"));
     expect(mockDeleteBeneficiary).toHaveBeenCalledWith("acc_1", "ben_1");
     expect(delBtn.style.minHeight).toBe("44px");
   });

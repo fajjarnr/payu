@@ -45,6 +45,7 @@ import {
 import { useAuthStore } from "@/stores/authStore";
 import { asMoney, formatCurrency } from "@/lib/currency";
 import { notify as toast } from "@/lib/notify";
+import { SkipLink } from "@/lib/a11y";
 
 export default function LendingPage() {
   const { token } = theme.useToken();
@@ -165,6 +166,7 @@ export default function LendingPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <div>

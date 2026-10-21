@@ -12,6 +12,8 @@ import {
 } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { Suspense, useEffect } from "react";
+import { SkipLink } from "@/lib/a11y";
+import { LoadingState } from "@/components/LoadingState";
 
 const { Title, Text } = Typography;
 
@@ -30,50 +32,12 @@ export default function LoginPage() {
 
 function LoginSkeleton() {
   return (
-    <div style={{ minHeight: "100vh", background: "hsl(var(--background))" }}>
-      <Row style={{ minHeight: "100vh" }}>
-        <Col xs={0} lg={12} style={{ background: "#1A1A2E" }} />
-        <Col
-          xs={24}
-          lg={12}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 32,
-          }}
-        >
-          <div style={{ width: "100%", maxWidth: 420 }}>
-            <div
-              style={{
-                height: 40,
-                width: 192,
-                background: "hsl(var(--muted))",
-                borderRadius: 12,
-                marginBottom: 32,
-              }}
-            />
-            <div
-              style={{
-                height: 20,
-                width: 256,
-                background: "hsl(var(--muted) / 0.6)",
-                borderRadius: 12,
-                marginBottom: 48,
-              }}
-            />
-            <div
-              style={{
-                height: 48,
-                background:
-                  "color-mix(in srgb, var(--color-primary-dark) 50%, transparent)",
-                borderRadius: 8,
-              }}
-            />
-          </div>
-        </Col>
-      </Row>
-    </div>
+    <>
+      <SkipLink />
+      <main id="main-content" style={{ minHeight: "100vh", background: "hsl(var(--background))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <LoadingState variant="spinner" />
+      </main>
+    </>
   );
 }
 
@@ -93,19 +57,21 @@ function LoginForm() {
   }, [t]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "hsl(var(--background))" }}>
+    <>
+      <SkipLink />
+      <main id="main-content" style={{ minHeight: "100vh", background: "hsl(var(--background))" }}>
       <Row style={{ minHeight: "100vh" }}>
         {/* Left Panel - Branding (Hidden on mobile) */}
         <Col
           xs={0}
           lg={12}
           style={{
-            background: "#1A1A2E",
+            background: token.colorText,
             borderRight: "1px solid hsl(var(--border) / 0.1)",
             padding: "32px 24px",
             position: "relative",
             overflow: "hidden",
-            color: "#FFFFFF",
+            color: token.colorBgContainer,
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
@@ -118,6 +84,7 @@ function LoginForm() {
               top: 0,
               right: 0,
               width: 800,
+              maxWidth: "100%",
               height: 800,
               background: "hsl(var(--primary) / 0.1)",
               borderRadius: "50%",
@@ -132,6 +99,7 @@ function LoginForm() {
               bottom: 0,
               left: 0,
               width: 600,
+              maxWidth: "100%",
               height: 600,
               background:
                 "color-mix(in srgb, var(--ant-color-primary) 90%, transparent)",
@@ -175,7 +143,7 @@ function LoginForm() {
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
-                  boxShadow: "0 10px 15px -3px hsl(var(--primary) / 0.2)",
+                  boxShadow: token.boxShadowSecondary,
                 }}
               >
                 <Image
@@ -191,7 +159,7 @@ function LoginForm() {
                   fontSize: 24,
                   fontWeight: 700,
                   letterSpacing: "-0.025em",
-                  color: "#FFFFFF",
+                  color: token.colorBgContainer,
                 }}
               >
                 PayU
@@ -232,7 +200,7 @@ function LoginForm() {
             <Title
               level={1}
               style={{
-                fontSize: 48,
+                fontSize: 32,
                 fontWeight: 700,
                 lineHeight: 1.2,
                 letterSpacing: "-0.025em",
@@ -264,7 +232,7 @@ function LoginForm() {
                       display: "flex",
                       alignItems: "center",
                       gap: 12,
-                      color: "#F8F9FA",
+                      color: token.colorBgContainer,
                     }}
                   >
                     <CheckCircle2
@@ -315,7 +283,7 @@ function LoginForm() {
                   <Title
                     level={2}
                     style={{
-                      fontSize: 30,
+                      fontSize: 24,
                       fontWeight: 700,
                       letterSpacing: "-0.025em",
                       margin: 0,
@@ -355,8 +323,7 @@ function LoginForm() {
                     height: 48,
                     fontWeight: 700,
                     fontSize: 16,
-                    boxShadow:
-                      "0 10px 15px -3px var(--color-primary-dark) / 0.2)",
+                    boxShadow: token.boxShadowSecondary,
                   }}
                   onClick={() => {
                     window.location.href = "/api/auth/authorize";
@@ -435,6 +402,7 @@ function LoginForm() {
           </div>
         </Col>
       </Row>
-    </div>
+      </main>
+    </>
   );
 }

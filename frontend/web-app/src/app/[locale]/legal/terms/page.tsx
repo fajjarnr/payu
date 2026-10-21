@@ -4,12 +4,14 @@ import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, Divider, Space, Typography } from 'antd';
 import { FileText, Shield, AlertCircle, CheckCircle2 } from '@/components/icons';
+import { SkipLink } from "@/lib/a11y";
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function TermsPage() {
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: '100%' }}>
         <Space size={16}>
           <div style={{ width: 56, height: 56, backgroundColor: 'var(--ant-color-primary)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

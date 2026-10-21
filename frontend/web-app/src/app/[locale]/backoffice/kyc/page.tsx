@@ -117,6 +117,7 @@ export default function KycReviewsPage() {
 
     <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
       <Table<KycReviewResponse>
+        scroll={{ x: "max-content" }}
         columns={columns}
         dataSource={reviews}
         rowKey="id"

@@ -65,6 +65,12 @@ export const lightTokens: SeedTokens = {
   fontSizeHeading3: 16,
   fontSizeHeading4: 16,
   fontSizeHeading5: 14,
+  // DESIGN.md display/caption/label roles documented on shared antd tokens —
+  // antd has no fontSizeDisplay/fontSizeCaption/fontSizeLabel seeds, so these
+  // roles read fontSizeXL (32, display), fontSizeSM (12, caption) and
+  // fontSizeSM (12, label, weight 500 at the call site).
+  fontSizeXL: 32,
+  fontSizeSM: 12,
 };
 
 export const darkTokens: SeedTokens = {

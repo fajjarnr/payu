@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import idMessages from "../../../messages/id.json";
 import userEvent from "@testing-library/user-event";
 import type { UserEvent } from "@testing-library/user-event";
 import "@testing-library/jest-dom";
@@ -59,6 +61,13 @@ async function openCreateForm(user: UserEvent) {
   await user.click(screen.getByRole("button", { name: /Split Bill Baru/ }));
 }
 
+const renderWithProviders = (ui: React.ReactElement) =>
+  render(
+    <NextIntlClientProvider locale="id" messages={idMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+
 describe("SplitBillPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -67,7 +76,7 @@ describe("SplitBillPage", () => {
 
   it("warns instead of silently returning when the description is missing", async () => {
     const user = userEvent.setup();
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
     await openCreateForm(user);
 
     await user.click(screen.getByRole("button", { name: "Buat" }));
@@ -80,7 +89,7 @@ describe("SplitBillPage", () => {
 
   it("warns when the total amount is missing", async () => {
     const user = userEvent.setup();
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
     await openCreateForm(user);
 
     await user.type(screen.getByLabelText("Deskripsi"), "Makan siang");
@@ -92,7 +101,7 @@ describe("SplitBillPage", () => {
 
   it("warns when no participant row is complete", async () => {
     const user = userEvent.setup();
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
     await openCreateForm(user);
 
     await user.type(screen.getByLabelText("Deskripsi"), "Makan siang");
@@ -107,7 +116,7 @@ describe("SplitBillPage", () => {
 
   it("creates the bill once description, amount and a participant are valid", async () => {
     const user = userEvent.setup();
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
     await openCreateForm(user);
 
     await user.type(screen.getByLabelText("Deskripsi"), "Makan siang");
@@ -140,30 +149,30 @@ describe("SplitBillPage", () => {
       },
     ]);
 
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
 
     expect(await screen.findByText("Audit Split Bill")).toBeInTheDocument();
     expect(screen.getByText("Draf")).toBeInTheDocument();
   });
 
   it("should render within DashboardLayout", () => {
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
     expect(screen.getByTestId("dashboard-layout")).toBeInTheDocument();
   });
 
   it("should render page title", () => {
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
     expect(screen.getByText("Split Bill")).toBeInTheDocument();
   });
 
   it("should render create split bill button", () => {
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
     expect(screen.getByText("Split Bill Baru")).toBeInTheDocument();
   });
 
   it("should submit a split bill with non-empty participants (FE-SPLIT-001)", async () => {
     const user = userEvent.setup();
-    render(<SplitBillPage />);
+    renderWithProviders(<SplitBillPage />);
     await openCreateForm(user);
 
     await user.type(screen.getByLabelText("ID akun peserta 1"), "acct_p1");

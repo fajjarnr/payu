@@ -28,6 +28,7 @@ import { useUpdateUser, useLogout } from "@/hooks";
 import { notify as toast } from "@/lib/notify";
 import BeneficiaryManager from "@/components/account/BeneficiaryManager";
 import StatementDownloader from "@/components/settings/statement-downloader";
+import { SkipLink } from "@/lib/a11y";
 
 const { Title, Text } = Typography;
 
@@ -102,11 +103,12 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
-            <Title level={2} style={{ margin: 0 }}>
+            <Title level={1} style={{ margin: 0 }}>
               {t("header.title")}
             </Title>
             <Text type="secondary" style={{ display: "block", marginTop: 4 }}>
@@ -447,7 +449,7 @@ export default function SettingsPage() {
             ) : (
               <Space direction="vertical" size={24} style={{ width: "100%" }}>
                 <div>
-                  <Title level={2} style={{ margin: 0 }}>
+                  <Title level={3} style={{ margin: 0 }}>
                     {t("menu.eStatement")}
                   </Title>
                   <Text

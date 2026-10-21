@@ -16,6 +16,7 @@ import {
   BadgePercent,
 } from "@/components/icons";
 import {
+  Alert,
   Button,
   Card,
   Divider,
@@ -50,7 +51,7 @@ export default function CampaignsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
-  const { data: campaigns, isLoading, error } = useActivePromotions();
+  const { data: campaigns, isLoading, error, refetch } = useActivePromotions();
   const createPromotion = useCreatePromotion();
   const filteredCampaigns = (campaigns ?? []).filter((cmp) =>
     cmp.name.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -235,18 +236,30 @@ export default function CampaignsPage() {
       </Card>
 
       <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
-        <Table<Promotion>
-          columns={columns}
-          dataSource={filteredCampaigns}
-          rowKey="id"
-          pagination={false}
-          loading={isLoading}
-          locale={{
-            emptyText: error
-              ? "Failed to load campaigns"
-              : "No campaigns found",
-          }}
-        />
+        {error ? (
+          <Alert
+            type="error"
+            showIcon
+            data-testid="campaigns-error"
+            message="Failed to load campaigns"
+            action={
+              <Button size="small" onClick={() => refetch()}>
+                Coba lagi
+              </Button>
+            }
+            style={{ margin: 24 }}
+          />
+        ) : (
+          <Table<Promotion>
+            scroll={{ x: "max-content" }}
+            columns={columns}
+            dataSource={filteredCampaigns}
+            rowKey="id"
+            pagination={false}
+            loading={isLoading}
+            locale={{ emptyText: "No campaigns found" }}
+          />
+        )}
         <Divider style={{ margin: 0 }} />
         <Flex
           align="center"

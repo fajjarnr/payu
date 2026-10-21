@@ -8,6 +8,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, Col, Input, Row, Space, Tag, Typography } from 'antd';
 import { Building2, Key, ShieldCheck, Loader2 } from '@/components/icons';
 import { useAuthStore } from '@/stores/authStore';
+import { SkipLink } from "@/lib/a11y";
 
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
@@ -42,6 +43,7 @@ export default function MerchantDashboard() {
   if (loading) {
     return (
       <DashboardLayout>
+      <SkipLink />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
           <Loader2 spin style={{ fontSize: 32, color: 'var(--ant-color-primary)' }} />
         </div>
@@ -52,6 +54,7 @@ export default function MerchantDashboard() {
   if (!partner) {
     return (
       <DashboardLayout>
+      <SkipLink />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, textAlign: 'center' }}>
           <Space direction="vertical" size={24} style={{ alignItems: 'center' }}>
             <Building2 style={{ width: 64, height: 64, color: 'var(--ant-color-text-tertiary)' }} />
@@ -85,6 +88,7 @@ export default function MerchantDashboard() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: '100%' }}>
         <Space direction="vertical" size={4}>
           <Typography.Title level={2} style={{ margin: 0 }}>{t('dashboard')}</Typography.Title>

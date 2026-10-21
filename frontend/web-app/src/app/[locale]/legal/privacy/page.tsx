@@ -4,12 +4,14 @@ import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, Space, Typography } from 'antd';
 import { Shield, Eye, Database, Lock, RefreshCw, CheckCircle2 } from '@/components/icons';
+import { SkipLink } from "@/lib/a11y";
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function PrivacyPage() {
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: '100%' }}>
         <Space size={16}>
           <div style={{ width: 56, height: 56, backgroundColor: 'var(--ant-color-primary)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

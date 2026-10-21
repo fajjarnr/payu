@@ -127,12 +127,12 @@ export function formatCurrency(
 
   // Handle null/undefined
   if (amount === null || amount === undefined) {
-    return `${symbol} 0`;
+    return `${symbol}\u00a00`;
   }
 
   if (compact) {
     const normalized = decimalString(amount);
-    if (!normalized) return `${symbol} 0`;
+    if (!normalized) return `${symbol}\u00a00`;
     const formatter = new Intl.NumberFormat(locale, {
       style: 'currency', currency: 'IDR', minimumFractionDigits: withDecimals ? 2 : 0,
       maximumFractionDigits: withDecimals ? 2 : 0, notation: 'compact', compactDisplay: 'short',
@@ -141,7 +141,7 @@ export function formatCurrency(
   }
 
   const formattedAmount = formatExact(amount, withDecimals ? 2 : 0, locale);
-  if (!formattedAmount) return `${symbol} 0`;
+  if (!formattedAmount) return `${symbol}\u00a00`;
   return `${formattedAmount.startsWith('-') ? '-' : ''}${symbol}\u00A0${formattedAmount.replace(/^-/, '')}`;
 }
 

@@ -39,6 +39,7 @@ import { Link } from "@/lib/navigation";
 
 import { useTranslations } from "next-intl";
 import { notify as toast } from "@/lib/notify";
+import { SkipLink } from "@/lib/a11y";
 
 const { Title, Text } = Typography;
 
@@ -164,6 +165,9 @@ export default function OnboardingPage() {
   });
 
   return (
+    <>
+      <SkipLink />
+      <main id="main-content" style={{ minHeight: "100vh" }}>
     <Row style={{ minHeight: "100vh" }}>
       {/* Left Panel - Branding (hidden on mobile) */}
       <Col
@@ -188,6 +192,7 @@ export default function OnboardingPage() {
             top: 0,
             right: 0,
             width: 800,
+            maxWidth: "100%",
             height: 800,
             background: token.colorPrimary,
             opacity: 0.1,
@@ -203,6 +208,7 @@ export default function OnboardingPage() {
             bottom: 0,
             left: 0,
             width: 600,
+            maxWidth: "100%",
             height: 600,
             background: token.colorPrimary,
             opacity: 0.1,
@@ -265,7 +271,7 @@ export default function OnboardingPage() {
               <Title
                 level={1}
                 style={{
-                  fontSize: 36,
+                  fontSize: 32,
                   lineHeight: 1.2,
                   letterSpacing: "-0.025em",
                   margin: 0,
@@ -759,5 +765,7 @@ export default function OnboardingPage() {
         </div>
       </Col>
     </Row>
+      </main>
+    </>
   );
 }

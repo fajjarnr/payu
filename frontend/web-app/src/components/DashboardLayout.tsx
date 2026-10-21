@@ -46,6 +46,7 @@ import MobileNav from "./MobileNav";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import { PersonalizedGreeting } from "./personalization";
+import { SkipLink } from "@/lib/a11y";
 import { useLogout } from "@/hooks";
 
 const { Sider, Header, Content } = Layout;
@@ -105,7 +106,7 @@ export default function DashboardLayout({
   const otherMenu = [
     { href: "/security", icon: ShieldCheck, label: t("security") },
     { href: "/settings", icon: Settings, label: t("settings") },
-    { href: "/notifications", icon: Bell, label: t("notifications") },
+    { href: "/notifications", icon: Bell, label: t("notificationsMenu") },
     { href: "/statements", icon: FileSearch, label: t("statements") },
     { href: "/support", icon: LifeBuoy, label: t("support") },
   ];
@@ -122,10 +123,13 @@ export default function DashboardLayout({
       ? pathname.replace(/^\/(id|en)(?=\/|$)/, "") || "/"
       : pathname;
 
+  // Segment match: child routes highlight their parent menu item; the
+  // dashboard special-case survives for locale-stripped root paths.
   const selectedKeys = allMenus
     .filter(
       (item) =>
         barePathname === item.href ||
+        (item.href !== "/" && barePathname.startsWith(`${item.href}/`)) ||
         (item.href.endsWith("/dashboard") &&
           barePathname.endsWith("/dashboard")),
     )
@@ -183,14 +187,21 @@ export default function DashboardLayout({
     </div>
   );
 
-  const sidebarMenu = (
-    <Menu
-      mode="inline"
-      selectedKeys={selectedKeys}
-      items={menuItems}
-      onClick={() => setDrawerOpen(false)}
-      style={{ borderInlineEnd: "none", background: "transparent" }}
-    />
+  const sidebarMenu = (label: string) => (
+    <nav aria-label={label}>
+      <Menu
+        mode="inline"
+        selectedKeys={selectedKeys}
+        items={menuItems}
+        onClick={() => setDrawerOpen(false)}
+        style={{
+          borderInlineEnd: "none",
+          background: "transparent",
+          // 44px touch floor (DESIGN.md): menu rows stretch to the minimum.
+          ["--ant-menu-item-height" as string]: "44px",
+        }}
+      />
+    </nav>
   );
   return (
     <>
@@ -206,6 +217,7 @@ export default function DashboardLayout({
         @media (min-width: 1024px) {
           .payu-content-inner { padding-bottom: 24px !important; }
         }
+        .payu-sidebar-menu .ant-menu-title-content { min-height: 44px; display: inline-flex; align-items: center; }
       `}</style>
       <Layout hasSider className="payu-full-h" style={{ overflow: "hidden" }}>
         <Sider
@@ -232,7 +244,7 @@ export default function DashboardLayout({
               PayU
             </span>
           </Link>
-          {sidebarMenu}
+          <div className="payu-sidebar-menu">{sidebarMenu(t("sidebarNav"))}</div>
         </Sider>
 
         <Layout className="payu-full-h" style={{ overflow: "hidden" }}>
@@ -259,6 +271,7 @@ export default function DashboardLayout({
                 onClick={() => setDrawerOpen(true)}
                 aria-label={t("openMenu")}
                 data-testid="mobile-menu-trigger"
+                style={{ width: 44, height: 44 }}
               />
               <div className="hidden flex-col justify-center sm:flex">
                 <PersonalizedGreeting
@@ -331,7 +344,9 @@ export default function DashboardLayout({
             </div>
           </Header>
 
+          <SkipLink href="#main-content" />
           <Content
+            id="main-content"
             style={{
               flex: 1,
               overflowY: "auto",
@@ -351,20 +366,18 @@ export default function DashboardLayout({
           onClose={() => setDrawerOpen(false)}
           width={288}
           title={
-            <Link
-              href="/"
-              className="flex items-center gap-4 px-2 py-4"
-              aria-label={t("homeBrand")}
-            >
+            // Drawer swaps places with the Sider below lg; its brand visual
+            // stays out of the a11y tree so only one logo landmark exists.
+            <span aria-hidden="true" className="flex items-center gap-4 px-2 py-4">
               {logoMark}
-            </Link>
+            </span>
           }
           styles={{
             header: { borderBottom: `1px solid ${token.colorBorderSecondary}` },
             body: { padding: 0, background: token.colorBgContainer },
           }}
         >
-          {sidebarMenu}
+          <div className="payu-sidebar-menu">{sidebarMenu(t("sidebarNav"))}</div>
         </Drawer>
 
         <Drawer

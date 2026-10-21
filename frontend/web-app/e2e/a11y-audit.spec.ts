@@ -1,43 +1,25 @@
 import { test, expect } from './fixtures';
 import AxeBuilder from '@axe-core/playwright';
-import { filterMinorA11yIssues } from './utils';
 
 /**
- * Axe-core accessibility audits against WCAG 2.1 AA. Color-contrast and other
- * minor a11y issues are tracked as design debt and don't fail the tests.
+ * Axe-core accessibility audits against WCAG 2.2 AA (see .a11yrc.json tags).
+ * No violation class is filtered: color-contrast included — failures are real
+ * bugs, not design debt.
  */
 
 test.describe('Accessibility Audit - @a11y', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test.describe('Login Page', () => {
-    test('should not have any critical accessibility issues', async ({ page }) => {
+    test('should have no accessibility violations on login', async ({ page }) => {
       await page.goto('/login');
       await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-        .exclude('.ignored-element') // Exclude any known false positives
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
         .analyze();
 
-      const criticalViolations = filterMinorA11yIssues(accessibilityScanResults.violations);
-
-      expect(criticalViolations).toEqual([]);
-    });
-
-    test('should have no critical accessibility violations beyond color contrast', async ({ page }) => {
-      await page.goto('/login');
-      await page.waitForLoadState('domcontentloaded');
-
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-        .analyze();
-
-      const criticalViolations = accessibilityScanResults.violations.filter(
-        v => v.id !== 'color-contrast'
-      );
-
-      expect(criticalViolations).toEqual([]);
+      expect(accessibilityScanResults.violations).toEqual([]);
     });
 
     test('should have proper form labels', async ({ page }) => {
@@ -86,29 +68,23 @@ test.describe('Accessibility Audit - @a11y', () => {
       await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
         .analyze();
 
-      const criticalViolations = accessibilityScanResults.violations.filter(
-        v => v.id !== 'color-contrast'
-      );
-
-      expect(criticalViolations).toEqual([]);
+      expect(accessibilityScanResults.violations).toEqual([]);
     });
   });
 
   test.describe('Protected Pages - Dashboard', () => {
-    test('should not have any critical accessibility issues on dashboard', async ({ authPage: page }) => {
+    test('should have no accessibility violations on dashboard', async ({ authPage: page }) => {
       await page.goto('/dashboard');
       await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
         .analyze();
 
-      const criticalViolations = filterMinorA11yIssues(accessibilityScanResults.violations);
-
-      expect(criticalViolations).toEqual([]);
+      expect(accessibilityScanResults.violations).toEqual([]);
     });
 
     test('should have proper form labels on dashboard', async ({ authPage: page }) => {
@@ -123,18 +99,42 @@ test.describe('Accessibility Audit - @a11y', () => {
     });
   });
 
+  test.describe('Protected Pages - Money Flows', () => {
+    // One axe pass per money-movement route, same goto+analyze pattern as above.
+    const moneyRoutes = [
+      '/transfer',
+      '/transactions',
+      '/cards',
+      '/bills',
+      '/pockets',
+      '/qris',
+      '/backoffice',
+    ] as const;
+
+    for (const route of moneyRoutes) {
+      test(`should have no accessibility violations on ${route}`, async ({ authPage: page }) => {
+        await page.goto(route);
+        await page.waitForLoadState('domcontentloaded');
+
+        const accessibilityScanResults = await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+          .analyze();
+
+        expect(accessibilityScanResults.violations).toEqual([]);
+      });
+    }
+  });
+
   test.describe('Protected Pages - Investments', () => {
-    test('should not have any critical accessibility issues on investments', async ({ authPage: page }) => {
+    test('should have no accessibility violations on investments', async ({ authPage: page }) => {
       await page.goto('/investments');
       await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
         .analyze();
 
-      const criticalViolations = filterMinorA11yIssues(accessibilityScanResults.violations);
-
-      expect(criticalViolations).toEqual([]);
+      expect(accessibilityScanResults.violations).toEqual([]);
     });
   });
 
@@ -282,30 +282,10 @@ test.describe('Accessibility - Full Site Scan @a11y', () => {
       await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa'])
-        // Exclude elements that are known to have issues (e.g., third-party widgets)
-        .exclude('.third-party-widget')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
         .analyze();
 
-      // Report violations but don't fail the test for minor issues
-      if (accessibilityScanResults.violations.length > 0) {
-        // Intentional console.warn for accessibility reporting - suppressing lint
-        console.warn('Accessibility violations detected:', name,
-          accessibilityScanResults.violations.map((v) => ({
-            rule: v.id,
-            impact: v.impact,
-            description: v.description,
-            nodes: v.nodes.length
-          }))
-        );
-      }
-
-      // Only fail for critical or serious violations, excluding color-contrast (design debt)
-      const criticalViolations = accessibilityScanResults.violations.filter(
-        (v) => (v.impact === 'critical' || v.impact === 'serious') && v.id !== 'color-contrast'
-      );
-
-      expect(criticalViolations).toEqual([]);
+      expect(accessibilityScanResults.violations).toEqual([]);
     });
   }
 });

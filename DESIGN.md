@@ -28,10 +28,10 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
 | `primary-dark` | `#00A87E` | Hover/active state for primary |
 | `primary-light` | `#E6FFF7` | Subtle backgrounds, highlights |
 | `secondary` | `#1A1A2E` | Dark navy — headings, dark surfaces |
-| `accent` | `#FF6B35` | Accent — notifications, badges, CTAs |
+| `accent` | `#C2410C` | Accent — notifications, badges, CTAs |
 | `success` | `#00D09C` | Success states (same as primary) |
-| `warning` | `#FFB800` | Warning states |
-| `error` | `#FF4757` | Error states, destructive actions |
+| `warning` | `#B45309` | Warning states (AA-hardened, was `#FFB800`) |
+| `error` | `#C62828` | Error states, destructive actions (AA-hardened, was `#FF4757`) |
 | `surface` | `#FFFFFF` | Card backgrounds, modals |
 | `surface-dim` | `#F8F9FA` | Page background, subtle sections |
 | `text-primary` | `#1A1A2E` | Body text, headings |
@@ -113,12 +113,12 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
 
 | Variant | Style | Usage |
 |---------|-------|-------|
-| `primary` | Filled `primary` color, white text | Main CTAs, form submits |
+| `primary` | Filled `primary` color, ink (`#06281F`) label | Main CTAs, form submits |
 | `secondary` | Outlined, `primary` border & text | Secondary actions |
 | `ghost` | No border, `primary` text | Tertiary actions, links |
 | `danger` | Filled `error` color | Destructive actions |
 
-**Sizes**: `sm` (32px), `md` (40px), `lg` (48px)
+**Sizes**: `sm` (44px), `md` (48px), `lg` (56px) — shipped heights, AA touch floor
 **States**: default, hover, active, disabled, loading
 
 ### Cards
@@ -183,11 +183,8 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
 - **Error**: Inline message + toast for critical errors
 - **Loading**: Skeleton screens for pages, spinners for actions
 
-## Accessibility
-
-- **WCAG 2.1 AA** compliance required
-- **Color contrast**: 4.5:1 minimum for text, 3:1 for large text
-- **Touch targets**: 44×44px minimum
+- **WCAG 2.2 AA** compliance required
+- **Color contrast**: 4.5:1 minimum for text, 3:1 for large text; focus indicator ≥2px at 3:1 (2.4.11/2.4.13); targets ≥24px (2.5.8)
 - **Focus indicators**: 2px `primary` outline, 2px offset
 - **Screen reader**: Semantic HTML, ARIA labels, live regions for dynamic content
 - **Keyboard**: All interactive elements focusable, logical tab order
@@ -216,10 +213,10 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
   --color-primary-dark: #00A87E;
   --color-primary-light: #E6FFF7;
   --color-secondary: #1A1A2E;
-  --color-accent: #FF6B35;
+  --color-accent: #C2410C;
   --color-success: #00D09C;
-  --color-warning: #FFB800;
-  --color-error: #FF4757;
+  --color-warning: #B45309;
+  --color-error: #C62828;
   --color-surface: #FFFFFF;
   --color-surface-dim: #F8F9FA;
   --color-text-primary: #1A1A2E;
@@ -257,12 +254,10 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
 }
 ```
 
-## Dark Mode (Future)
+## Dark Mode (Shipped Scope)
 
-Not in scope for v1. Design tokens use CSS custom properties so dark mode can be added later by overriding token values under `@media (prefers-color-scheme: dark)` or a `.dark` class.
+Shipped: antd `darkAlgorithm` + `darkTokens`/`darkComponentTokens` (`src/theme/tokens.ts`), `.dark` legacy-var overrides + tier shades (`src/app/globals.css`), per-theme chart palette and tier guards. New work must verify both themes (axe `color-contrast` in each).
 
----
-
-**Version**: 1.0.0
-**Last Updated**: 2026-10-06
+**Version**: 1.1.0
+**Last Updated**: 2026-10-21
 **Maintainer**: PayU Design Team

@@ -100,7 +100,7 @@ describe('DashboardLayout', () => {
     expect(getAllByText('Lainnya').length).toBeGreaterThan(0);
     expect(getAllByText('Keamanan').length).toBeGreaterThan(0);
     expect(getAllByText('Pengaturan').length).toBeGreaterThan(0);
-    expect(getAllByText('Notifikasi').length).toBeGreaterThan(0);
+    expect(getAllByText('Notifikasi (menu)').length).toBeGreaterThan(0);
     expect(getAllByText('Laporan').length).toBeGreaterThan(0);
     expect(getAllByText('Bantuan').length).toBeGreaterThan(0);
   });
@@ -114,7 +114,7 @@ describe('DashboardLayout', () => {
   it('should render notification button with badge when unread', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const notificationButton = screen.getByRole('button', { name: 'Notifikasi' });
+    const notificationButton = screen.getByRole('button', { name: 'Notifikasi (buka)' });
     expect(notificationButton).toBeInTheDocument();
 
     const badge = notificationButton.closest('.ant-badge');
@@ -164,6 +164,14 @@ describe('DashboardLayout', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
+  it('should expose a skip link targeting the main content landmark', () => {
+    const { container } = renderWithIntl(<DashboardLayout {...defaultProps} />);
+
+    const skipLink = container.querySelector('a[href="#main-content"]');
+    expect(skipLink).toBeInTheDocument();
+    expect(container.querySelector('#main-content')).toBeInTheDocument();
+  });
+
   it('should call onLogout when logout button is clicked', () => {
     const onLogout = vi.fn();
     renderWithIntl(<DashboardLayout {...defaultProps} onLogout={onLogout} />);
@@ -198,7 +206,7 @@ describe('DashboardLayout', () => {
     renderWithIntl(<DashboardLayout {...defaultProps} />);
 
     expect(screen.getByLabelText('Buka menu navigasi')).toBeInTheDocument();
-    expect(screen.getByLabelText('Notifikasi')).toBeInTheDocument();
+    expect(screen.getByLabelText('Notifikasi (buka)')).toBeInTheDocument();
     expect(screen.getByLabelText('Menu profil pengguna')).toBeInTheDocument();
   });
 
@@ -223,7 +231,7 @@ describe('DashboardLayout', () => {
   it('should show notification badge indicator', () => {
     const { container } = renderWithIntl(<DashboardLayout {...defaultProps} />);
 
-    const notificationButton = screen.getByRole('button', { name: 'Notifikasi' });
+    const notificationButton = screen.getByRole('button', { name: 'Notifikasi (buka)' });
     expect(notificationButton).toBeInTheDocument();
     const indicator = notificationButton.querySelector('[aria-hidden="true"]');
     expect(indicator).toBeInTheDocument();

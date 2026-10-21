@@ -31,6 +31,7 @@ import {
 import { useAuthStore } from "@/stores/authStore";
 import { notify as toast } from "@/lib/notify";
 import { AuthService } from "@/services/AuthService";
+import { SkipLink } from "@/lib/a11y";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -135,6 +136,7 @@ export default function SecurityPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         <Row justify="space-between" align="middle" gutter={[16, 16]}>
           <Col xs={24} md={16}>

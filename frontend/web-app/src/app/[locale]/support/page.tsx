@@ -15,6 +15,7 @@ import {
 } from "@/components/icons";
 import { Button, Card, Col, Row, Space, Tag, theme, Typography } from "antd";
 import { useTranslations } from "next-intl";
+import { SkipLink } from "@/lib/a11y";
 
 export default function SupportPage() {
   const t = useTranslations("support");
@@ -62,6 +63,7 @@ export default function SupportPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         {/* Header */}
         <Space direction="vertical" size={4}>

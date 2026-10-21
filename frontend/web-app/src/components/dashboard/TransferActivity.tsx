@@ -35,8 +35,22 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   CANCELLED: { label: "Batal", color: "default" },
 };
 
-// Helper to check if transaction type is a credit (income)
-const isCreditType = (type: string): boolean => type === "TOP_UP";
+// Credit when the money flows to the viewer: explicit TOP_UP, or any
+// transfer whose recipient is the current account (mirrors transactions/).
+const isCreditType = (
+  type: string,
+  t?: Transaction,
+  currentAccountId?: string | null,
+): boolean => {
+  if (type === "TOP_UP") return true;
+  if (t && currentAccountId && t.recipientAccountId === currentAccountId)
+    return true;
+  return false;
+};
+
+// Reference numbers are opaque ids: show a truncated tail, never the full id.
+const maskReference = (ref: string): string =>
+  ref.length > 8 ? `…${ref.slice(-6)}` : ref;
 
 interface TransferActivityProps {
   className?: string;
@@ -154,7 +168,7 @@ export default function TransferActivity({
             type="secondary"
             style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}
           >
-            {item.referenceNumber}
+            {maskReference(item.referenceNumber)}
           </Text>
         </Space>
       ),
@@ -224,12 +238,12 @@ export default function TransferActivity({
           style={{
             fontSize: 14,
             fontVariantNumeric: "tabular-nums",
-            color: isCreditType(item.type)
+            color: isCreditType(item.type, item, accountId)
               ? "var(--ant-color-success-text-active)"
               : undefined,
           }}
         >
-          {isCreditType(item.type) ? "+" : "-"}
+          {isCreditType(item.type, item, accountId) ? "+" : "-"}
           {formatAmount(item.amount)}
         </Text>
       ),
@@ -494,9 +508,14 @@ export default function TransferActivity({
                           </Space>
                           <Text
                             strong
-                            style={{ fontVariantNumeric: "tabular-nums" }}
+                            style={{
+                              fontVariantNumeric: "tabular-nums",
+                              color: isCreditType(item.type, item, accountId)
+                                ? "var(--ant-color-success-text-active)"
+                                : undefined,
+                            }}
                           >
-                            {isCreditType(item.type) ? "+" : "-"}
+                            {isCreditType(item.type, item, accountId) ? "+" : "-"}
                             {formatAmount(item.amount)}
                           </Text>
                         </Row>

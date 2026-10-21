@@ -259,6 +259,7 @@ export default function CompliancePage() {
 
       <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
         <Table<ComplianceAuditRow>
+          scroll={{ x: "max-content" }}
           columns={columns}
           dataSource={auditLogs}
           rowKey="id"

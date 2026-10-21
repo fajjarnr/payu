@@ -151,12 +151,12 @@ describe('FxService', () => {
   describe('formatCurrency', () => {
     it('should format IDR with no decimals', () => {
       const result = service.formatCurrency(1575000, 'IDR');
-      expect(result).toBe('Rp1,575,000');
+      expect(result).toBe('Rp1.575.000');
     });
 
     it('should format USD with 2 decimals', () => {
       const result = service.formatCurrency(100.5, 'USD');
-      expect(result).toBe('$100.50');
+      expect(result).toBe('$100,50');
     });
 
     it('should handle unknown currency', () => {

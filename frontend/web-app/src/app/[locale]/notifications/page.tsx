@@ -28,6 +28,7 @@ import { useNotifications, useMarkNotificationRead } from "@/hooks";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "@/lib/navigation";
 import { notify as toast } from "@/lib/notify";
+import { SkipLink } from "@/lib/a11y";
 
 const { Title, Text } = Typography;
 
@@ -119,6 +120,7 @@ export default function NotificationsPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         {/* Header */}
         <Card>

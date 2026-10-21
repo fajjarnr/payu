@@ -21,34 +21,18 @@
   --color-destructive: hsl(var(--destructive));
   --color-border: hsl(var(--border));
   --color-ring: hsl(var(--ring));
-  /* DESIGN.md Tokens */
+  /* DESIGN.md Tokens (live legacy aliases — antd tokens.ts is the truth) */
   --color-primary-dark: #00A87E;
   --color-primary-light: #E6FFF7;
   --color-secondary: #1A1A2E;
   --color-success: #00D09C;
-  --color-warning: #FFB800;
-  --color-error: #FF4757;
+  --color-warning: #B45309;
+  --color-error: #C62828;
   --color-surface: #FFFFFF;
   --color-surface-dim: #F8F9FA;
   --color-text-primary: #1A1A2E;
   --color-text-secondary: #6B7280;
   --color-text-disabled: #B0B8C4;
-
-  /* Semantic Aliases */
-  --color-bank-green: hsl(var(--primary));
-  --color-bank-emerald: hsl(145 50% 35%);
-  --color-success-light: hsl(var(--success-light));
-
-  /* Chart Colors */
-  --color-chart-1: hsl(var(--chart-green1));
-  --color-chart-2: hsl(var(--chart-green2));
-  --color-chart-3: hsl(var(--chart-green3));
-  --color-chart-4: hsl(var(--chart-green4));
-
-  /* Shadows */
-  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.08);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
-
   /* Fonts */
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-heading: var(--font-inter), system-ui, sans-serif;
@@ -56,55 +40,34 @@
 }
 
 :root {
-  /* Emerald Green Theme - WCAG AA Compliant */
+  /* Brand emerald #00D09C (hsl 165 100% 41%) — antd tokens.ts is the truth.
+     PRODUCT DECISION 2026-10-14: vivid emerald kept, AA gap accepted (see tokens.ts). */
   --background: 160 20% 98%;
   --foreground: 160 20% 8%;
 
-  /* Darker emerald for 4.5:1 contrast with white text (hsl 160 84% 26% = #0a6b48) */
-  --primary: 160 84% 26%;
+  --primary: 165 100% 41%;
   --primary-foreground: 0 0% 100%;
 
   --card: 0 0% 100%;
   --card-foreground: 160 20% 8%;
 
-  --accent: 160 84% 95%;
-  --accent-foreground: 160 84% 25%;
-
   --muted: 160 15% 94%;
   --muted-foreground: 160 10% 35%;
 
-  --destructive: 0 84% 60%;
-  --success-light: 160 84% 95%;
-  --warning: 45 93% 47%;
-  --info: 199 89% 48%;
+  /* AA-hardened seeds from tokens.ts: RED #C62828 (5.62:1), AMBER #B45309 (5.02:1) */
+  --destructive: 0 66% 47%;
+  --success-light: 161 100% 95%;
 
   --border: 160 15% 90%;
-  --ring: 160 84% 39%;
+  --ring: 165 100% 41%;
 
-  /* Chart Colors */
-  --chart-green1: 160 84% 39%;
-  --chart-green2: 160 70% 50%;
-  --chart-green3: 160 60% 65%;
-  --chart-green4: 160 50% 80%;
-
-  /* Semantic Color Aliases for Accessibility */
-  --success: 160 84% 39%;
-  --success-foreground: 0 0% 100%;
-
-  /* DESIGN.md Color Tokens */
-  --color-primary: #0B7A55;
+  /* DESIGN.md Color Tokens (live legacy aliases — antd tokens.ts is the truth) */
+  --color-primary: #00D09C;
   --color-primary-dark: #00A87E;
   --color-primary-light: #E6FFF7;
-  --color-secondary: #1A1A2E;
-  --color-accent: #C2410C;
-  --color-success: #00D09C;
-  --color-warning: #FFB800;
-  --color-error: #FF4757;
+  --color-warning: #B45309;
+  --color-error: #C62828;
   --color-surface: #FFFFFF;
-  --color-surface-dim: #F8F9FA;
-  --color-text-primary: #1A1A2E;
-  --color-text-secondary: #6B7280;
-  --color-text-disabled: #B0B8C4;
   --color-border: #E5E7EB;
 
   /* VIP tier colors (VIPBadge renders them as text on the card surface).
@@ -125,9 +88,6 @@
   --card: 160 20% 6%;
   --card-foreground: 160 20% 98%;
 
-  --accent: 160 84% 12%;
-  --accent-foreground: 160 84% 90%;
-
   --muted: 160 20% 8%;
   --muted-foreground: 160 10% 75%;
 
@@ -137,13 +97,11 @@
   --success: 160 84% 55%;
   --success-foreground: 160 20% 3%;
 
-  /* Dark mode primary and semantic colors */
+  /* Dark mode primary and semantic colors (tokens.ts dark seeds) */
   --primary: 160 84% 55%;
   --primary-foreground: 160 20% 3%;
   --destructive: 0 84% 60%;
   --ring: 160 84% 55%;
-  --warning: 45 93% 47%;
-  --info: 199 89% 48%;
 
   /* VIP tier colors, dark surface (#141414 container). Measured 4.5:1+. */
   --tier-bronze: #D9A066;
@@ -186,15 +144,22 @@
     background: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: var(--font-sans);
-    font-size: 1rem; /* 16px base */
-    line-height: 1.6;
+    font-size: 0.875rem; /* 14px base, DESIGN.md body */
+    line-height: 1.5;
     letter-spacing: -0.011em;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  /* DESIGN.md weights: H1 700, H2/H3 600 (H4-H6 follow H3) */
+  h1 {
     font-family: var(--font-heading);
     letter-spacing: -0.025em;
-    font-weight: 800;
+    font-weight: 700;
+  }
+
+  h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em;
+    font-weight: 600;
   }
 }
 
@@ -231,43 +196,10 @@
     transform: translateY(0);
   }
 }
-@keyframes checkmark-pop {
-  0% {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  60% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
+/* checkmark-pop + .animate-checkmark removed 2026-10-21: zero consumers (grep). */
 
-@layer utilities {
-  .animate-checkmark {
-    animation: checkmark-pop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .animate-checkmark {
-      animation: none;
-    }
-  }
-}
-
-@keyframes float-3d {
-  0%,
-  100% {
-    transform: rotateY(-7deg) rotateX(4deg) translateY(0);
-  }
-
-  50% {
-    transform: rotateY(7deg) rotateX(-2deg) translateY(-14px);
-  }
-}
+/* float-3d keyframes removed 2026-10-21: landing uses an inline arbitrary
+   animate-[float-3d...] utility instead. */
 
 /* Motion tokens — DESIGN.md durations + confident arrival easing. */
 :root {
@@ -339,9 +271,7 @@
   .animate-seal-lock,
   .animate-receipt-unfold,
   .animate-amount-settle,
-  .animate-fade-in,
-  .animate-checkmark,
-  .animate-float-3d {
+  .animate-fade-in {
     animation: none;
     opacity: 1 !important;
     clip-path: none !important;

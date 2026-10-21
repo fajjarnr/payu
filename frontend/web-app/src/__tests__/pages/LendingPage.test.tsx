@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import LendingPage from '@/app/[locale]/lending/page';
 
 vi.mock('@/components/DashboardLayout', () => ({
@@ -50,28 +51,28 @@ describe('LendingPage', () => {
   });
 
   it('should render within DashboardLayout', () => {
-    render(<LendingPage />);
+    renderWithIntl(<LendingPage />);
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
   it('should render page title', () => {
-    render(<LendingPage />);
+    renderWithIntl(<LendingPage />);
     expect(screen.getByText('Pinjaman & Kredit')).toBeInTheDocument();
   });
 
   it('should render lending tabs', () => {
-    render(<LendingPage />);
+    renderWithIntl(<LendingPage />);
     expect(screen.getByText('Pinjaman')).toBeInTheDocument();
     expect(screen.getByText('PayLater')).toBeInTheDocument();
   });
 
   it('should render credit score section', () => {
-    render(<LendingPage />);
+    renderWithIntl(<LendingPage />);
     expect(screen.getByText('Skor Kredit Anda')).toBeInTheDocument();
   });
 
   it('should render loan products', () => {
-    render(<LendingPage />);
+    renderWithIntl(<LendingPage />);
     expect(screen.getByText('Produk Pinjaman')).toBeInTheDocument();
   });
 });

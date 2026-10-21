@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Trash2, Building2, CreditCard, Plus } from '@/components/icons';
 import { useTranslations } from 'next-intl';
-import { Button, Card, Col, Divider, Empty, Input, List, Row, Skeleton, Space, Tag, Typography } from 'antd';
+import { Button, Card, Col, Divider, Empty, Input, List, Popconfirm, Row, Skeleton, Space, Tag, Typography } from 'antd';
 
 import { useBeneficiaries, useCreateBeneficiary, useDeleteBeneficiary } from '@/hooks/useBeneficiaries';
 import { notify as toast } from '@/lib/notify';
@@ -99,17 +99,26 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
                   ...(onSelect
                     ? [<Button key="use" type="link" size="small" onClick={() => onSelect(b.accountNumber)} data-testid={`beneficiary-select-${b.id}`}>{t('use')}</Button>]
                     : []),
-                  <Button
-                    key="delete"
-                    type="text"
-                    danger
-                    icon={<Trash2 style={{ fontSize: 16 }} />}
-                    loading={deletingId === b.id}
-                    onClick={() => handleDelete(b.id)}
-                    aria-label={t('delete', { name: b.nickname || b.accountNumber })}
-                    data-testid={`beneficiary-delete-${b.id}`}
-                    style={{ minWidth: 44, minHeight: 44 }}
-                  />,
+                  <Popconfirm
+                    key="delete-confirm"
+                    title={t('deleteConfirmTitle')}
+                    description={t('deleteConfirmDesc', { name: b.nickname || b.accountNumber })}
+                    okText={t('confirm')}
+                    cancelText={t('cancel')}
+                    okButtonProps={{ danger: true, loading: deletingId === b.id }}
+                    onConfirm={() => handleDelete(b.id)}
+                  >
+                    <Button
+                      key="delete"
+                      type="text"
+                      danger
+                      icon={<Trash2 style={{ fontSize: 16 }} />}
+                      loading={deletingId === b.id}
+                      aria-label={t('delete', { name: b.nickname || b.accountNumber })}
+                      data-testid={`beneficiary-delete-${b.id}`}
+                      style={{ minWidth: 44, minHeight: 44 }}
+                    />
+                  </Popconfirm>,
                 ]}
               >
                 <List.Item.Meta

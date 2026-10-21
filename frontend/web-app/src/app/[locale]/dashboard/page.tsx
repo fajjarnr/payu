@@ -13,7 +13,7 @@ import { useAuthStore } from "@/stores";
 import DashboardLayout from "@/components/DashboardLayout";
 import BalanceCard from "@/components/dashboard/BalanceCard";
 import QuickActions from "@/components/dashboard/QuickActions";
-import { Skeleton, Space } from "antd";
+import { Skeleton, Space, Typography } from "antd";
 import { cn } from "@/lib/utils";
 import { SkipLink } from "@/lib/a11y";
 
@@ -57,6 +57,7 @@ function Dashboard({
   handleLogout: () => void;
 }) {
   const accountId = useAuthStore((state) => state.accountId);
+  const t = useTranslations();
   // FE-AUDIT-006: analytics events are keyed by account_id (backend BUG-AUTH-013),
   // so queries must use accountId — Keycloak sub returns zero rows.
   const { data: balance, isLoading: balanceLoading } = useBalance(
@@ -73,9 +74,12 @@ function Dashboard({
       {/* Accessibility Skip Link */}
       <SkipLink href="#main-content" />
 
-      <main id="main-content" className="overflow-x-hidden">
+      <div className="overflow-x-hidden">
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
-          {/* Saldo — the one job of this screen */}
+          <div>
+            <Typography.Title level={1} style={{ marginBottom: 4 }}>{t("dashboard.welcome", { name: username })}</Typography.Title>
+            <Typography.Text type="secondary">{t("dashboard.thisMonth")}</Typography.Text>
+          </div>
           <div>
             {balanceLoading ? (
               <Skeleton
@@ -99,7 +103,7 @@ function Dashboard({
           {/* Ada yang aneh? — recent activity is the fraud check */}
           <TransferActivity />
         </Space>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

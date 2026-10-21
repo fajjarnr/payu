@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import { vi } from 'vitest';
 import TermsPage from '@/app/[locale]/legal/terms/page';
 
@@ -14,18 +15,18 @@ describe('TermsPage', () => {
   });
 
   it('renders the page title', () => {
-    render(<TermsPage />);
+    renderWithIntl(<TermsPage />);
     expect(screen.getByText('Syarat dan Ketentuan')).toBeInTheDocument();
   });
 
   it('renders version information', () => {
-    render(<TermsPage />);
+    renderWithIntl(<TermsPage />);
     expect(screen.getByText(/Versi 1.0/)).toBeInTheDocument();
     expect(screen.getByText(/Januari 2026/)).toBeInTheDocument();
   });
 
   it('renders all section headings', () => {
-    render(<TermsPage />);
+    renderWithIntl(<TermsPage />);
     
     expect(screen.getByText('1. Penerimaan Ketentuan')).toBeInTheDocument();
     expect(screen.getByText('2. Deskripsi Layanan')).toBeInTheDocument();
@@ -36,17 +37,17 @@ describe('TermsPage', () => {
   });
 
   it('renders contact email in footer', () => {
-    render(<TermsPage />);
+    renderWithIntl(<TermsPage />);
     expect(screen.getByText(/support@payu.fajjjar.my.id/)).toBeInTheDocument();
   });
 
   it('uses DashboardLayout wrapper', () => {
-    render(<TermsPage />);
+    renderWithIntl(<TermsPage />);
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
   it('renders introductory text for each section', () => {
-    render(<TermsPage />);
+    renderWithIntl(<TermsPage />);
     
     expect(screen.getByText(/Dengan mengakses dan menggunakan layanan PayU/)).toBeInTheDocument();
     expect(screen.getByText(/PayU menyediakan platform perbankan digital/)).toBeInTheDocument();
@@ -54,7 +55,7 @@ describe('TermsPage', () => {
   });
 
   it('renders SVG icons', () => {
-    render(<TermsPage />);
+    renderWithIntl(<TermsPage />);
     const svgs = document.querySelectorAll('svg');
     expect(svgs.length).toBeGreaterThan(0);
   });

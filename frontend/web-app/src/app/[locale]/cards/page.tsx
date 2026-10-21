@@ -5,7 +5,6 @@
 import React, { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Link } from "@/lib/navigation";
-import { SkipLink } from "@/lib/a11y";
 import {
   Eye,
   EyeOff,
@@ -44,7 +43,7 @@ import {
   useUpdateCard,
 } from "@/hooks";
 import { useAuthStore } from "@/stores/authStore";
-import { asMoney, parseCurrencyExact } from "@/lib/currency";
+import { asMoney, formatCurrency, parseCurrencyExact } from "@/lib/currency";
 import type { VirtualCard } from "@/services/WalletService";
 
 // Extended card properties that may come from backend but aren't in the base interface yet
@@ -180,13 +179,12 @@ export default function CardsPage() {
 
   return (
     <DashboardLayout>
-      <SkipLink href="#main-content" />
-      <main id="main-content">
+      <div>
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
           {/* Header */}
           <Flex justify="space-between" align="flex-end" gap={16} wrap>
             <div>
-              <Typography.Title level={2} style={{ marginBottom: 4 }}>
+              <Typography.Title level={1} style={{ marginBottom: 4 }}>
                 Kartu Virtual
               </Typography.Title>
               <Typography.Text type="secondary">
@@ -220,7 +218,7 @@ export default function CardsPage() {
                   style={{ width: "100%" }}
                   align="center"
                 >
-                  {/* Digital Card Visualization */}
+                  {/* Digital Card Visualization — flat solid surface */}
                   <div
                     style={{
                       width: "100%",
@@ -229,29 +227,10 @@ export default function CardsPage() {
                       borderRadius: 16,
                       position: "relative",
                       overflow: "hidden",
-                      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
+                      backgroundColor: "var(--ant-color-primary)",
+                      boxShadow: token.boxShadowSecondary,
                     }}
                   >
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background:
-                          "linear-gradient(135deg, hsl(var(--primary)), var(--color-primary-dark))",
-                      }}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: -32,
-                        right: -40,
-                        width: 256,
-                        height: 256,
-                        borderRadius: "50%",
-                        background: "rgba(255,255,255,0.2)",
-                        filter: "blur(48px)",
-                      }}
-                    />
                     <Flex
                       vertical
                       justify="space-between"
@@ -298,7 +277,6 @@ export default function CardsPage() {
                             height: 8,
                             borderRadius: "50%",
                             background: "#fff",
-                            boxShadow: "0 0 15px rgba(255,255,255,1)",
                           }}
                         />
                       </Flex>
@@ -379,17 +357,23 @@ export default function CardsPage() {
                     gutter={[16, 16]}
                     style={{ width: "100%", maxWidth: 440 }}
                   >
-                    <Col span={12}>
+                    <Col xs={24} sm={12}>
                       <Button
                         type="primary"
                         block
                         onClick={() => setShowFullDetails(!showFullDetails)}
                         icon={showFullDetails ? <EyeOff /> : <Eye />}
+                        aria-pressed={showFullDetails}
+                        aria-label={
+                          showFullDetails
+                            ? "Sembunyikan detail kartu"
+                            : "Tampilkan detail kartu"
+                        }
                       >
                         Detail Kartu
                       </Button>
                     </Col>
-                    <Col span={12}>
+                    <Col xs={24} sm={12}>
                       <Button
                         block
                         onClick={() =>
@@ -403,7 +387,7 @@ export default function CardsPage() {
                         {isFrozen ? "Aktifkan" : "Bekukan"}
                       </Button>
                     </Col>
-                    <Col span={12}>
+                    <Col xs={24} sm={12}>
                       <Button
                         block
                         onClick={handleOpenLimitModal}
@@ -412,7 +396,7 @@ export default function CardsPage() {
                         Ubah Limit
                       </Button>
                     </Col>
-                    <Col span={12}>
+                    <Col xs={24} sm={12}>
                       <Button
                         block
                         danger
@@ -435,16 +419,12 @@ export default function CardsPage() {
               <Card
                 style={{
                   height: "100%",
-                  background: token.colorText,
-                  color: token.colorBgContainer,
-                  border: "none",
-                  boxShadow: "0 20px 25px -5px rgba(0,0,0,0.15)",
                 }}
               >
                 <Flex justify="space-between" align="center">
                   <Typography.Title
                     level={4}
-                    style={{ marginBottom: 0, color: token.colorBgContainer }}
+                    style={{ marginBottom: 0 }}
                   >
                     Limit Harian
                   </Typography.Title>
@@ -453,9 +433,6 @@ export default function CardsPage() {
                     style={{
                       minWidth: 44,
                       minHeight: 44,
-                      background: `${token.colorBgContainer}0D`,
-                      borderColor: `${token.colorBgContainer}1A`,
-                      color: token.colorBgContainer,
                     }}
                     onClick={handleOpenLimitModal}
                     aria-label="Pengaturan kartu"
@@ -470,13 +447,11 @@ export default function CardsPage() {
                 >
                   <div>
                     <Typography.Text
+                      type="secondary"
                       style={{
                         display: "block",
-                        color: token.colorBgContainer,
-                        opacity: 0.4,
                         fontSize: 12,
                         fontWeight: 700,
-                        letterSpacing: "0.1em",
                         textTransform: "uppercase",
                         marginBottom: 8,
                       }}
@@ -484,16 +459,14 @@ export default function CardsPage() {
                       Terpakai Hari Ini
                     </Typography.Text>
                     <Typography.Text
+                      strong
                       style={{
-                        color: token.colorBgContainer,
-                        fontSize: 30,
+                        fontSize: 24,
                         fontWeight: 700,
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      {primaryCard
-                        ? `Rp ${dailySpent.toLocaleString("id-ID")}`
-                        : "\u2014"}
+                      {primaryCard ? formatCurrency(dailySpent) : "\u2014"}
                     </Typography.Text>
                   </div>
 
@@ -503,8 +476,6 @@ export default function CardsPage() {
                     style={{
                       padding: 16,
                       borderRadius: 12,
-                      background: `${token.colorBgContainer}0D`,
-                      border: `1px solid ${token.colorBgContainer}1A`,
                     }}
                   >
                     <Flex
@@ -514,29 +485,26 @@ export default function CardsPage() {
                         width: 32,
                         height: 32,
                         borderRadius: 8,
-                        background: `${token.colorBgContainer}1A`,
-                        color: token.colorBgContainer,
+                        background: token.colorPrimaryBg,
+                        color: token.colorPrimary,
                       }}
                     >
                       <ShieldCheck />
                     </Flex>
                     <div>
                       <Typography.Text
+                        strong
                         style={{
                           display: "block",
-                          color: token.colorBgContainer,
                           fontSize: 12,
-                          fontWeight: 700,
                         }}
                       >
                         Status Aktif
                       </Typography.Text>
                       <Typography.Text
+                        type="secondary"
                         style={{
-                          color: token.colorBgContainer,
-                          opacity: 0.4,
                           fontSize: 12,
-                          fontWeight: 500,
                         }}
                       >
                         Terlindungi Protokol Keamanan
@@ -552,26 +520,21 @@ export default function CardsPage() {
                     <Progress
                       percent={dailyLimitPercent}
                       showInfo={false}
-                      strokeColor={token.colorBgContainer}
-                      trailColor={`${token.colorBgContainer}1A`}
                       size="small"
                     />
                     <Flex justify="space-between" align="flex-end">
                       <Typography.Text
+                        strong
                         style={{
-                          color: token.colorBgContainer,
                           fontSize: 12,
-                          fontWeight: 700,
                         }}
                       >
                         {rawPercent}% Terpakai
                       </Typography.Text>
                       <Typography.Text
+                        type="secondary"
                         style={{
-                          color: token.colorBgContainer,
-                          opacity: 0.4,
                           fontSize: 12,
-                          fontWeight: 700,
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
@@ -581,11 +544,6 @@ export default function CardsPage() {
                     </Flex>
                     <Button
                       block
-                      style={{
-                        background: `${token.colorBgContainer}1A`,
-                        borderColor: `${token.colorBgContainer}1A`,
-                        color: token.colorBgContainer,
-                      }}
                       onClick={handleOpenLimitModal}
                     >
                       Ubah Batas Transaksi
@@ -886,7 +844,7 @@ export default function CardsPage() {
             </Space>
           </Modal>
         </Space>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

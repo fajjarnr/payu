@@ -4,7 +4,7 @@ import React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowUpRight, ArrowDownRight } from "@/components/icons";
 import VIPBadge from "@/components/personalization/VIPBadge";
-import { Card, Col, Row, Space, Tag, Typography } from "antd";
+import { Card, Col, Row, Skeleton, Space, Tag, Typography } from "antd";
 import { formatCurrency } from "@/lib/currency";
 
 const { Title, Text } = Typography;
@@ -37,6 +37,14 @@ export default function BalanceCard({
   const locale = useLocale();
   const t = useTranslations("dashboard");
   const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
+
+  if (isLoading) {
+    return (
+      <div data-testid="balance-card-skeleton">
+        <Skeleton active title={false} paragraph={{ rows: 4 }} />
+      </div>
+    );
+  }
 
   return (
     <Row gutter={[24, 24]} data-testid="balance-card">
@@ -105,13 +113,17 @@ export default function BalanceCard({
                 <Space size={12} align="center">
                   {percentage != null ? (
                     <Tag
-                      color="success"
+                      color={percentage < 0 ? "error" : "success"}
                       bordered={false}
                       icon={
-                        <ArrowUpRight style={{ width: 14, height: 14 }} />
+                        percentage < 0 ? (
+                          <ArrowDownRight style={{ width: 14, height: 14 }} />
+                        ) : (
+                          <ArrowUpRight style={{ width: 14, height: 14 }} />
+                        )
                       }
                     >
-                      +{percentage}%
+                      {percentage < 0 ? `${percentage}%` : `+${percentage}%`}
                     </Tag>
                   ) : (
                     <Text type="secondary" strong>
@@ -182,22 +194,39 @@ export default function BalanceCard({
                 </Title>
                 <Space size={8} align="center">
                   {netWorthChange != null ? (
+                    // AA: success-text-active/error carry the 12px delta
+                    // instead of the 2.00:1 primary fill color.
                     <Space size={4} align="center">
-                      <ArrowUpRight
-                        style={{
-                          width: 14,
-                          height: 14,
-                          color: "var(--ant-color-primary)",
-                        }}
-                      />
+                      {netWorthChange < 0 ? (
+                        <ArrowDownRight
+                          style={{
+                            width: 14,
+                            height: 14,
+                            color: "var(--ant-color-error)",
+                          }}
+                        />
+                      ) : (
+                        <ArrowUpRight
+                          style={{
+                            width: 14,
+                            height: 14,
+                            color: "var(--ant-color-success-text-active)",
+                          }}
+                        />
+                      )}
                       <Text
                         strong
                         style={{
                           fontSize: 12,
-                          color: "var(--ant-color-primary)",
+                          color:
+                            netWorthChange < 0
+                              ? "var(--ant-color-error)"
+                              : "var(--ant-color-success-text-active)",
                         }}
                       >
-                        +{netWorthChange}%
+                        {netWorthChange < 0
+                          ? `${netWorthChange}%`
+                          : `+${netWorthChange}%`}
                       </Text>
                     </Space>
                   ) : (

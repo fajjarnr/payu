@@ -13,6 +13,7 @@ import {
 import { useSegmentedOffers } from "@/hooks/useSegmentedOffers";
 import { useAuthStore } from "@/stores";
 import clsx from "clsx";
+import { formatCurrency, formatCurrencyWithoutSymbol } from "@/lib/currency";
 import type { SegmentedOffer } from "@/services/SegmentationService";
 
 interface SegmentedOffersProps {
@@ -96,10 +97,10 @@ function OfferCard({ offer }: OfferCardProps) {
       return `${offer.percentage}%`;
     }
     if (offer.currency && offer.value) {
-      return `${offer.currency} ${offer.value.toLocaleString("id-ID")}`;
+      return formatCurrency(offer.value, { symbol: offer.currency });
     }
     if (offer.value) {
-      return offer.value.toLocaleString("id-ID");
+      return formatCurrencyWithoutSymbol(offer.value);
     }
     return "Special";
   };
@@ -178,7 +179,7 @@ function OfferCard({ offer }: OfferCardProps) {
 
         {offer.minTransaction && (
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            Min. transaksi: Rp {offer.minTransaction.toLocaleString("id-ID")}
+            Min. transaksi: {formatCurrency(offer.minTransaction)}
           </Typography.Text>
         )}
 

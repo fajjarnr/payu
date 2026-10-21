@@ -31,15 +31,16 @@ describe("ForgotPasswordPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("should warn when submitting without an email", () => {
+  it("should warn when submitting without an email", async () => {
     renderWithIntl(<ForgotPasswordPage />);
     fireEvent.click(screen.getByRole("button", { name: "Kirim Instruksi" }));
-    expect(toast.error).toHaveBeenCalled();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Email wajib diisi");
   });
 
   it("hands the browser to the identity provider reset flow", async () => {
     // The BFF has no forgot-password route; the real flow is Keycloak's own
     // reset-credentials screen, so assert the redirect rather than a fetch.
+    process.env.NEXT_PUBLIC_OIDC_ISSUER = "https://sso-test.example.com/realms/payu";
     const assign = vi.fn();
     vi.stubGlobal("location", {
       ...window.location,
@@ -59,5 +60,6 @@ describe("ForgotPasswordPage", () => {
       );
     });
     vi.unstubAllGlobals();
+    delete process.env.NEXT_PUBLIC_OIDC_ISSUER;
   });
 });

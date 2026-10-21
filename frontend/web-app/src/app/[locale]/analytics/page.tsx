@@ -26,6 +26,8 @@ const Pie = dynamic(() => import("@ant-design/plots").then((m) => m.Pie), {
   ssr: false,
 });
 import { Button, Card, Space, Row, Col, Typography, Tag, theme } from "antd";
+import { formatCurrency } from "@/lib/currency";
+import { SkipLink } from "@/lib/a11y";
 
 export default function AnalyticsPage() {
   const accountId = useAuthStore((state) => state.accountId);
@@ -109,6 +111,7 @@ export default function AnalyticsPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         <Row justify="space-between" align="bottom">
           <div>
@@ -208,8 +211,11 @@ export default function AnalyticsPage() {
                 >
                   {stat.label}
                 </Typography.Text>
-                <Typography.Title level={3} style={{ marginBottom: 0 }}>
-                  Rp {Number(stat.amount).toLocaleString("id-ID")}
+                <Typography.Title
+                  level={3}
+                  style={{ marginBottom: 0, fontVariantNumeric: "tabular-nums" }}
+                >
+                  {formatCurrency(stat.amount)}
                 </Typography.Title>
               </Card>
             </Col>
@@ -343,12 +349,11 @@ export default function AnalyticsPage() {
                   >
                     Total Keluar
                   </Typography.Text>
-                  <Typography.Title level={3} style={{ marginBottom: 0 }}>
-                    Rp{" "}
-                    {Number(analyticsData.totalExpenses).toLocaleString(
-                      "id-ID",
-                      { notation: "compact", compactDisplay: "short" },
-                    )}
+                  <Typography.Title
+                    level={3}
+                    style={{ marginBottom: 0, fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {formatCurrency(analyticsData.totalExpenses, { compact: true })}
                   </Typography.Title>
                 </div>
               </div>
@@ -373,12 +378,11 @@ export default function AnalyticsPage() {
                       </Typography.Text>
                     </Space>
                     <div style={{ textAlign: "right" }}>
-                      <Typography.Text strong style={{ fontSize: 12 }}>
-                        Rp{" "}
-                        {Number(cat.amount).toLocaleString("id-ID", {
-                          notation: "compact",
-                          compactDisplay: "short",
-                        })}
+                      <Typography.Text
+                        strong
+                        style={{ fontSize: 12, fontVariantNumeric: "tabular-nums" }}
+                      >
+                        {formatCurrency(cat.amount, { compact: true })}
                       </Typography.Text>
                       <Typography.Text
                         type="secondary"

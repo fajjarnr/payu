@@ -3,6 +3,7 @@
 import React from "react";
 import type { CSSProperties } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SkipLink } from "@/lib/a11y";
 import { notify as toast } from "@/lib/notify";
 import {
   Gift,
@@ -40,7 +41,7 @@ import {
 import {
   addCurrency,
   asMoney,
-  formatExactDecimal,
+  formatCurrency,
   type Money,
 } from "@/lib/currency";
 import { useAuthStore } from "@/stores/authStore";
@@ -170,10 +171,6 @@ export default function RewardsPage() {
     endDate: p.endDate,
   }));
 
-  const formatCurrency = (amount: Money) => {
-    return formatExactDecimal(amount, 0, "id-ID");
-  };
-
   const earnMethods: Array<{
     Icon: typeof Zap;
     title: string;
@@ -234,6 +231,7 @@ export default function RewardsPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         <Space direction="vertical" size={4}>
           <Typography.Title level={2} style={{ margin: 0 }}>

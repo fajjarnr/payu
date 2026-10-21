@@ -107,6 +107,7 @@ export default function CustomerCasesPage() {
 
       <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
         <Table<CustomerCaseResponse>
+          scroll={{ x: "max-content" }}
           columns={columns}
           dataSource={cases}
           rowKey="id"

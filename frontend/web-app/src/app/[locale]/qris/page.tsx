@@ -14,7 +14,7 @@ import {
 import { notify as toast } from "@/lib/notify";
 import { useAuthStore } from "@/stores/authStore";
 import { useProcessQrisPayment, useTransactions } from "@/hooks";
-import { asMoney } from "@/lib/currency";
+import { addCurrency, asMoney, formatCurrency } from "@/lib/currency";
 import { Link } from "@/lib/navigation";
 import {
   Button,
@@ -80,9 +80,10 @@ export default function QRISPage() {
 
   const todayQrisSpend = useMemo(
     () =>
-      qrisToday
-        .reduce((sum, tx) => sum + Number(tx.amount), 0)
-        .toLocaleString("id-ID"),
+      qrisToday.reduce(
+        (sum, tx) => addCurrency(sum, tx.amount),
+        asMoney("0"),
+      ),
     [qrisToday],
   );
 
@@ -122,7 +123,8 @@ export default function QRISPage() {
   return (
     <DashboardLayout>
       <SkipLink href="#main-content" />
-      <main id="main-content" style={{ overflowX: "hidden" }}>
+      <div style={{ overflowX: "hidden" }}>
+        <style>{`@keyframes qris-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } } .qris-scan-ring { animation: qris-pulse 2s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .qris-scan-ring { animation: none; } }`}</style>
         <Space direction="vertical" size={16}>
           <input
             type="file"
@@ -135,7 +137,7 @@ export default function QRISPage() {
 
           {/* Header */}
           <Space direction="vertical" size={4}>
-            <Typography.Title level={2} style={{ marginBottom: 0 }}>
+            <Typography.Title level={1} style={{ marginBottom: 0 }}>
               Pembayaran QRIS
             </Typography.Title>
             <Typography.Text type="secondary">
@@ -171,6 +173,7 @@ export default function QRISPage() {
                       top: 0,
                       right: 0,
                       width: 400,
+                      maxWidth: "100%",
                       height: 400,
                       backgroundColor: token.colorPrimary,
                       opacity: 0.05,
@@ -184,6 +187,7 @@ export default function QRISPage() {
                       bottom: 0,
                       left: 0,
                       width: 256,
+                      maxWidth: "100%",
                       height: 256,
                       backgroundColor: token.colorPrimary,
                       opacity: 0.05,
@@ -223,12 +227,12 @@ export default function QRISPage() {
                         }}
                       />
                       <div
+                        className="qris-scan-ring"
                         style={{
                           position: "absolute",
                           inset: 32,
                           border: `2px solid ${token.colorPrimary}33`,
                           borderRadius: 12,
-                          animation: "pulse 2s infinite",
                         }}
                       />
 
@@ -488,8 +492,11 @@ export default function QRISPage() {
                               {new Date(tx.createdAt).toLocaleString("id-ID")}
                             </Typography.Text>
                           </Space>
-                          <Typography.Text strong>
-                            Rp {tx.amount}
+                          <Typography.Text
+                            strong
+                            style={{ fontVariantNumeric: "tabular-nums" }}
+                          >
+                            {formatCurrency(tx.amount)}
                           </Typography.Text>
                         </Row>
                       ))
@@ -725,6 +732,7 @@ export default function QRISPage() {
                       top: -30,
                       left: -30,
                       width: 160,
+                      maxWidth: "100%",
                       height: 160,
                       backgroundColor: `${token.colorPrimary}1a`,
                       borderRadius: "50%",
@@ -757,8 +765,11 @@ export default function QRISPage() {
                     >
                       Pemakaian QRIS Hari Ini
                     </Typography.Text>
-                    <Typography.Title level={2} style={{ marginBottom: 0 }}>
-                      Rp {todayQrisSpend}
+                    <Typography.Title
+                      level={2}
+                      style={{ marginBottom: 0, fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {formatCurrency(todayQrisSpend)}
                     </Typography.Title>
                   </Space>
                   <Space direction="vertical" size={16}>
@@ -826,7 +837,7 @@ export default function QRISPage() {
             </Form.Item>
           </Form>
         </Modal>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

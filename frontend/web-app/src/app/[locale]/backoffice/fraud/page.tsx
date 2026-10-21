@@ -100,6 +100,7 @@ import type { TableColumnsType } from 'antd';
 
     <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
       <Table<FraudCaseResponse>
+        scroll={{ x: "max-content" }}
         columns={columns}
         dataSource={cases}
         rowKey="id"

@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Download, FileText, Calendar, RefreshCw } from '@/components/icons';
 import { useTranslations } from 'next-intl';
 import { Alert, Button, Card, Select, Space, Tag, Typography, theme } from 'antd';
-import StatementService, { Statement, PeriodType } from '@/services/StatementService';
+import StatementService, { Statement } from '@/services/StatementService';
 import { getA11yProps } from '@/lib/a11y';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -23,7 +23,10 @@ export default function StatementDownloader() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('monthly');
+  // Decision (monthly-only): the backend generate contract is StatementGenerationRequest
+  // {customerId, accountNumber, year, month} -> YearMonth.of(year, month). It has no
+  // quarter/year parameter, so quarterly/annual options could only resend the same
+  // {year, month} payload. Keep monthly only instead of shipping misleading options.
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [page, setPage] = useState<number>(0);
@@ -58,6 +61,11 @@ export default function StatementDownloader() {
     }
   }, [t, accountId]);
 
+  const handleLoadMore = useCallback(() => {
+    if (isLoading || !hasMore) return;
+    void loadStatements(page + 1);
+  }, [isLoading, hasMore, loadStatements, page]);
+
   // Reload once the session account arrives after mount (store hydrates async).
   useEffect(() => {
     loadStatements(0);
@@ -65,6 +73,7 @@ export default function StatementDownloader() {
 
   // BUG-FE-099: Read from store directly inside async handler to avoid stale closure
   const handleGenerateStatement = useCallback(async () => {
+    if (isGenerating) return;
     const { user: currentUser, accountId: currentAccountId } = useAuthStore.getState();
     try {
       setIsGenerating(true);
@@ -85,13 +94,14 @@ export default function StatementDownloader() {
     } finally {
       setIsGenerating(false);
     }
-  }, [selectedYear, selectedMonth, loadStatements, t]);
+  }, [selectedYear, selectedMonth, loadStatements, t, isGenerating]);
 
   const handleDownload = useCallback(async (statement: Statement) => {
     if (statement.status !== 'COMPLETED') {
       setError(t('history.notReady'));
       return;
     }
+    if (isDownloading) return;
 
     try {
       setIsDownloading(statement.id);
@@ -106,7 +116,7 @@ export default function StatementDownloader() {
     } finally {
       setIsDownloading(null);
     }
-  }, [t]);
+  }, [t, isDownloading]);
 
   const statusTagColor = (status: Statement['status']): 'success' | 'processing' | 'error' => {
     switch (status) {
@@ -118,6 +128,19 @@ export default function StatementDownloader() {
         return 'error';
       default:
         return 'processing';
+    }
+  };
+
+  const statusLabel = (status: Statement['status']) => {
+    switch (status) {
+      case 'COMPLETED':
+        return t('history.statusCompleted');
+      case 'GENERATING':
+        return t('history.statusGenerating');
+      case 'FAILED':
+        return t('history.statusFailed');
+      default:
+        return status;
     }
   };
   return (
@@ -160,27 +183,6 @@ export default function StatementDownloader() {
 
           {/* Generator Form */}
           <Space direction="vertical" size={16} style={{ width: '100%' }}>
-            {/* Period Type Selector */}
-            <div>
-              <Text strong style={{ display: 'block', marginBottom: 8 }}>
-                {t('generator.periodType')}
-              </Text>
-              <Space size={8} style={{ width: '100%' }}>
-                {(['monthly', 'quarterly', 'annually'] as PeriodType[]).map((period) => (
-                  <Button
-                    key={period}
-                    type={selectedPeriod === period ? 'primary' : 'default'}
-                    onClick={() => setSelectedPeriod(period)}
-                    style={{ minHeight: 44, flex: 1, fontWeight: 700, fontSize: 12, textTransform: 'uppercase' }}
-                    aria-pressed={selectedPeriod === period}
-                    {...getA11yProps({ label: `Pilih periode ${StatementService.formatPeriodType(period)}` })}
-                  >
-                    {period === 'monthly' ? t('generator.monthly') : period === 'quarterly' ? t('generator.quarterly') : t('generator.annually')}
-                  </Button>
-                ))}
-              </Space>
-            </div>
-
             {/* Year Selector */}
             <div>
               <Text strong style={{ display: 'block', marginBottom: 8 }}>
@@ -192,48 +194,27 @@ export default function StatementDownloader() {
                 onChange={(value) => setSelectedYear(Number(value))}
                 options={years.map((year) => ({ value: year, label: String(year) }))}
                 style={{ width: '100%' }}
-                {...getA11yProps({ label: 'Pilih tahun statement' })}
+                {...getA11yProps({ label: t('a11y.selectYear') })}
               />
             </div>
 
-            {/* Month Selector (for monthly/quarterly) */}
-            {selectedPeriod !== 'annually' && (
-              <div>
-                <Text strong style={{ display: 'block', marginBottom: 8 }}>
-                  <label htmlFor={selectedPeriod === 'monthly' ? 'statement-month' : undefined}>
-                    {selectedPeriod === 'quarterly' ? t('generator.quarter') : t('generator.month')}
-                  </label>
-                </Text>
-                {selectedPeriod === 'monthly' ? (
-                  <Select
-                    id="statement-month"
-                    value={selectedMonth}
-                    onChange={(value) => setSelectedMonth(Number(value))}
-                    options={Array.from({ length: 12 }, (_, i) => i + 1).map((month) => ({
-                      value: month,
-                      label: t(`months.${month}`),
-                    }))}
-                    style={{ width: '100%' }}
-                    {...getA11yProps({ label: 'Pilih bulan statement' })}
-                  />
-                ) : (
-                  <Space size={8} style={{ width: '100%' }} role="group" aria-label={t('generator.quarter')}>
-                    {[1, 2, 3, 4].map((quarter) => (
-                      <Button
-                        key={quarter}
-                        type={selectedMonth === quarter * 3 ? 'primary' : 'default'}
-                        onClick={() => setSelectedMonth(quarter * 3)}
-                        style={{ minHeight: 44, flex: 1, fontWeight: 700 }}
-                        aria-pressed={selectedMonth === quarter * 3}
-                        {...getA11yProps({ label: `Pilih kuartal ${quarter}` })}
-                      >
-                        Q{quarter}
-                      </Button>
-                    ))}
-                  </Space>
-                )}
-              </div>
-            )}
+            {/* Month Selector (backend generate contract is monthly-only: {year, month}) */}
+            <div>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                <label htmlFor="statement-month">{t('generator.month')}</label>
+              </Text>
+              <Select
+                id="statement-month"
+                value={selectedMonth}
+                onChange={(value) => setSelectedMonth(Number(value))}
+                options={Array.from({ length: 12 }, (_, i) => i + 1).map((month) => ({
+                  value: month,
+                  label: t(`months.${month}`),
+                }))}
+                style={{ width: '100%' }}
+                {...getA11yProps({ label: t('a11y.selectMonth') })}
+              />
+            </div>
           </Space>
 
           {/* Generate Button */}
@@ -242,10 +223,11 @@ export default function StatementDownloader() {
             size="large"
             block
             loading={isGenerating}
+            disabled={isGenerating}
             onClick={handleGenerateStatement}
             icon={isGenerating ? <RefreshCw style={{ width: 20, height: 20 }} /> : <FileText style={{ width: 20, height: 20 }} />}
             style={{ minHeight: 56, fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}
-            {...getA11yProps({ label: 'Buat dan unduh e-statement' })}
+            {...getA11yProps({ label: t('a11y.generateButton') })}
           >
             {isGenerating ? t('generator.processing') : t('generator.generate')}
           </Button>
@@ -278,6 +260,15 @@ export default function StatementDownloader() {
           </Space>
 
           {/* Statements List */}
+          {!isLoading && error && statements.length === 0 && (
+            <Alert
+              type="error"
+              showIcon
+              message={t('history.errorLoad')}
+              description={error !== t('history.errorLoad') ? error : undefined}
+              action={<Button size="small" onClick={() => loadStatements(0)}>{t('history.retry')}</Button>}
+            />
+          )}
           <Space direction="vertical" size={12} style={{ width: '100%' }}>
             {isLoading ? (
               <Card loading style={{ width: '100%' }} />
@@ -295,7 +286,7 @@ export default function StatementDownloader() {
                       <Space size={12}>
                         <Text strong>{statement.periodFormatted}</Text>
                         <Tag color={statusTagColor(statement.status)}>
-                          {StatementService.formatStatementStatus(statement.status)}
+                          {statusLabel(statement.status)}
                         </Tag>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                           {t('history.transactionCount', { count: statement.transactionCount })}
@@ -317,7 +308,7 @@ export default function StatementDownloader() {
                           loading={isDownloading === statement.id}
                           icon={<Download style={{ width: 16, height: 16 }} aria-hidden="true" />}
                           style={{ minHeight: 44 }}
-                          {...getA11yProps({ label: `Download e-statement ${statement.periodFormatted}` })}
+                          {...getA11yProps({ label: t('a11y.downloadStatement', { period: statement.periodFormatted }) })}
                         >
                           {t('history.download')}
                         </Button>
@@ -360,9 +351,11 @@ export default function StatementDownloader() {
             <Button
               type="link"
               block
-              onClick={() => loadStatements(page + 1)}
+              onClick={handleLoadMore}
+              loading={isLoading}
+              disabled={isLoading || !hasMore}
               style={{ minHeight: 44, fontWeight: 700, fontSize: 12, textTransform: 'uppercase' }}
-              {...getA11yProps({ label: 'Muat lebih banyak e-statement' })}
+              {...getA11yProps({ label: t('a11y.loadMore') })}
             >
               {t('history.loadMore')}
             </Button>

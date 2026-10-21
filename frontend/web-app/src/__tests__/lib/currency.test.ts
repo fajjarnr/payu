@@ -49,11 +49,11 @@ describe('currency.ts - formatCurrency', () => {
 
   describe('Edge cases', () => {
     it('should handle null values', () => {
-      expect(formatCurrency(null)).toBe('Rp 0');
+      expect(formatCurrency(null)).toBe('Rp\u00A00');
     });
 
     it('should handle undefined values', () => {
-      expect(formatCurrency(undefined)).toBe('Rp 0');
+      expect(formatCurrency(undefined)).toBe('Rp\u00A00');
     });
 
     it('should handle string inputs', () => {
@@ -62,12 +62,12 @@ describe('currency.ts - formatCurrency', () => {
     });
 
     it('should handle invalid strings', () => {
-      expect(formatCurrency('invalid')).toBe('Rp 0');
-      expect(formatCurrency('abc123')).toBe('Rp 0');
+      expect(formatCurrency('invalid')).toBe('Rp\u00A00');
+      expect(formatCurrency('abc123')).toBe('Rp\u00A00');
     });
 
     it('should handle NaN', () => {
-      expect(formatCurrency(NaN)).toBe('Rp 0');
+      expect(formatCurrency(NaN)).toBe('Rp\u00A00');
     });
 
     it('should handle Infinity', () => {

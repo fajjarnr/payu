@@ -667,6 +667,7 @@ export default function CMSPage() {
 
       <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
         <Table<Content>
+          scroll={{ x: "max-content" }}
           columns={columns}
           dataSource={filteredContent}
           rowKey="id"

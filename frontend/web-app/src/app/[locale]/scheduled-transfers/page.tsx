@@ -30,7 +30,8 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import type { ScheduledTransfer } from '@/services/TransactionService';
-import { parseCurrencyExact } from '@/lib/currency';
+import { formatCurrency, parseCurrencyExact } from '@/lib/currency';
+import { SkipLink } from "@/lib/a11y";
 
 const { Title, Text } = Typography;
 
@@ -135,6 +136,7 @@ export default function ScheduledTransfersPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: '100%' }}>
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
@@ -300,7 +302,7 @@ export default function ScheduledTransfersPage() {
                       <Space size={16} style={{ marginTop: 4 }}>
                         <Space size={4}>
                           <ArrowRightLeft style={{ width: 12, height: 12 }} />
-                          <Text type="secondary">Rp {Number(transfer.amount).toLocaleString(bcp47Locale)}</Text>
+                          <Text type="secondary" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(transfer.amount, { locale: bcp47Locale })}</Text>
                         </Space>
                         <Space size={4}>
                           <Calendar style={{ width: 12, height: 12 }} />

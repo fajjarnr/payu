@@ -4,14 +4,15 @@ import {
   Search,
   ChevronRight,
   PlusCircle,
-  LifeBuoy,
   ArrowRight,
   Clock,
   Calendar as CalendarIcon,
   Zap,
   Truck,
   CheckCircle,
+  AlertTriangle,
 } from "@/components/icons";
+import { useTranslations } from "next-intl";
 import {
   Button,
   DatePicker,
@@ -22,13 +23,11 @@ import {
   Space,
   Row,
   Col,
-  Divider,
   Typography,
-  Radio,
-  Segmented,
   Tag,
-  Badge,
 } from "antd";
+import PageHeader from "@/components/PageHeader";
+import MoneyText from "@/components/MoneyText";
 import dayjs from "dayjs";
 import {
   transferSchema,
@@ -48,80 +47,69 @@ import {
 } from "@/hooks/useBeneficiaries";
 import { useUIStore } from "@/stores";
 import DashboardLayout from "@/components/DashboardLayout";
-import { SkipLink } from "@/lib/a11y";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { formatCurrencyWithoutSymbol } from "@/lib/currency";
 import { useRouter } from "@/lib/navigation";
 
-const TRANSFER_TYPES: {
+type TransferTypeMeta = {
   type: TransferType;
-  label: string;
-  description: string;
   icon: React.ComponentType<{ className?: string }>;
-  fee: string;
-  maxLimit: string;
-  processingTime: string;
-}[] = [
-  {
-    type: "INTERNAL_TRANSFER",
-    label: "Transfer Instan",
-    description: "Transfer antar rekening PayU seketika",
-    icon: Zap,
-    fee: "Gratis",
-    maxLimit: "Rp 100.000.000",
-    processingTime: "Seketika",
-  },
-  {
-    type: "BIFAST_TRANSFER",
-    label: "BI-FAST",
-    description: "Transfer real-time antar bank nasional",
-    icon: Zap,
-    fee: "Gratis",
-    maxLimit: "Rp 250.000.000",
-    processingTime: "Seketika",
-  },
-  {
-    type: "SKN_TRANSFER",
-    label: "SKN",
-    description: "Transfer kliring nasional",
-    icon: Truck,
-    fee: "Gratis",
-    maxLimit: "Rp 100.000.000",
-    processingTime: "Hari kerja",
-  },
-  {
-    type: "RTGS_TRANSFER",
-    label: "RTGS",
-    description: "Transfer real-time gross settlement",
-    icon: Clock,
-    fee: "Gratis",
-    maxLimit: "Tidak terbatas",
-    processingTime: "Seketika",
-  },
+};
+
+const TRANSFER_TYPE_META: TransferTypeMeta[] = [
+  { type: "INTERNAL_TRANSFER", icon: Zap },
+  { type: "BIFAST_TRANSFER", icon: Zap },
+  { type: "SKN_TRANSFER", icon: Truck },
+  { type: "RTGS_TRANSFER", icon: Clock },
 ];
 
-const SCHEDULE_TYPES: {
-  type: TransferScheduleType;
-  label: string;
-  description: string;
-}[] = [
-  {
-    type: "NOW",
-    label: "Sekarang",
-    description: "Proses transfer segera",
+const TRANSFER_TYPE_I18N: Record<
+  TransferType,
+  { labelKey: string; descKey: string; timeKey: string }
+> = {
+  INTERNAL_TRANSFER: {
+    labelKey: "typeInternalLabel",
+    descKey: "typeInternalDesc",
+    timeKey: "typeTimeInstant",
   },
-  {
-    type: "SCHEDULED",
-    label: "Terjadwal",
-    description: "Tentukan tanggal pengiriman",
+  BIFAST_TRANSFER: {
+    labelKey: "typeBifastLabel",
+    descKey: "typeBifastDesc",
+    timeKey: "typeTimeInstant",
   },
-  {
-    type: "RECURRING",
-    label: "Berulang",
-    description: "Pengiriman rutin bulanan",
+  SKN_TRANSFER: {
+    labelKey: "typeSknLabel",
+    descKey: "typeSknDesc",
+    timeKey: "typeTimeBusinessDay",
   },
+  RTGS_TRANSFER: {
+    labelKey: "typeRtgsLabel",
+    descKey: "typeRtgsDesc",
+    timeKey: "typeTimeInstant",
+  },
+};
+
+const SCHEDULE_TYPE_META: { type: TransferScheduleType }[] = [
+  { type: "NOW" },
+  { type: "SCHEDULED" },
+  { type: "RECURRING" },
 ];
+
+const SCHEDULE_TYPE_I18N: Record<
+  TransferScheduleType,
+  { labelKey: string; descKey: string }
+> = {
+  NOW: { labelKey: "scheduleNowLabel", descKey: "scheduleNowDesc" },
+  SCHEDULED: {
+    labelKey: "scheduleScheduledLabel",
+    descKey: "scheduleScheduledDesc",
+  },
+  RECURRING: {
+    labelKey: "scheduleRecurringLabel",
+    descKey: "scheduleRecurringDesc",
+  },
+};
 export interface ReviewContact {
   name: string;
   initial: string;
@@ -168,6 +156,19 @@ export interface TransferReviewSnapshot {
 }
 
 export default function TransferPage() {
+  const t = useTranslations("transfers");
+  const TRANSFER_TYPES = TRANSFER_TYPE_META.map((m) => ({
+    ...m,
+    label: t(TRANSFER_TYPE_I18N[m.type].labelKey),
+    description: t(TRANSFER_TYPE_I18N[m.type].descKey),
+    fee: t("typeFeeFree"),
+    processingTime: t(TRANSFER_TYPE_I18N[m.type].timeKey),
+  }));
+  const SCHEDULE_TYPES = SCHEDULE_TYPE_META.map((m) => ({
+    ...m,
+    label: t(SCHEDULE_TYPE_I18N[m.type].labelKey),
+    description: t(SCHEDULE_TYPE_I18N[m.type].descKey),
+  }));
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [showReview, setShowReview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -253,7 +254,7 @@ export default function TransferPage() {
   const handleBeneficiarySubmit = () => {
     const accountNumber = beneficiaryAccountNumber.trim();
     if (!/^\d{10,20}$/.test(accountNumber)) {
-      addToast("Nomor rekening penerima harus 10-20 digit", "warning");
+      addToast(t("toastBeneficiaryInvalid"), "warning");
       return;
     }
     createBeneficiary.mutate(
@@ -264,12 +265,12 @@ export default function TransferPage() {
       },
       {
         onSuccess: () => {
-          addToast("Penerima berhasil ditambahkan", "success");
+          addToast(t("toastBeneficiaryAdded"), "success");
           setBeneficiaryNickname("");
           setBeneficiaryAccountNumber("");
           setShowBeneficiaryModal(false);
         },
-        onError: () => addToast("Gagal menambahkan penerima", "error"),
+        onError: () => addToast(t("toastBeneficiaryAddFailed"), "error"),
       },
     );
   };
@@ -314,10 +315,10 @@ export default function TransferPage() {
         onSuccess: () => {
           const message =
             src.scheduleType === "NOW"
-              ? "Transfer berhasil!"
+              ? t("toastSuccessNow")
               : src.scheduleType === "SCHEDULED"
-                ? "Transfer terjadwal berhasil diset!"
-                : "Transfer berulang berhasil diset!";
+                ? t("toastSuccessScheduled")
+                : t("toastSuccessRecurring");
           addToast(message, "success");
           // The review branch renders before the success branch, so the
           // review flag must be cleared or the success screen never shows.
@@ -332,7 +333,7 @@ export default function TransferPage() {
           // reach the server is returned instead of executed twice.
           isSubmittingRef.current = false;
           setIsSubmitLocked(false);
-          addToast("Transfer gagal. Silakan coba lagi.", "error");
+          addToast(t("toastFailed"), "error");
         },
       },
     );
@@ -367,15 +368,12 @@ export default function TransferPage() {
       !formValues.toAccountId ||
       compareCurrency((formValues.amount ?? "0") as string, "0" as string) <= 0
     ) {
-      addToast(
-        "Silakan pilih penerima dan masukkan jumlah transfer",
-        "warning",
-      );
+      addToast(t("toastRecipientAmountRequired"), "warning");
       return;
     }
 
     if (formValues.scheduleType === "SCHEDULED" && !formValues.scheduledAt) {
-      addToast("Silakan tentukan tanggal transfer", "warning");
+      addToast(t("toastDateRequired"), "warning");
       return;
     }
 
@@ -383,13 +381,13 @@ export default function TransferPage() {
       formValues.scheduleType === "RECURRING" &&
       (!formValues.recurringDay || !formValues.recurringMonth)
     ) {
-      addToast("Silakan tentukan tanggal dan bulan transfer", "warning");
+      addToast(t("toastRecurringRequired"), "warning");
       return;
     }
 
     setReviewSnapshot(formValues as TransferReviewSnapshot);
     setShowReview(true);
-  }, [formValues, addToast]);
+  }, [formValues, addToast, t]);
 
   const selectedTransferType = TRANSFER_TYPES.find(
     (t) => t.type === transferType,
@@ -420,14 +418,13 @@ export default function TransferPage() {
 
     return (
       <DashboardLayout>
-        <SkipLink href="#main-content" />
         <Form
           form={form}
           onFinish={onValid}
           layout="vertical"
           style={{ width: "100%" }}
         >
-          <main id="main-content" className="overflow-x-hidden">
+          <div className="overflow-x-hidden">
             <Space direction="vertical" size={16}>
               <Space size={16}>
                 <Button
@@ -447,7 +444,7 @@ export default function TransferPage() {
                 </Button>
               </Space>
 
-              <Card>
+              <Card style={{ width: "100%" }}>
                 <Row
                   gutter={[16, 16]}
                   justify="space-between"
@@ -516,6 +513,10 @@ export default function TransferPage() {
                               id="recipient-verification-alert"
                               role="alert"
                             >
+                              <AlertTriangle
+                                aria-hidden
+                                style={{ marginRight: 8, verticalAlign: -2 }}
+                              />
                               ID Akun {reviewAccountId || "-"} tidak cocok
                               dengan penerima tersimpan. Cek kembali nomornya
                               atau tambahkan sebagai penerima favorit.
@@ -533,13 +534,7 @@ export default function TransferPage() {
                     >
                       Jumlah Transfer
                     </Typography.Text>
-                    <Typography.Text
-                      strong
-                      style={{ display: "block", fontSize: "2.25rem" }}
-                      className="animate-amount-settle"
-                    >
-                      Rp {formatCurrencyWithoutSymbol(rv.amount)}
-                    </Typography.Text>
+                    <MoneyText amount={rv.amount} size="display" direction="out" />
                     <Typography.Text
                       type="secondary"
                       strong
@@ -549,8 +544,9 @@ export default function TransferPage() {
                     </Typography.Text>
                   </Col>
                 </Row>
+              </Card>
 
-                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                   <Col xs={24} md={8}>
                     <Card>
                       <Space
@@ -706,7 +702,6 @@ export default function TransferPage() {
                     </Col>
                   )}
                 </Row>
-              </Card>
 
               <Button
                 type="primary"
@@ -725,12 +720,10 @@ export default function TransferPage() {
                 block
                 size="large"
               >
-                {transferMutation.isPending
-                  ? "Memvalidasi Transaksi..."
-                  : "Otorisasi Transfer Sekarang"}
+                {transferMutation.isPending ? t("validating") : t("confirmButton")}
               </Button>
             </Space>
-          </main>
+          </div>
         </Form>
       </DashboardLayout>
     );
@@ -756,8 +749,7 @@ export default function TransferPage() {
 
     return (
       <DashboardLayout>
-        <SkipLink href="#main-content" />
-        <main id="main-content" className="overflow-x-hidden">
+        <div className="overflow-x-hidden">
           <div
             style={{
               display: "flex",
@@ -866,16 +858,11 @@ export default function TransferPage() {
                   >
                     Jumlah Transfer
                   </Typography.Text>
-                  <Typography.Text
-                    strong
-                    style={{ display: "block", fontSize: "2.25rem" }}
-                    className="animate-amount-settle"
-                  >
-                    Rp{" "}
-                    {formatCurrencyWithoutSymbol(
-                      successSnapshot?.amount ?? "0",
-                    )}
-                  </Typography.Text>
+                  <MoneyText
+                    amount={successSnapshot?.amount ?? "0"}
+                    size="display"
+                    direction="out"
+                  />
                 </div>
 
                 <Row gutter={[16, 16]} style={{ paddingTop: 16 }}>
@@ -938,27 +925,16 @@ export default function TransferPage() {
               </Button>
             </Space>
           </div>
-        </main>
+        </div>
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      <SkipLink href="#main-content" />
-      <main id="main-content" className="overflow-x-hidden">
+      <div className="overflow-x-hidden">
         <Space direction="vertical" size={16}>
-          <div>
-            <Typography.Title level={1} style={{ marginBottom: 0 }}>
-              Transfer Instan
-            </Typography.Title>
-            <Typography.Text
-              type="secondary"
-              style={{ display: "block", marginTop: 4 }}
-            >
-              Kirim dana secara aman dalam hitungan detik.
-            </Typography.Text>
-          </div>
+          <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={16}>
@@ -976,23 +952,26 @@ export default function TransferPage() {
                   <Form.Item
                     name="transferType"
                     rules={[rule("transferType")]}
-                    noStyle
+                    validateTrigger="onBlur"
+                    style={{ marginBottom: 0 }}
                   >
-                    <Input type="hidden" />
+                    <Input type="hidden" aria-hidden tabIndex={-1} />
                   </Form.Item>
                   <Form.Item
                     name="scheduleType"
                     rules={[rule("scheduleType")]}
-                    noStyle
+                    validateTrigger="onBlur"
+                    style={{ marginBottom: 0 }}
                   >
-                    <Input type="hidden" />
+                    <Input type="hidden" aria-hidden tabIndex={-1} />
                   </Form.Item>
                   <Form.Item
                     name="fromAccountId"
                     rules={[rule("fromAccountId")]}
-                    noStyle
+                    validateTrigger="onBlur"
+                    style={{ marginBottom: 0 }}
                   >
-                    <Input type="hidden" />
+                    <Input type="hidden" aria-hidden tabIndex={-1} />
                   </Form.Item>
                   <Card>
                     <Typography.Text
@@ -1310,62 +1289,67 @@ export default function TransferPage() {
                         <Form.Item
                           name="recurringDay"
                           rules={[rule("recurringDay")]}
+                          validateTrigger="onBlur"
                           style={{ marginBottom: 0 }}
-                          noStyle
                         >
-                          <Input type="hidden" />
+                          <Input type="hidden" aria-hidden tabIndex={-1} />
                         </Form.Item>
-                        <Row
-                          gutter={[8, 8]}
+                        <div
                           style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fill, minmax(44px, 1fr))",
+                            gap: 8,
                             backgroundColor: "hsl(var(--muted) / 0.3)",
                             padding: 16,
                             borderRadius: 12,
                             border: "1px solid hsl(var(--border))",
+                            maxHeight: 220,
+                            overflowY: "auto",
                           }}
+                          role="radiogroup"
                           aria-labelledby="recurring-day-label"
                         >
                           {Array.from({ length: 31 }, (_, i) => i + 1).map(
                             (d) => (
-                              <Col span={3} key={d}>
-                                <Button
-                                  type="text"
-                                  htmlType="button"
-                                  onClick={() =>
-                                    form.setFieldsValue({ recurringDay: d })
-                                  }
-                                  style={{
-                                    aspectRatio: "1",
-                                    minHeight: 44,
-                                    minWidth: 44,
-                                    borderRadius: 12,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontWeight: "bold",
-                                    fontSize: "0.875rem",
-                                    transition: "all 0.2s",
-                                    ...(recurringDay === d
-                                      ? {
-                                          backgroundColor:
-                                            "hsl(var(--primary))",
-                                          color: "hsl(var(--surface))",
-                                          boxShadow:
-                                            "0 10px 15px -3px hsl(var(--primary) / 0.3)",
-                                          transform: "scale(1.05)",
-                                        }
-                                      : {
-                                          backgroundColor: "hsl(var(--card))",
-                                          color: "hsl(var(--foreground) / 0.6)",
-                                        }),
-                                  }}
-                                >
-                                  {d}
-                                </Button>
-                              </Col>
+                              <Button
+                                key={d}
+                                type="text"
+                                htmlType="button"
+                                role="radio"
+                                aria-checked={recurringDay === d}
+                                aria-label={`Tanggal ${d}`}
+                                onClick={() =>
+                                  form.setFieldsValue({ recurringDay: d })
+                                }
+                                style={{
+                                  aspectRatio: "1",
+                                  minHeight: 44,
+                                  minWidth: 44,
+                                  borderRadius: 12,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontWeight: "bold",
+                                  fontSize: "0.875rem",
+                                  ...(recurringDay === d
+                                    ? {
+                                        backgroundColor: "hsl(var(--primary))",
+                                        color: "hsl(var(--surface))",
+                                        boxShadow:
+                                          "0 10px 15px -3px hsl(var(--primary) / 0.3)",
+                                      }
+                                    : {
+                                        backgroundColor: "hsl(var(--card))",
+                                        color: "hsl(var(--foreground) / 0.6)",
+                                      }),
+                                }}
+                              >
+                                {d}
+                              </Button>
                             ),
                           )}
-                        </Row>
+                        </div>
                       </Space>
 
                       <Space direction="vertical" size={16}>
@@ -1401,19 +1385,23 @@ export default function TransferPage() {
                         <Form.Item
                           name="recurringMonth"
                           rules={[rule("recurringMonth")]}
+                          validateTrigger="onBlur"
                           style={{ marginBottom: 0 }}
-                          noStyle
                         >
-                          <Input type="hidden" />
+                          <Input type="hidden" aria-hidden tabIndex={-1} />
                         </Form.Item>
-                        <Row
-                          gutter={[8, 8]}
+                        <div
                           style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fill, minmax(64px, 1fr))",
+                            gap: 8,
                             backgroundColor: "hsl(var(--muted) / 0.3)",
                             padding: 16,
-                            borderRadius: 16,
+                            borderRadius: 12,
                             border: "1px solid hsl(var(--border))",
                           }}
+                          role="radiogroup"
                           aria-labelledby="recurring-month-label"
                         >
                           {[
@@ -1432,95 +1420,73 @@ export default function TransferPage() {
                           ].map((m, idx) => {
                             const val = idx + 1;
                             return (
-                              <Col span={4} key={m}>
-                                <Button
-                                  type="text"
-                                  htmlType="button"
-                                  onClick={() =>
-                                    form.setFieldsValue({ recurringMonth: val })
-                                  }
-                                  style={{
-                                    padding: "16px 0",
-                                    borderRadius: 12,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontWeight: "bold",
-                                    fontSize: "0.75rem",
-                                    letterSpacing: "0.1em",
-                                    transition: "all 0.2s",
-                                    ...(recurringMonth === val
-                                      ? {
-                                          backgroundColor:
-                                            "hsl(var(--primary))",
-                                          color: "hsl(var(--surface))",
-                                          boxShadow:
-                                            "0 10px 15px -3px hsl(var(--primary) / 0.3)",
-                                        }
-                                      : {
-                                          backgroundColor: "hsl(var(--card))",
-                                          color: "hsl(var(--foreground) / 0.6)",
-                                        }),
-                                  }}
-                                >
-                                  {m}
-                                </Button>
-                              </Col>
+                              <Button
+                                key={m}
+                                type="text"
+                                htmlType="button"
+                                role="radio"
+                                aria-checked={recurringMonth === val}
+                                aria-label={`Bulan ${m}`}
+                                onClick={() =>
+                                  form.setFieldsValue({ recurringMonth: val })
+                                }
+                                style={{
+                                  padding: "16px 0",
+                                  borderRadius: 12,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontWeight: "bold",
+                                  fontSize: "0.75rem",
+                                  letterSpacing: "0.1em",
+                                  ...(recurringMonth === val
+                                    ? {
+                                        backgroundColor: "hsl(var(--primary))",
+                                        color: "hsl(var(--surface))",
+                                        boxShadow:
+                                          "0 10px 15px -3px hsl(var(--primary) / 0.3)",
+                                      }
+                                    : {
+                                        backgroundColor: "hsl(var(--card))",
+                                        color: "hsl(var(--foreground) / 0.6)",
+                                      }),
+                                }}
+                              >
+                                {m}
+                              </Button>
                             );
                           })}
-                        </Row>
+                        </div>
                       </Space>
                     </Space>
                   )}
 
-                  <div style={{ position: "relative" }}>
-                    <Form.Item
-                      name="toAccountId"
-                      rules={[rule("toAccountId")]}
-                      style={{ marginBottom: 0 }}
-                      noStyle
-                    >
-                      <Input
-                        data-testid="recipient-account-input"
-                        type="text"
-                        placeholder="Masukkan ID Akun atau Nomor Rekening"
-                        style={{
-                          paddingLeft: 64,
-                          height: 64,
-                          fontSize: "1.125rem",
-                        }}
-                        aria-label="Nomor Rekening Penerima"
-                      />
-                    </Form.Item>
-                    <Search
+                  <Form.Item
+                    name="toAccountId"
+                    label={
+                      <label htmlFor="transfer-recipient">
+                        {t("recipientAccount")}
+                      </label>
+                    }
+                    rules={[rule("toAccountId")]}
+                    validateTrigger="onBlur"
+                    required
+                  >
+                    <Input
+                      id="transfer-recipient"
+                      data-testid="recipient-account-input"
+                      type="text"
+                      placeholder="Masukkan ID Akun atau Nomor Rekening"
+                      aria-required="true"
+                      prefix={<Search aria-hidden />}
                       style={{
-                        position: "absolute",
-                        left: 24,
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        height: 24,
-                        width: 24,
-                        color: "hsl(var(--muted-foreground))",
-                        zIndex: 10,
-                        pointerEvents: "none",
+                        height: 64,
+                        fontSize: "1.125rem",
                       }}
                     />
-                  </div>
+                  </Form.Item>
 
-                  <Card>
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        right: 0,
-                        width: 192,
-                        height: 192,
-                        backgroundColor: "hsl(var(--primary) / 0.05)",
-                        borderRadius: "50%",
-                        filter: "blur(48px)",
-                        zIndex: 0,
-                      }}
-                    />
+                  <Card style={{ position: "relative" }}>
 
                     <Row
                       justify="space-between"
@@ -1558,7 +1524,7 @@ export default function TransferPage() {
                           className="animate-pulse"
                         />
                         <Typography.Text strong style={{ fontSize: "0.75rem" }}>
-                          Secured IDR
+                          {t("securedIdr")}
                         </Typography.Text>
                       </div>
                     </Row>
@@ -1574,29 +1540,31 @@ export default function TransferPage() {
                     >
                       <Form.Item
                         name="amount"
+                        label={
+                          <label htmlFor="transfer-amount">
+                            {t("amount")}
+                          </label>
+                        }
                         rules={[rule("amount")]}
-                        style={{ marginBottom: 0 }}
-                        noStyle
+                        validateTrigger="onBlur"
+                        required
                       >
-                        <Input type="hidden" data-testid="amount-input" />
+                        <Input
+                          id="transfer-amount"
+                          data-testid="amount-input"
+                          value={formattedAmount}
+                          onChange={handleAmountChange}
+                          placeholder="0"
+                          inputMode="numeric"
+                          aria-required="true"
+                          style={{
+                            width: "100%",
+                            fontSize: "2rem",
+                            fontWeight: "bold",
+                          }}
+                          variant="borderless"
+                        />
                       </Form.Item>
-                      <Input
-                        value={formattedAmount}
-                        onChange={handleAmountChange}
-                        placeholder="0"
-                        aria-label="Nominal Transfer"
-                        style={{
-                          width: "100%",
-                          backgroundColor: "transparent",
-                          border: "none",
-                          padding: 0,
-                          fontSize: "2.25rem",
-                          fontWeight: "bold",
-                          color: "hsl(var(--foreground))",
-                        }}
-                        variant="borderless"
-                      />
-                    </Space>
 
                     <Card style={{ position: "relative", zIndex: 10 }}>
                       <Typography.Text
@@ -1608,26 +1576,25 @@ export default function TransferPage() {
                       </Typography.Text>
                       <Form.Item
                         name="description"
+                        label={
+                          <label htmlFor="transfer-memo">{t("memo")}</label>
+                        }
                         rules={[rule("description")]}
-                        style={{ marginBottom: 0 }}
-                        noStyle
+                        validateTrigger="onBlur"
                       >
                         <Input
+                          id="transfer-memo"
                           data-testid="description-input"
                           type="text"
                           placeholder="Apa tujuan transfer ini?"
                           style={{
                             width: "100%",
                             fontSize: "1rem",
-                            fontWeight: "bold",
-                            backgroundColor: "transparent",
-                            border: "none",
-                            padding: 0,
                           }}
-                          aria-label="Memo Transaksi"
                         />
                       </Form.Item>
                     </Card>
+                    </Space>
                   </Card>
 
                   <Button
@@ -1638,7 +1605,7 @@ export default function TransferPage() {
                     block
                     size="large"
                   >
-                    Tinjau Ringkasan Transfer
+                    {t("reviewButton")}
                     <ArrowRight
                       style={{ width: 20, height: 20, marginLeft: 8 }}
                     />
@@ -1809,17 +1776,6 @@ export default function TransferPage() {
                           Hubungi Kami
                         </Button>
                       </div>
-                      <LifeBuoy
-                        style={{
-                          position: "absolute",
-                          bottom: -30,
-                          right: -30,
-                          height: 192,
-                          width: 192,
-                          color: "hsl(var(--surface) / 0.05)",
-                          transform: "rotate(12deg)",
-                        }}
-                      />
                     </div>
                   </div>
                 </Card>
@@ -1894,7 +1850,7 @@ export default function TransferPage() {
             </Space>
           </Space>
         </Modal>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

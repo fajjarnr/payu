@@ -37,11 +37,12 @@ import {
   addCurrency,
   asMoney,
   divideCurrency,
-  formatExactDecimal,
+  formatCurrency,
   parseCurrencyExact,
   type Money,
 } from "@/lib/currency";
 import type { SplitBillParticipant } from "@/services/TransactionService";
+import { SkipLink } from "@/lib/a11y";
 
 const { Title, Text } = Typography;
 
@@ -100,9 +101,6 @@ export default function SplitBillPage() {
       paidAmount: Money;
     }>;
   }>;
-
-  const formatCurrency = (amount: Money | number) =>
-    formatExactDecimal(amount, 0, "id-ID");
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -205,6 +203,7 @@ export default function SplitBillPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>

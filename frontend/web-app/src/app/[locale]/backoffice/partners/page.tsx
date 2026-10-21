@@ -221,6 +221,7 @@ export default function PartnersPage() {
 
       <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
         <Table<PartnerRow>
+          scroll={{ x: "max-content" }}
           columns={columns}
           dataSource={partners}
           rowKey="id"

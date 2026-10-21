@@ -65,8 +65,12 @@
     "homeBrand": "PayU — home",
     "openMenu": "Open navigation menu",
     "openSearch": "Open search",
-    "notificationsLabel": "Notifications",
-    "profileMenu": "User profile menu"
+    "notificationsLabel": "Notifications (open)",
+    "profileMenu": "User profile menu",
+    "sidebarNav": "Primary navigation",
+    "notificationsMenu": "Notifications (menu)",
+    "exchangeHistoryEmpty": "No exchange history yet",
+    "exchangeHistoryEmptyDesc": "Exchanges you make will appear here."
   },
   "dashboard": {
     "welcome_morning": "Good Morning",
@@ -122,7 +126,6 @@
     "doneEditingLabel": "Done editing",
     "quickTransfer": "Quick Send",
     "favoriteCategory": "Favorite Categories",
-    "recentActivity": "Recent Activity",
     "txOptions": "Options for {description}",
     "txCancel": "Cancel {description} ({amount})",
     "txCancelShort": "Cancel",
@@ -179,7 +182,11 @@
     "deleteFailed": "Failed to delete",
     "errBankCode": "Bank code 1-10 chars",
     "errAccount": "10-20 digits",
-    "errNickname": "Max 100 chars"
+    "errNickname": "Max 100 chars",
+    "deleteConfirmTitle": "Delete this beneficiary?",
+    "deleteConfirmDesc": "Remove {name} from your saved recipients? This cannot be undone.",
+    "confirm": "Delete",
+    "cancel": "Cancel"
   },
   "cms": {
     "bannerLoadError": "Failed to load banners",
@@ -190,6 +197,8 @@
     "nextBanner": "Next banner",
     "goToBanner": "Go to banner {index}",
     "bannerPagination": "Banner pagination",
+    "pauseAutoplay": "Pause banner autoplay",
+    "resumeAutoplay": "Resume banner autoplay",
     "promoAnnouncement": "Promo available: {title}",
     "viewPromo": "View Promo: {title}",
     "goToPromo": "Go to promo {index}: {title}",
@@ -256,7 +265,38 @@
     "failed": "Transfer Failed",
     "insufficientBalance": "Insufficient balance",
     "invalidAccount": "Invalid account number",
-    "dailyLimit": "Daily limit reached"
+    "dailyLimit": "Daily limit reached",
+    "typeInternalLabel": "Instant Transfer",
+    "typeInternalDesc": "Transfer between PayU accounts instantly",
+    "typeBifastLabel": "BI-FAST",
+    "typeBifastDesc": "Real-time national interbank transfer",
+    "typeSknLabel": "SKN",
+    "typeSknDesc": "National clearing transfer",
+    "typeRtgsLabel": "RTGS",
+    "typeRtgsDesc": "Real-time gross settlement transfer",
+    "typeFeeFree": "Free",
+    "typeTimeInstant": "Instant",
+    "typeTimeBusinessDay": "Business day",
+    "scheduleNowLabel": "Now",
+    "scheduleNowDesc": "Process the transfer immediately",
+    "scheduleScheduledLabel": "Scheduled",
+    "scheduleScheduledDesc": "Choose a delivery date",
+    "scheduleRecurringLabel": "Recurring",
+    "scheduleRecurringDesc": "Routine monthly delivery",
+    "reviewButton": "Review Transfer Summary",
+    "confirmButton": "Authorize Transfer Now",
+    "validating": "Validating Transaction...",
+    "toastRecipientAmountRequired": "Please select a recipient and enter a transfer amount",
+    "toastDateRequired": "Please choose a transfer date",
+    "toastRecurringRequired": "Please choose a transfer date and month",
+    "toastSuccessNow": "Transfer successful!",
+    "toastSuccessScheduled": "Scheduled transfer created!",
+    "toastSuccessRecurring": "Recurring transfer created!",
+    "toastFailed": "Transfer failed. Please try again.",
+    "toastBeneficiaryInvalid": "Recipient account number must be 10-20 digits",
+    "toastBeneficiaryAdded": "Recipient added successfully",
+    "toastBeneficiaryAddFailed": "Failed to add recipient",
+    "securedIdr": "Secured IDR"
   },
   "bills": {
     "title": "Bills & Top-up",
@@ -460,6 +500,11 @@
     "mfaRequired": "MFA Required: Suspicious login pattern detected.",
     "invalidResponse": "Login failed: Invalid server response",
     "loginFailed": "Login failed. Please check your credentials.",
+    "resetSubtitle": "Enter your email to receive password reset instructions.",
+    "sendInstructions": "Send Instructions",
+    "backToLogin": "Back to login",
+    "emailRequired": "Email is required",
+    "issuerMissing": "Login service is not configured. Please try again later.",
     "onboarding": {
       "title": "Welcome to PayU",
       "subtitle": "The digital banking platform of the future",
@@ -628,7 +673,12 @@
         "errorLoad": "Failed to load e-statement list.",
         "loadError": "Failed to load e-statement list.",
         "errorDownload": "Failed to download e-statement. Please try again.",
-        "downloadError": "Failed to download e-statement. Please try again."
+        "downloadError": "Failed to download e-statement. Please try again.",
+        "retry": "Retry",
+        "loadMore": "Load More Statements",
+        "statusGenerating": "Generating",
+        "statusCompleted": "Ready to Download",
+        "statusFailed": "Failed"
       },
       "months": {
         "1": "January",
@@ -643,6 +693,13 @@
         "10": "October",
         "11": "November",
         "12": "December"
+      },
+      "a11y": {
+        "selectYear": "Select statement year",
+        "selectMonth": "Select statement month",
+        "generateButton": "Generate and download e-statement",
+        "downloadStatement": "Download e-statement {period}",
+        "loadMore": "Load more e-statements"
       }
     }
   },

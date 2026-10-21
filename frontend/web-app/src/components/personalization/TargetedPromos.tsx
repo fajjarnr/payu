@@ -5,6 +5,7 @@ import { Tag as TagIcon, TrendingUp, Star, ArrowRight } from '@/components/icons
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
 import { useAuthStore } from '@/stores';
 import { Card, Skeleton, Space, Tag, Typography, theme } from 'antd';
+import { formatCurrency } from '@/lib/currency';
 import type { SegmentedOffer } from '@/services/SegmentationService';
 
 interface TargetedPromosProps {
@@ -73,7 +74,7 @@ function PromoItem({ promo }: PromoItemProps) {
       return `Hemat ${promo.percentage}%`;
     }
     if (promo.currency) {
-      return `${promo.currency} ${promo.value.toLocaleString('id-ID')}`;
+      return formatCurrency(promo.value, { symbol: promo.currency });
     }
     return 'Special Offer';
   };
@@ -142,7 +143,7 @@ function PromoItem({ promo }: PromoItemProps) {
 
           {promo.minTransaction && (
             <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
-              Min. transaksi: Rp {promo.minTransaction.toLocaleString('id-ID')}
+              Min. transaksi: {formatCurrency(promo.minTransaction)}
             </Typography.Text>
           )}
         </div>

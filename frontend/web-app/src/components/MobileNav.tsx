@@ -36,8 +36,11 @@ export default function MobileNav() {
       ? pathname.replace(/^\/(id|en)(?=\/|$)/, "") || "/"
       : pathname;
 
+  // Segment match: child routes highlight their parent tab; the dashboard
+  // special-case survives for locale-stripped root paths.
   const isActive = (href: string) =>
     barePathname === href ||
+    (href !== "/" && barePathname.startsWith(`${href}/`)) ||
     (href.endsWith("/dashboard") && barePathname.endsWith("/dashboard"));
 
   return (

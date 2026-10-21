@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Space, Typography } from 'antd';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatementDownloader from '@/components/settings/statement-downloader';
+import { SkipLink } from "@/lib/a11y";
 
 /**
  * QAMVP-019: dedicated statement page.
@@ -16,6 +17,7 @@ export default function StatementsPage() {
 
   return (
     <DashboardLayout>
+      <SkipLink />
       <Space direction="vertical" size={16} style={{ maxWidth: 1024, margin: '0 auto', padding: '32px 16px', width: '100%' }}>
         <StatementDownloader />
       </Space>

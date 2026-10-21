@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 
 vi.mock('@/lib/a11y', () => ({
   a11yUtils: {
-    useFocusTrap: vi.fn(),
+    getA11yProps: (config: Record<string, unknown>) => config,
   },
 }));
 

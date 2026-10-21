@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithIntl } from '@/__tests__/utils/test-utils';
 import { vi } from 'vitest';
 import PrivacyPage from '@/app/[locale]/legal/privacy/page';
 
@@ -14,18 +15,18 @@ describe('PrivacyPage', () => {
   });
 
   it('renders the page title', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     expect(screen.getByText('Kebijakan Privasi')).toBeInTheDocument();
   });
 
   it('renders version information', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     expect(screen.getByText(/Versi 1.0/)).toBeInTheDocument();
     expect(screen.getByText(/Januari 2026/)).toBeInTheDocument();
   });
 
   it('renders all section headings', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     
     expect(screen.getByText('1. Pengumpulan Informasi')).toBeInTheDocument();
     expect(screen.getByText('2. Penggunaan Informasi')).toBeInTheDocument();
@@ -36,17 +37,17 @@ describe('PrivacyPage', () => {
   });
 
   it('renders contact email in footer', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     expect(screen.getByText(/privacy@payu.fajjjar.my.id/)).toBeInTheDocument();
   });
 
   it('uses DashboardLayout wrapper', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
   });
 
   it('renders introductory text for each section', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     
     expect(screen.getByText(/Kami mengumpulkan informasi yang Anda berikan secara langsung/)).toBeInTheDocument();
     expect(screen.getByText(/Informasi yang dikumpulkan digunakan untuk menyediakan/)).toBeInTheDocument();
@@ -54,18 +55,18 @@ describe('PrivacyPage', () => {
   });
 
   it('renders SVG icons', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     const svgs = document.querySelectorAll('svg');
     expect(svgs.length).toBeGreaterThan(0);
   });
 
   it('mentions data encryption', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     expect(screen.getByText(/dienkripsi/)).toBeInTheDocument();
   });
 
   it('mentions SSL/TLS protocols', () => {
-    render(<PrivacyPage />);
+    renderWithIntl(<PrivacyPage />);
     expect(screen.getByText(/SSL\/TLS/)).toBeInTheDocument();
   });
 });
