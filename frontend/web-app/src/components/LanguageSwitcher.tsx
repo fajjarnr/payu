@@ -65,6 +65,7 @@ export default function LanguageSwitcher() {
     // tech announces a link, not a menu item that navigates via the router.
     label: (
       <a
+        className="payu-focus-ring"
         href={localePath(loc.code) + queryString}
         onClick={(e) => {
           e.preventDefault();

@@ -6,7 +6,7 @@ import { useUserSegment } from '@/hooks/useUserSegment';
 import { useAuthStore } from '@/stores';
 import clsx from 'clsx';
 import { useTranslations } from 'next-intl';
-import { INK_ON_EMERALD } from '@/theme/tokens';
+import { BRAND_PANEL_FG, INK_ON_EMERALD } from '@/theme/tokens';
 interface PersonalizedGreetingProps {
   showTimeBased?: boolean;
   showSegment?: boolean;
@@ -79,7 +79,7 @@ export default function PersonalizedGreeting({
         {showSegment && isVIP && (
           <span
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full shadow-lg"
-            style={{ background: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`, color: '#06281F' }}
+            style={{ background: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`, color: INK_ON_EMERALD }}
           >
             <Crown className="h-3.5 w-3.5" aria-hidden="true" />
             <span className="text-xs font-bold tracking-[0.1em] uppercase">
@@ -110,7 +110,7 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         subtitle: t('welcomeVipSubtitle'),
         gradient: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`,
         // White on amber/red passes AA; the emerald branch needs ink (F-06).
-        onColor: '#FFFFFF',
+        onColor: BRAND_PANEL_FG,
       };
     }
     if (currentTier === 'GOLD') {
@@ -118,7 +118,7 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         title: t('welcomeHello', { name: firstName || t('tier_gold') }),
         subtitle: t('welcomeGoldSubtitle'),
         gradient: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorWarningActive})`,
-        onColor: '#FFFFFF',
+        onColor: BRAND_PANEL_FG,
       };
     }
     return {

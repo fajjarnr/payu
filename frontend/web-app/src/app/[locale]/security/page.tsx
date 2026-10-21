@@ -349,8 +349,7 @@ export default function SecurityPage() {
                   </Title>
                   <Paragraph
                     style={{
-                      color: "var(--ant-color-text-light-solid)",
-                      opacity: 0.7,
+                      color: "color-mix(in srgb, var(--ant-color-text-light-solid) 70%, var(--ant-color-text))",
                       marginBottom: 0,
                     }}
                   >

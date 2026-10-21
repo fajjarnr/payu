@@ -45,7 +45,8 @@ describe("pages token migration (source-text)", () => {
     expect(start).toBeGreaterThan(-1);
     expect(btn).toBeGreaterThan(-1);
     const block = src.slice(start, src.indexOf("</Button>", btn) + 9);
-    expect(block).toContain("#06281F");
+    // The ink comes from the theme module, not a literal (design-system guard).
+    expect(block).toContain("INK_ON_EMERALD");
     expect(block).not.toMatch(/rgba\(255,255,255|colorBgContainer/);
     expect(block).not.toContain("color: token.colorPrimary");
   });

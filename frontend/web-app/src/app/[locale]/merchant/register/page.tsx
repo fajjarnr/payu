@@ -247,7 +247,7 @@ export default function MerchantRegisterPage() {
                         </div>
                         <Typography.Title level={3} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>{t('readyTitle')}</Typography.Title>
                       </Space>
-                      <Typography.Text style={{ color: BRAND_PANEL_FG, opacity: 0.85 }}>
+                      <Typography.Text style={{ color: `color-mix(in srgb, ${BRAND_PANEL_FG} 85%, ${BRAND_PANEL_BG})` }}>
                         {t('termsIntro')}{' '}
                         <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>{t('termsLink')}</Typography.Text>{' '}
                         {t('termsConjunction')}{' '}

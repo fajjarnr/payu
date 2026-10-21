@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { INK_ON_EMERALD } from "@/theme/tokens";
 
 /**
  * SkipLink component for accessibility (WCAG 2.1 compliance)
@@ -22,7 +23,7 @@ export function SkipLink({
     <>
       {/* ponytail: focus colors live in CSS because Tailwind has no var() focus
           utilities without arbitrary values; sr-only→visible behavior unchanged. */}
-      <style data-skiplink-focus>{`.payu-skiplink:focus-visible{background-color:var(--ant-color-primary) !important;color:#06281F !important;}`}</style>
+      <style data-skiplink-focus>{`.payu-skiplink:focus-visible{background-color:var(--ant-color-primary) !important;color:${INK_ON_EMERALD} !important;}`}</style>
       <a
         href={href}
         className={`

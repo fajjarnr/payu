@@ -1763,7 +1763,7 @@ export default function TransferPage() {
                             fontWeight: "bold",
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
-                            backgroundColor: "color-mix(in srgb, #ffffff 10%, transparent)",
+                            backgroundColor: `color-mix(in srgb, ${token.colorTextLightSolid} 10%, transparent)`,
                             padding: "12px 24px",
                             borderRadius: 12,
                             border: `1px solid color-mix(in srgb, ${token.colorTextLightSolid} 10%, transparent)`,

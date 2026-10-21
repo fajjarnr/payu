@@ -76,7 +76,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               {/* ponytail: ink (#06281F, Button primaryColor) keeps AA on emerald hover fill (F-01) */}
               <button
                 onClick={handleReload}
-                className="w-full py-4 rounded-xl font-bold text-xs tracking-widest bg-[var(--ant-color-text)] text-[var(--ant-color-bg-layout)] hover:bg-[var(--ant-color-primary)] hover:text-[#06281F] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="payu-focus-ring w-full py-4 rounded-xl font-bold text-xs tracking-widest bg-[var(--ant-color-text)] text-[var(--ant-color-bg-layout)] hover:bg-[var(--ant-color-primary)] hover:text-[#06281F] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Muat ulang seluruh aplikasi"
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -85,7 +85,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
               <button
                 onClick={() => reset()}
-                className="w-full border py-4 rounded-xl font-bold text-xs tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-[var(--ant-color-fill-secondary)]"
+                className="payu-focus-ring w-full border py-4 rounded-xl font-bold text-xs tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-[var(--ant-color-fill-secondary)]"
                 style={{ borderColor: 'var(--ant-color-border-secondary)', color: 'var(--ant-color-text)', backgroundColor: 'color-mix(in srgb, var(--ant-color-text) 8%, transparent)' }}
                 aria-label="Coba pulihkan aplikasi"
               >

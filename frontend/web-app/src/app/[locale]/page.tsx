@@ -535,7 +535,7 @@ export default function LandingPage() {
                   <div
                     style={{
                       position: "relative",
-                      borderRadius: 48,
+                      borderRadius: 16,
                       border: `1px solid ${token.colorBorderSecondary}`,
                       background: token.colorBgContainer,
                       padding: 10,
@@ -546,7 +546,7 @@ export default function LandingPage() {
                       vertical
                       gap={20}
                       style={{
-                        borderRadius: 40,
+                        borderRadius: 16,
                         background: token.colorBgLayout,
                         padding: "16px 20px 28px",
                       }}

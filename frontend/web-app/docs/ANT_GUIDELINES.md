@@ -216,6 +216,7 @@ Ambiguous-label fixes (before → after):
 - **A-07 money rendering (Medium, 2026-10-21).** Amounts **must** render through `formatCurrency` / `MoneyText` with the active locale — never `Rp ${raw}`, never a hand-rolled `toLocaleString('id-ID')`. A limit or a mock card art may use a compact form, but the symbol and the grouping come from the helper.
 - **A-08 dead toast store (High, 2026-10-21).** `useUIStore.addToast` writes to a list **nothing renders** — every "success" and "error" message sent there is invisible and unannounced (the transfer page showed no feedback at all for a failed transfer). User feedback **must** go through `@/lib/notify` (antd `message`, `role="alert"`). The store's `toasts` slice is dead state.
 - **A-09 legacy CSS variables (Medium, 2026-10-21).** `hsl(var(--primary))`, `var(--color-border)`, `var(--background)` and friends are the frozen `globals.css` aliases — a second palette that does not follow the theme and carries the emerald as text. Components **must** read `token.*` / `var(--ant-color-*)`. Guard: `src/__tests__/theme/legacy-css-vars.test.ts`.
+- **A-10 raw values outside the theme module (Medium, 2026-10-21).** A colour literal in a component is a second source of truth: `#06281F` in fourteen places in `lending/page.tsx` meant "the ink on emerald" and drifted from the token. Colours **must** come from `src/theme/tokens.ts` (`INK_ON_EMERALD`, `BRAND_PANEL_*`, `CARD_ART_GRADIENT`); only the theme module, the chart palette and the global error page (which renders outside the antd provider) may hold literals. Guard: `src/__tests__/theme/design-system-guard.test.ts` — it also enforces the radius scale and "no opacity on text".
 
 ## 7. QA checklist (executable in code review)
 
@@ -234,6 +235,7 @@ Ambiguous-label fixes (before → after):
 - [ ] i18n/theme: `id` + `en` strings present; antd locale synced (`antd-locale.ts:9-20`); light + dark screenshots attached.
 - [ ] i18n: a customer page has **no** hardcoded user-facing string (A-05/A-06); `npm run check:i18n` reports key parity; API values stay untranslated.
 - [ ] Money: every amount renders through `formatCurrency`/`MoneyText` with the active locale (A-07) — no `Rp ${raw}`, no hand-rolled `toLocaleString`.
+- [ ] Guards green: `design-system-guard` (raw hex, radius scale, opacity on text), `legacy-css-vars`, `route-states`, `page-keys` (i18n), `mobile-shell` — these enforce the rules above; a new component must not need a new exemption.
 
 ---
 *Skipped: e2e spec bodies, `__tests__/a11y` assertions, `globals.css` dark block, `lib/a11y.tsx`, stores. Risk: contrast ratios cited from `tokens.ts` comments, not re-measured; dark-mode emerald and antd v6 focus-ring defaults unverified live.*

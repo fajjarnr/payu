@@ -46,6 +46,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { asMoney, formatCurrency } from "@/lib/currency";
 import { notify as toast } from "@/lib/notify";
 import { SkipLink } from "@/lib/a11y";
+import { BRAND_PANEL_FG, INK_ON_EMERALD } from '@/theme/tokens';
 
 export default function LendingPage() {
   const { token } = theme.useToken();
@@ -549,7 +550,7 @@ export default function LendingPage() {
                       <Card
                         style={{
                           background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
-                          color: "#06281F", // F-01: ink on emerald gradient, not white (2.00:1)
+                          color: INK_ON_EMERALD, // F-01: ink on emerald gradient, not white (2.00:1)
                         }}
                         styles={{ body: { padding: 24 } }}
                       >
@@ -588,7 +589,7 @@ export default function LendingPage() {
                                     fontSize: 12,
                                     letterSpacing: "0.1em",
                                     textTransform: "uppercase",
-                                    color: "#06281F",
+                                    color: INK_ON_EMERALD,
                                   }}
                                 >
                                   PayLater Limit
@@ -597,7 +598,7 @@ export default function LendingPage() {
                                   level={2}
                                   style={{
                                     marginBottom: 0,
-                                    color: "#06281F",
+                                    color: INK_ON_EMERALD,
                                   }}
                                 >
                                   {formatCurrency(payLaterStats.creditLimit)}
@@ -608,25 +609,25 @@ export default function LendingPage() {
                               size={16}
                               style={{
                                 fontSize: 12,
-                                color: "#06281F",
+                                color: INK_ON_EMERALD,
                               }}
                             >
                               <Typography.Text
                                 strong
-                                style={{ color: "#06281F" }}
+                                style={{ color: INK_ON_EMERALD }}
                               >
                                 Terpakai:{" "}
                                 {formatCurrency(payLaterStats.usedLimit)}
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: "#06281F" }}
+                                style={{ color: INK_ON_EMERALD }}
                               >
                                 •
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: "#06281F" }}
+                                style={{ color: INK_ON_EMERALD }}
                               >
                                 Tersedia:{" "}
                                 {formatCurrency(payLaterStats.availableLimit)}
@@ -642,14 +643,14 @@ export default function LendingPage() {
                                   fontSize: 12,
                                   letterSpacing: "0.1em",
                                   textTransform: "uppercase",
-                                  color: "#06281F",
+                                  color: INK_ON_EMERALD,
                                 }}
                               >
                                 Penggunaan Limit
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: "#06281F" }}
+                                style={{ color: INK_ON_EMERALD }}
                               >
                                 {creditUtilization.toFixed(0)}%
                               </Typography.Text>
@@ -657,7 +658,7 @@ export default function LendingPage() {
                             <Progress
                               percent={creditUtilization}
                               showInfo={false}
-                              strokeColor="#06281F"
+                              strokeColor={INK_ON_EMERALD}
                               trailColor="rgba(6,40,31,0.15)"
                               style={{ marginTop: 8 }}
                             />
@@ -679,7 +680,7 @@ export default function LendingPage() {
                                 fontSize: 12,
                                 letterSpacing: "0.1em",
                                 textTransform: "uppercase",
-                                color: "#06281F",
+                                color: INK_ON_EMERALD,
                               }}
                             >
                               Pembayaran Minimum
@@ -688,7 +689,7 @@ export default function LendingPage() {
                               level={4}
                               style={{
                                 marginBottom: 0,
-                                color: "#06281F",
+                                color: INK_ON_EMERALD,
                               }}
                             >
                               {formatCurrency(payLaterStats.minimumPayment)}
@@ -700,8 +701,8 @@ export default function LendingPage() {
                             disabled={payLaterPayment.isPending}
                             data-testid="pay-bill-button"
                             style={{
-                              background: "#06281F",
-                              color: "#FFFFFF",
+                              background: INK_ON_EMERALD,
+                              color: BRAND_PANEL_FG,
                             }}
                           >
                             {payLaterPayment.isPending

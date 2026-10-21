@@ -46,6 +46,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import { PersonalizedGreeting } from "./personalization";
 import { SkipLink } from "@/lib/a11y";
+import { INK_ON_EMERALD } from "@/theme/tokens";
 import { useLogout } from "@/hooks";
 
 const { Sider, Header, Content } = Layout;
@@ -180,7 +181,7 @@ export default function DashboardLayout({
   const logoMark = (
     <div
       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl font-bold shadow-lg"
-      style={{ backgroundColor: "var(--ant-color-primary)", color: "#06281F" }}
+      style={{ backgroundColor: "var(--ant-color-primary)", color: INK_ON_EMERALD }}
     >
       U
     </div>

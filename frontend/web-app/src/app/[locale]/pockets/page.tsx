@@ -824,7 +824,7 @@ export default function PocketsPage() {
                                 <Tag
                                   bordered={false}
                                   color={token.colorPrimary}
-                                  style={{ borderRadius: 999, fontWeight: 700 }}
+                                  style={{ borderRadius: 9999, fontWeight: 700 }}
                                 >
                                   {t("interestRate", {
                                     rate: goal.interestRate ?? "",
@@ -1083,6 +1083,7 @@ export default function PocketsPage() {
                       styles={{ body: { padding: 0 } }}
                     >
                       <div
+                        className="payu-focus-ring"
                         role="button"
                         tabIndex={0}
                         onClick={() =>

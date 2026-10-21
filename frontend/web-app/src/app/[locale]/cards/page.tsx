@@ -599,7 +599,7 @@ export default function CardsPage() {
                           fontSize: 12,
                           fontWeight: 700,
                           letterSpacing: "0.1em",
-                          borderRadius: 999,
+                          borderRadius: 9999,
                           marginInlineEnd: 0,
                         }}
                       >
