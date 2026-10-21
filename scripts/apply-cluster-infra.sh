@@ -40,9 +40,23 @@ oc apply -f "$BASE_DIR/cost/kubedescheduler.yaml"
 
 # Service Mesh & GitOps (various operator namespaces)
 echo "[8/8] Service Mesh, Istio CNI, Kiali, GitOps, Pipelines, RHDH..."
-oc apply -f "$BASE_DIR/mesh/service-mesh.yaml"
-oc apply -f "$BASE_DIR/mesh/istio-cni.yaml"
-oc apply -f "$BASE_DIR/mesh/kiali.yaml"
+# OSSM 3.4 control plane: istio-system + istio-cni namespaces, IstioCNI CR, Istio CR
+oc apply -f "$BASE_DIR/mesh/base/namespace.yaml"
+oc apply -f "$BASE_DIR/mesh/base/istio-cni.yaml"
+oc apply -f "$BASE_DIR/mesh/base/service-mesh.yaml"
+# Legacy Kiali CR — the CRD comes from the separate kiali-operator
+# subscription, not from OSSM 3.4, so skip it when the operator is absent.
+if oc get crd kialis.kiali.io &> /dev/null; then
+    oc apply -f "$BASE_DIR/mesh/base/kiali.yaml"
+else
+    echo "     kiali-operator CRD not found - skipping Kiali CR"
+fi
+# Dev-scoped mesh policy (PERMISSIVE mTLS in payu-dev)
+if oc get namespace payu-dev &> /dev/null; then
+    oc apply -k "$BASE_DIR/mesh/overlays/payu-dev"
+else
+    echo "     payu-dev namespace not found - skipping dev mesh overlay"
+fi
 oc apply -f "$BASE_DIR/cicd/argocd/gitops.yaml"
 oc apply -f "$BASE_DIR/cicd/tekton/pipelines.yaml"
 oc apply -f "$BASE_DIR/devportal/rhdh.yaml"

@@ -1063,7 +1063,7 @@ C4Deployment
 
   Deployment_Node(network, "Network Security Layer", "OpenShift NetworkPolicy") {
     Container(np, "Default-deny + allow rules", "NetworkPolicy", "Per-namespace zero-trust; egress allow-all pola dev")
-    Container(mtls, "Service Mesh mTLS", "Istio (UAT+)", "PeerAuthentication STRICT")
+    Container(mtls, "Service Mesh mTLS", "Istio (live payu-dev, STRICT UAT+)", "PeerAuthentication PERMISSIVE (dev) / STRICT (UAT+)")
   }
 
   Deployment_Node(platform, "Application Platform", "OpenShift 4.22+") {
@@ -1196,20 +1196,38 @@ C4Component
 
 ### 7.2 Istio Service Mesh
 
-> Status: manifests di `infrastructure/platform/mesh/` (Service Mesh/OSSM 3.4).
-> Enforcement STRICT untuk UAT ke atas; `payu-dev` memakai NetworkPolicy
-> (egress allow-all pola dev, zero-trust ingress) — lihat INFRASTRUCTURE_DEPLOYMENT.md.
+> **Status**: **LIVE di `payu-dev` (2026-10-21)** — OpenShift Service Mesh **3.4** via **Sail Operator**
+> (`servicemeshoperator3.v3.4.3`, CRD `sailoperator.io/v1`: `Istio` + `IstioCNI`, **bukan** CRD Maistra 2.x
+> `ServiceMeshControlPlane`/`ServiceMeshMemberRoll`). Manifest control plane:
+> `infrastructure/platform/mesh/base/` (namespace `istio-system` = mesh root + `istio-cni`, `IstioCNI` CR,
+> `Istio` CR `spec.version: v1.30.5`); policy per env: `infrastructure/platform/mesh/overlays/payu-dev/`.
+> Lihat [ADR-0072](../adr/0072-openshift-service-mesh-3-4-sail-operator-dev-rollout.md).
+>
+> - `payu-dev`: **24 service app-tier sudah di-mesh** (injection opt-in per deployment lewat label
+>   `sidecar.istio.io/inject: "true"` di pod template), **PERMISSIVE** — NetworkPolicy tetap yang membawa
+>   ingress/egress dev (egress allow-all, zero-trust ingress). Auto-mTLS Istio **tetap** menaikkan traffic
+>   mesh-to-mesh ke **mutual TLS**: `connection_security_policy="mutual_tls"` pada `istio_requests_total`
+>   (23 `mutual_tls` + 2 `none` dari sumber non-mesh: probe kubelet & OpenShift router).
+> - **STRICT mTLS + `AuthorizationPolicy` dari `payu-uat` ke atas** (`payu-uat`, `payu-preprod`, `payu`);
+>   `payu-sit` PERMISSIVE. Dev **tidak punya Istio ingress gateway** — trafik eksternal dilayani OpenShift router.
+> - `DestinationRule` circuit breaker untuk `*.payu.svc.cluster.local` (lihat YAML di bawah) kini **legacy asset**:
+>   tidak lagi dirujuk `base/kustomization.yaml` dan belum di-apply; harus di-rework untuk OSSM 3.4.
 
 ```yaml
+# infrastructure/platform/mesh/overlays/payu-dev/peer-authentication.yaml — nyata, sudah di-apply di payu-dev
 apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
-  name: default
-  namespace: payu
+  name: permissive-mtls
+  namespace: payu-dev
 spec:
   mtls:
-    mode: STRICT
----
+    mode: PERMISSIVE
+```
+
+```yaml
+# infrastructure/platform/mesh/base/destination-rules.yaml — LEGACY (Maistra-era), BELUM di-apply.
+# Tidak dirujuk base/kustomization.yaml; tampil sebagai kontrak target, bukan state live.
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
@@ -2040,7 +2058,7 @@ Phase 7: Integration
 | PostgreSQL      | 16.x (CNPG 1.30) |
 | Data Grid       | 8.x (Hot Rod / REST v2) |
 | OpenShift       | 4.22+     |
-| Service Mesh    | Istio (OSSM 3.4, UAT+) |
+| Service Mesh    | Istio (OSSM 3.4, live payu-dev; STRICT UAT+) |
 
 ### B. Compliance Checklist
 

@@ -1,51 +1,25 @@
-# Kustomization for OpenShift Service Mesh 3.x (Sail Operator)
-# OSSM 3.x uses sailoperator.io/v1 instead of maistra.io/v2
-
+# Root entrypoint for the OpenShift Service Mesh 3.4 control plane.
+#
+# OSSM 3.x installs the control plane through the sailoperator.io/v1
+# `Istio` and `IstioCNI` custom resources — there is no
+# ServiceMeshControlPlane/ServiceMeshMemberRoll any more (ADR-0069).
+#
+# `base/` holds the cluster-wide control plane: the istio-system and
+# istio-cni namespaces, the IstioCNI CR and the Istio CR. Per-environment
+# policy overlays live in `overlays/<env>/` and are applied on top of this
+# root:
+#
+#   oc apply -k infrastructure/platform/mesh
+#   oc apply -k infrastructure/platform/mesh/overlays/payu-dev
+#
+# The overlays are deliberately not referenced from here: the payu-dev
+# overlay sets `namespace: payu-dev`, which would move the namespaced
+# `Istio` CR out of istio-system and break the control plane.
+#
+# Labels are applied by base/kustomization.yaml (includeSelectors: false),
+# so this root stays free of transformers and image overrides.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Resources in order of application:
-# 1. Namespace + control plane support (network policies, HPA, PDB)
-# 2. IstioCNI (must be ready before Istio CR)
-# 3. Istio CR (creates the control plane: istiod + ingress/egress gateways)
-# 4. Gateway + VirtualService (depends on control plane)
-# 5. DestinationRules (depends on control plane)
-# 6. PeerAuthentication + AuthorizationPolicy (depends on services being in mesh)
-# 7. Rate limit service (depends on control plane)
-# 8. Security headers (depends on ingress gateway)
 resources:
-  - control-plane.yaml
-  - istio-cni.yaml
-  - service-mesh.yaml
-  - gateway.yaml
-  - destination-rules.yaml
-  - peer-authentication.yaml
-  - ratelimit-service.yaml
-  - security-headers.yaml
-
-labels:
-  - pairs:
-      app.kubernetes.io/part-of: payu
-      app.kubernetes.io/managed-by: kustomize
-      app.kubernetes.io/component: service-mesh
-    includeSelectors: true
-
-configMapGenerator:
-  - name: mesh-config
-    literals:
-      - MESH_ID=mesh1
-      - TRUST_DOMAIN=payu.local
-      - ENABLE_AUTO_MTLS=true
-      - ENABLE_TRACING=true
-      - TRACING_SAMPLING=10000
-
-# `payu-ingress-cert` and `payu-ingress-ca` are provisioned externally by the
-# certificate workflow. Private keys must not be kept in this repository.
-
-images:
-  - name: gcr.io/istio-testing/pilot
-    newName: registry.redhat.io/openshift-service-mesh/istio-pilot-rhel8
-    newTag: 2.6.0
-  - name: gcr.io/istio-testing/proxyv2
-    newName: registry.redhat.io/openshift-service-mesh/istio-proxyv2-rhel8
-    newTag: 2.6.0
+  - base

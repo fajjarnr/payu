@@ -357,6 +357,25 @@ graph LR
 
 #### 4.5.2 Service Mesh & mTLS
 
+> **Status live (2026-10-21)**: OpenShift Service Mesh **3.4** via **Sail Operator**
+> (`servicemeshoperator3.v3.4.3`) **sudah terpasang dan jalan di `payu-dev`** (cluster `payu-drrpz`, OCP 4.22.18).
+> Control plane dibuat lewat CRD `sailoperator.io/v1` — `Istio` CR `default` di `istio-system`
+> (`spec.version: v1.30.5`, `profile: default`, `updateStrategy: InPlace`) dan `IstioCNI` CR `default` di
+> `istio-cni`; **CRD Maistra 2.x (`ServiceMeshControlPlane`/`ServiceMeshMemberRoll`) tidak ada lagi**.
+> `istiod` sukses roll out, `istio-cni-node` DaemonSet **4/4** ready, status kedua CR **Healthy**,
+> `oc apply --dry-run=server -k infrastructure/platform/mesh/base` → 4 resource `unchanged` (tanpa drift).
+> **24 service app-tier sudah di-mesh** di `payu-dev` via opt-in per deployment (label
+> `sidecar.istio.io/inject: "true"` di pod template) — 5 simulator eksternal + `web-app` sengaja tidak di-mesh
+> (injection namespace-wide akan merusak pod CNPG/Strimzi/DataGrid/Keycloak).
+> **Dev PERMISSIVE by design** (NetworkPolicy tetap yang membawa ingress/egress dev), tetapi auto-mTLS Istio
+> **tetap** menaikkan traffic mesh-to-mesh ke **mutual TLS** — terbukti pada
+> `istio_requests_total{connection_security_policy="mutual_tls"}` (23 `mutual_tls` + 2 `none` dari sumber
+> non-mesh: probe kubelet + OpenShift router). **STRICT mTLS + `AuthorizationPolicy` dari `payu-uat` ke atas**
+> belum dieksekusi di env tsb (env sit/uat/preprod/prod belum di-bootstrap).
+> **Tidak ada Istio ingress gateway di dev** — trafik eksternal dilayani OpenShift shared router (cluster tak
+> punya node ber-label router). **Kiali belum di-deploy** (service graph dari UI belum tersedia; metrik tetap
+> ada via Prometheus). Referensi: [ADR-0072](../adr/0072-openshift-service-mesh-3-4-sail-operator-dev-rollout.md).
+
 - **OpenShift Service Mesh (OSSM/Istio)** — mTLS mandatory antar semua service di `payu-uat` ke atas
 - `PeerAuthentication: STRICT` mode di namespace `payu-uat`, `payu-preprod`, `payu`
 - `AuthorizationPolicy` — explicit allow-listing, **deny by default** untuk semua ingress/egress
@@ -584,7 +603,7 @@ graph LR
   - ZAP baseline scan dijalankan untuk environment `dev` dan `sit` setelah ArgoCD sync wait
   - Schemathesis API fuzzing dijalankan untuk environment `sit` dan `uat` setelah ZAP baseline
   - Pipeline: `payu-deploy-gitops-pipeline` di-update dengan steps `dev-zap-baseline`, `sit-zap-baseline`, `sit-schemathesis`, `uat-schemathesis`
-- [ ] 🔵 Service Mesh Operator tersedia, tetapi tidak ada live `Istio` control plane atau namespace injection. Manifest lama tidak diterapkan sebelum render, scheduling, dan egress policy tervalidasi.
+- [x] 🔵 Service Mesh live di `payu-dev` (OSSM 3.4 via Sail Operator, Istio v1.30.5): control plane `Istio` + `IstioCNI` CR Healthy, 24 service app-tier di-mesh (injection opt-in per deployment), mutual TLS mesh-to-mesh terbukti. Manifest lama (Maistra-era) tetap dikuarantin dari jalur apply control plane. STRICT + `AuthorizationPolicy` menyusul dari `payu-uat` ke atas.
 - [x] 🟡 ComplianceOperator menjalankan profil CIS 1.9 dan PCI-DSS 4.0 mingguan; hasil awal `NON-COMPLIANT` dan remediasi tetap manual.
 - [ ] 🟡 Wazuh belum ada di live cluster. Manifest community yang privileged/tidak random-UID-compatible tidak diterapkan.
 - [ ] 🔵 Migrasi secret menunggu Vault/secret store production-grade; secret statik tidak dianggap selesai.
@@ -716,7 +735,7 @@ graph LR
 - [x] ✅ Tekton tasks/pipelines, fail-closed Java/Python/Next.js tests, digest-pinned scanner images, digest promotion, SBOM contract
 - [ ] ❌ Chains image signing terbukti, tetapi Rekor, key backup/rotation, SBOM attestation retention, dan signed-image admission verification belum selesai
 - [ ] ❌ ArgoCD Applications, drift reconciliation, dan Git write-back belum aktif
-- [ ] ❌ Service Mesh mTLS/AuthorizationPolicy belum aktif
+- [ ] 🟡 Service Mesh mTLS aktif di `payu-dev` (auto-mTLS mutual TLS, 24 service); STRICT mTLS + `AuthorizationPolicy` belum aktif karena `payu-uat`/`payu-preprod`/`payu` belum di-bootstrap
 - [ ] ❌ Vault HA/auto-unseal/backup dan VSO secret store belum tersedia
 - [x] ✅ RHACS Central/SecuredCluster Ready; admission fail-closed, privileged policy, dan scoped short-lived CI identity terbukti melalui `roxctl`
 - [ ] ❌ Wazuh/SIEM, Loki object storage, immutable log archive belum tersedia

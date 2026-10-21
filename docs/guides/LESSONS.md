@@ -1,5 +1,13 @@
 # 🧠 PayU Lessons Learned (Session Log)
 
+## L-428: Envoy cuma buat listener untuk port yang dideklarasikan `containerPort` — Service expose 9090 tidak cukup (2026-10-21)
+
+**Context**: rollout Service Mesh OSSM 3.4 di `payu-dev` (sidecar native Istio 1.30). Tiga service punya server gRPC di 9090 (`account-service`, `transaction-service`, `wallet-service` — `@GrpcService` + listener live :9090). Setelah sidecar terpasang, `account-service` dan `transaction-service` **tidak** punya inbound listener 9090 padahal Service-nya sudah mengekspos 9090 — Envoy **hanya** bikin inbound listener untuk port yang dideklarasikan sebagai `containerPort` di pod spec, jadi port gRPC di-blackhole begitu traffic masuk lewat sidecar. `wallet-service` aman karena pod spec-nya memang sudah mendeklarasikan `containerPort: 9090`. Service client-only (billing, fx, investment, lending, promotion, statement) tak perlu perubahan sama sekali — masalahnya hanya di sisi server.
+
+**Fix**: `containerPort: 9090` (name `grpc`) ditambahkan ke `infrastructure/workloads/base/account-service/deployment.yaml` dan `.../transaction-service/deployment.yaml`. Setelah itu inbound listener: account `[8080,9090]`, transaction `[8080,9090]`, wallet `[8080,9090]`, cms `[8080]`, billing `[8080]`, dan panggilan live tercatat di proxy access log: `path=/payu.account.AccountService/GetAccountsByUser upstream=outbound|9090||account-service.payu-dev.svc.cluster.local response_code=200`.
+
+**Pelajaran**: **(1)** "Service sudah ekspos port" ≠ "pod mendeklarasikan port" — begitu sidecar masuk, **pod spec** yang jadi acuan Envoy, dan port yang tak deklarasikan jadi blackhole senyap (bukan error startup). Setiap port yang dipakai server (gRPC/HTTP listener) **wajib** punya `containerPort` di pod template, dan itu harus dicek saat menambah sidecar, bukan setelah call gagal. **(2)** Bentuk sidecar Istio 1.30 bikin tooling lama salah baca: proxy ada di `spec.initContainers` (`istio-proxy` `restartPolicy: Always`), jadi `spec.containers` tetap cuma `app` — assertion "2 container" itu false negative; jangan pakai hitungan container untuk mendeteksi sidecar.
+
 ## L-427: Early-return tanpa reset loading = spinner abadi (2026-09-04)
 
 **Context**: riwayat e-statement tampil header + spinner selamanya. `loadStatements` early-return saat `accountId` null (store hydrate async, null saat mount) tanpa `setIsLoading(false)` — initial `true` tak pernah turun. Efek cuma jalan sekali pula, jadi akun yang datang belakangan tak pernah me-reload.

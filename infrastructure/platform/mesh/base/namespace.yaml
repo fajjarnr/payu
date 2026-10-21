@@ -1,0 +1,23 @@
+# Namespaces for the OpenShift Service Mesh 3.4 control plane.
+#
+# istio-system is the mesh root namespace: a PeerAuthentication placed here
+# is mesh-wide, and the Sail operator reads the root namespace from the
+# namespace the `Istio` CR installs into.
+#
+# istio-cni holds the istio-cni-node DaemonSet that installs the CNI plugin.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+    istio-operator-managed: Reconcile
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-cni
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh

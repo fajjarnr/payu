@@ -78,6 +78,7 @@ This directory contains the historical record of architectural decisions made fo
 | [0069](0069-openshift-4-22-platform-standard.md) | Red Hat OpenShift 4.22 Platform Standard | Accepted | 2026-08-24 |
 | [0070](0070-e2e-test-environment-strategy-standard.md) | E2E Test Environment Strategy — Tiered Local → SIT → Preprod Smoke | Accepted | 2026-08-26 |
 | [0071](0071-test-quality-gates-mutation-accessibility-exploratory-canary-standard.md) | Test Quality Gate Formalization — Mutation Scoring, A11y Gating, Exploratory Ritual & Canary Deferral | Accepted | 2026-08-26 |
+| [0072](0072-openshift-service-mesh-3-4-sail-operator-dev-rollout.md) | OpenShift Service Mesh 3.4 (Sail Operator) — Dev Rollout | Accepted | 2026-10-21 |
 
 ### B4.6 Go/No-Go Decision 2026-08-24 (ADR-0067 / ADR-0068)
 

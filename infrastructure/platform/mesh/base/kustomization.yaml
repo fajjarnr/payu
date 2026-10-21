@@ -1,0 +1,34 @@
+# Kustomization for OpenShift Service Mesh 3.4 (Sail Operator)
+# OSSM 3.x installs the control plane through the sailoperator.io/v1
+# `Istio` and `IstioCNI` custom resources — there is no
+# ServiceMeshControlPlane/ServiceMeshMemberRoll any more (ADR-0069).
+#
+# Resources in application order:
+# 1. istio-system + istio-cni namespaces (the CRs target them explicitly)
+# 2. IstioCNI CR — installs the CNI plugin that gives sidecars their
+#    iptables redirect without a privileged init container
+# 3. Istio CR — installs the control plane (istiod) in istio-system
+#
+# The legacy Maistra-era / prod-ingress assets in this directory are NOT
+# listed here and are not applied by this kustomization:
+# control-plane.yaml, gateway.yaml, destination-rules.yaml,
+# ratelimit-service.yaml, security-headers.yaml, kiali.yaml, certs/,
+# gateway-api/, peer-authentication.yaml.
+# peer-authentication.yaml in particular carries a root-namespace STRICT
+# policy that would bind sibling namespaces (payu-sit, payu-uat) on a
+# cluster that also hosts payu-dev; the dev policy lives in
+# overlays/payu-dev/ instead.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - istio-cni.yaml
+  - service-mesh.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: payu
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/component: service-mesh
+    includeSelectors: false

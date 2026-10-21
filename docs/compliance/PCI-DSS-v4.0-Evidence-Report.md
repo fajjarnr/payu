@@ -37,7 +37,7 @@ This report documents the implementation status of PCI-DSS v4.0 requirements for
 
 ### 1.2 Service Mesh mTLS
 - **Control:** Istio PeerAuthentication STRICT in payu-uat, payu-preprod, payu
-- **Evidence:** `infrastructure/platform/mesh/peer-authentication.yaml`
+- **Evidence:** `infrastructure/platform/mesh/base/peer-authentication.yaml` (legacy prod-ingress asset, not applied by the dev control plane; dev posture lives in `infrastructure/platform/mesh/overlays/payu-dev/`)
 
 ---
 
@@ -106,7 +106,7 @@ This report documents the implementation status of PCI-DSS v4.0 requirements for
 
 ### 7.2 Service Mesh Authorization
 - **Control:** Istio AuthorizationPolicy deny-by-default + explicit allow
-- **Evidence:** `infrastructure/platform/mesh/peer-authentication.yaml` (AuthorizationPolicy section)
+- **Evidence:** `infrastructure/platform/mesh/base/peer-authentication.yaml` (AuthorizationPolicy section; legacy prod-ingress asset, not applied by the dev control plane)
 
 ---
 

@@ -1,5 +1,14 @@
 # Certificate Management for Service Mesh
 
+> **LEGACY prod-ingress assets.** This directory describes the certificates of
+> the legacy prod ingress Gateway (`payu-ingress-cert` / `payu-ingress-ca`),
+> which are provisioned out-of-band. Those assets are **not** applied by
+> `base/kustomization.yaml`, and dev has **no Istio ingress gateway** — external
+> traffic in dev is served by the OpenShift **default IngressController** on the
+> cluster domain `apps.payu.ocp.fajjjar.my.id`. The cert files in this
+> directory are public CA/TLS certificates only; no private keys are kept in
+> this repository.
+
 This directory contains TLS certificates for the PayU Digital Banking Platform Service Mesh.
 
 ## Required Certificates
@@ -150,14 +159,19 @@ openssl verify -CAfile ca.crt tls.crt
 ### Validate mTLS
 
 ```bash
-# Test mTLS connection
-oc exec -it account-service-xxx -n payu -c istio-proxy -- \
-  openssl s_client -connect auth-service:8082 -alpn istio
+# Inspect the proxy's outbound cluster for the peer service
+# (the istio-proxy image ships no curl/openssl — use pilot-agent)
+oc exec -n payu-dev deploy/account-service -c istio-proxy -- \
+  pilot-agent request GET config_dump | grep -A5 'outbound|.*auth-service'
+
+# Check the negotiated transport security
+oc exec -n payu-dev deploy/account-service -c app -- \
+  curl -s localhost:15090/stats/prometheus \
+  | grep -o 'connection_security_policy="[a-z_]*"' | sort -u
 
 # Should show:
-# - TLS handshake successful
-# - Certificate presented
-# - Verify return code: 0 (ok)
+# - "name": "outbound|8080||auth-service.payu-dev.svc.cluster.local"
+# - connection_security_policy="mutual_tls"
 ```
 
 ## Security Notes

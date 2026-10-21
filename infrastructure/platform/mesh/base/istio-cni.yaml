@@ -1,0 +1,21 @@
+# OpenShift Service Mesh 3.4 CNI plugin (Sail Operator `IstioCNI` CR).
+#
+# The plugin sets up the sidecar's traffic redirect without the privileged
+# `istio-init` container, so injected pods stay compatible with the
+# restricted-v2 SCC. The operator requires the CR to be named "default".
+#
+# The multus provider is what the operator's OpenShift profile expects: the
+# plugin publishes a NetworkAttachmentDefinition (default/istio-cni) that
+# the multus daemonset picks up, so the redirect happens before the pod
+# network is finalised.
+apiVersion: sailoperator.io/v1
+kind: IstioCNI
+metadata:
+  name: default
+  namespace: istio-cni
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  version: v1.30.5
+  namespace: istio-cni

@@ -10,5 +10,6 @@ labels:
     app.kubernetes.io/name: partner-service
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/version: 1.18.78
+    sidecar.istio.io/inject: "true"
   includeSelectors: false
   includeTemplates: true

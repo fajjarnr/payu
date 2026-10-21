@@ -116,7 +116,8 @@ rules:
   - apiGroups: ["rhpam.kiegroup.org"]
     resources: ["*"]
     verbs: ["create", "update", "patch", "delete"]
-  - apiGroups: ["maistra.io"]
+  # OSSM 3.x Sail Operator CRDs (Istio, IstioCNI) — replaces maistra.io
+  - apiGroups: ["sailoperator.io"]
     resources: ["*"]
     verbs: ["*"]
   - apiGroups: ["networking.istio.io"]

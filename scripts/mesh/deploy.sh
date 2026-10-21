@@ -1,7 +1,17 @@
 #!/bin/bash
 
 # Service Mesh Deployment Script for PayU Digital Banking Platform
-# This script deploys the complete OpenShift Service Mesh configuration
+# OpenShift Service Mesh 3.4 (Sail Operator).
+#
+# The control plane is the sailoperator.io/v1 `Istio` + `IstioCNI` CRs in
+# infrastructure/platform/mesh/base; per-environment mesh policy lives in
+# infrastructure/platform/mesh/overlays/<env>.
+#
+# The legacy Maistra-era prod-ingress assets (base/gateway.yaml,
+# base/destination-rules.yaml, base/peer-authentication.yaml) are NOT applied
+# here: they target the prod namespaces and the prod ingress gateway, and
+# base/peer-authentication.yaml carries a root-namespace STRICT policy that
+# would bind payu-sit/payu-uat on a cluster that also hosts payu-dev.
 
 set -e
 
@@ -11,8 +21,10 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+MESH_DIR="$REPO_ROOT/infrastructure/platform/mesh"
 NAMESPACE="${NAMESPACE:-istio-system}"
-ENV="${ENV:-prod}"
+ENV="${ENV:-dev}"
 DRY_RUN="${DRY_RUN:-false}"
 
 log_info() {
@@ -25,6 +37,31 @@ log_warn() {
 
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Environment -> mesh overlay directory (only payu-dev exists today)
+overlay_dir() {
+    case "$1" in
+        dev) echo "payu-dev" ;;
+        sit) echo "payu-sit" ;;
+        uat) echo "payu-uat" ;;
+        preprod) echo "payu-preprod" ;;
+        prod) echo "payu" ;;
+        *) echo "" ;;
+    esac
+}
+
+apply() {
+    local target=$1
+    local flag="-f"
+    [ -d "$target" ] && flag="-k"
+
+    if [ "$DRY_RUN" = "true" ]; then
+        log_warn "DRY RUN: Would apply $flag $target"
+        oc apply --dry-run=client "$flag" "$target" >/dev/null
+    else
+        oc apply "$flag" "$target"
+    fi
 }
 
 check_prerequisites() {
@@ -40,8 +77,8 @@ check_prerequisites() {
         exit 1
     fi
 
-    if ! oc get csv -n openshift-operators | grep -q "service-mesh"; then
-        log_warn "Service Mesh Operator not found. Installing..."
+    if ! oc get csv -n openshift-operators | grep -qi "servicemesh"; then
+        log_warn "Sail Operator (servicemeshoperator3) not found in openshift-operators."
     fi
 
     log_info "Prerequisites check passed."
@@ -57,142 +94,82 @@ wait_for_pod() {
 }
 
 deploy_control_plane() {
-    log_info "Deploying Service Mesh Control Plane..."
+    log_info "Deploying Service Mesh control plane (Istio + IstioCNI CRs)..."
+
+    apply "$MESH_DIR/base"
 
     if [ "$DRY_RUN" = "true" ]; then
-        log_warn "DRY RUN: Would apply control-plane.yaml"
-        oc apply --dry-run=client -f "$SCRIPT_DIR/control-plane.yaml"
-    else
-        oc apply -f "$SCRIPT_DIR/control-plane.yaml"
-
-        log_info "Waiting for Istiod to be ready..."
-        wait_for_pod "$NAMESPACE" "app=istiod" 300
-
-        log_info "Waiting for Ingress Gateway to be ready..."
-        wait_for_pod "$NAMESPACE" "app=istio-ingressgateway" 300
-
-        log_info "Waiting for Egress Gateway to be ready..."
-        wait_for_pod "$NAMESPACE" "app=istio-egressgateway" 300
+        return
     fi
+
+    log_info "Waiting for istiod to be ready..."
+    wait_for_pod "$NAMESPACE" "app=istiod" 300
+
+    log_info "Waiting for the CNI plugin to be ready on every node..."
+    oc rollout status daemonset/istio-cni-node -n istio-cni --timeout=300s
 }
 
-deploy_gateway() {
-    log_info "Deploying Gateway configuration..."
+deploy_mesh_policy() {
+    local overlay
+    overlay="$(overlay_dir "$ENV")"
 
-    if [ "$DRY_RUN" = "true" ]; then
-        log_warn "DRY RUN: Would apply gateway.yaml"
-        oc apply --dry-run=client -f "$SCRIPT_DIR/gateway.yaml"
-    else
-        oc apply -f "$SCRIPT_DIR/gateway.yaml"
-        log_info "Gateway configuration applied."
+    if [ -z "$overlay" ]; then
+        log_warn "Unknown environment '$ENV' - skipping mesh policy."
+        return
     fi
-}
 
-deploy_destination_rules() {
-    log_info "Deploying Destination Rules..."
-
-    if [ "$DRY_RUN" = "true" ]; then
-        log_warn "DRY RUN: Would apply destination-rules.yaml"
-        oc apply --dry-run=client -f "$SCRIPT_DIR/destination-rules.yaml"
-    else
-        oc apply -f "$SCRIPT_DIR/destination-rules.yaml"
-        log_info "Destination rules applied."
+    if [ ! -d "$MESH_DIR/overlays/$overlay" ]; then
+        log_warn "No mesh overlay for '$overlay' yet - skipping mesh policy."
+        return
     fi
-}
 
-deploy_peer_authentication() {
-    log_info "Deploying Peer Authentication and Authorization Policies..."
-
-    if [ "$DRY_RUN" = "true" ]; then
-        log_warn "DRY RUN: Would apply peer-authentication.yaml"
-        oc apply --dry-run=client -f "$SCRIPT_DIR/peer-authentication.yaml"
-    else
-        oc apply -f "$SCRIPT_DIR/peer-authentication.yaml"
-        log_info "Peer authentication policies applied."
-    fi
-}
-
-enable_sidecar_injection() {
-    log_info "Enabling sidecar injection for namespaces..."
-
-    local namespaces=("payu" "payu-preprod" "payu-uat" "payu-sit" "payu-dev")
-
-    for ns in "${namespaces[@]}"; do
-        if [ "$DRY_RUN" = "true" ]; then
-            log_warn "DRY RUN: Would label namespace $ns"
-        else
-            if oc get namespace "$ns" &> /dev/null; then
-                oc label namespace "$ns" "maistra.io/member-of=istio-system" --overwrite
-                log_info "Enabled sidecar injection for namespace: $ns"
-            else
-                log_warn "Namespace $ns does not exist. Skipping."
-            fi
-        fi
-    done
+    log_info "Deploying mesh policy for $overlay..."
+    apply "$MESH_DIR/overlays/$overlay"
 }
 
 verify_deployment() {
     log_info "Verifying Service Mesh deployment..."
 
-    log_info "Checking control plane pods..."
-    oc get pods -n "$NAMESPACE" | grep -E "istiod|ingressgateway|egressgateway"
+    log_info "Checking control plane CRs..."
+    oc get istios.sailoperator.io -A
+    oc get istiocnis.sailoperator.io -A
 
-    log_info "Checking ServiceMeshMemberRoll..."
-    oc get servicemeshmemberroll -n "$NAMESPACE"
+    log_info "Checking control plane pods..."
+    oc get pods -n "$NAMESPACE"
+    oc get pods -n istio-cni
 
     log_info "Checking PeerAuthentication resources..."
     oc get peerauthentication -A
-
-    log_info "Checking DestinationRules..."
-    oc get destinationrules -A
-
-    log_info "Checking VirtualServices..."
-    oc get virtualservices -A
 }
 
 print_next_steps() {
     log_info "Deployment complete!"
     echo ""
     echo "Next steps:"
-    echo "1. Restart your deployments to inject sidecars:"
-    echo "   oc rollout restart deployment/account-service -n payu"
-    echo "   oc rollout restart deployment/auth-service -n payu"
-    echo "   oc rollout restart deployment/transaction-service -n payu"
-    echo "   oc rollout restart deployment/wallet-service -n payu"
-    echo ""
-    echo "2. Verify sidecar injection:"
-    echo "   oc get pods -n payu"
-    echo "   # Each pod should have 2/2 containers"
-    echo ""
-    echo "3. Access Kiali dashboard:"
-    echo "   oc port-forward -n $NAMESPACE svc/kiali 20001:20001"
-    echo "   # Open http://localhost:20001"
-    echo ""
-    echo "4. Access Jaeger dashboard:"
-    echo "   oc port-forward -n $NAMESPACE svc/jaeger-query 16686:16686"
-    echo "   # Open http://localhost:16686"
-    echo ""
+    echo "1. Opt a workload into the mesh (pod template label):"
+    echo "   sidecar.istio.io/inject: \"true\""
+    echo "2. Restart the deployment so the sidecar is injected:"
+    echo "   oc rollout restart deployment/account-service -n payu-dev"
+    echo "3. Verify the sidecar is present (istio-proxy initContainer):"
+    echo "   oc get pods -n payu-dev -o jsonpath='{range .items[*]}{.metadata.name}{'  '}{.spec.initContainers[*].name}{'\\n'}{end}'"
 }
 
 print_usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  -e, --environment ENV   Target environment (prod, uat, sit, dev) [default: prod]"
-    echo "  -n, --namespace NS      Target namespace [default: istio-system]"
+    echo "  -e, --environment ENV   Target environment (dev, sit, uat, preprod, prod) [default: dev]"
+    echo "  -n, --namespace NS      Control plane namespace [default: istio-system]"
     echo "  -d, --dry-run           Show what would be applied without applying"
-    echo "  -s, --step STEP         Deploy specific step (1-5)"
+    echo "  -s, --step STEP         Deploy specific step (1-2)"
     echo "  -h, --help              Show this help message"
     echo ""
     echo "Steps:"
-    echo "  1 - Deploy control plane"
-    echo "  2 - Deploy gateway"
-    echo "  3 - Deploy destination rules"
-    echo "  4 - Deploy peer authentication"
-    echo "  5 - Enable sidecar injection"
+    echo "  1 - Deploy control plane (Istio + IstioCNI CRs)"
+    echo "  2 - Deploy mesh policy for the environment"
     echo ""
     echo "Examples:"
-    echo "  $0                          # Deploy all components"
+    echo "  $0                          # Deploy all steps"
     echo "  $0 -e dev                   # Deploy for development environment"
     echo "  $0 -d                       # Dry run (show what would be applied)"
     echo "  $0 -s 1                     # Deploy only control plane"
@@ -237,35 +214,13 @@ main() {
 
     check_prerequisites
 
-    case $STEP in
-        1|"")
-            deploy_control_plane
-            ;;
-    esac
+    if [ -z "$STEP" ] || [ "$STEP" = "1" ]; then
+        deploy_control_plane
+    fi
 
-    case $STEP in
-        2|"")
-            [ -z "$STEP" ] || { sleep 5; deploy_gateway; }
-            ;;
-    esac
-
-    case $STEP in
-        3|"")
-            [ -z "$STEP" ] || { sleep 2; deploy_destination_rules; }
-            ;;
-    esac
-
-    case $STEP in
-        4|"")
-            [ -z "$STEP" ] || { sleep 2; deploy_peer_authentication; }
-            ;;
-    esac
-
-    case $STEP in
-        5|"")
-            [ -z "$STEP" ] || { sleep 2; enable_sidecar_injection; }
-            ;;
-    esac
+    if [ -z "$STEP" ] || [ "$STEP" = "2" ]; then
+        deploy_mesh_policy
+    fi
 
     if [ -z "$STEP" ] && [ "$DRY_RUN" = "false" ]; then
         verify_deployment

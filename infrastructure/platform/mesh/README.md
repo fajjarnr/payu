@@ -1,471 +1,227 @@
-# OpenShift Service Mesh Configuration
+# OpenShift Service Mesh 3.4 (Sail Operator)
 
-> Istio-based service mesh configuration for PayU Digital Banking Platform on Red Hat OpenShift 4.22+
+> Istio-based service mesh for PayU Digital Banking Platform on Red Hat OpenShift 4.22+.
 
 ## Overview
 
-This directory contains the complete Service Mesh (Istio) configuration for the PayU Digital Banking Platform. The service mesh provides:
+The mesh runs on **OpenShift Service Mesh 3.4** with the **Sail Operator**
+(`servicemeshoperator3.v3.4.3`). In OSSM 3.x there is no `ServiceMeshControlPlane`
+and no `ServiceMeshMemberRoll`; the control plane is created by a
+`sailoperator.io/v1` custom resource.
 
-- **Zero Trust Security**: mTLS (mutual TLS) for all service-to-service communication
-- **Traffic Management**: Load balancing, circuit breaking, and traffic splitting
-- **Observability**: Distributed tracing, metrics, and logging
-- **Resilience**: Automatic retries, timeouts, and fault injection
+| Resource | API group / kind | Name | Namespace | Purpose |
+| --- | --- | --- | --- | --- |
+| Control plane | `istios.sailoperator.io/v1` `Istio` | `default` | `istio-system` | Installs istiod (and, when configured, gateways) |
+| CNI plugin | `istiocnis.sailoperator.io/v1` `IstioCNI` | `default` | `istio-cni` | Installs the CNI plugin that redirects sidecar traffic without a privileged init container |
 
-## Architecture
+Both CRs **must** be named `default` — the operator rejects other names.
+
+Namespaces:
+
+| Namespace | Role |
+| --- | --- |
+| `istio-system` | Mesh root namespace. The `Istio` CR installs istiod here; a `PeerAuthentication` placed here applies mesh-wide. |
+| `istio-cni` | Holds the `istio-cni-node` DaemonSet that installs the CNI plugin. |
+
+The control plane version is pinned in the CRs (`spec.version: v1.30.5`). The Sail
+operator resolves the matching Red Hat registry image itself — **do not** add
+`images:` overrides in kustomize, they would fight the operator and break the
+control plane.
+
+## Layout
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         OPENSHIFT SERVICE MESH                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                    ISTIO CONTROL PLANE (istio-system)                │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐     │   │
-│  │  │   Istiod   │  │  Ingress   │  │   Egress   │  │   Citadel  │     │   │
-│  │  │  (Pilot)   │  │  Gateway   │  │  Gateway   │  │    (CA)    │     │   │
-│  │  └────────────┘  └────────────┘  └────────────┘  └────────────┘     │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                    │                                          │
-│  ┌─────────────────────────────────┼──────────────────────────────────────┐  │
-│  │                                 │                                      │  │
-│  │  ┌─────────────┐    ┌──────────▼──────────┐    ┌─────────────┐       │  │
-│  │  │   Account   │    │   Gateway Service   │    │  Wallet     │       │  │
-│  │  │   Service   │◄───┤                    ├───►│   Service   │       │  │
-│  │  │  (mTLS)     │    │      (mTLS)         │    │   (mTLS)    │       │  │
-│  │  └─────────────┘    └─────────────────────┘    └─────────────┘       │  │
-│  │                                                                      │  │
-│  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐              │  │
-│  │  │    Auth     │    │ Transaction │    │  Billing    │              │  │
-│  │  │   Service   │    │   Service   │    │   Service   │              │  │
-│  │  │   (mTLS)    │    │    (mTLS)   │    │    (mTLS)   │              │  │
-│  │  └─────────────┘    └─────────────┘    └─────────────┘              │  │
-│  │                                                                      │  │
-│  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐              │  │
-│  │  │    KYC      │    │   Notify    │    │ Analytics   │              │  │
-│  │  │   Service   │    │   Service   │    │   Service   │              │  │
-│  │  │   (mTLS)    │    │    (mTLS)   │    │    (mTLS)   │              │  │
-│  │  └─────────────┘    └─────────────┘    └─────────────┘              │  │
-│  └──────────────────────────────────────────────────────────────────────┘  │
-│                                                                              │
-│  All services communicate via mTLS (encrypted, authenticated)              │
-│  Envoy sidecar proxy injected into each pod                                │
-└─────────────────────────────────────────────────────────────────────────────┘
+infrastructure/platform/mesh/
+├── base/                  # control plane (any cluster)
+│   ├── namespace.yaml     # istio-system + istio-cni namespaces
+│   ├── istio-cni.yaml     # IstioCNI CR
+│   ├── service-mesh.yaml  # Istio CR
+│   └── kustomization.yaml
+├── overlays/
+│   └── payu-dev/          # dev-scoped PeerAuthentication (PERMISSIVE mTLS)
+├── kustomization.yaml     # root entrypoint -> base
+└── README.md
 ```
 
-## Files
+### What is applied where
 
-| File                       | Description                                                                   |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| `control-plane.yaml`       | ServiceMeshControlPlane, ServiceMeshMemberRoll, HPA, PDB                      |
-| `gateway.yaml`             | Ingress Gateway, VirtualServices, AuthorizationPolicy, JWT                    |
-| `gateway-api/`             | Optional Kubernetes Gateway API package that reuses the Istio ingress service |
-| `destination-rules.yaml`   | DestinationRules, traffic policies, load balancing                            |
-| `peer-authentication.yaml` | PeerAuthentication, AuthorizationPolicies, RequestAuthN                       |
+| Path | Applied | Contents |
+| --- | --- | --- |
+| `base/` | **First** — any cluster | The control plane: `istio-system` + `istio-cni` namespaces, `IstioCNI` CR, `Istio` CR. Applied by the root kustomization. |
+| `overlays/payu-dev/` | **Second** — `payu-dev` only | Dev-scoped `PeerAuthentication` — **PERMISSIVE** mTLS, namespace-scoped, no selector. STRICT mTLS is enforced from UAT upward per `docs/adr/0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md` and `docs/architecture/DEVSECOPS_ARCHITECTURE.md`. |
+
+Per-environment overlays are **not** referenced from the root kustomization: the
+`payu-dev` overlay sets `namespace: payu-dev`, and pulling it into the root
+would move the namespaced `Istio` CR out of `istio-system` and break the
+control plane.
+
+### Legacy Maistra-era assets still in `base/`
+
+The following files in `base/` are the **legacy Maistra 2.x / prod-ingress
+assets**. They are **not** referenced by `base/kustomization.yaml`, so they are
+not applied by the dev control plane, and they still need rework for OSSM 3.4
+before prod/UAT ingress work can rely on them:
+
+| File | Legacy content | Needs |
+| --- | --- | --- |
+| `base/control-plane.yaml` | Maistra-era namespace/network policy/HPA/PDB for an `istio-ingressgateway` deployment | Rework for OSSM 3.4 (no ingress gateway in dev) |
+| `base/gateway.yaml` | Istio `Gateway` + `VirtualService` for the prod/UAT ingress gateway, TLS termination, JWT | Rework against the OSSM 3.4 ingress story |
+| `base/destination-rules.yaml` | `DestinationRule` traffic policies for the `payu` namespace | Port per environment |
+| `base/ratelimit-service.yaml` | Rate limit service + `EnvoyFilter` | Rework for OSSM 3.4 |
+| `base/security-headers.yaml` | Security-header `EnvoyFilter` | Rework for OSSM 3.4 |
+| `base/kiali.yaml` | Kiali CR | Kiali operator is installed separately (`kiali-ossm` subscription) |
+| `base/certs/` | Legacy ingress CA/TLS material | Ingress certificates are provisioned externally; private keys are not kept in git |
+| `base/gateway-api/` | Optional Kubernetes Gateway API package that reuses the Istio ingress service | Apply separately, only after the ingress rework |
+| `base/peer-authentication.yaml` | Mesh-wide + per-namespace `PeerAuthentication` and `AuthorizationPolicy` for `payu`, `payu-uat`, `payu-preprod`, `payu-sit` | Per-env overlay replaces it; dev posture lives in `overlays/payu-dev/` |
+
+> **Hazard — do not add `base/peer-authentication.yaml` to `base/kustomization.yaml`.**
+> Its root-namespace `mesh-wide-mtls` (STRICT) object applies to every workload
+> in the mesh root namespace. On a cluster that hosts `payu-dev` alongside
+> `payu-sit`/`payu-uat`, applying it would bind those sibling namespaces to
+> STRICT as well. It also carried a `payu-dev`/`permissive-mtls` object that
+> clashed with the dev overlay (last-apply-wins); that duplicate has been
+> removed — `overlays/payu-dev/peer-authentication.yaml` is the single owner of
+> the dev PERMISSIVE policy.
 
 ## Prerequisites
 
-Before deploying the service mesh, ensure:
+1. OpenShift 4.22+ running.
+2. The Sail Operator (`servicemeshoperator3`) installed from OperatorHub — see
+   `infrastructure/foundation/cluster-operators/subscriptions.yaml`.
+3. Cluster resources for istiod and the CNI DaemonSet (one pod per node).
 
-1. **OpenShift 4.22+** is installed and running
-2. **OpenShift Service Mesh Operator** is installed from OperatorHub
-3. **Sufficient Resources**:
-   - Control Plane: 2 CPU, 4 GB RAM minimum
-   - Per Service: +0.1 CPU, +128 MB RAM (sidecar proxy)
-4. **Network**:
-   - Pod network allows communication between all namespaces
-   - Service Mesh is configured for your network plugin (OpenShift SDN/OVN)
+## Runbook
 
-## Installation
-
-### Step 1: Install OpenShift Service Mesh Operator
+### Apply
 
 ```bash
-# Create namespace for operators
-oc create namespace openshift-operators
+# 1. Control plane (istio-system + istio-cni namespaces, IstioCNI CR, Istio CR)
+oc apply -k infrastructure/platform/mesh
 
-# Install Service Mesh Operator via OperatorHub or CLI
-oc apply -f https://operatorhub.io/install/openshift-service-matrix.yaml
-
-# Verify operator is ready
-oc get pods -n openshift-operators
+# 2. Dev-scoped mesh policy (PERMISSIVE mTLS for payu-dev)
+oc apply -k infrastructure/platform/mesh/overlays/payu-dev
 ```
 
-### Step 2: Deploy Service Mesh Control Plane
+The overlay needs the `payu-dev` namespace to exist — apply
+`infrastructure/foundation/namespaces/overlays/shared` first.
+
+### How to verify
 
 ```bash
-# Apply control plane configuration
-oc apply -f infrastructure/openshift/service-mesh/control-plane.yaml
+# Control plane CRs
+oc get istios.sailoperator.io -n istio-system
+oc get istiocnis.sailoperator.io -n istio-cni
 
-# Wait for Istio control plane to be ready
-oc wait --for=condition=ready pod -l app=istiod -n istio-system --timeout=300s
+# Control plane rollouts
+oc rollout status deploy/istiod -n istio-system
+oc rollout status ds/istio-cni-node -n istio-cni
 
-# Verify control plane components
+# Dev mesh policy (expect: permissive-mtls, PERMISSIVE, namespace payu-dev)
+oc get peerauthentication -n payu-dev
+
+# Injected sidecars: meshed pods list istio-validation + istio-proxy
+# as initContainers; non-meshed pods list nothing
+oc get pods -n payu-dev -o jsonpath='{range .items[*]}{.metadata.name}{"  "}{.spec.initContainers[*].name}{"\n"}{end}'
+
+# Proxy config of one meshed workload
+# (the istio-proxy container ships no curl; use pilot-agent from the proxy
+# container, or curl from the app container)
+oc exec -n payu-dev deploy/<svc> -c istio-proxy -- pilot-agent request GET config_dump | grep -A5 'outbound|.*<other-svc>'
+```
+
+### Sidecar injection
+
+Injection is **opt-in per deployment**, via the pod-template label
+`sidecar.istio.io/inject: "true"` (set in the `labels.pairs` block of each
+`infrastructure/workloads/base/<service>/kustomization.yaml`). The 24 app-tier
+services are meshed; the simulators (`bi-fast`, `biller`, `dukcapil`, `qris`,
+`va`) and `web-app` are not.
+
+Do **not** opt a whole namespace in with a namespace-wide label: that would also
+inject the CNPG, Strimzi and Kafka pods running in `payu-dev` and break them.
+
+Two Istio 1.30 specifics worth knowing:
+
+- **The sidecar is a native sidecar.** `istio-proxy` is injected as an
+  initContainer with `restartPolicy: Always` (plus an `istio-validation`
+  initContainer), so `spec.containers` still shows only `app`. Look at
+  `spec.initContainers` to confirm injection.
+- **The sidecar runs with the namespace UID range** (`runAsUser: 1000759999`),
+  not the legacy hardcoded `1337`, which is what keeps injected pods compliant
+  with the `restricted-v2` SCC.
+
+### mTLS in dev
+
+Auto-mTLS is on: mesh-to-mesh traffic is upgraded to `mutual_tls` even though
+the dev `PeerAuthentication` is PERMISSIVE. Verified via the proxy metrics:
+
+```bash
+oc exec -n payu-dev deploy/<svc> -c app -- curl -s localhost:15090/stats/prometheus \
+  | grep -o 'connection_security_policy="[a-z_]*"' | sort -u
+# connection_security_policy="mutual_tls"
+```
+
+PERMISSIVE (not STRICT) is deliberate in dev: it keeps the plain-text path
+open for non-mesh sources — the kubelet health probe and the OpenShift router —
+which are not part of the mesh. STRICT mTLS is enforced from UAT upward.
+
+### Remove the mesh
+
+```bash
+# Remove the dev policy and the control plane
+oc delete -k infrastructure/platform/mesh/overlays/payu-dev
+oc delete -k infrastructure/platform/mesh
+
+# The operator cleans up istiod and the CNI DaemonSet
 oc get pods -n istio-system
+oc get pods -n istio-cni
 ```
 
-Expected output:
+Pods that already carry an injected sidecar keep it until they are recreated;
+delete the workload pods after removing the control plane if the sidecar must
+go away.
 
-```
-NAME                          READY   STATUS    RESTARTS   AGE
-istiod-xxx                    1/1     Running   0          2m
-istio-ingressgateway-xxx-xxx  1/1     Running   0          2m
-istio-egressgateway-xxx       1/1     Running   0          2m
-```
+## Security posture
 
-### Step 3: Deploy Gateway Configuration
+- **mTLS**: PERMISSIVE in `payu-dev` (mesh policy in `overlays/payu-dev/`),
+  STRICT from `payu-uat` upward. Istio issues and rotates the workload
+  certificates — no certificate material in this repository.
+- **Authorization**: `AuthorizationPolicy` with deny-by-default and explicit
+  allow rules lives in the per-environment overlays.
+- **NetworkPolicy**: complements the mesh at the CNI level
+  (`infrastructure/foundation/namespaces/base/network-policies.yaml`).
+- **Traffic**: the CNI plugin redirects sidecar traffic without a privileged
+  init container, so injected pods stay compatible with the `restricted-v2` SCC.
+
+## Troubleshooting
+
+#### Sidecar not injected
 
 ```bash
-# Apply gateway and virtual services
-oc apply -f infrastructure/openshift/service-mesh/gateway.yaml
+# Does the pod template opt in?
+oc get deployment <name> -n payu-dev \
+  -o jsonpath='{.spec.template.metadata.labels.sidecar\.istio\.io/inject}{"\n"}'
 
-# Verify gateway is ready
-oc get pods -n istio-system -l app=istio-ingressgateway
+# Did the pod get the native sidecar?
+oc get pods -n payu-dev -o jsonpath='{range .items[*]}{.metadata.name}{"  "}{.spec.initContainers[*].name}{"\n"}{end}'
+
+# Is the injector webhook present?
+oc get mutatingwebhookconfiguration istio-sidecar-injector
 ```
 
-### Optional: Deploy Kubernetes Gateway API
-
-Use this package if you want Gateway API resources (`Gateway`, `HTTPRoute`) instead of the legacy Istio `Gateway` and `VirtualService` manifests.
-
-Do not apply both packages on the same hostnames at the same time.
-
-The package reuses the existing `istio-ingressgateway` Service that is already provisioned by the Service Mesh control plane.
+#### Control plane not ready
 
 ```bash
-# Install Gateway API CRDs if the cluster does not have them yet
-kubectl get crd gateways.gateway.networking.k8s.io >/dev/null 2>&1 || \
-  kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.4.0" | kubectl apply -f -
-
-# Apply the optional Gateway API package
-oc apply -k infrastructure/platform/service-mesh/gateway-api
+oc get istios.sailoperator.io -n istio-system
+oc describe istios.sailoperator.io default -n istio-system
+oc logs deployment/istiod -n istio-system
 ```
 
-This package keeps the PayU application gateway pattern intact: external traffic enters through the Gateway API listener, then routes into `gateway-service` inside each environment namespace.
-
-### Step 4: Deploy Destination Rules
+#### mTLS connection failures
 
 ```bash
-# Apply destination rules and traffic policies
-oc apply -f infrastructure/openshift/service-mesh/destination-rules.yaml
-
-# Verify destination rules
-oc get destinationrules -A
-```
-
-### Step 5: Deploy Peer Authentication
-
-```bash
-# Apply mTLS and authorization policies
-oc apply -f infrastructure/openshift/service-mesh/peer-authentication.yaml
-
-# Verify peer authentication
-oc get peerauthentication -A
-```
-
-### Step 6: Enable Sidecar Injection
-
-```bash
-# Enable automatic sidecar injection for namespaces
-oc label namespace payu maistra.io/member-of=istio-system
-oc label namespace payu-uat maistra.io/member-of=istio-system
-oc label namespace payu-sit maistra.io/member-of=istio-system
-oc label namespace payu-dev maistra.io/member-of=istio-system
-
-# Verify namespace membership
-oc get namespace -L maistra.io/member-of
-```
-
-### Step 7: Restart Services to Inject Sidecars
-
-```bash
-# Restart deployments to inject Envoy sidecar
-oc rollout restart deployment/account-service -n payu
-oc rollout restart deployment/auth-service -n payu
-oc rollout restart deployment/transaction-service -n payu
-oc rollout restart deployment/wallet-service -n payu
-oc rollout restart deployment/gateway-service -n payu
-
-# Verify sidecar injection (2 containers per pod)
-oc get pods -n payu
-```
-
-Expected output:
-
-```
-account-service-xxx-xxx   2/2     Running   0          1m
-auth-service-xxx-xxx      2/2     Running   0          1m
-```
-
-## Configuration
-
-### Control Plane Settings
-
-| Setting       | Value  | Description                            |
-| ------------- | ------ | -------------------------------------- |
-| **Version**   | v2.6   | Red Hat OpenShift Service Mesh version |
-| **mTLS Mode** | STRICT | Enforce mTLS for production            |
-| **Tracing**   | Jaeger | 10% sampling rate                      |
-| **Replicas**  | 2      | High availability                      |
-
-### Gateway Settings
-
-| Setting      | Value                       | Description     |
-| ------------ | --------------------------- | --------------- |
-| **Type**     | LoadBalancer                | External access |
-| **HTTP**     | Port 80 → Redirect to HTTPS |
-| **HTTPS**    | Port 443 → Main ingress     |
-| **TLS Mode** | SIMPLE                      | Server-side TLS |
-
-### mTLS Modes
-
-| Mode           | Environment        | Description                    |
-| -------------- | ------------------ | ------------------------------ |
-| **STRICT**     | prod, uat, preprod | Only mTLS connections allowed  |
-| **PERMISSIVE** | dev, sit           | Allow both mTLS and plain text |
-| **DISABLE**    | External services  | No mTLS (simulators)           |
-
-## Verification
-
-### Verify mTLS is Working
-
-```bash
-# Check peer authentication
-oc get peerauthentication -n payu
-
-# Check mTLS between services
-oc exec -it account-service-xxx -n payu -c istio-proxy \
-  -- openssl s_client -connect auth-service:8082 -alpn istio
-
-# View proxy configuration
-oc exec -it account-service-xxx -n payu -c istio-proxy \
-  -- pilot-agent request GET config
-```
-
-### Verify Traffic Routing
-
-```bash
-# Check virtual services
-oc get virtualservices -A
-
-# Check destination rules
-oc get destinationrules -A
-
-# Test routing
-curl -k https://api.payu.local/health
-```
-
-### Verify Observability
-
-```bash
-# Check metrics
-oc exec -it account-service-xxx -n payu -c istio-proxy \
-  -- curl -s localhost:15090/stats/prometheus | grep istio
-
-# View traces in Jaeger
-# Port forward to Jaeger
-oc port-forward -n istio-system svc/jaeger-query 16686:16686
-# Open browser: http://localhost:16686
-```
-
-## Operations
-
-### View Service Mesh Dashboard
-
-```bash
-# Port forward to Kiali dashboard
-oc port-forward -n istio-system svc/kiali 20001:20001
-# Open browser: http://localhost:20001
-```
-
-### View Service Graph
-
-```bash
-# Install Kiali (if not installed)
-oc apply -f https://raw.githubusercontent.com/istio/istio/release-1.23/manifests/charts/base/crds/crd-gen.yaml
-
-# Access Kiali dashboard at http://localhost:20001
-# Navigate to "Graph" to see service topology
-```
-
-### Troubleshooting
-
-#### Issue: Sidecar Not Injected
-
-```bash
-# Check if namespace is labeled
-oc get namespace payu -L maistra.io/member-of
-
-# Check webhook configuration
-oc get mutatingwebhookconfigurations | grep istio
-
-# Manual injection (for debugging)
-istioctl kube-inject -f deployment.yaml | oc apply -f -
-```
-
-#### Issue: mTLS Connection Failures
-
-```bash
-# Check peer authentication mode
-oc get peerauthentication -n payu -o yaml
-
-# Check destination rule TLS mode
-oc get destinationrules -n payu -o yaml
-
-# View proxy logs
-oc logs -f account-service-xxx -n payu -c istio-proxy
-```
-
-#### Issue: Gateway Not Routing
-
-```bash
-# Check gateway status
-oc get gateway -n istio-system
-
-# Check virtual services
-oc get virtualservices -n istio-system
-
-# View gateway logs
-oc logs -f istio-ingressgateway-xxx -n istio-system
-```
-
-## Traffic Management
-
-### Traffic Splitting (Canary Deployment)
-
-```yaml
-# Update VirtualService to split traffic
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: account-service-canary
-spec:
-  http:
-    - route:
-        - destination:
-            host: account-service
-            subset: v1
-          weight: 90 # 90% to version 1
-        - destination:
-            host: account-service
-            subset: v2
-          weight: 10 # 10% to version 2 (canary)
-```
-
-### Fault Injection
-
-```yaml
-# Inject delays for testing
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: account-service-fault
-spec:
-  http:
-    - fault:
-        delay:
-          percentage:
-            value: 10
-          fixedDelay: 5s
-      route:
-        - destination:
-            host: account-service
-```
-
-## Security Best Practices
-
-1. **Always use STRICT mTLS** in production environments
-2. **Implement least privilege** with AuthorizationPolicies
-3. **Rotate certificates** regularly (Citadel does this automatically)
-4. **Monitor mTLS connections** for security anomalies
-5. **Use network policies** alongside service mesh policies
-6. **Enable audit logging** for all security events
-
-## Performance Tuning
-
-### Control Plane Resources
-
-```yaml
-# For high-traffic clusters, increase Istiod resources
-spec:
-  istio:
-    pilot:
-      resources:
-        requests:
-          cpu: 1000m
-          memory: 4Gi
-        limits:
-          cpu: 2000m
-          memory: 8Gi
-```
-
-### Sidecar Resources
-
-```yaml
-# Adjust sidecar proxy resources per service
-spec:
-  template:
-    metadata:
-      annotations:
-        sidecar.istio.io/proxyCPU: "200m"
-        sidecar.istio.io/proxyMemory: "256Mi"
-        sidecar.istio.io/proxyCPULimit: "500m"
-        sidecar.istio.io/proxyMemoryLimit: "512Mi"
-```
-
-## Monitoring and Observability
-
-### Metrics
-
-Service mesh exposes metrics at `http://localhost:15090/stats/prometheus`:
-
-- **Request metrics**: Total requests, error rate, latency
-- **Connection metrics**: Active connections, mTLS status
-- **Service metrics**: Service-to-service calls, retries
-
-### Traces
-
-Distributed traces are sent to Jaeger:
-
-```bash
-# Query traces by trace ID
-curl -s http://jaeger-query:16686/api/traces/trace-id
-
-# View traces in Kiali
-# Navigate to "Tracing" in Kiali dashboard
-```
-
-### Logs
-
-Access logs are formatted as JSON:
-
-```json
-{
-  "start_time": "2026-01-24T10:00:00Z",
-  "method": "POST",
-  "path": "/v1/accounts",
-  "response_code": 201,
-  "duration": "45ms",
-  "upstream_service": "account-service"
-}
-```
-
-## Backup and Recovery
-
-### Backup Configuration
-
-```bash
-# Export all service mesh resources
-oc get servicemeshcontrolplane -n istio-system -o yaml > backup-smcp.yaml
-oc get serviceMeshMemberRoll -n istio-system -o yaml > backup-smmr.yaml
-oc get gateway,destinationrule,virtualservice -A -o yaml > backup-mesh-config.yaml
-```
-
-### Restore Configuration
-
-```bash
-# Restore from backup
-oc apply -f backup-smcp.yaml
-oc apply -f backup-smmr.yaml
-oc apply -f backup-mesh-config.yaml
+oc get peerauthentication -n payu-dev -o yaml
+oc logs deployment/<service> -n payu-dev -c istio-proxy
 ```
 
 ## References
@@ -473,18 +229,26 @@ oc apply -f backup-mesh-config.yaml
 - [Red Hat OpenShift Service Mesh Documentation](https://docs.openshift.com/container-platform/4.22/service_mesh/index.html)
 - [Istio Documentation](https://istio.io/latest/docs/)
 - [Istio Security Best Practices](https://istio.io/latest/docs/concepts/security/)
-- [OpenShift Service Mesh Architecture](https://www.redhat.com/en/topics/microservices/what-is-a-service-mesh)
 
-## Support
+## Known limits
 
-For issues or questions:
-
-- **Platform Issues**: platform-team@payu.fajjjar.my.id
-- **Architecture**: architect@payu.fajjjar.my.id
-- **Security**: security@payu.fajjjar.my.id
-
----
-
-**Version**: 1.0.0
-**Last Updated**: January 2026
-**Maintained By**: Platform Team PayU
+- **No Istio ingress gateway in dev.** External traffic in dev is served by
+  the OpenShift **default IngressController** on the cluster domain
+  `apps.payu.ocp.fajjjar.my.id` (e.g. `payu-dev.apps.payu.ocp.fajjjar.my.id`),
+  with the Let's Encrypt certificate `app-router-certs`
+  (`CN=*.apps.payu.ocp.fajjjar.my.id`) — not by an Istio `Gateway`. The
+  `payu-dev` Routes carry that cluster-domain host and no `routerName`, so they
+  are admitted by the `default` router only.
+  The `shared-ingress` IngressController (domain `apps.fajjjar.my.id`) is
+  healthy — 3/3 replicas, its own Let's Encrypt `shared-ingress-cert` — but no
+  Route is published on the shared domain, so `*.apps.fajjjar.my.id` answers
+  503. The cluster has no router-labelled nodes
+  (`oc get nodes -l node-role.kubernetes.io/router` is empty), so there is no
+  dedicated ingress tier. The legacy ingress assets in `base/` are not
+  applied.
+- **Simulators, `web-app`, Keycloak and the data plane are not in the mesh.**
+  They carry no `sidecar.istio.io/inject` label.
+- **No Kiali/Jaeger dashboards are wired up yet.** The Kiali operator is
+  installed, but `base/kiali.yaml` is a legacy asset awaiting rework.
+- **Per-env policy overlays exist for `payu-dev` only.** UAT and prod overlays
+  are still to be written.

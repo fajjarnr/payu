@@ -1,0 +1,45 @@
+# OpenShift Service Mesh 3.4 control plane (Sail Operator `Istio` CR).
+#
+# The Sail operator fills the Red Hat registry hub/tag/digest for the
+# selected Istio version, so `version` is the only knob that matters here.
+# `global.platform: openshift` is applied by the operator automatically and
+# is what makes the sidecar run with the namespace UID (satisfying the
+# restricted-v2 SCC) instead of a hardcoded 1337.
+#
+# The control plane runs in istio-system, which becomes the mesh root
+# namespace — a PeerAuthentication placed there applies mesh-wide.
+apiVersion: sailoperator.io/v1
+kind: Istio
+metadata:
+  name: default
+  namespace: istio-system
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  # 3.4 ships Istio 1.30.x; the operator resolves the matching Red Hat image.
+  version: v1.30.5
+  namespace: istio-system
+  profile: default
+  updateStrategy:
+    type: InPlace
+  values:
+    global:
+      proxy:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+    meshConfig:
+      trustDomain: payu.local
+      # Access logs to stdout feed the Loki pipeline (ADRS-0034 observability).
+      accessLogFile: /dev/stdout
+      accessLogEncoding: JSON
+      defaultConfig:
+        proxyMetadata:
+          ISTIO_META_DNS_CAPTURE: "true"
+        tracing:
+          sampling: 10.0
