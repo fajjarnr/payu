@@ -6,7 +6,7 @@ import {
 } from '@/app/[locale]/transfer/page';
 
 const favorites: ReviewContact[] = [
-  { name: 'Budi', initial: 'B', color: 'bg-emerald-100', accountId: '1002003001' },
+  { name: 'Budi', initial: 'B', accountId: '1002003001' },
 ];
 
 describe('resolveReviewContact', () => {

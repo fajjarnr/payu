@@ -103,6 +103,22 @@ function assertTheme(vars: Record<string, string>, mode: string) {
     ).toBeGreaterThanOrEqual(4.5);
   }
 
+  // Avatar text on tints (A-01): transfer favorite/review/success avatars.
+  const avatarPairs: Array<[string | undefined, string | undefined]> = [
+    [vars['ant-color-text'], vars['ant-color-primary-bg']],
+    [vars['ant-color-text-secondary'], vars['ant-color-fill-tertiary']],
+  ];
+  for (const [fg, tint] of avatarPairs) {
+    if (!fg || !tint) continue;
+    const tintOnSurface = toHex(tint, bg);
+    const textOnTint = toHex(fg, tintOnSurface);
+    const ratio = contrast(textOnTint, tintOnSurface);
+    expect(
+      ratio,
+      `${mode}: avatar text ${fg} on ${tint} (over ${bg}) is ${ratio.toFixed(2)}:1, needs 4.5:1`,
+    ).toBeGreaterThanOrEqual(4.5);
+  }
+
   // Component boundaries need 3:1 (SC 1.4.11); emerald borders exempt per override.
   for (const role of BORDERS) {
     if (EMERALD_ROLES.includes(role as (typeof EMERALD_ROLES)[number])) continue;

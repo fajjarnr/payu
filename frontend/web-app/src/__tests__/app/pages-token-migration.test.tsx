@@ -31,4 +31,22 @@ describe("pages token migration (source-text)", () => {
     expect(block).toContain("token.colorText");
     expect(block).not.toMatch(/colorPrimary|#00A87E|primary-dark/);
   });
+
+  it("transfer avatars use antd tokens, not legacy avatar classes (A-01)", () => {
+    const src = readFileSync(join(root, "transfer/page.tsx"), "utf8");
+    expect(src).not.toMatch(/bg-primary-light|text-primary-dark/);
+    expect(src).toContain("token.colorPrimaryBg");
+  });
+
+  it("lending PayLater card uses ink text on emerald, not white (F-01)", () => {
+    const src = readFileSync(join(root, "lending/page.tsx"), "utf8");
+    const start = src.indexOf('data-testid="paylater-tab"');
+    const btn = src.indexOf('data-testid="pay-bill-button"');
+    expect(start).toBeGreaterThan(-1);
+    expect(btn).toBeGreaterThan(-1);
+    const block = src.slice(start, src.indexOf("</Button>", btn) + 9);
+    expect(block).toContain("#06281F");
+    expect(block).not.toMatch(/rgba\(255,255,255|colorBgContainer/);
+    expect(block).not.toContain("color: token.colorPrimary");
+  });
 });

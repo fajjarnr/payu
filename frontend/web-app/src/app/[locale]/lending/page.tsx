@@ -549,7 +549,7 @@ export default function LendingPage() {
                       <Card
                         style={{
                           background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
-                          color: token.colorBgContainer,
+                          color: "#06281F", // F-01: ink on emerald gradient, not white (2.00:1)
                         }}
                         styles={{ body: { padding: 24 } }}
                       >
@@ -573,7 +573,7 @@ export default function LendingPage() {
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  background: "rgba(255,255,255,0.2)",
+                                  background: "rgba(6,40,31,0.12)",
                                 }}
                               >
                                 <CreditCard
@@ -588,7 +588,7 @@ export default function LendingPage() {
                                     fontSize: 12,
                                     letterSpacing: "0.1em",
                                     textTransform: "uppercase",
-                                    color: "rgba(255,255,255,0.8)",
+                                    color: "#06281F",
                                   }}
                                 >
                                   PayLater Limit
@@ -597,7 +597,7 @@ export default function LendingPage() {
                                   level={2}
                                   style={{
                                     marginBottom: 0,
-                                    color: token.colorBgContainer,
+                                    color: "#06281F",
                                   }}
                                 >
                                   {formatCurrency(payLaterStats.creditLimit)}
@@ -608,25 +608,25 @@ export default function LendingPage() {
                               size={16}
                               style={{
                                 fontSize: 12,
-                                color: "rgba(255,255,255,0.8)",
+                                color: "#06281F",
                               }}
                             >
                               <Typography.Text
                                 strong
-                                style={{ color: "rgba(255,255,255,0.8)" }}
+                                style={{ color: "#06281F" }}
                               >
                                 Terpakai:{" "}
                                 {formatCurrency(payLaterStats.usedLimit)}
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: "rgba(255,255,255,0.8)" }}
+                                style={{ color: "#06281F" }}
                               >
                                 •
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: "rgba(255,255,255,0.8)" }}
+                                style={{ color: "#06281F" }}
                               >
                                 Tersedia:{" "}
                                 {formatCurrency(payLaterStats.availableLimit)}
@@ -642,14 +642,14 @@ export default function LendingPage() {
                                   fontSize: 12,
                                   letterSpacing: "0.1em",
                                   textTransform: "uppercase",
-                                  color: "rgba(255,255,255,0.8)",
+                                  color: "#06281F",
                                 }}
                               >
                                 Penggunaan Limit
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: token.colorBgContainer }}
+                                style={{ color: "#06281F" }}
                               >
                                 {creditUtilization.toFixed(0)}%
                               </Typography.Text>
@@ -657,14 +657,14 @@ export default function LendingPage() {
                             <Progress
                               percent={creditUtilization}
                               showInfo={false}
-                              strokeColor={token.colorBgContainer}
-                              trailColor="rgba(255,255,255,0.2)"
+                              strokeColor="#06281F"
+                              trailColor="rgba(6,40,31,0.15)"
                               style={{ marginTop: 8 }}
                             />
                           </div>
                         </Row>
 
-                        <Divider style={{ borderColor: "rgba(255,255,255,0.2)" }} />
+                        <Divider style={{ borderColor: "rgba(6,40,31,0.25)" }} />
 
                         <Row
                           justify="space-between"
@@ -679,7 +679,7 @@ export default function LendingPage() {
                                 fontSize: 12,
                                 letterSpacing: "0.1em",
                                 textTransform: "uppercase",
-                                color: "rgba(255,255,255,0.6)",
+                                color: "#06281F",
                               }}
                             >
                               Pembayaran Minimum
@@ -688,7 +688,7 @@ export default function LendingPage() {
                               level={4}
                               style={{
                                 marginBottom: 0,
-                                color: token.colorBgContainer,
+                                color: "#06281F",
                               }}
                             >
                               {formatCurrency(payLaterStats.minimumPayment)}
@@ -700,8 +700,8 @@ export default function LendingPage() {
                             disabled={payLaterPayment.isPending}
                             data-testid="pay-bill-button"
                             style={{
-                              background: token.colorBgContainer,
-                              color: token.colorPrimary,
+                              background: "#06281F",
+                              color: "#FFFFFF",
                             }}
                           >
                             {payLaterPayment.isPending

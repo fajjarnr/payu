@@ -25,6 +25,7 @@ import {
   Col,
   Typography,
   Tag,
+  theme,
 } from "antd";
 import PageHeader from "@/components/PageHeader";
 import MoneyText from "@/components/MoneyText";
@@ -113,7 +114,6 @@ const SCHEDULE_TYPE_I18N: Record<
 export interface ReviewContact {
   name: string;
   initial: string;
-  color: string;
   accountId: string;
 }
 
@@ -157,6 +157,7 @@ export interface TransferReviewSnapshot {
 
 export default function TransferPage() {
   const t = useTranslations("transfers");
+  const { token } = theme.useToken();
   const TRANSFER_TYPES = TRANSFER_TYPE_META.map((m) => ({
     ...m,
     label: t(TRANSFER_TYPE_I18N[m.type].labelKey),
@@ -205,12 +206,10 @@ export default function TransferPage() {
   const recentContacts: Array<{
     name: string;
     initial: string;
-    color: string;
     accountId: string;
   }> = (beneficiaries ?? []).map((b) => ({
     name: b.nickname || b.accountName || b.accountNumber.slice(-4),
     initial: (b.nickname || b.accountName || "B").charAt(0).toUpperCase(),
-    color: "bg-primary-light text-primary-dark",
     accountId: b.accountNumber,
   }));
 
@@ -464,12 +463,13 @@ export default function TransferPage() {
                           fontWeight: "bold",
                           fontSize: "1.875rem",
                           boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                          ...(selectedContactData?.color
-                            ? {}
-                            : {
-                                backgroundColor: "hsl(var(--muted))",
-                                color: "hsl(var(--muted-foreground))",
-                              }),
+                          // A-01: antd tint pairs (guard: antd-theme.test.tsx), not legacy hsl vars
+                          backgroundColor: isRecipientVerified
+                            ? token.colorPrimaryBg
+                            : token.colorFillTertiary,
+                          color: isRecipientVerified
+                            ? token.colorText
+                            : token.colorTextSecondary,
                         }}
                         aria-hidden={!isRecipientVerified}
                       >
@@ -817,12 +817,12 @@ export default function TransferPage() {
                       fontWeight: "bold",
                       fontSize: "1.25rem",
                       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                      ...(successContact?.color
-                        ? {}
-                        : {
-                            backgroundColor: "hsl(var(--muted))",
-                            color: "hsl(var(--muted-foreground))",
-                          }),
+                      backgroundColor: successContact
+                        ? token.colorPrimaryBg
+                        : token.colorFillTertiary,
+                      color: successContact
+                        ? token.colorText
+                        : token.colorTextSecondary,
                     }}
                   >
                     {successContact?.initial || "?"}
@@ -1673,8 +1673,9 @@ export default function TransferPage() {
                               fontWeight: "bold",
                               fontSize: "1.5rem",
                               boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                              backgroundColor: token.colorPrimaryBg,
+                              color: token.colorText,
                             }}
-                            className={c.color}
                           >
                             {c.initial}
                           </div>
