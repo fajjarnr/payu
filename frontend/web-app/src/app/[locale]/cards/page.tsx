@@ -488,7 +488,8 @@ export default function CardsPage() {
                         height: 32,
                         borderRadius: 8,
                         background: token.colorPrimaryBg,
-                        color: token.colorPrimary,
+                        // Deep brand green: the emerald on its own tint is 1.9:1.
+                        color: token.colorPrimaryText,
                       }}
                     >
                       <ShieldCheck />

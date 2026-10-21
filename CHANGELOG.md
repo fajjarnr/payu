@@ -47,6 +47,12 @@ All notable changes to this project will be documented in this file.
 - **`/settings` tanpa fallback hardcoded (2026-10-21)**: nama pengguna, placeholder email, dan ID akun kini lewat katalog (fake `PAYU-09228373` dihapus).
 - Katalog `messages/{id,en}.json` kini 1238 key, parity terjaga (`npm run check:i18n`).
 
+### Fixed (Web-app mobile pass, 2026-10-21)
+
+- **Tombol menu mobile tergencet (High)**: pada 360px, grup kontrol header butuh 333px sehingga tombol menu (satu-satunya navigasi di mobile) terpampas jadi **22px** — di bawah lantai target 24px (WCAG 2.5.8) dan praktis tak terketuk. Kontrol header kini `flexShrink: 0`, dan tema + bahasa disembunyikan di bawah `sm` (keduanya tetap ada di `/settings`).
+- **Panel brand tak pernah tersembunyi di mobile (Medium)**: `<Col xs={0}>` hanya(make) kolom jadi 0 lebar tetapi anak-anaknya tetap dirender, dan `display: flex` inline mengalahkan kelas apa pun — jadi kolom marketing login/onboarding tetap tampil di 360px (form login harus di-scroll untuk dijangkau). Sekarang pakai kelas `payu-lg-only` (hidden < lg, flex column ≥ lg) dan layout inline `display` dihapus.
+- **Ikon emerald di atas tint emerald (Low)**: ikon padawells `colorPrimaryBg` (bills ×2, pockets ×2, cards, avatar profil) kini hijau tua `#0B7A55` — emerald di tint-nya sendiri hanya 1.9:1 dan praktis tak terlihat.
+
 ### Added (Istio ingress gateway di shared domain `apps.fajjjar.my.id`, 2026-10-21)
 
 - **Keputusan kepemilikan domain shared + Istio ingress gateway live di `payu-dev` (2026-10-21)**: `apps.fajjjar.my.id` dimiliki **satu tier** — OpenShift IngressController `shared-ingress` (TLS via `shared-ingress-cert`, AWS NLB `52.74.162.171`) tetap pemilik domain; Istio gateway **tidak memiliki domain**, dia **backend** di belakang router dengan Service `ClusterIP` (tanpa NLB kedua, tanpa biaya tambahan). Manifest baru: `infrastructure/platform/mesh/ingress/` (`namespace.yaml` namespace `payu-mesh-gateway` berlabel `payu.fajjjar.my.id/ingress: shared`, `gateway.yaml`, `route.yaml`, `http-route.yaml`, `network-policies.yaml`, `kustomization.yaml`) — package terpisah, tak ikut `base/kustomization.yaml`; `payu-dev` & `istio-system` **tidak** diberi label shared, jadi Route web-app/analytics tetap di router default. ADR baru: `docs/adr/0073-istio-ingress-gateway-and-shared-domain-ownership.md` (Accepted) + index `docs/adr/README.md`.

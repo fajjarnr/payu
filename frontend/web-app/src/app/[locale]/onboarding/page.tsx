@@ -171,6 +171,7 @@ export default function OnboardingPage() {
     <Row style={{ minHeight: "100vh" }}>
       {/* Left Panel - Branding (hidden on mobile) */}
       <Col
+        className="payu-lg-only"
         xs={0}
         lg={10}
         style={{
@@ -179,9 +180,6 @@ export default function OnboardingPage() {
           position: "relative",
           overflow: "hidden",
           color: BRAND_FG,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
         }}
         aria-label="Branding"
       >

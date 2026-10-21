@@ -270,7 +270,10 @@ export default function DashboardLayout({
                 onClick={() => setDrawerOpen(true)}
                 aria-label={t("openMenu")}
                 data-testid="mobile-menu-trigger"
-                style={{ width: 44, height: 44 }}
+                // The header row squeezes its first group on narrow screens;
+                // without this the menu button shrinks to 22px, below the 24px
+                // target floor (WCAG 2.5.8) — and it is the only nav on mobile.
+                style={{ width: 44, height: 44, flexShrink: 0 }}
               />
               <div className="hidden flex-col justify-center sm:flex">
                 <PersonalizedGreeting
@@ -285,8 +288,14 @@ export default function DashboardLayout({
             </div>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-              <ThemeToggle />
-              <LanguageSwitcher />
+              {/* Below sm the header cannot hold every control: the action
+                  group alone needs 333px, which squeezes the menu button
+                  (the only nav on mobile) out of the 360px viewport. Theme
+                  and language stay available in /settings. */}
+              <span className="hidden sm:contents">
+                <ThemeToggle />
+                <LanguageSwitcher />
+              </span>
 
               <Input.Search
                 aria-label={t("smartSearchDesktop")}
@@ -305,7 +314,7 @@ export default function DashboardLayout({
                 icon={<Search className="h-5 w-5" aria-hidden="true" />}
                 aria-label={t("openSearch")}
                 onClick={() => setSearchOpen(true)}
-                style={{ width: 44, height: 44 }}
+                style={{ width: 44, height: 44, flexShrink: 0 }}
               />
 
               <Badge dot={unreadCount > 0} count={unreadCount > 0 ? unreadCount : 0} color={token.colorPrimary} offset={[-4, 4]}>
@@ -315,7 +324,7 @@ export default function DashboardLayout({
                   icon={<Bell className="h-5 w-5" aria-hidden="true" />}
                   aria-label={t("notificationsLabel")}
                   onClick={() => router.push(`/${locale}/notifications`)}
-                  style={{ width: 44, height: 44 }}
+                  style={{ width: 44, height: 44, flexShrink: 0 }}
                 />
               </Badge>
 
@@ -328,14 +337,15 @@ export default function DashboardLayout({
                   type="text"
                   data-testid="profile-menu-trigger"
                   aria-label={t("profileMenu")}
-                  style={{ width: 48, height: 48, padding: 0 }}
+                  style={{ width: 48, height: 48, padding: 0, flexShrink: 0 }}
                 >
                   <Avatar
                     size={40}
                     icon={<User className="h-5 w-5" aria-hidden="true" />}
                     style={{
                       background: token.colorPrimaryBg,
-                      color: token.colorPrimary,
+                      // Deep brand green: the emerald on its own tint is 1.9:1.
+                      color: token.colorPrimaryText,
                     }}
                   />
                 </Button>

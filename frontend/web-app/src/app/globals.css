@@ -173,6 +173,21 @@
     outline-offset: 2px;
   }
 
+  /* An antd <Col xs={0}> collapses to zero width but still renders its
+     children, and an inline `display: flex` on the column beats any class —
+     so a "hidden on mobile" brand column needs its own display rule. */
+  .payu-lg-only {
+    display: none;
+  }
+
+  @media (min-width: 992px) {
+    .payu-lg-only {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  }
+
   .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
   }

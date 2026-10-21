@@ -64,6 +64,7 @@ function LoginForm() {
       <Row style={{ minHeight: "100vh" }}>
         {/* Left Panel - Branding (Hidden on mobile) */}
         <Col
+          className="payu-lg-only"
           xs={0}
           lg={12}
           style={{
@@ -74,9 +75,6 @@ function LoginForm() {
             position: "relative",
             overflow: "hidden",
             color: BRAND_PANEL_FG,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
           }}
         >
           {/* Background Effects */}

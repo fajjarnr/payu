@@ -235,7 +235,8 @@ export default function BillsPage() {
                   marginBottom: 32,
                   borderRadius: "50%",
                   background: token.colorPrimaryBg,
-                  color: token.colorPrimary,
+                  // Deep brand green: the emerald on its own tint is 1.9:1.
+                  color: token.colorPrimaryText,
                 }}
               >
                 <CheckCircle2 style={{ fontSize: 40 }} />
@@ -693,7 +694,8 @@ export default function BillsPage() {
                               height: 48,
                               borderRadius: 12,
                               background: token.colorPrimaryBg,
-                              color: token.colorPrimary,
+                              // Deep brand green: the emerald on its own tint is 1.9:1.
+                              color: token.colorPrimaryText,
                             }}
                           >
                             <Zap style={{ fontSize: 24 }} />

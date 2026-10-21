@@ -485,7 +485,8 @@ export default function PocketsPage() {
                         width: 48,
                         height: 48,
                         background: token.colorPrimaryBg,
-                        color: token.colorPrimary,
+                        // Deep brand green: the emerald on its own tint is 1.9:1.
+                        color: token.colorPrimaryText,
                       }}
                     >
                       <ShieldCheck />
@@ -1297,7 +1298,8 @@ export default function PocketsPage() {
                       height: 48,
                       borderRadius: 12,
                       background: token.colorPrimaryBg,
-                      color: token.colorPrimary,
+                      // Deep brand green: the emerald on its own tint is 1.9:1.
+                      color: token.colorPrimaryText,
                     }}
                   >
                     <TrendingUp />

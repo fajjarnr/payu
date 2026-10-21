@@ -164,6 +164,12 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 - The marketing column on login / merchant register is a **fixed dark surface** in both themes: `BRAND_PANEL_BG` `#1A1A2E` with `BRAND_PANEL_FG` `#FFFFFF` / `BRAND_PANEL_MUTED` `#E5E7EB` (13:1). Painting it with `token.colorText` inverted it in dark mode (white panel, white ink) — a token that means "the page ink" is not a surface.
 - On such a panel the antd text roles **must not** be used: `colorTextSecondary` is `rgba(0,0,0,0.65)` and would be dark-on-dark.
 
+### 3.16 Mobile shell — 360px is the design target
+
+- The header row has room for **four** controls at 360px, not six: the action group alone needs 333px, which squeezed the menu button — the only navigation on mobile — down to 22px (below the 24px target floor). Theme and language **must** hide below `sm` (they stay in `/settings`), and every header control **must** set `flexShrink: 0`.
+- A brand column that is meant to disappear on mobile needs the `payu-lg-only` class: an antd `<Col xs={0}>` collapses to zero width but still renders its children, and an inline `display: flex` beats any class. The class owns the column's layout (hidden below `lg`, flex column from `lg`).
+- Guard: `src/__tests__/app/mobile-shell.test.ts` (source-level, because jsdom cannot measure flex shrinking or media queries).
+
 ## 4. Accessibility requirements and testable acceptance criteria
 
 Baseline: `.a11yrc.json:1-4` targets **WCAG 2.2 AA**; `.a11y-baseline.json:1-8` has zero tracked violations with WEB-CSP-001/002 as P1 gate. Playwright covers chromium + firefox + webkit + Mobile Chrome (`playwright.config.ts:38-65`); `test:a11y` runs the a11y dir, incl. production-component coverage (`package.json:17`).
