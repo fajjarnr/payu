@@ -65,7 +65,6 @@ interface PaymentSuccess {
 export default function BillsPage() {
   const t = useTranslations("bills");
   const router = useRouter();
-  const { addToast } = useUIStore();
   const { accountId: authAccountId } = useAuthStore();
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
@@ -161,7 +160,7 @@ export default function BillsPage() {
       });
     },
     onSuccess: () => {
-      addToast(
+      toast.info(
         t("paymentSuccessToast", {
           biller: selectedBiller?.name ?? "",
           amount: formatCurrency(amount),
@@ -184,7 +183,7 @@ export default function BillsPage() {
     },
     onError: (error) => {
       console.error("Pembayaran gagal:", error);
-      addToast(t("paymentErrorToast"), "error");
+      toast.error(t("paymentErrorToast"));
     },
   });
 

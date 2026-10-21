@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
+import messages from '../../../../messages/id.json';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TargetedPromos from '@/components/personalization/TargetedPromos';
 import { QuickPromoBanner } from '@/components/personalization/TargetedPromos';
@@ -110,7 +112,9 @@ const createWrapper = () => {
   });
 
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <NextIntlClientProvider locale="id" messages={messages}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </NextIntlClientProvider>
   );
    
   Wrapper.displayName = 'QueryClientWrapper';

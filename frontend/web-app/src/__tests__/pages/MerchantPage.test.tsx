@@ -47,15 +47,24 @@ describe('MerchantDashboard', () => {
   });
 
   it('should render merchant portal when no partner found', async () => {
-    mockGetMyPartner.mockRejectedValue(new Error('Not found'));
+    // A successful lookup that returns no partner is the empty state.
+    mockGetMyPartner.mockResolvedValue(null);
     renderMerchant();
     expect(await screen.findByText('Portal Merchant')).toBeInTheDocument();
   });
 
   it('should render register link when not registered', async () => {
-    mockGetMyPartner.mockRejectedValue(new Error('Not found'));
+    mockGetMyPartner.mockResolvedValue(null);
     renderMerchant();
     expect(await screen.findByText('Daftar sebagai Merchant')).toBeInTheDocument();
+  });
+
+  it('R-06: a failed lookup shows an error with retry, not "not registered"', async () => {
+    mockGetMyPartner.mockRejectedValue(new Error('boom'));
+    renderMerchant();
+    expect(await screen.findByText('Gagal memuat data merchant')).toBeInTheDocument();
+    expect(screen.queryByText('Daftar sebagai Merchant')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Coba lagi' })).toBeInTheDocument();
   });
 
   it('should render merchant dashboard when partner exists', async () => {

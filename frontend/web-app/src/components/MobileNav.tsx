@@ -54,9 +54,6 @@ export default function MobileNav() {
         boxShadow: "0 -8px 30px rgba(0,0,0,0.12)",
       }}
     >
-      {/* F-02: the tabs are plain links, so they need their own focus ring —
-          the antd default does not cover them. */}
-      <style>{`.payu-mobile-nav a:focus-visible{outline:3px solid ${token.colorPrimaryBorder};outline-offset:2px;}`}</style>
       <ul
         className="flex w-full"
         style={{ maxWidth: 512, margin: "0 auto", listStyle: "none", padding: 0 }}
@@ -70,7 +67,7 @@ export default function MobileNav() {
                 data-testid={`mobile-nav-${label.toLowerCase()}`}
                 aria-current={active ? "page" : undefined}
                 aria-label={label}
-                className="flex min-h-[44px] w-full flex-col items-center justify-center gap-1 py-2"
+                className="payu-focus-ring flex min-h-[44px] w-full flex-col items-center justify-center gap-1 py-2"
                 style={{ position: "relative" }}
               >
                 {active && (

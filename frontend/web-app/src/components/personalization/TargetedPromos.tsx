@@ -3,18 +3,24 @@
 import React from 'react';
 import { Tag as TagIcon, TrendingUp, Star, ArrowRight } from '@/components/icons';
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
+import { useLocale, useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores';
-import { Card, Skeleton, Space, Tag, Typography, theme } from 'antd';
+import { Alert, Button, Card, Skeleton, Space, Tag, Typography, theme } from 'antd';
 import { formatCurrency } from '@/lib/currency';
 import type { SegmentedOffer } from '@/services/SegmentationService';
+import { INK_ON_EMERALD } from '@/theme/tokens';
+import { notify } from '@/lib/notify';
 
 interface TargetedPromosProps {
+  /** Localized message for a failed load (R-06). */
+  promosErrorMessage?: string;
   offerType?: SegmentedOffer['offerType'];
   className?: string;
   maxPromos?: number;
 }
 
-export default function TargetedPromos({ offerType, className, maxPromos = 2 }: TargetedPromosProps) {
+export default function TargetedPromos({ offerType, className, maxPromos = 2, promosErrorMessage }: TargetedPromosProps) {
+  const t = useTranslations('promos');
   const user = useAuthStore((state) => state.user);
   const { offers, isLoading, error } = useSegmentedOffers(user?.id);
   const { token } = theme.useToken();
@@ -38,7 +44,20 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2 }: 
     );
   }
 
-  if (error || filteredOffers.length === 0) {
+  // R-06: a failed segmentation query is not the same as "no offers" — it
+  // must not vanish silently.
+  if (error) {
+    return (
+      <Alert
+        type="error"
+        showIcon
+        className={className}
+        message={promosErrorMessage ?? t('loadError')}
+      />
+    );
+  }
+
+  if (filteredOffers.length === 0) {
     return null;
   }
 
@@ -47,7 +66,7 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2 }: 
       <Space size={8}>
         <TagIcon style={{ height: 16, width: 16, color: token.colorPrimary }} aria-hidden="true" />
         <Typography.Title level={5} style={{ margin: 0 }}>
-          Promo Untuk Anda
+          {t("forYou")}
         </Typography.Title>
       </Space>
 
@@ -66,17 +85,20 @@ interface PromoItemProps {
 
 function PromoItem({ promo }: PromoItemProps) {
   const { token } = theme.useToken();
+  const t = useTranslations('promos');
+  const locale = useLocale();
+  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
   const daysLeft = Math.ceil((new Date(promo.validUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
   const isExpiringSoon = daysLeft <= 3;
 
   const getValueDisplay = () => {
     if (promo.percentage) {
-      return `Hemat ${promo.percentage}%`;
+      return t("savePercent", { percent: promo.percentage });
     }
     if (promo.currency) {
-      return formatCurrency(promo.value, { symbol: promo.currency });
+      return formatCurrency(promo.value, { symbol: promo.currency, locale: bcp47Locale });
     }
-    return 'Special Offer';
+    return t("specialOffer");
   };
 
   return (
@@ -137,13 +159,17 @@ function PromoItem({ promo }: PromoItemProps) {
                 color: isExpiringSoon ? token.colorWarningText : token.colorTextSecondary,
               }}
             >
-              {isExpiringSoon ? `Berakhir dalam ${daysLeft} hari` : `${daysLeft} hari lagi`}
+              {isExpiringSoon
+                ? t("endsInDays", { days: daysLeft })
+                : t("daysLeft", { days: daysLeft })}
             </Typography.Text>
           </div>
 
           {promo.minTransaction && (
             <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
-              Min. transaksi: {formatCurrency(promo.minTransaction)}
+              {t("minTransaction", {
+                amount: formatCurrency(promo.minTransaction, { locale: bcp47Locale }),
+              })}
             </Typography.Text>
           )}
         </div>
@@ -158,9 +184,17 @@ interface QuickPromoBannerProps {
 
 export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
   const user = useAuthStore((state) => state.user);
-  const { cashbackOffers, isLoading } = useSegmentedOffers(user?.id);
+  const { cashbackOffers, isLoading, error } = useSegmentedOffers(user?.id);
   const { token } = theme.useToken();
+  const t = useTranslations('promos');
   const topPromo = cashbackOffers[0];
+
+  // R-06: a failed cashback fetch is not "no promo" — say so.
+  if (error) {
+    return (
+      <Alert type="error" showIcon className={className} message={t("loadError")} />
+    );
+  }
 
   if (isLoading || !topPromo) {
     return null;
@@ -179,24 +213,40 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <Space size={8} style={{ marginBottom: 4 }}>
-            <TrendingUp style={{ height: 16, width: 16, color: token.colorWhite }} aria-hidden="true" />
-            <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.05em', color: token.colorWhite }}>
-              PROMO SPESIAL
+            <TrendingUp style={{ height: 16, width: 16, color: INK_ON_EMERALD }} aria-hidden="true" />
+            <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.05em', color: INK_ON_EMERALD }}>
+              {t("specialPromo")}
             </Typography.Text>
           </Space>
-          <Typography.Title level={5} style={{ margin: '0 0 4px', color: token.colorWhite }} ellipsis>
+          <Typography.Title level={5} style={{ margin: '0 0 4px', color: INK_ON_EMERALD }} ellipsis>
             {topPromo.title}
           </Typography.Title>
-          <Typography.Paragraph style={{ fontSize: 12, margin: 0, color: token.colorWhite }} ellipsis={{ rows: 1 }}>
+          <Typography.Paragraph style={{ fontSize: 12, margin: 0, color: INK_ON_EMERALD }} ellipsis={{ rows: 1 }}>
             {topPromo.description}
           </Typography.Paragraph>
         </div>
 
         <Space size={8} style={{ flexShrink: 0 }}>
-          <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.05em', color: token.colorWhite }}>
-            Klaim
-          </Typography.Text>
-          <ArrowRight style={{ height: 16, width: 16, color: token.colorWhite }} aria-hidden="true" />
+          {/* A-04: the claim affordance copies the promo code — a styled text
+              that does nothing is a dead control. */}
+          <Button
+            type="text"
+            size="small"
+            data-testid="quick-promo-claim"
+            onClick={async () => {
+              if (!topPromo.promoCode) return;
+              try {
+                await navigator.clipboard.writeText(topPromo.promoCode);
+                notify.success(t('codeCopied'));
+              } catch {
+                notify.error(t('copyFailed'));
+              }
+            }}
+            style={{ color: INK_ON_EMERALD, fontWeight: 700, fontSize: 12, letterSpacing: '0.05em' }}
+          >
+            {t("claim")}
+          </Button>
+          <ArrowRight style={{ height: 16, width: 16, color: INK_ON_EMERALD }} aria-hidden="true" />
         </Space>
       </div>
     </Card>

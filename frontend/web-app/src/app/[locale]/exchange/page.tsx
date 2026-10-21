@@ -31,7 +31,7 @@ import {
   useFxConversion,
   useFxConversions,
 } from "@/hooks";
-import { useAuthStore, useUIStore } from "@/stores";
+import { useAuthStore } from "@/stores";
 import { SUPPORTED_CURRENCIES } from "@/services/FxService";
 import {
   compareCurrency,
@@ -41,9 +41,10 @@ import {
   type Money,
 } from "@/lib/currency";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Link } from "@/lib/navigation";
-import { useTranslations } from "next-intl";
+import { notify } from "@/lib/notify";
+import { useLocale, useTranslations } from "next-intl";
 import { SkipLink } from "@/lib/a11y";
+import { INK_ON_EMERALD } from '@/theme/tokens';
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
@@ -55,13 +56,14 @@ const labelStyle: CSSProperties = {
 
 const capsPrimaryStyle: CSSProperties = {
   ...labelStyle,
-  color: "var(--ant-color-primary)",
+  color: "var(--ant-color-primary-text)",
 };
 
 export default function ExchangePage() {
   const accountId = useAuthStore((state) => state.accountId);
-  const addToast = useUIStore((state) => state.addToast);
   const t = useTranslations("nav");
+  const locale = useLocale();
+  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
 
   const [form] = Form.useForm<ExchangeRequest>();
   const rule = (field: string) => zodFieldRule(form, exchangeSchema, field);
@@ -82,15 +84,22 @@ export default function ExchangePage() {
 
   const estimateMutation = useFxEstimate();
   const [estimatedAmount, setEstimatedAmount] = useState<Money | null>(null);
+  // R-06: a failed estimate must be visible, not a silently empty preview.
+  const [estimateError, setEstimateError] = useState(false);
 
   const conversionMutation = useFxConversion();
 
-  const { data: conversions, isLoading: isLoadingConversions } =
-    useFxConversions(!!accountId);
+  const {
+    data: conversions,
+    isLoading: isLoadingConversions,
+    isError: conversionsError,
+    refetch: refetchConversions,
+  } = useFxConversions(!!accountId);
 
   const handleSwap = useCallback(() => {
     form.setFieldsValue({ fromCurrency: toCurrency, toCurrency: fromCurrency });
     setEstimatedAmount(null);
+    setEstimateError(false);
   }, [form, fromCurrency, toCurrency]);
 
   // BUG-FE-022: Use ref for estimateMutation to avoid infinite loop
@@ -110,8 +119,10 @@ export default function ExchangePage() {
             amount: parseCurrencyExact(amount),
           });
           setEstimatedAmount(result.toAmount);
+          setEstimateError(false);
         } catch {
           setEstimatedAmount(null);
+          setEstimateError(true);
         }
       }, 300);
 
@@ -139,6 +150,7 @@ export default function ExchangePage() {
     return formatMoney(value, {
       symbol: currency.symbol,
       withDecimals: currency.decimalPlaces > 0,
+      locale: bcp47Locale,
     });
   };
 
@@ -147,12 +159,12 @@ export default function ExchangePage() {
   };
   const onSubmit = async (data: ExchangeRequest) => {
     if (!accountId) {
-      addToast("Please log in to perform currency exchange", "error");
+      notify.error(t("exchangeLoginRequired"));
       return;
     }
 
     if (data.fromCurrency === data.toCurrency) {
-      addToast("Please select different currencies", "warning");
+      notify.warning(t("exchangeSelectDifferentCurrencies"));
       return;
     }
 
@@ -164,8 +176,14 @@ export default function ExchangePage() {
       },
       {
         onSuccess: () => {
-          addToast(
-            `Successfully exchanged ${formatFxAmount(parseCurrencyExact(data.amount), data.fromCurrency)} to ${data.toCurrency}`,
+          notify.info(
+            t("exchangeSuccess", {
+              amount: formatFxAmount(
+                parseCurrencyExact(data.amount),
+                data.fromCurrency,
+              ),
+              currency: data.toCurrency,
+            }),
             "success",
           );
           form.setFieldsValue({ amount: "" });
@@ -176,8 +194,8 @@ export default function ExchangePage() {
           const response = (
             error as { response?: { data?: { message?: string } } }
           ).response;
-          addToast(
-            response?.data?.message || "Exchange failed. Please try again.",
+          notify.info(
+            response?.data?.message || t("exchangeFailed"),
             "error",
           );
         },
@@ -272,7 +290,7 @@ export default function ExchangePage() {
                             })
                           }
                           style={{ width: "100%" }}
-                          aria-label="From currency"
+                          aria-label={t("exchangeFromCurrencyAria")}
                           options={Object.values(SUPPORTED_CURRENCIES).map(
                             (currency) => ({
                               value: currency.code,
@@ -290,7 +308,7 @@ export default function ExchangePage() {
                         shape="circle"
                         onClick={handleSwap}
                         style={{ width: 48, height: 48 }}
-                        aria-label="Swap currencies"
+                        aria-label={t("exchangeSwapCurrencies")}
                         icon={
                           <ArrowRightLeft style={{ width: 24, height: 24 }} />
                         }
@@ -321,7 +339,7 @@ export default function ExchangePage() {
                             })
                           }
                           style={{ width: "100%" }}
-                          aria-label="To currency"
+                          aria-label={t("exchangeToCurrencyAria")}
                           options={Object.values(SUPPORTED_CURRENCIES).map(
                             (currency) => ({
                               value: currency.code,
@@ -341,13 +359,13 @@ export default function ExchangePage() {
                   >
                     <Row justify="space-between" align="middle">
                       <label htmlFor="exchange-amount" style={labelStyle}>
-                        Amount
+                        {t("exchangeAmount")}
                       </label>
                       {isLoadingRate && fromCurrency !== toCurrency && (
                         <Space size={8}>
                           <Spin size="small" />
                           <Typography.Text strong style={capsPrimaryStyle}>
-                            Updating Rate
+                            {t("exchangeUpdatingRate")}
                           </Typography.Text>
                         </Space>
                       )}
@@ -372,7 +390,7 @@ export default function ExchangePage() {
                             {fromCurrencyInfo?.symbol}
                           </Typography.Text>
                         }
-                        aria-label="Amount to exchange"
+                        aria-label={t("exchangeAmountAria")}
                       />
                     </Form.Item>
                   </Space>
@@ -391,14 +409,14 @@ export default function ExchangePage() {
                         <Alert
                           type="error"
                           showIcon
-                          message="Unable to fetch exchange rate"
+                          message={t("exchangeRateError")}
                           action={
                             <Button
                               type="link"
                               size="small"
                               onClick={() => refetchRate()}
                             >
-                              Try again
+                              {t("exchangeTryAgain")}
                             </Button>
                           }
                         />
@@ -414,11 +432,11 @@ export default function ExchangePage() {
                                 style={{
                                   width: 16,
                                   height: 16,
-                                  color: "var(--ant-color-primary)",
+                                  color: "var(--ant-color-primary-text)",
                                 }}
                               />
                               <Typography.Text strong style={labelStyle}>
-                                Current Rate
+                                {t("exchangeCurrentRate")}
                               </Typography.Text>
                             </Space>
                             <Space size={8}>
@@ -431,7 +449,7 @@ export default function ExchangePage() {
                                 }}
                               />
                               <Typography.Text strong style={capsPrimaryStyle}>
-                                Live
+                                {t("exchangeLive")}
                               </Typography.Text>
                             </Space>
                           </Row>
@@ -446,10 +464,15 @@ export default function ExchangePage() {
                               level={3}
                               style={{
                                 margin: 0,
-                                color: "var(--ant-color-primary)",
+                                color: "var(--ant-color-primary-text)",
                               }}
                             >
-                              {formatExactDecimal(fxRate.rate, 4)} {toCurrency}
+                              {formatExactDecimal(
+                                fxRate.rate,
+                                4,
+                                bcp47Locale,
+                              )}{" "}
+                              {toCurrency}
                             </Typography.Title>
                           </Space>
                           <Space size={8}>
@@ -458,8 +481,10 @@ export default function ExchangePage() {
                               type="secondary"
                               style={{ fontSize: 12 }}
                             >
-                              Valid until{" "}
-                              {new Date(fxRate.validUntil).toLocaleTimeString()}
+                              {t("exchangeValidUntil")}{" "}
+                              {new Date(
+                                fxRate.validUntil,
+                              ).toLocaleTimeString(bcp47Locale)}
                             </Typography.Text>
                           </Space>
                         </Space>
@@ -478,6 +503,19 @@ export default function ExchangePage() {
                   )}
 
                   {/* Conversion Preview */}
+                  {estimateError && fromCurrency !== toCurrency && (
+                    <Alert
+                      type="error"
+                      showIcon
+                      style={{ marginTop: 24 }}
+                      message={t("exchangeRateError")}
+                      action={
+                        <Button size="small" onClick={() => setEstimateError(false)}>
+                          {t("exchangeTryAgain")}
+                        </Button>
+                      }
+                    />
+                  )}
                   {displayAmount !== null && fromCurrency !== toCurrency && (
                     <Card
                       size="small"
@@ -497,7 +535,7 @@ export default function ExchangePage() {
                               marginBottom: 8,
                             }}
                           >
-                            You will receive
+                            {t("exchangeYouWillReceive")}
                           </Typography.Text>
                           <Typography.Title level={3} style={{ margin: 0 }}>
                             {formatFxAmount(displayAmount, toCurrency)}
@@ -518,7 +556,7 @@ export default function ExchangePage() {
                             style={{
                               width: 24,
                               height: 24,
-                              color: "var(--ant-color-primary)",
+                              color: "var(--ant-color-primary-text)",
                             }}
                           />
                         </div>
@@ -532,13 +570,13 @@ export default function ExchangePage() {
                       <Alert
                         type="info"
                         showIcon
-                        message="Please select different currencies to perform an exchange."
+                        message={t("exchangeSelectDifferentCurrenciesAlert")}
                       />
                     ) : (
                       <Alert
                         type="info"
                         showIcon
-                        message="Exchange Information"
+                        message={t("exchangeInformation")}
                         description={
                           <ul
                             style={{
@@ -547,13 +585,13 @@ export default function ExchangePage() {
                               fontSize: 12,
                             }}
                           >
-                            <li>Exchange rates are updated every 60 seconds</li>
+                            <li>{t("exchangeRatesUpdated")}</li>
+                            <li>{t("exchangeNoHiddenFees")}</li>
                             <li>
-                              No hidden fees - the rate you see is the rate you
-                              get
-                            </li>
-                            <li>
-                              Minimum exchange amount: 10,000 {fromCurrency}
+                              {t("exchangeMinimumAmount", {
+                                amount: 10000,
+                                currency: fromCurrency,
+                              })}
                             </li>
                           </ul>
                         }
@@ -577,8 +615,8 @@ export default function ExchangePage() {
                       }
                     >
                       {conversionMutation.isPending
-                        ? "Processing Exchange..."
-                        : "Exchange Currency Now"}
+                        ? t("exchangeProcessing")
+                        : t("exchangeNow")}
                     </Button>
                   </div>
                 </Form>
@@ -597,7 +635,7 @@ export default function ExchangePage() {
                   style={{ marginBottom: 24 }}
                 >
                   <Typography.Text strong style={labelStyle}>
-                    Market Status
+                    {t("exchangeMarketStatus")}
                   </Typography.Text>
                   <Space size={8}>
                     <span
@@ -609,45 +647,49 @@ export default function ExchangePage() {
                       }}
                     />
                     <Typography.Text strong style={capsPrimaryStyle}>
-                      Live
+                      {t("exchangeLive")}
                     </Typography.Text>
                   </Space>
                 </Row>
                 <Space direction="vertical" size={16} style={{ width: "100%" }}>
                   <Row justify="space-between" align="middle">
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Last Update
+                      {t("exchangeLastUpdate")}
                     </Typography.Text>
                     <Typography.Text strong style={{ fontSize: 12 }}>
                       {fxRate
-                        ? new Date(fxRate.validFrom).toLocaleTimeString()
+                        ? new Date(fxRate.validFrom).toLocaleTimeString(
+                            bcp47Locale,
+                          )
                         : "--:--:--"}
                     </Typography.Text>
                   </Row>
                   <Row justify="space-between" align="middle">
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Next Update
+                      {t("exchangeNextUpdate")}
                     </Typography.Text>
                     <Typography.Text strong style={{ fontSize: 12 }}>
                       {fxRate
                         ? new Date(
                             new Date(fxRate.validFrom).getTime() + 60000,
-                          ).toLocaleTimeString()
+                          ).toLocaleTimeString(bcp47Locale)
                         : "--:--:--"}
                     </Typography.Text>
                   </Row>
                   <Row justify="space-between" align="middle">
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Supported Pairs
+                      {t("exchangeSupportedPairs")}
                     </Typography.Text>
                     <Typography.Text
                       strong
                       style={{
                         fontSize: 12,
-                        color: "var(--ant-color-primary)",
+                        color: "var(--ant-color-primary-text)",
                       }}
                     >
-                      {Object.keys(SUPPORTED_CURRENCIES).length} currencies
+                      {t("exchangeCurrencyCount", {
+                        count: Object.keys(SUPPORTED_CURRENCIES).length,
+                      })}
                     </Typography.Text>
                   </Row>
                 </Space>
@@ -659,7 +701,7 @@ export default function ExchangePage() {
                   strong
                   style={{ ...labelStyle, display: "block", marginBottom: 24 }}
                 >
-                  Recent Exchanges
+                  {t("exchangeRecent")}
                 </Typography.Text>
 
                 {isLoadingConversions ? (
@@ -672,6 +714,18 @@ export default function ExchangePage() {
                   >
                     <Spin />
                   </div>
+                ) : conversionsError ? (
+                  // R-06: a failed history load is not an empty history.
+                  <Alert
+                    type="error"
+                    showIcon
+                    message={t("exchangeHistoryError")}
+                    action={
+                      <Button size="small" onClick={() => void refetchConversions()}>
+                        {t("exchangeTryAgain")}
+                      </Button>
+                    }
+                  />
                 ) : recentConversions.length === 0 ? (
                   <EmptyState
                     title={t("exchangeHistoryEmpty")}
@@ -739,6 +793,7 @@ export default function ExchangePage() {
                               {formatExactDecimal(
                                 conversion.fromAmount,
                                 fromInfo?.decimalPlaces,
+                                bcp47Locale,
                               )}
                             </Typography.Text>
                             <Typography.Text type="secondary">
@@ -748,13 +803,14 @@ export default function ExchangePage() {
                               strong
                               style={{
                                 fontSize: 14,
-                                color: "var(--ant-color-primary)",
+                                color: "var(--ant-color-primary-text)",
                               }}
                             >
                               {toInfo?.symbol}
                               {formatExactDecimal(
                                 conversion.toAmount,
                                 toInfo?.decimalPlaces,
+                                bcp47Locale,
                               )}
                             </Typography.Text>
                           </Space>
@@ -768,7 +824,7 @@ export default function ExchangePage() {
                           >
                             {new Date(
                               conversion.conversionDate,
-                            ).toLocaleString()}
+                            ).toLocaleString(bcp47Locale)}
                           </Typography.Text>
                         </Card>
                       );
@@ -807,7 +863,7 @@ export default function ExchangePage() {
                   <Typography.Title
                     level={4}
                     style={{
-                      color: "var(--ant-color-text-light-solid)",
+                      color: INK_ON_EMERALD,
                       marginTop: 0,
                       marginBottom: 8,
                     }}
@@ -818,16 +874,16 @@ export default function ExchangePage() {
                     strong
                     style={{
                       ...labelStyle,
-                      color: "var(--ant-color-text-light-solid)",
+                      color: INK_ON_EMERALD,
                       display: "block",
                       marginBottom: 24,
                     }}
                   >
                     {t("exchangeSupport")}
                   </Typography.Text>
-                  <Link href="/support">
-                    <Button ghost>Contact Support</Button>
-                  </Link>
+                  <Button ghost href="/support">
+                    {t("contactSupport")}
+                  </Button>
                 </div>
               </Card>
             </Space>

@@ -1,4 +1,6 @@
 import { screen, fireEvent, act } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { vi } from 'vitest';
 import BannerCarousel from '@/components/cms/BannerCarousel';
 import PromoPopup from '@/components/cms/PromoPopup';
@@ -262,11 +264,12 @@ describe('BannerCarousel ANT fixes', () => {
     const next = screen.getByRole('button', { name: 'Banner berikutnya' });
     expect(prev.closest('.hidden')).toBeNull();
     expect(next.closest('.hidden')).toBeNull();
-    const css = Array.from(container.querySelectorAll('style'))
-      .map((s) => s.textContent ?? '')
-      .join('');
-    expect(css).toMatch(/focus-visible/);
-    expect(css).toMatch(/3px/);
+    // The slide is a custom button, so it carries the shared focus-ring
+    // utility; the arrows are antd buttons and ship their own ring.
+    expect(container.querySelector('.cms-slide')?.className).toContain('payu-focus-ring');
+    const css = readFileSync(join(process.cwd(), 'src/app/globals.css'), 'utf8');
+    expect(css).toMatch(/\.payu-focus-ring:focus-visible/);
+    expect(css).toMatch(/outline:\s*3px/);
   });
 
   it('A-01: no legacy token-bypass classes in output', () => {

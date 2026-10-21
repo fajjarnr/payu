@@ -48,6 +48,7 @@ import {
 } from "@/hooks/useBeneficiaries";
 import { useUIStore } from "@/stores";
 import DashboardLayout from "@/components/DashboardLayout";
+import { notify } from "@/lib/notify";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { formatCurrency, formatCurrencyWithoutSymbol } from "@/lib/currency";
@@ -199,7 +200,6 @@ export default function TransferPage() {
     null,
   );
   const accountId = useAuthStore((state) => state.accountId);
-  const addToast = useUIStore((state) => state.addToast);
   const transferMutation = useInitiateTransfer();
   const createBeneficiary = useCreateBeneficiary(accountId ?? "");
   const router = useRouter();
@@ -256,7 +256,7 @@ export default function TransferPage() {
   const handleBeneficiarySubmit = () => {
     const accountNumber = beneficiaryAccountNumber.trim();
     if (!/^\d{10,20}$/.test(accountNumber)) {
-      addToast(t("toastBeneficiaryInvalid"), "warning");
+      notify.warning(t("toastBeneficiaryInvalid"));
       return;
     }
     createBeneficiary.mutate(
@@ -267,12 +267,12 @@ export default function TransferPage() {
       },
       {
         onSuccess: () => {
-          addToast(t("toastBeneficiaryAdded"), "success");
+          notify.success(t("toastBeneficiaryAdded"));
           setBeneficiaryNickname("");
           setBeneficiaryAccountNumber("");
           setShowBeneficiaryModal(false);
         },
-        onError: () => addToast(t("toastBeneficiaryAddFailed"), "error"),
+        onError: () => notify.error(t("toastBeneficiaryAddFailed")),
       },
     );
   };
@@ -321,7 +321,7 @@ export default function TransferPage() {
               : src.scheduleType === "SCHEDULED"
                 ? t("toastSuccessScheduled")
                 : t("toastSuccessRecurring");
-          addToast(message, "success");
+          notify.success(message);
           // The review branch renders before the success branch, so the
           // review flag must be cleared or the success screen never shows.
           setShowReview(false);
@@ -335,7 +335,7 @@ export default function TransferPage() {
           // reach the server is returned instead of executed twice.
           isSubmittingRef.current = false;
           setIsSubmitLocked(false);
-          addToast(t("toastFailed"), "error");
+          notify.error(t("toastFailed"));
         },
       },
     );
@@ -370,12 +370,12 @@ export default function TransferPage() {
       !formValues.toAccountId ||
       compareCurrency((formValues.amount ?? "0") as string, "0" as string) <= 0
     ) {
-      addToast(t("toastRecipientAmountRequired"), "warning");
+      notify.warning(t("toastRecipientAmountRequired"));
       return;
     }
 
     if (formValues.scheduleType === "SCHEDULED" && !formValues.scheduledAt) {
-      addToast(t("toastDateRequired"), "warning");
+      notify.warning(t("toastDateRequired"));
       return;
     }
 
@@ -383,13 +383,13 @@ export default function TransferPage() {
       formValues.scheduleType === "RECURRING" &&
       (!formValues.recurringDay || !formValues.recurringMonth)
     ) {
-      addToast(t("toastRecurringRequired"), "warning");
+      notify.warning(t("toastRecurringRequired"));
       return;
     }
 
     setReviewSnapshot(formValues as TransferReviewSnapshot);
     setShowReview(true);
-  }, [formValues, addToast, t]);
+  }, [formValues, t]);
 
   const selectedTransferType = TRANSFER_TYPES.find(
     (t) => t.type === transferType,
@@ -776,7 +776,7 @@ export default function TransferPage() {
                   width: 96,
                   height: 96,
                   borderRadius: "50%",
-                  backgroundColor: "hsl(var(--primary) / 0.1)",
+                  backgroundColor: token.colorPrimaryBg,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1020,12 +1020,11 @@ export default function TransferPage() {
                                 transition: "all 0.2s",
                                 ...(isSelected
                                   ? {
-                                      backgroundColor:
-                                        "hsl(var(--primary) / 0.05)",
-                                      boxShadow:
-                                        "0 10px 15px -3px hsl(var(--primary) / 0.1)",
+                                      backgroundColor: token.colorPrimaryBg,
+                                      // No glow: a neutral lift, per the design gate.
+                                      boxShadow: token.boxShadowSecondary,
                                     }
-                                  : { backgroundColor: "hsl(var(--muted))" }),
+                                  : { backgroundColor: token.colorFillTertiary }),
                               }}
                             >
                               <Row justify="space-between" align="top">
@@ -1042,9 +1041,8 @@ export default function TransferPage() {
                                           color: token.colorPrimaryText,
                                         }
                                       : {
-                                          backgroundColor:
-                                            "hsl(var(--muted) / 0.5)",
-                                          color: "hsl(var(--muted-foreground))",
+                                          backgroundColor: token.colorFillTertiary,
+                                          color: token.colorTextSecondary,
                                         }),
                                   }}
                                 >
@@ -1144,12 +1142,11 @@ export default function TransferPage() {
                                 transition: "all 0.2s",
                                 ...(isSelected
                                   ? {
-                                      backgroundColor:
-                                        "hsl(var(--primary) / 0.05)",
-                                      boxShadow:
-                                        "0 10px 15px -3px hsl(var(--primary) / 0.1)",
+                                      backgroundColor: token.colorPrimaryBg,
+                                      // No glow: a neutral lift, per the design gate.
+                                      boxShadow: token.boxShadowSecondary,
                                     }
-                                  : { backgroundColor: "hsl(var(--muted))" }),
+                                  : { backgroundColor: token.colorFillTertiary }),
                               }}
                             >
                               <Row justify="space-between" align="middle">
@@ -1168,10 +1165,8 @@ export default function TransferPage() {
                                             color: token.colorPrimaryText,
                                           }
                                         : {
-                                            backgroundColor:
-                                              "hsl(var(--muted) / 0.5)",
-                                            color:
-                                              "hsl(var(--muted-foreground))",
+                                            backgroundColor: token.colorFillTertiary,
+                                            color: token.colorTextSecondary,
                                           }),
                                     }}
                                   >
@@ -1239,7 +1234,7 @@ export default function TransferPage() {
                             style={{
                               fontSize: "0.75rem",
                               fontWeight: "bold",
-                              color: "hsl(var(--muted-foreground))",
+                              color: token.colorTextSecondary,
                               letterSpacing: "0.1em",
                               textTransform: "uppercase",
                               marginBottom: 12,
@@ -1305,10 +1300,10 @@ export default function TransferPage() {
                             gridTemplateColumns:
                               "repeat(auto-fill, minmax(44px, 1fr))",
                             gap: 8,
-                            backgroundColor: "hsl(var(--muted) / 0.3)",
+                            backgroundColor: token.colorFillQuaternary,
                             padding: 16,
                             borderRadius: 12,
-                            border: "1px solid hsl(var(--border))",
+                            border: `1px solid ${token.colorBorderSecondary}`,
                             maxHeight: 220,
                             overflowY: "auto",
                           }}
@@ -1341,12 +1336,11 @@ export default function TransferPage() {
                                     ? {
                                         backgroundColor: token.colorPrimary,
                                         color: INK_ON_EMERALD,
-                                        boxShadow:
-                                          "0 10px 15px -3px hsl(var(--primary) / 0.3)",
+                                        boxShadow: token.boxShadowSecondary,
                                       }
                                     : {
-                                        backgroundColor: "hsl(var(--card))",
-                                        color: "hsl(var(--foreground) / 0.6)",
+                                        backgroundColor: token.colorBgContainer,
+                                        color: token.colorTextSecondary,
                                       }),
                                 }}
                               >
@@ -1379,7 +1373,7 @@ export default function TransferPage() {
                             style={{
                               fontSize: "0.75rem",
                               fontWeight: "bold",
-                              color: "hsl(var(--primary-dark))",
+                              color: token.colorPrimaryText,
                               letterSpacing: "0.1em",
                               textTransform: "uppercase",
                             }}
@@ -1401,10 +1395,10 @@ export default function TransferPage() {
                             gridTemplateColumns:
                               "repeat(auto-fill, minmax(64px, 1fr))",
                             gap: 8,
-                            backgroundColor: "hsl(var(--muted) / 0.3)",
+                            backgroundColor: token.colorFillQuaternary,
                             padding: 16,
                             borderRadius: 12,
-                            border: "1px solid hsl(var(--border))",
+                            border: `1px solid ${token.colorBorderSecondary}`,
                           }}
                           role="radiogroup"
                           aria-labelledby="recurring-month-label"
@@ -1448,12 +1442,11 @@ export default function TransferPage() {
                                     ? {
                                         backgroundColor: token.colorPrimary,
                                         color: INK_ON_EMERALD,
-                                        boxShadow:
-                                          "0 10px 15px -3px hsl(var(--primary) / 0.3)",
+                                        boxShadow: token.boxShadowSecondary,
                                       }
                                     : {
-                                        backgroundColor: "hsl(var(--card))",
-                                        color: "hsl(var(--foreground) / 0.6)",
+                                        backgroundColor: token.colorBgContainer,
+                                        color: token.colorTextSecondary,
                                       }),
                                 }}
                               >
@@ -1511,10 +1504,10 @@ export default function TransferPage() {
                           display: "flex",
                           alignItems: "center",
                           gap: 8,
-                          backgroundColor: "hsl(var(--success-light))",
+                          backgroundColor: token.colorSuccessBg,
                           padding: "6px 12px",
                           borderRadius: "9999px",
-                          border: "1px solid hsl(var(--primary) / 0.1)",
+                          border: `1px solid ${token.colorPrimaryBorder}`,
                           boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                           flexShrink: 0,
                         }}
@@ -1660,11 +1653,10 @@ export default function TransferPage() {
                             transition: "all 0.2s",
                             ...(selectedContact === c.accountId
                               ? {
-                                  backgroundColor: "hsl(var(--primary) / 0.05)",
-                                  boxShadow:
-                                    "0 10px 15px -3px hsl(var(--primary) / 0.1)",
+                                  backgroundColor: token.colorPrimaryBg,
+                                  boxShadow: token.boxShadowSecondary,
                                 }
-                              : { backgroundColor: "hsl(var(--muted))" }),
+                              : { backgroundColor: token.colorFillTertiary }),
                           }}
                         >
                           <div
@@ -1704,7 +1696,7 @@ export default function TransferPage() {
                           gap: 16,
                           padding: 24,
                           borderRadius: 12,
-                          border: "1px dashed hsl(var(--border))",
+                          border: `1px dashed ${token.colorBorderSecondary}`,
                           transition: "all 0.2s",
                         }}
                       >
@@ -1713,11 +1705,11 @@ export default function TransferPage() {
                             width: 56,
                             height: 56,
                             borderRadius: 16,
-                            backgroundColor: "hsl(var(--muted))",
+                            backgroundColor: token.colorFillTertiary,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "hsl(var(--muted-foreground))",
+                            color: token.colorTextSecondary,
                           }}
                         >
                           <PlusCircle style={{ width: 24, height: 24 }} />
@@ -1732,11 +1724,10 @@ export default function TransferPage() {
                   <div style={{ marginTop: "auto", paddingTop: 40 }}>
                     <div
                       style={{
-                        background:
-                          "linear-gradient(135deg, hsl(var(--text-primary)), hsl(var(--text-primary)))",
+                        background: `linear-gradient(135deg, ${token.colorText}, ${token.colorText})`,
                         borderRadius: 12,
                         padding: "20px 24px",
-                        color: "hsl(var(--surface))",
+                        color: token.colorTextLightSolid,
                         position: "relative",
                         overflow: "hidden",
                         boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
@@ -1747,7 +1738,7 @@ export default function TransferPage() {
                           level={4}
                           style={{
                             marginBottom: 8,
-                            color: "hsl(var(--surface))",
+                            color: token.colorTextLightSolid,
                           }}
                         >
                           Bantuan?
@@ -1772,11 +1763,11 @@ export default function TransferPage() {
                             fontWeight: "bold",
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
-                            backgroundColor: "hsl(var(--surface) / 0.1)",
+                            backgroundColor: "color-mix(in srgb, #ffffff 10%, transparent)",
                             padding: "12px 24px",
                             borderRadius: 12,
-                            border: "1px solid hsl(var(--surface) / 0.1)",
-                            color: "hsl(var(--surface))",
+                            border: `1px solid color-mix(in srgb, ${token.colorTextLightSolid} 10%, transparent)`,
+                            color: token.colorTextLightSolid,
                           }}
                         >
                           Hubungi Kami

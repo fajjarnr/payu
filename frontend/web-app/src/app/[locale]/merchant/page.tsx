@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PartnerService, Partner } from '@/services/PartnerService';
 import { Link } from '@/lib/navigation';
 import { useTranslations } from 'next-intl';
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, Col, Input, Row, Space, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Col, Input, Row, Space, Tag, Typography } from 'antd';
 import { Building2, Key, ShieldCheck, Loader2 } from '@/components/icons';
 import { useAuthStore } from '@/stores/authStore';
 import { SkipLink } from "@/lib/a11y";
+import { INK_ON_EMERALD } from '@/theme/tokens';
 
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
@@ -23,22 +24,27 @@ export default function MerchantDashboard() {
   const { user: _user } = useAuthStore();
   const [partner, setPartner] = useState<Partner | null>(null);
   const [loading, setLoading] = useState(true);
+  // R-06: a failed lookup must not read as "you are not registered".
+  const [loadError, setLoadError] = useState(false);
+
+  const fetchPartner = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      // ponytail: email-based /me lookup; upgrade to owner_user_id if multi-tenant per user
+      const data = await PartnerService.getMyPartner();
+      setPartner(data);
+    } catch (error) {
+      console.error('Failed to fetch partner', error);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchPartner = async () => {
-      try {
-        // ponytail: email-based /me lookup; upgrade to owner_user_id if multi-tenant per user
-        const data = await PartnerService.getMyPartner();
-        setPartner(data);
-      } catch (error) {
-        console.error('Failed to fetch partner', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPartner();
-  }, []);
+    void fetchPartner();
+  }, [fetchPartner]);
 
   if (loading) {
     return (
@@ -46,6 +52,26 @@ export default function MerchantDashboard() {
       <SkipLink />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
           <Loader2 spin style={{ fontSize: 32, color: 'var(--ant-color-primary)' }} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DashboardLayout>
+      <SkipLink />
+        <div style={{ display: 'flex', justifyContent: 'center', minHeight: 320 }}>
+          <Alert
+            type="error"
+            showIcon
+            message={t('loadError')}
+            action={
+              <Button size="small" onClick={() => void fetchPartner()}>
+                {t('retry')}
+              </Button>
+            }
+          />
         </div>
       </DashboardLayout>
     );
@@ -70,7 +96,7 @@ export default function MerchantDashboard() {
                 padding: '0 24px',
                 borderRadius: 12,
                 backgroundColor: 'var(--ant-color-primary)',
-                color: 'var(--ant-color-text-light-solid)',
+                color: INK_ON_EMERALD,
                 fontSize: 12,
                 fontWeight: 700,
                 textTransform: 'uppercase',

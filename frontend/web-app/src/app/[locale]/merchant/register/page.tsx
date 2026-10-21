@@ -8,24 +8,25 @@ import { PartnerService } from '@/services/PartnerService';
 import { z } from 'zod';
 import { notify as toast } from '@/lib/notify';
 import { Button, Card, Col, Input, Row, Space, Typography } from 'antd';
+import { useTranslations } from 'next-intl';
+import { BRAND_PANEL_BG, BRAND_PANEL_FG, INK_ON_EMERALD } from '@/theme/tokens';
 
-const merchantSchema = z.object({
-  name: z.string().min(3, 'Nama merchant minimal 3 karakter'),
-  email: z.string().email('Format email tidak valid'),
-  phone: z.string().min(10, 'Nomor telepon minimal 10 digit'),
-  type: z.string().min(1, 'Tipe merchant wajib dipilih'),
-  publicKey: z.string().optional(),
-});
+interface MerchantFormData {
+  name: string;
+  email: string;
+  phone: string;
+  type: string;
+  publicKey?: string;
+}
 
-type MerchantFormData = z.infer<typeof merchantSchema>;
-
-const merchantTypes = [
-  { value: 'RETAIL', label: 'Retail', description: 'Toko fisik atau online dengan transaksi reguler' },
-  { value: 'FOOD_BEVERAGE', label: 'Food & Beverage', description: 'Restoran, kafe, dan layanan makanan' },
-  { value: 'TRANSPORTATION', label: 'Transportation', description: 'Ojek online, logistik, dan pengiriman' },
-  { value: 'MARKETPLACE', label: 'Marketplace', description: 'Platform e-commerce multi-vendor' },
-  { value: 'UTILITY', label: 'Utility', description: 'Pembayaran tagihan dan layanan utilitas' },
-];
+const buildMerchantSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(3, t('nameMinLength')),
+    email: z.string().email(t('emailInvalid')),
+    phone: z.string().min(10, t('phoneMinLength')),
+    type: z.string().min(1, t('typeRequired')),
+    publicKey: z.string().optional(),
+  });
 
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
@@ -37,6 +38,15 @@ const labelStyle: React.CSSProperties = {
 
 export default function MerchantRegisterPage() {
   const router = useRouter();
+  const t = useTranslations('merchantRegister');
+  const merchantSchema = buildMerchantSchema(t);
+  const merchantTypes = [
+    { value: 'RETAIL', label: t('typeRetail'), description: t('typeRetailDescription') },
+    { value: 'FOOD_BEVERAGE', label: t('typeFoodBeverage'), description: t('typeFoodBeverageDescription') },
+    { value: 'TRANSPORTATION', label: t('typeTransportation'), description: t('typeTransportationDescription') },
+    { value: 'MARKETPLACE', label: t('typeMarketplace'), description: t('typeMarketplaceDescription') },
+    { value: 'UTILITY', label: t('typeUtility'), description: t('typeUtilityDescription') },
+  ];
   const [formData, setFormData] = useState<MerchantFormData>({
     name: '',
     email: '',
@@ -49,11 +59,11 @@ export default function MerchantRegisterPage() {
   const registerMutation = useMutation({
     mutationFn: (data: MerchantFormData) => PartnerService.register(data),
     onSuccess: () => {
-      toast.success('Registrasi merchant berhasil! Silakan tunggu verifikasi.');
+      toast.success(t('successToast'));
       router.push('/merchant');
     },
     onError: () => {
-      toast.error('Registrasi gagal. Silakan coba lagi.');
+      toast.error(t('errorToast'));
     }
   });
 
@@ -95,9 +105,9 @@ export default function MerchantRegisterPage() {
             <div style={{ width: 80, height: 80, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
               <Building2 style={{ width: 40, height: 40, color: 'var(--ant-color-primary)' }} />
             </div>
-            <Typography.Title level={1} style={{ margin: 0 }}>Daftar Merchant Baru</Typography.Title>
+            <Typography.Title level={1} style={{ margin: 0 }}>{t('title')}</Typography.Title>
             <Typography.Text type="secondary" style={{ maxWidth: 576 }}>
-              Bergabunglah dengan ekosistem pembayaran PayU dan terima pembayaran instan dari jutaan pengguna.
+              {t('subtitle')}
             </Typography.Text>
           </Space>
 
@@ -107,13 +117,13 @@ export default function MerchantRegisterPage() {
                 <Space direction="vertical" size={24} style={{ width: '100%' }}>
                   <Space direction="vertical" size={8} style={{ width: '100%' }}>
                     <label htmlFor="merchant-name" style={labelStyle}>
-                      Nama Merchant
+                      {t('nameLabel')}
                     </label>
                     <Input
                       id="merchant-name"
                       value={formData.name}
                       onChange={(e) => handleChange('name', e.target.value)}
-                      placeholder="Masukkan nama bisnis Anda"
+                      placeholder={t('namePlaceholder')}
                       size="large"
                       prefix={<User style={{ width: 20, height: 20, color: 'var(--ant-color-text-tertiary)' }} />}
                       status={errors.name ? 'error' : undefined}
@@ -125,14 +135,14 @@ export default function MerchantRegisterPage() {
                     <Col xs={24} md={12}>
                       <Space direction="vertical" size={8} style={{ width: '100%' }}>
                         <label htmlFor="merchant-email" style={labelStyle}>
-                          Email Bisnis
+                          {t('emailLabel')}
                         </label>
                         <Input
                           id="merchant-email"
                           type="email"
                           value={formData.email}
                           onChange={(e) => handleChange('email', e.target.value)}
-                          placeholder="email@perusahaan.com"
+                          placeholder={t('emailPlaceholder')}
                           size="large"
                           prefix={<Mail style={{ width: 20, height: 20, color: 'var(--ant-color-text-tertiary)' }} />}
                           status={errors.email ? 'error' : undefined}
@@ -143,14 +153,14 @@ export default function MerchantRegisterPage() {
                     <Col xs={24} md={12}>
                       <Space direction="vertical" size={8} style={{ width: '100%' }}>
                         <label htmlFor="merchant-phone" style={labelStyle}>
-                          Nomor Telepon
+                          {t('phoneLabel')}
                         </label>
                         <Input
                           id="merchant-phone"
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => handleChange('phone', e.target.value)}
-                          placeholder="+62 812-3456-7890"
+                          placeholder={t('phonePlaceholder')}
                           size="large"
                           prefix={<Phone style={{ width: 20, height: 20, color: 'var(--ant-color-text-tertiary)' }} />}
                           status={errors.phone ? 'error' : undefined}
@@ -162,7 +172,7 @@ export default function MerchantRegisterPage() {
                 </Space>
               </Card>
 
-              <Card title={<Typography.Title level={4} style={{ margin: 0 }}>Tipe Merchant</Typography.Title>}>
+              <Card title={<Typography.Title level={4} style={{ margin: 0 }}>{t('typeTitle')}</Typography.Title>}>
                 <Row gutter={[24, 24]}>
                   {merchantTypes.map((type) => {
                     const selected = formData.type === type.value;
@@ -170,6 +180,7 @@ export default function MerchantRegisterPage() {
                       <Col xs={24} md={12} key={type.value}>
                         <button
                           type="button"
+                          className="payu-focus-ring"
                           onClick={() => handleChange('type', type.value)}
                           aria-pressed={selected}
                           style={{
@@ -190,7 +201,7 @@ export default function MerchantRegisterPage() {
                           <Space direction="vertical" size={16} style={{ width: '100%' }}>
                             <Space size={16}>
                               <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selected ? 'var(--ant-color-primary)' : 'var(--ant-color-fill-secondary)' }}>
-                                <Building2 style={{ width: 20, height: 20, color: selected ? 'var(--ant-color-text-light-solid)' : 'var(--ant-color-text-tertiary)' }} />
+                                <Building2 style={{ width: 20, height: 20, color: selected ? INK_ON_EMERALD : 'var(--ant-color-text-tertiary)' }} />
                               </div>
                               <Typography.Text strong>{type.label}</Typography.Text>
                             </Space>
@@ -210,7 +221,7 @@ export default function MerchantRegisterPage() {
               <Card>
                 <Space direction="vertical" size={8} style={{ width: '100%' }}>
                   <label htmlFor="merchant-public-key" style={labelStyle}>
-                    Public Key (Opsional)
+                    {t('publicKeyLabel')}
                   </label>
                   <Input.TextArea
                     id="merchant-public-key"
@@ -221,12 +232,12 @@ export default function MerchantRegisterPage() {
                     style={{ fontFamily: 'ui-monospace, monospace' }}
                   />
                   <Typography.Text type="secondary">
-                    Diperlukan untuk integrasi API custom
+                    {t('publicKeyHint')}
                   </Typography.Text>
                 </Space>
               </Card>
 
-              <Card style={{ backgroundColor: 'var(--ant-color-text)', border: 'none', position: 'relative', overflow: 'hidden' }}>
+              <Card style={{ backgroundColor: BRAND_PANEL_BG, border: 'none', position: 'relative', overflow: 'hidden' }}>
                 <Row justify="space-between" align="middle" gutter={[32, 24]}>
                   <Col xs={24} md={16}>
                     <Space direction="vertical" size={16}>
@@ -234,10 +245,14 @@ export default function MerchantRegisterPage() {
                         <div style={{ width: 40, height: 40, backgroundColor: 'var(--ant-color-primary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <ShieldCheck style={{ width: 20, height: 20, color: 'var(--ant-color-text-light-solid)' }} />
                         </div>
-                        <Typography.Title level={3} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>Siap untuk Mulai?</Typography.Title>
+                        <Typography.Title level={3} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>{t('readyTitle')}</Typography.Title>
                       </Space>
-                      <Typography.Text style={{ color: 'var(--ant-color-text-light-solid)', opacity: 0.7 }}>
-                        Dengan mendaftar, Anda menyetujui <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>Syarat & Ketentuan</Typography.Text> serta <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>Kebijakan Privasi</Typography.Text> PayU.
+                      <Typography.Text style={{ color: BRAND_PANEL_FG, opacity: 0.85 }}>
+                        {t('termsIntro')}{' '}
+                        <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>{t('termsLink')}</Typography.Text>{' '}
+                        {t('termsConjunction')}{' '}
+                        <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>{t('privacyLink')}</Typography.Text>{' '}
+                        {t('termsPayU')}
                       </Typography.Text>
                     </Space>
                   </Col>
@@ -249,7 +264,7 @@ export default function MerchantRegisterPage() {
                       size="large"
                       icon={!registerMutation.isPending ? <ArrowRight style={{ width: 16, height: 16 }} /> : undefined}
                     >
-                      {registerMutation.isPending ? 'Sedang Memproses...' : 'Daftar Sekarang'}
+                      {registerMutation.isPending ? t('submitting') : t('submit')}
                     </Button>
                   </Col>
                 </Row>
@@ -260,7 +275,7 @@ export default function MerchantRegisterPage() {
 
           <div style={{ textAlign: 'center' }}>
             <Button type="link" onClick={() => router.push('/merchant')}>
-              Kembali ke Dashboard Merchant
+              {t('backToDashboard')}
             </Button>
           </div>
         </Space>

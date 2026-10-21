@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { Suspense, useEffect } from "react";
 import { SkipLink } from "@/lib/a11y";
 import { LoadingState } from "@/components/LoadingState";
+import { BRAND_PANEL_BG, BRAND_PANEL_FG } from "@/theme/tokens";
 
 const { Title, Text } = Typography;
 
@@ -34,7 +35,7 @@ function LoginSkeleton() {
   return (
     <>
       <SkipLink />
-      <main id="main-content" style={{ minHeight: "100vh", background: "hsl(var(--background))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <main id="main-content" style={{ minHeight: "100vh", background: "var(--ant-color-bg-layout)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <LoadingState variant="spinner" />
       </main>
     </>
@@ -59,19 +60,20 @@ function LoginForm() {
   return (
     <>
       <SkipLink />
-      <main id="main-content" style={{ minHeight: "100vh", background: "hsl(var(--background))" }}>
+      <main id="main-content" style={{ minHeight: "100vh", background: "var(--ant-color-bg-layout)" }}>
       <Row style={{ minHeight: "100vh" }}>
         {/* Left Panel - Branding (Hidden on mobile) */}
         <Col
           xs={0}
           lg={12}
           style={{
-            background: token.colorText,
-            borderRight: "1px solid hsl(var(--border) / 0.1)",
+            // Always dark in both themes — token.colorText inverted the panel in dark mode.
+            background: BRAND_PANEL_BG,
+            borderRight: `1px solid color-mix(in srgb, ${token.colorTextLightSolid} 10%, transparent)`,
             padding: "32px 24px",
             position: "relative",
             overflow: "hidden",
-            color: token.colorBgContainer,
+            color: BRAND_PANEL_FG,
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
@@ -86,7 +88,7 @@ function LoginForm() {
               width: 800,
               maxWidth: "100%",
               height: 800,
-              background: "hsl(var(--primary) / 0.1)",
+              background: `color-mix(in srgb, ${token.colorPrimary} 10%, transparent)`,
               borderRadius: "50%",
               filter: "blur(120px)",
               transform: "translate(50%, -50%)",
@@ -126,6 +128,7 @@ function LoginForm() {
           >
             <Link
               href="/"
+              className="payu-focus-ring"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -159,7 +162,7 @@ function LoginForm() {
                   fontSize: 24,
                   fontWeight: 700,
                   letterSpacing: "-0.025em",
-                  color: token.colorBgContainer,
+                  color: BRAND_PANEL_FG,
                 }}
               >
                 PayU
@@ -183,10 +186,9 @@ function LoginForm() {
                 gap: 8,
                 padding: "4px 12px",
                 borderRadius: 9999,
-                background:
-                  "color-mix(in srgb, var(--color-primary-dark) 70%, transparent)",
-                border: "1px solid hsl(var(--primary) / 0.3)",
-                color: "var(--color-primary-light)",
+                background: `color-mix(in srgb, ${token.colorPrimaryActive} 70%, transparent)`,
+                border: `1px solid ${token.colorPrimaryBorder}`,
+                color: BRAND_PANEL_FG,
                 fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: "0.1em",
@@ -205,6 +207,9 @@ function LoginForm() {
                 lineHeight: 1.2,
                 letterSpacing: "-0.025em",
                 margin: 0,
+                // The brand panel is always dark: antd's heading colour would
+                // render dark-on-dark here, so the panel's ink is explicit.
+                color: BRAND_PANEL_FG,
               }}
             >
               {t("branding.title")}
@@ -212,7 +217,7 @@ function LoginForm() {
             <Text
               style={{
                 fontSize: 18,
-                color: "var(--color-border)",
+                color: `color-mix(in srgb, ${token.colorTextLightSolid} 75%, transparent)`,
                 lineHeight: 1.6,
               }}
             >
@@ -239,7 +244,7 @@ function LoginForm() {
                       style={{
                         width: 20,
                         height: 20,
-                        color: "hsl(var(--primary))",
+                        color: token.colorPrimary,
                       }}
                     />
                     <span style={{ fontWeight: 500 }}>{feature}</span>
@@ -253,7 +258,7 @@ function LoginForm() {
             style={{
               position: "relative",
               zIndex: 10,
-              color: "var(--color-border)",
+              color: token.colorTextSecondary,
               fontSize: 12,
               fontFamily: "monospace",
               textAlign: "center",
@@ -272,7 +277,7 @@ function LoginForm() {
             alignItems: "center",
             justifyContent: "center",
             padding: "32px 24px",
-            background: "hsl(var(--background))",
+            background: "var(--ant-color-bg-layout)",
             position: "relative",
           }}
         >
@@ -299,12 +304,12 @@ function LoginForm() {
                 <div
                   style={{
                     borderRadius: 12,
-                    border: "1px solid hsl(var(--destructive) / 0.3)",
-                    background: "hsl(var(--destructive) / 0.1)",
+                    border: `1px solid ${token.colorErrorBorder}`,
+                    background: token.colorErrorBg,
                     padding: "12px 16px",
                     fontSize: 14,
                     fontWeight: 500,
-                    color: "hsl(var(--destructive))",
+                    color: token.colorErrorText,
                   }}
                   role="alert"
                   data-testid="login-error"
@@ -352,7 +357,7 @@ function LoginForm() {
                   <span
                     style={{
                       width: "100%",
-                      borderTop: "1px solid hsl(var(--border))",
+                      borderTop: `1px solid ${token.colorBorderSecondary}`,
                     }}
                   />
                 </div>
@@ -367,9 +372,9 @@ function LoginForm() {
                 >
                   <span
                     style={{
-                      background: "hsl(var(--background))",
+                      background: "var(--ant-color-bg-layout)",
                       padding: "0 16px",
-                      color: "hsl(var(--muted-foreground))",
+                      color: token.colorTextSecondary,
                       fontWeight: 500,
                     }}
                   >
@@ -382,6 +387,7 @@ function LoginForm() {
                 <Text type="secondary">{t("noAccount")}</Text>{" "}
                 <Link
                   href="/onboarding"
+                  className="payu-focus-ring"
                   data-testid="register-link"
                   style={{
                     fontWeight: 700,

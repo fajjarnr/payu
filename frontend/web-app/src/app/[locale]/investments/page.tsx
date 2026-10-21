@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardLayout from '@/components/DashboardLayout';
-import { Button, Space, Row, Col, Card, Typography } from 'antd';
+import { Alert, Button, Space, Row, Col, Card, Typography } from 'antd';
 import { useInvestmentAccount, useBuyDeposit, useSellInvestment, useCreateInvestmentAccount } from '@/hooks';
 import { useTranslations } from 'next-intl';
 import { asMoney, formatCurrency } from '@/lib/currency';
@@ -10,7 +10,12 @@ import { SkipLink } from "@/lib/a11y";
 
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
-  const { data: account, isLoading: loadingAccount, isError: accountError } = useInvestmentAccount();
+  const {
+    data: account,
+    isLoading: loadingAccount,
+    isError: accountError,
+    refetch: refetchAccount,
+  } = useInvestmentAccount();
   const buyDeposit = useBuyDeposit();
   const sellInvestment = useSellInvestment();
   const createAccount = useCreateInvestmentAccount();
@@ -25,22 +30,22 @@ export default function InvestmentsPage() {
         acc = await createAccount.mutateAsync();
       }
       await buyDeposit.mutateAsync({ accountId: acc.id, amount: asMoney('1000000'), tenure: 12 });
-      toast.success('Pembelian deposit berhasil');
+      toast.success(t('buySuccess'));
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Gagal membeli produk');
+      toast.error(e instanceof Error ? e.message : t('buyFailed'));
     }
   };
 
   const handleSell = async () => {
     try {
       if (!account) {
-        toast.error('Belum ada akun investasi');
+        toast.error(t('noInvestmentAccount'));
         return;
       }
       await sellInvestment.mutateAsync({ accountId: account.id, transactionId: account.id, amount: asMoney('500000') });
-      toast.success('Penjualan berhasil');
+      toast.success(t('sellSuccess'));
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Gagal menjual produk');
+      toast.error(e instanceof Error ? e.message : t('sellFailed'));
     }
   };
 
@@ -64,6 +69,20 @@ export default function InvestmentsPage() {
                     ? formatCurrency(account.balance, { withDecimals: false })
                     : t('accountUnavailable')}
               </Typography.Title>
+              {/* R-06: a failed load gets an error and a retry, not just a dash. */}
+              {accountError && !loadingAccount && (
+                <Alert
+                  type="error"
+                  showIcon
+                  style={{ marginTop: 12 }}
+                  message={t('accountLoadError')}
+                  action={
+                    <Button size="small" onClick={() => void refetchAccount()}>
+                      {t('retry')}
+                    </Button>
+                  }
+                />
+              )}
               {hasAccount && <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('accountSource')}</Typography.Text>}
               <Space size={16} style={{ marginTop: 24 }}>
                 <Button
@@ -72,14 +91,14 @@ export default function InvestmentsPage() {
                   disabled={buyDeposit.isPending || createAccount.isPending}
                   data-testid="invest-buy-button"
                 >
-                  {buyDeposit.isPending ? 'Memproses...' : 'Beli Produk'}
+                  {buyDeposit.isPending ? t('processing') : t('buyProduct')}
                 </Button>
                 <Button
                   onClick={handleSell}
                   disabled={sellInvestment.isPending}
                   data-testid="invest-sell-button"
                 >
-                  {sellInvestment.isPending ? 'Memproses...' : 'Jual Produk'}
+                  {sellInvestment.isPending ? t('processing') : t('sellProduct')}
                 </Button>
               </Space>
             </Card>

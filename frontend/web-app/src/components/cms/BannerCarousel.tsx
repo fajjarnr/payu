@@ -110,11 +110,8 @@ export default function BannerCarousel({
   }
 
   // Why: arrows keep focus-visible ring on all viewports (no hover-only reveal).
-  // The slide is a custom button (not an antd component), so it needs its own
-  // ring — the UA default is below the 2px floor.
-  const arrowRing = `
-    .cms-arrow:focus-visible, .cms-slide:focus-visible { outline: 3px solid ${token.colorPrimaryBorder}; outline-offset: 2px; }
-  `;
+  // The slide is a custom button (not an antd component), so it carries the
+  // shared focus-ring utility — the UA default is below the 2px floor.
 
   return (
     <div
@@ -124,7 +121,6 @@ export default function BannerCarousel({
       onFocus={() => setIsHovered(true)}
       onBlur={() => setIsHovered(false)}
     >
-      <style>{arrowRing}</style>
       <div className="relative w-full">
         <Carousel
           ref={carouselRef}
@@ -135,7 +131,7 @@ export default function BannerCarousel({
           {banners.map((banner) => (
             <div key={banner.id} className="pl-0">
               <div
-                className="cms-slide relative overflow-hidden rounded-2xl cursor-pointer group/item"
+                className="cms-slide payu-focus-ring relative overflow-hidden rounded-2xl cursor-pointer group/item"
                 style={{ aspectRatio: '1.8/1', boxShadow: token.boxShadowSecondary }}
                 onClick={() => handleBannerClick(banner)}
                 role="button"

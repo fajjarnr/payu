@@ -201,10 +201,9 @@ function QuickActionItem({
 
   return (
     <>
-      <style>{`.payu-qa-tile:focus-visible{outline:3px solid var(--ant-color-primary);outline-offset:2px;box-shadow:0 0 0 4px var(--ant-color-primary-bg);}`}</style>
     <Space direction="vertical" size={8} style={{ width: "100%" }}>
       <a
-        className="payu-qa-tile"
+        className="payu-qa-tile payu-focus-ring"
         href={action.href}
         data-testid={`quick-action-${action.id}`}
         onKeyDown={handleKeyDown}

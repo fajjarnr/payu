@@ -31,7 +31,7 @@ describe('SettingsPage', () => {
 
   it('should render profile section', () => {
     renderWithIntl(<SettingsPage />);
-    expect(screen.getByText('PENGGUNA PAYU')).toBeInTheDocument();
+    expect(screen.getByText('Pengguna PayU')).toBeInTheDocument();
     expect(screen.getByText('Premium Member')).toBeInTheDocument();
   });
 

@@ -127,6 +127,14 @@ export const INK_ON_EMERALD = '#06281F'; // ~8:1 on #00D09C; ink labels on prima
 // globals.css (A-01: every colour comes from the theme module).
 export const CARD_ART_GRADIENT =
   'linear-gradient(135deg, #1A7440 0%, #1F5C38 50%, #145233 100%)';
+
+// Brand panel (the dark marketing column on login / merchant register). It is
+// always dark in both themes — painting it with `token.colorText` inverted it
+// in dark mode (white panel, white ink). Ink on this surface: #FFFFFF (13:1)
+// and #E5E7EB (11.6:1).
+export const BRAND_PANEL_BG = '#1A1A2E';
+export const BRAND_PANEL_FG = '#FFFFFF';
+export const BRAND_PANEL_MUTED = '#E5E7EB';
 const sharedButtonTokens = {
   // White on the vivid emerald fill is 2.00:1 (accepted brand gap); ink
   // labels on primary fills restore AA without a palette swap.

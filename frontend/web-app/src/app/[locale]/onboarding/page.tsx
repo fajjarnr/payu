@@ -44,10 +44,10 @@ import { SkipLink } from "@/lib/a11y";
 const { Title, Text } = Typography;
 
 // Branding panel is always dark (same surface as login-form.tsx), so it uses the
-// DESIGN.md surface tokens rather than light-mode antd tokens.
-const BRAND_BG = "#1A1A2E"; // branding panel: always dark navy (was bg-text-primary), both modes
-const BRAND_FG = "var(--color-surface)";
-const BRAND_MUTED = "var(--color-border)";
+// DESIGN.md surface tokens rather than light-mode antd tokens. The foreground
+// colours are explicit because the antd text tokens are tuned for a light
+// surface — on this panel they would be unreadable.
+import { BRAND_PANEL_BG as BRAND_BG, BRAND_PANEL_FG as BRAND_FG, BRAND_PANEL_MUTED as BRAND_MUTED } from "@/theme/tokens";
 const BRAND_TILE_BG = "rgba(255, 255, 255, 0.1)";
 const BRAND_TILE_BORDER = "rgba(255, 255, 255, 0.3)";
 const BRAND_CARD_BG = "rgba(255, 255, 255, 0.05)";
@@ -158,7 +158,7 @@ export default function OnboardingPage() {
     height: size,
     borderRadius: "50%",
     background: token.colorPrimaryBg,
-    color: token.colorPrimary,
+    color: token.colorPrimaryText,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -297,7 +297,7 @@ export default function OnboardingPage() {
                     style={{
                       width: 24,
                       height: 24,
-                      color: token.colorPrimary,
+                      color: token.colorPrimaryText,
                       flexShrink: 0,
                       marginTop: 4,
                     }}
@@ -329,7 +329,7 @@ export default function OnboardingPage() {
                     style={{
                       width: 24,
                       height: 24,
-                      color: token.colorPrimary,
+                      color: token.colorPrimaryText,
                       flexShrink: 0,
                       marginTop: 4,
                     }}
@@ -461,6 +461,7 @@ export default function OnboardingPage() {
                 }}
                 tabIndex={0}
                 role="button"
+                className="payu-focus-ring"
                 aria-label={t("step1.clickToUpload")}
                 onClick={() => fileInputRef.current?.click()}
                 onKeyDown={(e) => {
@@ -485,7 +486,7 @@ export default function OnboardingPage() {
                     <Text
                       style={{
                         fontSize: token.fontSizeSM,
-                        color: token.colorPrimary,
+                        color: token.colorPrimaryText,
                         fontWeight: 500,
                       }}
                     >
@@ -736,6 +737,10 @@ export default function OnboardingPage() {
               size={16}
               style={{ width: "100%", textAlign: "center", padding: "40px 0" }}
             >
+              {/* F-08: the step change is the outcome — announce it. */}
+              <span role="status" aria-live="polite" className="sr-only">
+                {t("step3.title")}
+              </span>
               <div style={{ ...iconTile(96), margin: "0 auto" }}>
                 <CheckCircle2 style={{ width: 48, height: 48 }} />
               </div>
@@ -755,7 +760,7 @@ export default function OnboardingPage() {
                 style={{
                   width: 24,
                   height: 24,
-                  color: token.colorPrimary,
+                  color: token.colorPrimaryText,
                   margin: "16px auto 0",
                 }}
                 aria-label="Processing..."

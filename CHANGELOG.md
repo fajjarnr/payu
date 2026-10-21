@@ -27,6 +27,26 @@ All notable changes to this project will be documented in this file.
 - **Token bypass di `/transfer` (2026-10-21)**: 10 pemakaian `hsl(var(--primary))` (raw CSS var,_primary emerald_) diganti token antd — teks accent memakai `colorPrimaryText` (hijau tua, AA), fill/border memakai `colorPrimary`, chip hari terpilih memakai ink `#06281F` di atas fill emerald (sebelumnya putih di emerald = 1.99:1).
 - **Hierarki heading seragam (2026-10-21)**: judul halaman `/backoffice/{,customers,fraud,kyc}` dinaikkan ke `h1`; `/backoffice/{campaigns,cms,compliance,fx-rates,partners}` yang belum punya judul kini memakai atom `PageHeader` yang sama dengan halaman customer.
 
+### Fixed (Web-app UX + a11y defects, 2026-10-21)
+
+- **Toast yang tak pernah tampil (High)**: `useUIStore.addToast` menulis ke slice `toasts` yang **tidak pernah dirender** — jadi 14 pesan sukses/error di `/transfer`, `/bills`, `/exchange` (termasuk "Gagal membatalkan transaksi" dan validasi form transfer) **tidak terlihat dan tidak diumumkan**. Semua call site kini memakai `@/lib/notify` (antd `message`, `role="alert"`).
+- **Kontrol mati di dashboard (High)**: 8 kontrol di `TransferActivity` tidak punya handler — termasuk CTA utama "Kirim Sekarang" pada kartu Quick Transfer. Sekarang: CTA/kategori (Bank → `/transfer`, E-Wallet → `/pockets`, Tagihan → `/bills`, Lain → `/split-bill`), ikon cari → `/transactions`, "Ulangi Transfer Terakhir" → `/transfer`, "Detail" membuka modal detail transaksi, dan "Riwayat Lengkap" jadi `<Button href>` (bukan `<Link><Button>` = interaktif bersarang).
+- **Panel brand terbalik di dark mode (High)**: kolom marketing di login dan merchant/register memakai `token.colorText` sebagai background — di dark mode panelnya jadi putih dengan teks putih. kini surface tetap gelap (`BRAND_PANEL_BG` `#1A1A2E`) dengan tinta eksplisit, dan judul H1 yang tadinya gelap-di-gelap (tak terbaca) kini putih.
+- **Kontras putih-di-emerald (High)**: avatar profil dan tombol menu aktif `/settings`, CTA `/merchant`, chip terpilih `/merchant/register`, kartu bantuan `/exchange`, banner promo → tinta `#06281F` (7.9:1, bukan 1.99:1); emerald sebagai teks (kurs, nama file, label notifikasi) → hijau brand `#0B7A55` (5.3:1).
+- **37 pemakaian CSS var legacy (Medium)**: `hsl(var(--primary))` / `var(--color-border)` / `var(--background)` di `transfer`, `login-form`, `notifications`, `onboarding`, `merchant`, `merchant/register`, `settings`, `exchange` → token antd (guard baru `src/__tests__/theme/legacy-css-vars.test.ts`).
+- **Error yang disamar jadi "kosong" (Medium)**: `/merchant` (lookup gagal → "Anda belum terdaftar"!), `/exchange` (riwayat gagal & estimasi gagal → kosong), `/investments` (akun gagal → tanpa retry), `TargetedPromos` (fetch gagal → `null`) → kini error + retry.
+- **Focus ring seragam (Medium)**: satu utility `.payu-focus-ring` di `globals.css` menggantikan 3 blok `<style>` per-komponen; diterapkan juga ke link login, tile upload onboarding, tile tipe merchant, dan link lupa-password.
+- **Reduced motion (Low)**: spinner inline di `/settings` diganti `className="animate-spin"` (aturan `prefers-reduced-motion` hanya berlaku ke class, bukan style inline).
+- **Pengumuman perpindahan langkah (Low)**: langkah sukses onboarding kini diumumkan lewat `role="status"`.
+
+### Changed (Web-app i18n pass 2, 2026-10-21)
+
+- **`/exchange` dan `/merchant/register` bilingual penuh (2026-10-21)**: seluruh copy, aria-label, pesan error, dan format uang/tanggal ikut locale aktif; validasi zod di merchant register sekarang terlokalisasi.
+- **`TransferActivity` dan `/investments` bilingual penuh (2026-10-21)**: label status & kategori, header tabel, dan pesan transaksi kini lewat `t()` (label status = copy app; enum API tetap apa adanya).
+- **`TargetedPromos` bilingual + tombol "Klaim" berfungsi (2026-10-21)**: namespace `promos` baru; tombol Klaim menyalin kode promo (bukan teks mati) dan menampilkan toast.
+- **`/settings` tanpa fallback hardcoded (2026-10-21)**: nama pengguna, placeholder email, dan ID akun kini lewat katalog (fake `PAYU-09228373` dihapus).
+- Katalog `messages/{id,en}.json` kini 1238 key, parity terjaga (`npm run check:i18n`).
+
 ### Added (Istio ingress gateway di shared domain `apps.fajjjar.my.id`, 2026-10-21)
 
 - **Keputusan kepemilikan domain shared + Istio ingress gateway live di `payu-dev` (2026-10-21)**: `apps.fajjjar.my.id` dimiliki **satu tier** — OpenShift IngressController `shared-ingress` (TLS via `shared-ingress-cert`, AWS NLB `52.74.162.171`) tetap pemilik domain; Istio gateway **tidak memiliki domain**, dia **backend** di belakang router dengan Service `ClusterIP` (tanpa NLB kedua, tanpa biaya tambahan). Manifest baru: `infrastructure/platform/mesh/ingress/` (`namespace.yaml` namespace `payu-mesh-gateway` berlabel `payu.fajjjar.my.id/ingress: shared`, `gateway.yaml`, `route.yaml`, `http-route.yaml`, `network-policies.yaml`, `kustomization.yaml`) — package terpisah, tak ikut `base/kustomization.yaml`; `payu-dev` & `istio-system` **tidak** diberi label shared, jadi Route web-app/analytics tetap di router default. ADR baru: `docs/adr/0073-istio-ingress-gateway-and-shared-domain-ownership.md` (Accepted) + index `docs/adr/README.md`.

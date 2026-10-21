@@ -1,4 +1,6 @@
 import React from "react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
@@ -132,11 +134,14 @@ describe("ANT guideline fixes", () => {
 
   it("F-02: QuickAction tiles show a >=2px :focus-visible ring", () => {
     const { container } = renderWithIntl(<QuickActions />);
-    const css = Array.from(container.querySelectorAll("style"))
-      .map((s) => s.textContent ?? "")
-      .join("");
-    expect(css).toMatch(/focus-visible/);
-    expect(css).toMatch(/2px|3px/);
+    // The ring is one shared utility (globals.css .payu-focus-ring) so every
+    // hand-styled control looks the same when tabbed to.
+    const tile = container.querySelector(".payu-qa-tile");
+    expect(tile?.className).toContain("payu-focus-ring");
+    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+    expect(css).toMatch(/\.payu-focus-ring:focus-visible/);
+    expect(css).toMatch(/outline:\s*3px/);
+    expect(css).toMatch(/outline-offset:\s*2px/);
   });
 
   it("DashboardLayout: sidebar items are real links with one context menu", () => {

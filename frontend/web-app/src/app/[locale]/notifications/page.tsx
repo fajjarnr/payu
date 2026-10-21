@@ -23,6 +23,7 @@ import {
   Empty,
   Avatar,
   Segmented,
+  theme,
 } from "antd";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useNotifications, useMarkNotificationRead } from "@/hooks";
@@ -35,6 +36,7 @@ const { Title, Text } = Typography;
 
 export default function NotificationsPage() {
   const t = useTranslations("notifications");
+  const { token } = theme.useToken();
   const { user } = useAuthStore();
   const router = useRouter();
   const userId = user?.id ?? "";
@@ -96,25 +98,25 @@ export default function NotificationsPage() {
       case "PROMO":
         return (
           <Gift
-            style={{ width: 20, height: 20, color: "hsl(var(--primary))" }}
+            style={{ width: 20, height: 20, color: token.colorPrimary }}
           />
         );
       case "ALERT":
         return (
           <ShieldAlert
-            style={{ width: 20, height: 20, color: "var(--color-error)" }}
+            style={{ width: 20, height: 20, color: token.colorError }}
           />
         );
       case "SECURITY":
         return (
           <Clock
-            style={{ width: 20, height: 20, color: "var(--color-warning)" }}
+            style={{ width: 20, height: 20, color: token.colorWarning }}
           />
         );
       default:
         return (
           <MessageSquare
-            style={{ width: 20, height: 20, color: "hsl(var(--primary))" }}
+            style={{ width: 20, height: 20, color: token.colorPrimary }}
           />
         );
     }
@@ -191,7 +193,7 @@ export default function NotificationsPage() {
                     style={{
                       width: 16,
                       height: 16,
-                      color: "hsl(var(--muted-foreground))",
+                      color: token.colorTextSecondary,
                     }}
                   />
                 }
@@ -251,13 +253,13 @@ export default function NotificationsPage() {
                 }}
                 style={{
                   cursor: "pointer",
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  background: token.colorBgContainer,
+                  border: `1px solid ${token.colorBorderSecondary}`,
                   borderRadius: 12,
                   padding: 24,
                   marginBottom: 16,
                   borderLeft: !n.read
-                    ? "4px solid hsl(var(--primary))"
+                    ? `4px solid ${token.colorPrimary}`
                     : undefined,
                 }}
                 actions={[
@@ -272,7 +274,7 @@ export default function NotificationsPage() {
                     style={{
                       fontSize: 12,
                       fontWeight: 700,
-                      color: "var(--color-primary-dark)",
+                      color: token.colorPrimaryText,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
                     }}
@@ -299,8 +301,8 @@ export default function NotificationsPage() {
                     <Avatar
                       size={56}
                       style={{
-                        background: "hsl(var(--muted))",
-                        border: "1px solid hsl(var(--border))",
+                        background: token.colorFillTertiary,
+                        border: `1px solid ${token.colorBorderSecondary}`,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -320,8 +322,8 @@ export default function NotificationsPage() {
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                           padding: "0 8px",
-                          border: "1px solid hsl(var(--primary) / 0.2)",
-                          color: "hsl(var(--primary))",
+                          border: `1px solid ${token.colorPrimaryBorder}`,
+                          color: token.colorPrimaryText,
                         }}
                       >
                         {n.type}
@@ -348,9 +350,7 @@ export default function NotificationsPage() {
                         strong
                         style={{
                           fontSize: 18,
-                          color: !n.read
-                            ? "var(--color-primary-dark)"
-                            : undefined,
+                          color: !n.read ? token.colorPrimaryText : undefined,
                         }}
                       >
                         {n.title}

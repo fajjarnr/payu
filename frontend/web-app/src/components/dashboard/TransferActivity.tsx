@@ -15,7 +15,7 @@ import {
   MoreHorizontal as MoreIcon,
   X,
 } from "@/components/icons";
-import { Alert, Button, Card, Col, Divider, Dropdown, Row, Skeleton, Space, Table, Tag, Typography } from "antd";
+import { Alert, Button, Card, Col, Descriptions, Divider, Dropdown, Modal, Row, Skeleton, Space, Table, Tag, Typography } from "antd";
 import type { TableColumnsType } from "antd";
 
 const { Title, Text } = Typography;
@@ -26,13 +26,13 @@ import { notify as toast } from "@/lib/notify";
 import { formatCurrency } from "@/lib/currency";
 import type { Transaction } from "@/services/TransactionService";
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  PENDING: { label: "Menunggu", color: "warning" },
-  VALIDATING: { label: "Validasi", color: "warning" },
-  PROCESSING: { label: "Diproses", color: "processing" },
-  COMPLETED: { label: "Selesai", color: "success" },
-  FAILED: { label: "Gagal", color: "error" },
-  CANCELLED: { label: "Batal", color: "default" },
+const statusConfig: Record<string, { labelKey: string; color: string }> = {
+  PENDING: { labelKey: "statusPending", color: "warning" },
+  VALIDATING: { labelKey: "statusValidating", color: "warning" },
+  PROCESSING: { labelKey: "statusProcessing", color: "processing" },
+  COMPLETED: { labelKey: "statusCompleted", color: "success" },
+  FAILED: { labelKey: "statusFailed", color: "error" },
+  CANCELLED: { labelKey: "statusCancelled", color: "default" },
 };
 
 // Credit when the money flows to the viewer: explicit TOP_UP, or any
@@ -56,11 +56,13 @@ interface TransferActivityProps {
   className?: string;
 }
 
+// Each tile is a shortcut into the flow it names (A-04: a control that looks
+// actionable must do something).
 const QUICK_CATEGORIES = [
-  { icon: Landmark, label: "Bank" },
-  { icon: Smartphone, label: "E-Wallet" },
-  { icon: ReceiptText, label: "Tagihan" },
-  { icon: MoreIcon, label: "Lain" },
+  { id: "bank", icon: Landmark, labelKey: "categoryBank", href: "/transfer" },
+  { id: "e-wallet", icon: Smartphone, labelKey: "categoryEWallet", href: "/pockets" },
+  { id: "tagihan", icon: ReceiptText, labelKey: "categoryBills", href: "/bills" },
+  { id: "lain", icon: MoreIcon, labelKey: "categoryOther", href: "/split-bill" },
 ];
 
 export function TransferEmpty({ title, hint }: { title: string; hint: string }) {
@@ -115,6 +117,8 @@ export default function TransferActivity({
   } = useTransactions(accountId || undefined, 0, 5);
   const cancelTransaction = useCancelTransaction();
   const [cancelAnnouncement, setCancelAnnouncement] = React.useState("");
+  // A-04: the row menu's "Detail" entry opens the transaction, it is not a no-op.
+  const [detailTransaction, setDetailTransaction] = React.useState<Transaction | null>(null);
 
   const handleCancel = async (transactionId: string) => {
     try {
@@ -150,7 +154,7 @@ export default function TransferActivity({
   const columns: TableColumnsType<Transaction> = [
     {
       key: "date",
-      title: "Tanggal",
+      title: t("columnDate"),
       render: (_, item) => (
         <Space direction="vertical" size={4}>
           <Text
@@ -175,7 +179,7 @@ export default function TransferActivity({
     },
     {
       key: "recipient",
-      title: "Penerima",
+      title: t("columnRecipient"),
       render: (_, item) => (
         <Space size={16} align="center">
           <div
@@ -217,20 +221,22 @@ export default function TransferActivity({
     },
     {
       key: "status",
-      title: "Status",
+      title: t("columnStatus"),
       align: "center",
       render: (_, item) => (
         <Tag
           bordered={false}
           color={statusConfig[item.status]?.color ?? "warning"}
         >
-          {statusConfig[item.status]?.label || item.status}
+          {statusConfig[item.status]
+            ? t(statusConfig[item.status].labelKey)
+            : item.status}
         </Tag>
       ),
     },
     {
       key: "amount",
-      title: "Jumlah",
+      title: t("columnAmount"),
       align: "right",
       render: (_, item) => (
         <Text
@@ -259,6 +265,7 @@ export default function TransferActivity({
               {
                 key: "detail",
                 label: t("txDetail"),
+                onClick: () => setDetailTransaction(item),
               },
               ...(canCancel(item.status)
                 ? [
@@ -302,6 +309,27 @@ export default function TransferActivity({
       <span role="status" aria-live="polite" data-testid="transfer-cancel-announcement">
         {cancelAnnouncement}
       </span>
+      <Modal
+        open={detailTransaction !== null}
+        onCancel={() => setDetailTransaction(null)}
+        footer={null}
+        title={t("txDetail")}
+        data-testid="transaction-detail-modal"
+      >
+        {detailTransaction && (
+          <Descriptions
+            column={1}
+            size="small"
+            items={[
+              { key: "description", label: t("columnDescription"), children: detailTransaction.description },
+              { key: "amount", label: t("columnAmount"), children: formatAmount(detailTransaction.amount) },
+              { key: "date", label: t("columnDate"), children: formatDate(detailTransaction.createdAt) },
+              { key: "status", label: t("columnStatus"), children: detailTransaction.status },
+              { key: "reference", label: t("columnReference"), children: maskReference(detailTransaction.referenceNumber) },
+            ]}
+          />
+        )}
+      </Modal>
       {/* Quick Transfer strip */}
       <Card data-testid="quick-transfer-card">
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
@@ -309,12 +337,15 @@ export default function TransferActivity({
             <Title level={4} style={{ margin: 0 }}>
               {t("quickTransfer")}
             </Title>
-            <Button
-              type="text"
-              aria-label={t("searchTransfer")}
-              icon={<Search style={{ width: 20, height: 20 }} />}
-              style={{ minWidth: 44, minHeight: 44 }}
-            />
+            <Link href="/transactions" aria-label={t("searchTransfer")} style={{ display: "inline-flex" }}>
+              <Button
+                type="text"
+                tabIndex={-1}
+                aria-hidden="true"
+                icon={<Search style={{ width: 20, height: 20 }} />}
+                style={{ minWidth: 44, minHeight: 44, pointerEvents: "none" }}
+              />
+            </Link>
           </Row>
 
           <Space direction="vertical" size={8} style={{ width: "100%" }}>
@@ -333,10 +364,14 @@ export default function TransferActivity({
             </Text>
             <Row gutter={[16, 16]}>
               {QUICK_CATEGORIES.map((item) => (
-                <Col span={6} key={item.label}>
+                <Col span={6} key={item.id}>
+                  <Link
+                    href={item.href}
+                    data-testid={`quick-transfer-category-${item.id}`}
+                    style={{ display: "block" }}
+                  >
                   <Button
                     type="text"
-                    data-testid={`quick-transfer-category-${item.label.toLowerCase()}`}
                     style={{ height: "auto", width: "100%", padding: 8, minHeight: 44 }}
                   >
                     <Space direction="vertical" size={8} align="center">
@@ -367,30 +402,33 @@ export default function TransferActivity({
                         strong
                         style={{ fontSize: 12, textTransform: "uppercase" }}
                       >
-                        {item.label}
+                        {t(item.labelKey)}
                       </Text>
                     </Space>
                   </Button>
+                  </Link>
                 </Col>
               ))}
             </Row>
           </Space>
 
-          <Button
-            data-testid="quick-transfer-send-button"
-            type="primary"
-            size="large"
-            block
-            style={{
-              height: 56,
-              fontWeight: 700,
-              fontSize: 12,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-            }}
-          >
-            Kirim Sekarang
-          </Button>
+          <Link href="/transfer" style={{ display: "block" }}>
+            <Button
+              data-testid="quick-transfer-send-button"
+              type="primary"
+              size="large"
+              block
+              style={{
+                height: 56,
+                fontWeight: 700,
+                fontSize: 12,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+              }}
+            >
+              {t("sendNow")}
+            </Button>
+          </Link>
         </Space>
       </Card>
 
@@ -531,7 +569,9 @@ export default function TransferActivity({
                                 statusConfig[item.status]?.color ?? "warning"
                               }
                             >
-                              {statusConfig[item.status]?.label || item.status}
+                              {statusConfig[item.status]
+                                ? t(statusConfig[item.status].labelKey)
+                                : item.status}
                             </Tag>
                             {canCancel(item.status) && (
                               <Button
@@ -559,11 +599,31 @@ export default function TransferActivity({
 
               <Divider style={{ margin: 0 }} />
               <Row justify="space-between" align="middle">
+                <Link href="/transfer" style={{ display: "inline-flex" }}>
+                  <Button
+                    type="link"
+                    size="small"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    data-testid="repeat-last-transfer-button"
+                    icon={<RotateCcw style={{ width: 16, height: 16 }} />}
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 12,
+                      textTransform: "uppercase",
+                      minHeight: 44,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {t("repeatLastTransfer")}
+                  </Button>
+                </Link>
                 <Button
                   type="link"
                   size="small"
-                  data-testid="repeat-last-transfer-button"
-                  icon={<RotateCcw style={{ width: 16, height: 16 }} />}
+                  href="/transactions"
+                  data-testid="view-full-history-button"
+                  icon={<ArrowRight style={{ width: 16, height: 16 }} />}
                   style={{
                     fontWeight: 700,
                     fontSize: 12,
@@ -571,24 +631,8 @@ export default function TransferActivity({
                     minHeight: 44,
                   }}
                 >
-                  Ulangi Transfer Terakhir
+                  {t("fullHistory")}
                 </Button>
-                <Link href="/transactions">
-                  <Button
-                    type="link"
-                    size="small"
-                    data-testid="view-full-history-button"
-                    icon={<ArrowRight style={{ width: 16, height: 16 }} />}
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 12,
-                      textTransform: "uppercase",
-                      minHeight: 44,
-                    }}
-                  >
-                    Riwayat Lengkap
-                  </Button>
-                </Link>
               </Row>
             </>
           )}

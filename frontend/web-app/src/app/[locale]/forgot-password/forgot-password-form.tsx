@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
       <Card style={{ width: "100%", maxWidth: 420, borderRadius: 12 }}>
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
           <Space direction="vertical" size={8} style={{ width: "100%" }}>
-            <Link href="/login">
+            <Link href="/login" className="payu-focus-ring">
               <Space size={8}>
                 <ArrowLeft style={{ width: 16, height: 16 }} />
                 <Text type="secondary">{t("backToLogin")}</Text>

@@ -29,6 +29,7 @@ import { notify as toast } from "@/lib/notify";
 import BeneficiaryManager from "@/components/account/BeneficiaryManager";
 import StatementDownloader from "@/components/settings/statement-downloader";
 import { SkipLink } from "@/lib/a11y";
+import { INK_ON_EMERALD } from '@/theme/tokens';
 
 const { Title, Text } = Typography;
 
@@ -146,7 +147,7 @@ export default function SettingsPage() {
                       shape="square"
                       style={{
                         backgroundColor: "var(--ant-color-primary)",
-                        color: "var(--ant-color-text-light-solid)",
+                        color: INK_ON_EMERALD,
                         fontSize: 36,
                         fontWeight: 700,
                         borderRadius: 16,
@@ -157,7 +158,7 @@ export default function SettingsPage() {
                         : "P"}
                     </Avatar>
                     <Title level={3} style={{ margin: 0 }}>
-                      {formData.fullName || "PENGGUNA PAYU"}
+                      {formData.fullName || t("profileNameFallback")}
                     </Title>
                     <Tag color="success">{t("premiumMember")}</Tag>
                     <Divider style={{ margin: "40px 0" }} />
@@ -171,7 +172,7 @@ export default function SettingsPage() {
                           {t("accountId")}
                         </Text>
                         <Text strong code>
-                          {user?.id?.slice(0, 12) || "PAYU-09228373"}
+                          {user?.id?.slice(0, 12) || t("accountIdUnavailable")}
                         </Text>
                       </Row>
                       <Row justify="space-between">
@@ -205,7 +206,7 @@ export default function SettingsPage() {
                               padding: "16px 20px",
                               borderRadius: 12,
                               backgroundColor: "var(--ant-color-primary)",
-                              color: "var(--ant-color-text-light-solid)",
+                              color: INK_ON_EMERALD,
                               boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
                             }
                           : {
@@ -372,7 +373,7 @@ export default function SettingsPage() {
                             onChange={(e) =>
                               handleInputChange("email", e.target.value)
                             }
-                            placeholder="email@contoh.com"
+                            placeholder={t("emailPlaceholder")}
                             disabled={updateUser.isPending}
                           />
                         </Space>
@@ -422,11 +423,14 @@ export default function SettingsPage() {
                       {updateUser.isPending ? (
                         <>
                           <Loader2
+                            // F-07: the class variant is what globals.css
+                            // disables under prefers-reduced-motion; an inline
+                            // animation would keep spinning.
+                            className="animate-spin"
                             style={{
                               width: 16,
                               height: 16,
                               marginRight: 8,
-                              animation: "spin 1s linear infinite",
                             }}
                           />
                           {t("saving")}
