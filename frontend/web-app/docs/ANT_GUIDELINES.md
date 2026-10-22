@@ -220,6 +220,7 @@ Ambiguous-label fixes (before → after):
 - **A-11 one theme value for two modes (High, 2026-10-22).** A component token shared by both themes must not carry a light-mode value: `Menu.itemSelectedColor` was `#0B7A55` in both modes, and on the dark emerald tint that is 1.85:1. Component tokens **must** be overridden per theme in `darkComponentTokens` when the surface flips lightness. The same applies to any surface painted with a theme colour: the error colour is dark in light mode and light in dark mode, so a white label on it fails in one of them — use the fixed `DANGER_PANEL_BG` instead.
 - **A-12 a colour string is not a preset (Medium, 2026-10-22).** antd's `<Tag color>` takes a **preset name** ("success", "green"); a colour string paints the whole tag as the fill and antd picks the label colour — the label then lands on an unintended surface (measured 2.17:1 in dark mode). Set the label colour with `style={{ color: … }}` instead.
 - **A-13 every shell carries the theme control (Medium, 2026-10-22).** The backoffice console has its own layout, so it had no `ThemeToggle` — a user landing there directly could never reach dark mode even though the global `AntdProvider` follows the store. Every shell **must** expose the shared `ThemeToggle`.
+- **A-14 a custom tab label breaks the tablist (Medium, 2026-10-22).** antd puts `role="tab"` on an element *inside* the tab wrapper, so a tab whose label is a custom node (`<Space><Icon/>Label</Space>`) leaves the `role="tablist"` without direct tab children — axe reports `aria-required-children` (measured at 360px on `/rewards`). Tab labels **must** be plain text; put the icon inside the tab content instead.
 
 ## 7. QA checklist (executable in code review)
 
@@ -243,7 +244,7 @@ Ambiguous-label fixes (before → after):
 ---
 *Skipped: e2e spec bodies, `__tests__/a11y` assertions, `globals.css` dark block, `lib/a11y.tsx`, stores. Risk: contrast ratios cited from `tokens.ts` comments, not re-measured; dark-mode emerald and antd v6 focus-ring defaults unverified live.*
 
-**Verified live (2026-10-22).** Production build (`npm run build` → `npm start`) + axe 4.13 on **23 routes** (every customer page, the backoffice console, the public pages): **0 violations, 1017 passing checks** (before: 38 violations across 19 routes). The same sweep in **dark mode** (21 routes — the backoffice console has its own light-only shell): **0 violations, 925 passing checks** (before: 15 violations). Token ratios re-measured in the browser, not copied from comments.
+**Verified live (2026-10-22).** Production build (`npm run build` → `npm start`) + axe 4.13 on **23 routes** (every customer page, the backoffice console, the public pages): **0 violations, 1017 passing checks** (before: 38 violations across 19 routes). The same sweep in **dark mode** (21 routes): **0 violations, 925 passing checks** (before: 15 violations). At **360px** (21 routes): **0 violations**, **no horizontal overflow** on any route. Token ratios re-measured in the browser, not copied from comments.
 
 ### How to re-run the app-wide sweep (authenticated routes)
 

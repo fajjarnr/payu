@@ -251,12 +251,10 @@ export default function RewardsPage() {
           items={[
             {
               key: "points",
-              label: (
-                <Space size={8}>
-                  <Coins style={{ width: 16, height: 16 }} />
-                  {t("pointsTab")}
-                </Space>
-              ),
+              // A plain label keeps antd's tab markup accessible: with a
+              // custom node the role="tab" lands on a nested element and the
+              // tablist has no direct tab children (axe aria-required-children).
+              label: t("pointsTab"),
               children: (
                 <Space orientation="vertical" size={24} style={{ width: "100%" }}>
                   <Row gutter={[24, 24]}>
@@ -549,12 +547,7 @@ export default function RewardsPage() {
             },
             {
               key: "cashback",
-              label: (
-                <Space size={8}>
-                  <DollarSign style={{ width: 16, height: 16 }} />
-                  {t("cashback")}
-                </Space>
-              ),
+              label: t("cashback"),
               children: (
                 <Space orientation="vertical" size={24} style={{ width: "100%" }}>
                   <Row gutter={[24, 24]}>
