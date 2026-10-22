@@ -18,6 +18,7 @@ import {
   Menu,
 } from "@/components/icons";
 import { INK_ON_EMERALD } from "@/theme/tokens";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   Avatar,
   Badge,
@@ -257,6 +258,9 @@ export default function BackofficeLayout({
                   aria-label="Notifikasi"
                 />
               </Badge>
+              {/* The console is the one shell without a theme control, so a
+                  user who lands here directly could never reach dark mode. */}
+              <ThemeToggle />
               <Flex align="center" gap={16}>
                 <Space
                   direction="vertical"

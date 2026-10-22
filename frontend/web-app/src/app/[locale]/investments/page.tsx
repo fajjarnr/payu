@@ -3,13 +3,15 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { Alert, Button, Space, Row, Col, Card, Typography } from 'antd';
 import { useInvestmentAccount, useBuyDeposit, useSellInvestment, useCreateInvestmentAccount } from '@/hooks';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { asMoney, formatCurrency } from '@/lib/currency';
 import { notify as toast } from '@/lib/notify';
 import { SkipLink } from "@/lib/a11y";
 
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
+  const locale = useLocale();
+  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
   const {
     data: account,
     isLoading: loadingAccount,
@@ -91,7 +93,12 @@ export default function InvestmentsPage() {
                   disabled={buyDeposit.isPending || createAccount.isPending}
                   data-testid="invest-buy-button"
                 >
-                  {buyDeposit.isPending ? t('processing') : t('buyProduct')}
+                  {buyDeposit.isPending
+                    ? t('processing')
+                    : t('buyProduct', {
+                        // The amount is fixed for now — say so on the button.
+                        amount: formatCurrency('1000000', { locale: bcp47Locale }),
+                      })}
                 </Button>
                 <Button
                   onClick={handleSell}

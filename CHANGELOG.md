@@ -77,6 +77,11 @@ All notable changes to this project will be documented in this file.
 - **`<Tag color>` menerima preset, bukan warna (Medium)**: `/cards` dan `/pockets` mengoper string warna ke prop `color` antd — antd lalu mengecat seluruh tag dengan warna itu dan label berakhir di permukaan yang tidak diinginkan (2.17:1 di dark mode). Warna label kini lewat `style={{ color }}`.
 - **Deskripsi pada kartu terpilih (Low)**: label sekunder pada tile transfer terpilih memakai tinta sekunder di atas tint emerald gelap (4.09:1) — kini memakai tinta utama saat tile terpilih.
 
+### Fixed (Web-app console + clarity, 2026-10-22)
+
+- **Konsol backoffice tanpa mode gelap (Medium)**: shell konsol punya layout sendiri dan tidak punya kontrol tema — user yang mendarat langsung di sana tidak pernah bisa mencapai dark mode (meski `AntdProvider` global sudah mengikuti store). Sekarang memakai atom `ThemeToggle` yang sama, jadi konsol ikut mode gelap dan bisa diaudit.
+- **Tombol beli tidak menyebut jumlahnya (Low)**: "Beli Produk" di `/investments` selalu membeli Rp 1.000.000 tanpa memberi tahu — label sekarang menyebut nominalnya ("Beli Produk Rp 1.000.000", mengikuti locale aktif).
+
 ### Added (Istio ingress gateway di shared domain `apps.fajjjar.my.id`, 2026-10-21)
 
 - **Keputusan kepemilikan domain shared + Istio ingress gateway live di `payu-dev` (2026-10-21)**: `apps.fajjjar.my.id` dimiliki **satu tier** — OpenShift IngressController `shared-ingress` (TLS via `shared-ingress-cert`, AWS NLB `52.74.162.171`) tetap pemilik domain; Istio gateway **tidak memiliki domain**, dia **backend** di belakang router dengan Service `ClusterIP` (tanpa NLB kedua, tanpa biaya tambahan). Manifest baru: `infrastructure/platform/mesh/ingress/` (`namespace.yaml` namespace `payu-mesh-gateway` berlabel `payu.fajjjar.my.id/ingress: shared`, `gateway.yaml`, `route.yaml`, `http-route.yaml`, `network-policies.yaml`, `kustomization.yaml`) — package terpisah, tak ikut `base/kustomization.yaml`; `payu-dev` & `istio-system` **tidak** diberi label shared, jadi Route web-app/analytics tetap di router default. ADR baru: `docs/adr/0073-istio-ingress-gateway-and-shared-domain-ownership.md` (Accepted) + index `docs/adr/README.md`.

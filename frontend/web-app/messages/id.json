@@ -646,7 +646,7 @@
     "sellFailed": "Gagal menjual produk",
     "noInvestmentAccount": "Belum ada akun investasi",
     "processing": "Memproses...",
-    "buyProduct": "Beli Produk",
+    "buyProduct": "Beli Produk {amount}",
     "sellProduct": "Jual Produk",
     "accountLoadError": "Gagal memuat akun investasi",
     "retry": "Coba lagi"
