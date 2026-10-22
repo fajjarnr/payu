@@ -12,6 +12,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (Web-app deploy `1.18.134` ke `payu-dev`, 2026-10-22)
+
+- **Deploy web-app `1.18.134` live di `payu-dev` (2026-10-22)**: image dibangun dari repo HEAD (`c81962cb7`, 13 commit) → push manual ke registry internal `default-route-openshift-image-registry.apps.payu.ocp.fajjjar.my.id/payu-dev/web-app:1.18.134` (kredensial: SA `builder` di namespace `payu-dev`, bound ke `ClusterRole/system:image-builder` — SA `deployer` hanya punya `pull`, jadi `POST /blobs/uploads/` balik 401). `newTag` dinaikkan di **kedua** overlay (`overlays/payu-dev/web-app/kustomization.yaml` + `overlays/payu-dev/kustomization.yaml`), lalu `oc apply --server-side -k` **hanya** overlay per-service (root overlay tidak disentuh). Rollout `web-app-579ddf5b74-wlj6l` `1/1 Running`, `Available=True`/`Progressing=True`, image live `image-registry.openshift-image-registry.svc:5000/payu-dev/web-app:1.18.134`. Smoke: `GET /` → **200** (1.2s), `GET /api/health` → **200**, judul halaman "PayU Digital Banking | Masa Depan Finansial Anda".
+- Isi deploy ini: 13 commit design-system pass (route states di atom shared, seluruh halaman customer bilingual, peran teks brand ke AA, kontrol mati + toast tak pernah tampil diperbaiki, error state yang tidak berbohong, guard design-system 5 suite, audit axe app-wide 0 pelanggaran di light/dark/360px, API antd v6 deprecated dibersihkan).
+
 ### Changed (Web-app design-system pass, 2026-10-21)
 
 - **Route-level states disatukan ke atom shared (2026-10-21)**: 35 `error.tsx` + 34 `loading.tsx` di `src/app/[locale]/**` sekarang re-export `src/components/RouteError.tsx` / `src/components/LoadingState.tsx` (sebelumnya 4 varian copy-paste berbahasa Inggris "Something went wrong" / "Loading..."). `RouteError` lokal (`common.error/errorDescription/errorDetails/errorSupport/home`), punya retry + back + beranda, dan menampilkan detail teknis hanya di mode development. Guard baru `src/__tests__/app/route-states.test.ts` mengunci delegasi + larangan stem legacy.
