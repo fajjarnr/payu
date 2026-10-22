@@ -70,16 +70,18 @@ metadata:
   namespace: payu-preprod
 spec:
   hard:
-    requests.cpu: "16"
-    requests.memory: 40Gi
-    limits.cpu: "72"
-    limits.memory: 96Gi
-    persistentvolumeclaims: "30"
-    requests.storage: 200Gi
-    pods: "120"
-    services: "60"
-    secrets: "120"
-    configmaps: "120"
+    # Preprod runs the same fleet shape as dev on this single cluster —
+    # dev parity (SIT proved 100/120 secrets wedges the CNPG operator).
+    requests.cpu: "24"
+    requests.memory: 64Gi
+    limits.cpu: "96"
+    limits.memory: 120Gi
+    persistentvolumeclaims: "40"
+    requests.storage: 400Gi
+    pods: "150"
+    services: "80"
+    secrets: "300"
+    configmaps: "200"
 ---
 apiVersion: v1
 kind: ResourceQuota

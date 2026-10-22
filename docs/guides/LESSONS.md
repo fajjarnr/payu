@@ -7672,3 +7672,11 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: `PeerAuthentication edge-plaintext-8080` kedua dengan `selector: {app.kubernetes.io/part-of: payu}` + `portLevelMtls: {8080: PERMISSIVE}` (API menolak `portLevelMtls` tanpa selector — "Invalid value"). Mesh-to-mesh tetap `mutual_tls`, edge 200.
 
 **Pelajaran**: (1) **STRICT + edge route = selalu butuh pengecualian port** untuk port yang dilayani router plaintext; (2) `filter_chain_not_found` NR di sidecar = sidik jari mTLS-vs-plaintext, bukan NetPol (itu 000/timeout); (3) bedakan via router-to-pod `curl` langsung (reset = sidecar tolak) vs in-cluster (200 = mesh sehat).
+
+## L-497: Overlay preprod tanpa patch Quarkus OIDC = semua token INVALID (2026-10-22)
+
+**Context**: Preprod login Keycloak OK tapi semua API `INVALID_TOKEN`. Akar: overlay preprod tak punya blok patch Quarkus (`QUARKUS_OIDC_AUTH_SERVER_URL` warisan base `payu-sso` yang kosong di env ini) — JWKS tak pernah ter-fetch, validator menolak semua token. Spring services sudah di-patch, Quarkus (gateway/api-portal/notification) tertinggal.
+
+**Fix**: Transplant blok Quarkus SIT (3 Deployment) dengan sed namespace → gateway rollout → balance 200 + transfer COMPLETED.
+
+**Pelajaran**: (1) **setiap env promoted butuh KEDUA blok OIDC** (Spring + Quarkus) — base hanya benar untuk dev/payu-sso; (2) `INVALID_TOKEN` pasca-login-sukses = curigai JWKS/AuthServer URL, bukan token — bandingkan env pod vs issuer token; (3) transplant antar-overlay via `sed` namespace + verifikasi `grep -c` target dan `grep` leak sumber sebelum apply.

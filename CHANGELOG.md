@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (Preprod bootstrap payu-preprod 2026-10-22 — fleet 33/33 + transfer COMPLETED)
+
+- **Preprod live (2026-10-22)**: `payu-preprod` kosong → fleet penuh. Pola SIT/UAT diulang preemptif: quota dev-parity, `preferred` affinity, `redis-standalone.yaml`, `sso-preprod` Route first-class dual-admit 200 (label ns), 3 user `partialImport`, sync jobs `Complete`, 30 digest re-pin + copy, `preprod-plain-cache`, account digest fix, `edge-plaintext-8080` mesh. Temuan khas preprod: overlay tak punya patch Quarkus OIDC (base `payu-sso` kosong) → semua token `INVALID_TOKEN`; transplant blok SIT (api-portal/gateway/notification) → 200. Kafka `True` + 118/118, CNPG 3/3 healthy. Bukti uang: transfer 1000 **COMPLETED**, saldo 10jt→9.999jt/5jt→5.001jt, ledger sepasang. `app-preprod`/`gateway-preprod` 200. Lesson L-497.
+
 ### Fixed (UAT bootstrap payu-uat 2026-10-22 — `KAFKA-UAT-001` CLOSED, fleet 33/33 + transfer COMPLETED)
 
 - **KAFKA-UAT-001 CLOSED (2026-10-22)**: `payu-uat` kosong → fleet penuh live. Kafka `True` 4.1.0 langsung (broker+controller Running, 118/118 topic) — fix git `egress: - {}` terbukti menutup blackhole DNS Strimzi di UAT. Data: CNPG 3/3 healthy (patch `preferred` preemptif + quota dev-parity + `redis-standalone.yaml` UAT dibuat — VelocityGuard butuh RESP). Identity: Keycloak `True`, `sso-uat` Route dual-admit 200 (label ns di-restore — L-493 berulang!), 3 user pin `partialImport` (`ADDED` + id benar), sync jobs `Complete`. Bug sync-job: `sed s///` replacement tak escape `&`/`/` → realm secret kosong → semua login `unauthorized_client`; fix escape + delimiter `|` (git + live, login ESO OK). Workloads: 30 digest re-pin + copy, `uat-plain-cache`, account digest fix. Mesh: STRICT + `edge-plaintext-8080` (portLevelMtls 8080 PERMISSIVE, selector wajib) — mesh `mutual_tls`, edge 200. Bukti uang: transfer 1000 **COMPLETED**, saldo 10jt→9.999jt/5jt→5.001jt, ledger sepasang. `app-uat`/`gateway-uat` 200. Lessons L-495/L-496.
