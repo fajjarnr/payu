@@ -7656,3 +7656,19 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Context**: SIT kosong → fleet 33/33 + transfer COMPLETED dalam satu sesi. Jebakan: (1) `payu-cache-credentials` tak ada (secret hidup di workload overlay, bukan data) → apply `payu-secrets.yaml` dulu; (2) `podAntiAffinityType: required` single-AZ → patch `preferred` (L-454) + hapus job+PVC+primary lama (aturan menempel di pod, bukan CR); (3) quota `secrets 100/100` menjegal operator CNPG → samakan dev (300); (4) digest SIT basi (cluster lama) → re-pin 30 digest dari ImageStream dev + `skopeo copy` split-creds; (5) base mTLS cache vs server plain → patch `sit-plain-cache` (+ strip volume index 1).
 
 **Pelajaran**: (1) **urutan bootstrap = secrets → data → messaging → identity → workloads**, dan tiap lapis butuh Ready sebelum lanjut; (2) aturan affinity/quota/digest dari cluster lama = **selalu curiga** — verifikasi render-vs-live per lapis; (3) `skopeo copy` antar-namespace butuh kredensial **terpisah** per sisi (`--src-creds`/`--dest-creds` SA builder masing-masing ns).
+
+## L-495: `sed s///` replacement + secret acak = bom: `&` dan `/` wajib escape (2026-10-22)
+
+**Context**: `keycloak-client-secret-sync` lapor "converged" + `client_credentials` check lolos (check memakai nilai ESO yang dikirim — tapi PUT-nya korup), realm secret jadi **string kosong** → semua login UAT `unauthorized_client`. Akar: secret ESO base64url mengandung `&` (sed = "seluruh match") dan `/` (delimiter) — tak di-escape.
+
+**Fix**: Escape `&` + delimiter di sisi replacement, ganti delimiter ke `|` (+ escape `|`): terbukti roundtrip `json.load` cocok byte-per-byte; re-run job → realm = ESO 64 char, login OK.
+
+**Pelajaran**: (1) **jangan rakit JSON dengan `sed`** bila nilainya acak — pakai `python3 -c json` / `jq`; bila terpaksa, escape `&` + delimiter + `"` + `\`; (2) "converged" tanpa verifikasi baca-balik = klaim kosong — check harus `GET` nilai realm lalu bandingkan, bukan ulangi nilai yang dikirim; (3) secret kosong di realm = gejala khas corrupt-PUT, bukan "belum sync".
+
+## L-496: STRICT mTLS + router plaintext = 502 `filter_chain_not_found`; eksepsi per-port butuh selector (2026-10-22)
+
+**Context**: UAT STRICT namespace-wide menolak trafik router (TLS edge berhenti di router, pod terima plain) — sidecar log `filter_chain_not_found` NR, route 502 di kedua router. In-cluster 200 (mTLS), edge 502.
+
+**Fix**: `PeerAuthentication edge-plaintext-8080` kedua dengan `selector: {app.kubernetes.io/part-of: payu}` + `portLevelMtls: {8080: PERMISSIVE}` (API menolak `portLevelMtls` tanpa selector — "Invalid value"). Mesh-to-mesh tetap `mutual_tls`, edge 200.
+
+**Pelajaran**: (1) **STRICT + edge route = selalu butuh pengecualian port** untuk port yang dilayani router plaintext; (2) `filter_chain_not_found` NR di sidecar = sidik jari mTLS-vs-plaintext, bukan NetPol (itu 000/timeout); (3) bedakan via router-to-pod `curl` langsung (reset = sidecar tolak) vs in-cluster (200 = mesh sehat).

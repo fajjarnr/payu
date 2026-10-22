@@ -69,93 +69,96 @@ replicas:
   count: 1
 # ponytail: scale 1 dev single replica; HPA/PDB disabled via patch delete for quota
 images:
+- name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
+  newName: image-registry.openshift-image-registry.svc:5000/payu-uat/account-service
+  digest: sha256:8571d0399959d8b6caf6f7c6e93dcbb3231a96609085f773bbc780af25797059
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/analytics-service
-  newTag: "1.18.103"
+  digest: sha256:dd72c46963950998f22bb491ac269ce826bff383bb6b92d373a864f064ae2237
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/api-portal-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/api-portal-service
-  newTag: "1.18.74"
+  digest: sha256:97c757a204c3f38a96b683b5a004d16448f23eabb38097e781b2c40002f2bf54
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/auth-service
-  newTag: "1.18.74"
+  digest: sha256:ef773470ba6e436c0ee1192c2f1936ff9b19fea6fd8487ce06b4a10ebcf35e4a
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/backoffice-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/backoffice-service
-  newTag: "1.18.74"
+  digest: sha256:e2516f3cd2f6232b1e1756d89fca87e63db53ba0d4262abd62c3e0d207d879f6
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/billing-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/billing-service
-  newTag: "1.18.98"
+  digest: sha256:1a6ea069137325cec5ed2354f6a24d4ae65281a3d832478d091ad49e2616df51
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/cms-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/cms-service
-  newTag: "1.18.74"
+  digest: sha256:79b2a5e62eaaf281a48d8ffb8e33056b4eff1aeb6cce1ede80e25b5428962b49
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/compliance-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/compliance-service
-  newTag: "1.18.74"
+  digest: sha256:928e2fe85f920dd835fe1ca863daee3b3912b85918da5cccaed2b620733e42a1
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dispute-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/dispute-service
-  newTag: "1.18.74"
+  digest: sha256:3116dd548f377f3c731307ed7b0d8ad485f68b7a221895df9be6bd39c4b7eab1
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/fx-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/fx-service
-  newTag: "1.18.98"
+  digest: sha256:4bbca05f9bb0fc22437a9f519c6582d55fba93c64ba83f7f04c21ccddd697bac
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/gateway-service
-  newTag: "1.18.74"
+  digest: sha256:780aec7c5908dcd5b1a2cfc7627b0dc5e3f654978453abdb25960b7ed0ef7344
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/integration-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/integration-service
-  newTag: "1.18.74"
+  digest: sha256:ee61914cbc4ca30f016b1af26dde2a4f98453bf670cd958fc5d943e7a84bcfe4
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/investment-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/investment-service
-  newTag: "1.18.98"
+  digest: sha256:341f12f224474e11c20d13ee792f3c02e0841ba1b3f1b712080b0683f63938e3
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/kyc-service
-  newTag: "1.18.74"
+  digest: sha256:81ceae4d2b97467e5c83459227fc60efe3e8764e148708b60f62accda2cfbd78
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/lending-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/lending-service
-  newTag: "1.18.98"
+  digest: sha256:bc8a41cda4f3e31ac51cae1dd11a7d0e952475a7eb18b0d91030796d478b7c97
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/loan-origination-process
-  newTag: "1.18.74"
+  digest: sha256:16d4c26facc0c734a4d1c273069f7063de595c2105947a6a14eb63133e1e9f1c
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/notification-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/notification-service
-  newTag: "1.18.74"
+  digest: sha256:65927747e3217e375b333294edd82f392e985b52250c65fb26e13489d3836c70
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/partner-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/partner-service
-  newTag: "1.18.78"
+  digest: sha256:473091bf0c9ae4b8dbfd453296bc5ab32100c884cd0c923f52d4b3678638b5b3
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/product-catalog-service
-  newTag: "1.18.74"
+  digest: sha256:c1b6ed9ab608092f4bd79ccddf6fe0b8c081ec3763e9ff68b691d89385420ea3
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/promotion-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/promotion-service
-  newTag: "1.18.98"
+  digest: sha256:e8bab7b2b861f3029ffccf3ca02dc3bc414e35fdb7d2f4f7672e58196c650cdc
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/statement-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/statement-service
-  newTag: "1.18.98"
+  digest: sha256:fdbde8f4844d420ddb51352037f6e5cdeb9dc1526147479079c83ea4e8da12ea
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/support-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/support-service
-  newTag: "1.18.74"
+  digest: sha256:814a118d44e5f205f6900cc9a00a38dccfc172921af460ac44f944947a411689
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/transaction-service
-  newTag: "1.8.116"
+  digest: sha256:32b127953c1b7ba891e2c6b79d9bd6356a80dffa5e495f6f7f7d97fc2dfb44b8
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/wallet-service
-  newTag: "1.18.103"
+  digest: sha256:38f75d9d850ce18c1bdb8cdb2be514c9b8cd65f93dd54963dbfa0c0c9b357fa5
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/web-app
-  newTag: "1.18.102"
+  digest: sha256:593166a6dd5cb4fe5ca58b36aa433cd185d563621753d3bbab3e351d5e5f1adb
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/bi-fast-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/bi-fast-simulator
-  newTag: "1.18.74"
+  digest: sha256:b2fdefae996d2a01aae0fc73fce102f3a42406a1a85ece13e5f7cfba282c600f
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/biller-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/biller-simulator
-  newTag: "1.18.74"
+  digest: sha256:c09dba67aee7ce65b82f43cce395bf84c23b0569bae577e78e6cdf09ddf8e4b1
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/dukcapil-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/dukcapil-simulator
-  newTag: "1.18.74"
+  digest: sha256:5eba6587e20df7ce3c9310c8442ffca7814af472eb87f3c9181f59ee385dd332
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/qris-simulator
-  newTag: "1.18.74"
+  digest: sha256:3b0edd4c40012c533f98cba33b3f5e94f57f55a3cea9343e5cd254c977e93c6f
 - name: image-registry.openshift-image-registry.svc:5000/payu-dev/va-simulator
   newName: image-registry.openshift-image-registry.svc:5000/payu-uat/va-simulator
-  newTag: "1.18.74"
+  digest: sha256:8dd6ec593cb4cfbd7c1e0b5750068a668b2f892cc4d644d6097104732059082b
 patches:
 # Development still consumes the shared Keycloak instance in payu-sso.
 - target:
@@ -914,3 +917,46 @@ patches:
               env:
                 - name: SPRINGDOC_API_DOCS_ENABLED
                   value: "true"
+# UAT runs the same standalone plain Hot Rod cache as dev/SIT (operator
+# webhook panics on the CR in this cluster). Strip base mTLS/auth env +
+# client-tls volume — mirror of sit-plain-cache.
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service)$"
+  patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: uat-plain-cache
+    spec:
+      template:
+        spec:
+          containers:
+            - name: app
+              env:
+              - name: PAYU_CACHE_HOTROD_AUTH_USERNAME
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_USE_SSL
+                value: "false"
+              - name: PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD
+                $patch: delete
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service)$"
+  patch: |-
+    - op: remove
+      path: /spec/template/spec/containers/0/volumeMounts/1
+    - op: remove
+      path: /spec/template/spec/volumes/1

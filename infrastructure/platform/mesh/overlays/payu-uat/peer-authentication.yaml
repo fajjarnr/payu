@@ -1,8 +1,10 @@
-# UAT mesh posture: STRICT mTLS for payu-uat.
+# UAT mesh posture: STRICT mTLS for payu-uat, plaintext on edge ports.
 #
-# STRICT from UAT upward per ADR-0037
-# (docs/adr/0037-internal-synchronous-inter-service-communication-via-grpc-and-protobuf-governance.md)
-# and docs/architecture/DEVSECOPS_ARCHITECTURE.md.
+# STRICT from UAT upward per ADR-0037, but the OpenShift router speaks
+# plain HTTP to the pods (edge TLS terminates at the router). Without a
+# port-level exception the sidecar drops router traffic with
+# filter_chain_not_found (NR) → route 502 (UAT 2026-10-22).
+# Service-to-service stays STRICT; only the router-facing ports are open.
 #
 # Namespace-scoped on purpose: a mesh-wide (istio-system) STRICT policy would
 # also bind the sibling payu-dev / payu-sit namespaces on this same cluster.
@@ -14,3 +16,18 @@ metadata:
 spec:
   mtls:
     mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: edge-plaintext-8080
+  namespace: payu-uat
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: payu
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    8080:
+      mode: PERMISSIVE

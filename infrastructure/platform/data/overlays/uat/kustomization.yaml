@@ -12,6 +12,7 @@ resources:
   - ../../cnpg
   - cnpg-secrets.yaml
   - infinispan-standalone.yaml
+  - redis-standalone.yaml
 
 replacements:
   # Bootstrap jobs hardcode the dev FQDN; retarget the namespace segment.
@@ -58,6 +59,17 @@ configMapGenerator:
       - environment=sit
       - namespace=payu-uat
 patches:
+  # Single-AZ cluster (L-454, SIT L-494): REQUIRED zone anti-affinity
+  # blocks every replica after instance-1. Preferred for UAT here.
+  - target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: payu-database
+    patch: |-
+      - op: replace
+        path: /spec/affinity/podAntiAffinityType
+        value: preferred
   - target:
       group: infinispan.org
       version: v1

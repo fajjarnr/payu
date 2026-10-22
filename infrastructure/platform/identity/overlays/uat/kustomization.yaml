@@ -6,6 +6,9 @@ resources:
   - ../common
   # Plain secrets replace VaultStaticSecrets until Vault/VSO ships (DEVSECOPS-017).
   - keycloak-secrets.yaml
+  # Direct Route (SIT L-492): operator Ingress only admits to
+  # router-default; shared-ingress needs a first-class Route.
+  - sso-route.yaml
 
 namespace: payu-uat
 
@@ -46,6 +49,9 @@ patches:
       - op: add
         path: /spec/hostname/hostname
         value: https://sso-uat.apps.fajjjar.my.id
+      - op: replace
+        path: /spec/ingress/enabled
+        value: false
   - target:
       kind: Keycloak
       name: payu-keycloak

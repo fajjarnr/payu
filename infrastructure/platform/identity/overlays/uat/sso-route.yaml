@@ -1,0 +1,22 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: sso-uat
+  namespace: payu-uat
+  labels:
+    app: keycloak
+    app.kubernetes.io/instance: payu-keycloak
+    app.kubernetes.io/managed-by: platform-team
+    app.kubernetes.io/part-of: payu
+spec:
+  host: sso-uat.apps.fajjjar.my.id
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: payu-keycloak-service
+    weight: 100
+  wildcardPolicy: None

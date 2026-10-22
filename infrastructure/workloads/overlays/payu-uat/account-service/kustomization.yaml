@@ -9,7 +9,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-uat/account-service
-    newTag: "1.18.102"
+    digest: sha256:8571d0399959d8b6caf6f7c6e93dcbb3231a96609085f773bbc780af25797059
 
 patches:
   - target:
@@ -40,3 +40,18 @@ patches:
                     value: https://sso-uat.apps.fajjjar.my.id/realms/payu
                   - name: PAYU_KEYCLOAK_SERVER_URL
                     value: https://sso-uat.apps.fajjjar.my.id
+                  # UAT plain Hot Rod (mirror uat-plain-cache).
+                  - name: PAYU_CACHE_HOTROD_AUTH_USERNAME
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_USE_SSL
+                    value: "false"
+                  - name: PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD
+                    $patch: delete
