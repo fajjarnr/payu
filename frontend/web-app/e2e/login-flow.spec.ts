@@ -12,7 +12,9 @@ test.describe('Login Flow', () => {
     await expect(page.getByText('Masuk ke dashboard finansial Anda')).toBeVisible();
   });
 
-  test('should have branding panel on desktop', async ({ page }) => {
+  test('should have branding panel on desktop', async ({ page }, testInfo) => {
+    // Branding column is xs={0} (hidden) on mobile viewports by design.
+    test.skip(testInfo.project.name === 'Mobile Chrome', 'branding panel is desktop-only');
     // The branding column is an AntD <Col> (a plain div) with no landmark role and
     // no aria-label — target the heading it renders instead of a CSS selector.
     // Copy: messages/id.json -> auth.branding.title
@@ -54,7 +56,9 @@ test.describe('Login Flow', () => {
     });
   });
 
-  test('should display security features on branding panel', async ({ page }) => {
+  test('should display security features on branding panel', async ({ page }, testInfo) => {
+    // Same desktop-only branding column as above.
+    test.skip(testInfo.project.name === 'Mobile Chrome', 'branding panel is desktop-only');
     // Copy: messages/id.json -> auth.branding.tag / auth.branding.features.*
     await expect(page.getByText('Kontrol Keamanan')).toBeVisible();
     await expect(page.getByText('Enkripsi AES-GCM di database')).toBeVisible();
@@ -143,10 +147,18 @@ test.describe('Login Flow - OIDC PKCE journey (LOGIN-003)', () => {
 });
 
 test.describe('Login Flow - Accessibility', () => {
-  test('should have proper heading hierarchy', async ({ page }) => {
+  test('should have proper heading hierarchy', async ({ page }, testInfo) => {
     await page.goto('/login');
     await page.waitForLoadState('domcontentloaded');
 
+    // Mobile hides the branding h1 (xs={0}); the form h2 "Selamat Datang
+    // Kembali" is the page heading there.
+    if (testInfo.project.name === 'Mobile Chrome') {
+      const h2 = page.locator('h2');
+      await expect(h2).toBeVisible();
+      await expect(h2).toContainText('Selamat Datang Kembali');
+      return;
+    }
     const h1 = page.locator('h1');
     await expect(h1).toBeVisible();
     await expect(h1).toContainText('Platform Perbankan');

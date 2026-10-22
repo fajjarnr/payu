@@ -12,6 +12,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (Full-E2E zero-fail 2026-10-22 — shell 18/18, vitest 2103/2103, Playwright hijau, deploy `1.18.137`)
+
+- **ResponseStatusException envelope (2026-10-22)**: `Rfc9457GlobalExceptionHandler` kini unwrap `ResponseStatusException` — status yang dibawa controller dihormati (400 tetap 400, bukan 500 `INTERNAL_ERROR`). TDD RED→GREEN (`ProblemDetailTest` 11→13, `Tests run: 13 Failures: 0`). Deploy `compliance-service:1.18.137` (build+push manual, `newTag` di kedua overlay, apply per-service, rollout sukses): `GET /api/v1/compliance/audit-report` tanpa param → **400** + detail "At least one search parameter is required".
+- **Shell E2E RBAC-aware (2026-10-22)**: 5 skrip diperbaiki — ekspektasi 403/400/404 by-design ditegaskan + jalur admin JWT 200 dibuktikan (partner `PARTNER_*`, notification `SEC-NOTIF-002`, dispute `DISPUTE_AGENT`, integration `?status` wajib, compliance param wajib, statement `/latest` 404-bisnis, SNAP `MISSING_REQUIRED_HEADER` 400, `lending-rules` mati → `lending-service`). **18/18 exit 0**.
+- **NIK scope realm (2026-10-22)**: client-scope `account:verify` (`include.in.token.scope: true`) dibuat + di-assign ke default-client-scopes `payu-backend` (live Admin REST + `keycloak-realm-import.yaml` + `payu-realm-export.json`) — `verify-nik-cache.sh` kini T1/T2 **200 VALID** + retry sekali lawan 3% random-failure simulator.
+- **Vitest forks pool (2026-10-22)**: `vitest.config.ts` `pool: 'forks', maxWorkers: 4` — timeout-flake 1-3/run (TransferActivity axe di bawah beban penuh) hilang, **2103/2103 hijau** dua run beruntun.
+- **Playwright mobile (2026-10-22)**: branding/h1 desktop-only di-skip/assert-h2 di `Mobile Chrome`; REG-VAL-001 digate judul hidrasi ketat (`/Identitas \| PayU/`, bukan `/PayU/` yang cocok shell SSR) + `toBeEnabled` — **12/12** stress-run, `login-flow` 52 passed 0 failed, `money-journey` 13 passed 0 failed.
+- **Bukti akhir (2026-10-22)**: `transactions` 54 COMPLETED / 6 FAILED (pra-V114 semua), `ledger_entries` 132 = 66 DEBIT + 66 CREDIT berpasangan, drift guard OK, 32/32 Deployment 1/1.
+
 ### Fixed (Dev loop payu-dev production-ready 2026-10-22 — MESH-003/004/006 CLOSED)
 
 - **MESH-003 CLOSED (2026-10-22)**: deny-by-default L7 di `payu-dev` — `deny-all` (namespace-wide, empty spec) + `allow-mesh-and-gateway` (caller `payu-dev` + `payu-mesh-gateway`) + `allow-direct-routes` (eksepsi MESH-008 eksplisit: plaintext router→pod hanya ke 2 Service direct-Route). Guard TDD `test_dev_mesh_has_deny_by_default_authorization` RED→GREEN (suite 7/7→8/8). Live: direct Routes 200/200/200, mesh gateway 401, transfer COMPLETED + ledger DEBIT/CREDIT 1000, RBAC-403/5m = 0 series, antar-service 100% `mutual_tls`; kubelet probe (:15020) + scrape :15090 tak tersentuh (excludeInboundPorts).

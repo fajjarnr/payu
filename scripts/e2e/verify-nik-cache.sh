@@ -49,12 +49,14 @@ USERKEY="${USERKEY:-04dc03f2e2a776bffcb9b16eb9f93796}"
 ACCT_ID="750e8400-e29b-41d4-a716-446655440001"
 NIK="3201234567890001"
 
+FAILED=0
+ok(){ [ "$3" = "$2" ] && echo "  ✅ $1 HTTP=$3" || { echo "  ❌ $1 exp=$2 got=$3"; FAILED=1; }; true; }
 run_test() {
     local label="$1"; shift
     sleep 1
-    local out
-    out=$(oc exec -n payu-dev "$ACCOUNT_POD" -- \
-        curl -s -o /tmp/r.json -w "HTTP=%{http_code} TIME=%{time_total}s" \
+    local code
+    code=$(oc exec -n payu-dev "$ACCOUNT_POD" -- \
+        curl -s -o /tmp/r.json -w "%{http_code}" \
         -X POST "$ACCT_URL/api/v1/accounts/verify-nik" \
         -H "Authorization: Bearer $JWT" \
         -H "Content-Type: application/json" \
@@ -62,15 +64,32 @@ run_test() {
     oc exec -n payu-dev "$ACCOUNT_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
     local body
     body=$(head -c 400 "$TMPFILE" 2>/dev/null)
-    printf "\n=== %s ===\n%s\nBODY: %s\n" "$label" "$out" "$body"
+    printf "\n=== %s ===\nHTTP=%s\nBODY: %s\n" "$label" "$code" "$body" >&2
+    printf "%s" "$code"
 }
 
 echo "=== NEW-001 E2E: account-service:1.8.13 NIK verification cache round-trip ==="
 echo "ACCT_URL=$ACCT_URL"
 echo "ACCT_ID=$ACCT_ID  NIK=$NIK"
 
-run_test "T1: 1st verify-nik (cache miss, calls Dukcapil via gateway)"
-run_test "T2: 2nd verify-nik SAME NIK (cache hit, no ClassCastException expected)"
+# Requires realm client-scope account:verify on payu-backend (else 403).
+# Dukcapil simulator has a 3% random-failure mode, so a 503-body on either
+# leg is retried once with a fresh NIK (different cache key, same shape).
+attempt=0
+while true; do
+    T1=$(run_test "T1: 1st verify-nik (cache miss, calls Dukcapil)")
+    T2=$(run_test "T2: 2nd verify-nik SAME NIK (cache hit, no ClassCastException)")
+    if [ "$T1" = "200" ] && [ "$T2" = "200" ]; then
+        ok "T1 status" "200" "$T1"; ok "T2 status" "200" "$T2"
+        break
+    fi
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge 2 ]; then
+        ok "T1 status" "200" "$T1"; ok "T2 status" "200" "$T2"
+        break
+    fi
+    echo "  ⚠️ simulator random failure — retrying once with fresh NIK" >&2
+    NIK="3201234567890002"
+done
 
-echo
-echo "=== DONE ==="
+[ "$FAILED" -eq 0 ] && echo "ALL 2 PASSED" || { echo "FAILED"; exit 1; }

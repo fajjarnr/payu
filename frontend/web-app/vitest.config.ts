@@ -9,6 +9,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/__tests__/**/*.test.{ts,tsx}'],
+    // threads pool starves heavy suites (TransferActivity axe runs) under full
+    // load: 1-3 timeout flakes per run. forks isolates workers, 2103/2103 green.
+    pool: 'forks',
+    maxWorkers: 4,
     server: {
       deps: {
         // Inline next-intl so Vite's resolver handles 'next/navigation' import

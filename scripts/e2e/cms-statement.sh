@@ -28,7 +28,7 @@ T3=$(run_test "T3: No JWT → 401" "$CMS/api/v1/contents"); ok "T3" "401" "$T3"
 
 echo "=== Statements ==="
 T4=$(run_test "T4: List" "$STMT/api/v1/statements" -H "Authorization: Bearer $JWT"); ok "T4" "200" "$T4"
-T5=$(run_test "T5: Latest" "$STMT/api/v1/statements/latest" -H "Authorization: Bearer $JWT"); ok "T5" "200" "$T5"
+T5=$(run_test "T5: Latest (200 or 404 no-statements)" "$STMT/api/v1/statements/latest" -H "Authorization: Bearer $JWT"); [ "$T5" = "200" ] && echo "  ✅ T5 HTTP=200" || [ "$T5" = "404" ] && echo "  ✅ T5 HTTP=404 (no statements)" || { echo "  ❌ T5=$T5"; FAILED=1; }
 T6=$(run_test "T6: Receipt 404" "$STMT/api/v1/statements/receipts/transaction/00000000-0000-0000-0000-000000000000" -H "Authorization: Bearer $JWT"); ok "T6" "404" "$T6"
 T7=$(run_test "T7: No JWT → 401" "$STMT/api/v1/statements" -H "Authorization: Bearer dead"); ok "T7" "401" "$T7"
 

@@ -203,6 +203,21 @@ public class Rfc9457GlobalExceptionHandler {
                 "Insufficient permissions", "ACCESS_DENIED", request);
     }
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ProblemDetail> handleResponseStatus(
+            org.springframework.web.server.ResponseStatusException ex, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        String detail = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
+        if (status.is5xxServerError()) {
+            log.error("ResponseStatus error in {}: {} - {}", request.getRequestURI(), status, detail);
+        } else {
+            log.warn("ResponseStatus error in {}: {} - {}", request.getRequestURI(), status, detail);
+        }
+        return respondWith(status, titleFor(status), detail,
+                status.is4xxClientError() ? "CLIENT_ERROR_" + status.value() : "INTERNAL_ERROR", request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(
             Exception ex, HttpServletRequest request) {

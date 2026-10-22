@@ -7596,3 +7596,35 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: Inventarisasi sebelum tulis policy: (1)+(3) tak tersentuh karena Istio exclude `15020/15090` dari capture; (4) lolos via `namespaces: [payu-dev]` (namespace, bukan principal); (2) satu-satunya eksepsi nyata → `allow-direct-routes` eksplisit (scope port+path, bukan carve-out umum). Verifikasi: RBAC-403/5m = 0 series + 100% `mutual_tls` antar-service + transfer COMPLETED.
 
 **Pelajaran**: (1) **deny-by-default = latihan inventarisasi, bukan latihan YAML** — tulis policy setelah SEMUA caller plaintext terpetakan + terverifikasi live; (2) `excludeInboundPorts` adalah jawaban probe/scrape — jangan ALLOW `0.0.0.0/0` untuk mereka; (3) syarat `namespaces:` (bukan `principals:`) adalah cara benar mengizinkan pod non-mesh dalam ns; (4) NetPol L3 menjelaskan banyak "deny misterius" — bedakan 000 (L3 DROP, mis. `allow-intra-namespace` podSelector) dari 403+`RBAC` flag (L7 deny) sebelum menyalahkan policy.
+
+## L-487: `@RestControllerAdvice` + fallback `Exception` menelan status `ResponseStatusException` (2026-10-22)
+
+**Context**: `GET /api/v1/compliance/audit-report` tanpa param melempar `ResponseStatusException(BAD_REQUEST)` tapi klien menerima **500 `INTERNAL_ERROR`** — global handler tak punya cabang `ResponseStatusException`, fallback `Exception` menelan statusnya.
+
+**Fix**: Handler khusus di `Rfc9457GlobalExceptionHandler` yang unwrap `ex.getStatusCode()` + `ex.getReason()` (TDD `ProblemDetailTest` 11→13), deploy `compliance-service:1.18.137` (builder SA butuh **fresh token** `oc create token builder -n payu-dev` — dockercfg lama kedaluwarsa → push 401).
+
+**Pelajaran**: (1) setiap `@RestControllerAdvice` dengan fallback `Exception` **wajib** cabang `ResponseStatusException` (atau `ErrorResponseException`) — kalau tidak, semua throw-status controller jadi 500; (2) push registry internal gagal 401 walau authfile kemarin valid → `podman login` ulang dengan token SA fresh (dockercfg statis kedaluwarsa); (3) verifikasi fix ada di jar sebelum push (`unzip -p app.jar BOOT-INF/lib/... + javap`), bukan asumsi `-am` rebuild.
+
+## L-488: Judul SSR menipu gate hidrasi Playwright — gate pada judul efek klien (2026-10-22)
+
+**Context**: REG-VAL-001 flake 30% di Mobile Chrome: `setInputFiles` pada input `display:none` kadang no-op (tombol tetap disabled). Gate `/PayU/` lolos terhadap **judul shell SSR** — React `onChange` belum terpasang saat file di-set.
+
+**Fix**: Gate pada judul yang hanya ditulis efek klien (`/Identitas \| PayU/`, `document.title` di `useEffect`) + `toBeEnabled` sebelum klik. Stress 12/12 hijau. Bukan retry — akar (urutan hidrasi) diperbaiki.
+
+**Pelajaran**: (1) `/Brand/` bukan sinyal hidrasi bila SSR shell sudah mengandungnya — gate pada **string yang hanya efek klien yang tulis**; (2) jangan klik tombol disabled lalu salahkan klik — `toBeEnabled` adalah assertion yang benar; (3) `input[type=file]` `display:none` + `setInputFiles` = pasangan rapuh — selalu verifikasi efek samping (tombol enable), bukan `files.length` saja.
+
+## L-489: Vitest threads pool membuat timeout-flake di bawah beban penuh (2026-10-22)
+
+**Context**: Full-run vitest gagal 1-3 test/run (`TransferActivity` + axe, timeout 5s); file yang sama hijau terisolasi maupun shuffled-trio. Bukan kontaminasi state (isolasi per-file), melainkan **starvasi worker** threads pool.
+
+**Fix**: `vitest.config.ts` `pool: 'forks', maxWorkers: 4` — dua full-run beruntun **2103/2103**.
+
+**Pelajaran**: (1) "gagal hanya di full-run + timeout (bukan assertion salah)" = curigai **penjadwal**, bukan logika — uji `--pool=forks` sebelum refactor test; (2) shuffle yang tetap gagal menyingkirkan teori kontaminasi-urutan; (3) pin pool+worker di config (bukan flag CLI) agar CI dan lokal sama.
+
+## L-490: Skrip E2E tanpa assertion = lolos vakum; scope realm adalah drift tak terlihat (2026-10-22)
+
+**Context**: `verify-nik-cache.sh` exit 0 selama berminggu-minggu sementara kedua call 403 — skrip lama tak punya `ok()` assertion. Akar 403: `@PreAuthorize(SCOPE_account:verify)` tapi realm tak punya client-scope itu (pernah ada per L-155, hilang saat bootstrap cluster baru — drift tak terdeteksi karena skrip tak assert).
+
+**Fix**: Scope dibuat ulang via Admin REST + dipin di **kedua** file realm (`keycloak-realm-import.yaml` + `payu-realm-export.json` — keduanya dipakai jalur berbeda); skrip kini assert T1/T2 200 + retry sekali lawan 3% random-failure simulator.
+
+**Pelajaran**: (1) setiap skrip E2E **wajib assertion + exit code** — `DONE` tanpa assert = pembohong; (2) state realm (scope/role/user) adalah drift class tersendiri — pin di git + verifikasi scope di token nyata (`scope:` field), bukan asumsi; (3) simulator dengan failure-rate butuh retry sadar (fresh key, bukan retry buta) di skrip deterministik.

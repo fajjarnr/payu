@@ -223,4 +223,35 @@ class ProblemDetailTest {
         assertThat(response.getHeaders().getContentType().toString())
                 .isEqualTo("application/problem+json");
     }
+
+    @Test
+    @DisplayName("ResponseStatusException: honors the carried status (400 stays 400, not 500)")
+    void responseStatusExceptionHonorsStatus() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/compliance/audit-report");
+        org.springframework.web.server.ResponseStatusException ex =
+                new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "At least one search parameter is required");
+
+        ResponseEntity<ProblemDetail> response = handler.handleResponseStatus(ex, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getStatus()).isEqualTo(400);
+        assertThat(response.getBody().getDetail()).contains("At least one search parameter");
+        assertThat(response.getHeaders().getContentType().toString())
+                .isEqualTo("application/problem+json");
+    }
+
+    @Test
+    @DisplayName("ResponseStatusException: 404 reason preserved")
+    void responseStatusException404() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/x");
+        org.springframework.web.server.ResponseStatusException ex =
+                new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "no such thing");
+
+        ResponseEntity<ProblemDetail> response = handler.handleResponseStatus(ex, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getStatus()).isEqualTo(404);
+    }
 }

@@ -54,21 +54,35 @@ test.describe('PayU E2E — full money journey (real)', () => {
   test('register blocks short NIK (REG-VAL-001)', async ({ page }) => {
     await page.goto('/onboarding');
     await page.waitForLoadState('domcontentloaded');
-    // Gates on KTP upload — attach a 1px PNG to enable continue.
+    // The file input is display:none; hydration must attach React's onChange
+    // before setInputFiles or the upload silently no-ops (button stays
+    // disabled). Gate on the STEP title ("Identitas | ...") set by the
+    // onboarding client effect — /PayU/ alone matches the SSR shell title.
+    await expect(page).toHaveTitle(/Identitas \| PayU/, { timeout: 15000 });
     const png = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
       'base64',
     );
-    await page.locator('input[type="file"]').first().setInputFiles({ name: 'ktp.png', mimeType: 'image/png', buffer: png });
-    await page.click('button:has-text("Lanjut ke Profil Data")');
-    await page.getByPlaceholder(/16 digit/).fill('123');
+    const fileInput = page.locator('input[type="file"]');
+    await expect(fileInput).toBeAttached({ timeout: 15000 });
+    await fileInput.setInputFiles({ name: 'ktp.png', mimeType: 'image/png', buffer: png });
+    // setKtpFile is async React state — the continue button enables only
+    // after the change event is processed. Never click a disabled button.
+    const continueButton = page.getByRole('button', { name: /Lanjut ke Profil Data/ });
+    await expect(continueButton).toBeEnabled({ timeout: 15000 });
+    await continueButton.click();
+    // The profile step renders after an async transition; wait for it before
+    // filling (Mobile Chrome flaked filling a detaching tree).
+    const nikInput = page.getByPlaceholder(/16 digit/);
+    await expect(nikInput).toBeVisible({ timeout: 15000 });
+    await nikInput.fill('123');
     await page.getByPlaceholder(/Sesuai KTP/).fill('Test User');
     await page.getByPlaceholder(/nama@email.com/).fill('test@example.com');
     await page.getByPlaceholder(/unik & mudah diingat/).fill('testuser');
-    await page.click('button:has-text("Konfirmasi Pendaftaran")');
+    await page.getByRole('button', { name: /Konfirmasi Pendaftaran/ }).click();
     // AntD renders the zod validation message under the field (not a .text-red-500
     // span). Message source: src/types/index.ts -> nik rule.
-    await expect(page.getByText('NIK must be exactly 16 digits')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('NIK must be exactly 16 digits')).toBeVisible({ timeout: 15000 });
   });
 
   test('login lands on dashboard with balance card (LOGIN-J-001)', async ({ authPage }) => {

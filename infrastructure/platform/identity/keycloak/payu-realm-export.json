@@ -289,7 +289,10 @@
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
       "attributes": {},
-      "protocol": "openid-connect"
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "account:verify"
+      ]
     },
     {
       "clientId": "payu-gateway",
@@ -364,5 +367,16 @@
     "contentSecurityPolicy": "",
     "xXSSProtection": "1; mode=block",
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
-  }
+  },
+  "clientScopes": [
+    {
+      "name": "account:verify",
+      "description": "Allow NIK verification via Dukcapil (SCOPE_account:verify)",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    }
+  ]
 }

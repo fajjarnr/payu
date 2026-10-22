@@ -12,7 +12,7 @@ for svc in \
   "qris:http://qris-simulator.payu-dev.svc.cluster.local:8080/q/health" \
   "va:http://va-simulator.payu-dev.svc.cluster.local:8080/q/health" \
   "loan-origination:http://loan-origination-process.payu-dev.svc.cluster.local:8080/actuator/health" \
-  "lending-rules:http://lending-rules.payu-dev.svc.cluster.local:8080/actuator/health" \
+  "lending:http://lending-service.payu-dev.svc.cluster.local:8080/actuator/health" \
 ; do
   name="${svc%%:*}" url="${svc#*:}"
   code=$(oc exec -n payu-dev "$POD" -- timeout 5 curl -skS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "TO")
