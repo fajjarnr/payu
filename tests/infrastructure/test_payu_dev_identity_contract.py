@@ -217,5 +217,81 @@ class PayuDevIdentityContractTest(unittest.TestCase):
                 checked += 1
         self.assertGreaterEqual(checked, 30)
 
+    def test_dev_mesh_has_deny_by_default_authorization(self) -> None:
+        # MESH-003: every meshed workload in payu-dev must sit behind a
+        # namespace-wide deny-by-default AuthorizationPolicy. The policy is
+        # intentionally "empty spec" (deny all unmatched): ALLOW exceptions
+        # for the mesh gateway + same-namespace callers live in the same
+        # overlay file, and plaintext callers (router direct Routes,
+        # Prometheus scrape) are covered by design, not by carve-outs.
+        result = self.render("infrastructure/platform/mesh/overlays/payu-dev")
+        self.assertEqual(0, result.returncode, result.stderr)
+        documents = load_rendered(result.stdout)
+        deny = next(
+            item
+            for item in documents
+            if item.get("kind") == "AuthorizationPolicy"
+            and item.get("metadata", {}).get("name") == "deny-all"
+        )
+        self.assertEqual("payu-dev", deny["metadata"]["namespace"])
+        self.assertNotIn("selector", deny["spec"])
+        self.assertEqual({}, deny["spec"])
+        allow = next(
+            item
+            for item in documents
+            if item.get("kind") == "AuthorizationPolicy"
+            and item.get("metadata", {}).get("name") == "allow-mesh-and-gateway"
+        )
+        namespaces = {
+            src.get("namespaces", [None])[0]
+            for rule in allow["spec"]["rules"]
+            for src in rule.get("from", [{}])
+            for src in [src.get("source", {})]
+        }
+        self.assertIn("payu-dev", namespaces)
+        self.assertIn("payu-mesh-gateway", namespaces)
+
+
+    def test_prod_ingress_gateway_sits_behind_apicast(self) -> None:
+        # MESH-004: prod mesh gateway is a ClusterIP backend behind APIcast,
+        # never a public edge. Contract: (a) Gateway carries the ClusterIP
+        # pin annotation, (b) NO OpenShift Route exists in the package (no
+        # public hostname, no TLS edge at the router — APIcast owns the edge),
+        # (c) prod HTTPRoute attaches to the prod gateway and routes only the
+        # public API prefixes to gateway-service, setting X-PayU-Environment.
+        result = self.render("infrastructure/platform/mesh/ingress-prod")
+        self.assertEqual(0, result.returncode, result.stderr)
+        documents = load_rendered(result.stdout)
+        kinds = {item.get("kind") for item in documents}
+        self.assertNotIn("Route", kinds)
+        gateway = next(
+            item for item in documents if item.get("kind") == "Gateway"
+        )
+        self.assertEqual("istio", gateway["spec"]["gatewayClassName"])
+        self.assertEqual(
+            "ClusterIP",
+            gateway["metadata"]["annotations"][
+                "networking.istio.io/service-type"
+            ],
+        )
+        route = next(
+            item for item in documents if item.get("kind") == "HTTPRoute"
+        )
+        parents = route["spec"]["parentRefs"]
+        self.assertEqual(gateway["metadata"]["name"], parents[0]["name"])
+        self.assertEqual(
+            gateway["metadata"]["namespace"], parents[0]["namespace"]
+        )
+        backend = route["spec"]["rules"][0]["backendRefs"][0]
+        self.assertEqual("gateway-service", backend["name"])
+        filters = route["spec"]["rules"][0].get("filters", [])
+        headers = [
+            setter["name"]
+            for item in filters
+            for setter in item.get("requestHeaderModifier", {}).get("set", [])
+        ]
+        self.assertIn("X-PayU-Environment", headers)
+
+
 if __name__ == "__main__":
     unittest.main()

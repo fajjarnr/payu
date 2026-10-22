@@ -1,0 +1,97 @@
+# MESH-003: deny-by-default L7 authorization for the `payu-dev` namespace.
+#
+# Before this file the cluster held exactly one AuthorizationPolicy (the
+# gateway-scoped simulator DENY in ../ingress/): every meshed pod in payu-dev
+# could reach every port of every other meshed pod. mTLS (PERMISSIVE here,
+# STRICT from UAT up) authenticates the caller; these policies authorize it.
+#
+# Design (dev = debuggable zero-trust, mirrors overlays/payu/ shape):
+# - `deny-all`: namespace-wide default DENY. No selector + empty spec means
+#   "deny every request this namespace's sidecars receive unless an ALLOW
+#   policy in this namespace explicitly permits it" (Istio default-deny
+#   semantics: ALLOW policies are additive, DENY policies win over ALLOW).
+# - `allow-mesh-and-gateway`: the single ALLOW exception. Permits callers
+#   from `payu-dev` itself (service-to-service, incl. the 5 non-meshed
+#   simulators and platform pods, which arrive without a mesh identity but
+#   from inside the namespace) and from `payu-mesh-gateway` (the public
+#   internet door, identity
+#   spiffe://payu.local/ns/payu-mesh-gateway/sa/payu-public-gateway-istio).
+#
+# Plaintext callers that must NOT break (verified in design, re-verified
+# live after apply):
+# - kubelet probes: rewritten by Istio to :15020 (/app-health/...), a port
+#   excluded from capture (excludeInboundPorts: 15020) — never evaluated
+#   against these policies.
+# - OpenShift router direct Routes (web-app, analytics-ws): plaintext from
+#   outside the mesh. PERMISSIVE mTLS accepts them; the ALLOW rule has no
+#   `principals` requirement on the gateway path, and direct-to-pod traffic
+#   keeps working because the router is not subject to sidecar policy on
+#   ports without a server-side mTLS requirement... EXCEPT under deny-all
+#   every unmatched request IS denied. The router->pod path is preserved
+#   because these Routes terminate at Services whose pods accept plaintext
+#   and the ALLOW policy below covers same-namespace callers; the router
+#   itself is outside any mesh namespace, so its traffic arrives with no
+#   source namespace and would be denied. See the `allow-direct-routes`
+#   policy below: it permits unauthenticated plaintext to the two Services
+#   that own direct Routes (web-app, analytics-service), on their app ports
+#   only. This is the documented dev exception (MESH-008): UAT/preprod must
+#   route ALL public traffic through the mesh gateway instead.
+# - Prometheus scrape (:15090 /stats/prometheus): port excluded from capture
+#   like the probes — never evaluated.
+#
+# What this does NOT do (deliberately, dev scope):
+# - no per-service path/method rules (prod overlay has them; dev keeps one
+#   namespace rule so new services work without a policy change);
+# - no RequestAuthentication/JWT rules (app-layer JWT stays authoritative;
+#   mesh JWT would double-validate and break the simulator paths);
+# - no STRICT mTLS (dev stays PERMISSIVE for debugging; STRICT from UAT up).
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all
+  namespace: payu-dev
+spec: {}
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-mesh-and-gateway
+  namespace: payu-dev
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces:
+              - payu-dev
+    - from:
+        - source:
+            namespaces:
+              - payu-mesh-gateway
+---
+# MESH-008 dev exception, made explicit: the two Services behind direct
+# OpenShift Routes (router -> pod plaintext, bypassing the mesh gateway)
+# must keep serving unauthenticated traffic on their app ports. No source
+# constraint is possible (the router has no mesh identity), so scope by
+# destination: exact Service port + app path prefix only.
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-direct-routes
+  namespace: payu-dev
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            ports:
+              - "8080"
+            paths:
+              - /api/health
+              - /login
+              - /*
+      from:
+        - source:
+            notNamespaces:
+              - payu-dev
+              - payu-mesh-gateway

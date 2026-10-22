@@ -1,0 +1,43 @@
+# Istio ingress gateway for the PROD API — a backend behind 3scale APIcast.
+#
+# MESH-004 (ADR-0074): the public edge for prod is APIcast
+# (api-payu-apicast-production.apps.fajjjar.my.id, owned by the 3scale
+# operator in payu-api-management). This Gateway is the hop AFTER APIcast:
+# APIcast validates key/quota/analytics, then forwards in-cluster HTTP to
+# this gateway's ClusterIP Service, which routes (HTTPRoute) to
+# gateway-service:8080 in namespace `payu` and returns via mTLS.
+#
+# OSSM 3.4 (Sail Operator) reconciles a gateway.networking.k8s.io/v1 Gateway
+# with gatewayClassName: istio into an istio-proxy Deployment + Service named
+# <gateway>-istio in the Gateway's own namespace.
+#
+# networking.istio.io/service-type: ClusterIP keeps the generated Service
+# internal: no second AWS NLB is provisioned, and no OpenShift Route points
+# here (there is deliberately no route.yaml in this package).
+#
+# TLS: HTTP listener only. APIcast->gateway is cluster-internal plaintext
+# (same as dev's router->gateway edge); gateway->gateway-service is mTLS via
+# the mesh (namespace `payu` is STRICT). No gateway certificate needed —
+# reencrypt/passthrough would need one and buys nothing inside the cluster.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: payu-public-gateway-prod
+  namespace: payu-mesh-gateway-prod
+  annotations:
+    networking.istio.io/service-type: ClusterIP
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      port: 8080
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              app.kubernetes.io/part-of: payu

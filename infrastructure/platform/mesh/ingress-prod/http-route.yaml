@@ -1,0 +1,58 @@
+# Mesh routing for the PROD API.
+#
+# MESH-004 (ADR-0074): mirrors ../ingress/http-route.yaml (dev) with the prod
+# backend. The route lives in `payu` (namespace of the backend) so the
+# backendRef needs no ReferenceGrant; the gateway lives in
+# payu-mesh-gateway-prod and its listener only admits namespaces labelled
+# app.kubernetes.io/part-of: payu.
+#
+# Only the public API prefixes are routed. Management endpoints of
+# gateway-service (/q/metrics, /q/openapi, /q/swagger-ui, /actuator) stay
+# unreachable: APIcast forwards only mapped paths, and the mesh gateway
+# answers 404 for anything not matched here.
+#
+# Hostname note: no `hostnames:` field — APIcast forwards to the gateway
+# Service by cluster DNS, preserving the ORIGINAL Host header
+# (api-payu-apicast-production.apps.fajjjar.my.id). Constraining hostnames
+# here to an api-prod.* name would 404 every APIcast-forwarded request, so
+# the route matches on path only. Do NOT add hostnames without also
+# changing the APIcast backend mapping.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: payu-gateway-prod
+  namespace: payu
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: payu-public-gateway-prod
+      namespace: payu-mesh-gateway-prod
+      sectionName: http
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/v1
+        - path:
+            type: PathPrefix
+            value: /v1/partner
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-PayU-Environment
+                value: prod
+              - name: X-PayU-Ingress
+                value: gateway-api
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: gateway-service
+          port: 8080
+          # explicit: the API server defaults weight to 1, so without this
+          # every `oc apply` reports the object as changed
+          weight: 1

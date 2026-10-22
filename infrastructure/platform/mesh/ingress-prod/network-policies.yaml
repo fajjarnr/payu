@@ -1,0 +1,84 @@
+# NetworkPolicy for the prod mesh gateway namespace.
+#
+# MESH-004 (ADR-0074): default-deny + additive allows, mirroring the dev
+# ../ingress/network-policies.yaml shape with the prod callers:
+# - ingress to the gateway pods (8080/15021) ONLY from the APIcast pods
+#   (namespace payu-api-management) — APIcast is the sole public edge;
+# - egress from the gateway pods to istiod (15012/15017), to the `payu`
+#   namespace backends (8080/9090), and DNS.
+# The `payu` namespace needs its own additive allowance for gateway ingress
+# (same as dev's allow-mesh-gateway-ingress); that lives with the prod
+# workload policies, not here.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payu-mesh-gateway-prod-default-deny
+  namespace: payu-mesh-gateway-prod
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-apicast-to-gateway
+  namespace: payu-mesh-gateway-prod
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  podSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: payu-public-gateway-prod
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu-api-management
+      ports:
+        - port: 8080
+        - port: 15021
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-egress
+  namespace: payu-mesh-gateway-prod
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  podSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: payu-public-gateway-prod
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - port: 15012
+        - port: 15017
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: payu
+      ports:
+        - port: 8080
+        - port: 9090
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+        - port: 5353

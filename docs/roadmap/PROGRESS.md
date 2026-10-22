@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Dev loop payu-dev production-ready — MESH-003/004/006 CLOSED (2026-10-22)
+
+- **MESH-003**: deny-by-default L7 live di `payu-dev` (`deny-all` + `allow-mesh-and-gateway` + `allow-direct-routes`); RBAC-403/5m = 0, antar-service 100% mTLS, transfer COMPLETED + ledger pair, Routes 200, guard TDD hijau.
+- **MESH-004**: package `mesh/ingress-prod/` (gateway ClusterIP di belakang APIcast, tanpa Route) + ADR-0074 Accepted + guard; schema-validate bersih, apply menunggu bootstrap prod.
+- **MESH-006**: evaluasi ambient terukur → TETAP sidecar (ADR-0075); blocker: chaos `fault.*`, telemetry :15090, waypoint L7; 3 trigger re-evaluasi.
+- **Bukti**: shell E2E 8/8 PASS, guard 8/8, drift `OK`, 32/32 1/1. Sisa OPEN: `IDN-002`, `KAFKA-UAT-001`, `PLAT-DRIFT-001`, `KAFKA-QUORUM-001` (blocked-on-env) + `CICD-PERF-004`, `CICD-FUZZ-001` (deferred) + platform gates.
+
 ## Backlog TODOS 2026-10-22 — 14 tiket CLOSED + deploy `1.18.136` (2026-10-22)
 
 - **Skor**: 14/14 tiket actionable CLOSED/advanced di dev (`AUTH-CONTRACT-001`, `MESH-007`, `E2E-CLIENTSECRET-001`, `MESH-011`, `MESH-009`, `MESH-012`, `MESH-002`, `MESH-008`, `MESH-013`, `MESH-001`, `FX-CRED-001`, `CNPG-SNAPSHOT-001`, `SHARED-DNS-001`, `MESH-010`, `OVERLAY-STRUCT-001`); 8 tetap OPEN (blocked/deferred/decision: `IDN-002`, `KAFKA-UAT-001`, `PLAT-DRIFT-001`, `KAFKA-QUORUM-001`, `MESH-003`, `MESH-004`, `MESH-006`, `CICD-PERF-004`, `CICD-FUZZ-001`, platform gates).

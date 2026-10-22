@@ -1,0 +1,18 @@
+# Dedicated namespace for the Istio ingress gateway that fronts the PROD API.
+#
+# MESH-004: unlike dev (`payu-mesh-gateway`, which owns a public Route on the
+# shared domain), the prod gateway namespace carries NO ingress label on
+# purpose — the prod gateway is a backend behind 3scale APIcast, never a
+# public edge, so no OpenShift router must ever admit a Route from here.
+# (The shared IngressController only admits Routes from namespaces labelled
+# payu.fajjjar.my.id/ingress: shared; this namespace deliberately lacks it.)
+#
+# app.kubernetes.io/part-of: payu is the label the Gateway listener's
+# allowedRoutes namespace selector matches on.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payu-mesh-gateway-prod
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh

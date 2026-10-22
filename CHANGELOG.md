@@ -12,6 +12,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (Dev loop payu-dev production-ready 2026-10-22 — MESH-003/004/006 CLOSED)
+
+- **MESH-003 CLOSED (2026-10-22)**: deny-by-default L7 di `payu-dev` — `deny-all` (namespace-wide, empty spec) + `allow-mesh-and-gateway` (caller `payu-dev` + `payu-mesh-gateway`) + `allow-direct-routes` (eksepsi MESH-008 eksplisit: plaintext router→pod hanya ke 2 Service direct-Route). Guard TDD `test_dev_mesh_has_deny_by_default_authorization` RED→GREEN (suite 7/7→8/8). Live: direct Routes 200/200/200, mesh gateway 401, transfer COMPLETED + ledger DEBIT/CREDIT 1000, RBAC-403/5m = 0 series, antar-service 100% `mutual_tls`; kubelet probe (:15020) + scrape :15090 tak tersentuh (excludeInboundPorts).
+- **MESH-004 CLOSED (2026-10-22)**: desain gateway prod final — package `mesh/ingress-prod/` (namespace tanpa label ingress, Gateway `ClusterIP`, HTTPRoute path-only ke `gateway-service:8080` + `X-PayU-Environment: prod`, NetworkPolicy default-deny + allow APIcast→gateway + egress istiod/`payu`/DNS), **tanpa** Route (APIcast pemilik edge tunggal). ADR-0074 Accepted + guard `test_prod_ingress_gateway_sits_behind_apicast`. Repo + schema-validate bersih; live apply menunggu bootstrap prod.
+- **MESH-006 CLOSED (2026-10-22)**: evaluasi ambient terukur — TETAP sidecar. Bukti: 25 sidecar = 2500m+3200Mi vs quota 36%/27% (terjangkau); blocker: ADR-0024 butuh `fault.delay/abort` (ambient tak support), telemetry scrape :15090 per-pod akan mati, policy L7 butuh waypoint tier baru. ADR-0075 Accepted + 3 trigger re-evaluasi. Nol perubahan manifest.
+- **Bukti loop (2026-10-22)**: shell E2E 8/8 PASS, guard identiti 8/8, drift guard `OK: no overlay drift`, 32/32 Deployment 1/1.
+
 ### Fixed (Backlog TODOS 2026-10-22 — 14 tiket CLOSED, deploy `1.18.136`)
 
 - **AUTH-CONTRACT-001 CLOSED (2026-10-22)**: sisa dead route `POST /api/v1/auth/login` dibersihkan — `RequestValidationFilter` map + javadoc, `application.yaml` api-keys bypass, `schemas/auth-login.json` dihapus, `auth-service/README.md` kini tabel endpoint live (`/callback /refresh /device /register /validate /logout`). Test: `getSchemaForPath("/api/v1/auth/login") == null` + rate-limit/tenant test retarget `/callback`. Live: `POST /api/v1/auth/login` → 401 `MISSING_TOKEN`, `login-flow.spec.ts` **25/25 hijau** ("real login lands on the dashboard with httpOnly cookies" PASS).

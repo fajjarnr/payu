@@ -54,6 +54,9 @@ infrastructure/platform/mesh/
 │   ├── payu-preprod/      # STRICT mTLS (applied)
 │   └── payu/              # STRICT mTLS (prod, not applied yet)
 ├── ingress/               # dev ingress on the shared domain (applied separately)
+├── ingress-uat/           # UAT ingress mirror of dev (repo-only until UAT bootstrap, MESH-008)
+├── ingress-preprod/       # preprod ingress mirror of dev (repo-only until preprod bootstrap, MESH-008)
+├── ingress-prod/          # prod gateway BEHIND APIcast, no Route (repo-only until prod, MESH-004/ADR-0074)
 ├── telemetry/             # Envoy + istiod scrape into the cluster Prometheus (applied separately)
 ├── kustomization.yaml     # root entrypoint -> base
 └── README.md

@@ -1,0 +1,29 @@
+# Prod ingress (MESH-004): mesh gateway BEHIND 3scale APIcast.
+#
+#   internet -> shared router (TLS) -> APIcast (key/quota/analytics)
+#            -> payu-public-gateway-istio (ClusterIP, this package)
+#            -> gateway-service:8080 (namespace `payu`, via HTTPRoute)
+#
+#   oc apply -k infrastructure/platform/mesh/ingress-prod
+#
+# Repo + dry-run only for now: namespace `payu` has no workloads yet, so
+# this package is not applied. Deliberately NO route.yaml (APIcast owns the
+# public edge; a Route here would recreate the §7.3 backdoor) and NO
+# AuthorizationPolicy carve-out (the prod overlay's deny-by-default +
+# allow-same-namespace already covers gateway->backend; APIcast->gateway is
+# plaintext inside the cluster and needs no mesh identity).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - gateway.yaml
+  - http-route.yaml
+  - network-policies.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: payu
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/component: service-mesh
+    includeSelectors: false

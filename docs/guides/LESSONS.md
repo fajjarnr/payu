@@ -7588,3 +7588,11 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: Aturan delegasi: **subagent DILARANG `git stash/checkout/reset/clean`** di shared tree (read-only `status/diff/log` boleh); uji baseline pre-existing memakai `git worktree` di `.worktrees/` atau salinan file ke `/tmp`, bukan stash. Freeze + recovery terpusat oleh integrator.
 
 **Pelajaran**: (1) `git stash` bare di shared tree = **senjata pemusnah massal** — selalu pathspec (`stash push -- <paths>`) atau jangan sama sekali; (2) `stash pop` gagal di tengah = state terburuk (stash tersimpan + worktree parsial) — JANGAN `pop` ulang buta, petakan dulu (`stash show --name-only` vs `status`); (3) `git checkout stash@{0} -- <paths>` + `git reset` adalah restore surgical yang aman (tak menyentuh file lain); (4) recovery harus **verifikasi per workstream** (diff stash-vs-disk + render + test), bukan asumsi "pop sukses = utuh".
+
+## L-486: Deny-by-default L7 aman di dev bila 4 plaintext caller dipetakan dulu (2026-10-22)
+
+**Context**: MESH-003 menuntut `AuthorizationPolicy` deny-by-default, tapi tiketnya sendiri memperingatkan deny-by-default "akan memutus jalur plaintext router". Empat caller plaintext di `payu-dev`: (1) kubelet probe, (2) router direct-Route, (3) scrape Prometheus :15090, (4) pod non-mesh dalam ns.
+
+**Fix**: Inventarisasi sebelum tulis policy: (1)+(3) tak tersentuh karena Istio exclude `15020/15090` dari capture; (4) lolos via `namespaces: [payu-dev]` (namespace, bukan principal); (2) satu-satunya eksepsi nyata → `allow-direct-routes` eksplisit (scope port+path, bukan carve-out umum). Verifikasi: RBAC-403/5m = 0 series + 100% `mutual_tls` antar-service + transfer COMPLETED.
+
+**Pelajaran**: (1) **deny-by-default = latihan inventarisasi, bukan latihan YAML** — tulis policy setelah SEMUA caller plaintext terpetakan + terverifikasi live; (2) `excludeInboundPorts` adalah jawaban probe/scrape — jangan ALLOW `0.0.0.0/0` untuk mereka; (3) syarat `namespaces:` (bukan `principals:`) adalah cara benar mengizinkan pod non-mesh dalam ns; (4) NetPol L3 menjelaskan banyak "deny misterius" — bedakan 000 (L3 DROP, mis. `allow-intra-namespace` podSelector) dari 403+`RBAC` flag (L7 deny) sebelum menyalahkan policy.

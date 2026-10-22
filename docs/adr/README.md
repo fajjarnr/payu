@@ -80,6 +80,8 @@ This directory contains the historical record of architectural decisions made fo
 | [0071](0071-test-quality-gates-mutation-accessibility-exploratory-canary-standard.md) | Test Quality Gate Formalization — Mutation Scoring, A11y Gating, Exploratory Ritual & Canary Deferral | Accepted | 2026-08-26 |
 | [0072](0072-openshift-service-mesh-3-4-sail-operator-dev-rollout.md) | OpenShift Service Mesh 3.4 (Sail Operator) — Dev Rollout | Accepted | 2026-10-21 |
 | [0073](0073-istio-ingress-gateway-and-shared-domain-ownership.md) | Istio Ingress Gateway & Shared Domain Ownership (`apps.fajjjar.my.id`) | Accepted | 2026-10-21 |
+| [0074](0074-prod-mesh-gateway-behind-3scale-apicast.md) | Prod Mesh Gateway Behind 3scale APIcast (ClusterIP backend, no public edge) | Accepted | 2026-10-22 |
+| [0075](0075-ambient-mode-evaluation-stay-on-sidecars.md) | Ambient Mode Evaluation — Stay on Sidecars (measured, trigger-based revisit) | Accepted | 2026-10-22 |
 
 ### B4.6 Go/No-Go Decision 2026-08-24 (ADR-0067 / ADR-0068)
 
