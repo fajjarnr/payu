@@ -134,6 +134,14 @@ spec:
 
     users: []
 
+    clientScopes:
+      - name: account:verify
+        description: "Allow NIK verification via Dukcapil (SCOPE_account:verify)"
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "false"
+
     clients:
       - clientId: payu-web-app
         name: PayU Web Application
@@ -203,6 +211,8 @@ spec:
         directAccessGrantsEnabled: true
         serviceAccountsEnabled: true
         protocol: openid-connect
+        defaultClientScopes:
+          - account:verify
 
       - clientId: payu-gateway
         name: PayU API Gateway

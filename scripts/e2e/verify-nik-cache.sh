@@ -10,21 +10,23 @@
 # Pre-reqs: customer1 JWT available in gateway-service pod
 
 set -e
+# shellcheck source=env.sh
+. "$(dirname "$0")/env.sh"
 
-GATEWAY_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
-ACCOUNT_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=account-service -o jsonpath='{.items[0].metadata.name}')
+GATEWAY_POD=$(oc get pod -n "$PAYU_ENV" -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
+ACCOUNT_POD=$(oc get pod -n "$PAYU_ENV" -l app.kubernetes.io/name=account-service -o jsonpath='{.items[0].metadata.name}')
 TMPFILE=/tmp/r.json.host
 # Generate fresh JWT via Keycloak (ran from host, not pod)
 refresh_jwt() {
     local client_secret
-    client_secret=$(cat /tmp/client-secret.txt 2>/dev/null || echo "")
+    client_secret=$(cat $E2E_SECRET_FILE 2>/dev/null || echo "")
     if [ -z "$client_secret" ]; then
-        echo "ERROR: /tmp/client-secret.txt not found" >&2
+        echo "ERROR: $E2E_SECRET_FILE not found" >&2
         exit 1
     fi
     local result
     result=$(curl -skS -X POST \
-        "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        "https://$SSO_HOST/realms/payu/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=payu-backend" \
         -d "client_secret=${client_secret}" \
@@ -37,14 +39,14 @@ refresh_jwt() {
         echo "ERROR: JWT generation failed: $result" >&2
         exit 1
     fi
-    echo "$token" > /tmp/cust1-jwt.txt
+    echo "$token" > /tmp/cust1-jwt-$PAYU_ENV.txt
     echo "$token"
 }
 
 JWT=$(refresh_jwt)
 
 # Use the INTERNAL account-service URL (port 8080, in-cluster DNS)
-ACCT_URL="http://account-service.payu-dev.svc.cluster.local:8080"
+ACCT_URL="http://account-service.$PAYU_ENV.svc.cluster.local:8080"
 USERKEY="${USERKEY:-04dc03f2e2a776bffcb9b16eb9f93796}"
 ACCT_ID="750e8400-e29b-41d4-a716-446655440001"
 NIK="3201234567890001"
@@ -55,13 +57,13 @@ run_test() {
     local label="$1"; shift
     sleep 1
     local code
-    code=$(oc exec -n payu-dev "$ACCOUNT_POD" -- \
+    code=$(oc exec -n "$PAYU_ENV" "$ACCOUNT_POD" -- \
         curl -s -o /tmp/r.json -w "%{http_code}" \
         -X POST "$ACCT_URL/api/v1/accounts/verify-nik" \
         -H "Authorization: Bearer $JWT" \
         -H "Content-Type: application/json" \
         -d "{\"nik\":\"$NIK\",\"fullName\":\"E2E Test\",\"birthPlace\":\"Jakarta\",\"birthDate\":\"1990-01-15\"}" 2>&1)
-    oc exec -n payu-dev "$ACCOUNT_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
+    oc exec -n "$PAYU_ENV" "$ACCOUNT_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
     local body
     body=$(head -c 400 "$TMPFILE" 2>/dev/null)
     printf "\n=== %s ===\nHTTP=%s\nBODY: %s\n" "$label" "$code" "$body" >&2

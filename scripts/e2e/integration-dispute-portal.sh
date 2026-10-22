@@ -1,13 +1,15 @@
 #!/bin/bash
 # PayU Integration + Dispute Read-only E2E
 set -e
+# shellcheck source=env.sh
+. "$(dirname "$0")/env.sh"
 TMPFILE=/tmp/r.json; FAILED=0
-POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
-INT="http://integration-service.payu-dev.svc.cluster.local:8080"
-DSP="http://dispute-service.payu-dev.svc.cluster.local:8080"
-CS=$(tr -d '[:space:]' < /tmp/client-secret.txt)
+POD=$(oc get pod -n "$PAYU_ENV" -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
+INT="http://integration-service.$PAYU_ENV.svc.cluster.local:8080"
+DSP="http://dispute-service.$PAYU_ENV.svc.cluster.local:8080"
+CS=$(tr -d '[:space:]' < $E2E_SECRET_FILE)
 get_jwt() {
-  curl -skS -X POST "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+  curl -skS -X POST "https://$SSO_HOST/realms/payu/protocol/openid-connect/token" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     --data-urlencode "client_id=payu-backend" --data-urlencode "client_secret=$CS" \
     --data-urlencode "grant_type=password" --data-urlencode "username=$1" \
@@ -18,7 +20,7 @@ JWT=$(get_jwt customer1)
 AJWT=$(get_jwt admin)
 [ ${#AJWT} -lt 20 ] && { echo "FATAL: no admin JWT"; exit 1; }
 ok(){ [ "$3" = "$2" ] && echo "  ✅ $1 HTTP=$3" || { echo "  ❌ $1 exp=$2 got=$3"; FAILED=1; }; true; }
-t(){ local l="$1"; shift; sleep 0.3; local c=$(oc exec -n payu-dev "$POD" -- curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null); oc exec -n payu-dev "$POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null; printf "\n%s HTTP=%s\n" "$l" "$c" >&2; printf "%s" "$c"; }
+t(){ local l="$1"; shift; sleep 0.3; local c=$(oc exec -n "$PAYU_ENV" "$POD" -- curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null); oc exec -n "$PAYU_ENV" "$POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null; printf "\n%s HTTP=%s\n" "$l" "$c" >&2; printf "%s" "$c"; }
 
 echo "=== Integration ==="
 T1=$(t "T1: Status" "$INT/api/v1/integration/status" -H "Authorization: Bearer $JWT"); ok "T1" "200" "$T1"

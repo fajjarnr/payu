@@ -12,6 +12,8 @@
 # customer1 Keycloak sub (750e8400-...)
 
 set -e
+# shellcheck source=env.sh
+. "$(dirname "$0")/env.sh"
 
 GATEWAY_MODE="${GATEWAY_MODE:-internal}"
 USERKEY="${USERKEY:-9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed}"
@@ -21,21 +23,21 @@ ACCT="${ACCT:-750e8400-e29b-41d4-a716-446655440001}"
 TMPFILE=/tmp/r.json
 FAILED=0
 
-GATEWAY_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
+GATEWAY_POD=$(oc get pod -n "$PAYU_ENV" -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
 
 # Generate fresh JWT via Keycloak (ran from host, not pod)
 refresh_jwt() {
     local client_secret
-    client_secret=$(cat /tmp/client-secret.txt 2>/dev/null || echo "")
+    client_secret=$(cat $E2E_SECRET_FILE 2>/dev/null || echo "")
     if [ -z "$client_secret" ]; then
-        echo "ERROR: /tmp/client-secret.txt not found — generate first with:" >&2
+        echo "ERROR: $E2E_SECRET_FILE not found — generate first with:" >&2
         echo "  ADMIN_TOKEN=\$(cat /tmp/admin-master-jwt.txt)" >&2
         echo "  curl -skS .../clients/PAYU_BACKEND_ID/client-secret -H 'Authorization: Bearer \$ADMIN_TOKEN' | ..." >&2
         exit 1
     fi
     local result
     result=$(curl -skS -X POST \
-        "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        "https://$SSO_HOST/realms/payu/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=payu-backend" \
         -d "client_secret=${client_secret}" \
@@ -48,7 +50,7 @@ refresh_jwt() {
         echo "ERROR: JWT generation failed: $result" >&2
         exit 1
     fi
-    echo "$token" > /tmp/cust1-jwt.txt
+    echo "$token" > /tmp/cust1-jwt-$PAYU_ENV.txt
     echo "$token"
 }
 
@@ -97,9 +99,9 @@ run_test() {
     if [ "$GATEWAY_MODE" = "apicast" ]; then
         code=$(curl -skS -o "$TMPFILE" -w "%{http_code}" "$@" 2>/dev/null)
     else
-        code=$(oc exec -n payu-dev "$GATEWAY_POD" -- \
+        code=$(oc exec -n "$PAYU_ENV" "$GATEWAY_POD" -- \
             curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null)
-        oc exec -n payu-dev "$GATEWAY_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
+        oc exec -n "$PAYU_ENV" "$GATEWAY_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
     fi
     # Print debug info to stderr so it doesn't pollute captured output
     local body

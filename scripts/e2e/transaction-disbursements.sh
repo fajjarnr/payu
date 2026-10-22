@@ -3,6 +3,8 @@
 # Read-only queries through gateway -> transaction-service
 
 set -e
+# shellcheck source=env.sh
+. "$(dirname "$0")/env.sh"
 
 GATEWAY_MODE="${GATEWAY_MODE:-internal}"
 USERKEY="${USERKEY:-9a3f2bf49ca8d9c1eb3a7d1e4a4c55ed}"
@@ -11,16 +13,16 @@ ACCT="${ACCT:-750e8400-e29b-41d4-a716-446655440001}"
 TMPFILE=/tmp/r.json
 FAILED=0
 
-GATEWAY_POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
-TX_URL="http://transaction-service.payu-dev.svc.cluster.local:8080"
+GATEWAY_POD=$(oc get pod -n "$PAYU_ENV" -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
+TX_URL="http://transaction-service.$PAYU_ENV.svc.cluster.local:8080"
 
 refresh_jwt() {
     local client_secret
-    client_secret=$(cat /tmp/client-secret.txt 2>/dev/null || echo "")
-    [ -z "$client_secret" ] && { echo "ERROR: /tmp/client-secret.txt not found" >&2; exit 1; }
+    client_secret=$(cat $E2E_SECRET_FILE 2>/dev/null || echo "")
+    [ -z "$client_secret" ] && { echo "ERROR: $E2E_SECRET_FILE not found" >&2; exit 1; }
     local token
     token=$(curl -skS -X POST \
-        "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+        "https://$SSO_HOST/realms/payu/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=payu-backend" \
         -d "client_secret=${client_secret}" \
@@ -28,7 +30,7 @@ refresh_jwt() {
         -d "username=customer1" \
         -d "password=P@ssw0rd123" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
     [ -z "$token" ] && { echo "ERROR: JWT generation failed" >&2; exit 1; }
-    echo "$token" > /tmp/cust1-jwt.txt
+    echo "$token" > /tmp/cust1-jwt-$PAYU_ENV.txt
     echo "$token"
 }
 
@@ -54,9 +56,9 @@ run_test() {
     local label="$1"; shift
     sleep 0.4
     local code
-    code=$(oc exec -n payu-dev "$GATEWAY_POD" -- \
+    code=$(oc exec -n "$PAYU_ENV" "$GATEWAY_POD" -- \
         curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null)
-    oc exec -n payu-dev "$GATEWAY_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
+    oc exec -n "$PAYU_ENV" "$GATEWAY_POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
     printf "\n=== %s ===\nHTTP=%s\nBODY: %s\n" "$label" "$code" "$(head -c 300 "$TMPFILE")" >&2
     echo "$code"
 }

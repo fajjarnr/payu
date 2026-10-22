@@ -678,5 +678,5 @@ MOP ringkas setelah manifest `infrastructure/platform/security/vault/promotion/d
 | `DEPLOY-010` | Deploy 3scale APIManager after external backing-store/Vault secrets exist | Open |
 | `INFRA-021` | Clear RHBK `payu-keycloak` CR `HasErrors=True` service patch conflict | ✅ Closed 2026-08-04; live `Ready=True`, `HasErrors=False` |
 | `SEC-020` | Remediate CIS platform failures | Open |
-| `PROMO-2026-08` | Complete UAT final rerun and preprod Kraken evidence | Open |
+| `PROMO-2026-08` | Complete UAT final rerun and preprod Kraken evidence | ✅ Closed 2026-10-22; UAT shell E2E 18/18 + transfer 5000 COMPLETED + ledger pair; Kraken etcd-kill (10s recovery) + Cerberus go-signal; Litmus pod-delete Pass + probe 100%. Evidence → `CHANGELOG.md` `[Unreleased]` |
 | `PROD-READINESS` | Argo Rollouts, production storage, Vault HA/DR, approvals, and signed-image admission evidence | Open |

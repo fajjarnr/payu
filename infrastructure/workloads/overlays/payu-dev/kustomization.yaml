@@ -145,7 +145,7 @@ images:
     newTag: "1.18.74"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/transaction-service
-    newTag: "1.18.132"
+    newTag: "1.18.138"
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/wallet-service
     newTag: "1.18.133"

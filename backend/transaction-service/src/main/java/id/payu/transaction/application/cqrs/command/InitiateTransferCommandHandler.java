@@ -453,6 +453,9 @@ public class InitiateTransferCommandHandler implements CommandHandler<InitiateTr
                     .getAccountIdByNumber(command.recipientAccountNumber())
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Recipient account not found: " + command.recipientAccountNumber()));
+            // GRPC-AUTH-001 leftover: persist the resolved UUID so history/
+            // analytics queries by recipient work (was always null).
+            transaction.setRecipientAccountId(recipientAccountId);
             walletServicePort.transferBalance(
                     command.senderAccountId().toString(),
                     recipientAccountId.toString(),

@@ -13,6 +13,7 @@ data:
     kraken:
       exit_on_failure: true
       publish_kraken_status: true
+      kubeconfig_path: /tmp/kubeconfig
       signal_state: RUN
       signal_address: 0.0.0.0
       port: 8081
@@ -26,6 +27,19 @@ data:
       cerberus_enabled: true
       cerberus_url: "http://cerberus.payu-preprod.svc.cluster.local:8080"
       check_applicaton_routes: false
+
+    performance_monitoring:
+      prometheus_url: ''
+      prometheus_bearer_token:
+      enable_alerts: false
+      run_during: during
+      exit_on_failure: false
+
+    telemetry:
+      enabled: false
+
+    elastic:
+      enable_elastic: false
 
     tunings:
       wait_duration: 60
@@ -56,8 +70,9 @@ data:
       port: 8080
       kubeconfig_path: /tmp/kubeconfig
       watch_url_routes:
-        - https://console-openshift-console.apps.payu.ocp.fajjjar.my.id
-        - https://oauth-openshift.apps.payu.ocp.fajjjar.my.id
+        - ["https://console-openshift-console.apps.payu.ocp.fajjjar.my.id"]
+        - ["https://gateway-preprod.apps.fajjjar.my.id/q/health"]
+        - ["https://app-preprod.apps.fajjjar.my.id/api/health"]
       watch_namespaces:
         - payu-preprod
         - openshift-etcd
@@ -251,10 +266,10 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 500m
               memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
       volumes:
         - name: config
           configMap:
@@ -289,17 +304,37 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: kraken-chaos
-      securityContext:
-        runAsUser: 0
+      # No runAsUser override: the krkn image runs as uid 1001 (krkn) and
+      # owns /home/krkn/kraken (L-188 root cause: forcing root broke the
+      # report write via SELinux/MCS).
       initContainers:
-        - name: fixperms
+        - name: kubeconfig
           image: quay.io/krkn-chaos/krkn:latest
           command:
             - sh
             - -c
-            - echo INIT_WRITE_OK
+            - |
+              TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+              cat > /tmp/kubeconfig <<'EOF'
+              apiVersion: v1
+              clusters:
+              - cluster:
+                  certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                  server: https://kubernetes.default.svc
+                name: in-cluster
+              contexts:
+              - context:
+                  cluster: in-cluster
+                  user: in-cluster
+                name: in-cluster
+              current-context: in-cluster
+              users:
+              - name: in-cluster
+                user:
+                  token: PLACEHOLDER_TOKEN
+              EOF
+              sed -i "s/PLACEHOLDER_TOKEN/$TOKEN/" /tmp/kubeconfig
           securityContext:
-            runAsUser: 0
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
             capabilities:
@@ -311,17 +346,25 @@ spec:
       containers:
         - name: kraken
           image: quay.io/krkn-chaos/krkn:latest
+          # run_kraken.py resolves its config relative to CWD; the image
+          # default CWD is /root, so force the kraken workdir (keeps the
+          # image entrypoint + venv intact).
+          workingDir: /home/krkn/kraken
+          args: ["--config", "/tmp/kraken-config/config.yaml"]
+          env:
+            - name: KUBECONFIG
+              value: /tmp/kubeconfig
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
-            runAsUser: 0
             capabilities:
               drop:
                 - ALL
           volumeMounts:
+            # /root/* is unreadable for the krkn uid (1001): mount the
+            # config under /tmp instead.
             - name: config
-              mountPath: /root/kraken/config/config.yaml
-              subPath: config.yaml
+              mountPath: /tmp/kraken-config
             - name: tmp
               mountPath: /tmp
           resources:
@@ -335,9 +378,5 @@ spec:
         - name: config
           configMap:
             name: kraken-config
-        # Writabe emptyDir over the report/temp paths: OCP CRI-O mounted the
-        # krkn image rootfs read-only (OPS-2026-08-01-05) even with
-        # readOnlyRootFilesystem:false, so `kraken.report` write failed.
-        # Mounting writable volumes keeps the job runnable on any cluster.
         - name: tmp
           emptyDir: {}

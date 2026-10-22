@@ -19,6 +19,13 @@ rules:
   - apiGroups: ["litmuschaos.io"]
     resources: ["chaosengines", "chaosexperiments", "chaosresults"]
     verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  # The runner pod carries an ownerReference to the ChaosEngine with
+  # blockOwnerDeletion — creating it requires finalizer rights on
+  # chaosengines (else: "cannot set blockOwnerDeletion", engine stuck
+  # at initialized, preprod 2026-10-22).
+  - apiGroups: ["litmuschaos.io"]
+    resources: ["chaosengines/finalizers", "chaosresults/finalizers"]
+    verbs: ["get", "patch", "update"]
   - apiGroups: ["security.openshift.io"]
     resources: ["securitycontextconstraints"]
     resourceNames: ["litmus-chaos", "litmus-portal"]

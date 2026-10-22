@@ -7680,3 +7680,27 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: Transplant blok Quarkus SIT (3 Deployment) dengan sed namespace → gateway rollout → balance 200 + transfer COMPLETED.
 
 **Pelajaran**: (1) **setiap env promoted butuh KEDUA blok OIDC** (Spring + Quarkus) — base hanya benar untuk dev/payu-sso; (2) `INVALID_TOKEN` pasca-login-sukses = curigai JWKS/AuthServer URL, bukan token — bandingkan env pod vs issuer token; (3) transplant antar-overlay via `sed` namespace + verifikasi `grep -c` target dan `grep` leak sumber sebelum apply.
+
+## L-498: Cerberus `watch_url_routes` harus list-of-lists — string diiterasi per-huruf (2026-10-22)
+
+**Context**: Cerberus `False` permanen dengan log absurd `Route url: h` × N. Akar: `process_routes` mengindeks `route_info[0]` — bila entri berupa string (bukan `[url]`), `[0]` = huruf pertama (`h` dari `https://`), dicek sebagai URL → gagal → no-go selamanya.
+
+**Fix**: Entri sebagai tuple YAML `- ["https://…"]` → signal `True`, Kraken `Test passed`.
+
+**Pelajaran**: (1) **log yang mengulang 1 huruf = indeksasi string-vs-list** — baca source (`client.py:428`), jangan tebak config; (2) format `watch_url_routes` Cerberus = `[[url], [url, auth]]`, bukan `[url]` — validasi dengan `curl` dari pod tak cukup, harus baca kode konsumennya; (3) ganti watched-oauth (403) dengan route app sendiri (gateway `/q/health`, web `/api/health) agar sinyal mencerminkan beban kerja.
+
+## L-499: Kraken krkn:latest butuh 5 prasyarat non-obvious sebelum skenario jalan (2026-10-22)
+
+**Context**: `kraken-run` Error beruntun di preprod, tiap fix membuka lapis berikut: (1) `runAsUser: 0` → report PermissionError (image jalan sebagai krkn 1001; root merusak via SELinux/MCS) → hapus override; (2) tanpa kubeconfig → localhost:80 → init-container tulis `/tmp/kubeconfig` + env + `kubeconfig_path` di config; (3) config lama缺 blok wajib → tambah `performance_monitoring`/`telemetry`/`elastic` (KeyError per blok); (4) entrypoint CWD `/root` → config tak ketemu + `/root/*` unreadable uid 1001 → `workingDir` + `args --config` + mount di `/tmp/kraken-config`; (5) Cerberus OOMKilled 512Mi → 1Gi.
+
+**Fix**: Semua di-repo-kan di `overlays/payu-preprod/kraken.yaml`; run hijau: etcd kill → recovery 10s → Cerberus go → `Test passed`.
+
+**Pelajaran**: (1) **baca `config/config.yaml` sample DI DALAM image** — 5 blok di atas adalah kontrak versi image, bukan dokumentasi; (2) `grep "config\[" run_kraken.py` memberikan daftar blok wajib dalam 1 perintah — lakukan SEBELUM iterasi trial-error; (3) job Kraken hang pasca-Test-passed (server :8081 menahan exit) — evidence = `kraken.report` + log, bukan `Complete`; `activeDeadlineSeconds` me-reap.
+
+## L-500: Litmus runner butuh `chaosengines/finalizers` + agent restart pasca-RBAC (2026-10-22)
+
+**Context**: ChaosEngine stuck `initialized` 26 mnt: `cannot set blockOwnerDeletion if an ownerReference refers to a resource you can't set finalizers on`. ClusterRole `chaos` punya verbs penuh pada `chaosengines` tapi bukan subresource `/finalizers`.
+
+**Fix**: Tambah `chaosengines/finalizers` + `chaosresults/finalizers` (`get/patch/update`) di git + `rollout restart` agent (cache RBAC) → runner Running → ChaosResult **Pass** (probe gateway 200, 100%).
+
+**Pelajaran**: (1) **ownerReference + blockOwnerDeletion = butuh finalizer rights** pada parent — error ini selalu RBAC, bukan CRD; (2) operator cache authorization — restart deployment setelah ubah Role/ClusterRole; (3) verdict baca di `.status.experimentStatus.verdict` (bukan `.status.phase` engine).

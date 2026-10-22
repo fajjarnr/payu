@@ -1,14 +1,16 @@
 #!/bin/bash
 # PayU Support + Compliance + Backoffice E2E
 set -e
+# shellcheck source=env.sh
+. "$(dirname "$0")/env.sh"
 TMPFILE=/tmp/r.json; FAILED=0
-POD=$(oc get pod -n payu-dev -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
-S="http://support-service.payu-dev.svc.cluster.local:8080"
-C="http://compliance-service.payu-dev.svc.cluster.local:8080"
-B="http://backoffice-service.payu-dev.svc.cluster.local:8080"
-CS=$(tr -d '[:space:]' < /tmp/client-secret.txt)
+POD=$(oc get pod -n "$PAYU_ENV" -l app.kubernetes.io/name=gateway-service -o jsonpath='{.items[0].metadata.name}')
+S="http://support-service.$PAYU_ENV.svc.cluster.local:8080"
+C="http://compliance-service.$PAYU_ENV.svc.cluster.local:8080"
+B="http://backoffice-service.$PAYU_ENV.svc.cluster.local:8080"
+CS=$(tr -d '[:space:]' < $E2E_SECRET_FILE)
 get_jwt() {
-  curl -skS -X POST "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu/protocol/openid-connect/token" \
+  curl -skS -X POST "https://$SSO_HOST/realms/payu/protocol/openid-connect/token" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     --data-urlencode "client_id=payu-backend" --data-urlencode "client_secret=$CS" \
     --data-urlencode "grant_type=password" --data-urlencode "username=$1" \
@@ -22,8 +24,8 @@ AJWT=$(get_jwt admin)
 ok(){ [ "$3" = "$2" ] && echo "  ✅ $1 HTTP=$3" || { echo "  ❌ $1 exp=$2 got=$3"; FAILED=1; }; true; }
 run_test() {
     local label="$1"; shift; sleep 0.3
-    local code=$(oc exec -n payu-dev "$POD" -- curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null)
-    oc exec -n payu-dev "$POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
+    local code=$(oc exec -n "$PAYU_ENV" "$POD" -- curl -skS -o /tmp/r.json -w "%{http_code}" "$@" 2>/dev/null)
+    oc exec -n "$PAYU_ENV" "$POD" -- cat /tmp/r.json > "$TMPFILE" 2>/dev/null
     printf "\n%s HTTP=%s\n" "$label" "$code" >&2; echo "$code"
 }
 

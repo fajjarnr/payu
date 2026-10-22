@@ -648,6 +648,41 @@ class InitiateTransferCommandHandlerTest {
         assertThat(result.referenceNumber()).isEqualTo("TXN-LEGACY-001");
     }
 
+    @Test
+    void internalTransferPersistsResolvedRecipientAccountId() {
+        UUID transactionId = UUID.randomUUID();
+        UUID senderAccountId = UUID.randomUUID();
+        UUID recipientAccountId = UUID.randomUUID();
+        String recipientAccountNumber = "1001001002";
+        InitiateTransferCommand command = new InitiateTransferCommand(
+                senderAccountId,
+                recipientAccountNumber,
+                Money.idr("100"),
+                "internal transfer",
+                id.payu.transaction.interfaces.dto.TransactionType.INTERNAL_TRANSFER,
+                null,
+                null,
+                "idem-recipient-id-001",
+                "user-001",
+                null);
+        when(accountServicePort.getAccountIdByNumber(recipientAccountNumber))
+                .thenReturn(java.util.Optional.of(recipientAccountId));
+        org.mockito.ArgumentCaptor<TransactionEntity> captor =
+                org.mockito.ArgumentCaptor.forClass(TransactionEntity.class);
+        when(transactionPersistencePort.save(captor.capture()))
+                .thenAnswer(invocation -> {
+                    TransactionEntity transaction = invocation.getArgument(0);
+                    if (transaction.getId() == null) {
+                        transaction.setId(transactionId);
+                    }
+                    return transaction;
+                });
+
+        handler.handle(command);
+
+        TransactionEntity saved = captor.getValue();
+        assertThat(saved.getRecipientAccountId()).isEqualTo(recipientAccountId);
+    }
 
     private InitiateTransferCommand bifastCommand(String idempotencyKey) {
         return new InitiateTransferCommand(
