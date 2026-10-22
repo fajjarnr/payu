@@ -29,16 +29,19 @@ metadata:
   namespace: payu-sit
 spec:
   hard:
-    requests.cpu: "8"
-    requests.memory: 24Gi
-    limits.cpu: "56"
-    limits.memory: 80Gi
-    persistentvolumeclaims: "30"
-    requests.storage: 200Gi
-    pods: "120"
-    services: "60"
-    secrets: "100"
-    configmaps: "100"
+    # SIT runs the same fleet shape as dev on this single cluster
+    # (CNPG + Kafka + Keycloak + 30+ workloads) — dev parity, else the
+    # CNPG operator wedges at secrets 100/100 (L-454 sibling, SIT 2026-10-22).
+    requests.cpu: "24"
+    requests.memory: 64Gi
+    limits.cpu: "96"
+    limits.memory: 120Gi
+    persistentvolumeclaims: "40"
+    requests.storage: 400Gi
+    pods: "150"
+    services: "80"
+    secrets: "300"
+    configmaps: "200"
 ---
 apiVersion: v1
 kind: ResourceQuota

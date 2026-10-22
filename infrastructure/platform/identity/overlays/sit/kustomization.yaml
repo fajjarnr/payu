@@ -7,6 +7,10 @@ resources:
   # Plain secrets replace VaultStaticSecrets (rhbk-externalsecrets.yaml is not
   # wired into common) until Vault/VSO ships (DEVSECOPS-017).
   - keycloak-secrets.yaml
+  # Direct Route (not operator Ingress): the ingress-to-route controller
+  # only admits to router-default; the shared-ingress admission needs a
+  # first-class Route (SIT 2026-10-22).
+  - sso-route.yaml
 
 namespace: payu-sit
 
@@ -47,6 +51,9 @@ patches:
       - op: add
         path: /spec/hostname/hostname
         value: https://sso-sit.apps.fajjjar.my.id
+      - op: replace
+        path: /spec/ingress/enabled
+        value: false
   - target:
       kind: KeycloakRealmImport
       name: payu-realm-import

@@ -139,20 +139,22 @@ curl -skS -X PUT "https://${EXT_HOST}/admin/realms/payu/users/profile" \
   -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" \
   -d '{"unmanagedAttributePolicy":"ENABLED"}'
 
-# 4) create user dengan id terpaket + atribut accountId (id WAJIB diisi)
-curl -skS -X POST "https://${EXT_HOST}/admin/realms/payu/users" \
+# 4) create user dengan id terpaket + atribut accountId (id WAJIB diisi).
+#    RHBK 26.6 MENGABAIKAN field "id" pada POST /users (201 tapi sub acak!).
+#    Pin sub via partialImport (terbukti SIT 2026-10-22, L-491).
+curl -skS -X POST "https://${EXT_HOST}/admin/realms/payu/partialImport" \
   -H "Authorization: Bearer ${ADMIN_TOKEN}" -H "Content-Type: application/json" \
-  -d '{"id":"8d177115-af87-47d5-8b94-a09e7cfa55bc","username":"customer1",
-       "email":"customer1@payu.fajjjar.my.id","emailVerified":true,
-       "firstName":"Customer","lastName":"One","enabled":true,
-       "attributes":{"phoneNumber":["+6281234567890"],"nik":["3201234567890001"],
-                     "externalId":["EXT-CUST-001"],
-                     "accountId":["750e8400-e29b-41d4-a716-446655440001"]},
-       "credentials":[{"type":"password","value":"P@ssw0rd123","temporary":false}],
-       "realmRoles":["USER","KYC_VERIFIED","PREMIUM"]}'
-# 201 Created. Ulangi untuk customer2 / admin / backoffice (id & atribut spt tabel di atas).
-# Untuk user yang SUDAH ada: GET user -> set attributes+realmRoles+credentials -> PUT balik
-#   (roundtrip penuh, bukan PATCH sebagian).
+  -d '{"ifResourceExists":"OVERWRITE","users":[
+    {"id":"8d177115-af87-47d5-8b94-a09e7cfa55bc","username":"customer1",
+     "email":"customer1@payu.fajjjar.my.id","emailVerified":true,
+     "firstName":"Customer","lastName":"One","enabled":true,
+     "attributes":{"phoneNumber":["+6281234567890"],"nik":["3201234567890001"],
+                   "externalId":["EXT-CUST-001"],
+                   "accountId":["750e8400-e29b-41d4-a716-446655440001"]},
+     "credentials":[{"type":"password","value":"P@ssw0rd123","temporary":false}],
+     "realmRoles":["USER","KYC_VERIFIED","PREMIUM"]}]}'
+# {"overwritten":1,...,"id":"8d177115-..."}. Ulangi untuk customer2 / admin
+# (id & atribut spt tabel di atas). Verifikasi: GET /users/<id> -> username cocok.
 
 # 5) mapper account_id di client payu-web-app DAN payu-backend
 #    (user attribute "accountId" -> claim "account_id"; tanpa ini claim tak mengalir ke BFF)

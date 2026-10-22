@@ -7628,3 +7628,31 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: Scope dibuat ulang via Admin REST + dipin di **kedua** file realm (`keycloak-realm-import.yaml` + `payu-realm-export.json` — keduanya dipakai jalur berbeda); skrip kini assert T1/T2 200 + retry sekali lawan 3% random-failure simulator.
 
 **Pelajaran**: (1) setiap skrip E2E **wajib assertion + exit code** — `DONE` tanpa assert = pembohong; (2) state realm (scope/role/user) adalah drift class tersendiri — pin di git + verifikasi scope di token nyata (`scope:` field), bukan asumsi; (3) simulator dengan failure-rate butuh retry sadar (fresh key, bukan retry buta) di skrip deterministik.
+
+## L-491: RHBK 26.6 abaikan `id` pada POST /users — pin sub via partialImport (2026-10-22)
+
+**Context**: Seed SIT mengikuti runbook (`POST /users` dengan `id` terpaket) → 201 tapi `sub` acak; login membuktikan (`sub=421dbe8e…` bukan `8d177115…`). Ternyata RHBK 26.6 **mengabaikan field `id`** pada create-user (Location header = UUID acak, terisolasi via probe user).
+
+**Fix**: `POST /admin/realms/payu/partialImport` `{"ifResourceExists":"OVERWRITE","users":[...]}` — respons `OVERWRITTEN id=8d177115…`, `GET /users/<id>` cocok, login `sub+account_id+roles` benar untuk 3 user. Runbook `dev-seed.md` §4 diperbaiki.
+
+**Pelajaran**: (1) **201 bukan bukti pin** — verifikasi `Location` header / `GET /users/<id>` setiap create-with-id; (2) bila id diabaikan, `partialImport OVERWRITE` adalah alat pin (match by username, set id); (3) runbook lama ("POST dengan id") kedaluwarsa oleh perilaku versi — uji ulang perintah seed tiap upgrade mayor RHBK.
+
+## L-492: Operator Ingress Keycloak tak tembus shared-ingress — Route first-class (2026-10-22)
+
+**Context**: `sso-sit` via operator Ingress (`className: openshift-shared-ingress`) hanya di-admit `router-default` → DNS publik (shared LB) 503. Ingress identik metadata dengan dev; label/selector/restart tak mempan; bahkan Route manual kalah `HostAlreadyClaimed` oleh route milik Ingress.
+
+**Fix**: `spec.ingress.enabled=false` (operator tak kelola edge) + `Route sso-sit` first-class di overlay git → admit `default+shared-ingress`, 200. Pola api-dev (Route langsung, dual-admit) adalah yang benar.
+
+**Pelajaran**: (1) **jangan campur Ingress operator + Route manual satu host** — `HostAlreadyClaimed` pasti; pilih satu pemilik edge; (2) `ingress-to-route` controller bukan admission path yang sama dengan Route — bila butuh multi-router, tulis Route; (3) `routerCanonicalHostname` di status = diagnosis tercepat (satu vs dua router).
+
+## L-493: Label namespace = admission shared-ingress; apply kustomize bisa strip label (2026-10-22)
+
+**Context**: Probe Route di `payu-mesh-gateway` dual-admit, di `payu-sit` tidak. Diff label: `payu-sit` **kehilangan** `payu.fajjjar.my.id/ingress=shared` (+ 3 label payu lain) — kemungkinan ter-strip oleh apply yang me-manage namespace tanpa label itu. Restore label → dual-admit + 200 dalam 20s.
+
+**Pelajaran**: (1) **namespaceSelector IC = silent gate** — route sehat + router sehat + 503 = cek label namespace dulu; (2) manifest namespace tanpa label lengkap = strip risk — apply namespace hanya dari file git utuh (`namespaces.yaml`), bukan overlay parsial; (3) probe lintas-namespace (route identik di ns sehat) adalah diagnosis tercepat untuk admission misterius.
+
+## L-494: Bootstrap SIT = 5 jebakan berlapis, semua berpola dev (2026-10-22)
+
+**Context**: SIT kosong → fleet 33/33 + transfer COMPLETED dalam satu sesi. Jebakan: (1) `payu-cache-credentials` tak ada (secret hidup di workload overlay, bukan data) → apply `payu-secrets.yaml` dulu; (2) `podAntiAffinityType: required` single-AZ → patch `preferred` (L-454) + hapus job+PVC+primary lama (aturan menempel di pod, bukan CR); (3) quota `secrets 100/100` menjegal operator CNPG → samakan dev (300); (4) digest SIT basi (cluster lama) → re-pin 30 digest dari ImageStream dev + `skopeo copy` split-creds; (5) base mTLS cache vs server plain → patch `sit-plain-cache` (+ strip volume index 1).
+
+**Pelajaran**: (1) **urutan bootstrap = secrets → data → messaging → identity → workloads**, dan tiap lapis butuh Ready sebelum lanjut; (2) aturan affinity/quota/digest dari cluster lama = **selalu curiga** — verifikasi render-vs-live per lapis; (3) `skopeo copy` antar-namespace butuh kredensial **terpisah** per sisi (`--src-creds`/`--dest-creds` SA builder masing-masing ns).

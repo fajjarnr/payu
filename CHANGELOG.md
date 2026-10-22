@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (SIT bootstrap payu-sit 2026-10-22 — `IDN-002` CLOSED, fleet 33/33 + transfer COMPLETED)
+
+- **IDN-002 CLOSED (2026-10-22)**: `payu-sit` kosong → fleet penuh live. Data: CNPG 3/3 healthy (patch `preferred` single-AZ + quota secrets 100→300 dev-parity + hapus job/PVC/primary ber-aturan lama), cache plain 1+1. Messaging: Kafka `True` 4.1.0 + 118/118 topic (egress `- {}` git terbukti — broker resolve langsung). Identity: Keycloak `True`, realm `Done`, Route `sso-sit` first-class dual-admit (`default+shared-ingress`, 200), 3 user sub-terpin via `partialImport` (RHBK 26.6 abaikan `id` pada POST!), mapper `account_id`, sync jobs `Complete` (master + client-secret konvergen). Workloads: 30 digest di-re-pin dari ImageStream dev + `skopeo copy` split-creds, patch `sit-plain-cache` (+ strip volume TLS), account-service per-service digest fix. Bukti uang: transfer 1000 **COMPLETED**, saldo 10.000.000→9.999.000 / 5.000.000→5.001.000, ledger DEBIT+CREDIT `balance_after` nyambung. `app-sit` 200, `gateway-sit` 200. Lessons L-491..L-494.
+
 ### Fixed (Full-E2E zero-fail 2026-10-22 — shell 18/18, vitest 2103/2103, Playwright hijau, deploy `1.18.137`)
 
 - **ResponseStatusException envelope (2026-10-22)**: `Rfc9457GlobalExceptionHandler` kini unwrap `ResponseStatusException` — status yang dibawa controller dihormati (400 tetap 400, bukan 500 `INTERNAL_ERROR`). TDD RED→GREEN (`ProblemDetailTest` 11→13, `Tests run: 13 Failures: 0`). Deploy `compliance-service:1.18.137` (build+push manual, `newTag` di kedua overlay, apply per-service, rollout sukses): `GET /api/v1/compliance/audit-report` tanpa param → **400** + detail "At least one search parameter is required".

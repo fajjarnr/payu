@@ -92,3 +92,9 @@ patches:
   patch: |-
     - op: remove
       path: /spec/plugins
+    # Same single-AZ reality as dev (L-454): all 4 nodes in
+    # ap-southeast-1a, so REQUIRED zone anti-affinity blocks every
+    # replica after instance-1. Preferred for SIT on this cluster.
+    - op: replace
+      path: /spec/affinity/podAntiAffinityType
+      value: preferred

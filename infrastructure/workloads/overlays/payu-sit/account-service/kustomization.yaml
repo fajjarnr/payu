@@ -9,7 +9,7 @@ resources:
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/account-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-sit/account-service
-    digest: sha256:db91c8021d79041d73e98cfe7576edb60cda7f2751e33d20d6aa5b9444c537e8
+    digest: sha256:8571d0399959d8b6caf6f7c6e93dcbb3231a96609085f773bbc780af25797059
 
 patches:
   - target:
@@ -40,3 +40,20 @@ patches:
                     value: https://sso-sit.apps.fajjjar.my.id/realms/payu
                   - name: PAYU_KEYCLOAK_SERVER_URL
                     value: https://sso-sit.apps.fajjjar.my.id
+                  # SIT plain Hot Rod (mirror sit-plain-cache): base injects
+                  # mTLS/auth env but the SIT cache is the standalone plain
+                  # server — strip auth, disable SSL.
+                  - name: PAYU_CACHE_HOTROD_AUTH_USERNAME
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_USE_SSL
+                    value: "false"
+                  - name: PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME
+                    $patch: delete
+                  - name: PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD
+                    $patch: delete
