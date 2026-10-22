@@ -211,7 +211,7 @@ export default function AnalyticsPage() {
                   {stat.label}
                 </Typography.Text>
                 <Typography.Title
-                  level={3}
+                  level={2}
                   style={{ marginBottom: 0, fontVariantNumeric: "tabular-nums" }}
                 >
                   {formatCurrency(stat.amount)}
@@ -226,7 +226,7 @@ export default function AnalyticsPage() {
             <Card>
               <Row justify="space-between" align="middle">
                 <div>
-                  <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                  <Typography.Title level={2} style={{ marginBottom: 0 }}>
                     {t("spendingTrajectory")}
                   </Typography.Title>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
@@ -304,7 +304,7 @@ export default function AnalyticsPage() {
 
           <Col xs={24} md={12} lg={8}>
             <Card>
-              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+              <Typography.Title level={2} style={{ marginBottom: 0 }}>
                 {t("spendingBreakdown")}
               </Typography.Title>
 
@@ -404,12 +404,12 @@ export default function AnalyticsPage() {
         <Card>
           <Row gutter={[16, 16]} align="middle" justify="space-between">
             <div>
-              <Typography.Title level={3} style={{ marginBottom: 0 }}>
+              <Typography.Title level={2} style={{ marginBottom: 0 }}>
                 {t("savingsCtaTitle")}
               </Typography.Title>
               <Typography.Text type="secondary">
                 {t("savingsCtaPrefix")}{" "}
-                <Typography.Text strong style={{ color: token.colorPrimary }}>
+                <Typography.Text strong style={{ color: token.colorPrimaryText }}>
                   {formatCurrency(2500000)}
                 </Typography.Text>{" "}
                 {t("savingsCtaSuffix")}

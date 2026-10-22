@@ -202,7 +202,8 @@
     "repeatLastTransfer": "Repeat Last Transfer",
     "fullHistory": "Full History",
     "columnDescription": "Description",
-    "columnReference": "Reference"
+    "columnReference": "Reference",
+    "columnActions": "Actions"
   },
   "feedback": {
     "title": "Send Feedback",
@@ -369,7 +370,9 @@
     "unfreezeSuccess": "Pocket reactivated successfully",
     "unfreezeError": "Failed to activate pocket",
     "closeSuccess": "Pocket closed successfully",
-    "closeError": "Failed to close pocket"
+    "closeError": "Failed to close pocket",
+    "reserveProgressLabel": "Reserved balance ratio",
+    "pocketProgressLabel": "Target progress for {name}"
   },
   "transactions": {
     "date": "Date",
@@ -424,7 +427,8 @@
     "reference": "Reference",
     "cancel": "Cancel",
     "cancelling": "Cancelling...",
-    "yesCancel": "Yes, Cancel"
+    "yesCancel": "Yes, Cancel",
+    "columnActions": "Actions"
   },
   "transfers": {
     "title": "Transfer",
@@ -1357,6 +1361,10 @@
       "item2": "Biometric verification",
       "item3": "Licensed & audited"
     }
+  },
+  "lending": {
+    "creditScoreProgress": "Credit Score",
+    "limitUsageProgress": "Limit Usage"
   },
   "qris": {
     "title": "QRIS Payment",

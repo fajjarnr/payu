@@ -202,7 +202,8 @@
     "repeatLastTransfer": "Ulangi Transfer Terakhir",
     "fullHistory": "Riwayat Lengkap",
     "columnDescription": "Deskripsi",
-    "columnReference": "Referensi"
+    "columnReference": "Referensi",
+    "columnActions": "Aksi"
   },
   "feedback": {
     "title": "Kirim Feedback",
@@ -369,7 +370,9 @@
     "unfreezeSuccess": "Kantong berhasil diaktifkan kembali",
     "unfreezeError": "Gagal mengaktifkan kantong",
     "closeSuccess": "Kantong berhasil ditutup",
-    "closeError": "Gagal menutup kantong"
+    "closeError": "Gagal menutup kantong",
+    "reserveProgressLabel": "Proporsi saldo cadangan",
+    "pocketProgressLabel": "Progres target {name}"
   },
   "transactions": {
     "date": "Tanggal",
@@ -424,7 +427,8 @@
     "reference": "Referensi",
     "cancel": "Batal",
     "cancelling": "Membatalkan...",
-    "yesCancel": "Ya, Batalkan"
+    "yesCancel": "Ya, Batalkan",
+    "columnActions": "Aksi"
   },
   "transfers": {
     "title": "Transfer",
@@ -1357,6 +1361,10 @@
       "item2": "Verifikasi biometrik",
       "item3": "Berlisensi & diaudit"
     }
+  },
+  "lending": {
+    "creditScoreProgress": "Skor Kredit",
+    "limitUsageProgress": "Penggunaan Limit"
   },
   "qris": {
     "title": "Pembayaran QRIS",

@@ -46,10 +46,12 @@ import { useAuthStore } from "@/stores/authStore";
 import { asMoney, formatCurrency } from "@/lib/currency";
 import { notify as toast } from "@/lib/notify";
 import { SkipLink } from "@/lib/a11y";
+import { useTranslations } from "next-intl";
 import { BRAND_PANEL_FG, INK_ON_EMERALD } from '@/theme/tokens';
 
 export default function LendingPage() {
   const { token } = theme.useToken();
+  const t = useTranslations("lending");
   const { user } = useAuthStore();
   const userId = user?.id ?? "";
   const { data: creditScoreData, isLoading: isLoadingScore } =
@@ -171,7 +173,7 @@ export default function LendingPage() {
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <div>
-            <Typography.Title level={2} style={{ marginBottom: 0 }}>
+            <Typography.Title level={1} style={{ marginBottom: 0 }}>
               Pinjaman & Kredit
             </Typography.Title>
             <Typography.Text type="secondary">
@@ -228,7 +230,7 @@ export default function LendingPage() {
                             </Typography.Text>
                             <Space align="baseline" size={12} style={{ gap: 12 }}>
                               <Typography.Title
-                                level={1}
+                                level={2}
                                 style={{
                                   marginBottom: 0,
                                   color: token.colorBgContainer,
@@ -247,7 +249,7 @@ export default function LendingPage() {
                               <Tag color="success">
                                 <Typography.Text
                                   strong
-                                  style={{ color: token.colorSuccess }}
+                                  style={{ color: token.colorPrimaryText }}
                                 >
                                   Grade{" "}
                                   {isLoadingScore ? "..." : creditScore.grade}
@@ -340,6 +342,7 @@ export default function LendingPage() {
                           }
                           showInfo={false}
                           strokeColor={token.colorSuccess}
+                          aria-label={t("creditScoreProgress")}
                           style={{ marginTop: 16 }}
                         />
                       </Card>
@@ -367,16 +370,16 @@ export default function LendingPage() {
                           />
                         </div>
                         <Typography.Title
-                          level={4}
+                          level={2}
                           style={{ marginBottom: 12 }}
                         >
                           Total Limit Pinjaman
                         </Typography.Title>
                         <Typography.Title
-                          level={2}
+                          level={3}
                           style={{
                             marginBottom: 8,
-                            color: token.colorPrimary,
+                            color: token.colorPrimaryText,
                           }}
                         >
                           {isLoadingPreApprovals ? (
@@ -409,7 +412,7 @@ export default function LendingPage() {
                     size={16}
                     style={{ marginTop: 16, width: "100%" }}
                   >
-                    <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                    <Typography.Title level={2} style={{ marginBottom: 0 }}>
                       Produk Pinjaman
                     </Typography.Title>
                     <Row gutter={[16, 16]}>
@@ -460,7 +463,7 @@ export default function LendingPage() {
                             </Row>
                             <div>
                               <Typography.Title
-                                level={4}
+                                level={3}
                                 style={{ marginBottom: 8 }}
                               >
                                 {product.name}
@@ -488,7 +491,7 @@ export default function LendingPage() {
                                   </Typography.Text>
                                   <Typography.Text
                                     strong
-                                    style={{ color: token.colorPrimary }}
+                                    style={{ color: token.colorPrimaryText }}
                                   >
                                     {product.interestRate}
                                   </Typography.Text>
@@ -660,6 +663,7 @@ export default function LendingPage() {
                               showInfo={false}
                               strokeColor={INK_ON_EMERALD}
                               trailColor="rgba(6,40,31,0.15)"
+                              aria-label={t("limitUsageProgress")}
                               style={{ marginTop: 8 }}
                             />
                           </div>
@@ -686,7 +690,7 @@ export default function LendingPage() {
                               Pembayaran Minimum
                             </Typography.Text>
                             <Typography.Title
-                              level={4}
+                              level={3}
                               style={{
                                 marginBottom: 0,
                                 color: INK_ON_EMERALD,
@@ -720,7 +724,7 @@ export default function LendingPage() {
                           style={{ marginBottom: 24 }}
                         >
                           <Typography.Title
-                            level={5}
+                            level={2}
                             style={{ marginBottom: 0 }}
                           >
                             Ringkasan Transaksi
@@ -782,7 +786,7 @@ export default function LendingPage() {
                               strong
                               style={{
                                 fontSize: 16,
-                                color: token.colorSuccess,
+                                color: token.colorPrimaryText,
                               }}
                             >
                               {
@@ -823,7 +827,7 @@ export default function LendingPage() {
                     size={16}
                     style={{ marginTop: 16, width: "100%" }}
                   >
-                    <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                    <Typography.Title level={2} style={{ marginBottom: 0 }}>
                       Riwayat Transaksi PayLater
                     </Typography.Title>
                     <Card styles={{ body: { padding: 0 } }}>
@@ -898,7 +902,7 @@ export default function LendingPage() {
                                     letterSpacing: "0.1em",
                                     color:
                                       txn.status === "paid"
-                                        ? token.colorSuccess
+                                        ? token.colorPrimaryText
                                         : token.colorWarning,
                                   }}
                                 >

@@ -45,6 +45,7 @@ import {
 } from "@/hooks";
 import { useAuthStore } from "@/stores/authStore";
 import { asMoney, formatCurrency, parseCurrencyExact } from "@/lib/currency";
+import { INK_ON_EMERALD } from "@/theme/tokens";
 import type { VirtualCard } from "@/services/WalletService";
 
 // Extended card properties that may come from backend but aren't in the base interface yet
@@ -241,7 +242,8 @@ export default function CardsPage() {
                         zIndex: 1,
                         height: "100%",
                         padding: 24,
-                        color: "#fff",
+                        // Ink on the emerald card face: white measures 2.0:1.
+                        color: INK_ON_EMERALD,
                       }}
                     >
                       <Flex justify="space-between" align="flex-start">
@@ -263,7 +265,7 @@ export default function CardsPage() {
                           </Flex>
                           <Typography.Text
                             style={{
-                              color: "#fff",
+                              color: INK_ON_EMERALD,
                               fontSize: 20,
                               fontWeight: 700,
                               letterSpacing: "-0.02em",
@@ -278,7 +280,7 @@ export default function CardsPage() {
                             width: 8,
                             height: 8,
                             borderRadius: "50%",
-                            background: "#fff",
+                            background: INK_ON_EMERALD,
                           }}
                         />
                       </Flex>
@@ -286,7 +288,7 @@ export default function CardsPage() {
                       <Space direction="vertical" size={16}>
                         <Typography.Text
                           style={{
-                            color: "#fff",
+                            color: INK_ON_EMERALD,
                             fontSize: 24,
                             fontWeight: 700,
                             letterSpacing: "0.25em",
@@ -303,7 +305,7 @@ export default function CardsPage() {
                           <Space direction="vertical" size={2}>
                             <Typography.Text
                               style={{
-                                color: "rgba(255,255,255,0.5)",
+                                color: INK_ON_EMERALD,
                                 fontSize: 12,
                                 fontWeight: 700,
                                 letterSpacing: "0.1em",
@@ -315,7 +317,7 @@ export default function CardsPage() {
                             <Typography.Text
                               ellipsis
                               style={{
-                                color: "#fff",
+                                color: INK_ON_EMERALD,
                                 maxWidth: 150,
                                 fontSize: 12,
                                 fontWeight: 700,
@@ -329,7 +331,7 @@ export default function CardsPage() {
                           <Space direction="vertical" size={2} align="end">
                             <Typography.Text
                               style={{
-                                color: "rgba(255,255,255,0.5)",
+                                color: INK_ON_EMERALD,
                                 fontSize: 12,
                                 fontWeight: 700,
                                 letterSpacing: "0.1em",
@@ -340,7 +342,7 @@ export default function CardsPage() {
                             </Typography.Text>
                             <Typography.Text
                               style={{
-                                color: "#fff",
+                                color: INK_ON_EMERALD,
                                 fontFamily: "monospace",
                                 fontWeight: 700,
                                 fontSize: 12,
@@ -425,7 +427,7 @@ export default function CardsPage() {
               >
                 <Flex justify="space-between" align="center">
                   <Typography.Title
-                    level={4}
+                    level={2}
                     style={{ marginBottom: 0 }}
                   >
                     {t("dailyLimit")}
@@ -524,6 +526,7 @@ export default function CardsPage() {
                       percent={dailyLimitPercent}
                       showInfo={false}
                       size="small"
+                      aria-label={t("dailyLimit")}
                     />
                     <Flex justify="space-between" align="flex-end">
                       <Typography.Text
@@ -560,7 +563,7 @@ export default function CardsPage() {
 
           {/* Mid Section: Catalog Style Operations */}
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <Typography.Title level={3} style={{ marginBottom: 0 }}>
+            <Typography.Title level={2} style={{ marginBottom: 0 }}>
               {t("operationalControls")}
             </Typography.Title>
             <Row gutter={[16, 16]}>
@@ -584,7 +587,7 @@ export default function CardsPage() {
                               : token.colorBorder
                           }`,
                           color: item.status
-                            ? token.colorPrimary
+                            ? token.colorPrimaryText
                             : token.colorTextTertiary,
                         }}
                       >
@@ -593,7 +596,9 @@ export default function CardsPage() {
                       <Tag
                         bordered={false}
                         color={
-                          item.status ? token.colorPrimary : token.colorFill
+                          item.status
+                            ? token.colorPrimaryText
+                            : token.colorTextDescription
                         }
                         style={{
                           fontSize: 12,
@@ -625,7 +630,7 @@ export default function CardsPage() {
                       <Typography.Text strong>{item.label}</Typography.Text>
                       <Typography.Text
                         type="secondary"
-                        style={{ fontSize: 12, opacity: 0.7 }}
+                        style={{ fontSize: 12 }}
                       >
                         {item.desc}
                       </Typography.Text>
@@ -645,7 +650,7 @@ export default function CardsPage() {
                           fontWeight: 700,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
-                          color: token.colorPrimary,
+                          color: token.colorPrimaryText,
                         }}
                       >
                         {t("managePermission")}
@@ -680,13 +685,13 @@ export default function CardsPage() {
                     borderRadius: 16,
                     background: `${token.colorPrimary}1A`,
                     border: `1px solid ${token.colorPrimary}33`,
-                    color: token.colorPrimary,
+                    color: token.colorPrimaryText,
                   }}
                 >
                   <SecurityIcon />
                 </Flex>
                 <div style={{ maxWidth: 640 }}>
-                  <Typography.Title level={4} style={{ marginBottom: 4 }}>
+                  <Typography.Title level={2} style={{ marginBottom: 4 }}>
                     {t("securityProtocolActive")}
                   </Typography.Title>
                   <Typography.Text type="secondary">
@@ -710,7 +715,7 @@ export default function CardsPage() {
             centered
             width={512}
             title={
-              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+              <Typography.Title level={2} style={{ marginBottom: 0 }}>
                 {t("changeTransactionLimit")}
               </Typography.Title>
             }
@@ -808,7 +813,7 @@ export default function CardsPage() {
             width={512}
             title={
               <Typography.Title
-                level={4}
+                level={2}
                 style={{ marginBottom: 0, color: token.colorError }}
               >
                 {t("deleteCard")}

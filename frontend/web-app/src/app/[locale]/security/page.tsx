@@ -339,7 +339,7 @@ export default function SecurityPage() {
               <Col xs={24} lg={16}>
                 <Space direction="vertical" size="middle">
                   <Title
-                    level={3}
+                    level={2}
                     style={{
                       color: "var(--ant-color-text-light-solid)",
                       marginBottom: 0,
@@ -349,7 +349,8 @@ export default function SecurityPage() {
                   </Title>
                   <Paragraph
                     style={{
-                      color: "color-mix(in srgb, var(--ant-color-text-light-solid) 70%, var(--ant-color-text))",
+                      // White on the error red is 5.6:1; a 70% mix measured 2.75:1.
+                      color: "var(--ant-color-text-light-solid)",
                       marginBottom: 0,
                     }}
                   >

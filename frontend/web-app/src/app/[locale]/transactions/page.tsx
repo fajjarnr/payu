@@ -193,7 +193,8 @@ export default function TransactionsPage() {
     },
     {
       key: 'actions',
-      title: '',
+      // The actions column holds icon buttons with their own labels.
+      title: <span className="sr-only">{t('columnActions')}</span>,
       align: 'right',
       render: (_, transaction) => (
         <Dropdown
@@ -404,7 +405,7 @@ export default function TransactionsPage() {
                   rowKey="id"
                   pagination={false}
                   loading={isLoading}
-                  locale={{ emptyText: t('emptyTable') }}
+                  locale={{ emptyText: <Typography.Text type="secondary">{t('emptyTable')}</Typography.Text> }}
                 />
               </div>
 
@@ -437,7 +438,7 @@ export default function TransactionsPage() {
                               }}>
                                 <TypeIcon style={{
                                   width: 20, height: 20,
-                                  color: isCreditType(transaction.type) ? token.colorPrimary : token.colorTextTertiary
+                                  color: isCreditType(transaction.type) ? token.colorPrimaryText : token.colorTextDescription
                                 }} />
                               </div>
                               <div>

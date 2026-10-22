@@ -240,4 +240,16 @@ Ambiguous-label fixes (before → after):
 ---
 *Skipped: e2e spec bodies, `__tests__/a11y` assertions, `globals.css` dark block, `lib/a11y.tsx`, stores. Risk: contrast ratios cited from `tokens.ts` comments, not re-measured; dark-mode emerald and antd v6 focus-ring defaults unverified live.*
 
-**Verified live (2026-10-21).** Production build (`npm run build` → `npm start`) + axe 4.13 on `/`, `/statements`, `/legal/terms`, `/legal/privacy`, `/login`: **0 violations** on every page (before this pass: landing 23 contrast + 1 definition-list + 2 heading-order, statements 10 contrast + heading-order + region, legal 1 heading-order). Token ratios re-measured in the browser, not copied from comments. Still unverified live: the authenticated surfaces (dashboard, transfer, cards) — no session in the local environment — and the dark theme on those routes.
+**Verified live (2026-10-22).** Production build (`npm run build` → `npm start`) + axe 4.13 on **23 routes** (every customer page, the backoffice console, the public pages): **0 violations, 1017 passing checks** (before: 38 violations across 19 routes). Token ratios re-measured in the browser, not copied from comments.
+
+### How to re-run the app-wide sweep (authenticated routes)
+
+The proxy treats a *transient* token-validation failure as a valid session, so a dummy cookie renders the authenticated shell locally with every API call failing — which is exactly the "no data" state worth auditing:
+
+```bash
+cd frontend/web-app && npm run build && PORT=3111 npm start
+# in the browser: set the cookie, then load each route
+#   document.cookie = "accessToken=local-audit-token; path=/"   (or CDP setCookie)
+#   await tab.goto("http://127.0.0.1:3111/<route>")  → tab.a11y()
+```
+Re-set the cookie before each navigation: the app's session bootstrap clears it after the first failed refresh. This needs no app change and no real credential.

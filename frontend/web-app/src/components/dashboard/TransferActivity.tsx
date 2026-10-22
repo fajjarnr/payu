@@ -23,6 +23,7 @@ const { Title, Text } = Typography;
 import { useTransactions, useCancelTransaction } from "@/hooks";
 import { useAuthStore } from "@/stores";
 import { notify as toast } from "@/lib/notify";
+import { INK_ON_EMERALD } from "@/theme/tokens";
 import { formatCurrency } from "@/lib/currency";
 import type { Transaction } from "@/services/TransactionService";
 
@@ -256,7 +257,9 @@ export default function TransferActivity({
     },
     {
       key: "actions",
-      title: "",
+      // A screen reader needs to know what the column holds (axe
+      // empty-table-header); the visual header stays empty.
+      title: <span className="sr-only">{t("columnActions")}</span>,
       align: "right",
       render: (_, item) => (
         <Dropdown
@@ -337,14 +340,19 @@ export default function TransferActivity({
             <Title level={4} style={{ margin: 0 }}>
               {t("quickTransfer")}
             </Title>
-            <Link href="/transactions" aria-label={t("searchTransfer")} style={{ display: "inline-flex" }}>
-              <Button
-                type="text"
-                tabIndex={-1}
-                aria-hidden="true"
-                icon={<Search style={{ width: 20, height: 20 }} />}
-                style={{ minWidth: 44, minHeight: 44, pointerEvents: "none" }}
-              />
+            <Link
+              href="/transactions"
+              className="payu-focus-ring"
+              aria-label={t("searchTransfer")}
+              style={{
+                display: "inline-flex",
+                width: 44,
+                height: 44,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Search style={{ width: 20, height: 20 }} aria-hidden="true" />
             </Link>
           </Row>
 
@@ -412,22 +420,25 @@ export default function TransferActivity({
             </Row>
           </Space>
 
-          <Link href="/transfer" style={{ display: "block" }}>
-            <Button
-              data-testid="quick-transfer-send-button"
-              type="primary"
-              size="large"
-              block
-              style={{
-                height: 56,
-                fontWeight: 700,
-                fontSize: 12,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-              }}
-            >
-              {t("sendNow")}
-            </Button>
+          <Link
+            href="/transfer"
+            className="payu-focus-ring"
+            data-testid="quick-transfer-send-button"
+            style={{
+              display: "block",
+              height: 56,
+              fontWeight: 700,
+              fontSize: 12,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              textAlign: "center",
+              lineHeight: "56px",
+              borderRadius: 12,
+              background: "var(--ant-color-primary)",
+              color: INK_ON_EMERALD,
+            }}
+          >
+            {t("sendNow")}
           </Link>
         </Space>
       </Card>
@@ -599,24 +610,22 @@ export default function TransferActivity({
 
               <Divider style={{ margin: 0 }} />
               <Row justify="space-between" align="middle">
-                <Link href="/transfer" style={{ display: "inline-flex" }}>
-                  <Button
-                    type="link"
-                    size="small"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                    data-testid="repeat-last-transfer-button"
-                    icon={<RotateCcw style={{ width: 16, height: 16 }} />}
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 12,
-                      textTransform: "uppercase",
-                      minHeight: 44,
-                      pointerEvents: "none",
-                    }}
-                  >
-                    {t("repeatLastTransfer")}
-                  </Button>
+                <Link
+                  href="/transfer"
+                  className="payu-focus-ring"
+                  data-testid="repeat-last-transfer-button"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontWeight: 700,
+                    fontSize: 12,
+                    textTransform: "uppercase",
+                    minHeight: 44,
+                  }}
+                >
+                  <RotateCcw style={{ width: 16, height: 16 }} aria-hidden="true" />
+                  {t("repeatLastTransfer")}
                 </Link>
                 <Button
                   type="link"

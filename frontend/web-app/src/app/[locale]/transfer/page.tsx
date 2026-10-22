@@ -489,7 +489,7 @@ export default function TransferPage() {
                         {isRecipientVerified ? (
                           <>
                             <Typography.Title
-                              level={3}
+                              level={2}
                               style={{ marginBottom: 0 }}
                             >
                               {selectedContactData.name}
@@ -504,7 +504,7 @@ export default function TransferPage() {
                         ) : (
                           <>
                             <Typography.Title
-                              level={3}
+                              level={2}
                               style={{ marginBottom: 0 }}
                             >
                               Penerima belum terverifikasi
@@ -1735,7 +1735,7 @@ export default function TransferPage() {
                     >
                       <div style={{ position: "relative", zIndex: 10 }}>
                         <Typography.Title
-                          level={4}
+                          level={2}
                           style={{
                             marginBottom: 8,
                             color: token.colorTextLightSolid,

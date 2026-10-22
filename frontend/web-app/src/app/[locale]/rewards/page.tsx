@@ -303,7 +303,7 @@ export default function RewardsPage() {
                                 {t("pointsBalance")}
                               </Typography.Text>
                               <Typography.Title
-                                level={3}
+                                level={2}
                                 style={{
                                   margin: 0,
                                   color: "var(--ant-color-text-light-solid)",
@@ -334,7 +334,7 @@ export default function RewardsPage() {
                                 {t("totalEarned")}
                               </Typography.Text>
                               <Typography.Title
-                                level={4}
+                                level={2}
                                 style={{
                                   margin: 0,
                                   color: "var(--ant-color-text-light-solid)",
@@ -355,7 +355,7 @@ export default function RewardsPage() {
                                 {t("totalRedeemed")}
                               </Typography.Text>
                               <Typography.Title
-                                level={4}
+                                level={2}
                                 style={{
                                   margin: 0,
                                   color: "var(--ant-color-text-light-solid)",
@@ -428,7 +428,7 @@ export default function RewardsPage() {
                     <Col xs={24} lg={12}>
                       <Card style={{ height: "100%" }}>
                         <Typography.Title
-                          level={4}
+                          level={2}
                           style={{ marginTop: 0, marginBottom: 24 }}
                         >
                           {t("howToEarnPoints")}
@@ -477,7 +477,7 @@ export default function RewardsPage() {
                     size={16}
                     style={{ width: "100%" }}
                   >
-                    <Typography.Title level={4} style={{ margin: 0 }}>
+                    <Typography.Title level={2} style={{ margin: 0 }}>
                       {t("history")}
                     </Typography.Title>
                     <Card styles={{ body: { padding: 0 } }}>
@@ -596,7 +596,7 @@ export default function RewardsPage() {
                                 {t("totalCashback")}
                               </Typography.Text>
                               <Typography.Title
-                                level={3}
+                                level={2}
                                 style={{
                                   margin: 0,
                                   color: "var(--ant-color-text-light-solid)",
@@ -678,7 +678,7 @@ export default function RewardsPage() {
                     <Col xs={24} lg={16}>
                       <Card style={{ height: "100%" }}>
                         <Typography.Title
-                          level={4}
+                          level={2}
                           style={{ marginTop: 0, marginBottom: 24 }}
                         >
                           {t("activePromotions")}
@@ -756,7 +756,7 @@ export default function RewardsPage() {
                     size={16}
                     style={{ width: "100%" }}
                   >
-                    <Typography.Title level={4} style={{ margin: 0 }}>
+                    <Typography.Title level={2} style={{ margin: 0 }}>
                       {t("cashbackHistory")}
                     </Typography.Title>
                     <Card styles={{ body: { padding: 0 } }}>
@@ -866,7 +866,7 @@ export default function RewardsPage() {
                     >
                       <Row justify="space-between" align="middle">
                         <Typography.Title
-                          level={4}
+                          level={2}
                           style={{
                             margin: 0,
                             color: "var(--ant-color-text-light-solid)",
@@ -946,7 +946,7 @@ export default function RewardsPage() {
                             {t("totalFriends")}
                           </Typography.Text>
                           <Typography.Title
-                            level={4}
+                            level={2}
                             style={{
                               margin: 0,
                               color: "var(--ant-color-text-light-solid)",
@@ -992,7 +992,7 @@ export default function RewardsPage() {
 
                   <Card>
                     <Typography.Title
-                      level={4}
+                      level={2}
                       style={{ marginTop: 0, marginBottom: 24 }}
                     >
                       {t("referralSummary")}

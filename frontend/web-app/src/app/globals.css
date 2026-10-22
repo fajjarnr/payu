@@ -180,6 +180,23 @@
     display: none;
   }
 
+  /* A filled success Tag paints its label with the solid success colour — the
+     emerald — on the emerald tint: 1.9:1, unreadable. The label is text, so
+     it takes the text role (deep brand green, 5.3:1 on the tint). The same
+     holds for the info/processing presets — colorInfo is the emerald too. */
+  .ant-tag-success:not(.ant-tag-disabled),
+  .ant-tag-processing:not(.ant-tag-disabled),
+  .ant-tag-info:not(.ant-tag-disabled),
+  .ant-tag-green:not(.ant-tag-disabled) {
+    color: var(--ant-color-success-text);
+  }
+
+  /* A disabled Tag is a status, not a control: antd fades its label to
+     rgba(0,0,0,0.25) (1.4:1), which leaves the state unreadable. */
+  .ant-tag-disabled {
+    color: var(--ant-color-text-description);
+  }
+
   @media (min-width: 992px) {
     .payu-lg-only {
       display: flex;

@@ -262,7 +262,7 @@ export default function SplitBillPage() {
                   >
                     {t("statActive")}
                   </Text>
-                  <Title level={3} style={{ margin: "4px 0 0" }}>
+                  <Title level={2} style={{ margin: "4px 0 0" }}>
                     {activeBills.length}
                   </Title>
                 </div>
@@ -303,7 +303,7 @@ export default function SplitBillPage() {
                   >
                     {t("statSettled")}
                   </Text>
-                  <Title level={3} style={{ margin: "4px 0 0" }}>
+                  <Title level={2} style={{ margin: "4px 0 0" }}>
                     {settledBills.length}
                   </Title>
                 </div>
@@ -344,7 +344,7 @@ export default function SplitBillPage() {
                   >
                     {t("statTotal")}
                   </Text>
-                  <Title level={3} style={{ margin: "4px 0 0" }}>
+                  <Title level={2} style={{ margin: "4px 0 0" }}>
                     {formatCurrency(
                       splitBills.reduce(
                         (sum, b) => addCurrency(sum, b.totalAmount),
@@ -362,7 +362,7 @@ export default function SplitBillPage() {
         {showCreateModal && (
           <Card>
             <Space direction="vertical" size={24} style={{ width: "100%" }}>
-              <Title level={3} style={{ margin: 0 }}>
+              <Title level={2} style={{ margin: 0 }}>
                 {t("createTitle")}
               </Title>
               <Row gutter={[24, 24]}>
@@ -519,7 +519,7 @@ export default function SplitBillPage() {
         {/* Active Split Bills */}
         {activeBills.length > 0 && (
           <Space direction="vertical" size={24} style={{ width: "100%" }}>
-            <Title level={3} style={{ margin: 0 }}>
+            <Title level={2} style={{ margin: 0 }}>
               {t("activeBillsTitle")}
             </Title>
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
@@ -688,7 +688,7 @@ export default function SplitBillPage() {
         {/* Settled Bills */}
         {settledBills.length > 0 && (
           <Space direction="vertical" size={24} style={{ width: "100%" }}>
-            <Title level={3} style={{ margin: 0 }}>
+            <Title level={2} style={{ margin: 0 }}>
               {t("historyTitle")}
             </Title>
             <Space direction="vertical" size={16} style={{ width: "100%" }}>

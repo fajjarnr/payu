@@ -34,7 +34,7 @@ export default function EmptyState({
       <div style={{ fontSize: 64, lineHeight: 1, color: token.colorTextSecondary }} aria-hidden="true">
         {icon ?? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={false} />}
       </div>
-      <Typography.Title level={3} style={{ margin: 0 }}>
+      <Typography.Title level={2} style={{ margin: 0 }}>
         {title}
       </Typography.Title>
       <Typography.Text type="secondary">{description}</Typography.Text>

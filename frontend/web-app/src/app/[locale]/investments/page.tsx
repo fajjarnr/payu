@@ -62,7 +62,7 @@ export default function InvestmentsPage() {
           <Col xs={24} lg={16}>
             <Card data-testid="portfolio-overview-card">
               <Typography.Text type="secondary">{t('accountBalance')}</Typography.Text>
-              <Typography.Title level={3} style={{ marginTop: 8 }}>
+              <Typography.Title level={2} style={{ marginTop: 8 }}>
                 {loadingAccount
                   ? '...'
                   : account && !accountError
@@ -106,28 +106,28 @@ export default function InvestmentsPage() {
 
           <Col xs={24} lg={8}>
             <Card data-testid="investment-performance-empty" style={{ height: '100%' }}>
-              <Typography.Title level={4}>{t('performance')}</Typography.Title>
+              <Typography.Title level={3}>{t('performance')}</Typography.Title>
               <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('performanceUnavailable')}</Typography.Text>
             </Card>
           </Col>
 
           <Col xs={24} lg={8}>
             <Card data-testid="investment-risk-empty" style={{ height: '100%' }}>
-              <Typography.Title level={4}>{t('riskLevel')}</Typography.Title>
+              <Typography.Title level={3}>{t('riskLevel')}</Typography.Title>
               <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('riskUnavailable')}</Typography.Text>
             </Card>
           </Col>
 
           <Col xs={24} lg={16}>
             <Card data-testid="investment-products-empty" style={{ height: '100%' }}>
-              <Typography.Title level={4}>{t('portfolio')}</Typography.Title>
+              <Typography.Title level={3}>{t('portfolio')}</Typography.Title>
               <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('productsUnavailable')}</Typography.Text>
             </Card>
           </Col>
 
           <Col xs={24} lg={24}>
             <Card data-testid="investment-advice-empty">
-              <Typography.Title level={4}>{t('advice')}</Typography.Title>
+              <Typography.Title level={3}>{t('advice')}</Typography.Title>
               <Typography.Text type="secondary" style={{ marginTop: 8 }}>{t('adviceUnavailable')}</Typography.Text>
             </Card>
           </Col>

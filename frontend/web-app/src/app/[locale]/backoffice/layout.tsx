@@ -17,6 +17,7 @@ import {
   Bell,
   Menu,
 } from "@/components/icons";
+import { INK_ON_EMERALD } from "@/theme/tokens";
 import {
   Avatar,
   Badge,
@@ -127,7 +128,8 @@ export default function BackofficeLayout({
             size={48}
             style={{
               background: "var(--ant-color-primary)",
-              color: "var(--ant-color-text-light-solid)",
+              // Ink on the emerald fill: white is 1.99:1.
+              color: INK_ON_EMERALD,
               fontSize: 24,
               fontWeight: 700,
               flexShrink: 0,
@@ -137,19 +139,25 @@ export default function BackofficeLayout({
           </Avatar>
           {!collapsed && (
             <Space direction="vertical" size={4}>
-              <Typography.Title
-                level={4}
-                style={{ margin: 0, textTransform: "uppercase" }}
+              <Typography.Text
+                strong
+                style={{
+                  margin: 0,
+                  textTransform: "uppercase",
+                  fontSize: 18,
+                  letterSpacing: "-0.025em",
+                }}
               >
                 PayU
-              </Typography.Title>
+              </Typography.Text>
               <Typography.Text
                 strong
                 style={{
                   fontSize: 12,
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  color: "var(--ant-color-primary)",
+                  // Emerald as text is 1.99:1 on white — the deep brand green.
+                  color: "var(--ant-color-primary-text)",
                 }}
               >
                 Backoffice
@@ -204,9 +212,9 @@ export default function BackofficeLayout({
                 aria-label="Buka menu navigasi"
               />
               <Space direction="vertical" size={4} style={{ lineHeight: 1.4 }}>
-                <Typography.Title level={4} style={{ margin: 0 }}>
+                <Typography.Text strong style={{ margin: 0, fontSize: 18 }}>
                   {activeNav?.name || "Dashboard"}
-                </Typography.Title>
+                </Typography.Text>
                 <Typography.Text
                   type="secondary"
                   strong
@@ -267,7 +275,8 @@ export default function BackofficeLayout({
                       fontSize: 12,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
-                      color: "var(--ant-color-primary)",
+                      // Emerald as text is 1.99:1 on white — the deep brand green.
+                      color: "var(--ant-color-primary-text)",
                     }}
                   >
                     Super User
@@ -277,7 +286,7 @@ export default function BackofficeLayout({
                   size={48}
                   style={{
                     background: "var(--ant-color-primary-bg)",
-                    color: "var(--ant-color-primary)",
+                    color: "var(--ant-color-primary-text)",
                     fontWeight: 700,
                   }}
                 >

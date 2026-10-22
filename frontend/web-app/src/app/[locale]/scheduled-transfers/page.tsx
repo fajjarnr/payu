@@ -193,7 +193,7 @@ export default function ScheduledTransfersPage() {
                 <Row justify="space-between" align="middle">
                   <div>
                     <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{stat.label}</Text>
-                    <Title level={3} style={{ margin: '4px 0 0' }}>{stat.value}</Title>
+                    <Title level={2} style={{ margin: '4px 0 0' }}>{stat.value}</Title>
                   </div>
                   <div style={{ width: 48, height: 48, backgroundColor: stat.color, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <stat.icon style={{ width: 24, height: 24, color: stat.iconColor }} />
@@ -206,7 +206,7 @@ export default function ScheduledTransfersPage() {
 
         {/* Transfers List */}
         <Card>
-          <Title level={3} style={{ margin: '0 0 16px' }}>{t('listTitle')}</Title>
+          <Title level={2} style={{ margin: '0 0 16px' }}>{t('listTitle')}</Title>
 
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
@@ -324,7 +324,7 @@ export default function ScheduledTransfersPage() {
       </Space>
 
       {/* Edit Modal */}
-      <Modal open={isEditModalOpen} onCancel={() => setIsEditModalOpen(false)} footer={null} centered width={512} title={<Title level={4} style={{ marginBottom: 4 }}>{t('editModalTitle')}</Title>}>
+      <Modal open={isEditModalOpen} onCancel={() => setIsEditModalOpen(false)} footer={null} centered width={512} title={<Title level={2} style={{ marginBottom: 4 }}>{t('editModalTitle')}</Title>}>
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Text type="secondary">
             {t('editModalDescription')}
@@ -396,7 +396,7 @@ export default function ScheduledTransfersPage() {
       </Modal>
 
       {/* Cancel Confirmation Modal */}
-      <Modal open={isCancelModalOpen} onCancel={() => setIsCancelModalOpen(false)} footer={null} centered width={512} title={<Title level={4} style={{ marginBottom: 4, color: 'var(--ant-color-error)' }}>{t('cancelModalTitle')}</Title>}>
+      <Modal open={isCancelModalOpen} onCancel={() => setIsCancelModalOpen(false)} footer={null} centered width={512} title={<Title level={2} style={{ marginBottom: 4, color: 'var(--ant-color-error)' }}>{t('cancelModalTitle')}</Title>}>
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Text type="secondary">
             {t('cancelModalDescription')}

@@ -104,7 +104,7 @@ export default function SupportPage() {
                 >
                   <channel.icon style={{ fontSize: 40 }} />
                 </div>
-                <Typography.Title level={4} style={{ marginBottom: 12 }}>
+                <Typography.Title level={2} style={{ marginBottom: 12 }}>
                   {channel.label}
                 </Typography.Title>
                 <Typography.Text
@@ -131,7 +131,7 @@ export default function SupportPage() {
 
         {/* FAQs */}
         <Card>
-          <Typography.Title level={4} style={{ marginBottom: 24 }}>
+          <Typography.Title level={2} style={{ marginBottom: 24 }}>
             {t("faqs")}
           </Typography.Title>
           <Row gutter={[16, 16]}>
@@ -202,7 +202,7 @@ export default function SupportPage() {
           <Row align="middle" gutter={[16, 16]}>
             <Col xs={24} lg={16}>
               <Space direction="vertical" size={16}>
-                <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                <Typography.Title level={2} style={{ marginBottom: 0 }}>
                   Integritas Sistem Aktif.
                 </Typography.Title>
                 <Space size={12} wrap>
@@ -226,7 +226,7 @@ export default function SupportPage() {
                     ),
                   )}
                 </Space>
-                <Typography.Text style={{ color: token.colorTextDisabled }}>
+                <Typography.Text type="secondary">
                   Status infrastruktur belum tersedia. Hubungi tim operasional
                   untuk informasi real-time.
                 </Typography.Text>

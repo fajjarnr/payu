@@ -454,14 +454,14 @@ export default function ExchangePage() {
                             </Space>
                           </Row>
                           <Space size={12} align="baseline">
-                            <Typography.Title level={3} style={{ margin: 0 }}>
+                            <Typography.Title level={2} style={{ margin: 0 }}>
                               1 {fromCurrency}
                             </Typography.Title>
                             <Typography.Text type="secondary">
                               =
                             </Typography.Text>
                             <Typography.Title
-                              level={3}
+                              level={2}
                               style={{
                                 margin: 0,
                                 color: "var(--ant-color-primary-text)",
@@ -537,7 +537,7 @@ export default function ExchangePage() {
                           >
                             {t("exchangeYouWillReceive")}
                           </Typography.Text>
-                          <Typography.Title level={3} style={{ margin: 0 }}>
+                          <Typography.Title level={2} style={{ margin: 0 }}>
                             {formatFxAmount(displayAmount, toCurrency)}
                           </Typography.Title>
                         </div>
@@ -861,7 +861,7 @@ export default function ExchangePage() {
                 </div>
                 <div style={{ position: "relative", zIndex: 1 }}>
                   <Typography.Title
-                    level={4}
+                    level={2}
                     style={{
                       color: INK_ON_EMERALD,
                       marginTop: 0,
@@ -881,7 +881,13 @@ export default function ExchangePage() {
                   >
                     {t("exchangeSupport")}
                   </Typography.Text>
-                  <Button ghost href="/support">
+                  <Button
+                    ghost
+                    href="/support"
+                    // Ghost default text is white (1.99:1 on the emerald fill);
+                    // ink labels clear AA on the primary surface.
+                    style={{ color: INK_ON_EMERALD, borderColor: INK_ON_EMERALD }}
+                  >
                     {t("contactSupport")}
                   </Button>
                 </div>

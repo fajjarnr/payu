@@ -62,16 +62,21 @@ export default function MerchantDashboard() {
       <DashboardLayout>
       <SkipLink />
         <div style={{ display: 'flex', justifyContent: 'center', minHeight: 320 }}>
-          <Alert
-            type="error"
-            showIcon
-            message={t('loadError')}
-            action={
-              <Button size="small" onClick={() => void fetchPartner()}>
-                {t('retry')}
-              </Button>
-            }
-          />
+          <Space direction="vertical" size={16} align="center" style={{ textAlign: 'center' }}>
+            <Typography.Title level={1} style={{ margin: 0 }}>
+              {t('title')}
+            </Typography.Title>
+            <Alert
+              type="error"
+              showIcon
+              message={t('loadError')}
+              action={
+                <Button size="small" onClick={() => void fetchPartner()}>
+                  {t('retry')}
+                </Button>
+              }
+            />
+          </Space>
         </div>
       </DashboardLayout>
     );

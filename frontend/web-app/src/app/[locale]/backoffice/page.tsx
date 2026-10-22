@@ -73,7 +73,7 @@ export default function BackofficeDashboard() {
                 </Space>
                 <div>
                   <Typography.Text strong style={labelStyle}>{stat.label}</Typography.Text>
-                  <Typography.Title level={3} style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>{stat.value}</Typography.Title>
+                  <Typography.Title level={2} style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>{stat.value}</Typography.Title>
                 </div>
               </Space>
             </Card>
@@ -96,7 +96,7 @@ export default function BackofficeDashboard() {
                     </div>
                   </Space>
                   <div>
-                    <Typography.Title level={4} style={{ marginBottom: 8 }}>{link.name}</Typography.Title>
+                    <Typography.Title level={3} style={{ marginBottom: 8 }}>{link.name}</Typography.Title>
                     <Typography.Text type="secondary">{link.description}</Typography.Text>
                   </div>
                   <Typography.Text strong style={labelStyle}>Open Management &rarr;</Typography.Text>

@@ -16,7 +16,6 @@ import { notify as toast } from "@/lib/notify";
 import { useAuthStore } from "@/stores/authStore";
 import { useProcessQrisPayment, useTransactions } from "@/hooks";
 import { addCurrency, asMoney, formatCurrency } from "@/lib/currency";
-import { Link } from "@/lib/navigation";
 import {
   Button,
   Card,
@@ -24,7 +23,6 @@ import {
   Form,
   Input,
   Modal,
-  Progress,
   Row,
   Space,
   theme,
@@ -280,7 +278,7 @@ export default function QRISPage() {
                             fontWeight: 700,
                             letterSpacing: "0.3em",
                             textTransform: "uppercase",
-                            opacity: 0.4,
+                            color: token.colorTextDescription,
                           }}
                         >
                           {isScanning
@@ -410,7 +408,7 @@ export default function QRISPage() {
                           color: token.colorPrimary,
                         }}
                       />
-                      <Typography.Title level={4} style={{ marginBottom: 0 }}>
+                      <Typography.Title level={2} style={{ marginBottom: 0 }}>
                         {t("recentActivity")}
                       </Typography.Title>
                     </div>
@@ -420,7 +418,7 @@ export default function QRISPage() {
                       style={{
                         fontSize: 12,
                         fontWeight: 700,
-                        color: token.colorPrimary,
+                        color: token.colorPrimaryText,
                         letterSpacing: "0.2em",
                         textTransform: "uppercase",
                       }}
@@ -472,7 +470,7 @@ export default function QRISPage() {
                             fontWeight: 700,
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
-                            opacity: 0.4,
+                            color: token.colorTextDescription,
                           }}
                         >
                           {t("noHistory")}
@@ -522,7 +520,7 @@ export default function QRISPage() {
                       fontWeight: 700,
                       letterSpacing: "0.2em",
                       textTransform: "uppercase",
-                      opacity: 0.6,
+                      color: token.colorTextDescription,
                       display: "block",
                       marginBottom: 24,
                     }}
@@ -562,7 +560,7 @@ export default function QRISPage() {
                             fontSize: 12,
                             display: "block",
                             marginTop: 4,
-                            opacity: 0.7,
+                            color: token.colorTextDescription,
                           }}
                         >
                           {t("dynamicTokenDescription")}
@@ -601,7 +599,7 @@ export default function QRISPage() {
                             fontSize: 12,
                             display: "block",
                             marginTop: 4,
-                            opacity: 0.7,
+                            color: token.colorTextDescription,
                           }}
                         >
                           {t("qrisRegulationDescription")}
@@ -631,7 +629,7 @@ export default function QRISPage() {
                     >
                       <div>
                         <Typography.Title
-                          level={4}
+                          level={2}
                           style={{
                             marginBottom: 0,
                             color: token.colorTextLightSolid,
@@ -643,7 +641,7 @@ export default function QRISPage() {
                           strong
                           style={{
                             fontSize: 12,
-                            color: token.colorPrimary,
+                            color: token.colorTextLightSolid,
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
                           }}
@@ -697,7 +695,7 @@ export default function QRISPage() {
                             strong
                             style={{
                               fontSize: 12,
-                              color: token.colorTextTertiary,
+                              color: token.colorTextLightSolid,
                               letterSpacing: "0.2em",
                               textTransform: "uppercase",
                               transform: "rotate(-12deg)",
@@ -717,7 +715,7 @@ export default function QRISPage() {
                       style={{
                         height: 48,
                         backgroundColor: `${token.colorPrimary}33`,
-                        color: token.colorPrimary,
+                        color: token.colorTextLightSolid,
                         borderRadius: 12,
                         fontWeight: 700,
                         fontSize: 12,
@@ -763,7 +761,7 @@ export default function QRISPage() {
                         fontWeight: 700,
                         letterSpacing: "0.2em",
                         textTransform: "uppercase",
-                        opacity: 0.6,
+                        color: token.colorTextDescription,
                       }}
                     >
                       {t("todayUsage")}
@@ -782,7 +780,7 @@ export default function QRISPage() {
                       strong
                       style={{
                         fontSize: 12,
-                        color: token.colorPrimary,
+                        color: token.colorPrimaryText,
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
                       }}

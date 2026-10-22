@@ -364,12 +364,15 @@ export default function PocketsPage() {
                           }}
                         />
                         <Typography.Text
-                          style={{ ...labelStyle, color: token.colorPrimary }}
+                          style={{
+                            ...labelStyle,
+                            color: token.colorPrimaryText,
+                          }}
                         >
                           {t("activeWallet")}
                         </Typography.Text>
                       </Flex>
-                      <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                      <Typography.Title level={2} style={{ marginBottom: 0 }}>
                         {t("mainPocket")}
                       </Typography.Title>
                     </div>
@@ -392,7 +395,7 @@ export default function PocketsPage() {
                   <div style={{ marginTop: "auto" }}>
                     <Typography.Text
                       type="secondary"
-                      style={{ ...labelStyle, opacity: 0.6 }}
+                      style={{ ...labelStyle, color: token.colorTextDescription }}
                     >
                       {t("availableLiquidity")}
                     </Typography.Text>
@@ -430,7 +433,7 @@ export default function PocketsPage() {
                     position: "absolute",
                     bottom: 24,
                     right: 24,
-                    color: token.colorPrimary,
+                    color: token.colorPrimaryText,
                   }}
                 />
               </Card>
@@ -442,7 +445,7 @@ export default function PocketsPage() {
                 <Card styles={{ body: { minHeight: 160 } }}>
                   <Typography.Text
                     type="secondary"
-                    style={{ ...labelStyle, opacity: 0.6 }}
+                    style={{ ...labelStyle, color: token.colorTextDescription }}
                   >
                     {t("reserveProtocol")}
                   </Typography.Text>
@@ -459,6 +462,7 @@ export default function PocketsPage() {
                     })}
                   </Typography.Title>
                   <Progress
+                    aria-label={t("reserveProgressLabel")}
                     percent={reservedPercent}
                     showInfo={false}
                     strokeColor={`${token.colorPrimary}66`}
@@ -516,7 +520,7 @@ export default function PocketsPage() {
           {/* Pockets List with CRUD */}
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <Flex justify="space-between" align="center">
-              <Typography.Title level={3} style={{ marginBottom: 0 }}>
+              <Typography.Title level={2} style={{ marginBottom: 0 }}>
                 {t("myPockets")}
               </Typography.Title>
               <Tag bordered style={{ fontFamily: "monospace" }}>
@@ -678,7 +682,7 @@ export default function PocketsPage() {
                               <Typography.Text
                                 strong
                                 style={{
-                                  color: token.colorPrimary,
+                                  color: token.colorPrimaryText,
                                   fontSize: 12,
                                 }}
                               >
@@ -688,6 +692,9 @@ export default function PocketsPage() {
                           </Flex>
                           {pocket.target && (
                             <Progress
+                              aria-label={t("pocketProgressLabel", {
+                                name: pocket.name,
+                              })}
                               percent={Math.min(percentage, 100)}
                               showInfo={false}
                               strokeColor={token.colorPrimary}
@@ -750,7 +757,7 @@ export default function PocketsPage() {
             <Col xs={24} lg={14}>
               <Space direction="vertical" size={16} style={{ width: "100%" }}>
                 <Flex justify="space-between" align="center">
-                  <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                  <Typography.Title level={2} style={{ marginBottom: 0 }}>
                     {t("specialGoals")}
                   </Typography.Title>
                   <Link href="/investments">
@@ -823,7 +830,7 @@ export default function PocketsPage() {
                               {goal.locked ? (
                                 <Tag
                                   bordered={false}
-                                  color={token.colorPrimary}
+                                  color={token.colorPrimaryText}
                                   style={{ borderRadius: 9999, fontWeight: 700 }}
                                 >
                                   {t("interestRate", {
@@ -834,7 +841,7 @@ export default function PocketsPage() {
                                 <Typography.Text
                                   strong
                                   style={{
-                                    color: token.colorPrimary,
+                                    color: token.colorPrimaryText,
                                     fontSize: 12,
                                   }}
                                 >
@@ -846,7 +853,7 @@ export default function PocketsPage() {
                               <Typography.Text
                                 style={{
                                   ...labelStyle,
-                                  color: token.colorPrimary,
+                                  color: token.colorPrimaryText,
                                 }}
                               >
                                 <Lock /> {t("lockedAndGuaranteed")}
@@ -854,6 +861,9 @@ export default function PocketsPage() {
                             ) : (
                               <>
                                 <Progress
+                                  aria-label={t("pocketProgressLabel", {
+                                    name: goal.name,
+                                  })}
                                   percent={percentage}
                                   showInfo={false}
                                   strokeColor={token.colorPrimary}
@@ -888,7 +898,7 @@ export default function PocketsPage() {
             <Col xs={24} lg={10}>
               <Space direction="vertical" size={16} style={{ width: "100%" }}>
                 <Flex justify="space-between" align="center">
-                  <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                  <Typography.Title level={2} style={{ marginBottom: 0 }}>
                     {t("recentLedger")}
                   </Typography.Title>
                   <Flex
@@ -953,7 +963,7 @@ export default function PocketsPage() {
                             </Typography.Text>
                             <Typography.Text
                               type="secondary"
-                              style={{ ...labelStyle, opacity: 0.6 }}
+                              style={{ ...labelStyle, color: token.colorTextDescription }}
                             >
                               {t("noActivityDescription")}
                             </Typography.Text>
@@ -1022,7 +1032,7 @@ export default function PocketsPage() {
                                 strong
                                 style={{
                                   color: isCredit
-                                    ? token.colorPrimary
+                                    ? token.colorPrimaryText
                                     : token.colorText,
                                 }}
                               >
@@ -1057,7 +1067,7 @@ export default function PocketsPage() {
             <Flex justify="space-between" align="center">
               <Flex align="center" gap={12}>
                 <Users style={{ color: token.colorPrimary }} />
-                <Typography.Title level={3} style={{ marginBottom: 0 }}>
+                <Typography.Title level={2} style={{ marginBottom: 0 }}>
                   {t("sharedPocketsSection")}
                 </Typography.Title>
               </Flex>
@@ -1153,7 +1163,7 @@ export default function PocketsPage() {
                             <Typography.Text
                               strong
                               style={{
-                                color: token.colorPrimary,
+                                color: token.colorPrimaryText,
                                 fontSize: 12,
                               }}
                             >
@@ -1161,6 +1171,9 @@ export default function PocketsPage() {
                             </Typography.Text>
                           </Flex>
                           <Progress
+                            aria-label={t("pocketProgressLabel", {
+                              name: pocket.name,
+                            })}
                             percent={percentage}
                             showInfo={false}
                             strokeColor={token.colorPrimary}
@@ -1232,7 +1245,7 @@ export default function PocketsPage() {
                                       height: 24,
                                       borderRadius: "50%",
                                       background: `${token.colorPrimary}1A`,
-                                      color: token.colorPrimary,
+                                      color: token.colorPrimaryText,
                                       fontSize: 12,
                                       fontWeight: 700,
                                     }}
@@ -1251,7 +1264,7 @@ export default function PocketsPage() {
                                     bordered={false}
                                     color={
                                       member.role === "OWNER"
-                                        ? token.colorPrimary
+                                        ? token.colorPrimaryText
                                         : member.role === "ADMIN"
                                           ? token.colorSuccess
                                           : token.colorFill
@@ -1306,7 +1319,7 @@ export default function PocketsPage() {
                     <TrendingUp />
                   </Flex>
                   <Typography.Title
-                    level={3}
+                    level={2}
                     style={{ marginBottom: 0 }}
                   >
                     {t("wealthTitle")}
@@ -1336,7 +1349,7 @@ export default function PocketsPage() {
         >
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <div>
-              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+              <Typography.Title level={3} style={{ marginBottom: 0 }}>
                 {t("newPocketTitle")}
               </Typography.Title>
               <Typography.Text type="secondary">
@@ -1434,7 +1447,7 @@ export default function PocketsPage() {
         >
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <div>
-              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+              <Typography.Title level={3} style={{ marginBottom: 0 }}>
                 {t("addFunds")}
               </Typography.Title>
               <Typography.Text type="secondary">
@@ -1503,7 +1516,7 @@ export default function PocketsPage() {
         >
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <div>
-              <Typography.Title level={4} style={{ marginBottom: 0 }}>
+              <Typography.Title level={3} style={{ marginBottom: 0 }}>
                 {t("withdrawFunds")}
               </Typography.Title>
               <Typography.Text type="secondary">
@@ -1574,7 +1587,7 @@ export default function PocketsPage() {
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
             <div>
               <Typography.Title
-                level={4}
+                level={3}
                 style={{ marginBottom: 0, color: token.colorError }}
               >
                 <Flex align="center" gap={8}>

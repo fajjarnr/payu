@@ -158,6 +158,15 @@ const sharedComponentTokens: ComponentTokens = {
     controlHeight: 48,
     borderRadius: 12,
   },
+  Menu: {
+    // The selected item's label is text: the emerald default measures 1.9:1
+    // on the emerald tint (measured live on the dashboard sidebar).
+    itemSelectedColor: '#0B7A55',
+  },
+  Tabs: {
+    // The selected tab label is text too (1.83:1 on the layout background).
+    itemSelectedColor: '#0B7A55',
+  },
 };
 
 export const lightComponentTokens: ComponentTokens = {

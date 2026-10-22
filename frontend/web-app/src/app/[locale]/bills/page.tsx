@@ -40,6 +40,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { idempotencyKeyFor } from "@/lib/utils";
 import { notify as toast } from "@/lib/notify";
 import { formatCurrency, parseCurrencyExact } from "@/lib/currency";
+import { INK_ON_EMERALD } from "@/theme/tokens";
 
 type BillerIcon = React.ComponentType<{ style?: React.CSSProperties }>;
 
@@ -116,7 +117,8 @@ export default function BillsPage() {
       name: t("billerTypes.bpjs"),
       icon: Heart,
       bg: token.colorSuccess,
-      fg: token.colorTextLightSolid,
+      // Emerald fill: the icon needs the dark ink, white on emerald is 1.99:1.
+      fg: INK_ON_EMERALD,
       code: "BPJS",
     },
     {
@@ -283,7 +285,7 @@ export default function BillsPage() {
                     >
                       {t("serviceProvider")}
                     </Typography.Text>
-                    <Typography.Title level={4} style={{ margin: 0 }}>
+                    <Typography.Title level={2} style={{ margin: 0 }}>
                       {successData.billerName}
                     </Typography.Title>
                   </div>
@@ -444,12 +446,12 @@ export default function BillsPage() {
                       marginBottom: 4,
                       fontSize: 12,
                       letterSpacing: "0.1em",
-                      color: token.colorTextQuaternary,
+                      color: token.colorTextDescription,
                     }}
                   >
                     {t("serviceProvider")}
                   </Typography.Text>
-                  <Typography.Title level={3} style={{ margin: 0 }}>
+                  <Typography.Title level={2} style={{ margin: 0 }}>
                     {selectedBiller.name}
                   </Typography.Title>
                   <Typography.Text
@@ -519,7 +521,7 @@ export default function BillsPage() {
                         style={{
                           fontSize: 24,
                           fontWeight: 700,
-                          color: token.colorTextQuaternary,
+                          color: token.colorTextDescription,
                         }}
                       >
                         Rp
@@ -552,7 +554,7 @@ export default function BillsPage() {
                   fontSize: 12,
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  opacity: 0.6,
+                  color: token.colorTextDescription,
                 }}
               >
                 {t("encryptedTransactionNote")}
@@ -585,7 +587,6 @@ export default function BillsPage() {
             {isMd && (
               <Tag
                 color="success"
-                className="animate-pulse"
                 style={{
                   margin: 0,
                   padding: "12px 24px",
@@ -626,7 +627,7 @@ export default function BillsPage() {
                 fontSize: 12,
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                opacity: 0.6,
+                color: token.colorTextDescription,
               }}
             >
               {t("serviceCategory")}
@@ -676,7 +677,7 @@ export default function BillsPage() {
           </Card>
 
           <Space direction="vertical" size={24} style={{ width: "100%" }}>
-            <Typography.Title level={4} style={{ margin: 0 }}>
+            <Typography.Title level={2} style={{ margin: 0 }}>
               {t("recentActivity")}
             </Typography.Title>
             {!isLoading && recentBills.length > 0 ? (
@@ -748,7 +749,8 @@ export default function BillsPage() {
                               fontSize: 12,
                               letterSpacing: "0.2em",
                               textTransform: "uppercase",
-                              color: token.colorPrimary,
+                              // Deep brand green: the emerald on white is 1.99:1.
+                              color: token.colorPrimaryText,
                             }}
                           >
                             {bill.status}
@@ -777,7 +779,7 @@ export default function BillsPage() {
                       fontSize: 12,
                       letterSpacing: "0.2em",
                       textTransform: "uppercase",
-                      opacity: 0.6,
+                      color: token.colorTextDescription,
                     }}
                   >
                     {t("noRecentPayments")}

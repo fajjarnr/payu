@@ -157,7 +157,7 @@ export default function SettingsPage() {
                         ? formData.fullName.charAt(0).toUpperCase()
                         : "P"}
                     </Avatar>
-                    <Title level={3} style={{ margin: 0 }}>
+                    <Title level={2} style={{ margin: 0 }}>
                       {formData.fullName || t("profileNameFallback")}
                     </Title>
                     <Tag color="success">{t("premiumMember")}</Tag>
@@ -310,7 +310,7 @@ export default function SettingsPage() {
                           }}
                         />
                       </div>
-                      <Title level={3} style={{ margin: 0 }}>
+                      <Title level={2} style={{ margin: 0 }}>
                         {t("profileCredentials")}
                       </Title>
                     </Space>
@@ -453,7 +453,7 @@ export default function SettingsPage() {
             ) : (
               <Space direction="vertical" size={24} style={{ width: "100%" }}>
                 <div>
-                  <Title level={3} style={{ margin: 0 }}>
+                  <Title level={2} style={{ margin: 0 }}>
                     {t("menu.eStatement")}
                   </Title>
                   <Text

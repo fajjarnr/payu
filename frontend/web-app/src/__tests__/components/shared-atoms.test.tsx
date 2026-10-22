@@ -59,7 +59,7 @@ describe('shared atoms (foundation)', () => {
     expect(await axe(spinner)).toHaveNoViolations();
   });
 
-  it('EmptyState renders 64px icon + h3 + description + optional CTA', async () => {
+  it('EmptyState renders 64px icon + h2 + description + optional CTA', async () => {
     const { container } = renderWithIntl(
       <EmptyState
         title="Belum ada data"
@@ -68,7 +68,9 @@ describe('shared atoms (foundation)', () => {
         onAction={() => {}}
       />
     );
-    expect(screen.getByRole('heading', { level: 3, name: 'Belum ada data' })).toBeInTheDocument();
+    // h2, not h3: the empty state is a section under the page h1 (axe
+    // heading-order measured live across every route).
+    expect(screen.getByRole('heading', { level: 2, name: 'Belum ada data' })).toBeInTheDocument();
     expect(screen.getByText('Data akan muncul di sini')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Muat ulang' })).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
