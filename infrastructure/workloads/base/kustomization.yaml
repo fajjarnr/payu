@@ -41,6 +41,11 @@ resources:
 # ARCH-007: all remaining JVM workloads use the shared Hot Rod/mTLS contract.
 # The referenced secrets are provisioned externally; no credential material is
 # stored in this repository.
+# OVERLAY-STRUCT-001: the tls-client mount (volumeMounts/volumes index 1) and
+# the mTLS env injected below are DEVOURED on the payu-dev render path by
+# overlays/payu-dev/components/dev-cache (strategic $patch: delete + no-mount
+# since per-service renders never include this base patch). Promoted envs keep
+# the mTLS shape. Do NOT move this patch into per-service bases.
 patches:
   - target:
       group: apps
@@ -126,28 +131,9 @@ patches:
                     value: http://qris-simulator:8080
                   - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
                     value: payu-cache
-                  - name: PAYU_CACHE_REDIS_HOST
-                    $patch: delete
-                  - name: PAYU_CACHE_REDIS_PORT
-                    $patch: delete
-                  - name: PAYU_CACHE_REDIS_PASSWORD
-                    $patch: delete
-                  - name: PAYU_CACHE_REDIS_USERNAME
-                    $patch: delete
-                  - name: PAYU_CACHE_REDIS_URL
-                    $patch: delete
-                  - name: REDIS_HOST
-                    $patch: delete
-                  - name: REDIS_PORT
-                    $patch: delete
-                  - name: REDIS_PASSWORD
-                    $patch: delete
-                  - name: SPRING_DATA_REDIS_HOST
-                    $patch: delete
-                  - name: SPRING_DATA_REDIS_PORT
-                    $patch: delete
-                  - name: SPRING_DATA_REDIS_USERNAME
-                    $patch: delete
-                  - name: SPRING_DATA_REDIS_PASSWORD
-                    $patch: delete
+                  # OVERLAY-STRUCT-001: NO redis $patch:delete here. The leaf
+                  # bases carry the dev RESP triple (payu-cache-resp:11222) and
+                  # BOTH render paths (root + per-service) must keep it — the
+                  # 2026-10-12 wallet-only re-add proved per-target exceptions
+                  # do not scale. Promoted envs override via their own overlays.
 

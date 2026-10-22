@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/auth-service
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/auth-service
@@ -17,8 +21,9 @@ patches:
         value:
           name: SPRINGDOC_API_DOCS_ENABLED
           value: "true"
-  # WEB-AUTH-001: token-exchange client secret must match live realm client payu-web-app
-  # (dev-only value, same pattern as keycloak-realm-import.yaml).
+  # E2E-CLIENTSECRET-001: web client secret comes from the ESO-generated
+  # payu-keycloak-client-secrets (same source as PAYU_KEYCLOAK_CLIENT_SECRET),
+  # converged into the realm by keycloak-client-secret-sync-job. No static pin.
   - patch: |-
       apiVersion: apps/v1
       kind: Deployment
@@ -33,7 +38,10 @@ patches:
                   - name: PAYU_KEYCLOAK_WEB_CLIENT_ID
                     value: "payu-web-app"
                   - name: PAYU_KEYCLOAK_WEB_CLIENT_SECRET
-                    value: "payu-web-secret-dev-2026!"
+                    valueFrom:
+                      secretKeyRef:
+                        name: payu-keycloak-client-secrets
+                        key: payu-web-client-secret
   # WEB-CSP-001 issuer alignment: tokens carry the PUBLIC SSO issuer
   # (https://sso-dev...); validators must expect it. JWK/auth-server URLs stay
   # internal (in-cluster).

@@ -3,10 +3,14 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/gateway-service
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/gateway-service
-    newTag: "1.18.131"
+    newTag: "1.18.136"
 patches:
   - target:
       kind: Deployment
@@ -53,3 +57,9 @@ patches:
                     value: "https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu"
                   - name: QUARKUS_OIDC_AUTH_SERVER_URL
                     value: "http://payu-keycloak-service.payu-sso.svc.cluster.local:8080/realms/payu"
+                  # OVERLAY-STRUCT-001: dev-only rate-limit bypass for E2E
+                  # (X-E2E-Test header, E2E-RLS-001). Promoted from the root
+                  # overlay so per-service apply carries the same contract;
+                  # prod profile ignores it (BUG-AUTH-025).
+                  - name: GATEWAY_RATE_LIMIT_TEST_MODE
+                    value: "true"

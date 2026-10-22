@@ -79,7 +79,7 @@ class TenantFilterTest {
             given()
                 .header(new Header("X-Tenant-Id", "test-tenant"))
             .when()
-                .post("/api/v1/auth/login")
+                .post("/api/v1/auth/callback")
             .then()
                 .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(503)));
         }

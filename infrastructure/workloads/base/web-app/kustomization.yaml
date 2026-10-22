@@ -11,5 +11,9 @@ labels:
     app.kubernetes.io/name: web-app
     app.kubernetes.io/part-of: payu
     app.kubernetes.io/version: 1.18.74
+    # MESH-011: BFF joins the mesh so hop web-app -> gateway-service is mTLS
+    # with a SPIFFE identity (edge in Kiali) instead of plaintext; REQUIRED
+    # before namespace payu goes STRICT (plaintext would be rejected).
+    sidecar.istio.io/inject: "true"
   includeSelectors: false
   includeTemplates: true

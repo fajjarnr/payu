@@ -33,7 +33,12 @@ mesh_pkg_drift() {
     say "SKIP: mesh package $pkg (CRD $crd absent)"
     return
   fi
-  if ! out="$(oc apply --dry-run=server "$mode" "$pkg" 2>&1)"; then
+  # OVERLAY-STRUCT-001: server-side dry-run (matches how the packages are
+  # applied: `oc apply --server-side`). Client dry-run always reports
+  # `configured` for server-side-managed objects (no last-applied
+  # annotation), which is a false drift. Both `unchanged` and
+  # `serverside-applied` mean "render matches live".
+  if ! out="$(oc apply --server-side --dry-run=server --field-manager=payu-dev-root "$mode" "$pkg" 2>&1)"; then
     flag "mesh package $pkg: server dry-run failed: $out"
     return
   fi
@@ -43,7 +48,7 @@ mesh_pkg_drift() {
       *) continue ;;
     esac
     case "$line" in
-      *"unchanged (server dry run)") ;;
+      *"unchanged (server dry run)"|*"serverside-applied (server dry run)") ;;
       *) flag "mesh package $pkg: $line" ;;
     esac
   done <<<"$out"
@@ -111,6 +116,52 @@ while IFS= read -r img; do
   name="${repo#*/}"
   oc get istag "$name:$tag" -n "$NS" -o name >/dev/null 2>&1 || flag "registry tag missing: $img"
 done < <(oc kustomize "$OVERLAY" 2>/dev/null | grep -E '^[[:space:]]*image: ' | awk '{print $2}' | sort -u | grep -v '^docker.io\|quay.io\|registry.access\|ghcr.io')
+
+# OVERLAY-STRUCT-001 — root-vs-per-service parity: one `oc apply -k` of
+# EITHER unit must carry the same Deployment env contract. Compares the root
+# render against every per-service render: any env present in root but absent
+# in per-service (or vice versa, outside the documented per-service-only
+# allowlist) fails. KEYCLOAK_URL on analytics is exempt: root carries it as a
+# service-endpoints ref, per-service as the same resolved literal.
+root_env="$(oc kustomize "$OVERLAY" 2>/dev/null | python3 -c "
+import sys, yaml
+for d in yaml.safe_load_all(sys.stdin):
+    if isinstance(d, dict) and d.get('kind') == 'Deployment':
+        envs = ','.join(sorted(e['name'] for e in d['spec']['template']['spec']['containers'][0].get('env', []) if 'name' in e))
+        print(d['metadata']['name'] + '|' + envs)
+" 2>/dev/null | sort || true)"
+for dir in "$OVERLAY"/*/; do
+  [ -f "$dir/kustomization.yaml" ] || continue
+  case "$dir" in */components/*) continue;; esac
+  rendered="$(oc kustomize "$dir" 2>/dev/null || true)"
+  [ -z "$rendered" ] && continue
+  echo "$rendered" | python3 -c "
+import sys, yaml
+for d in yaml.safe_load_all(sys.stdin):
+    if not isinstance(d, dict) or d.get('kind') != 'Deployment': continue
+    envs = ','.join(sorted(e['name'] for e in d['spec']['template']['spec']['containers'][0].get('env', []) if 'name' in e))
+    print(d['metadata']['name'] + '|' + envs)
+" 2>/dev/null | while IFS='|' read -r deploy svc_env; do
+    [ -z "$deploy" ] && continue
+    want="$(echo "$root_env" | grep "^$deploy|" | cut -d'|' -f2 || true)"
+    [ -z "$want" ] && { flag "parity $deploy per-service not in root render"; continue; }
+    IFS=',' read -ra rnames <<<"$want"
+    IFS=',' read -ra snames <<<"$svc_env"
+    for n in "${rnames[@]}"; do
+      [ -z "$n" ] && continue
+      echo ",$svc_env," | grep -q ",$n," || flag "parity $deploy root-only env (stripped by per-service apply): $n"
+    done
+    for n in "${snames[@]}"; do
+      [ -z "$n" ] && continue
+      case ",$want," in *",$n,"*) continue;; esac
+      case "$deploy:$n" in
+        analytics-service:KEYCLOAK_URL) continue;; # ref-vs-literal, same resolved value
+        *:MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS|*:PAYU_KEYCLOAK_WEB_CLIENT_ID|*:PAYU_KEYCLOAK_WEB_CLIENT_SECRET|*:OIDC_ISSUER|*:WS_TICKET_SECRET|*:SERVICES_ANALYTICS_URL|*:NEXT_PUBLIC_WS_URL) continue;;
+      esac
+      flag "parity $deploy per-service-only env (stripped by root apply): $n"
+    done
+  done
+done
 
 # Mesh packages: the control plane, the console CRs, the per-environment
 # policy overlay and the dev-scoped ingress/telemetry packages.

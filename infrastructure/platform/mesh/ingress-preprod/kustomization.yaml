@@ -1,0 +1,23 @@
+# Preprod ingress (MESH-008): mirrors infrastructure/platform/mesh/ingress (dev).
+#
+#   oc apply -k infrastructure/platform/mesh/ingress-preprod
+#
+# Repo + dry-run only for now: no preprod workloads run behind a gateway yet,
+# so this package is not applied. NetworkPolicies and the simulator-deny
+# policy from dev are deliberately NOT mirrored (dev-specific: they reference
+# the payu-dev namespace and the dev gateway identity).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - gateway.yaml
+  - route.yaml
+  - http-route.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: payu
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/component: service-mesh
+    includeSelectors: false

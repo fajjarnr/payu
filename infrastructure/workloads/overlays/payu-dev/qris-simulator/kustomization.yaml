@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/qris-simulator
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/qris-simulator

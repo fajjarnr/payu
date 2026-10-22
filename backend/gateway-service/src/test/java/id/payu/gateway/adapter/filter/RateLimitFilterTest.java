@@ -25,7 +25,7 @@ class RateLimitFilterTest {
         void shouldAllowRequestsWithinAuthRateLimit() {
             given()
                 .when()
-                    .post("/api/v1/auth/login")
+                    .post("/api/v1/auth/callback")
                 .then()
                     .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(503)));
         }
@@ -37,7 +37,7 @@ class RateLimitFilterTest {
             Response response = given()
                 .header("X-Forwarded-For", clientId)
             .when()
-                .post("/api/v1/auth/login");
+                .post("/api/v1/auth/callback");
 
             int statusCode = response.getStatusCode();
             if (statusCode == 429) {
@@ -161,7 +161,7 @@ class RateLimitFilterTest {
             Response response = given()
                 .header("X-Forwarded-For", clientId)
             .when()
-                .post("/api/v1/auth/login");
+                .post("/api/v1/auth/callback");
 
             int statusCode = response.getStatusCode();
             if (statusCode == 429) {
@@ -182,7 +182,7 @@ class RateLimitFilterTest {
             Response response = given()
                 .header("X-Forwarded-For", clientId)
             .when()
-                .post("/api/v1/auth/login");
+                .post("/api/v1/auth/callback");
 
             int statusCode = response.getStatusCode();
             if (statusCode == 429) {
@@ -211,7 +211,7 @@ class RateLimitFilterTest {
             given()
                 .header("X-Forwarded-For", clientId)
             .when()
-                .post("/api/v1/auth/login")
+                .post("/api/v1/auth/callback")
             .then()
                 .statusCode(anyOf(is(200), is(400), is(404), is(415), is(429), is(503)));
 

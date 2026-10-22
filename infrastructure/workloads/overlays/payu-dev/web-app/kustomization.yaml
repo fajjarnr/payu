@@ -3,11 +3,37 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/web-app
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/web-app
     newTag: "1.18.135"
 patches:
+  # OVERLAY-STRUCT-001: dev-only runtime key (promoted from the root overlay
+  # so per-service apply carries the same contract). Base points at the
+  # Vault-provisioned session-secrets (absent in dev); dev uses the
+  # pre-provisioned key in dev-env-secrets. Strategic merge REPLACES the
+  # whole valueFrom (no dual value+valueFrom).
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: web-app
+      spec:
+        template:
+          spec:
+            containers:
+              - name: app
+                env:
+                  - name: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: dev-env-secrets
+                        key: encryption-key
+                        optional: false
   - target:
       kind: Deployment
       name: web-app

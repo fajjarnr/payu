@@ -1,0 +1,25 @@
+# MESH-013: preprod external hosts for the mesh (ServiceEntry, MESH_EXTERNAL).
+#
+# Hosts are taken from repo config only — nothing invented:
+# - api-preprod.bifast.or.id / api-preprod.qris-processor.co.id:
+#   SERVICES_BIFAST_URL / SERVICES_QRIS_URL defaults in
+#   backend/transaction-service/src/main/resources/application-preprod.yml
+# - sso-preprod.payu.id: OIDC issuer default in
+#   backend/*/src/main/resources/application-preprod.yml
+# All preprod external calls are https, so only port 443 is declared.
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: payu-external-services
+  namespace: payu-preprod
+spec:
+  hosts:
+    - api-preprod.bifast.or.id
+    - api-preprod.qris-processor.co.id
+    - sso-preprod.payu.id
+  ports:
+    - number: 443
+      name: https
+      protocol: TLS
+  location: MESH_EXTERNAL
+  resolution: DNS

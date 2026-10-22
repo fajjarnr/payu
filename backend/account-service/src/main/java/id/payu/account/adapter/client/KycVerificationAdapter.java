@@ -23,7 +23,7 @@ import java.util.UUID;
 @Slf4j
 public class KycVerificationAdapter implements KycVerificationPort {
 
-    private final GatewayClient gatewayClient;
+    private final DukcapilSimulatorClient dukcapilSimulatorClient;
 
     @Override
     @Deprecated
@@ -35,7 +35,7 @@ public class KycVerificationAdapter implements KycVerificationPort {
             "2000-01-01"
         );
 
-        VerifyNikResponse response = gatewayClient.verifyNik(request);
+        VerifyNikResponse response = dukcapilSimulatorClient.verifyNik(request);
 
         // Convert VerifyNikResponse to DukcapilResponse for backward compatibility
         return new DukcapilResponse(
@@ -59,7 +59,7 @@ public class KycVerificationAdapter implements KycVerificationPort {
         log.info("NIK verification request [requestId={}, nik={}]", requestId, maskedNik);
 
         try {
-            VerifyNikResponse response = gatewayClient.verifyNik(request);
+            VerifyNikResponse response = dukcapilSimulatorClient.verifyNik(request);
             log.info("NIK verification completed [requestId={}, verified={}]", requestId, response.verified());
             return response;
         } catch (Exception e) {

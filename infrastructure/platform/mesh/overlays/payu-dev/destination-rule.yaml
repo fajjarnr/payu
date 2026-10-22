@@ -1,0 +1,25 @@
+# MESH-012: dev-wide default DestinationRule (no per-service subsets).
+#
+# Single wildcard host covers every in-mesh service in payu-dev; per-service
+# tuning is intentionally NOT added here. No `subsets` (no canary labels on
+# workloads), no `tls` (mTLS posture is owned by PeerAuthentication —
+# PERMISSIVE in payu-dev), and no `retries` (never add mesh retries: the
+# grpc-starter already retries idempotent unary calls, and wallet mutations
+# are deduplicated by referenceId — a mesh-level retry would double-spend).
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: payu-dev-default
+  namespace: payu-dev
+spec:
+  host: "*.payu-dev.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 10s
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50

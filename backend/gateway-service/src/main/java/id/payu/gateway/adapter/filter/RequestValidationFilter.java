@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
  * Example:
  *   schemas/accounts-create.json       → POST /api/v1/accounts
  *   schemas/transactions-create.json   → POST /api/v1/transactions
- *   schemas/auth-login.json            → POST /api/v1/auth/login
  */
 @Provider
 @ApplicationScoped
@@ -52,7 +51,6 @@ public class RequestValidationFilter implements ContainerRequestFilter {
 
     static {
         Map<String, String> map = new java.util.LinkedHashMap<>();
-        map.put("/api/v1/auth/login", "auth-login.json");
         map.put("/api/v1/auth/register", "auth-register.json");
         map.put("/api/v1/auth/refresh", "auth-refresh.json");
 

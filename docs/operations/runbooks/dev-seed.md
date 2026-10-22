@@ -190,7 +190,7 @@ Verified live 2026-10-20: `sub=8d177115-af87-47d5-8b94-a09e7cfa55bc`,
 `account_id=750e8400-e29b-41d4-a716-446655440001`,
 `iss=https://sso-dev.apps.payu.ocp.fajjjar.my.id/realms/payu`.
 
-## 5. Client secret realm harus diselaraskan dengan ESO (MANUAL)
+## 5. Client secret realm diselaraskan dengan ESO (OTOMATIS via PostSync Job)
 
 Dev memakai ESO `Password` generator (`infrastructure/workloads/overlays/payu-dev/keycloak-client-secret-generator.yaml`)
 yang menghasilkan nilai **acak** untuk `payu-keycloak-client-secrets`. Repo pin
@@ -202,9 +202,11 @@ POST .../realms/payu/protocol/openid-connect/token  client_secret=payu-backend-s
 {"error":"unauthorized_client","error_description":"Invalid client or Invalid client credentials"}
 ```
 
-`keycloak-db-secret-sync.yaml` hanya menyalin secret ESO ke namespace `payu-sso`
-(ExternalSecret): **tidak** menulis nilainya ke dalam DB realm. Jadi keselarasan
-harus dilakukan manual sekali:
+`keycloak-client-secret-sync` (Job PostSync di `identity/overlays/common`, E2E-CLIENTSECRET-001
+CLOSED 2026-10-22) membaca `payu-keycloak-client-secrets` ter-mirror di `payu-sso` dan
+menulisnya ke kedua client realm via GET-modify-PUT (L-482: `POST client-secret` me-regenerate
+acak — jangan dipakai). Job idempoten + fail-closed (check `client_credentials` akhir).
+Perintah manual di bawah hanya untuk darurat (Job gagal / cluster tanpa Argo):
 
 ```bash
 # nilai yang DIPAKAI service (auth-service, partner-service) = nilai ESO live
@@ -225,21 +227,16 @@ c=json.load(sys.stdin); c['secret']=os.environ['BACKEND_SECRET']; print(json.dum
     -d @- "https://${EXT_HOST}/admin/realms/payu/clients/${CID}" -o /dev/null -w '%{http_code}\n'   # 204
 ```
 
-Untuk `payu-web-app`, live auth-service memakai `PAYU_KEYCLOAK_WEB_CLIENT_SECRET`
-**hardcoded** `payu-web-secret-dev-2026!` (bukan secretRef), jadi realm
-`payu-web-app` harus bernilai sama dengan string itu. Verified live 2026-10-20:
-kedua client lalu bisa token:
+Untuk `payu-web-app`, `auth-service` kini membaca `PAYU_KEYCLOAK_WEB_CLIENT_SECRET` dari
+secretRef ESO (bukan hardcoded) — realm `payu-web-app` = nilai ESO `payu-web-client-secret`.
+Verified live 2026-10-22: Job `Complete`, kedua client token 200:
 
 ```bash
-# payu-backend client_credentials
+# payu-backend client_credentials (nilai ESO live)
 curl -skS -X POST "https://${EXT_HOST}/realms/payu/protocol/openid-connect/token" \
-  -d grant_type=client_credentials -d client_id=payu-backend -d "client_secret=${BACKEND_SECRET}"
+  -d grant_type=client_credentials -d client_id=payu-backend --data-urlencode "client_secret=${BACKEND_SECRET}"
 # {"access_token":"...","expires_in":300}
 ```
-
-Utat repo yang belum tuntas: tiket `E2E-CLIENTSECRET-001` di
-`docs/roadmap/TODOS.md` (opsi fix: drop generator di dev, atau tambah PostSync
-Job yang menulis ESO ke realm).
 
 ## 6. Verifikasi seed end-to-end (semua harus cocok)
 

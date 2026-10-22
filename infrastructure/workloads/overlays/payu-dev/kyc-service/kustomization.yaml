@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/kyc-service
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/kyc-service

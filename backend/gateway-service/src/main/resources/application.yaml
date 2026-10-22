@@ -383,7 +383,6 @@ gateway:
     bypass-paths:
       - "/health"
       - "/q/"
-      - "/api/v1/auth/login"
       - "/api/v1/accounts/register"
   # Request Signing (HMAC-SHA256)
   request-signing:
@@ -590,10 +589,9 @@ gateway:
       service: "cms-service"
       target-prefix: "/api/v1/public/contents"
       methods: ["GET"]
-    "simulator/dukcapil":
-      service: "dukcapil-simulator"
-      target-prefix: "/api/v1"
-      methods: ["POST"]
+    # MESH-007: "simulator/dukcapil" dispatch route removed — account-service
+    # calls dukcapil-simulator directly (DukcapilSimulatorClient). The gateway
+    # SimulatorGatewayResource proxy endpoints remain for bifast/qris/manual use.
     statements:
       service: "statement-service"
       target-prefix: "/api/v1/statements"

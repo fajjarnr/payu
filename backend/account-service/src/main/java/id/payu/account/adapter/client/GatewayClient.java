@@ -1,7 +1,5 @@
 package id.payu.account.adapter.client;
 
-import id.payu.account.interfaces.dto.VerifyNikRequest;
-import id.payu.account.interfaces.dto.VerifyNikResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,12 +18,8 @@ import java.util.Map;
 )
 public interface GatewayClient {
 
-    /**
-     * Verify NIK with Dukcapil simulator.
-     * Returns detailed citizen data for comprehensive verification.
-     */
-    @PostMapping("/api/v1/simulator/dukcapil/verify")
-    VerifyNikResponse verifyNik(@RequestBody VerifyNikRequest request);
+    // MESH-007: verifyNik moved to DukcapilSimulatorClient (direct call to
+    // dukcapil-simulator, no longer via gateway /api/v1/simulator/dukcapil/verify).
 
     /**
      * Register a new user in the identity provider (Keycloak) via auth-service.

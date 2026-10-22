@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/analytics-service
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/analytics-service

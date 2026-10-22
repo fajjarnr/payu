@@ -42,7 +42,7 @@ class AuthorizationFilterTest {
     }
 
     @Test
-    @DisplayName("Should bypass authorization for public auth login endpoint")
+    @DisplayName("Should bypass authorization for public auth callback endpoint")
     void testPublicEndpointBypass_Callback() {
         // The auth endpoint is public but returns 404/503 in test since backend is not available
         given()
@@ -50,6 +50,20 @@ class AuthorizationFilterTest {
             .get("/api/v1/auth/callback")
             .then()
             .statusCode(anyOf(is(200), is(404), is(503)));
+    }
+
+    @Test
+    @DisplayName("MESH-007: simulator verify path is NOT public — requires JWT")
+    void testSimulatorVerifyRequiresAuth() {
+        // account-service calls dukcapil-simulator directly (DukcapilSimulatorClient);
+        // the gateway proxy path must no longer bypass authorization.
+        given()
+            .contentType("application/json")
+            .body("{\"nik\":\"3201234567890001\",\"fullName\":\"Test User\"}")
+            .when()
+            .post("/api/v1/simulator/dukcapil/verify")
+            .then()
+            .statusCode(401);
     }
 
     @Test

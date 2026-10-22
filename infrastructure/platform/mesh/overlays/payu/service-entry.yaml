@@ -1,0 +1,27 @@
+# MESH-013: prod external hosts for the mesh (ServiceEntry, MESH_EXTERNAL).
+#
+# Hosts are taken from repo config only — nothing invented:
+# - sso-prod.apps.fajjjar.my.id: OIDC_ISSUER in
+#   infrastructure/workloads/overlays/payu-prod/kustomization.yaml
+# - api.bi.go.id: FX provider default in
+#   backend/fx-service/src/main/resources/application.yml
+#   (FX_PROVIDER_URL default https://api.bi.go.id/fx).
+# SERVICES_BIFAST_URL / SERVICES_QRIS_URL have no repo default for prod
+# (fail-fast ${VAR} in application-prod.yml, injected at deploy time), so
+# they are deliberately NOT modeled here — no placeholder hosts.
+# All prod external calls are https, so only port 443 is declared.
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: payu-external-services
+  namespace: payu
+spec:
+  hosts:
+    - sso-prod.apps.fajjjar.my.id
+    - api.bi.go.id
+  ports:
+    - number: 443
+      name: https
+      protocol: TLS
+  location: MESH_EXTERNAL
+  resolution: DNS

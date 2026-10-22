@@ -49,10 +49,10 @@ class RequestValidationFilterTest {
     class SchemaResolution {
 
         @Test
-        @DisplayName("should resolve auth login schema")
-        void shouldResolveAuthLoginSchema() {
+        @DisplayName("AUTH-CONTRACT-001: dead login path has no schema")
+        void shouldReturnNullForDeadLoginPath() {
             JsonSchema schema = filter.getSchemaForPath("/api/v1/auth/login");
-            assertNotNull(schema, "Auth login schema should be loaded from classpath");
+            assertNull(schema, "POST /api/v1/auth/login was removed (LOGIN-003); no schema must resolve");
         }
 
         @Test
@@ -115,32 +115,7 @@ class RequestValidationFilterTest {
     @DisplayName("Schema Validation")
     class SchemaValidation {
 
-        @Test
-        @DisplayName("should validate valid auth login request")
-        void shouldValidateValidAuthLogin() {
-            JsonSchema schema = filter.getSchemaForPath("/api/v1/auth/login");
-            assertNotNull(schema);
-
-            var node = new ObjectMapper().createObjectNode()
-                    .put("username", "testuser")
-                    .put("password", "securepass123");
-
-            var errors = schema.validate(node);
-            assertTrue(errors.isEmpty(), "Valid login should pass validation: " + errors);
-        }
-
-        @Test
-        @DisplayName("should reject auth login without required fields")
-        void shouldRejectLoginWithoutRequired() {
-            JsonSchema schema = filter.getSchemaForPath("/api/v1/auth/login");
-            assertNotNull(schema);
-
-            var node = new ObjectMapper().createObjectNode()
-                    .put("username", "testuser");
-
-            var errors = schema.validate(node);
-            assertFalse(errors.isEmpty(), "Missing password should fail validation");
-        }
+        // AUTH-CONTRACT-001: POST /api/v1/auth/login removed (LOGIN-003); its schema tests were deleted.
 
         @Test
         @DisplayName("should reject transfer with zero amount")

@@ -85,7 +85,7 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await expect(authPage.locator('[data-testid="recipient-account-input"]')).toBeVisible({ timeout: 15000 });
 
     await authPage.locator('[data-testid="recipient-account-input"]').fill(RECIPIENT);
-    await authPage.getByLabel('Nominal Transfer').fill(String(AMOUNT));
+    await authPage.locator('[data-testid="amount-input"]').fill(String(AMOUNT));
     await authPage.locator('[data-testid="description-input"]').fill(MEMO).catch(() => {});
     await authPage.locator('[data-testid="review-transfer-button"]').click();
     // The review view has no "Tinjau Transfer" title; it shows the amount summary
@@ -116,7 +116,7 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await authPage.goto('/transfer');
     await waitForPageStable(authPage);
     await authPage.locator('[data-testid="recipient-account-input"]').fill(RECIPIENT);
-    await authPage.getByLabel('Nominal Transfer').fill('5000');
+    await authPage.locator('[data-testid="amount-input"]').fill('5000');
     await authPage.locator('[data-testid="description-input"]').fill(memo).catch(() => {});
     await authPage.locator('[data-testid="review-transfer-button"]').click();
     await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible({ timeout: 10000 });
@@ -149,7 +149,7 @@ test.describe('PayU E2E — full money journey (real)', () => {
     await expect(authPage.locator('[data-testid="recipient-account-input"]')).toBeVisible({ timeout: 15000 });
 
     await authPage.locator('[data-testid="recipient-account-input"]').fill(RECIPIENT);
-    await authPage.getByLabel('Nominal Transfer').fill('5000');
+    await authPage.locator('[data-testid="amount-input"]').fill('5000');
     await authPage.locator('[data-testid="description-input"]').fill(MEMO).catch(() => {});
     await authPage.locator('[data-testid="review-transfer-button"]').click();
     await expect(authPage.locator('[data-testid="confirm-transfer-button"]')).toBeVisible({ timeout: 10000 });

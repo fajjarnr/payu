@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/product-catalog-service
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/product-catalog-service

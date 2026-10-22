@@ -1327,6 +1327,26 @@ class DevSecOpsArchitectureContractTest(unittest.TestCase):
         }
         self.assertNotIn("allow-kafka-platform", names)
 
+    def test_no_mesh_manifest_defines_istio_system_peer_authentication(self) -> None:
+        # MESH-002: a root-namespace (istio-system) STRICT PeerAuthentication
+        # binds every namespace in the mesh, so on a cluster hosting
+        # payu-dev alongside sit/uat the dev debugging path dies too.
+        # No manifest under infrastructure/platform/mesh may define a
+        # PeerAuthentication in the istio-system namespace; the posture
+        # lives in the per-env overlays (namespace-scoped, no selector).
+        mesh_root = REPO_ROOT / "infrastructure/platform/mesh"
+        offenders = [
+            str(path.relative_to(REPO_ROOT))
+            for path in sorted(mesh_root.rglob("*.yaml"))
+            if any(
+                document.get("kind") == "PeerAuthentication"
+                and document.get("metadata", {}).get("namespace")
+                == "istio-system"
+                for document in load_documents(path)
+            )
+        ]
+        self.assertEqual([], offenders)
+
 
 if __name__ == "__main__":
     unittest.main()

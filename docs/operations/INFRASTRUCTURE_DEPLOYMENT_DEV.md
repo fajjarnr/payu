@@ -188,18 +188,17 @@ rtk oc get job keycloak-admin-password-sync -n payu-sso
 #    + selaraskan client secret realm dengan nilai ESO. Lihat:
 #    docs/operations/runbooks/dev-seed.md bagian 4-5
 
-# 5. images (build + push), baru workload: ROOT DULU, PER-SERVICE TERAKHIR.
-#    Field manager root harus TERPISAH dari per-service, dan keduanya perlu
-#    --force-conflicts: root memegang kontrak OIDC (QUARKUS_OIDC_DISCOVERY_ENABLED,
-#    QUARKUS_OIDC_JWKS_PATH, QUARKUS_TLS_TRUST_ALL) yang ada HANYA di root overlay,
-#    sedangkan per-service memegang issuer publik + env per service. Tanpa
-#    pemisahan itu, apply per-service men-strip kontrak OIDC dan
-#    api-portal-service / notification-service gagal start dengan
-#    SSLHandshakeException (certificate_unknown) PKIX path building failed.
+# 5. images (build + push), baru workload: SATU apply cukup (OVERLAY-STRUCT-001
+#    CLOSED 2026-10-22 — root + per-service overlay berbagi kontrak OIDC/cache
+#    via Kustomize Components, root kini 30/30 Deployment). Pilih SALAH SATU:
+#    (a) root untuk bootstrap fleet penuh, atau (b) loop per-service untuk
+#    deploy bertarget. Keduanya membawa kontrak env yang sama (guard paritas di
+#    verify-overlay-drift.sh menjaganya).
 rtk oc apply --server-side --force-conflicts --field-manager=payu-dev-root -k infrastructure/workloads/overlays/payu-dev
-for d in infrastructure/workloads/overlays/payu-dev/*/; do
-  [ -f "$d/kustomization.yaml" ] && rtk oc apply --server-side --force-conflicts -k "$d"
-done
+# ATAU bertarget:
+# for d in infrastructure/workloads/overlays/payu-dev/*/; do
+#   [ -f "$d/kustomization.yaml" ] && rtk oc apply --server-side --force-conflicts -k "$d"
+# done
 ```
 
 Setelah ApplicationSet aktif, perubahan workload normal harus melalui Git dan
@@ -211,17 +210,14 @@ rtk oc get applications.argoproj.io identity-dev -n openshift-gitops
 rtk oc get events -n payu-dev --field-selector type=Warning --sort-by=.lastTimestamp | rtk tail -60
 ```
 
-### Jebakan bootstrap cluster baru (terverifikasi 2026-10-20)
+### Jebakan bootstrap cluster baru (terverifikasi 2026-10-20; overlay CLOSED 2026-10-22)
 
-- **Root overlay dan per-service overlay adalah dua deploy unit berbeda.** Root
-  (`overlays/payu-dev`, 29 Deployment) men-strip env yang hanya ada di
-  per-service overlay (per-service punya 201 env ekstra per pod template), jadi
-  **root wajib di-apply lebih dulu, per-service terakhir**. `analytics-service`
-  bahkan tak bisa di-apply root sama sekali (`KEYCLOAK_URL` punya `value` +
-  `valueFrom` -> Deployment invalid). Live state sekarang adalah **union** dua
-  layer, yang **tidak reproducible oleh satu `oc apply -k`**. Guard drift
-  (`scripts/verify-overlay-drift.sh`) membandingkan live vs **per-service** saja.
-  Tiket: `docs/roadmap/TODOS.md` -> `OVERLAY-STRUCT-001`.
+- **~~Root overlay dan per-service overlay adalah dua deploy unit berbeda~~ CLOSED 2026-10-22
+  (`OVERLAY-STRUCT-001`)**: kontrak OIDC/cache/shared-endpoints kini di Kustomize Components
+  (`overlays/payu-dev/components/dev-cache`, `dev-oidc`) yang dipakai root + 30 per-service —
+  satu `oc apply -k` dari unit mana pun membawa kontrak env yang sama (root 30/30 Deployment,
+  128 objek; guard paritas + `test_dev_workload_overlays_are_single_apply_units`). Sebelumnya:
+  root (29 Deployment) men-strip env per-service dan sebaliknya; live = union tak reproducible.
 - **Pod instance CNPG yang Pending bisa membawa anti-afinitas lawas.** Job
   `payu-database-2-join` macet ~20 menit karena pod template-nya punya
   **required** anti-afinitas zona dari generasi Cluster lama, padahal keempat node

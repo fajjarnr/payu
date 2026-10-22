@@ -120,7 +120,7 @@ public class RateLimitV2IntegrationTest {
         for (int i = 0; i < 3; i++) {
             given()
                     .when()
-                    .get("/api/v1/auth/login")
+                    .get("/api/v1/auth/callback")
                     .then()
                     .statusCode(anyOf(is(200), is(401), is(404), is(503)));
         }

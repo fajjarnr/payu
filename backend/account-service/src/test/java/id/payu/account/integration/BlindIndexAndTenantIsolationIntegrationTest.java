@@ -1,6 +1,6 @@
 package id.payu.account.integration;
 
-import id.payu.account.adapter.client.GatewayClient;
+import id.payu.account.adapter.client.DukcapilSimulatorClient;
 import id.payu.account.adapter.client.IdentityProviderAdapter;
 import id.payu.account.adapter.persistence.repository.UserRepository;
 import id.payu.account.application.service.UserApplicationService;
@@ -69,7 +69,7 @@ class BlindIndexAndTenantIsolationIntegrationTest {
     private BlindIndexService blindIndexService;
 
     @MockitoBean
-    private GatewayClient gatewayClient;
+    private DukcapilSimulatorClient dukcapilSimulatorClient;
 
     @MockitoBean
     private IdentityProviderAdapter identityProviderAdapter;
@@ -184,7 +184,7 @@ class BlindIndexAndTenantIsolationIntegrationTest {
         );
         given(identityProviderAdapter.provisionUser(any(), any(), any(), any()))
                 .willReturn("iam-" + username);
-        given(gatewayClient.verifyNik(any()))
+        given(dukcapilSimulatorClient.verifyNik(any()))
                 .willReturn(new VerifyNikResponse(
                         UUID.randomUUID().toString(),
                         request.nik(),

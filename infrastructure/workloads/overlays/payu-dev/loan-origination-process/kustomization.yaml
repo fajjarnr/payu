@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/loan-origination-process
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   - name: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process
     newName: image-registry.openshift-image-registry.svc:5000/payu-dev/loan-origination-process

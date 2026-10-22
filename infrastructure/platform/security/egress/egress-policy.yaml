@@ -1,3 +1,13 @@
+# SUPERSEDED (ServiceEntry only): the payu-egress-gateway ServiceEntry below
+# is superseded by per-env ServiceEntry packages (MESH-013):
+# infrastructure/platform/mesh/overlays/payu-uat/service-entry.yaml,
+# infrastructure/platform/mesh/overlays/payu-preprod/service-entry.yaml and
+# infrastructure/platform/mesh/overlays/payu/service-entry.yaml (prod:
+# sso-prod.apps.fajjjar.my.id + api.bi.go.id, no invented hosts).
+# This file is kept because the payu-egress-allow NetworkPolicy above is
+# still the egress topology for payu-dev. Do not add new hosts here; extend
+# the per-env ServiceEntry packages instead.
+
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

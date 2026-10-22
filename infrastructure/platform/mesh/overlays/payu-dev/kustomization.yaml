@@ -15,3 +15,4 @@ namespace: payu-dev
 
 resources:
   - peer-authentication.yaml
+  - destination-rule.yaml

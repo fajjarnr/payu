@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 class KycVerificationAdapterTest {
 
     @Mock
-    private GatewayClient gatewayClient;
+    private DukcapilSimulatorClient dukcapilSimulatorClient;
 
     private KycVerificationAdapter kycVerificationAdapter;
 
@@ -35,7 +35,7 @@ class KycVerificationAdapterTest {
 
     @BeforeEach
     void setUp() {
-        kycVerificationAdapter = new KycVerificationAdapter(gatewayClient);
+        kycVerificationAdapter = new KycVerificationAdapter(dukcapilSimulatorClient);
 
         validRequest = new VerifyNikRequest(
             "3201234567890001",
@@ -64,7 +64,7 @@ class KycVerificationAdapterTest {
         @Test
         @DisplayName("should return verified response when gateway returns success")
         void shouldReturnVerifiedResponseWhenGatewayReturnsSuccess() {
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(successResponse);
 
             VerifyNikResponse result = kycVerificationAdapter.verifyNik(validRequest);
@@ -83,7 +83,7 @@ class KycVerificationAdapterTest {
                 UUID.randomUUID().toString(),
                 "3201234567890001"
             );
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(notFoundResponse);
 
             VerifyNikResponse result = kycVerificationAdapter.verifyNik(validRequest);
@@ -100,7 +100,7 @@ class KycVerificationAdapterTest {
                 UUID.randomUUID().toString(),
                 "3201234567890001"
             );
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(blockedResponse);
 
             VerifyNikResponse result = kycVerificationAdapter.verifyNik(validRequest);
@@ -113,7 +113,7 @@ class KycVerificationAdapterTest {
         @Test
         @DisplayName("should throw exception when gateway throws exception")
         void shouldThrowExceptionWhenGatewayThrows() {
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willThrow(new RuntimeException("Network error"));
 
             assertThatThrownBy(() -> kycVerificationAdapter.verifyNik(validRequest))
@@ -125,7 +125,7 @@ class KycVerificationAdapterTest {
         @Test
         @DisplayName("should mask NIK in logs")
         void shouldMaskNikInLogs() {
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(successResponse);
 
             kycVerificationAdapter.verifyNik(validRequest);
@@ -156,7 +156,7 @@ class KycVerificationAdapterTest {
                 "ACTIVE"
             );
 
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(response);
 
             VerifyNikResponse result = kycVerificationAdapter.verifyNik(requestWithNullBirthPlace);
@@ -182,7 +182,7 @@ class KycVerificationAdapterTest {
                 "Success"
             );
 
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(VerifyNikResponse.success(
                     "req-123",
                     "3201234567890001",
@@ -212,7 +212,7 @@ class KycVerificationAdapterTest {
         @Test
         @DisplayName("should mask NIK correctly for 16-digit NIK")
         void shouldMaskNikCorrectly() {
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(successResponse);
 
             kycVerificationAdapter.verifyNik(validRequest);
@@ -231,7 +231,7 @@ class KycVerificationAdapterTest {
                 "1990-01-15"
             );
 
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(successResponse);
 
             kycVerificationAdapter.verifyNik(requestWithShortNik);
@@ -242,7 +242,7 @@ class KycVerificationAdapterTest {
         @Test
         @DisplayName("should handle null NIK in masking")
         void shouldHandleNullNikInMasking() {
-            given(gatewayClient.verifyNik(any(VerifyNikRequest.class)))
+            given(dukcapilSimulatorClient.verifyNik(any(VerifyNikRequest.class)))
                 .willReturn(successResponse);
 
             // Would fail validation before masking; testing the adapter directly.
@@ -255,7 +255,7 @@ class KycVerificationAdapterTest {
 
             // Null handled by masking; validation would reject it before the gateway call.
             assertThatNoException().isThrownBy(() -> kycVerificationAdapter.verifyNik(requestWithNullNik));
-            verify(gatewayClient).verifyNik(requestWithNullNik);
+            verify(dukcapilSimulatorClient).verifyNik(requestWithNullNik);
         }
     }
 }

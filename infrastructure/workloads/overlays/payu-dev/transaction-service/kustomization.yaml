@@ -3,6 +3,10 @@ kind: Kustomization
 namespace: payu-dev
 resources:
   - ../../../base/transaction-service
+components:
+  - ../components/dev-cache
+  - ../components/dev-oidc
+
 images:
   # NOTE: transaction-service images are service-versioned (1.8.x), not platform
   # (1.18.x). Live was 1.8.108; this overlay now tracks the service line.

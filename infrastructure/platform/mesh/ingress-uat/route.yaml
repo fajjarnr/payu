@@ -1,0 +1,32 @@
+# Public entry point for the UAT API on the shared domain.
+#
+# Mirrors infrastructure/platform/mesh/ingress/route.yaml (MESH-008): TLS is
+# terminated by the shared OpenShift IngressController (shared-ingress,
+# domain apps.fajjjar.my.id) using its default shared-ingress-cert. The
+# hostname is ONE label below the domain, following the dev pattern
+# api-dev.apps.fajjjar.my.id.
+#
+# edge termination (router terminates TLS, plain HTTP to the backend) is
+# used because the Istio gateway has no certificate of its own: a reencrypt
+# or passthrough route would need one, and the gateway is an internal
+# ClusterIP Service by design (ADR-0073).
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: api-uat
+  namespace: payu-mesh-gateway-uat
+  labels:
+    app.kubernetes.io/part-of: payu
+    app.kubernetes.io/component: service-mesh
+spec:
+  host: api-uat.apps.fajjjar.my.id
+  path: /
+  to:
+    kind: Service
+    name: payu-public-gateway-uat-istio
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+  wildcardPolicy: None

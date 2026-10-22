@@ -186,6 +186,8 @@ resilience4j:
         max-concurrent-calls: 50
         max-wait-duration: 2s
 payu:
+  dukcapil:
+    url: ${PAYU_DUKCAPIL_URL:http://dukcapil-simulator:8080}
   kyc:
     auto-approve-score: 80
   resilience:

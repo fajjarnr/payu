@@ -15,3 +15,5 @@ namespace: payu
 
 resources:
   - peer-authentication.yaml
+  - service-entry.yaml
+  - authorization-policy.yaml

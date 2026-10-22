@@ -6,3 +6,5 @@ resources:
   - rhbk-keycloak.yaml
   # IDN-002: PostSync reconciliation of master admin password to git secret
   - admin-password-sync-job.yaml
+  # E2E-CLIENTSECRET-001: PostSync convergence of realm client secrets to ESO values
+  - keycloak-client-secret-sync-job.yaml

@@ -6,3 +6,6 @@ metadata:
     app.kubernetes.io/part-of: payu
     environment: dev
     payu.fajjjar.my.id/ingress: shared
+    # MESH-009: cluster Prometheus (openshift-monitoring/k8s) only evaluates
+    # PrometheusRules in namespaces with this label (ruleNamespaceSelector).
+    openshift.io/cluster-monitoring: "true"

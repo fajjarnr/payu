@@ -1,0 +1,94 @@
+# OVERLAY-STRUCT-001 — shared dev-cache contract as a Kustomize Component.
+#
+# Dev cache is an internal, non-TLS Hot Rod endpoint. Keep mTLS in promoted
+# environments; do not make dev depend on Vault-provisioned client material.
+#
+# NOTE: this component carries ONLY the strategic-merge env half of the old
+# root cache patch. The JSON-patch half (remove volumeMounts[1]/volumes[1],
+# the datagrid-client-tls mount the shared base injects) lives inline in the
+# root overlay: a per-service overlay renders WITHOUT the shared-base patch,
+# so index 1 does not exist there and the whole render would fail.
+# OVERLAY-STRUCT-001 (shared endpoints): the cross-service endpoint env the
+# shared base injects (WALLET_GRPC_ADDRESS, *_SIMULATOR_URL, Hot Rod server
+# list, FLYWAY lock count) is fail-fast in code (${VAR} without default), so
+# per-service renders MUST carry it too. It lives in the second patch below
+# — not in dev-oidc — because it is transport/endpoints, not identity.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service)$"
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: dev-cache-client
+      spec:
+        template:
+          spec:
+            containers:
+            - name: app
+              env:
+              - name: PAYU_CACHE_HOTROD_AUTH_USERNAME
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_AUTH_PASSWORD
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_USE_SSL
+                value: "false"
+              - name: PAYU_CACHE_HOTROD_TRUST_STORE_FILE_NAME
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_TRUST_STORE_PASSWORD
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_KEY_STORE_FILE_NAME
+                $patch: delete
+              - name: PAYU_CACHE_HOTROD_KEY_STORE_PASSWORD
+                $patch: delete
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: "^(account-service|analytics-service|api-portal-service|auth-service|backoffice-service|billing-service|cms-service|compliance-service|dispute-service|fx-service|gateway-service|integration-service|investment-service|kyc-service|lending-service|loan-origination-process|notification-service|partner-service|product-catalog-service|promotion-service|statement-service|support-service|transaction-service|wallet-service)$"
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: dev-shared-endpoints
+      spec:
+        template:
+          spec:
+            containers:
+            - name: app
+              env:
+              # OVERLAY-STRUCT-001: mirror of the shared-base ARCH-007 env.
+              # Values byte-identical to infrastructure/workloads/base/
+              # kustomization.yaml so the per-service render (which never sees
+              # the shared-base patch) carries the same fail-fast contract.
+              - name: SPRING_FLYWAY_LOCK_RETRY_COUNT
+                value: "120"
+              - name: PAYU_CACHE_PROVIDER
+                value: hotrod
+              - name: PAYU_CACHE_HOTROD_SERVER_LIST
+                valueFrom:
+                  configMapKeyRef:
+                    name: service-endpoints
+                    key: DATAGRID_HOTROD_SERVER_LIST
+              - name: PAYU_CACHE_HOTROD_CACHE_NAME
+                valueFrom:
+                  configMapKeyRef:
+                    name: service-endpoints
+                    key: DATAGRID_CACHE_NAME
+              - name: PAYU_CACHE_HOTROD_USE_SSL
+                value: 'false'
+              - name: WALLET_GRPC_ADDRESS
+                value: static://wallet-service:9090
+              - name: DUKCAPIL_SIMULATOR_URL
+                value: http://dukcapil-simulator:8080
+              - name: BIFAST_SIMULATOR_URL
+                value: http://bi-fast-simulator:8080
+              - name: QRIS_SIMULATOR_URL
+                value: http://qris-simulator:8080
+              - name: PAYU_CACHE_HOTROD_SNI_HOST_NAME
+                value: payu-cache

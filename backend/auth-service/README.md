@@ -18,7 +18,14 @@ The Auth Service handles:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/auth/login` | Login with username/password |
+| POST | `/api/v1/auth/callback` | OIDC authorization-code + PKCE exchange (LOGIN-003) |
+| POST | `/api/v1/auth/refresh` | Refresh access token |
+| POST | `/api/v1/auth/device` | Initiate RFC 8628 device authorization |
+| POST | `/api/v1/auth/device/token` | Poll device token (returns 202 while pending) |
+| POST | `/api/v1/auth/register` | Register user in IAM |
+| DELETE | `/api/v1/auth/users/{userId}` | Delete user in IAM (saga compensation) |
+| GET | `/api/v1/auth/validate` | Validate session |
+| POST | `/api/v1/auth/logout` | Logout and revoke session (LOGIN-002) |
 
 ## Configuration
 | Environment Variable | Default | Description |
