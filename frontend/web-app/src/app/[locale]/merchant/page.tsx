@@ -62,7 +62,7 @@ export default function MerchantDashboard() {
       <DashboardLayout>
       <SkipLink />
         <div style={{ display: 'flex', justifyContent: 'center', minHeight: 320 }}>
-          <Space direction="vertical" size={16} align="center" style={{ textAlign: 'center' }}>
+          <Space orientation="vertical" size={16} align="center" style={{ textAlign: 'center' }}>
             <Typography.Title level={1} style={{ margin: 0 }}>
               {t('title')}
             </Typography.Title>
@@ -87,7 +87,7 @@ export default function MerchantDashboard() {
       <DashboardLayout>
       <SkipLink />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, textAlign: 'center' }}>
-          <Space direction="vertical" size={24} style={{ alignItems: 'center' }}>
+          <Space orientation="vertical" size={24} style={{ alignItems: 'center' }}>
             <Building2 style={{ width: 64, height: 64, color: 'var(--ant-color-text-tertiary)' }} />
             <Typography.Title level={1} style={{ margin: 0 }}>{t('title')}</Typography.Title>
             <Typography.Text type="secondary">{t('notRegistered')}</Typography.Text>
@@ -120,8 +120,8 @@ export default function MerchantDashboard() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={24} style={{ width: '100%' }}>
-        <Space direction="vertical" size={4}>
+      <Space orientation="vertical" size={24} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={4}>
           <Typography.Title level={1} style={{ margin: 0 }}>{t('dashboard')}</Typography.Title>
           <Typography.Text type="secondary">{t('subtitle')}</Typography.Text>
         </Space>
@@ -136,28 +136,28 @@ export default function MerchantDashboard() {
         >
           <Row gutter={[24, 24]}>
             <Col xs={24} sm={12}>
-              <Space direction="vertical" size={4}>
+              <Space orientation="vertical" size={4}>
                 <Typography.Text strong style={labelStyle}>{t('merchantName')}</Typography.Text>
                 <Typography.Text>{partner.name}</Typography.Text>
               </Space>
             </Col>
             <Col xs={24} sm={12}>
-              <Space direction="vertical" size={4}>
+              <Space orientation="vertical" size={4}>
                 <Typography.Text strong style={labelStyle}>{t('email')}</Typography.Text>
                 <Typography.Text>{partner.email}</Typography.Text>
               </Space>
             </Col>
             <Col xs={24} sm={12}>
-              <Space direction="vertical" size={4}>
+              <Space orientation="vertical" size={4}>
                 <Typography.Text strong style={labelStyle}>{t('type')}</Typography.Text>
                 <Typography.Text>{partner.type}</Typography.Text>
               </Space>
             </Col>
             <Col xs={24} sm={12}>
-              <Space direction="vertical" size={4}>
+              <Space orientation="vertical" size={4}>
                 <Typography.Text strong style={labelStyle}>{t('status')}</Typography.Text>
                 <div>
-                  <Tag bordered={false} color={partner.active ? 'green' : 'red'}>
+                  <Tag variant="filled" color={partner.active ? 'green' : 'red'}>
                     {partner.active ? t('active') : t('inactive')}
                   </Tag>
                 </div>
@@ -174,14 +174,14 @@ export default function MerchantDashboard() {
             </Space>
           }
         >
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
-            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={4} style={{ width: '100%' }}>
               <Typography.Text strong style={labelStyle}>{t('clientId')}</Typography.Text>
               <Typography.Text code style={{ display: 'block', padding: 12 }}>
                 {partner.clientId || 'N/A'}
               </Typography.Text>
             </Space>
-            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={4} style={{ width: '100%' }}>
               <Typography.Text strong style={labelStyle}>{t('publicKey')}</Typography.Text>
               <Input.TextArea
                 aria-label="Public key"

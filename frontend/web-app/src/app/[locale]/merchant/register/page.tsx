@@ -100,8 +100,8 @@ export default function MerchantRegisterPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--ant-color-fill-tertiary)', padding: '48px 16px' }}>
       <div style={{ maxWidth: 896, margin: '0 auto' }}>
-        <Space direction="vertical" size={24} style={{ width: '100%' }}>
-          <Space direction="vertical" size={16} style={{ width: '100%', textAlign: 'center', alignItems: 'center' }}>
+        <Space orientation="vertical" size={24} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%', textAlign: 'center', alignItems: 'center' }}>
             <div style={{ width: 80, height: 80, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
               <Building2 style={{ width: 40, height: 40, color: 'var(--ant-color-primary)' }} />
             </div>
@@ -112,10 +112,10 @@ export default function MerchantRegisterPage() {
           </Space>
 
           <form onSubmit={handleSubmit}>
-            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={24} style={{ width: '100%' }}>
               <Card>
-                <Space direction="vertical" size={24} style={{ width: '100%' }}>
-                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={24} style={{ width: '100%' }}>
+                  <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                     <label htmlFor="merchant-name" style={labelStyle}>
                       {t('nameLabel')}
                     </label>
@@ -133,7 +133,7 @@ export default function MerchantRegisterPage() {
 
                   <Row gutter={[32, 24]}>
                     <Col xs={24} md={12}>
-                      <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                      <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                         <label htmlFor="merchant-email" style={labelStyle}>
                           {t('emailLabel')}
                         </label>
@@ -151,7 +151,7 @@ export default function MerchantRegisterPage() {
                       </Space>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                      <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                         <label htmlFor="merchant-phone" style={labelStyle}>
                           {t('phoneLabel')}
                         </label>
@@ -198,7 +198,7 @@ export default function MerchantRegisterPage() {
                             backgroundColor: selected ? 'var(--ant-color-primary-bg)' : 'var(--ant-color-bg-container)',
                           }}
                         >
-                          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                             <Space size={16}>
                               <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selected ? 'var(--ant-color-primary)' : 'var(--ant-color-fill-secondary)' }}>
                                 <Building2 style={{ width: 20, height: 20, color: selected ? INK_ON_EMERALD : 'var(--ant-color-text-tertiary)' }} />
@@ -219,7 +219,7 @@ export default function MerchantRegisterPage() {
               </Card>
 
               <Card>
-                <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                   <label htmlFor="merchant-public-key" style={labelStyle}>
                     {t('publicKeyLabel')}
                   </label>
@@ -240,7 +240,7 @@ export default function MerchantRegisterPage() {
               <Card style={{ backgroundColor: BRAND_PANEL_BG, border: 'none', position: 'relative', overflow: 'hidden' }}>
                 <Row justify="space-between" align="middle" gutter={[32, 24]}>
                   <Col xs={24} md={16}>
-                    <Space direction="vertical" size={16}>
+                    <Space orientation="vertical" size={16}>
                       <Space size={12}>
                         <div style={{ width: 40, height: 40, backgroundColor: 'var(--ant-color-primary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <ShieldCheck style={{ width: 20, height: 20, color: 'var(--ant-color-text-light-solid)' }} />

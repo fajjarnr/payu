@@ -127,7 +127,7 @@ export default function QRISPage() {
       <SkipLink href="#main-content" />
       <div style={{ overflowX: "hidden" }}>
         <style>{`@keyframes qris-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } } .qris-scan-ring { animation: qris-pulse 2s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .qris-scan-ring { animation: none; } }`}</style>
-        <Space direction="vertical" size={16}>
+        <Space orientation="vertical" size={16}>
           <input
             type="file"
             ref={fileInputRef}
@@ -138,7 +138,7 @@ export default function QRISPage() {
           />
 
           {/* Header */}
-          <Space direction="vertical" size={4}>
+          <Space orientation="vertical" size={4}>
             <Typography.Title level={1} style={{ marginBottom: 0 }}>
               {t("title")}
             </Typography.Title>
@@ -148,7 +148,7 @@ export default function QRISPage() {
           <Row gutter={[16, 16]}>
             {/* Main Scanner Column (16 units) */}
             <Col xs={24} lg={16}>
-              <Space direction="vertical" size={16}>
+              <Space orientation="vertical" size={16}>
                 {/* Scanner Card */}
                 <Card
                   style={{
@@ -339,7 +339,7 @@ export default function QRISPage() {
                     </div>
 
                     <Space
-                      direction="vertical"
+                      orientation="vertical"
                       size={20}
                       style={{ maxWidth: 320, margin: "0 auto" }}
                     >
@@ -428,7 +428,7 @@ export default function QRISPage() {
                   </div>
 
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ width: "100%" }}
                   >
@@ -479,7 +479,7 @@ export default function QRISPage() {
                     ) : (
                       qrisHistory.map((tx) => (
                         <Row key={tx.id} justify="space-between" align="middle">
-                          <Space direction="vertical" size={0}>
+                          <Space orientation="vertical" size={0}>
                             <Typography.Text strong>
                               {tx.description ?? t("paymentLabel")}
                             </Typography.Text>
@@ -510,7 +510,7 @@ export default function QRISPage() {
 
             {/* Right Sidebar Column (8 units) */}
             <Col xs={24} lg={8}>
-              <Space direction="vertical" size={16}>
+              <Space orientation="vertical" size={16}>
                 {/* Security Status Card */}
                 <Card>
                   <Typography.Text
@@ -527,7 +527,7 @@ export default function QRISPage() {
                   >
                     {t("securityProtocol")}
                   </Typography.Text>
-                  <Space direction="vertical" size={24}>
+                  <Space orientation="vertical" size={24}>
                     <div style={{ display: "flex", gap: 16 }}>
                       <div
                         style={{
@@ -753,7 +753,7 @@ export default function QRISPage() {
                     },
                   }}
                 >
-                  <Space direction="vertical" size={4}>
+                  <Space orientation="vertical" size={4}>
                     <Typography.Text
                       type="secondary"
                       style={{
@@ -775,7 +775,7 @@ export default function QRISPage() {
                       })}
                     </Typography.Title>
                   </Space>
-                  <Space direction="vertical" size={16}>
+                  <Space orientation="vertical" size={16}>
                     <Typography.Text
                       strong
                       style={{

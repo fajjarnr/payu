@@ -54,7 +54,7 @@ export default function InvestmentsPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <div>
           <Typography.Title level={1} style={{ marginBottom: 4 }}>{t('title')}</Typography.Title>
           <Typography.Text type="secondary">{t('subtitle')}</Typography.Text>

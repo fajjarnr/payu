@@ -293,7 +293,7 @@ export default function BillsPage() {
 
                 <Divider />
 
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <Flex justify="space-between" align="center" gap={16}>
                     <Typography.Text
                       type="secondary"
@@ -388,7 +388,7 @@ export default function BillsPage() {
     return (
       <DashboardLayout>
         <div className="overflow-x-hidden">
-          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={24} style={{ width: "100%" }}>
             <Button
               type="default"
               onClick={() => setSelectedBiller(null)}
@@ -470,7 +470,7 @@ export default function BillsPage() {
               <Divider />
 
               <Space
-                direction="vertical"
+                orientation="vertical"
                 size={24}
                 style={{ width: "100%", position: "relative", zIndex: 1 }}
               >
@@ -569,7 +569,7 @@ export default function BillsPage() {
   return (
     <DashboardLayout>
       <div className="overflow-x-hidden">
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={24} style={{ width: "100%" }}>
           <Flex
             vertical={!isSm}
             justify="space-between"
@@ -676,7 +676,7 @@ export default function BillsPage() {
             </Row>
           </Card>
 
-          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={24} style={{ width: "100%" }}>
             <Typography.Title level={2} style={{ margin: 0 }}>
               {t("recentActivity")}
             </Typography.Title>

@@ -305,7 +305,7 @@ export default function PocketsPage() {
     <DashboardLayout>
       <SkipLink href="#main-content" />
       <div>
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={24} style={{ width: "100%" }}>
           {/* Header */}
           <Flex justify="space-between" align="flex-end" gap={16} wrap>
             <div>
@@ -441,7 +441,7 @@ export default function PocketsPage() {
 
             {/* Right column */}
             <Col xs={24} lg={8}>
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 <Card styles={{ body: { minHeight: 160 } }}>
                   <Typography.Text
                     type="secondary"
@@ -518,7 +518,7 @@ export default function PocketsPage() {
           </Row>
 
           {/* Pockets List with CRUD */}
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Flex justify="space-between" align="center">
               <Typography.Title level={2} style={{ marginBottom: 0 }}>
                 {t("myPockets")}
@@ -665,7 +665,7 @@ export default function PocketsPage() {
                         </Flex>
 
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={12}
                           style={{ width: "100%", marginTop: 16 }}
                         >
@@ -704,7 +704,7 @@ export default function PocketsPage() {
                           )}
                           <Flex justify="space-between" align="center">
                             <Tag
-                              bordered={false}
+                              variant="filled"
                               color={
                                 pocket.status === "ACTIVE" ? "green" : undefined
                               }
@@ -730,7 +730,7 @@ export default function PocketsPage() {
                 <Empty
                   image={<Wallet style={{ fontSize: 40 }} />}
                   description={
-                    <Space direction="vertical" size={4}>
+                    <Space orientation="vertical" size={4}>
                       <Typography.Text strong style={{ fontSize: 16 }}>
                         {t("emptyPocketsTitle")}
                       </Typography.Text>
@@ -755,7 +755,7 @@ export default function PocketsPage() {
           {/* Special Goals + Ledger */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={14}>
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 <Flex justify="space-between" align="center">
                   <Typography.Title level={2} style={{ marginBottom: 0 }}>
                     {t("specialGoals")}
@@ -814,7 +814,7 @@ export default function PocketsPage() {
                           </Flex>
 
                           <Space
-                            direction="vertical"
+                            orientation="vertical"
                             size={16}
                             style={{ width: "100%", marginTop: 24 }}
                           >
@@ -829,7 +829,7 @@ export default function PocketsPage() {
                               </Typography.Title>
                               {goal.locked ? (
                                 <Tag
-                                  bordered={false}
+                                  variant="filled"
                                   // antd's `color` prop takes a preset, not a colour.
                                   style={{
                                     color: token.colorPrimaryText,
@@ -900,7 +900,7 @@ export default function PocketsPage() {
             </Col>
 
             <Col xs={24} lg={10}>
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 <Flex justify="space-between" align="center">
                   <Typography.Title level={2} style={{ marginBottom: 0 }}>
                     {t("recentLedger")}
@@ -932,7 +932,7 @@ export default function PocketsPage() {
                 >
                   {transactionsLoading ? (
                     <Space
-                      direction="vertical"
+                      orientation="vertical"
                       size={16}
                       style={{ width: "100%" }}
                     >
@@ -1064,7 +1064,7 @@ export default function PocketsPage() {
           {/* Shared pockets */}
           <Space
             id="shared-pockets"
-            direction="vertical"
+            orientation="vertical"
             size={16}
             style={{ width: "100%" }}
           >
@@ -1151,7 +1151,7 @@ export default function PocketsPage() {
                         </Flex>
 
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={12}
                           style={{ width: "100%", marginTop: 16 }}
                         >
@@ -1224,7 +1224,7 @@ export default function PocketsPage() {
                             </Button>
                           </Flex>
                           <Space
-                            direction="vertical"
+                            orientation="vertical"
                             size={8}
                             style={{ width: "100%", marginTop: 12 }}
                           >
@@ -1265,7 +1265,7 @@ export default function PocketsPage() {
                                 </Flex>
                                 <Flex align="center" gap={8}>
                                   <Tag
-                                    bordered={false}
+                                    variant="filled"
                                     color={
                                       member.role === "OWNER"
                                         ? token.colorPrimaryText
@@ -1306,7 +1306,7 @@ export default function PocketsPage() {
           <Card
           >
             <Flex justify="space-between" align="center" gap={24} wrap>
-              <Space direction="vertical" size={16} style={{ maxWidth: 640 }}>
+              <Space orientation="vertical" size={16} style={{ maxWidth: 640 }}>
                 <Flex align="center" gap={16}>
                   <Flex
                     align="center"
@@ -1351,7 +1351,7 @@ export default function PocketsPage() {
           width={512}
           title={undefined}
         >
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <div>
               <Typography.Title level={3} style={{ marginBottom: 0 }}>
                 {t("newPocketTitle")}
@@ -1361,7 +1361,7 @@ export default function PocketsPage() {
               </Typography.Text>
             </div>
             <Space
-              direction="vertical"
+              orientation="vertical"
               size={16}
               style={{ width: "100%", paddingBlock: 16 }}
             >
@@ -1449,7 +1449,7 @@ export default function PocketsPage() {
           width={512}
           title={undefined}
         >
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <div>
               <Typography.Title level={3} style={{ marginBottom: 0 }}>
                 {t("addFunds")}
@@ -1461,7 +1461,7 @@ export default function PocketsPage() {
               </Typography.Text>
             </div>
             <Space
-              direction="vertical"
+              orientation="vertical"
               size={16}
               style={{ width: "100%", paddingBlock: 16 }}
             >
@@ -1518,7 +1518,7 @@ export default function PocketsPage() {
           width={512}
           title={undefined}
         >
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <div>
               <Typography.Title level={3} style={{ marginBottom: 0 }}>
                 {t("withdrawFunds")}
@@ -1530,7 +1530,7 @@ export default function PocketsPage() {
               </Typography.Text>
             </div>
             <Space
-              direction="vertical"
+              orientation="vertical"
               size={16}
               style={{ width: "100%", paddingBlock: 16 }}
             >
@@ -1588,7 +1588,7 @@ export default function PocketsPage() {
           width={512}
           title={undefined}
         >
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <div>
               <Typography.Title
                 level={3}

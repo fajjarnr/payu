@@ -37,7 +37,7 @@ export default function KycReviewsPage() {
           <Avatar style={{ background: 'var(--ant-color-fill-tertiary)', color: 'var(--ant-color-text-secondary)' }}>
             {review.fullName.slice(0, 2).toUpperCase()}
           </Avatar>
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Typography.Text strong style={{ fontSize: 14 }}>{review.fullName}</Typography.Text>
             <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{review.userId}</Typography.Text>
           </Space>
@@ -48,7 +48,7 @@ export default function KycReviewsPage() {
       key: 'document',
       title: 'Dokumen',
       render: (_, review) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Typography.Text strong style={{ fontSize: 14 }}>{review.documentType}</Typography.Text>
           <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{review.documentNumber}</Typography.Text>
         </Space>
@@ -87,9 +87,9 @@ export default function KycReviewsPage() {
   ];
 
  return (
-  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+  <Space orientation="vertical" size={24} style={{ width: '100%' }}>
     <Flex align="flex-start" justify="space-between" gap={24} wrap>
-      <Space direction="vertical" size={4}>
+      <Space orientation="vertical" size={4}>
         <Typography.Title level={1} style={{ margin: 0 }}>KYC Reviews</Typography.Title>
         <Typography.Text type="secondary">Review verifikasi identitas dan dokumen nasabah.</Typography.Text>
       </Space>

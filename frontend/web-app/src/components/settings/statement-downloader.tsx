@@ -150,10 +150,10 @@ export default function StatementDownloader() {
     }
   };
   return (
-    <Space direction="vertical" size={24} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={24} style={{ width: '100%' }}>
       {/* Statement Generator Section */}
       <Card>
-        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={24} style={{ width: '100%' }}>
           {/* Section Header */}
           <Space size={16} align="start">
             <div
@@ -188,7 +188,7 @@ export default function StatementDownloader() {
           )}
 
           {/* Generator Form */}
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             {/* Year Selector */}
             <div>
               <Text strong style={{ display: 'block', marginBottom: 8 }}>
@@ -241,7 +241,7 @@ export default function StatementDownloader() {
       </Card>
       {/* Statement History Section */}
       <Card>
-        <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={24} style={{ width: '100%' }}>
           {/* Section Header */}
           <Space size={16} align="start">
             <div
@@ -277,7 +277,7 @@ export default function StatementDownloader() {
           {error?.scope === 'download' && (
             <Alert type="error" showIcon message={error.message} />
           )}
-          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={12} style={{ width: '100%' }}>
             {isLoading ? (
               <Card loading style={{ width: '100%' }} />
             ) : statements.length === 0 ? (
@@ -289,7 +289,7 @@ export default function StatementDownloader() {
             ) : (
               statements.map((statement) => (
                 <Card key={statement.id} size="small">
-                  <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                     <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
                       <Space size={12}>
                         <Text strong>{statement.periodFormatted}</Text>

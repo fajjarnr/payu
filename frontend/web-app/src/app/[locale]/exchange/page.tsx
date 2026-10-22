@@ -212,7 +212,7 @@ export default function ExchangePage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
         <div>
           <Typography.Title level={1} style={{ marginTop: 0, marginBottom: 4 }}>
             {t("currencyExchange")}
@@ -353,7 +353,7 @@ export default function ExchangePage() {
 
                   {/* Amount Input */}
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ width: "100%", marginTop: 24 }}
                   >
@@ -422,7 +422,7 @@ export default function ExchangePage() {
                         />
                       ) : fxRate ? (
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={12}
                           style={{ width: "100%" }}
                         >
@@ -626,7 +626,7 @@ export default function ExchangePage() {
 
           {/* Sidebar - Recent Conversions & Info */}
           <Col xs={24} lg={8}>
-            <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={24} style={{ width: "100%" }}>
               {/* Rate Updates Card */}
               <Card>
                 <Row
@@ -651,7 +651,7 @@ export default function ExchangePage() {
                     </Typography.Text>
                   </Space>
                 </Row>
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <Row justify="space-between" align="middle">
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                       {t("exchangeLastUpdate")}
@@ -733,7 +733,7 @@ export default function ExchangePage() {
                   />
                 ) : (
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ width: "100%" }}
                   >

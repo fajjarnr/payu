@@ -63,9 +63,9 @@ import type { TableColumnsType } from 'antd';
   ];
 
  return (
-  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+  <Space orientation="vertical" size={24} style={{ width: '100%' }}>
     <Flex align="flex-start" justify="space-between" gap={24} wrap>
-      <Space direction="vertical" size={4}>
+      <Space orientation="vertical" size={4}>
         <Typography.Title level={1} style={{ margin: 0 }}>Fraud Monitoring</Typography.Title>
         <Typography.Text type="secondary">Sistem deteksi risiko dan investigasi kecurangan transaksi.</Typography.Text>
       </Space>

@@ -223,7 +223,7 @@ function LoginForm() {
             </Text>
 
             <div style={{ paddingTop: 32 }}>
-              <Space direction="vertical" size={16}>
+              <Space orientation="vertical" size={16}>
                 {[
                   t("branding.features.encryption"),
                   t("branding.features.monitoring"),
@@ -280,9 +280,9 @@ function LoginForm() {
           }}
         >
           <div style={{ width: "100%", maxWidth: 420 }}>
-            <Space direction="vertical" size={32} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={32} style={{ width: "100%" }}>
               <div style={{ textAlign: "center" }}>
-                <Space direction="vertical" size={8}>
+                <Space orientation="vertical" size={8}>
                   <Title
                     level={2}
                     style={{
@@ -316,7 +316,7 @@ function LoginForm() {
                 </div>
               )}
 
-              <Space direction="vertical" size={24} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={24} style={{ width: "100%" }}>
                 <Button
                   type="primary"
                   htmlType="button"

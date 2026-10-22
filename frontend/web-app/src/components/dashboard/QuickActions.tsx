@@ -110,7 +110,7 @@ export default function QuickActions({
       style={{ position: "relative", overflow: "hidden" }}
       className={className}
     >
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
         <Row justify="space-between" align="top">
           <div>
             <Title level={3} id="quick-actions-title" style={{ margin: 0 }}>
@@ -201,7 +201,7 @@ function QuickActionItem({
 
   return (
     <>
-    <Space direction="vertical" size={8} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={8} style={{ width: "100%" }}>
       <a
         className="payu-qa-tile payu-focus-ring"
         href={action.href}

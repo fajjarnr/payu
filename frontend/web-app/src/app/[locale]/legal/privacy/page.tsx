@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={24} style={{ width: '100%' }}>
         <Space size={16}>
           <div style={{ width: 56, height: 56, backgroundColor: 'var(--ant-color-primary)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Shield style={{ width: 28, height: 28, color: 'var(--ant-color-text-light-solid)' }} />
@@ -24,8 +24,8 @@ export default function PrivacyPage() {
         </Space>
 
         <Card>
-          <Space direction="vertical" size={24} style={{ width: '100%' }}>
-            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={24} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Eye style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
                 <Title level={2} style={{ margin: 0 }}>1. Pengumpulan Informasi</Title>
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
               </Paragraph>
             </Space>
 
-            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Database style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
                 <Title level={2} style={{ margin: 0 }}>2. Penggunaan Informasi</Title>
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
               </Paragraph>
             </Space>
 
-            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Lock style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
                 <Title level={2} style={{ margin: 0 }}>3. Keamanan Data</Title>
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
               </Paragraph>
             </Space>
 
-            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <Shield style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
                 <Title level={2} style={{ margin: 0 }}>4. Berbagi Informasi</Title>
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
               </Paragraph>
             </Space>
 
-            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <RefreshCw style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
                 <Title level={2} style={{ margin: 0 }}>5. Hak Pengguna</Title>
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
               </Paragraph>
             </Space>
 
-            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
                 <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
                 <Title level={2} style={{ margin: 0 }}>6. Kepatuhan Regulasi</Title>

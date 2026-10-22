@@ -75,7 +75,7 @@ export default function CampaignsPage() {
       key: "name",
       title: "Campaign Name",
       render: (_, cmp) => (
-        <Space direction="vertical" size={4}>
+        <Space orientation="vertical" size={4}>
           <Typography.Text strong style={{ fontSize: 14 }}>
             {cmp.name}
           </Typography.Text>
@@ -124,7 +124,7 @@ export default function CampaignsPage() {
       key: "reward",
       title: "Reward Value / Kuota",
       render: (_, cmp) => (
-        <Space direction="vertical" size={8} style={{ minWidth: 128 }}>
+        <Space orientation="vertical" size={8} style={{ minWidth: 128 }}>
           <Flex align="center" justify="space-between">
             <Typography.Text
               strong
@@ -166,7 +166,7 @@ export default function CampaignsPage() {
   ];
 
   return (
-    <Space direction="vertical" size={24} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={24} style={{ width: "100%" }}>
       <PageHeader title="Campaigns" subtitle="Marketing campaigns and claims" />
       <StatCards
         stats={[

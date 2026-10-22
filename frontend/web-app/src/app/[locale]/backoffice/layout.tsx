@@ -139,7 +139,7 @@ export default function BackofficeLayout({
             U
           </Avatar>
           {!collapsed && (
-            <Space direction="vertical" size={4}>
+            <Space orientation="vertical" size={4}>
               <Typography.Text
                 strong
                 style={{
@@ -212,7 +212,7 @@ export default function BackofficeLayout({
                 icon={<Menu style={{ fontSize: 24 }} />}
                 aria-label="Buka menu navigasi"
               />
-              <Space direction="vertical" size={4} style={{ lineHeight: 1.4 }}>
+              <Space orientation="vertical" size={4} style={{ lineHeight: 1.4 }}>
                 <Typography.Text strong style={{ margin: 0, fontSize: 18 }}>
                   {activeNav?.name || "Dashboard"}
                 </Typography.Text>
@@ -263,7 +263,7 @@ export default function BackofficeLayout({
               <ThemeToggle />
               <Flex align="center" gap={16}>
                 <Space
-                  direction="vertical"
+                  orientation="vertical"
                   size={0}
                   style={{ textAlign: "right", lineHeight: 1.4 }}
                 >

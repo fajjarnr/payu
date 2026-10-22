@@ -118,7 +118,7 @@ export default function ScheduledTransfersPage() {
   const getStatusBadge = (status: string) => {
     const config = STATUS_TAG[status] || STATUS_TAG.ACTIVE;
     return (
-      <Tag bordered={false} color={config.color}>
+      <Tag variant="filled" color={config.color}>
         {status}
       </Tag>
     );
@@ -138,7 +138,7 @@ export default function ScheduledTransfersPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={24} style={{ width: '100%' }}>
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
@@ -216,7 +216,7 @@ export default function ScheduledTransfersPage() {
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <Space direction="vertical" size={8}>
+                <Space orientation="vertical" size={8}>
                   <Text type="secondary">{t('emptyTitle')}</Text>
                   <Link href="/transfer">
                     <Button type="primary" size="small">{t('emptyAction')}</Button>
@@ -325,7 +325,7 @@ export default function ScheduledTransfersPage() {
 
       {/* Edit Modal */}
       <Modal open={isEditModalOpen} onCancel={() => setIsEditModalOpen(false)} footer={null} centered width={512} title={<Title level={2} style={{ marginBottom: 4 }}>{t('editModalTitle')}</Title>}>
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
           <Text type="secondary">
             {t('editModalDescription')}
           </Text>
@@ -339,8 +339,8 @@ export default function ScheduledTransfersPage() {
             />
           )}
 
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
-            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={8} style={{ width: '100%' }}>
               <label htmlFor="scheduled-amount" style={{ fontSize: 14, fontWeight: 500 }}>{t('amountLabel')}</label>
               <Input id="scheduled-amount"
                 type="number"
@@ -351,7 +351,7 @@ export default function ScheduledTransfersPage() {
               />
             </Space>
 
-            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={8} style={{ width: '100%' }}>
               <label htmlFor="scheduled-description" style={{ fontSize: 14, fontWeight: 500 }}>{t('descriptionLabel')}</label>
               <Input id="scheduled-description"
                 type="text"
@@ -361,7 +361,7 @@ export default function ScheduledTransfersPage() {
               />
             </Space>
 
-            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={8} style={{ width: '100%' }}>
               <label htmlFor="scheduled-type" style={{ fontSize: 14, fontWeight: 500 }}>{t('scheduleTypeLabel')}</label>
               <Select id="scheduled-type"
                 style={{ width: '100%' }}
@@ -397,7 +397,7 @@ export default function ScheduledTransfersPage() {
 
       {/* Cancel Confirmation Modal */}
       <Modal open={isCancelModalOpen} onCancel={() => setIsCancelModalOpen(false)} footer={null} centered width={512} title={<Title level={2} style={{ marginBottom: 4, color: 'var(--ant-color-error)' }}>{t('cancelModalTitle')}</Title>}>
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
           <Text type="secondary">
             {t('cancelModalDescription')}
           </Text>

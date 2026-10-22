@@ -38,7 +38,7 @@ export default function CustomerCaseDetailPage() {
  }
 
  return (
-  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+  <Space orientation="vertical" size={24} style={{ width: '100%' }}>
    <Card
      title={<Typography.Title level={4} style={{ margin: 0 }}>Customer Case: {customerCase.caseNumber}</Typography.Title>}
      extra={<Typography.Text type="secondary">{customerCase.subject}</Typography.Text>}
@@ -54,8 +54,8 @@ export default function CustomerCaseDetailPage() {
    </Card>
 
    <Card title={<Typography.Title level={4} style={{ margin: 0 }}>Update Case</Typography.Title>}>
-    <Space direction="vertical" size={16} style={{ width: '100%' }}>
-     <Space direction="vertical" size={4} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+     <Space orientation="vertical" size={4} style={{ width: '100%' }}>
       <Typography.Text strong>New Status</Typography.Text>
       <Select
        id="status"
@@ -66,7 +66,7 @@ export default function CustomerCaseDetailPage() {
        options={Object.values(CustomerCaseStatus).map((s) => ({ value: s, label: s }))}
       />
      </Space>
-     <Space direction="vertical" size={4} style={{ width: '100%' }}>
+     <Space orientation="vertical" size={4} style={{ width: '100%' }}>
       <Typography.Text strong>Notes</Typography.Text>
       <Input.TextArea
        id="notes"

@@ -81,7 +81,7 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
         </Space>
       }
     >
-      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={24} style={{ width: '100%' }}>
         <Typography.Text type="secondary">{t('description')}</Typography.Text>
         {isLoading ? (
           <Skeleton active paragraph={{ rows: 2 }} aria-busy="true" />
@@ -156,25 +156,25 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
 
         <Divider />
 
-        <Space direction="vertical" size={16} style={{ width: '100%' }} data-testid="beneficiary-form">
+        <Space orientation="vertical" size={16} style={{ width: '100%' }} data-testid="beneficiary-form">
           <Typography.Text strong>{t('addTitle')}</Typography.Text>
           <Row gutter={16}>
             <Col xs={24} sm={8}>
-              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                 <label htmlFor="beneficiary-bankCode">{t('bankCode')}</label>
                 <Input id="beneficiary-bankCode" data-testid="beneficiary-bankCode" value={bankCode} onChange={(e) => setBankCode(e.target.value)} placeholder="014" maxLength={10} status={errors.bankCode ? 'error' : undefined} />
                 {errors.bankCode && <Typography.Text type="danger" role="alert">{errors.bankCode}</Typography.Text>}
               </Space>
             </Col>
             <Col xs={24} sm={16}>
-              <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                 <label htmlFor="beneficiary-accountNumber">{t('accountNumber')}</label>
                 <Input id="beneficiary-accountNumber" data-testid="beneficiary-accountNumber" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g,''))} placeholder="1234567890" inputMode="numeric" status={errors.accountNumber ? 'error' : undefined} />
                 {errors.accountNumber && <Typography.Text type="danger" role="alert">{errors.accountNumber}</Typography.Text>}
               </Space>
             </Col>
           </Row>
-          <Space direction="vertical" size={4} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={4} style={{ width: '100%' }}>
             <label htmlFor="beneficiary-nickname">{t('nicknameOptional')}</label>
             <Input id="beneficiary-nickname" data-testid="beneficiary-nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="My BCA" maxLength={100} status={errors.nickname ? 'error' : undefined} />
             {errors.nickname && <Typography.Text type="danger" role="alert">{errors.nickname}</Typography.Text>}

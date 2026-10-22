@@ -38,7 +38,7 @@ export default function StatCards({ stats }: { stats: StatItem[] }) {
               >
                 <stat.icon style={{ fontSize: 24 }} />
               </div>
-              <Space direction="vertical" size={2}>
+              <Space orientation="vertical" size={2}>
                 <Typography.Text strong style={labelStyle}>{stat.label}</Typography.Text>
                 <Typography.Title level={3} style={{ margin: 0 }}>{stat.value}</Typography.Title>
               </Space>

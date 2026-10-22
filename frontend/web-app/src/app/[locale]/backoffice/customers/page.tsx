@@ -30,7 +30,7 @@ export default function CustomerCasesPage() {
       key: 'subject',
       title: 'Subjek & Nasabah',
       render: (_, c) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Typography.Text strong style={{ fontSize: 14 }}>{c.subject}</Typography.Text>
           <Typography.Text type="secondary" strong style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{c.userId}</Typography.Text>
         </Space>
@@ -69,9 +69,9 @@ export default function CustomerCasesPage() {
   ];
 
  return (
-    <Space direction="vertical" size={24} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={24} style={{ width: '100%' }}>
       <Flex align="flex-start" justify="space-between" gap={24} wrap>
-        <Space direction="vertical" size={4}>
+        <Space orientation="vertical" size={4}>
           <Typography.Title level={1} style={{ margin: 0 }}>Customer Operations</Typography.Title>
           <Typography.Text type="secondary">Kelola tiket dukungan, keluhan, dan bantuan nasabah.</Typography.Text>
         </Space>

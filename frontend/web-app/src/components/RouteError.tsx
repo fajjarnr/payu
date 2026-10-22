@@ -35,7 +35,7 @@ export default function RouteError({ error, reset }: RouteErrorProps) {
       }}
     >
       <Card style={{ maxWidth: 448, width: '100%' }}>
-        <Space direction="vertical" size={token.margin} style={{ textAlign: 'center', width: '100%' }}>
+        <Space orientation="vertical" size={token.margin} style={{ textAlign: 'center', width: '100%' }}>
           <Typography.Title level={2} style={{ margin: 0 }}>
             {t('error')}
           </Typography.Title>
@@ -45,7 +45,7 @@ export default function RouteError({ error, reset }: RouteErrorProps) {
             <Alert
               type="error"
               message={
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Typography.Text strong style={{ fontSize: 12 }}>
                     {t('errorDetails')}
                   </Typography.Text>

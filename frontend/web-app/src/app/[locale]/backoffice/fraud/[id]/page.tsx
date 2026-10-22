@@ -37,7 +37,7 @@ export default function FraudCaseDetailPage() {
  }
 
  return (
-  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+  <Space orientation="vertical" size={24} style={{ width: '100%' }}>
    <Card
      title={<Typography.Title level={4} style={{ margin: 0 }}>Fraud Case Details</Typography.Title>}
      extra={<Typography.Text type="secondary">Case ID: {fraudCase.id}</Typography.Text>}
@@ -56,8 +56,8 @@ export default function FraudCaseDetailPage() {
 
    {(fraudCase.status === FraudCaseStatus.OPEN || fraudCase.status === FraudCaseStatus.UNDER_INVESTIGATION) && (
     <Card title={<Typography.Title level={4} style={{ margin: 0 }}>Resolve Case</Typography.Title>}>
-     <Space direction="vertical" size={16} style={{ width: '100%' }}>
-      <Space direction="vertical" size={4} style={{ width: '100%' }}>
+     <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={4} style={{ width: '100%' }}>
        <Typography.Text strong>Notes</Typography.Text>
        <Input.TextArea
         id="notes"

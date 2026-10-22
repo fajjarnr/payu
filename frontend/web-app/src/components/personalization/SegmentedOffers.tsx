@@ -60,7 +60,7 @@ export default function SegmentedOffers({
   }
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }} className={className}>
+    <Space orientation="vertical" size={16} style={{ width: "100%" }} className={className}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <Typography.Title level={4} style={{ margin: 0 }}>
@@ -118,7 +118,7 @@ function OfferCard({ offer }: OfferCardProps) {
   );
   return (
     <Card style={{ borderRadius: 16, height: "100%" }}>
-      <Space direction="vertical" size={12} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={12} style={{ width: "100%" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div
             style={{

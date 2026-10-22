@@ -170,7 +170,7 @@ export default function LendingPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <div>
             <Typography.Title level={1} style={{ marginBottom: 0 }}>
@@ -201,7 +201,7 @@ export default function LendingPage() {
                 <span data-testid="loans-tab">Pinjaman</span>
               ),
               children: (
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <Row gutter={[16, 16]}>
                     <Col xs={24} lg={16}>
                       <Card
@@ -293,7 +293,7 @@ export default function LendingPage() {
                         </Row>
 
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={12}
                           style={{ marginTop: 32 }}
                         >
@@ -408,7 +408,7 @@ export default function LendingPage() {
                   </Row>
 
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ marginTop: 16, width: "100%" }}
                   >
@@ -472,7 +472,7 @@ export default function LendingPage() {
                                 {product.description}
                               </Typography.Paragraph>
                               <Space
-                                direction="vertical"
+                                orientation="vertical"
                                 size={12}
                                 style={{ marginBottom: 24, width: "100%" }}
                               >
@@ -547,7 +547,7 @@ export default function LendingPage() {
                 <span data-testid="paylater-tab">PayLater</span>
               ),
               children: (
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   <Row gutter={[16, 16]}>
                     <Col xs={24} lg={16}>
                       <Card
@@ -750,7 +750,7 @@ export default function LendingPage() {
                           </div>
                         </Row>
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={16}
                           style={{ width: "100%" }}
                         >
@@ -823,7 +823,7 @@ export default function LendingPage() {
                     </Col>
                   </Row>
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ marginTop: 16, width: "100%" }}
                   >

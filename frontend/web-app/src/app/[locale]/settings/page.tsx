@@ -105,7 +105,7 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
@@ -121,7 +121,7 @@ export default function SettingsPage() {
         <Row gutter={[24, 24]}>
           {/* Sidebar */}
           <Col xs={24} md={12} lg={8}>
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               {/* Profile Card */}
               <Card>
                 <div style={{ position: "relative", overflow: "hidden" }}>
@@ -138,7 +138,7 @@ export default function SettingsPage() {
                     }}
                   />
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ width: "100%", textAlign: "center" }}
                   >
@@ -163,7 +163,7 @@ export default function SettingsPage() {
                     <Tag color="success">{t("premiumMember")}</Tag>
                     <Divider style={{ margin: "40px 0" }} />
                     <Space
-                      direction="vertical"
+                      orientation="vertical"
                       size={12}
                       style={{ width: "100%" }}
                     >
@@ -190,7 +190,7 @@ export default function SettingsPage() {
 
               {/* Menu Card */}
               <Card>
-                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={8} style={{ width: "100%" }}>
                   {menuItems.map((item, i) => (
                     <Button
                       type="text"
@@ -252,7 +252,7 @@ export default function SettingsPage() {
           <Col xs={24} md={12} lg={16}>
             {activeTab === "profile" ? (
               <Card>
-                <Space direction="vertical" size={24} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={24} style={{ width: "100%" }}>
                   {/* Success Alert */}
                   {updateUser.isSuccess && (
                     <Alert
@@ -285,7 +285,7 @@ export default function SettingsPage() {
 
                   {/* Personal Details */}
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={24}
                     style={{ width: "100%" }}
                   >
@@ -318,7 +318,7 @@ export default function SettingsPage() {
                     <Row gutter={[24, 24]}>
                       <Col xs={24} md={12}>
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={8}
                           style={{ width: "100%" }}
                         >
@@ -349,7 +349,7 @@ export default function SettingsPage() {
                       </Col>
                       <Col xs={24} md={12}>
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={8}
                           style={{ width: "100%" }}
                         >
@@ -380,7 +380,7 @@ export default function SettingsPage() {
                       </Col>
                       <Col xs={24} md={12}>
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={8}
                           style={{ width: "100%" }}
                         >
@@ -451,7 +451,7 @@ export default function SettingsPage() {
             ) : activeTab === "beneficiaries" ? (
               <BeneficiaryManager accountId={accountId ?? ""} />
             ) : (
-              <Space direction="vertical" size={24} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={24} style={{ width: "100%" }}>
                 <div>
                   <Title level={2} style={{ margin: 0 }}>
                     {t("menu.eStatement")}

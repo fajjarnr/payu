@@ -114,7 +114,7 @@ export default function AnalyticsPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         <Row justify="space-between" align="bottom">
           <div>
             <Typography.Title level={1} style={{ marginBottom: 0 }}>
@@ -133,7 +133,7 @@ export default function AnalyticsPage() {
                 {isConnected ? t("liveUpdate") : t("offline")}
               </Typography.Text>
             </Tag>
-            <Tag bordered={false}>
+            <Tag variant="filled">
               <Calendar style={{ width: 16, height: 16 }} /> {periodLabel}
             </Tag>
           </Space>
@@ -361,7 +361,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              <Space direction="vertical" size={16} style={{ marginTop: 32 }}>
+              <Space orientation="vertical" size={16} style={{ marginTop: 32 }}>
                 {analyticsData.spendingBreakdown.map((cat, i) => (
                   <Row key={i} justify="space-between" align="middle">
                     <Space size={16}>

@@ -37,7 +37,7 @@ export default function KycReviewDetailPage() {
  }
 
  return (
-  <Space direction="vertical" size={24} style={{ width: '100%' }}>
+  <Space orientation="vertical" size={24} style={{ width: '100%' }}>
    <Card
      title={<Typography.Title level={4} style={{ margin: 0 }}>KYC Application Details</Typography.Title>}
      extra={<Typography.Text type="secondary">{review.fullName} - {review.userId}</Typography.Text>}
@@ -59,8 +59,8 @@ export default function KycReviewDetailPage() {
 
    {review.status === BackofficeKycStatus.PENDING && (
     <Card title={<Typography.Title level={4} style={{ margin: 0 }}>Make Decision</Typography.Title>}>
-     <Space direction="vertical" size={16} style={{ width: '100%' }}>
-      <Space direction="vertical" size={4} style={{ width: '100%' }}>
+     <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={4} style={{ width: '100%' }}>
        <Typography.Text strong>Notes</Typography.Text>
        <Input.TextArea
         id="notes"

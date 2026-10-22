@@ -118,7 +118,7 @@ export default function PartnersPage() {
             }}
             icon={<Store style={{ fontSize: 20 }} />}
           />
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Typography.Text strong style={{ fontSize: 14 }}>
               {partner.name}
             </Typography.Text>
@@ -156,7 +156,7 @@ export default function PartnersPage() {
       key: "volume",
       title: "Volume",
       render: (_, partner) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Typography.Text strong style={{ fontSize: 12 }}>
             {partner.volume}
           </Typography.Text>
@@ -169,7 +169,7 @@ export default function PartnersPage() {
   ];
 
   return (
-    <Space direction="vertical" size={24} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={24} style={{ width: "100%" }}>
       <PageHeader title="Partners" subtitle="Partner registry and onboarding" />
       <StatCards
         stats={[

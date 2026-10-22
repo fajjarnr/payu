@@ -69,7 +69,7 @@ const QUICK_CATEGORIES = [
 export function TransferEmpty({ title, hint }: { title: string; hint: string }) {
   return (
     <Space
-      direction="vertical"
+      orientation="vertical"
       size={8}
       align="center"
       style={{ width: "100%", textAlign: "center", padding: "48px 0" }}
@@ -157,7 +157,7 @@ export default function TransferActivity({
       key: "date",
       title: t("columnDate"),
       render: (_, item) => (
-        <Space direction="vertical" size={4}>
+        <Space orientation="vertical" size={4}>
           <Text
             type="secondary"
             strong
@@ -205,7 +205,7 @@ export default function TransferActivity({
               }}
             />
           </div>
-          <Space direction="vertical" size={4}>
+          <Space orientation="vertical" size={4}>
             <Text
               type="secondary"
               strong
@@ -226,7 +226,7 @@ export default function TransferActivity({
       align: "center",
       render: (_, item) => (
         <Tag
-          bordered={false}
+          variant="filled"
           color={statusConfig[item.status]?.color ?? "warning"}
         >
           {statusConfig[item.status]
@@ -303,7 +303,7 @@ export default function TransferActivity({
 
   return (
     <Space
-      direction="vertical"
+      orientation="vertical"
       size={24}
       style={{ width: "100%" }}
       data-testid="transfer-activity-section"
@@ -335,7 +335,7 @@ export default function TransferActivity({
       </Modal>
       {/* Quick Transfer strip */}
       <Card data-testid="quick-transfer-card">
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={24} style={{ width: "100%" }}>
           <Row justify="space-between" align="middle">
             <Title level={4} style={{ margin: 0 }}>
               {t("quickTransfer")}
@@ -356,7 +356,7 @@ export default function TransferActivity({
             </Link>
           </Row>
 
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={8} style={{ width: "100%" }}>
             <Text
               type="secondary"
               strong
@@ -382,7 +382,7 @@ export default function TransferActivity({
                     type="text"
                     style={{ height: "auto", width: "100%", padding: 8, minHeight: 44 }}
                   >
-                    <Space direction="vertical" size={8} align="center">
+                    <Space orientation="vertical" size={8} align="center">
                       <div
                         aria-hidden="true"
                         style={{
@@ -445,7 +445,7 @@ export default function TransferActivity({
 
       {/* Recent Transfer Activity ledger */}
       <Card data-testid="recent-activity-card">
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={16} style={{ width: "100%" }}>
           <Row justify="space-between" align="middle">
             <Title level={4} style={{ margin: 0 }}>
               {t("recentActivity")}
@@ -453,7 +453,7 @@ export default function TransferActivity({
           </Row>
 
           {isLoading ? (
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               {[1, 2, 3, 4].map((i) => (
                 <Skeleton
                   key={i}
@@ -499,7 +499,7 @@ export default function TransferActivity({
 
               {/* Mobile Card Layout */}
               <div className="md:hidden">
-                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                   {displayTransactions.length === 0 ? (
                     <TransferEmpty title={t("transferEmpty")} hint={t("transferEmptyHint")} />
                   ) : (
@@ -510,7 +510,7 @@ export default function TransferActivity({
                       data-testid={`transfer-card-mobile-${item.id}`}
                     >
                       <Space
-                        direction="vertical"
+                        orientation="vertical"
                         size={12}
                         style={{ width: "100%" }}
                       >
@@ -540,7 +540,7 @@ export default function TransferActivity({
                                 }}
                               />
                             </div>
-                            <Space direction="vertical" size={2}>
+                            <Space orientation="vertical" size={2}>
                               <Text strong ellipsis style={{ maxWidth: 120 }}>
                                 {item.description}
                               </Text>
@@ -575,7 +575,7 @@ export default function TransferActivity({
                           </Text>
                           <Space size={8} align="center">
                             <Tag
-                              bordered={false}
+                              variant="filled"
                               color={
                                 statusConfig[item.status]?.color ?? "warning"
                               }

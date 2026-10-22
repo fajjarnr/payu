@@ -171,7 +171,7 @@ export default function TransactionsPage() {
         const status = statusConfig[transaction.status];
         const StatusIcon = status.icon;
         return (
-          <Tag bordered={false} color={status.color} className="font-bold text-xs">
+          <Tag variant="filled" color={status.color} className="font-bold text-xs">
             <StatusIcon style={{ width: 12, height: 12, marginRight: 4 }} />
             {t(status.labelKey)}
           </Tag>
@@ -218,11 +218,11 @@ export default function TransactionsPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         {/* Header */}
         <Row gutter={[16, 16]} align="middle" justify="space-between">
           <Col>
-            <Space direction="vertical" size={4}>
+            <Space orientation="vertical" size={4}>
               <Typography.Title level={1} style={{ margin: 0 }}>{t('transactionHistory')}</Typography.Title>
               <Typography.Text type="secondary">{t('pageSubtitle')}</Typography.Text>
             </Space>
@@ -391,7 +391,7 @@ export default function TransactionsPage() {
           extra={<Tag bordered className="font-mono">{t('pageNumber', { page: page + 1 })}</Tag>}
         >
           {isLoading ? (
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={16} style={{ width: '100%' }}>
               {[1, 2, 3, 4, 5].map((i) => (
                 <Skeleton.Input key={i} active style={{ height: 64, width: '100%' }} />
               ))}
@@ -411,7 +411,7 @@ export default function TransactionsPage() {
 
               {/* Mobile Layout */}
               <div className="md:hidden">
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                   {transactions?.map((transaction: Transaction) => {
                     const status = statusConfig[transaction.status];
                     const type = typeConfig[transaction.type] || typeConfig.INTERNAL_TRANSFER;
@@ -420,7 +420,7 @@ export default function TransactionsPage() {
 
                     return (
                       <div key={transaction.id} style={{ borderBottom: "1px solid var(--ant-color-border-secondary)", paddingBottom: 16 }}>
-                        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                           <Row justify="space-between" align="middle">
                             <Space size={12}>
                               <div style={{
@@ -448,7 +448,7 @@ export default function TransactionsPage() {
                                 </div>
                               </div>
                             </Space>
-                            <Tag bordered={false} color={status.color} className="font-bold text-xs">
+                            <Tag variant="filled" color={status.color} className="font-bold text-xs">
                               <StatusIcon style={{ width: 12, height: 12, marginRight: 4 }} />
                               {t(status.labelKey)}
                             </Tag>
@@ -539,13 +539,13 @@ export default function TransactionsPage() {
 
       {/* Cancel Confirmation Dialog */}
       <Modal open={isCancelDialogOpen} onCancel={() => setIsCancelDialogOpen(false)} footer={null} centered width={512} title={<Typography.Title level={4} style={{ marginBottom: 4 }}><Space size={8}><AlertCircle style={{ width: 20, height: 20, color: token.colorError }} />{t('cancelTransactionTitle')}</Space></Typography.Title>}>
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
           <Typography.Text type="secondary">
             {t('cancelConfirm')}
           </Typography.Text>
           {selectedTransaction && (
             <Card size="small">
-              <Space direction="vertical" size={8} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                 <Row justify="space-between">
                   <Typography.Text type="secondary">{t('reference')}</Typography.Text>
                   <Typography.Text className="font-mono">{selectedTransaction.referenceNumber}</Typography.Text>

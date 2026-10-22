@@ -108,31 +108,31 @@ export default function SplitBillPage() {
     switch (status) {
       case "ACTIVE":
         return (
-          <Tag bordered={false} color="green">
+          <Tag variant="filled" color="green">
             {t("statusActive")}
           </Tag>
         );
       case "SETTLED":
         return (
-          <Tag bordered={false} color="blue">
+          <Tag variant="filled" color="blue">
             {t("statusSettled")}
           </Tag>
         );
       case "PENDING":
         return (
-          <Tag bordered={false} color="orange">
+          <Tag variant="filled" color="orange">
             {t("statusPending")}
           </Tag>
         );
       case "DRAFT":
         return (
-          <Tag bordered={false} color="default">
+          <Tag variant="filled" color="default">
             {t("statusDraft")}
           </Tag>
         );
       case "CANCELLED":
         return (
-          <Tag bordered={false} color="red">
+          <Tag variant="filled" color="red">
             {t("statusCancelled")}
           </Tag>
         );
@@ -204,7 +204,7 @@ export default function SplitBillPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
         {/* Header */}
         <Row justify="space-between" align="bottom" gutter={[16, 16]}>
           <Col>
@@ -361,14 +361,14 @@ export default function SplitBillPage() {
         {/* Create Modal */}
         {showCreateModal && (
           <Card>
-            <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={24} style={{ width: "100%" }}>
               <Title level={2} style={{ margin: 0 }}>
                 {t("createTitle")}
               </Title>
               <Row gutter={[24, 24]}>
                 <Col xs={24} md={12}>
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={8}
                     style={{ width: "100%" }}
                   >
@@ -394,7 +394,7 @@ export default function SplitBillPage() {
                 </Col>
                 <Col xs={24} md={12}>
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={8}
                     style={{ width: "100%" }}
                   >
@@ -420,7 +420,7 @@ export default function SplitBillPage() {
                   </Space>
                 </Col>
               </Row>
-              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                 <Row justify="space-between" align="middle">
                   <label
                     htmlFor="splitbill-participant-accountId-0"
@@ -518,11 +518,11 @@ export default function SplitBillPage() {
 
         {/* Active Split Bills */}
         {activeBills.length > 0 && (
-          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={24} style={{ width: "100%" }}>
             <Title level={2} style={{ margin: 0 }}>
               {t("activeBillsTitle")}
             </Title>
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               {activeBills.map((bill) => (
                 <Card key={bill.id}>
                   <Row justify="space-between" align="middle" gutter={[16, 16]}>
@@ -578,7 +578,7 @@ export default function SplitBillPage() {
                   {/* Participants */}
                   {bill.participants?.length > 0 && (
                     <Space
-                      direction="vertical"
+                      orientation="vertical"
                       size={8}
                       style={{ width: "100%", marginTop: 16 }}
                     >
@@ -687,11 +687,11 @@ export default function SplitBillPage() {
 
         {/* Settled Bills */}
         {settledBills.length > 0 && (
-          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={24} style={{ width: "100%" }}>
             <Title level={2} style={{ margin: 0 }}>
               {t("historyTitle")}
             </Title>
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               {settledBills.map((bill) => (
                 <Card key={bill.id} style={{ opacity: 0.8 }}>
                   <Row justify="space-between" align="middle" gutter={[16, 16]}>
@@ -758,7 +758,7 @@ export default function SplitBillPage() {
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <Space direction="vertical" size={8}>
+                <Space orientation="vertical" size={8}>
                   <Text strong style={{ fontSize: 16 }}>
                     {t("emptyTitle")}
                   </Text>

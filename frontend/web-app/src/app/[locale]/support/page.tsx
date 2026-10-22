@@ -64,9 +64,9 @@ export default function SupportPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         {/* Header */}
-        <Space direction="vertical" size={4}>
+        <Space orientation="vertical" size={4}>
           <Typography.Title level={1} style={{ marginBottom: 0 }}>
             {t("title")}
           </Typography.Title>
@@ -201,7 +201,7 @@ export default function SupportPage() {
         <Card style={{ position: "relative", overflow: "hidden" }}>
           <Row align="middle" gutter={[16, 16]}>
             <Col xs={24} lg={16}>
-              <Space direction="vertical" size={16}>
+              <Space orientation="vertical" size={16}>
                 <Typography.Title level={2} style={{ marginBottom: 0 }}>
                   Integritas Sistem Aktif.
                 </Typography.Title>

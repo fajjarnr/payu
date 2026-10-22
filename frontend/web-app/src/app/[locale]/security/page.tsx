@@ -141,7 +141,7 @@ export default function SecurityPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         <Row justify="space-between" align="middle" gutter={[16, 16]}>
           <Col xs={24} md={16}>
             <Title level={1} style={{ marginBottom: 4 }}>
@@ -170,7 +170,7 @@ export default function SecurityPage() {
           <Col xs={24} md={12}>
             <Card style={{ height: "100%" }}>
               <Space
-                direction="vertical"
+                orientation="vertical"
                 size="large"
                 style={{ width: "100%" }}
               >
@@ -183,7 +183,7 @@ export default function SecurityPage() {
                       color: "var(--ant-color-primary)",
                     }}
                   />
-                  <Space direction="vertical" size={0}>
+                  <Space orientation="vertical" size={0}>
                     <Text strong style={{ fontSize: 20 }}>
                       {t("mfaBiometric")}
                     </Text>
@@ -239,7 +239,7 @@ export default function SecurityPage() {
           <Col xs={24} md={12}>
             <Card style={{ height: "100%" }}>
               <Space
-                direction="vertical"
+                orientation="vertical"
                 size="large"
                 style={{ width: "100%" }}
               >
@@ -252,7 +252,7 @@ export default function SecurityPage() {
                       color: "var(--ant-color-primary)",
                     }}
                   />
-                  <Space direction="vertical" size={0}>
+                  <Space orientation="vertical" size={0}>
                     <Text strong style={{ fontSize: 20 }}>
                       {t("deviceToken")}
                     </Text>
@@ -340,7 +340,7 @@ export default function SecurityPage() {
           <div style={{ position: "relative", zIndex: 1 }}>
             <Row justify="space-between" align="middle" gutter={[24, 24]}>
               <Col xs={24} lg={16}>
-                <Space direction="vertical" size="middle">
+                <Space orientation="vertical" size="middle">
                   <Title
                     level={2}
                     style={{

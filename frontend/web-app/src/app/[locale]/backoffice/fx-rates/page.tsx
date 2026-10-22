@@ -105,7 +105,7 @@ export default function FxRatesAdminPage() {
       key: "updated",
       title: "Last Update",
       render: (_, fx) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           <Typography.Text style={{ fontSize: 12 }}>
             {new Date(fx.validFrom).toLocaleTimeString()}
           </Typography.Text>
@@ -117,7 +117,7 @@ export default function FxRatesAdminPage() {
     },
   ];
   return (
-    <Space direction="vertical" size={24} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={24} style={{ width: "100%" }}>
       <PageHeader title="FX Rates" subtitle="Live currency rates and manual overrides" />
       <StatCards
         stats={[

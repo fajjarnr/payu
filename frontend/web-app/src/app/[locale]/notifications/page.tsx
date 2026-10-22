@@ -125,12 +125,12 @@ export default function NotificationsPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
         {/* Header */}
         <Card>
           <Row justify="space-between" align="middle" gutter={[16, 16]}>
             <Col>
-              <Space direction="vertical" size={4}>
+              <Space orientation="vertical" size={4}>
                 <Title
                   level={1}
                   style={{
@@ -314,7 +314,7 @@ export default function NotificationsPage() {
                   title={
                     <Space size={12} align="center">
                       <Tag
-                        bordered={false}
+                        variant="filled"
                         color="green"
                         style={{
                           fontSize: 12,
@@ -345,7 +345,7 @@ export default function NotificationsPage() {
                     </Space>
                   }
                   description={
-                    <Space direction="vertical" size={4}>
+                    <Space orientation="vertical" size={4}>
                       <Text
                         strong
                         style={{

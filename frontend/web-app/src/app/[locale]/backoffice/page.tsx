@@ -54,7 +54,7 @@ export default function BackofficeDashboard() {
   ];
 
   return (
-    <Space direction="vertical" size={32} style={{ width: '100%', paddingBottom: 48 }}>
+    <Space orientation="vertical" size={32} style={{ width: '100%', paddingBottom: 48 }}>
       <div>
         <Typography.Title level={1} style={{ margin: 0 }}>Command Center</Typography.Title>
         <Typography.Text type="secondary">Sistem orkestrasi internal PayU Digital Banking.</Typography.Text>
@@ -64,7 +64,7 @@ export default function BackofficeDashboard() {
         {stats.map((stat, i) => (
           <Col key={i} xs={24} md={8}>
             <Card>
-              <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={24} style={{ width: '100%' }}>
                 <Space align="start" style={{ width: '100%', justifyContent: 'space-between' }}>
                   <div style={{ ...tileStyle, background: stat.bg, color: stat.fg }}>
                     <stat.icon style={{ fontSize: 24 }} />
@@ -86,7 +86,7 @@ export default function BackofficeDashboard() {
           <Col key={i} xs={24} md={12} lg={8}>
             <Link href={link.href} style={{ textDecoration: 'none' }}>
               <Card hoverable style={{ height: '100%' }}>
-                <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={24} style={{ width: '100%' }}>
                   <Space align="start" style={{ width: '100%', justifyContent: 'space-between' }}>
                     <div style={{ ...tileStyle, width: 56, height: 56, background: 'var(--ant-color-primary)', color: 'var(--ant-color-text-light-solid)' }}>
                       <link.icon style={{ fontSize: 28 }} />

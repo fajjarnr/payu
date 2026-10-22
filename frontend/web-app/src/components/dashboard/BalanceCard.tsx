@@ -52,11 +52,11 @@ export default function BalanceCard({
     <Row gutter={[24, 24]} data-testid="balance-card">
       {/* Col 1: Primary Balance & Net Worth */}
       <Col xs={24} xl={10}>
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={24} style={{ width: "100%" }}>
           <Card data-testid="primary-balance-card" style={{ minHeight: 220 }}>
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <Row justify="space-between" align="top">
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Text
                     strong
                     type="secondary"
@@ -98,7 +98,7 @@ export default function BalanceCard({
                 </Space>
               </Row>
 
-              <Space direction="vertical" size={12}>
+              <Space orientation="vertical" size={12}>
                 <Title
                   level={2}
                   style={{
@@ -116,7 +116,7 @@ export default function BalanceCard({
                   {percentage != null ? (
                     <Tag
                       color={percentage < 0 ? "error" : "success"}
-                      bordered={false}
+                      variant="filled"
                       icon={
                         percentage < 0 ? (
                           <ArrowDownRight style={{ width: 14, height: 14 }} />
@@ -149,7 +149,7 @@ export default function BalanceCard({
           </Card>
 
           <Card data-testid="net-worth-card" style={{ minHeight: 220 }}>
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <Row justify="space-between" align="middle">
                 <Text
                   type="secondary"
@@ -180,7 +180,7 @@ export default function BalanceCard({
                 </div>
               </Row>
 
-              <Space direction="vertical" size={12}>
+              <Space orientation="vertical" size={12}>
                 <Title
                   level={3}
                   style={{
@@ -321,7 +321,7 @@ export default function BalanceCard({
             </Text>
           </Row>
 
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Text
               strong
               style={{
@@ -334,7 +334,7 @@ export default function BalanceCard({
               4829 •••• •••• 1928
             </Text>
             <Row justify="space-between" align="bottom">
-              <Space direction="vertical" size={4} style={{ minWidth: 0 }}>
+              <Space orientation="vertical" size={4} style={{ minWidth: 0 }}>
                 <Text
                   strong
                   style={{
@@ -438,7 +438,7 @@ function SummaryItem({
   const t = useTranslations("dashboard");
   return (
     <Card data-testid={testId} style={{ height: "100%" }}>
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         <Row justify="space-between" align="middle">
           <Text
             type="secondary"
@@ -476,7 +476,7 @@ function SummaryItem({
           </div>
         </Row>
 
-        <Space direction="vertical" size={8}>
+        <Space orientation="vertical" size={8}>
           <Title
             level={4}
             style={{ margin: 0, fontVariantNumeric: "tabular-nums" }}
@@ -484,7 +484,7 @@ function SummaryItem({
             {formatCurrency(amount, { symbol: currency, locale: bcp47Locale })}
           </Title>
           <Space size={8} align="center">
-            <Tag bordered={false} color={isPositive ? "success" : "error"}>
+            <Tag variant="filled" color={isPositive ? "success" : "error"}>
               {isPositive ? "+" : ""}
               {change}%
             </Tag>

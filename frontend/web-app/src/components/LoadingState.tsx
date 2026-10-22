@@ -24,7 +24,7 @@ export function LoadingState({ variant = 'skeleton' }: LoadingStateProps) {
           justifyContent: 'center',
         }}
       >
-        <Space direction="vertical" size={token.margin} align="center">
+        <Space orientation="vertical" size={token.margin} align="center">
           <Spin size="large" />
           <span style={{ color: token.colorTextSecondary }}>{t('loading')}</span>
         </Space>

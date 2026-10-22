@@ -427,7 +427,7 @@ export default function TransferPage() {
           style={{ width: "100%" }}
         >
           <div className="overflow-x-hidden">
-            <Space direction="vertical" size={16}>
+            <Space orientation="vertical" size={16}>
               <Space size={16}>
                 <Button
                   type="default"
@@ -811,7 +811,7 @@ export default function TransferPage() {
               className="animate-receipt-unfold"
               style={{ width: "100%", maxWidth: 448 }}
             >
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={16} style={{ width: "100%" }}>
                 <Space size={16} style={{ paddingBottom: 24 }}>
                   <div
                     style={{
@@ -908,7 +908,7 @@ export default function TransferPage() {
             </Card>
 
             <Space
-              direction="vertical"
+              orientation="vertical"
               size={16}
               style={{ width: "100%", maxWidth: 448, marginTop: 32 }}
             >
@@ -940,12 +940,12 @@ export default function TransferPage() {
   return (
     <DashboardLayout>
       <div className="overflow-x-hidden">
-        <Space direction="vertical" size={16}>
+        <Space orientation="vertical" size={16}>
           <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={16}>
-              <Space direction="vertical" size={16}>
+              <Space orientation="vertical" size={16}>
                 <Form
                   form={form}
                   onFinish={onValid}
@@ -1276,12 +1276,12 @@ export default function TransferPage() {
 
                   {scheduleType === "RECURRING" && (
                     <Space
-                      direction="vertical"
+                      orientation="vertical"
                       size={16}
                       className="animate-fade-in"
                       style={{ marginTop: 24 }}
                     >
-                      <Space direction="vertical" size={16}>
+                      <Space orientation="vertical" size={16}>
                         <Typography.Text
                           type="secondary"
                           strong
@@ -1355,7 +1355,7 @@ export default function TransferPage() {
                         </div>
                       </Space>
 
-                      <Space direction="vertical" size={16}>
+                      <Space orientation="vertical" size={16}>
                         <Row
                           justify="space-between"
                           align="middle"
@@ -1617,7 +1617,7 @@ export default function TransferPage() {
             </Col>
 
             <Col xs={24} lg={8}>
-              <Space direction="vertical" size={16}>
+              <Space orientation="vertical" size={16}>
                 <Card>
                   <Row
                     justify="space-between"
@@ -1795,11 +1795,11 @@ export default function TransferPage() {
           destroyOnHidden
         >
           <Space
-            direction="vertical"
+            orientation="vertical"
             size={16}
             style={{ width: "100%", marginTop: 16 }}
           >
-            <Space direction="vertical" size={4} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={4} style={{ width: "100%" }}>
               <label
                 htmlFor="new-beneficiary-name"
                 style={{
@@ -1821,7 +1821,7 @@ export default function TransferPage() {
                 maxLength={100}
               />
             </Space>
-            <Space direction="vertical" size={4} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={4} style={{ width: "100%" }}>
               <label
                 htmlFor="new-beneficiary-account"
                 style={{

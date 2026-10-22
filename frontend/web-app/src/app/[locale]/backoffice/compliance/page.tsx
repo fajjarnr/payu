@@ -150,7 +150,7 @@ export default function CompliancePage() {
             }}
             icon={eventIcon(log.event)}
           />
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             <Typography.Text strong style={{ fontSize: 12 }}>
               {log.event}
             </Typography.Text>
@@ -192,7 +192,7 @@ export default function CompliancePage() {
       title: "Timestamp",
       align: "right",
       render: (_, log) => (
-        <Space direction="vertical" size={2} style={{ textAlign: "right" }}>
+        <Space orientation="vertical" size={2} style={{ textAlign: "right" }}>
           <Typography.Text style={{ fontSize: 12 }}>
             {new Date(log.timestamp).toLocaleTimeString()}
           </Typography.Text>
@@ -205,7 +205,7 @@ export default function CompliancePage() {
   ];
 
   return (
-    <Space direction="vertical" size={24} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={24} style={{ width: "100%" }}>
       <PageHeader title="Compliance" subtitle="Audit logs and security posture" />
       <StatCards
         stats={[
@@ -271,7 +271,7 @@ export default function CompliancePage() {
             emptyText: auditError ? (
               "Audit stream tidak tersedia — periksa koneksi gateway"
             ) : !hasAuditFilter ? (
-              <Space direction="vertical" size={4} align="center">
+              <Space orientation="vertical" size={4} align="center">
                 <Typography.Text strong>
                   Belum ada pencarian audit
                 </Typography.Text>

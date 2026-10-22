@@ -183,7 +183,7 @@ export default function CardsPage() {
   return (
     <DashboardLayout>
       <div>
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={24} style={{ width: "100%" }}>
           {/* Header */}
           <Flex justify="space-between" align="flex-end" gap={16} wrap>
             <div>
@@ -216,7 +216,7 @@ export default function CardsPage() {
             <Col xs={24} lg={16}>
               <Card style={{ height: "100%" }}>
                 <Space
-                  direction="vertical"
+                  orientation="vertical"
                   size={24}
                   style={{ width: "100%" }}
                   align="center"
@@ -285,7 +285,7 @@ export default function CardsPage() {
                         />
                       </Flex>
 
-                      <Space direction="vertical" size={16}>
+                      <Space orientation="vertical" size={16}>
                         <Typography.Text
                           style={{
                             color: INK_ON_EMERALD,
@@ -302,7 +302,7 @@ export default function CardsPage() {
                             : `•••• •••• •••• ${cardLast4}`}
                         </Typography.Text>
                         <Flex justify="space-between" align="flex-end">
-                          <Space direction="vertical" size={2}>
+                          <Space orientation="vertical" size={2}>
                             <Typography.Text
                               style={{
                                 color: INK_ON_EMERALD,
@@ -328,7 +328,7 @@ export default function CardsPage() {
                               {cardOwner}
                             </Typography.Text>
                           </Space>
-                          <Space direction="vertical" size={2} align="end">
+                          <Space orientation="vertical" size={2} align="end">
                             <Typography.Text
                               style={{
                                 color: INK_ON_EMERALD,
@@ -445,7 +445,7 @@ export default function CardsPage() {
                 </Flex>
 
                 <Space
-                  direction="vertical"
+                  orientation="vertical"
                   size={24}
                   style={{ width: "100%", marginTop: 24 }}
                 >
@@ -518,7 +518,7 @@ export default function CardsPage() {
                   </Flex>
 
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ width: "100%" }}
                   >
@@ -562,7 +562,7 @@ export default function CardsPage() {
           </Row>
 
           {/* Mid Section: Catalog Style Operations */}
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Typography.Title level={2} style={{ marginBottom: 0 }}>
               {t("operationalControls")}
             </Typography.Title>
@@ -594,7 +594,7 @@ export default function CardsPage() {
                         <item.icon />
                       </Flex>
                       <Tag
-                        bordered={false}
+                        variant="filled"
                         // antd's `color` prop takes a preset, not a colour:
                         // a colour string paints the whole tag as the fill.
                         style={{
@@ -612,7 +612,7 @@ export default function CardsPage() {
                       </Tag>
                     </Flex>
                     <Space
-                      direction="vertical"
+                      orientation="vertical"
                       size={2}
                       style={{ marginTop: 24, width: "100%" }}
                     >
@@ -720,7 +720,7 @@ export default function CardsPage() {
               </Typography.Title>
             }
           >
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
                 {t("adjustLimitsForCard", { last4: cardLast4 })}
               </Typography.Text>
@@ -734,7 +734,7 @@ export default function CardsPage() {
               )}
 
               <Space
-                direction="vertical"
+                orientation="vertical"
                 size={16}
                 style={{ width: "100%", paddingBlock: 16 }}
               >
@@ -820,7 +820,7 @@ export default function CardsPage() {
               </Typography.Title>
             }
           >
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
               <Typography.Text type="secondary">
                 {t("deleteCardConfirm", { last4: cardLast4 })}
               </Typography.Text>

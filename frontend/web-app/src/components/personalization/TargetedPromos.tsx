@@ -62,7 +62,7 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2, pr
   }
 
   return (
-    <Space direction="vertical" size={12} style={{ width: '100%' }} className={className}>
+    <Space orientation="vertical" size={12} style={{ width: '100%' }} className={className}>
       <Space size={8}>
         <TagIcon style={{ height: 16, width: 16, color: token.colorPrimary }} aria-hidden="true" />
         <Typography.Title level={5} style={{ margin: 0 }}>
@@ -70,7 +70,7 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2, pr
         </Typography.Title>
       </Space>
 
-      <Space direction="vertical" size={12} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={12} style={{ width: '100%' }}>
         {filteredOffers.map((promo) => (
           <PromoItem key={promo.id} promo={promo} />
         ))}

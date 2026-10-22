@@ -148,7 +148,7 @@ function ContentFormModal({
       confirmLoading={loading}
       width={560}
     >
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         <div>
           <Typography.Text
             strong
@@ -440,7 +440,7 @@ export default function CMSPage() {
               contentTypeIcon(item.contentType)
             )}
           </div>
-          <Space direction="vertical" size={4}>
+          <Space orientation="vertical" size={4}>
             <Typography.Text strong style={{ fontSize: 14 }}>
               {item.title}
             </Typography.Text>
@@ -476,7 +476,7 @@ export default function CMSPage() {
       key: "schedule",
       title: "Schedule",
       render: (_, item) => (
-        <Space direction="vertical" size={4}>
+        <Space orientation="vertical" size={4}>
           <Typography.Text style={{ fontSize: 12 }}>
             S: {new Date(item.startDate).toLocaleDateString()}
           </Typography.Text>
@@ -596,7 +596,7 @@ export default function CMSPage() {
   ];
 
   return (
-    <Space direction="vertical" size={24} style={{ width: "100%" }}>
+    <Space orientation="vertical" size={24} style={{ width: "100%" }}>
       <PageHeader title="CMS Content" subtitle="Banners, promos and dynamic content" />
       <StatCards
         stats={[

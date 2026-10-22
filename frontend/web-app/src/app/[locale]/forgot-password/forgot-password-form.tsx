@@ -57,8 +57,8 @@ export default function ForgotPasswordPage() {
       }}
     >
       <Card style={{ width: "100%", maxWidth: 420, borderRadius: 12 }}>
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={24} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={8} style={{ width: "100%" }}>
             <Link href="/login" className="payu-focus-ring">
               <Space size={8}>
                 <ArrowLeft style={{ width: 16, height: 16 }} />
@@ -71,8 +71,8 @@ export default function ForgotPasswordPage() {
             <Text type="secondary">{t("resetSubtitle")}</Text>
           </Space>
           <form onSubmit={handleSubmit} noValidate style={{ width: "100%" }}>
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
-              <Space direction="vertical" size={8} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={16} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={8} style={{ width: "100%" }}>
                 <label htmlFor="email" style={{ fontSize: 14, fontWeight: 500 }}>
                   {t("email")}
                 </label>

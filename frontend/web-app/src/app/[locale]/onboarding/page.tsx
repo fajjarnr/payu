@@ -246,8 +246,8 @@ export default function OnboardingPage() {
         </div>
 
         <div style={{ position: "relative", zIndex: 1, maxWidth: 480 }}>
-          <Space direction="vertical" size={24}>
-            <Space direction="vertical" size={16}>
+          <Space orientation="vertical" size={24}>
+            <Space orientation="vertical" size={16}>
               <div
                 style={{
                   width: 64,
@@ -285,7 +285,7 @@ export default function OnboardingPage() {
               </Text>
             </Space>
 
-            <Space direction="vertical" size={16}>
+            <Space orientation="vertical" size={16}>
               <Card
                 size="small"
                 style={{ background: BRAND_CARD_BG, border: BRAND_CARD_BORDER }}
@@ -418,9 +418,9 @@ export default function OnboardingPage() {
           </nav>
 
           {step === 1 && (
-            <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={24} style={{ width: "100%" }}>
               <div style={{ textAlign: "center" }}>
-                <Space direction="vertical" size={8}>
+                <Space orientation="vertical" size={8}>
                   <Title id="onboarding-title" level={3} style={{ margin: 0 }}>
                     {t("step1.title")}
                   </Title>
@@ -475,7 +475,7 @@ export default function OnboardingPage() {
                     aria-hidden="true"
                   />
                 </div>
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Text strong>{t("step1.clickToUpload")}</Text>
                   <Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
                     {t("step1.formats")}
@@ -527,9 +527,9 @@ export default function OnboardingPage() {
           )}
 
           {step === 2 && (
-            <Space direction="vertical" size={32} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={32} style={{ width: "100%" }}>
               <div style={{ textAlign: "center" }}>
-                <Space direction="vertical" size={8}>
+                <Space orientation="vertical" size={8}>
                   <Title id="onboarding-title" level={3} style={{ margin: 0 }}>
                     {t("step2.title")}
                   </Title>
@@ -731,7 +731,7 @@ export default function OnboardingPage() {
 
           {step === 3 && (
             <Space
-              direction="vertical"
+              orientation="vertical"
               size={16}
               style={{ width: "100%", textAlign: "center", padding: "40px 0" }}
             >
@@ -742,7 +742,7 @@ export default function OnboardingPage() {
               <div style={{ ...iconTile(96), margin: "0 auto" }}>
                 <CheckCircle2 style={{ width: 48, height: 48 }} />
               </div>
-              <Space direction="vertical" size={8}>
+              <Space orientation="vertical" size={8}>
                 <Title id="onboarding-title" level={2} style={{ margin: 0 }}>
                   {t("step3.title")}
                 </Title>

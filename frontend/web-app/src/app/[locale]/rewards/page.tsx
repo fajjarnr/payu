@@ -239,8 +239,8 @@ export default function RewardsPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
-        <Space direction="vertical" size={4}>
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={4}>
           <Typography.Title level={1} style={{ margin: 0 }}>
             {t("title")}
           </Typography.Title>
@@ -258,7 +258,7 @@ export default function RewardsPage() {
                 </Space>
               ),
               children: (
-                <Space direction="vertical" size={24} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={24} style={{ width: "100%" }}>
                   <Row gutter={[24, 24]}>
                     <Col xs={24} lg={12}>
                       <Card
@@ -272,7 +272,7 @@ export default function RewardsPage() {
                         styles={{ body: { padding: 24 } }}
                       >
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={24}
                           style={{
                             width: "100%",
@@ -295,7 +295,7 @@ export default function RewardsPage() {
                                 }}
                               />
                             </div>
-                            <Space direction="vertical" size={0}>
+                            <Space orientation="vertical" size={0}>
                               <Typography.Text
                                 strong
                                 style={{ ...lightLabelStyle, display: "block" }}
@@ -382,7 +382,7 @@ export default function RewardsPage() {
                                     color: "var(--ant-color-warning)",
                                   }}
                                 />
-                                <Space direction="vertical" size={0}>
+                                <Space orientation="vertical" size={0}>
                                   <Typography.Text
                                     strong
                                     style={{
@@ -434,7 +434,7 @@ export default function RewardsPage() {
                           {t("howToEarnPoints")}
                         </Typography.Title>
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={24}
                           style={{ width: "100%" }}
                         >
@@ -454,7 +454,7 @@ export default function RewardsPage() {
                                   }}
                                 />
                               </div>
-                              <Space direction="vertical" size={0}>
+                              <Space orientation="vertical" size={0}>
                                 <Typography.Text strong>
                                   {title}
                                 </Typography.Text>
@@ -473,7 +473,7 @@ export default function RewardsPage() {
                   </Row>
 
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ width: "100%" }}
                   >
@@ -517,7 +517,7 @@ export default function RewardsPage() {
                                     />
                                   )}
                                 </div>
-                                <Space direction="vertical" size={0}>
+                                <Space orientation="vertical" size={0}>
                                   <Typography.Text strong>
                                     {point.description}
                                   </Typography.Text>
@@ -556,7 +556,7 @@ export default function RewardsPage() {
                 </Space>
               ),
               children: (
-                <Space direction="vertical" size={24} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={24} style={{ width: "100%" }}>
                   <Row gutter={[24, 24]}>
                     <Col xs={24} lg={8}>
                       <Card
@@ -569,7 +569,7 @@ export default function RewardsPage() {
                         styles={{ body: { padding: 24 } }}
                       >
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={24}
                           style={{ width: "100%" }}
                         >
@@ -588,7 +588,7 @@ export default function RewardsPage() {
                                 }}
                               />
                             </div>
-                            <Space direction="vertical" size={0}>
+                            <Space orientation="vertical" size={0}>
                               <Typography.Text
                                 strong
                                 style={{ ...lightLabelStyle, display: "block" }}
@@ -607,7 +607,7 @@ export default function RewardsPage() {
                             </Space>
                           </Space>
                           <Space
-                            direction="vertical"
+                            orientation="vertical"
                             size={0}
                             style={{ width: "100%" }}
                           >
@@ -684,7 +684,7 @@ export default function RewardsPage() {
                           {t("activePromotions")}
                         </Typography.Title>
                         <Space
-                          direction="vertical"
+                          orientation="vertical"
                           size={16}
                           style={{ width: "100%" }}
                         >
@@ -710,7 +710,7 @@ export default function RewardsPage() {
                                       }}
                                     />
                                   </div>
-                                  <Space direction="vertical" size={0}>
+                                  <Space orientation="vertical" size={0}>
                                     <Typography.Text strong>
                                       {promo.name}
                                     </Typography.Text>
@@ -723,7 +723,7 @@ export default function RewardsPage() {
                                   </Space>
                                 </Space>
                                 <Space
-                                  direction="vertical"
+                                  orientation="vertical"
                                   size={0}
                                   align="end"
                                 >
@@ -752,7 +752,7 @@ export default function RewardsPage() {
                   </Row>
 
                   <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size={16}
                     style={{ width: "100%" }}
                   >
@@ -796,7 +796,7 @@ export default function RewardsPage() {
                                     />
                                   )}
                                 </div>
-                                <Space direction="vertical" size={4}>
+                                <Space orientation="vertical" size={4}>
                                   <Typography.Text strong>
                                     {cb.merchant}
                                   </Typography.Text>
@@ -848,7 +848,7 @@ export default function RewardsPage() {
                 </Space>
               ),
               children: (
-                <Space direction="vertical" size={24} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={24} style={{ width: "100%" }}>
                   <Card
                     style={{
                       background:
@@ -860,7 +860,7 @@ export default function RewardsPage() {
                     styles={{ body: { padding: 24 } }}
                   >
                     <Space
-                      direction="vertical"
+                      orientation="vertical"
                       size={24}
                       style={{ width: "100%", position: "relative", zIndex: 1 }}
                     >
@@ -998,7 +998,7 @@ export default function RewardsPage() {
                       {t("referralSummary")}
                     </Typography.Title>
                     <Space
-                      direction="vertical"
+                      orientation="vertical"
                       size={24}
                       style={{ width: "100%" }}
                     >
@@ -1014,7 +1014,7 @@ export default function RewardsPage() {
                                 }}
                               />
                             </div>
-                            <Space direction="vertical" size={0}>
+                            <Space orientation="vertical" size={0}>
                               <Typography.Text strong>{title}</Typography.Text>
                               <Typography.Text
                                 type="secondary"

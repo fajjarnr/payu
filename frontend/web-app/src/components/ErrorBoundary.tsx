@@ -52,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
    return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
      <Card style={{ maxWidth: 448, width: '100%', borderRadius: 16, textAlign: 'center' }}>
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
        <div style={{ height: 80, width: 80, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', backgroundColor: 'var(--ant-color-error-bg)', border: '1px solid var(--ant-color-error-border)' }}>
         <AlertTriangle style={{ height: 40, width: 40, color: 'var(--ant-color-error)' }} aria-hidden="true" />
        </div>
@@ -74,7 +74,7 @@ export class ErrorBoundary extends Component<Props, State> {
         />
        )}
 
-       <Space direction="vertical" size={12} style={{ width: '100%' }}>
+       <Space orientation="vertical" size={12} style={{ width: '100%' }}>
         <Button
          type="primary"
          block
