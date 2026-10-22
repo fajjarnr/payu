@@ -19,7 +19,7 @@ export default function StatementsPage() {
   return (
     <DashboardLayout>
       <SkipLink />
-      <Space orientation="vertical" size={16} style={{ maxWidth: 1024, margin: '0 auto', padding: '32px 16px', width: '100%' }}>
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <PageHeader title={t('pageTitle')} subtitle={t('pageSubtitle')} />
         <StatementDownloader />
       </Space>

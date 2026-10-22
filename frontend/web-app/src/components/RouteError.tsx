@@ -3,8 +3,11 @@
 import { useEffect } from 'react';
 import { theme, Alert, Button, Card, Space, Typography } from 'antd';
 import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { useRouter } from '@/lib/navigation';
 import { ArrowLeft, Home, RefreshCw } from '@/components/icons';
+import DashboardLayout from '@/components/DashboardLayout';
+import { usesAppShell } from '@/lib/app-shell-routes';
 
 export interface RouteErrorProps {
   error: Error & { digest?: string };
@@ -20,11 +23,12 @@ export default function RouteError({ error, reset }: RouteErrorProps) {
   const { token } = theme.useToken();
   const t = useTranslations('common');
   const router = useRouter();
+  const pathname = usePathname();
   useEffect(() => {
     console.error('[RouteError]', error);
   }, [error]);
 
-  return (
+  const card = (
     <div
       style={{
         display: 'flex',
@@ -90,4 +94,9 @@ export default function RouteError({ error, reset }: RouteErrorProps) {
       </Card>
     </div>
   );
+
+  // The boundary replaces the page component, and the shell lives inside the
+  // page — so without this the whole app frame vanished on any page error.
+  if (!usesAppShell(pathname)) return card;
+  return <DashboardLayout>{card}</DashboardLayout>;
 }

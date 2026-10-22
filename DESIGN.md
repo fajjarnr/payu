@@ -99,9 +99,10 @@ PayU adalah platform digital banking untuk Indonesia. Target user: Millennials &
 
 ### Grid
 
-- **Max content width**: 1200px (desktop)
+- **Max content width**: 1440px — the shell (`DashboardLayout`) owns the content box: `max-w-[1440px]`, `px-4` (mobile) / `sm:px-6`, `py-4` / `sm:py-6`. **Pages must not re-implement it** (no own `max-width`, no own horizontal padding): the 288px sidebar leaves 1632px at 1920, and a 1200px measure stranded 216px of empty margin on each side of a data-dense console.
 - **Gutter**: 16px (mobile), 24px (tablet+)
 - **Columns**: 12-column grid on desktop, 4-column on mobile
+- **Narrow measures** are for single-column forms only (e.g. `max-w-4xl` = 896px on the merchant registration page), expressed with the same class vocabulary so the intent is explicit.
 
 ### Navigation
 

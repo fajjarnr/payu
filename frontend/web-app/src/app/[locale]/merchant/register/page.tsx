@@ -99,7 +99,9 @@ export default function MerchantRegisterPage() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--ant-color-fill-tertiary)', padding: '48px 16px' }}>
-      <div style={{ maxWidth: 896, margin: '0 auto' }}>
+      {/* A single form keeps a narrow measure (max-w-4xl = 896px) — the same
+          class vocabulary as the shell box, so the intent is explicit. */}
+      <div className="max-w-4xl mx-auto w-full">
         <Space orientation="vertical" size={24} style={{ width: '100%' }}>
           <Space orientation="vertical" size={16} style={{ width: '100%', textAlign: 'center', alignItems: 'center' }}>
             <div style={{ width: 80, height: 80, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>

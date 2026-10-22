@@ -373,7 +373,11 @@ export default function DashboardLayout({
             {/* Inside the main landmark: outside it the skip link was the one
                 piece of page content not contained by a landmark (axe region). */}
             <SkipLink href="#main-content" />
-            <div className="payu-content-inner mx-auto w-full max-w-[1200px] px-4 py-4 sm:px-6 sm:py-6">
+            {/* One content box for the whole app. The sidebar leaves 1632px at
+                1920 — capping at 1200 left 216px of empty margin on each side
+                of a data-dense console, so the measure is 1440 (96px gutters)
+                and pages must not re-implement it. */}
+            <div className="payu-content-inner mx-auto w-full max-w-[1440px] px-4 py-4 sm:px-6 sm:py-6">
               {children}
             </div>
           </Content>

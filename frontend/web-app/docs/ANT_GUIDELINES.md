@@ -64,7 +64,7 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 
 ### 3.1 App shell — `DashboardLayout.tsx:134-217, 233-412`
 
-- Anatomy: `Layout` + `Sider` 288px (`breakpoint=lg`) + sticky `Header` + `Content` max-1200 + nav `Drawer` + search `Drawer` + `MobileNav`.
+- Anatomy: `Layout` + `Sider` 288px (`breakpoint=lg`) + sticky `Header` + `Content` max-1440 + nav `Drawer` + search `Drawer` + `MobileNav`.
 - States: drawer open/closed; search inline ≥xl else trigger+drawer (`:302-320`). No shell-level loading/error — **must** stay that way (pages own states).
 - Input: sidebar items navigate via `onClick → router.push` (`:173-176`) — **must** become real links (keyboard: Enter works, but no new-tab/context-menu semantics).
 - Token usage: exemplary (`token.colorBgContainer/BorderSecondary/BgLayout/PrimaryBg`, `:244-245,270-271,348-349,362`).
@@ -151,7 +151,8 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 
 - Every route segment **must** delegate to the shared atoms: `error.tsx` → `export { default } from '@/components/RouteError'`, `loading.tsx` → `<LoadingState variant="spinner|skeleton" />`. Per-route copies are banned (35 error files were four English variants of the same screen; 34 loading files were a Tailwind spinner with an English "Loading..." label).
 - `RouteError` **must** stay localized (`common.error*`) — the copies it replaced were English in an Indonesian-default app — and **must** offer retry + back + home; technical detail is development-only.
-- `LoadingState` skeleton **must** use the shell's content box (1200px, 16/24px padding) so the page does not jump when the data arrives.
+- `LoadingState` skeleton **must** use the shell's content box (1440px, 16/24px padding) so the page does not jump when the data arrives.
+- The shell lives *inside* the page component, so a page error or a 404 replaced the whole app frame. `RouteError` and `not-found` **must** re-wrap their card in `DashboardLayout` for app routes (`usesAppShell` in `src/lib/app-shell-routes.ts` decides; the public routes — landing, login, forgot-password, onboarding, merchant register — and the backoffice console keep their own frame).
 - Guard: `src/__tests__/app/route-states.test.ts` asserts the delegation and the A-01 stem ban for every route file.
 
 ### 3.14 Focus ring — `globals.css` `.payu-focus-ring`
@@ -169,6 +170,13 @@ Conventions for all: antd component first; `ConfigProvider` tokens over Tailwind
 - The header row has room for **four** controls at 360px, not six: the action group alone needs 333px, which squeezed the menu button — the only navigation on mobile — down to 22px (below the 24px target floor). Theme and language **must** hide below `sm` (they stay in `/settings`), and every header control **must** set `flexShrink: 0`.
 - A brand column that is meant to disappear on mobile needs the `payu-lg-only` class: an antd `<Col xs={0}>` collapses to zero width but still renders its children, and an inline `display: flex` beats any class. The class owns the column's layout (hidden below `lg`, flex column from `lg`).
 - Guard: `src/__tests__/app/mobile-shell.test.ts` (source-level, because jsdom cannot measure flex shrinking or media queries).
+
+### 3.17 Content box — one column for the whole app
+
+- The shell owns the column: `max-w-[1440px]`, `px-4` / `sm:px-6`, `py-4` / `sm:py-6`. At 1920 the 288px sider leaves 1632px, so 1440 keeps 96px of gutter; a 1200px measure stranded 216px of empty margin on each side of a data-dense console.
+- **Pages must not re-implement it** — no own `max-width`, no own horizontal padding. That is what made the grid jump between pages: the statements page ran 1024px inside a 1200px shell, and the notifications title sat 25px inside the content edge because its header was wrapped in a `Card`.
+- A narrower measure is for single-column forms only (`max-w-4xl` = 896px on the merchant registration page), expressed with the same class vocabulary so the intent is explicit.
+- Guard: `src/__tests__/app/content-box.test.tsx` — the shell owns `max-w-[1440px]`, the skeleton matches it, and no page carries a column of its own.
 
 ## 4. Accessibility requirements and testable acceptance criteria
 
@@ -236,6 +244,7 @@ Ambiguous-label fixes (before → after):
 - [ ] Motion: autoplay pausable + reduced-motion off (F-07); announcements polite for submit/cancel/dismiss (F-08).
 - [ ] States: loading skeleton, shared empty, and error+retry all render — no silent `null` on failure (R-06); a failed load never renders the empty state.
 - [ ] Route states: every `error.tsx` / `loading.tsx` delegates to `RouteError` / `LoadingState` (§3.13) — no per-route copy.
+- [ ] Grid: the page uses the shell's content box and adds no column of its own (§3.17); the page title starts at the same x as on every other page; a page error or 404 keeps the app frame.
 - [ ] Landmarks + headings: skip link inside `<main>`; one `h1` per page, no skipped levels (axe `landmark-one-main`, `region`, `heading-order`).
 - [ ] Responsive: beneficiary form stacks `xs=24`; tile/description truncation verified with longest `id` strings; desktop+mobile ledger parity.
 - [ ] i18n/theme: `id` + `en` strings present; antd locale synced (`antd-locale.ts:9-20`); light + dark screenshots attached.

@@ -126,9 +126,9 @@ export default function NotificationsPage() {
     <DashboardLayout>
       <SkipLink />
       <Space orientation="vertical" size={24} style={{ width: "100%" }}>
-        {/* Header */}
-        <Card>
-          <Row justify="space-between" align="middle" gutter={[16, 16]}>
+        {/* Header — a bare row, like every other page: the Card wrapper put
+            the title 25px inside the content edge, so the grid shifted. */}
+        <Row justify="space-between" align="middle" gutter={[16, 16]}>
             <Col>
               <Space orientation="vertical" size={4}>
                 <Title
@@ -179,7 +179,6 @@ export default function NotificationsPage() {
               </Space>
             </Col>
           </Row>
-        </Card>
 
         {/* Toolbar */}
         <Card>

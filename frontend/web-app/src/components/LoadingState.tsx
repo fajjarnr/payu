@@ -32,7 +32,7 @@ export function LoadingState({ variant = 'skeleton' }: LoadingStateProps) {
     );
   }
   return (
-    // The shell renders its content in a 1200px column with 16/24px padding —
+    // The shell renders its content in a 1440px column with 16/24px padding —
     // the skeleton uses the same box so the page does not jump on load.
     <div
       aria-busy="true"
@@ -41,7 +41,7 @@ export function LoadingState({ variant = 'skeleton' }: LoadingStateProps) {
         display: 'flex',
         flexDirection: 'column',
         gap: token.margin,
-        maxWidth: 1200,
+        maxWidth: 1440,
         margin: '0 auto',
         padding: token.padding,
       }}
