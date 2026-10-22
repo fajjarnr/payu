@@ -1,4 +1,11 @@
 # 📈 PayU Platform — Progress & Engineering Scorecard
+## Autonomous dev loop — SIT+UAT+preprod bootstrapped, 0 OPEN (2026-10-22)
+
+- **Skor**: `IDN-002` + `KAFKA-UAT-001` CLOSED, `KAFKA-QUORUM-001` CLOSED (terbukti di 3 env), `PLAT-DRIFT-001` advanced (sit/uat/preprod converged, sisa prod). **0 OPEN + 2 DEFERRED**; sisa hanya platform gates eksternal (`DEPLOY-010`, `SEC-020`, `PROMO-2026-08`, `PROD-READINESS`).
+- **Per env** (semua dari overlay git): 33/33 Deployment 1/1, CNPG 3/3 healthy, Kafka `True` 4.1.0 + 118/118 topic, Keycloak `True` + realm `Done`, sync jobs `Complete`, transfer 1000 COMPLETED + ledger DEBIT/CREDIT sepasang, edge 200 (`app-*`, `gateway-*`, `sso-*`).
+- **Pola bootstrap** (berulang, terdokumentasi L-491..L-497): secrets→data→messaging→identity→workloads; quota dev-parity; `preferred` affinity single-AZ; digest re-pin + `skopeo copy` split-creds; `*-plain-cache` patch; Route SSO first-class (operator Ingress tak admit shared); user pin via `partialImport` (RHBK 26.6 abaikan POST `id`); `sed s///` escape fix di sync-job; `edge-plaintext-8080` untuk STRICT; transplant Quarkus OIDC preprod.
+- **Bukti**: 9/9 edge 200 lintas 3 env; 4 env × transfer COMPLETED; lessons L-491..L-497; commits `77384ac` (sit) + `233d679` (uat) + `b774492` (preprod).
+
 ## Dev loop payu-dev production-ready — MESH-003/004/006 CLOSED (2026-10-22)
 
 - **MESH-003**: deny-by-default L7 live di `payu-dev` (`deny-all` + `allow-mesh-and-gateway` + `allow-direct-routes`); RBAC-403/5m = 0, antar-service 100% mTLS, transfer COMPLETED + ledger pair, Routes 200, guard TDD hijau.
