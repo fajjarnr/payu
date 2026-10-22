@@ -1087,6 +1087,10 @@ export default function TransferPage() {
                                     display: "block",
                                     fontSize: "0.75rem",
                                     marginBottom: 8,
+                                    // On the selected tile the background is the
+                                    // emerald tint: the secondary ink measures
+                                    // 4.1:1 there, so it takes the primary ink.
+                                    color: isSelected ? token.colorText : undefined,
                                   }}
                                 >
                                   {t.description}

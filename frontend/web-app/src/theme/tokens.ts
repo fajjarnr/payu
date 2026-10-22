@@ -135,6 +135,12 @@ export const CARD_ART_GRADIENT =
 export const BRAND_PANEL_BG = '#1A1A2E';
 export const BRAND_PANEL_FG = '#FFFFFF';
 export const BRAND_PANEL_MUTED = '#E5E7EB';
+
+// Danger panel (the security "panic protocol" card). antd's error colour is
+// dark in light mode and light in dark mode, so a white label would fail on
+// one of them (3.6:1 measured in dark mode). A fixed deep red keeps the white
+// label at 9.7:1 in both themes.
+export const DANGER_PANEL_BG = '#8B1A1A';
 const sharedButtonTokens = {
   // White on the vivid emerald fill is 2.00:1 (accepted brand gap); ink
   // labels on primary fills restore AA without a palette swap.
@@ -179,6 +185,14 @@ export const lightComponentTokens: ComponentTokens = {
 
 export const darkComponentTokens: ComponentTokens = {
   ...sharedComponentTokens,
+  Menu: {
+    // The dark emerald tint needs a light label (the deep brand green is
+    // 1.85:1 on it).
+    itemSelectedColor: '#35D6A0',
+  },
+  Tabs: {
+    itemSelectedColor: '#35D6A0',
+  },
   Button: {
     ...sharedButtonTokens,
     // Danger labels only. White on the dark-mapped red fill (#dc5e5e) is

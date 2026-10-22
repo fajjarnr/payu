@@ -595,12 +595,12 @@ export default function CardsPage() {
                       </Flex>
                       <Tag
                         bordered={false}
-                        color={
-                          item.status
-                            ? token.colorPrimaryText
-                            : token.colorTextDescription
-                        }
+                        // antd's `color` prop takes a preset, not a colour:
+                        // a colour string paints the whole tag as the fill.
                         style={{
+                          color: item.status
+                            ? token.colorPrimaryText
+                            : token.colorTextDescription,
                           fontSize: 12,
                           fontWeight: 700,
                           letterSpacing: "0.1em",

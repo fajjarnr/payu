@@ -69,6 +69,14 @@ All notable changes to this project will be documented in this file.
 - **Tabel tanpa nama kolom (Low)**: kolom aksi pada tabel transaksi kini punya header `sr-only` ("Aksi").
 - **Halaman tanpa `h1` (Low)**: state error `/merchant` kini membawa judul halaman.
 
+### Fixed (Web-app dark-mode audit, 2026-10-22)
+
+- **Sweep axe dark mode di 21 route (Medium)**: light mode 0 pelanggaran, dark mode **15 pelanggaran** — kini **0 di kedua mode** (light: 1017 pemeriksaan lolos di 23 route; dark: 925 di 21 route).
+- **Token komponen dua mode (High)**: `Menu.itemSelectedColor` dan `Tabs.itemSelectedColor` memakai nilai light-mode di kedua mode — label menu/tab terpilih hanya 1.85:1 di atas tint emerald gelap. `darkComponentTokens` kini meng-override keduanya ke hijau terang `#35D6A0`.
+- **Panel bahaya (Medium)**: kartu "Protokol Panic" di `/security` memakai warna error — gelap di light mode, terang di dark mode, sehingga teks putih selalu gagal di salah satu mode (3.61:1). Kini memakai surface merah tetap `DANGER_PANEL_BG` `#8B1A1A` (putih 9.7:1 di kedua mode).
+- **`<Tag color>` menerima preset, bukan warna (Medium)**: `/cards` dan `/pockets` mengoper string warna ke prop `color` antd — antd lalu mengecat seluruh tag dengan warna itu dan label berakhir di permukaan yang tidak diinginkan (2.17:1 di dark mode). Warna label kini lewat `style={{ color }}`.
+- **Deskripsi pada kartu terpilih (Low)**: label sekunder pada tile transfer terpilih memakai tinta sekunder di atas tint emerald gelap (4.09:1) — kini memakai tinta utama saat tile terpilih.
+
 ### Added (Istio ingress gateway di shared domain `apps.fajjjar.my.id`, 2026-10-21)
 
 - **Keputusan kepemilikan domain shared + Istio ingress gateway live di `payu-dev` (2026-10-21)**: `apps.fajjjar.my.id` dimiliki **satu tier** — OpenShift IngressController `shared-ingress` (TLS via `shared-ingress-cert`, AWS NLB `52.74.162.171`) tetap pemilik domain; Istio gateway **tidak memiliki domain**, dia **backend** di belakang router dengan Service `ClusterIP` (tanpa NLB kedua, tanpa biaya tambahan). Manifest baru: `infrastructure/platform/mesh/ingress/` (`namespace.yaml` namespace `payu-mesh-gateway` berlabel `payu.fajjjar.my.id/ingress: shared`, `gateway.yaml`, `route.yaml`, `http-route.yaml`, `network-policies.yaml`, `kustomization.yaml`) — package terpisah, tak ikut `base/kustomization.yaml`; `payu-dev` & `istio-system` **tidak** diberi label shared, jadi Route web-app/analytics tetap di router default. ADR baru: `docs/adr/0073-istio-ingress-gateway-and-shared-domain-ownership.md` (Accepted) + index `docs/adr/README.md`.

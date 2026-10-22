@@ -34,6 +34,7 @@ import { notify as toast } from "@/lib/notify";
 import { AuthService } from "@/services/AuthService";
 import { SkipLink } from "@/lib/a11y";
 import { formatCurrency } from "@/lib/currency";
+import { DANGER_PANEL_BG } from "@/theme/tokens";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -328,8 +329,10 @@ export default function SecurityPage() {
 
         <Card
           style={{
-            backgroundColor: "var(--ant-color-error)",
-            borderColor: "var(--ant-color-error)",
+            // A fixed deep red: the error colour is light in dark mode, where
+            // a white label would measure 3.6:1.
+            backgroundColor: DANGER_PANEL_BG,
+            borderColor: DANGER_PANEL_BG,
             position: "relative",
             overflow: "hidden",
           }}

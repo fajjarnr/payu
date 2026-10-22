@@ -830,8 +830,12 @@ export default function PocketsPage() {
                               {goal.locked ? (
                                 <Tag
                                   bordered={false}
-                                  color={token.colorPrimaryText}
-                                  style={{ borderRadius: 9999, fontWeight: 700 }}
+                                  // antd's `color` prop takes a preset, not a colour.
+                                  style={{
+                                    color: token.colorPrimaryText,
+                                    borderRadius: 9999,
+                                    fontWeight: 700,
+                                  }}
                                 >
                                   {t("interestRate", {
                                     rate: goal.interestRate ?? "",
