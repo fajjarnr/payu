@@ -158,11 +158,15 @@ export default function DashboardLayout({
       key: "identity",
       disabled: true,
       label: (
-        <div className="py-1">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: "var(--ant-color-text-tertiary)" }}>
+        // A disabled menu item is faded to 25% by antd (1.6:1 on the
+        // dropdown surface), so the identity block states its own ink.
+        <div className="py-1" style={{ color: token.colorText }}>
+          {/* 12px is the DESIGN.md caption size, and the description role
+              clears AA (the tertiary role measured 1.6:1 on the dropdown). */}
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: token.colorTextDescription }}>
             Authenticated User
           </p>
-          <p className="truncate text-lg font-bold uppercase tracking-tight">
+          <p className="truncate text-lg font-bold uppercase tracking-tight" style={{ color: token.colorText }}>
             {username}
           </p>
         </div>
@@ -282,7 +286,7 @@ export default function DashboardLayout({
                   showSegment={true}
                   className="text-lg font-bold leading-tight"
                 />
-                <p className="ml-0.5 mt-1 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: token.colorTextSecondary }}>
+                <p className="ml-0.5 mt-1 text-xs font-bold uppercase tracking-[0.2em]" style={{ color: token.colorTextSecondary }}>
                   {t("aiForecaster")}
                 </p>
               </div>
@@ -333,6 +337,9 @@ export default function DashboardLayout({
                 menu={{ items: profileItems }}
                 trigger={["click"]}
                 placement="bottomRight"
+                // Render inside the header (a landmark) instead of a body
+                // portal: a menu outside every landmark trips axe `region`.
+                getPopupContainer={(trigger) => trigger.parentElement ?? document.body}
               >
                 <Button
                   type="text"
@@ -380,8 +387,10 @@ export default function DashboardLayout({
           title={
             // Drawer swaps places with the Sider below lg; its brand visual
             // stays out of the a11y tree so only one logo landmark exists.
-            <span aria-hidden="true" className="flex items-center gap-4 px-2 py-4">
-              {logoMark}
+            // The sr-only name gives the dialog its accessible name.
+            <span className="flex items-center gap-4 px-2 py-4">
+              <span aria-hidden="true">{logoMark}</span>
+              <span className="sr-only">{t("mobileNavigation")}</span>
             </span>
           }
           styles={{
@@ -389,7 +398,9 @@ export default function DashboardLayout({
             body: { padding: 0, background: token.colorBgContainer },
           }}
         >
-          <div className="payu-sidebar-menu">{sidebarMenu(t("sidebarNav"))}</div>
+          {/* Its own label: the sider's nav is still in the DOM below lg,
+              and two landmarks with the same name are ambiguous. */}
+          <div className="payu-sidebar-menu">{sidebarMenu(t("mobileNavigation"))}</div>
         </Drawer>
 
         <Drawer
