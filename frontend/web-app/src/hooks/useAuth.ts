@@ -5,7 +5,6 @@ import { MutationPresets } from '@/lib/mutation-config';
 import AuthService from '@/services/AuthService';
 import { useAuthStore, useWalletStore, useNotificationStore, useTransactionStore, useUIStore } from '@/stores';
 import { createLocaleHref } from '@/lib/navigation';
-import { useLocale } from 'next-intl';
 
 export const useLogout = () => {
   const queryClient = useQueryClient();
@@ -14,7 +13,6 @@ export const useLogout = () => {
   const setNotifications = useNotificationStore((state) => state.setNotifications);
   const resetFilters = useTransactionStore((state) => state.resetFilters);
   const clearToasts = useUIStore((state) => state.clearToasts);
-  const locale = useLocale();
 
   return useMutation({
     mutationFn: async () => {
@@ -45,7 +43,7 @@ export const useLogout = () => {
 
       queryClient.clear();
       if (typeof window !== 'undefined') {
-        window.location.href = createLocaleHref('/login', locale);
+        window.location.href = createLocaleHref('/login');
       }
     },
   });

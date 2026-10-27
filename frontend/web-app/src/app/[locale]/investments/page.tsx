@@ -3,15 +3,14 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { Alert, Button, Space, Row, Col, Card, Typography } from 'antd';
 import { useInvestmentAccount, useBuyDeposit, useSellInvestment, useCreateInvestmentAccount } from '@/hooks';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { asMoney, formatCurrency } from '@/lib/currency';
 import { notify as toast } from '@/lib/notify';
 import { SkipLink } from "@/lib/a11y";
 
 export default function InvestmentsPage() {
   const t = useTranslations('investments');
-  const locale = useLocale();
-  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
   const {
     data: account,
     isLoading: loadingAccount,

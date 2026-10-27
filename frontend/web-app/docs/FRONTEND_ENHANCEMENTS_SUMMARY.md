@@ -177,8 +177,7 @@ Features:
 
 ### Updated Translations
 **Files**:
-- `messages/id.json` - Indonesian
-- `messages/en.json` - English
+- `messages/id.json` - Indonesian (single-locale app since 2026-10-27)
 
 **New Keys**:
 ```json
@@ -267,7 +266,6 @@ src/app/[locale]/page.tsx (integrated widgets)
 src/components/DashboardLayout.tsx (ARIA labels)
 src/lib/a11y.tsx (React import fix)
 messages/id.json (new translations)
-messages/en.json (new translations)
 package.json (new dependencies & scripts)
 ```
 

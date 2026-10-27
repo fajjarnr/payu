@@ -12,12 +12,8 @@ test.describe('Support Flow', () => {
   });
 
   test('should display support page with heading', async ({ authPage: page }) => {
-    // Uses i18n; id locale: "Bantuan"
-    const heading = page.getByRole('heading', { name: 'Bantuan', exact: true });
-    const headingEn = page.getByRole('heading', { name: 'Support', exact: true });
-    const hasId = await heading.isVisible().catch(() => false);
-    const hasEn = await headingEn.isVisible().catch(() => false);
-    expect(hasId || hasEn).toBeTruthy();
+    // Single-locale app: id only ("Bantuan").
+    await expect(page.getByRole('heading', { name: 'Bantuan', exact: true })).toBeVisible({ timeout: 10000 });
   });
 
   test('should display system status banner', async ({ authPage: page }) => {
@@ -33,21 +29,16 @@ test.describe('Support Flow', () => {
   });
 
   test('should display support channels', async ({ authPage: page }) => {
-    // id locale channel names
     const liveChat = await page.getByText('Bantuan Langsung').isVisible().catch(() => false);
     const email = await page.getByText('Protokol Email').isVisible().catch(() => false);
     const phone = await page.getByText('Panggilan Suara').isVisible().catch(() => false);
-    // en locale fallback
-    const liveChatEn = await page.getByText('Live Chat').isVisible().catch(() => false);
-    expect(liveChat || liveChatEn).toBeTruthy();
+    expect(liveChat).toBeTruthy();
     expect(email || true).toBeTruthy(); // at least one channel visible
     expect(phone || true).toBeTruthy();
   });
 
   test('should display FAQ section', async ({ authPage: page }) => {
-    const faqId = await page.getByText('Tanya Jawab').isVisible().catch(() => false);
-    const faqEn = await page.getByText('FAQs').isVisible().catch(() => false);
-    expect(faqId || faqEn).toBeTruthy();
+    await expect(page.getByText('Tanya Jawab')).toBeVisible({ timeout: 10000 });
   });
 
   test('should display FAQ items', async ({ authPage: page }) => {

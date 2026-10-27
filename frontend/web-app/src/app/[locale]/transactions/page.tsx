@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useAuthStore } from '@/stores';
 import { useTransactions, useCancelTransaction } from '@/hooks';
@@ -64,8 +64,7 @@ export default function TransactionsPage() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [filters, setFilters] = useState<TransactionFilters>({});
-  const locale = useLocale();
-  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
 
   const { data: transactions, isLoading } = useTransactions(accountId || undefined, page, 20, filters);
   const cancelTransaction = useCancelTransaction();

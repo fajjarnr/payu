@@ -26,14 +26,11 @@ export default function MobileNav() {
   // Don't show if not authenticated
   if (!isAuthenticated) return null;
 
-  // next-intl `as-needed` keeps `/id` unprefixed: strip a leading locale
-  // segment before comparing, so active state works in both locales.
+  // Locale prefix is always present (`/id/...`): strip the leading segment
+  // before comparing. Single-locale app: only `/id` exists.
   const barePathname =
-    pathname === "/id" ||
-    pathname === "/en" ||
-    pathname.startsWith("/id/") ||
-    pathname.startsWith("/en/")
-      ? pathname.replace(/^\/(id|en)(?=\/|$)/, "") || "/"
+    pathname === "/id" || pathname.startsWith("/id/")
+      ? pathname.replace(/^\/id(?=\/|$)/, "") || "/"
       : pathname;
 
   // Segment match: child routes highlight their parent tab; the dashboard

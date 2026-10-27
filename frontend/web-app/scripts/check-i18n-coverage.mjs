@@ -2,17 +2,18 @@
 /**
  * i18n key coverage check — prevents MISSING_MESSAGE crashes (L-057).
  *
- * Compares key paths in messages/en.json vs messages/id.json.
+ * Single-locale app (Indonesian only): validates messages/id.json —
+ * valid JSON, non-empty key set, every leaf a non-empty string.
  * Fails CI if:
- *   - Any key exists in en.json but not id.json (Indonesian users see English fallback)
- *   - Any key exists in id.json but not en.json (English users see missing key)
+ *   - id.json is unreadable or invalid JSON
+ *   - id.json has zero keys or any empty/non-string leaf
  *
  * Usage:
  *   node scripts/check-i18n-coverage.mjs
  *
  * Exit codes:
- *   0 = key sets match
- *   1 = key mismatch
+ *   0 = catalog valid
+ *   1 = catalog invalid
  *   2 = file read error
  */
 
@@ -24,78 +25,61 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const messagesDir = resolve(__dirname, '../messages');
 
 /**
- * Flatten nested JSON object to dot-path set.
- * { common: { loading: "..." } } → Set { "common.loading" }
+ * Flatten nested JSON object to dot-path entries.
+ * { common: { loading: "..." } } → [ ["common.loading", "..."] ]
  */
 function flatten(obj, prefix = '') {
-  const keys = new Set();
+  const entries = [];
   for (const [k, v] of Object.entries(obj)) {
     const path = prefix ? `${prefix}.${k}` : k;
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
-      for (const nested of flatten(v, path)) keys.add(nested);
+    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      entries.push(...flatten(v, path));
     } else {
-      keys.add(path);
+      entries.push([path, v]);
     }
   }
-  return keys;
-}
-
-/**
- * Check key parity between two locale files.
- * Returns { ok: boolean, missing: Set, extra: Set }.
- */
-function checkParity(enKeys, idKeys) {
-  const missing = new Set([...enKeys].filter((k) => !idKeys.has(k)));
-  const extra = new Set([...idKeys].filter((k) => !enKeys.has(k)));
-  return { ok: missing.size === 0 && extra.size === 0, missing, extra };
+  return entries;
 }
 
 function main() {
-  let enRaw, idRaw;
+  let idRaw;
   try {
-    enRaw = readFileSync(resolve(messagesDir, 'en.json'), 'utf-8');
     idRaw = readFileSync(resolve(messagesDir, 'id.json'), 'utf-8');
   } catch (e) {
-    console.error(`ERROR: Failed to read locale files: ${e.message}`);
+    console.error(`ERROR: Failed to read locale file: ${e.message}`);
     process.exit(2);
   }
 
-  let en, id;
+  let id;
   try {
-    en = JSON.parse(enRaw);
     id = JSON.parse(idRaw);
   } catch (e) {
-    console.error(`ERROR: Invalid JSON in locale files: ${e.message}`);
+    console.error(`ERROR: Invalid JSON in id.json: ${e.message}`);
     process.exit(2);
   }
 
-  const enKeys = flatten(en);
-  const idKeys = flatten(id);
+  const entries = flatten(id);
+  console.warn(`id.json: ${entries.length} keys`);
 
-  console.warn(`en.json: ${enKeys.size} keys`);
-  console.warn(`id.json: ${idKeys.size} keys`);
+  const bad = entries.filter(
+    ([, v]) => typeof v !== 'string' || v.trim() === '',
+  );
 
-  const { ok, missing, extra } = checkParity(enKeys, idKeys);
-
-  if (ok) {
-    console.warn('OK: key parity maintained across locales');
-    process.exit(0);
+  if (entries.length === 0 || bad.length > 0) {
+    console.error('');
+    console.error('FAIL: id.json catalog invalid');
+    for (const [k, v] of bad.slice(0, 20)) {
+      console.error(`    - ${k}: ${JSON.stringify(v)}`);
+    }
+    if (bad.length > 20) console.error(`    ... and ${bad.length - 20} more`);
+    console.error('');
+    console.error('Fix: every leaf in id.json must be a non-empty string.');
+    console.error('Ref: L-057 — MISSING_MESSAGE causes silent translation fallback in production.');
+    process.exit(1);
   }
 
-  console.error('');
-  console.error('FAIL: i18n key mismatch detected');
-  if (missing.size > 0) {
-    console.error(`  Missing in id.json (${missing.size}):`);
-    for (const k of [...missing].sort()) console.error(`    - ${k}`);
-  }
-  if (extra.size > 0) {
-    console.error(`  Extra in id.json (${extra.size}):`);
-    for (const k of [...extra].sort()) console.error(`    + ${k}`);
-  }
-  console.error('');
-  console.error('Fix: add missing keys to BOTH en.json and id.json, or remove extras.');
-  console.error('Ref: L-057 — MISSING_MESSAGE causes silent translation fallback in production.');
-  process.exit(1);
+  console.warn('OK: id.json catalog valid (single-locale app)');
+  process.exit(0);
 }
 
 main();

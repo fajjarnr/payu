@@ -77,18 +77,18 @@ describe("MobileNav", () => {
     renderWithIntl(<MobileNav />);
 
     const homeLink = screen.getByText("Dasbor").closest("a");
-    expect(homeLink).toHaveAttribute("href", "/dashboard");
+    expect(homeLink).toHaveAttribute("href", "/id/dashboard");
 
     const transferLink = screen.getByText("Transfer").closest("a");
-    expect(transferLink).toHaveAttribute("href", "/transfer");
+    expect(transferLink).toHaveAttribute("href", "/id/transfer");
     const qrisLink = screen.getByText("Bayar QRIS").closest("a");
-    expect(qrisLink).toHaveAttribute("href", "/qris");
+    expect(qrisLink).toHaveAttribute("href", "/id/qris");
 
     const cardsLink = screen.getByText("Kartu").closest("a");
-    expect(cardsLink).toHaveAttribute("href", "/cards");
+    expect(cardsLink).toHaveAttribute("href", "/id/cards");
 
     const settingsLink = screen.getByText("Pengaturan").closest("a");
-    expect(settingsLink).toHaveAttribute("href", "/settings");
+    expect(settingsLink).toHaveAttribute("href", "/id/settings");
   });
 
   it("should have proper styling for mobile navigation", () => {
@@ -138,8 +138,8 @@ describe("MobileNav", () => {
     expect(activeLink).toHaveAttribute("aria-current", "page");
   });
 
-  it("should highlight active item with /en locale prefix", () => {
-    mockPathname = "/en/transfer";
+  it("should highlight active item on the prefixed default route", () => {
+    mockPathname = "/id/transfer";
     renderWithIntl(<MobileNav />);
 
     const transferLink = screen.getByText("Transfer").closest("a");

@@ -18,7 +18,7 @@ import {
   CheckCircle2,
   Repeat
 } from '@/components/icons';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/navigation';
 import { Alert, Button, Card, Col, Empty, Input, List, Modal, Row, Select, Space, Tag, Typography } from 'antd';
 import {
@@ -39,8 +39,7 @@ export default function ScheduledTransfersPage() {
   const t = useTranslations("scheduledTransfers");
   const { accountId: storeAccountId } = useAuthStore();
   const accountId = storeAccountId ?? '';
-  const locale = useLocale();
-  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
 
   const { data: rawTransfers, isLoading } = useScheduledTransfers(accountId);
   const transfers = Array.isArray(rawTransfers) ? rawTransfers : [];

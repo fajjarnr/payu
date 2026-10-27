@@ -22,7 +22,7 @@ import {
   TriangleAlert,
 } from "@/components/icons";
 import { useQuery } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { BalanceResponse, WalletTransaction, Pocket } from "@/types";
 import api from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -94,8 +94,7 @@ export default function PocketsPage() {
   const { token } = theme.useToken();
   // SECURITY: Get accountId from auth store, NOT localStorage
   const accountId = useAuthStore((state) => state.accountId) || "";
-  const locale = useLocale();
-  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
   const [selectedPocket, setSelectedPocket] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);

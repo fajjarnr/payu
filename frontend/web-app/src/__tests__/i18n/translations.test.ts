@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import idMessages from '../../../messages/id.json';
-import enMessages from '../../../messages/en.json';
 
 interface TranslationMessages {
   [key: string]: string | TranslationMessages;
 }
 
+// Single-locale app (Indonesian only): the catalog must be complete and valid.
 describe('Translation Files', () => {
-  it('should have identical keys in both languages', () => {
+  it('should have a non-empty key set', () => {
     const getKeys = (obj: TranslationMessages, prefix = ''): string[] => {
       let keys: string[] = [];
       for (const key in obj) {
@@ -21,14 +21,7 @@ describe('Translation Files', () => {
       return keys;
     };
 
-    const idKeys = new Set(getKeys(idMessages));
-    const enKeys = new Set(getKeys(enMessages));
-
-    const missingInEn = [...idKeys].filter(k => !enKeys.has(k));
-    const missingInId = [...enKeys].filter(k => !idKeys.has(k));
-
-    expect(missingInEn).toHaveLength(0);
-    expect(missingInId).toHaveLength(0);
+    expect(getKeys(idMessages).length).toBeGreaterThan(1000);
   });
 
   it('should have all required common translations', () => {
@@ -41,7 +34,6 @@ describe('Translation Files', () => {
 
     requiredCommonKeys.forEach(key => {
       expect(idMessages).toHaveProperty(key);
-      expect(enMessages).toHaveProperty(key);
     });
   });
 
@@ -55,7 +47,6 @@ describe('Translation Files', () => {
 
     requiredNavKeys.forEach(key => {
       expect(idMessages).toHaveProperty(key);
-      expect(enMessages).toHaveProperty(key);
     });
   });
 
@@ -72,11 +63,9 @@ describe('Translation Files', () => {
     };
 
     checkNonEmpty(idMessages);
-    checkNonEmpty(enMessages);
   });
 
   it('should support interpolation parameters', () => {
     expect(idMessages.dashboard.welcome).toContain('{name}');
-    expect(enMessages.dashboard.welcome).toContain('{name}');
   });
 });

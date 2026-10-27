@@ -8,13 +8,11 @@ import { renderWithIntl } from "@/__tests__/utils/test-utils";
 import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 import TransferActivity from "@/components/dashboard/TransferActivity";
 import ThemeToggle from "@/components/ThemeToggle";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PersonalizedGreeting, {
   PersonalizedWelcomeBanner,
 } from "@/components/personalization/PersonalizedGreeting";
 import StatementDownloader from "@/components/settings/statement-downloader";
 import idMessages from "../../../messages/id.json";
-import enMessages from "../../../messages/en.json";
 vi.mock("@/lib/a11y", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
@@ -120,17 +118,11 @@ describe("misc ANT fixes", () => {
     );
   });
 
-  it("A-05: LanguageSwitcher flags are aria-hidden with text labels", () => {
-    renderWithIntl(<LanguageSwitcher />);
-    const btn = screen.getByTestId("language-switcher-button");
-    const flags = btn.querySelectorAll('[aria-hidden="true"]');
-    expect(flags.length).toBeGreaterThan(0);
-    expect(btn.textContent).toMatch(/ID|Indonesia|EN|English/i);
-    const rows = btn.querySelectorAll('[role="menuitem"], [role="option"], li');
-    for (const row of Array.from(rows)) {
-      const h = (row as HTMLElement).getBoundingClientRect?.().height ?? 24;
-      expect(h === 0 || h >= 24).toBe(true);
-    }
+  it("A-05: ThemeToggle exposes a labelled pressed button", () => {
+    renderWithIntl(<ThemeToggle />);
+    const btn = screen.getByRole("button");
+    expect(btn).toHaveAttribute("aria-label");
+    expect(btn).toHaveAttribute("aria-pressed");
   });
 
   it("A-05: PersonalizedWelcomeBanner progress uses tokens, no raw #ffffff", () => {
@@ -138,7 +130,7 @@ describe("misc ANT fixes", () => {
     expect(container.innerHTML).not.toMatch(/#ffffff|rgba\(255,255,255/);
   });
 
-  it("A-01/A-05: StatementDownloader uses antd Card/Typography/Tag + id+en strings", () => {
+  it("A-01/A-05: StatementDownloader uses antd Card/Typography/Tag + id strings", () => {
     const { container } = renderWithIntl(<StatementDownloader />);
     expect(container.querySelector(".ant-card")).toBeInTheDocument();
     expect(container.innerHTML).not.toMatch(
@@ -156,7 +148,6 @@ describe("misc ANT fixes", () => {
       "feedback.successAnnouncement",
     ]) {
       expect(idMessages, key).toHaveProperty(key);
-      expect(enMessages, key).toHaveProperty(key);
     }
   });
 
@@ -171,13 +162,8 @@ describe("misc ANT fixes", () => {
     expect(container.innerHTML).not.toMatch(/rounded-3xl|rounded-sm/);
   });
 
-  it("axe: no violations on ThemeToggle + LanguageSwitcher", async () => {
-    const { container } = renderWithIntl(
-      <>
-        <ThemeToggle />
-        <LanguageSwitcher />
-      </>,
-    );
+  it("axe: no violations on ThemeToggle", async () => {
+    const { container } = renderWithIntl(<ThemeToggle />);
     expect((await axe(container)).violations).toEqual([]);
   });
 });

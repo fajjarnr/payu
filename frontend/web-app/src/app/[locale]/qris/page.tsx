@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkipLink } from "@/lib/a11y";
 import {
@@ -43,8 +43,7 @@ function _crc16X25(data: string): string {
 
 export default function QRISPage() {
   const t = useTranslations("qris");
-  const locale = useLocale();
-  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
   const [isScanning, setIsScanning] = useState(false);
   const [showMyQr, setShowMyQr] = useState(false);
   const [pendingScan, setPendingScan] = useState<string | null>(null);

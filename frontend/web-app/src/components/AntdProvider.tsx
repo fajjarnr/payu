@@ -14,7 +14,7 @@ import {
 
 export interface AntdProviderProps {
   children: ReactNode;
-  /** next-intl locale code (`id` | `en`). */
+  /** next-intl locale code (single-locale app: always `id`). */
   locale?: string;
   /** Whether the app is currently in dark mode. */
   isDark?: boolean;
@@ -29,7 +29,7 @@ function NotifyRegistrar() {
  * Ant Design root provider. Renders no DOM wrapper (`App component={false}`)
  * so wrapping the tree does not change the existing layout.
  */
-export function AntdProvider({ children, locale = 'en', isDark = false }: AntdProviderProps) {
+export function AntdProvider({ children, locale = 'id', isDark = false }: AntdProviderProps) {
   return (
     <StyleProvider layer>
       <ConfigProvider

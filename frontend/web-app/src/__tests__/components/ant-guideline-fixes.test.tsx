@@ -9,7 +9,6 @@ import { contrast, toHex } from "@/__tests__/theme/wcag";
 import { lightComponentTokens } from "@/theme/tokens";
 import type { Transaction } from "@/services/TransactionService";
 import idMessages from "../../../messages/id.json";
-import enMessages from "../../../messages/en.json";
 
 import BalanceCard from "@/components/dashboard/BalanceCard";
 import QuickActions from "@/components/dashboard/QuickActions";
@@ -173,7 +172,7 @@ describe("ANT guideline fixes", () => {
     expect(logos.length).toBeGreaterThan(0);
   });
 
-  it("A-05: new dashboard/transfer/nav strings exist in id+en", () => {
+  it("A-05: new dashboard/transfer/nav strings exist in id", () => {
     const need = [
       "dashboard.editActions",
       "dashboard.doneEditing",
@@ -199,7 +198,6 @@ describe("ANT guideline fixes", () => {
     ];
     for (const key of need) {
       expect(idMessages, key).toHaveProperty(key);
-      expect(enMessages, key).toHaveProperty(key);
     }
   });
 

@@ -63,17 +63,16 @@ function SilentRefreshRunner() {
  */
 function AuthSessionExpiredHandler() {
   const logout = useAuthStore((state) => state.logout);
-  const locale = useLocale();
 
   useEffect(() => {
     const handler = () => {
       logout();
       // Use replace to avoid polluting browser history
-      window.location.replace(createLocaleHref('/login', locale));
+      window.location.replace(createLocaleHref('/login'));
     };
     window.addEventListener('auth:session-expired', handler);
     return () => window.removeEventListener('auth:session-expired', handler);
-  }, [logout, locale]);
+  }, [logout]);
 
   return null;
 }

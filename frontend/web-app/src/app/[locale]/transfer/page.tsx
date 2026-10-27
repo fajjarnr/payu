@@ -12,7 +12,7 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "@/components/icons";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import {
   Button,
   DatePicker,
@@ -159,8 +159,7 @@ export interface TransferReviewSnapshot {
 
 export default function TransferPage() {
   const t = useTranslations("transfers");
-  const locale = useLocale();
-  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
   const { token } = theme.useToken();
   const TRANSFER_TYPES = TRANSFER_TYPE_META.map((m) => ({
     ...m,

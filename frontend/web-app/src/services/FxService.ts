@@ -181,7 +181,7 @@ export class FxService {
       return `${amount} ${currencyCode}`;
     }
 
-    // id-ID grouping (1.575.000 / 100,50) — Indonesian users, not en-US.
+    // id-ID grouping (1.575.000 / 100,50) — single-locale app.
     const formattedAmount = formatExactDecimal(amount, currency.decimalPlaces, 'id-ID');
 
     return `${currency.symbol}${formattedAmount}`;

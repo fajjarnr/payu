@@ -96,9 +96,9 @@ function formatExact(value: CurrencyInput, decimals: number, locale: string): st
 
 /**
  * Format a decimal money string with grouping and fixed decimals, no symbol
- * (locale: 'id-ID' → 1.234,56 ; default en-US → 1,234.56). Returns '0' on invalid input.
+ * (single-locale app: default 'id-ID' → 1.234,56). Returns '0' on invalid input.
  */
-export function formatExactDecimal(value: CurrencyInput | null | undefined, decimals = 0, locale = 'en-US'): string {
+export function formatExactDecimal(value: CurrencyInput | null | undefined, decimals = 0, locale = 'id-ID'): string {
   if (value === null || value === undefined) return '0';
   return formatExact(value, decimals, locale) ?? '0';
 }

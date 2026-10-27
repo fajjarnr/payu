@@ -27,7 +27,7 @@ import {
   Partition,
   Search,
 } from "@/components/icons";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useUIStore, useNotificationStore } from "@/stores";
 import {
   Layout,
@@ -42,7 +42,6 @@ import {
 } from "antd";
 import type { MenuProps } from "antd";
 import MobileNav from "./MobileNav";
-import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import { PersonalizedGreeting } from "./personalization";
 import { SkipLink } from "@/lib/a11y";
@@ -65,7 +64,6 @@ export default function DashboardLayout({
   onLogout,
 }: DashboardLayoutProps) {
   const t = useTranslations("nav");
-  const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
   const logoutMutation = useLogout();
@@ -113,14 +111,11 @@ export default function DashboardLayout({
 
   const allMenus = [...overviewMenu, ...transactionMenu, ...financeMenu, ...otherMenu];
 
-  // next-intl `as-needed` keeps `/id` unprefixed: strip a leading locale
-  // segment before comparing, so active state works in both locales.
+  // Locale prefix is always present (`/id/...`): strip the leading segment
+  // before comparing. Single-locale app: only `/id` exists.
   const barePathname =
-    pathname === "/id" ||
-    pathname === "/en" ||
-    pathname.startsWith("/id/") ||
-    pathname.startsWith("/en/")
-      ? pathname.replace(/^\/(id|en)(?=\/|$)/, "") || "/"
+    pathname === "/id" || pathname.startsWith("/id/")
+      ? pathname.replace(/^\/id(?=\/|$)/, "") || "/"
       : pathname;
 
   // Segment match: child routes highlight their parent menu item; the
@@ -295,13 +290,10 @@ export default function DashboardLayout({
             </div>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-              {/* Below sm the header cannot hold every control: the action
-                  group alone needs 333px, which squeezes the menu button
-                  (the only nav on mobile) out of the 360px viewport. Theme
-                  and language stay available in /settings. */}
+              {/* Below sm the header cannot hold every control: the theme
+                  toggle stays available in /settings. */}
               <span className="hidden sm:contents">
                 <ThemeToggle />
-                <LanguageSwitcher />
               </span>
 
               <Input.Search
@@ -330,7 +322,7 @@ export default function DashboardLayout({
                   data-testid="notification-button"
                   icon={<Bell className="h-5 w-5" aria-hidden="true" />}
                   aria-label={t("notificationsLabel")}
-                  onClick={() => router.push(`/${locale}/notifications`)}
+                  onClick={() => router.push(`/id/notifications`)}
                   style={{ width: 44, height: 44, flexShrink: 0 }}
                 />
               </Badge>

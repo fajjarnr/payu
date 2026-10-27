@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ArrowUpRight, ArrowDownRight } from "@/components/icons";
 import VIPBadge from "@/components/personalization/VIPBadge";
 import { Card, Col, Row, Skeleton, Space, Tag, Typography, theme } from "antd";
@@ -35,10 +35,9 @@ export default function BalanceCard({
   currency = "Rp",
   isLoading = false,
 }: BalanceCardProps) {
-  const locale = useLocale();
   const t = useTranslations("dashboard");
   const { token } = theme.useToken();
-  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
 
   if (isLoading) {
     return (

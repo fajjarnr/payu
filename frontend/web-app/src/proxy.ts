@@ -13,7 +13,10 @@ function safeRandomUUID(): string {
 const intlMiddleware = createMiddleware({
   locales,
   defaultLocale,
-  localePrefix: 'as-needed',
+  // Single-locale app: always prefix (`/id/...`) so prefixed routes render
+  // directly. `as-needed` self-redirects unprefixed paths (pre-existing
+  // `/`→`/`, `/login`→`/login` loops, stash-proven on baseline).
+  localePrefix: 'always',
   localeDetection: false
 });
 

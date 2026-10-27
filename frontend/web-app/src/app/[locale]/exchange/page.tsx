@@ -42,7 +42,7 @@ import {
 } from "@/lib/currency";
 import DashboardLayout from "@/components/DashboardLayout";
 import { notify } from "@/lib/notify";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { SkipLink } from "@/lib/a11y";
 import { ON_PRIMARY } from '@/theme/tokens';
 
@@ -62,8 +62,7 @@ const capsPrimaryStyle: CSSProperties = {
 export default function ExchangePage() {
   const accountId = useAuthStore((state) => state.accountId);
   const t = useTranslations("nav");
-  const locale = useLocale();
-  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
 
   const [form] = Form.useForm<ExchangeRequest>();
   const rule = (field: string) => zodFieldRule(form, exchangeSchema, field);

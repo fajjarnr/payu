@@ -100,9 +100,8 @@ api.interceptors.response.use(
       } catch (refreshError) {
         tokenRefreshManager.processQueue(refreshError);
         if (typeof window !== 'undefined') {
-          // Extract locale from current URL path for locale-aware redirect
-          const pathLocale = window.location.pathname.match(/^\/(en|id)(\/|$)/);
-          const locale = pathLocale ? pathLocale[1] : 'id';
+          // Single-locale app (Indonesian only).
+          const locale = 'id';
           // BUG-FE-010 FIX: Dispatch event for graceful handling, with fallback redirect
           window.dispatchEvent(new CustomEvent('auth:session-expired', { detail: { locale } }));
           // Fallback: hard redirect if event is not handled within 100ms

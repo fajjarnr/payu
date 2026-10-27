@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/qris',
   ];
 
-  const locales = ['id', 'en'];
+  const locales = ['id'];
 
   const entries: MetadataRoute.Sitemap = [];
 

@@ -302,10 +302,8 @@ describe('currency.ts - Indonesian Locale Specifics', () => {
       .toContain(',');
   });
 
-  it('should handle different locales', () => {
+  it('should format Indonesian grouping by default', () => {
     const idFormat = formatCurrency(1000000, { locale: 'id-ID' });
-     
-    const _usFormat = formatCurrency(1000000, { locale: 'en-US' });
     expect(idFormat).toContain('.');
   });
 });

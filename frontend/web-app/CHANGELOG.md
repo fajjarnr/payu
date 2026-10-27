@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0] - 2026-10-27
+
+### Removed (single-locale app — Bahasa Indonesia only)
+
+- **`messages/en.json` deleted**; `locales = ['id']`, antd pinned to `id_ID`, `LanguageSwitcher` + its test removed from the shell header.
+- **Locale prefix `always`**: every route is `/id/...` (`/` → `/id`, `/en/*` → 404). This also fixes the pre-existing `as-needed` self-redirect loops (`/`→`/`, `/login`→`/login`, stash-proven on baseline) — prefixed routes now render directly.
+- **Simplifications**: 11 `locale === 'id' ? 'id-ID' : 'en-US'` ternaries → `'id-ID'`; `createLocaleHref(path, locale='id')`; `formatExactDecimal` defaults to `id-ID`; sitemap emits `id` only; session/home redirects pinned to `/id`.
+- **Tests**: parity tests rewritten single-locale (`translations`, `page-keys`), `MobileNav` hrefs → `/id/*`, switcher mocks/assertions removed, `check:i18n` validates `id.json` (1244 keys, non-empty leaves).
+
+### Verified (2026-10-27)
+
+- `tsc --noEmit` clean; `vitest` 2108/2108; `next build` 47 routes; `/id` + `/id/login` 200 with Indonesian copy (curl); `/en` no longer resolves; `check:i18n` exit 0.
 ## [1.6.0] - 2026-10-27
 
 ### Changed (Wise re-skin — total UI/UX overhaul per `wise/DESIGN.md`)

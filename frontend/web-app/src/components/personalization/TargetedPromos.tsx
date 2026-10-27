@@ -3,7 +3,7 @@
 import React from 'react';
 import { Tag as TagIcon, TrendingUp, Star, ArrowRight } from '@/components/icons';
 import { useSegmentedOffers } from '@/hooks/useSegmentedOffers';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/stores';
 import { Alert, Button, Card, Skeleton, Space, Tag, Typography, theme } from 'antd';
 import { formatCurrency } from '@/lib/currency';
@@ -86,8 +86,7 @@ interface PromoItemProps {
 function PromoItem({ promo }: PromoItemProps) {
   const { token } = theme.useToken();
   const t = useTranslations('promos');
-  const locale = useLocale();
-  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
   const daysLeft = Math.ceil((new Date(promo.validUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
   const isExpiringSoon = daysLeft <= 3;
 

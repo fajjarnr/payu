@@ -148,7 +148,7 @@ Dark mode (layout `#0e0f0c`, container `#1a1c1a`):
 - Errors: what happened, why, next step, and the record. "Saldo tidak cukup. Kurangi nominal atau pilih sumber dana lain." + "Coba lagi" (the RFC 9457 code stays in technical detail, never the headline).
 - Empty states: situation + CTA. "Belum ada transaksi. Kirim uang pertama Anda dalam 2 menit."
 - Amounts and dates: keep the existing Indonesian formatting (`Rp` prefix, `.` thousands, ISO dates in tables) with consistent decimals.
-- Copy ships in both locales: `id` and `en` parity is enforced by `npm run check:i18n`.
+- Copy ships in Indonesian only: `messages/id.json` validity (non-empty leaves) is enforced by `npm run check:i18n`.
 
 ## 6. Anti-patterns and migration notes
 

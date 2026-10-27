@@ -31,11 +31,6 @@ vi.mock('@/components/MobileNav', () => ({
   default: () => <div data-testid="mobile-nav">MobileNav</div>,
 }));
 
-vi.mock('@/components/LanguageSwitcher', () => ({
-  __esModule: true,
-  default: () => <button data-testid="language-switcher">LanguageSwitcher</button>,
-}));
-
 expect.extend(toHaveNoViolations);
 
 describe('DashboardLayout', () => {
@@ -50,7 +45,6 @@ describe('DashboardLayout', () => {
     expect(screen.getAllByText('PayU')[0]).toBeInTheDocument();
     expect(screen.getByText('Test Content')).toBeInTheDocument();
     expect(screen.getByTestId('mobile-nav')).toBeInTheDocument();
-    expect(screen.getByTestId('language-switcher')).toBeInTheDocument();
   });
 
   it('should render desktop sidebar with overview menu items', () => {

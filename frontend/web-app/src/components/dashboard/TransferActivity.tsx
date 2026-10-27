@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
 import {
   Search,
@@ -106,9 +106,8 @@ export function TransferEmpty({ title, hint }: { title: string; hint: string }) 
 export default function TransferActivity({
   className = "",
 }: TransferActivityProps) {
-  const locale = useLocale();
   const t = useTranslations("dashboard");
-  const bcp47Locale = locale === "id" ? "id-ID" : "en-US";
+  const bcp47Locale = 'id-ID'; // Single-locale app (Indonesian only)
   const accountId = useAuthStore((state) => state.accountId);
   const {
     data: transactions,

@@ -2,7 +2,6 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import idMessages from '../../../messages/id.json';
-import enMessages from '../../../messages/en.json';
 
 const APP_DIR = join(process.cwd(), 'src/app/[locale]');
 
@@ -68,17 +67,13 @@ describe('customer pages use existing message keys', () => {
     const usages = usedKeys(source);
     if (usages.length === 0) continue;
 
-    it(`${rel} resolves every t() key in id and en`, () => {
+    it(`${rel} resolves every t() key in id`, () => {
       const missing: string[] = [];
+      const catalog = idMessages as Catalog;
       for (const { namespace, key } of usages) {
-        for (const [locale, catalog] of [
-          ['id', idMessages as Catalog],
-          ['en', enMessages as Catalog],
-        ] as const) {
-          const scoped = resolve(catalog, namespace) as Catalog | undefined;
-          if (!scoped || !hasKey(scoped, key)) {
-            missing.push(`${locale}:${namespace}.${key}`);
-          }
+        const scoped = resolve(catalog, namespace) as Catalog | undefined;
+        if (!scoped || !hasKey(scoped, key)) {
+          missing.push(`id:${namespace}.${key}`);
         }
       }
       expect(missing).toEqual([]);

@@ -51,7 +51,7 @@ describe('ADR-0047 strict branded types', () => {
   });
 
   it('formatExactDecimal groups correctly', () => {
-    expect(formatExactDecimal('1234567.89', 2, 'en-US')).toBe('1,234,567.89');
+    expect(formatExactDecimal('1234567.89', 2)).toBe('1.234.567,89');
     expect(formatExactDecimal('1234567.89', 2, 'id-ID')).toBe('1.234.567,89');
   });
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { X } from '@/components/icons';
 import { useRouter } from '@/lib/navigation';
 import { usePopups } from '@/hooks';
@@ -51,11 +51,10 @@ export default function PromoPopup({
   sessionKey = 'promo-popup-session',
 }: PromoPopupProps) {
   const router = useRouter();
-  // BUG-FE-008 FIX: Use dynamic locale instead of hardcoded 'id-ID'
-  const locale = useLocale();
   const t = useTranslations('promo');
   const tc = useTranslations('cms');
-  const bcp47Locale = locale === 'id' ? 'id-ID' : 'en-US';
+  // Single-locale app (Indonesian only).
+  const bcp47Locale = 'id-ID';
   const { token } = theme.useToken();
   const { data: popups, isLoading, error, refetch } = usePopups({ segment, location, device });
   const [isOpen, setIsOpen] = useState(false);
