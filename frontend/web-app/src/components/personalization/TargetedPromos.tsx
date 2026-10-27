@@ -8,7 +8,7 @@ import { useAuthStore } from '@/stores';
 import { Alert, Button, Card, Skeleton, Space, Tag, Typography, theme } from 'antd';
 import { formatCurrency } from '@/lib/currency';
 import type { SegmentedOffer } from '@/services/SegmentationService';
-import { INK_ON_EMERALD } from '@/theme/tokens';
+import { ON_PRIMARY } from '@/theme/tokens';
 import { notify } from '@/lib/notify';
 
 interface TargetedPromosProps {
@@ -39,7 +39,7 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2, pr
   if (isLoading) {
     return (
       <div className={className}>
-        <Skeleton title={false} paragraph={false} active style={{ height: 128, borderRadius: 12 }} />
+        <Skeleton title={false} paragraph={false} active style={{ height: 128, borderRadius: 24 }} />
       </div>
     );
   }
@@ -64,7 +64,7 @@ export default function TargetedPromos({ offerType, className, maxPromos = 2, pr
   return (
     <Space orientation="vertical" size={12} style={{ width: '100%' }} className={className}>
       <Space size={8}>
-        <TagIcon style={{ height: 16, width: 16, color: token.colorPrimary }} aria-hidden="true" />
+        <TagIcon style={{ height: 16, width: 16, color: token.colorPrimaryText }} aria-hidden="true" />
         <Typography.Title level={5} style={{ margin: 0 }}>
           {t("forYou")}
         </Typography.Title>
@@ -102,13 +102,13 @@ function PromoItem({ promo }: PromoItemProps) {
   };
 
   return (
-    <Card size="small" style={{ borderRadius: 12 }}>
+    <Card size="small" style={{ borderRadius: 24, boxShadow: 'none' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div
           style={{
             height: 40,
             width: 40,
-            borderRadius: 8,
+            borderRadius: 12,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -132,7 +132,7 @@ function PromoItem({ promo }: PromoItemProps) {
               {promo.title}
             </Typography.Text>
             {promo.promoCode && (
-              <Tag style={{ fontFamily: 'monospace', fontWeight: 700, flexShrink: 0, marginInlineEnd: 0 }}>
+              <Tag style={{ fontFamily: 'monospace', fontWeight: 600, flexShrink: 0, marginInlineEnd: 0, borderRadius: 9999 }}>
                 {promo.promoCode}
               </Tag>
             )}
@@ -204,7 +204,7 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
     <Card
       className={className}
       style={{
-        borderRadius: 12,
+        borderRadius: 24,
         background: `linear-gradient(to right, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
         border: 'none',
       }}
@@ -213,15 +213,15 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <Space size={8} style={{ marginBottom: 4 }}>
-            <TrendingUp style={{ height: 16, width: 16, color: INK_ON_EMERALD }} aria-hidden="true" />
-            <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.05em', color: INK_ON_EMERALD }}>
+            <TrendingUp style={{ height: 16, width: 16, color: ON_PRIMARY }} aria-hidden="true" />
+            <Typography.Text strong style={{ fontSize: 12, letterSpacing: '0.05em', color: ON_PRIMARY }}>
               {t("specialPromo")}
             </Typography.Text>
           </Space>
-          <Typography.Title level={5} style={{ margin: '0 0 4px', color: INK_ON_EMERALD }} ellipsis>
+          <Typography.Title level={5} style={{ margin: '0 0 4px', color: ON_PRIMARY }} ellipsis>
             {topPromo.title}
           </Typography.Title>
-          <Typography.Paragraph style={{ fontSize: 12, margin: 0, color: INK_ON_EMERALD }} ellipsis={{ rows: 1 }}>
+          <Typography.Paragraph style={{ fontSize: 12, margin: 0, color: ON_PRIMARY }} ellipsis={{ rows: 1 }}>
             {topPromo.description}
           </Typography.Paragraph>
         </div>
@@ -242,11 +242,11 @@ export function QuickPromoBanner({ className }: QuickPromoBannerProps) {
                 notify.error(t('copyFailed'));
               }
             }}
-            style={{ color: INK_ON_EMERALD, fontWeight: 700, fontSize: 12, letterSpacing: '0.05em' }}
+            style={{ color: ON_PRIMARY, fontWeight: 600, fontSize: 12, letterSpacing: '0.05em' }}
           >
             {t("claim")}
           </Button>
-          <ArrowRight style={{ height: 16, width: 16, color: INK_ON_EMERALD }} aria-hidden="true" />
+          <ArrowRight style={{ height: 16, width: 16, color: ON_PRIMARY }} aria-hidden="true" />
         </Space>
       </div>
     </Card>

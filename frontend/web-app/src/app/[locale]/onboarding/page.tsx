@@ -151,7 +151,7 @@ export default function OnboardingPage() {
 
   const labelStyle: React.CSSProperties = {
     fontSize: token.fontSize,
-    fontWeight: 700,
+    fontWeight: 600,
   };
   const iconTile = (size: number): React.CSSProperties => ({
     width: size,
@@ -252,10 +252,9 @@ export default function OnboardingPage() {
                 style={{
                   width: 64,
                   height: 64,
-                  borderRadius: token.borderRadiusLG,
+                  borderRadius: 24,
                   background: BRAND_TILE_BG,
                   border: `1px solid ${BRAND_TILE_BORDER}`,
-                  boxShadow: token.boxShadow,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -263,7 +262,7 @@ export default function OnboardingPage() {
                 aria-hidden="true"
               >
                 <ScanFace
-                  style={{ width: 32, height: 32, color: token.colorPrimary }}
+                  style={{ width: 32, height: 32, color: token.colorPrimaryText }}
                 />
               </div>
               <Title
@@ -288,7 +287,7 @@ export default function OnboardingPage() {
             <Space orientation="vertical" size={16}>
               <Card
                 size="small"
-                style={{ background: BRAND_CARD_BG, border: BRAND_CARD_BORDER }}
+                style={{ background: BRAND_CARD_BG, border: BRAND_CARD_BORDER, borderRadius: 24 }}
               >
                 <Space align="start" size={16}>
                   <Fingerprint
@@ -320,7 +319,7 @@ export default function OnboardingPage() {
               </Card>
               <Card
                 size="small"
-                style={{ background: BRAND_CARD_BG, border: BRAND_CARD_BORDER }}
+                style={{ background: BRAND_CARD_BG, border: BRAND_CARD_BORDER, borderRadius: 24 }}
               >
                 <Space align="start" size={16}>
                   <ShieldCheck
@@ -444,7 +443,7 @@ export default function OnboardingPage() {
               <div
                 style={{
                   border: `2px dashed ${ktpFile ? token.colorBorder : token.colorErrorBorder}`,
-                  borderRadius: token.borderRadiusLG,
+                  borderRadius: 24,
                   padding: 32,
                   cursor: "pointer",
                   display: "flex",

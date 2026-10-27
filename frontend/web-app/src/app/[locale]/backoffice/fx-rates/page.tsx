@@ -30,7 +30,7 @@ import PageHeader from "@/components/PageHeader";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: "var(--ant-color-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",
@@ -56,7 +56,7 @@ export default function FxRatesAdminPage() {
             size={40}
             style={{
               background: "var(--ant-color-primary-bg)",
-              color: "var(--ant-color-primary)",
+              color: "var(--ant-color-primary-text)",
             }}
             icon={<ArrowRightLeft style={{ fontSize: 20 }} />}
           />
@@ -140,7 +140,7 @@ export default function FxRatesAdminPage() {
         ]}
       />
 
-      <Card>
+      <Card style={{ borderRadius: 24 }}>
         <Flex gap={16} wrap align="center" justify="space-between">
           <Input
             aria-label="Cari pasangan mata uang"
@@ -160,7 +160,7 @@ export default function FxRatesAdminPage() {
         </Flex>
       </Card>
 
-      <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
+      <Card style={{ borderRadius: 24 }} styles={{ body: { padding: 0, overflow: "hidden" } }}>
         <Table<FxRateResponse>
           scroll={{ x: "max-content" }}
           columns={columns}
@@ -187,7 +187,7 @@ export default function FxRatesAdminPage() {
             ) : marketLive ? (
               <Typography.Text
                 strong
-                style={{ color: "var(--ant-color-primary)" }}
+                style={{ color: "var(--ant-color-primary-text)" }}
               >
                 Connected
               </Typography.Text>

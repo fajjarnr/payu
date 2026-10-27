@@ -41,7 +41,7 @@ const FILES = sourceFiles(SRC).filter(
   (file) => !HEX_ALLOWLIST.includes(relative(process.cwd(), file))
 );
 
-const RADIUS_SCALE = new Set([2, 4, 6, 8, 12, 16, 9999]);
+const RADIUS_SCALE = new Set([2, 4, 6, 8, 12, 16, 24, 9999]);
 
 describe('design-system guard', () => {
   it('finds the source files', () => {

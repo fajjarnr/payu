@@ -78,7 +78,7 @@ export default function CustomerCasesPage() {
         <Tag color="blue">Open: {isLoading ? '…' : openCount}</Tag>
       </Flex>
 
-      <Card>
+      <Card style={{ borderRadius: 24 }}>
         <Flex gap={16} wrap>
           <Input
             aria-label="Cari tiket atau ID nasabah"
@@ -105,7 +105,7 @@ export default function CustomerCasesPage() {
         </Flex>
       </Card>
 
-      <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
+      <Card style={{ borderRadius: 24 }} styles={{ body: { padding: 0, overflow: 'hidden' } }}>
         <Table<CustomerCaseResponse>
           scroll={{ x: "max-content" }}
           columns={columns}

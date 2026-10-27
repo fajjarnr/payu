@@ -73,10 +73,10 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             )}
 
             <div className="space-y-3" role="group" aria-label="Tindakan pemulihan error kritis">
-              {/* ponytail: ink (#06281F, Button primaryColor) keeps AA on emerald hover fill (F-01) */}
+              {/* ink (#0e0f0c, Button primaryColor) keeps AA on the lime hover fill (F-01) */}
               <button
                 onClick={handleReload}
-                className="payu-focus-ring w-full py-4 rounded-xl font-bold text-xs tracking-widest bg-[var(--ant-color-text)] text-[var(--ant-color-bg-layout)] hover:bg-[var(--ant-color-primary)] hover:text-[#06281F] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="payu-focus-ring w-full py-4 rounded-xl font-bold text-xs tracking-widest bg-[var(--ant-color-text)] text-[var(--ant-color-bg-layout)] hover:bg-[var(--ant-color-primary)] hover:text-[#0e0f0c] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Muat ulang seluruh aplikasi"
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />

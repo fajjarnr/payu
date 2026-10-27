@@ -382,10 +382,10 @@ export default function PocketsPage() {
                       style={{
                         width: 48,
                         height: 48,
-                        borderRadius: 12,
+                        borderRadius: 24,
                         background: token.colorFillTertiary,
                         border: `1px solid ${token.colorBorderSecondary}`,
-                        color: token.colorPrimary,
+                        color: token.colorPrimaryText,
                       }}
                     >
                       <Wallet />
@@ -489,7 +489,7 @@ export default function PocketsPage() {
                         width: 48,
                         height: 48,
                         background: token.colorPrimaryBg,
-                        // Deep brand green: the emerald on its own tint is 1.9:1.
+                        // Deep positive-green: the lime on its own tint is unreadable.
                         color: token.colorPrimaryText,
                       }}
                     >
@@ -558,7 +558,7 @@ export default function PocketsPage() {
                               style={{
                                 width: 40,
                                 height: 40,
-                                borderRadius: 12,
+                                borderRadius: 24,
                                 background:
                                   pocket.status === "FROZEN"
                                     ? `${token.colorWarning}1A`
@@ -566,7 +566,7 @@ export default function PocketsPage() {
                                 color:
                                   pocket.status === "FROZEN"
                                     ? token.colorWarning
-                                    : token.colorPrimary,
+                                    : token.colorPrimaryText,
                               }}
                             >
                               {pocket.type === "GOAL" ? <Target /> : <Wallet />}
@@ -593,7 +593,7 @@ export default function PocketsPage() {
                                   label: (
                                     <Flex align="center" gap={8}>
                                       <ArrowDownLeft
-                                        style={{ color: token.colorPrimary }}
+                                        style={{ color: token.colorPrimaryText }}
                                       />
                                       {t("addFunds")}
                                     </Flex>
@@ -605,7 +605,7 @@ export default function PocketsPage() {
                                   label: (
                                     <Flex align="center" gap={8}>
                                       <ArrowUpRight
-                                        style={{ color: token.colorPrimary }}
+                                        style={{ color: token.colorPrimaryText }}
                                       />
                                       {t("withdrawFunds")}
                                     </Flex>
@@ -633,7 +633,7 @@ export default function PocketsPage() {
                                         <Flex align="center" gap={8}>
                                           <UnlockIcon
                                             style={{
-                                              color: token.colorPrimary,
+                                              color: token.colorPrimaryText,
                                             }}
                                           />
                                           {t("activatePocket")}
@@ -782,7 +782,7 @@ export default function PocketsPage() {
                               style={{
                                 width: 48,
                                 height: 48,
-                                borderRadius: 12,
+                                borderRadius: 24,
                                 background: isPrimary
                                   ? `${token.colorPrimary}1A`
                                   : `${token.colorSuccess}1A`,
@@ -790,8 +790,8 @@ export default function PocketsPage() {
                                   ? `1px solid ${token.colorPrimary}1A`
                                   : `1px solid ${token.colorSuccess}1A`,
                                 color: isPrimary
-                                  ? token.colorPrimary
-                                  : token.colorSuccess,
+                                  ? token.colorPrimaryText
+                                  : token.colorSuccessText,
                               }}
                             >
                               <Icon />
@@ -834,7 +834,7 @@ export default function PocketsPage() {
                                   style={{
                                     color: token.colorPrimaryText,
                                     borderRadius: 9999,
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                   }}
                                 >
                                   {t("interestRate", {
@@ -911,7 +911,7 @@ export default function PocketsPage() {
                     style={{
                       width: 40,
                       height: 40,
-                      borderRadius: 12,
+                      borderRadius: 24,
                       background: token.colorFillTertiary,
                       border: `1px solid ${token.colorBorderSecondary}`,
                       color: token.colorTextSecondary,
@@ -991,7 +991,7 @@ export default function PocketsPage() {
                                   style={{
                                     width: 48,
                                     height: 48,
-                                    borderRadius: 12,
+                                    borderRadius: 24,
                                     background: isCredit
                                       ? `${token.colorPrimary}1A`
                                       : `${token.colorError}0D`,
@@ -1001,7 +1001,7 @@ export default function PocketsPage() {
                                         : `${token.colorError}1A`
                                     }`,
                                     color: isCredit
-                                      ? token.colorPrimary
+                                      ? token.colorPrimaryText
                                       : token.colorError,
                                   }}
                                 >
@@ -1070,7 +1070,7 @@ export default function PocketsPage() {
           >
             <Flex justify="space-between" align="center">
               <Flex align="center" gap={12}>
-                <Users style={{ color: token.colorPrimary }} />
+                <Users style={{ color: token.colorPrimaryText }} />
                 <Typography.Title level={2} style={{ marginBottom: 0 }}>
                   {t("sharedPocketsSection")}
                 </Typography.Title>
@@ -1119,9 +1119,9 @@ export default function PocketsPage() {
                               style={{
                                 width: 40,
                                 height: 40,
-                                borderRadius: 12,
+                                borderRadius: 24,
                                 background: `${token.colorPrimary}1A`,
-                                color: token.colorPrimary,
+                                color: token.colorPrimaryText,
                               }}
                             >
                               <Users />
@@ -1235,7 +1235,7 @@ export default function PocketsPage() {
                                 align="center"
                                 style={{
                                   padding: 8,
-                                  borderRadius: 12,
+                                  borderRadius: 24,
                                   background: token.colorBgContainer,
                                   border: `1px solid ${token.colorBorderSecondary}`,
                                 }}
@@ -1251,7 +1251,7 @@ export default function PocketsPage() {
                                       background: `${token.colorPrimary}1A`,
                                       color: token.colorPrimaryText,
                                       fontSize: 12,
-                                      fontWeight: 700,
+                                      fontWeight: 600,
                                     }}
                                   >
                                     {member.fullName.charAt(0)}
@@ -1270,12 +1270,12 @@ export default function PocketsPage() {
                                       member.role === "OWNER"
                                         ? token.colorPrimaryText
                                         : member.role === "ADMIN"
-                                          ? token.colorSuccess
+                                          ? token.colorSuccessText
                                           : token.colorFill
                                     }
                                     style={{
                                       ...labelStyle,
-                                      borderRadius: 12,
+                                      borderRadius: 9999,
                                     }}
                                   >
                                     {member.role}
@@ -1314,9 +1314,9 @@ export default function PocketsPage() {
                     style={{
                       width: 48,
                       height: 48,
-                      borderRadius: 12,
+                      borderRadius: 24,
                       background: token.colorPrimaryBg,
-                      // Deep brand green: the emerald on its own tint is 1.9:1.
+                      // Deep positive-green: the lime on its own tint is unreadable.
                       color: token.colorPrimaryText,
                     }}
                   >

@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { notify as toast } from '@/lib/notify';
 import { Button, Card, Col, Input, Row, Space, Typography } from 'antd';
 import { useTranslations } from 'next-intl';
-import { BRAND_PANEL_BG, BRAND_PANEL_FG, INK_ON_EMERALD } from '@/theme/tokens';
+import { BRAND_PANEL_BG, BRAND_PANEL_FG, BRAND_PANEL_MUTED, ON_PRIMARY } from '@/theme/tokens';
 
 interface MerchantFormData {
   name: string;
@@ -30,7 +30,7 @@ const buildMerchantSchema = (t: (key: string) => string) =>
 
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--ant-color-text-secondary)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -104,8 +104,8 @@ export default function MerchantRegisterPage() {
       <div className="max-w-4xl mx-auto w-full">
         <Space orientation="vertical" size={24} style={{ width: '100%' }}>
           <Space orientation="vertical" size={16} style={{ width: '100%', textAlign: 'center', alignItems: 'center' }}>
-            <div style={{ width: 80, height: 80, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Building2 style={{ width: 40, height: 40, color: 'var(--ant-color-primary)' }} />
+            <div style={{ width: 80, height: 80, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Building2 style={{ width: 40, height: 40, color: 'var(--ant-color-primary-text)' }} />
             </div>
             <Typography.Title level={1} style={{ margin: 0 }}>{t('title')}</Typography.Title>
             <Typography.Text type="secondary" style={{ maxWidth: 576 }}>
@@ -193,7 +193,7 @@ export default function MerchantRegisterPage() {
                             textAlign: 'left',
                             cursor: 'pointer',
                             padding: 24,
-                            borderRadius: 16,
+                            borderRadius: 24,
                             borderWidth: 2,
                             borderStyle: 'solid',
                             borderColor: selected ? 'var(--ant-color-primary)' : 'var(--ant-color-border)',
@@ -203,13 +203,13 @@ export default function MerchantRegisterPage() {
                           <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                             <Space size={16}>
                               <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: selected ? 'var(--ant-color-primary)' : 'var(--ant-color-fill-secondary)' }}>
-                                <Building2 style={{ width: 20, height: 20, color: selected ? INK_ON_EMERALD : 'var(--ant-color-text-tertiary)' }} />
+                                <Building2 style={{ width: 20, height: 20, color: selected ? ON_PRIMARY : 'var(--ant-color-text-tertiary)' }} />
                               </div>
                               <Typography.Text strong>{type.label}</Typography.Text>
                             </Space>
                             <Typography.Text type="secondary">{type.description}</Typography.Text>
                             {selected && (
-                              <CheckCircle2 style={{ width: 20, height: 20, color: 'var(--ant-color-primary)', alignSelf: 'flex-end' }} />
+                              <CheckCircle2 style={{ width: 20, height: 20, color: 'var(--ant-color-primary-text)', alignSelf: 'flex-end' }} />
                             )}
                           </Space>
                         </button>
@@ -245,15 +245,15 @@ export default function MerchantRegisterPage() {
                     <Space orientation="vertical" size={16}>
                       <Space size={12}>
                         <div style={{ width: 40, height: 40, backgroundColor: 'var(--ant-color-primary)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <ShieldCheck style={{ width: 20, height: 20, color: 'var(--ant-color-text-light-solid)' }} />
+                          <ShieldCheck style={{ width: 20, height: 20, color: ON_PRIMARY }} />
                         </div>
-                        <Typography.Title level={3} style={{ margin: 0, color: 'var(--ant-color-text-light-solid)' }}>{t('readyTitle')}</Typography.Title>
+                        <Typography.Title level={3} style={{ margin: 0, color: BRAND_PANEL_FG }}>{t('readyTitle')}</Typography.Title>
                       </Space>
                       <Typography.Text style={{ color: `color-mix(in srgb, ${BRAND_PANEL_FG} 85%, ${BRAND_PANEL_BG})` }}>
                         {t('termsIntro')}{' '}
-                        <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>{t('termsLink')}</Typography.Text>{' '}
+                        <Typography.Text strong style={{ color: BRAND_PANEL_MUTED }}>{t('termsLink')}</Typography.Text>{' '}
                         {t('termsConjunction')}{' '}
-                        <Typography.Text strong style={{ color: 'var(--ant-color-primary)' }}>{t('privacyLink')}</Typography.Text>{' '}
+                        <Typography.Text strong style={{ color: BRAND_PANEL_MUTED }}>{t('privacyLink')}</Typography.Text>{' '}
                         {t('termsPayU')}
                       </Typography.Text>
                     </Space>
@@ -270,7 +270,7 @@ export default function MerchantRegisterPage() {
                     </Button>
                   </Col>
                 </Row>
-                <CreditCard style={{ position: 'absolute', bottom: -30, right: -30, width: 192, height: 192, opacity: 0.08, transform: 'rotate(-12deg)', color: 'var(--ant-color-text-light-solid)' }} />
+                <CreditCard style={{ position: 'absolute', bottom: -30, right: -30, width: 192, height: 192, opacity: 0.08, transform: 'rotate(-12deg)', color: BRAND_PANEL_FG }} />
               </Card>
             </Space>
           </form>

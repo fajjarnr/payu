@@ -72,7 +72,7 @@ import type { TableColumnsType } from 'antd';
       <Tag color="red">Kritis: {isLoading ? '…' : criticalCount}</Tag>
     </Flex>
 
-    <Card>
+    <Card style={{ borderRadius: 24 }}>
       <Flex gap={16} wrap>
         <Input
           aria-label="Cari kasus"
@@ -99,7 +99,7 @@ import type { TableColumnsType } from 'antd';
       </Flex>
     </Card>
 
-    <Card styles={{ body: { padding: 0, overflow: 'hidden' } }}>
+    <Card style={{ borderRadius: 24 }} styles={{ body: { padding: 0, overflow: 'hidden' } }}>
       <Table<FraudCaseResponse>
         scroll={{ x: "max-content" }}
         columns={columns}

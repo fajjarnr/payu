@@ -16,6 +16,7 @@ import {
 import { Button, Card, Col, Row, Space, Tag, theme, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import { SkipLink } from "@/lib/a11y";
+import { ON_PRIMARY } from "@/theme/tokens";
 
 export default function SupportPage() {
   const t = useTranslations("support");
@@ -58,7 +59,7 @@ export default function SupportPage() {
   const getChannelColor = (color: string) => {
     if (color === "primary") return token.colorPrimary;
     if (color === "secondary") return token.colorPrimaryHover;
-    return token.colorText;
+    return token.colorPrimaryBg;
   };
 
   return (
@@ -94,12 +95,12 @@ export default function SupportPage() {
                     width: 80,
                     height: 80,
                     marginBottom: 24,
-                    borderRadius: 12,
+                    borderRadius: 24,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     backgroundColor: getChannelColor(channel.color),
-                    color: token.colorTextLightSolid,
+                    color: ON_PRIMARY,
                   }}
                 >
                   <channel.icon style={{ fontSize: 40 }} />
@@ -118,7 +119,7 @@ export default function SupportPage() {
                   style={{
                     width: "100%",
                     height: 56,
-                    borderRadius: 12,
+                    borderRadius: 24,
                     marginTop: "auto",
                   }}
                 >
@@ -143,7 +144,7 @@ export default function SupportPage() {
                     gap: 24,
                     padding: 24,
                     backgroundColor: token.colorFillQuaternary,
-                    borderRadius: 12,
+                    borderRadius: 24,
                     cursor: "pointer",
                   }}
                 >
@@ -160,8 +161,8 @@ export default function SupportPage() {
                       border: `1px solid ${token.colorBorder}`,
                     }}
                   >
-                    <faq.icon
-                      style={{ fontSize: 24, color: token.colorPrimary }}
+                  <faq.icon
+                      style={{ fontSize: 24, color: token.colorPrimaryText }}
                     />
                   </div>
                   <div>
@@ -177,7 +178,7 @@ export default function SupportPage() {
                         {faq.title}
                       </Typography.Text>
                       <ExternalLink
-                        style={{ fontSize: 12, color: token.colorPrimary }}
+                        style={{ fontSize: 12, color: token.colorPrimaryText }}
                       />
                     </div>
                     <Typography.Text
@@ -210,7 +211,7 @@ export default function SupportPage() {
                     (svc, i) => (
                       <Tag
                         key={i}
-                        style={{ padding: "4px 16px", borderRadius: 12 }}
+                        style={{ padding: "4px 16px", borderRadius: 9999 }}
                       >
                         <Typography.Text
                           strong
@@ -234,8 +235,11 @@ export default function SupportPage() {
             </Col>
             <Col xs={24} lg={8}>
               <a href="/api/v1/health" target="_blank" rel="noreferrer">
-                <Button type="primary" block style={{ height: 64 }}>
-                  Cek Detail Infrastruktur
+                <Button
+                  type="primary"
+                  block
+                  style={{ height: 64, borderRadius: 24 }}
+                >
                 </Button>
               </a>
             </Col>

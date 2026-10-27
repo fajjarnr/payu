@@ -17,7 +17,7 @@ import {
   Bell,
   Menu,
 } from "@/components/icons";
-import { INK_ON_EMERALD } from "@/theme/tokens";
+import { ON_PRIMARY } from "@/theme/tokens";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
   Avatar,
@@ -115,6 +115,16 @@ export default function BackofficeLayout({
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      <style>{`
+        .payu-header { height: 72px !important; line-height: 72px !important; padding: 0 16px !important; }
+        .payu-backoffice-content { padding: 16px !important; }
+        .payu-backoffice-search { display: none !important; }
+        @media (min-width: 640px) {
+          .payu-header { padding: 0 32px !important; }
+          .payu-backoffice-content { padding: 32px !important; }
+          .payu-backoffice-search { display: inline-flex !important; }
+        }
+      `}</style>
       <Layout.Sider
         collapsible
         collapsed={collapsed}
@@ -129,8 +139,8 @@ export default function BackofficeLayout({
             size={48}
             style={{
               background: "var(--ant-color-primary)",
-              // Ink on the emerald fill: white is 1.99:1.
-              color: INK_ON_EMERALD,
+              // Ink on the lime fill: white is 1.99:1.
+              color: ON_PRIMARY,
               fontSize: 24,
               fontWeight: 700,
               flexShrink: 0,
@@ -157,7 +167,7 @@ export default function BackofficeLayout({
                   fontSize: 12,
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  // Emerald as text is 1.99:1 on white — the deep brand green.
+                  // Lime as text is 1.47:1 on white — the deep positive-green.
                   color: "var(--ant-color-primary-text)",
                 }}
               >
@@ -191,11 +201,11 @@ export default function BackofficeLayout({
 
       <Layout>
         <Layout.Header
+          className="payu-header"
           style={{
             background: "var(--ant-color-bg-container)",
-            padding: "0 32px",
-            height: 96,
-            lineHeight: "96px",
+            padding: "0 16px",
+            borderBottom: "1px solid var(--ant-color-border-secondary)",
           }}
         >
           <Flex
@@ -234,6 +244,7 @@ export default function BackofficeLayout({
               <Input
                 aria-label="Pencarian Universal Admin"
                 placeholder="Universal Admin Search..."
+                className="payu-backoffice-search"
                 prefix={
                   <Search
                     style={{
@@ -279,7 +290,7 @@ export default function BackofficeLayout({
                       fontSize: 12,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
-                      // Emerald as text is 1.99:1 on white — the deep brand green.
+                      // Lime as text is 1.47:1 on white — the deep positive-green.
                       color: "var(--ant-color-primary-text)",
                     }}
                   >
@@ -301,7 +312,7 @@ export default function BackofficeLayout({
           </Flex>
         </Layout.Header>
 
-        <Layout.Content id="main-content" style={{ padding: 32, overflowY: "auto" }}>
+        <Layout.Content id="main-content" className="payu-backoffice-content" style={{ overflowY: "auto", background: "var(--ant-color-bg-layout)" }}>
           {children}
         </Layout.Content>
       </Layout>

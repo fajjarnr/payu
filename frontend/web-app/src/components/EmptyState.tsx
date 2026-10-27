@@ -28,7 +28,12 @@ export default function EmptyState({
         alignItems: 'center',
         textAlign: 'center',
         gap: token.marginSM,
-        padding: `${token.paddingLG}px ${token.padding}px`,
+        padding: `${token.paddingXL}px ${token.paddingLG}px`,
+        background: token.colorBgContainer,
+        borderRadius: token.borderRadiusLG,
+        maxWidth: 448,
+        margin: '0 auto',
+        width: '100%',
       }}
     >
       <div style={{ fontSize: 64, lineHeight: 1, color: token.colorTextSecondary }} aria-hidden="true">
@@ -39,7 +44,7 @@ export default function EmptyState({
       </Typography.Title>
       <Typography.Text type="secondary">{description}</Typography.Text>
       {actionLabel && onAction ? (
-        <Button type="primary" onClick={onAction}>
+        <Button type="primary" onClick={onAction} style={{ marginTop: token.marginXS }}>
           {actionLabel}
         </Button>
       ) : null}

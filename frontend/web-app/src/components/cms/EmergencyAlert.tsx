@@ -180,7 +180,7 @@ export default function EmergencyAlert({
               showIcon
               icon={<Icon className="h-4 w-4" aria-hidden="true" />}
               message={
-                <span className="inline-flex items-center gap-2 font-bold uppercase tracking-tight text-xs mb-1">
+                <span className="inline-flex items-center gap-2 font-semibold uppercase tracking-tight text-xs mb-1">
                   {alert.title}
                 </span>
               }
@@ -212,7 +212,7 @@ export default function EmergencyAlert({
                   icon={<X className="h-4 w-4" />}
                 />
               }
-              className="relative p-4 pr-16 rounded-2xl"
+              className="relative p-4 pr-16 rounded-3xl"
               style={
                 clickable
                   ? { background: token.colorBgContainer, border: `1px solid ${token.colorBorderSecondary}`, cursor: 'pointer' }

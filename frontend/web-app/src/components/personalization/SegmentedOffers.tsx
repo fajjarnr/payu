@@ -49,7 +49,7 @@ export default function SegmentedOffers({
           title={false}
           paragraph={false}
           active
-          style={{ height: 192, borderRadius: 12 }}
+          style={{ height: 192, borderRadius: 24 }}
         />
       </div>
     );
@@ -117,7 +117,7 @@ function OfferCard({ offer }: OfferCardProps) {
     ),
   );
   return (
-    <Card style={{ borderRadius: 16, height: "100%" }}>
+    <Card style={{ borderRadius: 24, height: "100%", boxShadow: 'none' }}>
       <Space orientation="vertical" size={12} style={{ width: "100%" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div
@@ -135,7 +135,7 @@ function OfferCard({ offer }: OfferCardProps) {
           </div>
 
           {offer.promoCode && (
-            <Tag style={{ fontFamily: "monospace", fontWeight: 700, marginInlineEnd: 0 }}>
+            <Tag style={{ fontFamily: "monospace", fontWeight: 600, marginInlineEnd: 0, borderRadius: 9999 }}>
               {offer.promoCode}
             </Tag>
           )}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
-import { Button, Card, Input, Space, Typography } from "antd";
+import { Button, Card, Input, Space, Typography, theme } from "antd";
 import { ArrowLeft } from "@/components/icons";
 import { notify as toast } from "@/lib/notify";
 import { SkipLink } from "@/lib/a11y";
@@ -12,6 +12,7 @@ const { Title, Text } = Typography;
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth");
+  const { token } = theme.useToken();
   const [email, setEmail] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
@@ -56,7 +57,15 @@ export default function ForgotPasswordPage() {
         padding: 32,
       }}
     >
-      <Card style={{ width: "100%", maxWidth: 420, borderRadius: 12 }}>
+      <Card
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          borderRadius: 24,
+          background: token.colorBgLayout,
+        }}
+        styles={{ body: { padding: 24 } }}
+      >
         <Space orientation="vertical" size={24} style={{ width: "100%" }}>
           <Space orientation="vertical" size={8} style={{ width: "100%" }}>
             <Link href="/login" className="payu-focus-ring">

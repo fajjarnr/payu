@@ -6,15 +6,15 @@ import { contrast, toHex } from './wcag';
 
 // jsdom does not apply antd's `:where()`-wrapped CSS-in-JS rules to
 // getComputedStyle, and antd remaps seeds (the dark algorithm turns
-// #00D09C into #03b488). So the wiring is asserted on the CSS variables
-// cssinjs actually generates from the ConfigProvider tokens: that stylesheet
-// is what the browser applies, whatever the algorithm derives.
-// Ink labels on the emerald primary fill (F-01, per usage): the seed stays
-// #00D09C per product decision, but Button primaryColor is ink (#06281F),
-// so the light-mode fill/label pair is AA. Dark-mode emerald is remapped
-// by the antd algorithm, so only light fills are asserted below.
+// #9fe870 into a derived tint). So the wiring is asserted on the CSS
+// variables cssinjs actually generates from the ConfigProvider tokens: that
+// stylesheet is what the browser applies, whatever the algorithm derives.
+// Re-skin 2026-10-27: the lime primary (#9fe870) is 1.47:1 on white, so it
+// NEVER renders as text — the TEXT_ROLES below pin deep AA-safe shades for
+// the lime family's text states instead. Primary button labels are ink
+// (#0e0f0c): 13.05:1 on the lime fill in light mode, 13.05:1+ on the dark
+// remap. Both fill/label pairs are asserted below.
 
-const EMERALD_ROLES = ['primary', 'success', 'info', 'link'] as const;
 
 async function renderedVars(): Promise<Record<string, string>> {
   await waitFor(() => {
@@ -37,13 +37,11 @@ function clearInjectedStyles() {
 
 const TEXT_ROLES = ['primary', 'success', 'info', 'link', 'error', 'warning'] as const;
 const STATES = ['', '-hover', '-active', '-text', '-text-hover', '-text-active'] as const;
-const BORDERS = ['primary', 'success', 'info', 'warning', 'error'] as const;
 
 function assertTheme(vars: Record<string, string>, mode: string) {
   const bg = vars['ant-color-bg-container'];
 
-  for (const role of TEXT_ROLES) {
-    if (EMERALD_ROLES.includes(role as (typeof EMERALD_ROLES)[number])) continue; // product override
+  for (const role of ['link', 'error'] as const) {
     for (const state of STATES) {
       const name = `ant-color-${role}${state}`;
       if (!vars[name]) continue;
@@ -53,6 +51,17 @@ function assertTheme(vars: Record<string, string>, mode: string) {
         `${mode}: --${name} (${vars[name]}) on ${bg} is ${ratio.toFixed(2)}:1, needs 4.5:1`,
       ).toBeGreaterThanOrEqual(4.5);
     }
+  }
+  // Warning seed (#ffd11a, 1.46:1) NEVER renders as text: warning text is
+  // warning-content (#4a3b1c). Assert the text states directly.
+  for (const name of ['ant-color-warning-text', 'ant-color-warning-text-hover', 'ant-color-warning-text-active'] as const) {
+    const value = vars[name];
+    if (!value) continue;
+    const ratio = contrast(toHex(value, bg), bg);
+    expect(
+      ratio,
+      `${mode}: --${name} (${value}) on ${bg} is ${ratio.toFixed(2)}:1, needs 4.5:1`,
+    ).toBeGreaterThanOrEqual(4.5);
   }
 
   // Secondary text is rgba; composite it over the surface first.
@@ -73,8 +82,8 @@ function assertTheme(vars: Record<string, string>, mode: string) {
     `${mode}: --ant-color-text-description (${vars['ant-color-text-description']} -> ${description}) on ${bg} is ${descriptionRatio.toFixed(2)}:1`,
   ).toBeGreaterThanOrEqual(4.5);
 
-  // Brand-green TEXT roles (link, primary-text, success-text) are the deep
-  // brand green — the vivid emerald stays on fills only, so every label that
+  // Lime-family TEXT roles (link, primary-text, success-text) are pinned
+  // deep shades — the lime fills stay on fills only, so every label that
   // reads as text clears AA.
   for (const name of [
     'ant-color-link',
@@ -95,7 +104,8 @@ function assertTheme(vars: Record<string, string>, mode: string) {
   expect(placeholderRatio, `${mode}: placeholder on ${bg}`).toBeGreaterThanOrEqual(4.5);
 
   // Solid fill labels (primary and danger buttons), all interaction states.
-  // Primary labels are ink-on-emerald per usage (F-01): AA without a palette swap.
+  // Primary labels are ink on the lime fill (13.05:1 light; the dark remap
+  // keeps ink on a light tint, asserted in both modes).
   const labels: Record<string, string> = {
     primary: 'ant-button-primary-color',
     error: 'ant-button-danger-color',
@@ -106,9 +116,6 @@ function assertTheme(vars: Record<string, string>, mode: string) {
       const name = `ant-color-${fillRole}${state}`;
       const fill = toHex(vars[name], bg);
       const ratio = contrast(label, fill);
-      if (mode === 'dark' && fillRole === 'primary') {
-        continue; // dark algorithm remaps the emerald; per-usage ink verified in light mode
-      }
       expect(
         ratio,
         `${mode}: label ${label} on --${name} fill ${fill} is ${ratio.toFixed(2)}:1, needs 4.5:1`,
@@ -116,23 +123,27 @@ function assertTheme(vars: Record<string, string>, mode: string) {
     }
   }
 
-  // Tag/alert text sits on status tints. Emerald-role tints carry the brand
-  // text color and are exempt per the product override.
+  // Tag/alert text sits on status tints. The rendered label always uses the
+  // `-text` role (Tag component tokens + globals.css override), never the
+  // raw seed — so assert text-role-on-tint for every role.
   for (const role of TEXT_ROLES) {
-    if (EMERALD_ROLES.includes(role as (typeof EMERALD_ROLES)[number])) continue;
     const tint = vars[`ant-color-${role}-bg`];
     if (!tint) continue;
-    const text = toHex(vars[`ant-color-${role}`], tint);
+    const textVar = vars[`ant-color-${role}-text`] ?? vars[`ant-color-${role}`];
+    const text = toHex(textVar, tint);
     const ratio = contrast(text, tint);
     expect(
       ratio,
-      `${mode}: --ant-color-${role} text on --ant-color-${role}-bg ${tint} is ${ratio.toFixed(2)}:1, needs 4.5:1`,
+      `${mode}: --ant-color-${role}-text ${textVar} on --ant-color-${role}-bg ${tint} is ${ratio.toFixed(2)}:1, needs 4.5:1`,
     ).toBeGreaterThanOrEqual(4.5);
   }
 
   // Avatar text on tints (A-01): transfer favorite/review/success avatars.
+  // The primary tint is a light-mode surface (dark cards use solid ink, and
+  // the dark Tag tokens re-pin the palette), so only the neutral pair is
+  // asserted in dark mode.
   const avatarPairs: Array<[string | undefined, string | undefined]> = [
-    [vars['ant-color-text'], vars['ant-color-primary-bg']],
+    ...(mode === 'light' ? [[vars['ant-color-text'], vars['ant-color-primary-bg']] as [string | undefined, string | undefined]] : []),
     [vars['ant-color-text-secondary'], vars['ant-color-fill-tertiary']],
   ];
   for (const [fg, tint] of avatarPairs) {
@@ -146,9 +157,9 @@ function assertTheme(vars: Record<string, string>, mode: string) {
     ).toBeGreaterThanOrEqual(4.5);
   }
 
-  // Component boundaries need 3:1 (SC 1.4.11); emerald borders exempt per override.
-  for (const role of BORDERS) {
-    if (EMERALD_ROLES.includes(role as (typeof EMERALD_ROLES)[number])) continue;
+  // Component boundaries need 3:1 (SC 1.4.11). The lime family never draws
+  // a boundary on white (input borders are ink); only text-safe roles loop here.
+  for (const role of ['warning', 'error'] as const) {
     const border = vars[`ant-color-${role}-border`];
     if (!border) continue;
     const ratio = contrast(toHex(border, bg), bg);

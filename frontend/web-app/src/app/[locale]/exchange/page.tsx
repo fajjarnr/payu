@@ -44,11 +44,11 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { notify } from "@/lib/notify";
 import { useLocale, useTranslations } from "next-intl";
 import { SkipLink } from "@/lib/a11y";
-import { INK_ON_EMERALD } from '@/theme/tokens';
+import { ON_PRIMARY } from '@/theme/tokens';
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: "var(--ant-color-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",
@@ -385,7 +385,7 @@ export default function ExchangePage() {
                         prefix={
                           <Typography.Text
                             type="secondary"
-                            style={{ fontSize: 24, fontWeight: 700 }}
+                            style={{ fontSize: 24, fontWeight: 600 }}
                           >
                             {fromCurrencyInfo?.symbol}
                           </Typography.Text>
@@ -781,7 +781,7 @@ export default function ExchangePage() {
                                 textTransform: "uppercase",
                                 letterSpacing: "0.1em",
                                 fontSize: 12,
-                                fontWeight: 700,
+                                fontWeight: 600,
                               }}
                             >
                               {conversion.status.toLowerCase()}
@@ -855,7 +855,7 @@ export default function ExchangePage() {
                     style={{
                       width: 128,
                       height: 128,
-                      color: "var(--ant-color-text-light-solid)",
+                      color: ON_PRIMARY,
                     }}
                   />
                 </div>
@@ -863,7 +863,7 @@ export default function ExchangePage() {
                   <Typography.Title
                     level={2}
                     style={{
-                      color: INK_ON_EMERALD,
+                      color: ON_PRIMARY,
                       marginTop: 0,
                       marginBottom: 8,
                     }}
@@ -874,7 +874,7 @@ export default function ExchangePage() {
                     strong
                     style={{
                       ...labelStyle,
-                      color: INK_ON_EMERALD,
+                      color: ON_PRIMARY,
                       display: "block",
                       marginBottom: 24,
                     }}
@@ -884,9 +884,9 @@ export default function ExchangePage() {
                   <Button
                     ghost
                     href="/support"
-                    // Ghost default text is white (1.99:1 on the emerald fill);
+                    // Ghost default text is white (1.99:1 on the lime fill);
                     // ink labels clear AA on the primary surface.
-                    style={{ color: INK_ON_EMERALD, borderColor: INK_ON_EMERALD }}
+                    style={{ color: ON_PRIMARY, borderColor: ON_PRIMARY }}
                   >
                     {t("contactSupport")}
                   </Button>

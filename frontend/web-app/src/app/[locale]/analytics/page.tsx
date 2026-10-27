@@ -177,7 +177,7 @@ export default function AnalyticsPage() {
                     style={{
                       width: 48,
                       height: 48,
-                      borderRadius: 12,
+                      borderRadius: 24,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -189,7 +189,7 @@ export default function AnalyticsPage() {
                         width: 24,
                         height: 24,
                         color: stat.isPos
-                          ? token.colorPrimary
+                          ? token.colorPrimaryText
                           : token.colorError,
                       }}
                     />
@@ -292,7 +292,7 @@ export default function AnalyticsPage() {
                       title: false,
                       labelFill: palette.axisLabel,
                       labelFontSize: 10,
-                      labelFontWeight: 700,
+                      labelFontWeight: 600,
                     },
                     y: false,
                   }}

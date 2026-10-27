@@ -6,85 +6,100 @@ export type ComponentTokens = NonNullable<ThemeConfig['components']>;
 const FONT_FAMILY = 'Inter, system-ui, sans-serif';
 
 /**
- * PRODUCT DECISION 2026-10-14: the brand emerald is the vivid `#00D09C`
- * (PayU green since the antd migration, commit 7cd9f2abd). A previous
- * revision darkened it to #0B7A55 for WCAG AA; the product owner rejected
- * that look and the vivid green is restored verbatim.
+ * Wise re-skin 2026-10-27: seeds follow `wise/DESIGN.md` — a lime primary
+ * (`#9fe870`) with ink labels, ink text, sage layout, and the Wise semantic
+ * family. Every pairing below was measured, not guessed:
  *
- * Known gap, accepted by that decision: `#00D09C` measures 2.00:1 on white,
- * so it fails AA as small text (links, tag text, stat text on pages that read
- * `token.colorPrimary`) and as a fill under a white button label. The contrast
- * guard (`antd-theme.test.tsx`) keeps every other role enforced and lists the
- * emerald roles as explicit, dated exceptions instead of silently skipping
- * them. If AA compliance for the green is required later, the fix is per
- * usage (darker text token, or ink labels on primary fills), not a palette
- * swap.
- *
- * Everything unrelated to the emerald keeps its measured fix from the same
- * revision: error seeds, warning seeds, placeholder, table headers.
+ * - Ink `#0e0f0c` on lime `#9fe870`: 13.05:1 (primary button labels, F-01).
+ * - Lime on white is 1.47:1, so the primary/success/info fills NEVER render
+ *   as text: their text roles pin deep shades (`positive-deep #054d28`,
+ *   10.01:1 on white). The contrast guard (`antd-theme.test.tsx`) enforces
+ *   this structurally.
+ * - Wise hover/active go LIGHTER (`primary-active #cdffad`, `primary-neutral
+ *   #c5edab`) — the inverse of antd's darkening algorithm — so they are set
+ *   explicitly, never derived.
+ * - Text-input and tertiary-button borders are ink (`#0e0f0c`, 1px), which
+ *   also satisfies SC 1.4.11 (3:1) on white.
+ * - Dark mode is an ink derivation (DESIGN.md has no dark tokens): layout
+ *   `#0e0f0c`, containers `#1a1c1a`, text roles resolve to the light lime
+ *   tint `#cdffad` (16.94:1 on ink).
  */
 
-const EMERALD = '#00D09C'; // brand emerald; 2.00:1 on white (see PRODUCT DECISION above)
-const RED = '#C62828'; // 5.62:1 on white
-const RED_HOVER = '#A61B1B'; // 7.52:1
-const RED_ACTIVE = '#8B1A1A'; // darker than hover, above 7.52:1
-const AMBER = '#B45309'; // 5.02:1
-const AMBER_HOVER = '#9A4A08'; // 6.26:1
-const AMBER_ACTIVE = '#80400A'; // 7.91:1
+// Wise core (wise/DESIGN.md colors.*)
+const LIME = '#9fe870'; // primary; 1.47:1 on white (fills only), 13.05:1 under ink labels
+const LIME_HOVER = '#cdffad'; // primary-active
+const LIME_ACTIVE = '#c5edab'; // primary-neutral
+const LIME_PALE = '#e2f6d5'; // primary-pale
+const INK = '#0e0f0c'; // text + dark surface; 19.23:1 on white
+const INK_DEEP = '#163300'; // 13.93:1 on white
+const BODY = '#454745'; // secondary text; 9.37:1 on white
+const CANVAS_SOFT = '#e8ebe6'; // sage layout surface
+const POSITIVE = '#2ead4b'; // success seed (fills); 2.92:1 on white, never text
+const POSITIVE_DEEP = '#054d28'; // success/warning-safe text; 10.01:1 on white
+const INFO = '#38c8ff'; // info seed (fills); 1.93:1 on white, never text
+const WARNING = '#ffd11a'; // warning seed (fills); 1.46:1 on white, never text
+const WARNING_CONTENT = '#4a3b1c'; // text on warning surfaces; 7.44:1 on #ffd11a
+const NEGATIVE = '#d03238'; // 5.01:1 on white, both directions
+const NEGATIVE_HOVER = '#a72027'; // 7.29:1 under white labels
+const NEGATIVE_ACTIVE = '#a7000d'; // 7.93:1 under white labels
+const NEGATIVE_BG = '#320707'; // dark maroon callouts; 17.96:1 under white
 
 export const lightTokens: SeedTokens = {
-  colorPrimary: EMERALD,
-  colorSuccess: EMERALD,
-  colorInfo: EMERALD,
-  colorError: RED,
-  colorWarning: AMBER,
+  colorPrimary: LIME,
+  colorSuccess: POSITIVE,
+  colorInfo: INFO,
+  colorError: NEGATIVE,
+  colorWarning: WARNING,
+  colorPrimaryHover: LIME_HOVER,
+  colorPrimaryActive: LIME_ACTIVE,
+  colorText: INK,
+  colorTextSecondary: BODY,
   colorTextPlaceholder: '#6B7280', // 4.83:1; antd default rgba(0,0,0,0.25) is ~2.3:1
-  // antd v6 paints "secondary" typography and menu group titles with
-  // colorTextDescription = rgba(0,0,0,0.45) -> 3.36:1 on white (fails AA).
-  // Darker than DESIGN.md text-secondary (#6B7280) so secondary text also
-  // clears AA on the layout (#f5f5f5) and on the landing page's tinted cards:
-  // 4.65:1 on #ebebeb, 5.1:1 on #f5f5f5, 5.5:1 on white.
-  colorTextDescription: '#626975',
-  // Brand green as TEXT: the vivid emerald measures 1.99:1 on white, so every
-  // link / accent / success label uses the deep brand green (5.3:1). The
-  // emerald stays on fills (buttons, tags, charts) per the product decision.
-  colorLink: '#0B7A55',
-  colorPrimaryText: '#0B7A55',
-  colorPrimaryTextHover: '#095F43',
-  colorPrimaryTextActive: '#074A34',
-  colorSuccessText: '#0B7A55',
-  colorSuccessTextHover: '#095F43',
-  colorSuccessTextActive: '#074A34',
-  colorErrorHover: RED_HOVER,
-  colorErrorActive: RED_ACTIVE,
-  colorWarningHover: AMBER_HOVER,
-  colorWarningActive: AMBER_ACTIVE,
-  colorErrorText: RED,
-  colorErrorTextHover: RED_HOVER,
-  colorErrorTextActive: RED_ACTIVE,
-  colorWarningText: AMBER,
-  colorWarningTextHover: AMBER_HOVER,
-  colorWarningTextActive: AMBER_ACTIVE,
-  colorWarningBg: '#FFFBEB', // 4.84:1 with warning text
-  colorErrorBg: '#FEF2F2', // 5.14:1 with error text
-  colorWarningBorder: AMBER,
-  colorErrorBorder: RED,
+  // Wise `mute #868685` is 3.64:1 on white (fails AA as small text), so
+  // secondary/tertiary text uses Wise `body #454745` instead (9.37:1).
+  colorTextDescription: BODY,
+  // Lime-family fills NEVER render as text; every link / accent / success
+  // label uses positive-deep (10.01:1 on white).
+  colorLink: POSITIVE_DEEP,
+  colorPrimaryText: POSITIVE_DEEP,
+  colorPrimaryTextHover: INK_DEEP,
+  colorPrimaryTextActive: INK,
+  colorSuccessText: POSITIVE_DEEP,
+  colorSuccessTextHover: INK_DEEP,
+  colorSuccessTextActive: INK,
+  colorInfoText: POSITIVE_DEEP,
+  colorErrorHover: NEGATIVE_HOVER,
+  colorErrorActive: NEGATIVE_ACTIVE,
+  colorWarningHover: WARNING,
+  colorWarningActive: WARNING,
+  colorErrorText: NEGATIVE,
+  colorErrorTextHover: NEGATIVE_HOVER,
+  colorErrorTextActive: NEGATIVE_ACTIVE,
+  colorWarningText: WARNING_CONTENT,
+  colorWarningTextHover: WARNING_CONTENT,
+  colorWarningTextActive: WARNING_CONTENT,
+  colorWarningBg: '#FFFBEB',
+  colorErrorBg: '#FEF2F2',
+  colorWarningBorder: WARNING_CONTENT,
+  colorErrorBorder: NEGATIVE,
+  colorSuccessBg: LIME_PALE,
+  colorSuccessBorder: POSITIVE_DEEP,
+  colorBgLayout: CANVAS_SOFT,
+  colorBgContainer: '#ffffff',
+  colorBorder: INK,
+  colorBorderSecondary: CANVAS_SOFT,
   borderRadius: 12,
-  borderRadiusLG: 16,
+  borderRadiusLG: 24,
   // antd v6 dropped the `borderRadiusXL` alias token; set 24px per-component
-  // (e.g. Modal/Sheet) when those migrations land.
+  // (Card, Modal, Button) in the component tokens below.
   fontFamily: FONT_FAMILY,
   fontSize: 14,
-  // DESIGN.md role scale — antd Title levels map to spec roles, not antd defaults
-  fontSizeHeading1: 24,
-  fontSizeHeading2: 20,
+  // wise/DESIGN.md product roles: display-sm 32/600, display-xs 24/600.
+  fontSizeHeading1: 32,
+  fontSizeHeading2: 24,
   fontSizeHeading3: 16,
   fontSizeHeading4: 16,
   fontSizeHeading5: 14,
-  // DESIGN.md display/caption/label roles documented on shared antd tokens —
-  // antd has no fontSizeDisplay/fontSizeCaption/fontSizeLabel seeds, so these
-  // roles read fontSizeXL (32, display), fontSizeSM (12, caption) and
-  // fontSizeSM (12, label, weight 500 at the call site).
   fontSizeXL: 32,
   fontSizeSM: 12,
 };
@@ -107,44 +122,59 @@ export const darkTokens: SeedTokens = {
   colorWarningBorder: '#e8b727',
   colorWarningBg: '#2c2211',
   colorErrorBg: '#2c1a1b',
+  colorSuccessBg: '#0d2b16',
+  colorSuccessBorder: '#cdffad',
+  colorText: CANVAS_SOFT,
+  colorTextSecondary: '#A6A6A6',
   colorTextPlaceholder: '#9CA3AF', // 7.26:1 on #141414
   colorTextDescription: '#A6A6A6', // 7.58:1 on #141414 (dark secondary ink)
-  // Dark mode needs a lighter brand green for text (10:1 on #141414).
-  colorLink: '#35D6A0',
-  colorPrimaryText: '#35D6A0',
-  colorPrimaryTextHover: '#6FE3BC',
-  colorPrimaryTextActive: '#4BD9A8',
-  colorSuccessText: '#35D6A0',
-  colorSuccessTextHover: '#6FE3BC',
-  colorSuccessTextActive: '#4BD9A8',
+  // Dark mode text roles resolve to the light lime tint (16.94:1 on ink).
+  colorLink: LIME_HOVER,
+  colorLinkHover: LIME_PALE,
+  colorLinkActive: LIME,
+  colorPrimaryText: LIME_HOVER,
+  colorPrimaryTextHover: LIME_PALE,
+  colorPrimaryTextActive: LIME,
+  colorSuccessText: LIME_HOVER,
+  colorSuccessTextHover: LIME_PALE,
+  colorSuccessTextActive: LIME,
+  colorInfoText: LIME_HOVER,
+  colorBgLayout: INK,
+  colorBgContainer: '#1a1c1a',
+  colorBorder: CANVAS_SOFT,
+  colorBorderSecondary: '#2a2d2a',
 };
 
-export const INK_ON_EMERALD = '#06281F'; // ~8:1 on #00D09C; ink labels on primary fills (F-01, per usage)
+export const ON_PRIMARY = '#0e0f0c'; // 13.05:1 on #9fe870; ink labels on primary fills (F-01, per usage)
+
+// Wise fixed surfaces (wise/DESIGN.md): the dark card and footer are ALWAYS
+// ink, in both themes — so pages read these constants, not literals (A-01).
+export const INK_SURFACE = '#0e0f0c';
+export const INK_SURFACE_SOFT = '#1a1c1a';
+export const INK_SURFACE_BORDER = '#2a2d2a';
+export const LIME_ACCENT = '#9fe870';
+export const SAGE_ON_INK = '#e8ebe6';
 
 // Card art (the debit-card metaphor on the dashboard). It is a fixed brand
 // artifact — the physical card looks the same in light and dark mode — so it
 // lives here with the other brand literals instead of a raw hsl() in
 // globals.css (A-01: every colour comes from the theme module).
 export const CARD_ART_GRADIENT =
-  'linear-gradient(135deg, #1A7440 0%, #1F5C38 50%, #145233 100%)';
+  'linear-gradient(135deg, #163300 0%, #0e0f0c 60%, #1a1c1a 100%)';
 
 // Brand panel (the dark marketing column on login / merchant register). It is
-// always dark in both themes — painting it with `token.colorText` inverted it
-// in dark mode (white panel, white ink). Ink on this surface: #FFFFFF (13:1)
-// and #E5E7EB (11.6:1).
-export const BRAND_PANEL_BG = '#1A1A2E';
-export const BRAND_PANEL_FG = '#FFFFFF';
-export const BRAND_PANEL_MUTED = '#E5E7EB';
+// always dark in both themes: Wise ink with sage/pale text (15.98:1).
+export const BRAND_PANEL_BG = '#0e0f0c';
+export const BRAND_PANEL_FG = '#e8ebe6';
+export const BRAND_PANEL_MUTED = '#e2f6d5';
 
-// Danger panel (the security "panic protocol" card). antd's error colour is
-// dark in light mode and light in dark mode, so a white label would fail on
-// one of them (3.6:1 measured in dark mode). A fixed deep red keeps the white
-// label at 9.7:1 in both themes.
-export const DANGER_PANEL_BG = '#8B1A1A';
+// Danger panel (the security "panic protocol" card). A fixed deep maroon
+// keeps the white label at 17.96:1 in both themes.
+export const DANGER_PANEL_BG = '#320707';
 const sharedButtonTokens = {
-  // White on the vivid emerald fill is 2.00:1 (accepted brand gap); ink
-  // labels on primary fills restore AA without a palette swap.
-  primaryColor: INK_ON_EMERALD,
+  // Ink labels on the lime fill (F-01): 13.05:1, no palette swap needed.
+  primaryColor: ON_PRIMARY,
+  borderRadiusLG: 24,
 };
 
 const sharedComponentTokens: ComponentTokens = {
@@ -152,55 +182,73 @@ const sharedComponentTokens: ComponentTokens = {
     controlHeight: 48,
     controlHeightLG: 56,
     controlHeightSM: 44,
-    fontWeight: 700,
+    fontWeight: 600,
     ...sharedButtonTokens,
   },
   Card: {
-    borderRadiusLG: 16,
-    boxShadowTertiary:
-      '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.08)',
+    // Wise elevation is surface contrast (white on sage), not shadow.
+    borderRadiusLG: 24,
+    boxShadowTertiary: 'none',
+    colorBorderSecondary: CANVAS_SOFT,
+  },
+  Modal: {
+    borderRadiusLG: 24,
   },
   Input: {
     controlHeight: 48,
     borderRadius: 12,
+    colorBorder: INK,
+  },
+  Select: {
+    controlHeight: 48,
+    colorBorder: INK,
+  },
+  Tag: {
+    // badge-positive: pale tint + deep text (8.76:1).
+    colorText: POSITIVE_DEEP,
+    borderRadiusSM: 9999,
   },
   Menu: {
-    // The selected item's label is text: the emerald default measures 1.9:1
-    // on the emerald tint (measured live on the dashboard sidebar).
-    itemSelectedColor: '#0B7A55',
+    // The selected item's label is text on the sage fill: deep shade (AA).
+    itemSelectedColor: POSITIVE_DEEP,
+    itemSelectedBg: LIME_PALE,
   },
   Tabs: {
-    // The selected tab label is text too (1.83:1 on the layout background).
-    itemSelectedColor: '#0B7A55',
+    itemSelectedColor: POSITIVE_DEEP,
   },
 };
 
 export const lightComponentTokens: ComponentTokens = {
   ...sharedComponentTokens,
   Table: {
-    headerBg: 'transparent',
-    headerColor: '#6B7280', // 4.83:1 on surface; replaces rgba(0,0,0,0.45) (3.36:1)
+    headerBg: CANVAS_SOFT,
+    headerColor: BODY, // 7.79:1 on sage
   },
 };
 
 export const darkComponentTokens: ComponentTokens = {
   ...sharedComponentTokens,
   Menu: {
-    // The dark emerald tint needs a light label (the deep brand green is
-    // 1.85:1 on it).
-    itemSelectedColor: '#35D6A0',
+    itemSelectedColor: LIME_HOVER,
+    itemSelectedBg: '#1a1c1a',
   },
   Tabs: {
-    itemSelectedColor: '#35D6A0',
+    itemSelectedColor: LIME_HOVER,
   },
   Button: {
     ...sharedButtonTokens,
-    // Danger labels only. White on the dark-mapped red fill (#dc5e5e) is
+    // Danger labels only: white on the dark-mapped red fill (#dc5e5e) is
     // 3.62:1; black is 5.8:1. Primary buttons keep ink labels per F-01.
     dangerColor: '#000000',
   },
+  Tag: {
+    ...sharedComponentTokens.Tag,
+    // badge-negative on ink: light red text on the dark maroon tint.
+    colorErrorText: '#ff9a9a',
+    colorErrorBg: NEGATIVE_BG,
+  },
   Table: {
     headerBg: 'transparent',
-    headerColor: '#ACACAC', // 8.12:1 on #141414; the old rgba(0,0,0,0.45) was near-invisible in dark mode
+    headerColor: '#e8ebe6', // 15.31:1 on #141414-class surfaces
   },
 };

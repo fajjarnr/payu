@@ -21,54 +21,54 @@
   --color-destructive: hsl(var(--destructive));
   --color-border: hsl(var(--border));
   --color-ring: hsl(var(--ring));
-  /* DESIGN.md Tokens (live legacy aliases — antd tokens.ts is the truth) */
-  --color-primary-dark: #00A87E;
-  --color-primary-light: #E6FFF7;
-  --color-secondary: #1A1A2E;
-  --color-success: #00D09C;
-  --color-warning: #B45309;
-  --color-error: #C62828;
+  /* Wise aliases (live legacy names — antd tokens.ts is the truth) */
+  --color-primary-dark: #054d28;
+  --color-primary-light: #e2f6d5;
+  --color-secondary: #0e0f0c;
+  --color-success: #2ead4b;
+  --color-warning: #4a3b1c;
+  --color-error: #d03238;
   --color-surface: #FFFFFF;
-  --color-surface-dim: #F8F9FA;
-  --color-text-primary: #1A1A2E;
-  --color-text-secondary: #6B7280;
-  --color-text-disabled: #B0B8C4;
+  --color-surface-dim: #e8ebe6;
+  --color-text-primary: #0e0f0c;
+  --color-text-secondary: #454745;
+  --color-text-disabled: #6B7280;
   /* Fonts */
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-heading: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-inter), ui-monospace, monospace;
 }
-
 :root {
-  /* Brand emerald #00D09C (hsl 165 100% 41%) — antd tokens.ts is the truth.
-     PRODUCT DECISION 2026-10-14: vivid emerald kept, AA gap accepted (see tokens.ts). */
-  --background: 160 20% 98%;
-  --foreground: 160 20% 8%;
+  /* Wise re-skin 2026-10-27: sage layout #e8ebe6, ink text #0e0f0c,
+     lime primary #9fe870 — antd tokens.ts is the truth. */
+  --background: 120 6% 90%;
+  --foreground: 120 7% 5%;
 
-  --primary: 165 100% 41%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 103 89% 71%;
+  --primary-foreground: 120 7% 5%;
 
   --card: 0 0% 100%;
-  --card-foreground: 160 20% 8%;
+  --card-foreground: 120 7% 5%;
 
-  --muted: 160 15% 94%;
-  --muted-foreground: 160 10% 35%;
+  --muted: 120 6% 90%;
+  --muted-foreground: 120 1% 27%;
 
-  /* AA-hardened seeds from tokens.ts: RED #C62828 (5.62:1), AMBER #B45309 (5.02:1) */
-  --destructive: 0 66% 47%;
-  --success-light: 161 100% 95%;
+  /* AA-hardened seeds from tokens.ts: NEGATIVE #d03238 (5.01:1) */
+  --destructive: 359 62% 50%;
+  --success-light: 103 89% 90%;
 
-  --border: 160 15% 90%;
-  --ring: 165 100% 41%;
+  --border: 120 6% 90%;
+  --ring: 103 89% 71%;
 
-  /* DESIGN.md Color Tokens (live legacy aliases — antd tokens.ts is the truth) */
-  --color-primary: #00D09C;
-  --color-primary-dark: #00A87E;
-  --color-primary-light: #E6FFF7;
-  --color-warning: #B45309;
-  --color-error: #C62828;
+  /* Wise aliases (live legacy names — antd tokens.ts is the truth) */
+  --color-primary: #9fe870;
+  --color-primary-dark: #054d28;
+  --color-primary-light: #e2f6d5;
+  --color-warning: #4a3b1c;
+  --color-error: #d03238;
   --color-surface: #FFFFFF;
-  --color-border: #E5E7EB;
+  --color-border: #e8ebe6;
 
   /* VIP tier colors (VIPBadge renders them as text on the card surface).
      Measured 4.5:1+ on #FFFFFF; guard: src/__tests__/theme/tier-colors.test.ts */
@@ -77,52 +77,52 @@
   --tier-gold: #92700F;
   --tier-platinum: #5F6B76;
   --tier-diamond: #2E7D9A;
-  --tier-vip: #0B7A55;
+  --tier-vip: #054d28;
   --tier-standard: #6B7280;
 }
 
 .dark {
-  --background: 160 20% 3%;
-  --foreground: 160 20% 98%;
+  --background: 120 7% 5%;
+  --foreground: 120 6% 90%;
 
-  --card: 160 20% 6%;
-  --card-foreground: 160 20% 98%;
+  --card: 120 7% 10%;
+  --card-foreground: 120 6% 90%;
 
-  --muted: 160 20% 8%;
-  --muted-foreground: 160 10% 75%;
+  --muted: 120 7% 10%;
+  --muted-foreground: 0 0% 65%;
 
-  --border: 160 20% 12%;
+  --border: 120 7% 16%;
 
   /* Accessible Success Colors for Dark Mode */
-  --success: 160 84% 55%;
-  --success-foreground: 160 20% 3%;
+  --success: 103 89% 80%;
+  --success-foreground: 120 7% 5%;
 
   /* Dark mode primary and semantic colors (tokens.ts dark seeds) */
-  --primary: 160 84% 55%;
-  --primary-foreground: 160 20% 3%;
+  --primary: 103 89% 80%;
+  --primary-foreground: 120 7% 5%;
   --destructive: 0 84% 60%;
-  --ring: 160 84% 55%;
+  --ring: 103 89% 80%;
 
-  /* VIP tier colors, dark surface (#141414 container). Measured 4.5:1+. */
+  /* VIP tier colors on the ink surface (#0e0f0c). Measured 4.5:1+. */
   --tier-bronze: #D9A066;
   --tier-silver: #C9CDD3;
   --tier-gold: #FFD666;
   --tier-platinum: #D8DEE6;
   --tier-diamond: #9BE3F5;
-  --tier-vip: #00D09C;
+  --tier-vip: #9fe870;
   --tier-standard: #9CA3AF;
 }
 
 /* High Contrast Mode Support */
 @media (prefers-contrast: high) {
   :root {
-    --muted-foreground: 160 10% 25%;
-    --border: 160 15% 70%;
+    --muted-foreground: 120 1% 20%;
+    --border: 120 6% 70%;
   }
 
   .dark {
-    --muted-foreground: 160 10% 85%;
-    --border: 160 20% 25%;
+    --muted-foreground: 120 6% 88%;
+    --border: 120 7% 28%;
   }
 }
 
@@ -149,11 +149,17 @@
     letter-spacing: -0.011em;
   }
 
-  /* DESIGN.md weights: H1 700, H2/H3 600 (H4-H6 follow H3) */
+  /* Wise display (landing hero): Manrope 800, clamp keeps 64px off 360px screens. */
+  .payu-display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
   h1 {
     font-family: var(--font-heading);
     letter-spacing: -0.025em;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   h2, h3, h4, h5, h6 {
@@ -180,10 +186,10 @@
     display: none;
   }
 
-  /* A filled success Tag paints its label with the solid success colour — the
-     emerald — on the emerald tint: 1.9:1, unreadable. The label is text, so
-     it takes the text role (deep brand green, 5.3:1 on the tint). The same
-     holds for the info/processing presets — colorInfo is the emerald too. */
+  /* A filled success Tag paints its label with the solid success colour on
+     the success tint: unreadable. The label is text, so it takes the text
+     role (positive-deep, 8.76:1 on the pale tint). The same holds for the
+     info/processing presets — the info fill never renders as text. */
   .ant-tag-success:not(.ant-tag-disabled),
   .ant-tag-processing:not(.ant-tag-disabled),
   .ant-tag-info:not(.ant-tag-disabled),

@@ -46,7 +46,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import { PersonalizedGreeting } from "./personalization";
 import { SkipLink } from "@/lib/a11y";
-import { INK_ON_EMERALD } from "@/theme/tokens";
+import { ON_PRIMARY } from "@/theme/tokens";
 import { useLogout } from "@/hooks";
 
 const { Sider, Header, Content } = Layout;
@@ -163,10 +163,10 @@ export default function DashboardLayout({
         <div className="py-1" style={{ color: token.colorText }}>
           {/* 12px is the DESIGN.md caption size, and the description role
               clears AA (the tertiary role measured 1.6:1 on the dropdown). */}
-          <p className="mb-1 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: token.colorTextDescription }}>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: token.colorTextDescription }}>
             Authenticated User
           </p>
-          <p className="truncate text-lg font-bold uppercase tracking-tight" style={{ color: token.colorText }}>
+          <p className="truncate text-lg font-semibold uppercase tracking-tight" style={{ color: token.colorText }}>
             {username}
           </p>
         </div>
@@ -184,8 +184,8 @@ export default function DashboardLayout({
 
   const logoMark = (
     <div
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl font-bold shadow-lg"
-      style={{ backgroundColor: "var(--ant-color-primary)", color: INK_ON_EMERALD }}
+      className="flex h-11 w-11 shrink-0 items-center justify-center text-2xl font-semibold"
+      style={{ backgroundColor: "var(--ant-color-primary)", color: ON_PRIMARY, borderRadius: 24 }}
     >
       U
     </div>
@@ -213,9 +213,11 @@ export default function DashboardLayout({
           inline styles can't express fallback declarations or media queries. */}
       <style>{`
         .payu-full-h { height: 100vh; height: 100dvh; }
-        .payu-header { height: 64px !important; padding: 0 16px !important; }
+        /* One header rhythm on mobile AND desktop: padding is the only
+           breakpoint delta (responsive parity, not mobile-first extension). */
+        .payu-header { height: 72px !important; padding: 0 16px !important; }
         @media (min-width: 640px) {
-          .payu-header { height: 80px !important; padding: 0 24px !important; }
+          .payu-header { height: 72px !important; padding: 0 24px !important; }
         }
         .payu-content-inner { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
         @media (min-width: 1024px) {
@@ -244,7 +246,7 @@ export default function DashboardLayout({
             aria-label={t("homeBrand")}
           >
             {logoMark}
-            <span className="text-2xl font-bold uppercase tracking-tighter" style={{ color: token.colorText }}>
+            <span className="text-2xl font-semibold uppercase tracking-tighter" style={{ color: token.colorText }}>
               PayU
             </span>
           </Link>
@@ -284,9 +286,9 @@ export default function DashboardLayout({
                 <PersonalizedGreeting
                   showTimeBased={true}
                   showSegment={true}
-                  className="text-lg font-bold leading-tight"
+                  className="text-lg font-semibold leading-tight"
                 />
-                <p className="ml-0.5 mt-1 text-xs font-bold uppercase tracking-[0.2em]" style={{ color: token.colorTextSecondary }}>
+                <p className="ml-0.5 mt-1 text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: token.colorTextSecondary }}>
                   {t("aiForecaster")}
                 </p>
               </div>
@@ -352,7 +354,7 @@ export default function DashboardLayout({
                     icon={<User className="h-5 w-5" aria-hidden="true" />}
                     style={{
                       background: token.colorPrimaryBg,
-                      // Deep brand green: the emerald on its own tint is 1.9:1.
+                      // Deep positive-green: the lime on its own tint is unreadable.
                       color: token.colorPrimaryText,
                     }}
                   />

@@ -44,6 +44,7 @@ import {
 } from "@/lib/currency";
 import type { SplitBillParticipant } from "@/services/TransactionService";
 import { SkipLink } from "@/lib/a11y";
+import { ON_PRIMARY } from "@/theme/tokens";
 
 const { Title, Text } = Typography;
 
@@ -236,7 +237,7 @@ export default function SplitBillPage() {
                     width: 48,
                     height: 48,
                     backgroundColor: "var(--ant-color-primary)",
-                    borderRadius: 12,
+                    borderRadius: 24,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -246,7 +247,7 @@ export default function SplitBillPage() {
                     style={{
                       width: 24,
                       height: 24,
-                      color: "var(--ant-color-text-light-solid)",
+                      color: ON_PRIMARY,
                     }}
                   />
                 </div>
@@ -277,7 +278,7 @@ export default function SplitBillPage() {
                     width: 48,
                     height: 48,
                     backgroundColor: "var(--ant-color-primary)",
-                    borderRadius: 12,
+                    borderRadius: 24,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -287,7 +288,7 @@ export default function SplitBillPage() {
                     style={{
                       width: 24,
                       height: 24,
-                      color: "var(--ant-color-text-light-solid)",
+                      color: ON_PRIMARY,
                     }}
                   />
                 </div>
@@ -317,8 +318,8 @@ export default function SplitBillPage() {
                   style={{
                     width: 48,
                     height: 48,
-                    backgroundColor: "var(--ant-color-secondary)",
-                    borderRadius: 12,
+                    backgroundColor: "var(--ant-color-primary-bg)",
+                    borderRadius: 24,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -328,7 +329,7 @@ export default function SplitBillPage() {
                     style={{
                       width: 24,
                       height: 24,
-                      color: "var(--ant-color-text-light-solid)",
+                      color: "var(--ant-color-primary-text)",
                     }}
                   />
                 </div>
@@ -376,7 +377,7 @@ export default function SplitBillPage() {
                       htmlFor="splitbill-description"
                       style={{
                         fontSize: 12,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: "var(--ant-color-text-secondary)",
                         textTransform: "uppercase",
                         letterSpacing: "0.1em",
@@ -402,7 +403,7 @@ export default function SplitBillPage() {
                       htmlFor="splitbill-amount"
                       style={{
                         fontSize: 12,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: "var(--ant-color-text-secondary)",
                         textTransform: "uppercase",
                         letterSpacing: "0.1em",
@@ -426,7 +427,7 @@ export default function SplitBillPage() {
                     htmlFor="splitbill-participant-accountId-0"
                     style={{
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       color: "var(--ant-color-text-secondary)",
                       textTransform: "uppercase",
                       letterSpacing: "0.1em",
@@ -533,7 +534,7 @@ export default function SplitBillPage() {
                             width: 48,
                             height: 48,
                             backgroundColor: "var(--ant-color-primary-bg)",
-                            borderRadius: 12,
+                            borderRadius: 24,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -543,7 +544,7 @@ export default function SplitBillPage() {
                             style={{
                               width: 24,
                               height: 24,
-                              color: "var(--ant-color-primary)",
+                              color: "var(--ant-color-primary-text)",
                             }}
                           />
                         </div>
@@ -590,7 +591,7 @@ export default function SplitBillPage() {
                           style={{
                             padding: "12px 16px",
                             backgroundColor: "var(--ant-color-fill-tertiary)",
-                            borderRadius: 12,
+                            borderRadius: 24,
                           }}
                         >
                           <Space size={12}>
@@ -604,8 +605,8 @@ export default function SplitBillPage() {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 fontSize: 12,
-                                fontWeight: 700,
-                                color: "var(--ant-color-primary)",
+                                fontWeight: 600,
+                                color: "var(--ant-color-primary-text)",
                               }}
                             >
                               {p.name?.charAt(0) ?? "?"}
@@ -619,7 +620,7 @@ export default function SplitBillPage() {
                                 style={{
                                   width: 16,
                                   height: 16,
-                                  color: "var(--ant-color-primary)",
+                                  color: "var(--ant-color-success-text)",
                                 }}
                               />
                             ) : p.status === "DECLINED" ? (
@@ -702,7 +703,7 @@ export default function SplitBillPage() {
                             width: 48,
                             height: 48,
                             backgroundColor: "var(--ant-color-fill-tertiary)",
-                            borderRadius: 12,
+                            borderRadius: 24,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -789,7 +790,7 @@ export default function SplitBillPage() {
                 width: 32,
                 height: 32,
                 animation: "spin 1s linear infinite",
-                color: "var(--ant-color-primary)",
+                color: "var(--ant-color-primary-text)",
               }}
             />
           </div>

@@ -9,11 +9,11 @@ import { Alert, Button, Card, Col, Input, Row, Space, Tag, Typography } from 'an
 import { Building2, Key, ShieldCheck, Loader2 } from '@/components/icons';
 import { useAuthStore } from '@/stores/authStore';
 import { SkipLink } from "@/lib/a11y";
-import { INK_ON_EMERALD } from '@/theme/tokens';
+import { ON_PRIMARY } from '@/theme/tokens';
 
 const labelStyle: React.CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--ant-color-text-secondary)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -51,7 +51,7 @@ export default function MerchantDashboard() {
       <DashboardLayout>
       <SkipLink />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
-          <Loader2 spin style={{ fontSize: 32, color: 'var(--ant-color-primary)' }} />
+          <Loader2 spin style={{ fontSize: 32, color: 'var(--ant-color-primary-text)' }} />
         </div>
       </DashboardLayout>
     );
@@ -99,11 +99,11 @@ export default function MerchantDashboard() {
                 justifyContent: 'center',
                 height: 48,
                 padding: '0 24px',
-                borderRadius: 12,
+                borderRadius: 24,
                 backgroundColor: 'var(--ant-color-primary)',
-                color: INK_ON_EMERALD,
+                color: ON_PRIMARY,
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 600,
                 textTransform: 'uppercase',
                 letterSpacing: '0.15em',
                 textDecoration: 'none',
@@ -129,7 +129,7 @@ export default function MerchantDashboard() {
         <Card
           title={
             <Space size={8}>
-              <ShieldCheck style={{ width: 20, height: 20, color: 'var(--ant-color-primary)' }} />
+              <ShieldCheck style={{ width: 20, height: 20, color: 'var(--ant-color-primary-text)' }} />
               <Typography.Text strong>{t('profile')}</Typography.Text>
             </Space>
           }
@@ -169,7 +169,7 @@ export default function MerchantDashboard() {
         <Card
           title={
             <Space size={8}>
-              <Key style={{ width: 20, height: 20, color: 'var(--ant-color-primary)' }} />
+              <Key style={{ width: 20, height: 20, color: 'var(--ant-color-primary-text)' }} />
               <Typography.Text strong>{t('apiCredentials')}</Typography.Text>
             </Space>
           }

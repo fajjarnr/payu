@@ -52,7 +52,7 @@ import { notify } from "@/lib/notify";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { formatCurrency, formatCurrencyWithoutSymbol } from "@/lib/currency";
-import { INK_ON_EMERALD } from "@/theme/tokens";
+import { ON_PRIMARY } from "@/theme/tokens";
 import { useRouter } from "@/lib/navigation";
 
 type TransferTypeMeta = {
@@ -459,13 +459,12 @@ export default function TransferPage() {
                         style={{
                           width: 80,
                           height: 80,
-                          borderRadius: 16,
+                          borderRadius: 24,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontWeight: "bold",
+                          fontWeight: 600,
                           fontSize: "1.875rem",
-                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
                           // A-01: antd tint pairs (guard: antd-theme.test.tsx), not legacy hsl vars
                           backgroundColor: isRecipientVerified
                             ? token.colorPrimaryBg
@@ -560,7 +559,7 @@ export default function TransferPage() {
                           style={{
                             width: 16,
                             height: 16,
-                            color: token.colorPrimary,
+                            color: token.colorPrimaryText,
                           }}
                         />
                         <Typography.Text type="secondary" strong>
@@ -613,7 +612,7 @@ export default function TransferPage() {
                             style={{
                               width: 16,
                               height: 16,
-                              color: token.colorPrimary,
+                              color: token.colorPrimaryText,
                             }}
                           />
                         )}
@@ -817,13 +816,12 @@ export default function TransferPage() {
                     style={{
                       width: 56,
                       height: 56,
-                      borderRadius: 16,
+                      borderRadius: 24,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontWeight: "bold",
+                      fontWeight: 600,
                       fontSize: "1.25rem",
-                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                       backgroundColor: successContact
                         ? token.colorPrimaryBg
                         : token.colorFillTertiary,
@@ -1011,19 +1009,15 @@ export default function TransferPage() {
                                 flexDirection: "column",
                                 gap: 16,
                                 padding: 24,
-                                borderRadius: 12,
+                                borderRadius: 24,
                                 width: "100%",
                                 height: "auto",
                                 border: isSelected
-                                  ? `2px solid ${token.colorPrimary}`
+                                  ? `2px solid ${token.colorPrimaryText}`
                                   : "2px solid transparent",
                                 transition: "all 0.2s",
                                 ...(isSelected
-                                  ? {
-                                      backgroundColor: token.colorPrimaryBg,
-                                      // No glow: a neutral lift, per the design gate.
-                                      boxShadow: token.boxShadowSecondary,
-                                    }
+                                  ? { backgroundColor: token.colorPrimaryBg }
                                   : { backgroundColor: token.colorFillTertiary }),
                               }}
                             >
@@ -1088,8 +1082,8 @@ export default function TransferPage() {
                                     fontSize: "0.75rem",
                                     marginBottom: 8,
                                     // On the selected tile the background is the
-                                    // emerald tint: the secondary ink measures
-                                    // 4.1:1 there, so it takes the primary ink.
+                                    // lime tint: the secondary ink is too dim
+                                    // there, so it takes the primary ink.
                                     color: isSelected ? token.colorText : undefined,
                                   }}
                                 >
@@ -1137,19 +1131,15 @@ export default function TransferPage() {
                                 flexDirection: "column",
                                 gap: 12,
                                 padding: 24,
-                                borderRadius: 12,
+                                borderRadius: 24,
                                 width: "100%",
                                 height: "auto",
                                 border: isSelected
-                                  ? `2px solid ${token.colorPrimary}`
+                                  ? `2px solid ${token.colorPrimaryText}`
                                   : "2px solid transparent",
                                 transition: "all 0.2s",
                                 ...(isSelected
-                                  ? {
-                                      backgroundColor: token.colorPrimaryBg,
-                                      // No glow: a neutral lift, per the design gate.
-                                      boxShadow: token.boxShadowSecondary,
-                                    }
+                                  ? { backgroundColor: token.colorPrimaryBg }
                                   : { backgroundColor: token.colorFillTertiary }),
                               }}
                             >
@@ -1237,7 +1227,7 @@ export default function TransferPage() {
                             htmlFor="transfer-scheduled-at"
                             style={{
                               fontSize: "0.75rem",
-                              fontWeight: "bold",
+                              fontWeight: 600,
                               color: token.colorTextSecondary,
                               letterSpacing: "0.1em",
                               textTransform: "uppercase",
@@ -1255,7 +1245,7 @@ export default function TransferPage() {
                             width: "100%",
                             height: 64,
                             borderRadius: 12,
-                            fontWeight: "bold",
+                            fontWeight: 600,
                           }}
                           placeholder="Pilih Tanggal Transfer"
                           format="DD MMM YYYY"
@@ -1334,13 +1324,12 @@ export default function TransferPage() {
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  fontWeight: "bold",
+                                  fontWeight: 600,
                                   fontSize: "0.875rem",
                                   ...(recurringDay === d
                                     ? {
                                         backgroundColor: token.colorPrimary,
-                                        color: INK_ON_EMERALD,
-                                        boxShadow: token.boxShadowSecondary,
+                                        color: ON_PRIMARY,
                                       }
                                     : {
                                         backgroundColor: token.colorBgContainer,
@@ -1376,7 +1365,7 @@ export default function TransferPage() {
                             }
                             style={{
                               fontSize: "0.75rem",
-                              fontWeight: "bold",
+                              fontWeight: 600,
                               color: token.colorPrimaryText,
                               letterSpacing: "0.1em",
                               textTransform: "uppercase",
@@ -1439,14 +1428,13 @@ export default function TransferPage() {
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  fontWeight: "bold",
+                                  fontWeight: 600,
                                   fontSize: "0.75rem",
                                   letterSpacing: "0.1em",
                                   ...(recurringMonth === val
                                     ? {
                                         backgroundColor: token.colorPrimary,
-                                        color: INK_ON_EMERALD,
-                                        boxShadow: token.boxShadowSecondary,
+                                        color: ON_PRIMARY,
                                       }
                                     : {
                                         backgroundColor: token.colorBgContainer,
@@ -1512,7 +1500,6 @@ export default function TransferPage() {
                           padding: "6px 12px",
                           borderRadius: "9999px",
                           border: `1px solid ${token.colorPrimaryBorder}`,
-                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                           flexShrink: 0,
                         }}
                       >
@@ -1562,7 +1549,7 @@ export default function TransferPage() {
                           style={{
                             width: "100%",
                             fontSize: "2rem",
-                            fontWeight: "bold",
+                            fontWeight: 600,
                           }}
                           variant="borderless"
                         />
@@ -1649,17 +1636,14 @@ export default function TransferPage() {
                             alignItems: "center",
                             gap: 16,
                             padding: 24,
-                            borderRadius: 12,
+                            borderRadius: 24,
                             border:
                               selectedContact === c.accountId
-                                ? `1px solid ${token.colorPrimary}`
+                                ? `1px solid ${token.colorPrimaryText}`
                                 : "1px solid transparent",
                             transition: "all 0.2s",
                             ...(selectedContact === c.accountId
-                              ? {
-                                  backgroundColor: token.colorPrimaryBg,
-                                  boxShadow: token.boxShadowSecondary,
-                                }
+                              ? { backgroundColor: token.colorPrimaryBg }
                               : { backgroundColor: token.colorFillTertiary }),
                           }}
                         >
@@ -1667,13 +1651,12 @@ export default function TransferPage() {
                             style={{
                               width: 56,
                               height: 56,
-                              borderRadius: 16,
+                              borderRadius: 24,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              fontWeight: "bold",
+                              fontWeight: 600,
                               fontSize: "1.5rem",
-                              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                               backgroundColor: token.colorPrimaryBg,
                               color: token.colorText,
                             }}
@@ -1699,7 +1682,7 @@ export default function TransferPage() {
                           alignItems: "center",
                           gap: 16,
                           padding: 24,
-                          borderRadius: 12,
+                          borderRadius: 24,
                           border: `1px dashed ${token.colorBorderSecondary}`,
                           transition: "all 0.2s",
                         }}
@@ -1708,7 +1691,7 @@ export default function TransferPage() {
                           style={{
                             width: 56,
                             height: 56,
-                            borderRadius: 16,
+                            borderRadius: 24,
                             backgroundColor: token.colorFillTertiary,
                             display: "flex",
                             alignItems: "center",
@@ -1728,51 +1711,38 @@ export default function TransferPage() {
                   <div style={{ marginTop: "auto", paddingTop: 40 }}>
                     <div
                       style={{
-                        background: `linear-gradient(135deg, ${token.colorText}, ${token.colorText})`,
-                        borderRadius: 12,
-                        padding: "20px 24px",
-                        color: token.colorTextLightSolid,
+                        background: token.colorText,
+                        borderRadius: 24,
+                        padding: 24,
                         position: "relative",
                         overflow: "hidden",
-                        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
                       }}
                     >
                       <div style={{ position: "relative", zIndex: 10 }}>
                         <Typography.Title
-                          level={2}
+                          level={3}
                           style={{
                             marginBottom: 8,
-                            color: token.colorTextLightSolid,
+                            color: token.colorPrimary,
                           }}
                         >
                           Bantuan?
                         </Typography.Title>
                         <Typography.Text
-                          type="secondary"
                           style={{
                             display: "block",
                             marginBottom: 32,
                             lineHeight: 1.5,
+                            color: token.colorBgLayout,
                           }}
                         >
                           Proteksi & panduan transaksi aman.
                         </Typography.Text>
                         <Button
-                          type="default"
+                          type="primary"
                           htmlType="button"
                           onClick={() => router.push("/support")}
                           data-testid="contact-support-button"
-                          style={{
-                            fontSize: "0.75rem",
-                            fontWeight: "bold",
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                            backgroundColor: `color-mix(in srgb, ${token.colorTextLightSolid} 10%, transparent)`,
-                            padding: "12px 24px",
-                            borderRadius: 12,
-                            border: `1px solid color-mix(in srgb, ${token.colorTextLightSolid} 10%, transparent)`,
-                            color: token.colorTextLightSolid,
-                          }}
                         >
                           Hubungi Kami
                         </Button>
@@ -1804,7 +1774,7 @@ export default function TransferPage() {
                 htmlFor="new-beneficiary-name"
                 style={{
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: "var(--ant-color-text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
@@ -1826,7 +1796,7 @@ export default function TransferPage() {
                 htmlFor="new-beneficiary-account"
                 style={{
                   fontSize: 12,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: "var(--ant-color-text-secondary)",
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",

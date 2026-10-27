@@ -247,12 +247,12 @@ export default function PromoPopup({
         footer={null}
         centered
         width={512}
-        styles={{ body: { padding: 0 }, mask: { background: 'rgba(0,0,0,0.8)' }, container: { background: 'transparent', boxShadow: 'none', padding: 0, borderRadius: 16, overflow: 'visible' }, root: { background: 'transparent', boxShadow: 'none' } }}
+        styles={{ body: { padding: 0 }, mask: { background: 'rgba(0,0,0,0.8)' }, container: { background: 'transparent', boxShadow: 'none', padding: 0, borderRadius: 24, overflow: 'visible' }, root: { background: 'transparent', boxShadow: 'none' } }}
         aria-modal="true"
       >
         <div
           className="relative z-50 mx-auto grid w-full max-w-lg gap-4 p-6 overflow-hidden"
-          style={{ background: token.colorBgContainer, borderRadius: 16, border: `1px solid ${token.colorBorderSecondary}`, boxShadow: token.boxShadowSecondary }}
+          style={{ background: token.colorBgContainer, borderRadius: 24, border: `1px solid ${token.colorBorderSecondary}` }}
         >
           <div className="flex flex-col space-y-2 text-center sm:text-left sr-only">
             <div className="text-lg font-semibold leading-none tracking-tight">{currentPopup.title}</div>
@@ -292,7 +292,7 @@ export default function PromoPopup({
               <Tag color="success" style={{ marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
                 {t('specialOffer')}
               </Tag>
-              <h3 className="text-2xl sm:text-4xl font-bold mb-4 leading-tight uppercase" style={{ color: token.colorText }}>
+              <h3 className="text-2xl sm:text-4xl font-semibold mb-4 leading-tight uppercase" style={{ color: token.colorText }}>
                 {currentPopup.title}
               </h3>
               {currentPopup.description && (
@@ -310,7 +310,7 @@ export default function PromoPopup({
                   type="primary"
                   size="large"
                   onClick={handleAction}
-                  className="flex-1 h-14 font-bold uppercase tracking-widest text-xs rounded-2xl"
+                  className="flex-1 h-14 font-semibold uppercase tracking-widest text-xs rounded-3xl"
                 >
                   {t('claimNow')}
                 </Button>
@@ -319,7 +319,7 @@ export default function PromoPopup({
                 type="default"
                 size="large"
                 onClick={() => handleClose(true)}
-                className="flex-1 h-14 font-bold uppercase tracking-widest text-xs rounded-2xl transition-all"
+                className="flex-1 h-14 font-semibold uppercase tracking-widest text-xs rounded-3xl transition-all"
               >
                 {t('dismissForever')}
               </Button>
@@ -354,7 +354,7 @@ export default function PromoPopup({
 
             {/* Validity Date */}
             {currentPopup.endDate && (
-              <Typography.Text type="secondary" className="block text-xs text-center font-bold uppercase" style={{ letterSpacing: '0.1em' }}>
+              <Typography.Text type="secondary" className="block text-xs text-center font-semibold uppercase" style={{ letterSpacing: '0.1em' }}>
                 {tc('promoValidUntil', {
                   date: new Date(currentPopup.endDate).toLocaleDateString(bcp47Locale, {
                     day: 'numeric',

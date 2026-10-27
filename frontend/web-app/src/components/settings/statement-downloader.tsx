@@ -161,7 +161,7 @@ export default function StatementDownloader() {
               style={{
                 width: 48,
                 height: 48,
-                borderRadius: token.borderRadius,
+                borderRadius: token.borderRadiusLG,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -169,7 +169,7 @@ export default function StatementDownloader() {
                 border: `1px solid ${token.colorPrimaryBorder}`,
               }}
             >
-              <FileText style={{ width: 24, height: 24, color: token.colorPrimary }} />
+              <FileText style={{ width: 24, height: 24, color: token.colorPrimaryText }} />
             </div>
             <div>
               <Title level={2} style={{ margin: 0 }}>{t('generator.title')}</Title>
@@ -232,7 +232,7 @@ export default function StatementDownloader() {
             disabled={isGenerating}
             onClick={handleGenerateStatement}
             icon={isGenerating ? <RefreshCw style={{ width: 20, height: 20 }} /> : <FileText style={{ width: 20, height: 20 }} />}
-            style={{ minHeight: 56, fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+            style={{ minHeight: 56, fontWeight: 600, fontSize: 16, borderRadius: 24 }}
             {...getA11yProps({ label: t('a11y.generateButton') })}
           >
             {isGenerating ? t('generator.processing') : t('generator.generate')}
@@ -249,7 +249,7 @@ export default function StatementDownloader() {
               style={{
                 width: 48,
                 height: 48,
-                borderRadius: token.borderRadius,
+                borderRadius: token.borderRadiusLG,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -257,7 +257,7 @@ export default function StatementDownloader() {
                 border: `1px solid ${token.colorPrimaryBorder}`,
               }}
             >
-              <Calendar style={{ width: 24, height: 24, color: token.colorPrimary }} />
+              <Calendar style={{ width: 24, height: 24, color: token.colorPrimaryText }} />
             </div>
             <div>
               <Title level={2} style={{ margin: 0 }}>{t('history.title')}</Title>
@@ -315,7 +315,7 @@ export default function StatementDownloader() {
                           disabled={statement.status !== 'COMPLETED' || isDownloading === statement.id}
                           loading={isDownloading === statement.id}
                           icon={<Download style={{ width: 16, height: 16 }} aria-hidden="true" />}
-                          style={{ minHeight: 44 }}
+                          style={{ minHeight: 44, fontWeight: 600, fontSize: 16, borderRadius: 24 }}
                           {...getA11yProps({ label: t('a11y.downloadStatement', { period: statement.periodFormatted }) })}
                         >
                           {t('history.download')}
@@ -362,7 +362,7 @@ export default function StatementDownloader() {
               onClick={handleLoadMore}
               loading={isLoading}
               disabled={isLoading || !hasMore}
-              style={{ minHeight: 44, fontWeight: 700, fontSize: 12, textTransform: 'uppercase' }}
+              style={{ minHeight: 44, fontWeight: 600, fontSize: 16, borderRadius: 24 }}
               {...getA11yProps({ label: t('a11y.loadMore') })}
             >
               {t('history.loadMore')}

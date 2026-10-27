@@ -102,7 +102,7 @@ function LoginForm() {
               maxWidth: "100%",
               height: 600,
               background:
-                "color-mix(in srgb, var(--ant-color-primary) 90%, transparent)",
+                `color-mix(in srgb, ${token.colorPrimary} 90%, transparent)`,
               borderRadius: "50%",
               filter: "blur(100px)",
               transform: "translate(-25%, 50%)",
@@ -144,7 +144,6 @@ function LoginForm() {
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
-                  boxShadow: token.boxShadowSecondary,
                 }}
               >
                 <Image
@@ -158,7 +157,7 @@ function LoginForm() {
               <span
                 style={{
                   fontSize: 24,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   letterSpacing: "-0.025em",
                   color: BRAND_PANEL_FG,
                 }}
@@ -188,7 +187,7 @@ function LoginForm() {
                 border: `1px solid ${token.colorPrimaryBorder}`,
                 color: BRAND_PANEL_FG,
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 600,
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
                 marginBottom: 16,
@@ -201,7 +200,7 @@ function LoginForm() {
               level={1}
               style={{
                 fontSize: 32,
-                fontWeight: 700,
+                fontWeight: 600,
                 lineHeight: 1.2,
                 letterSpacing: "-0.025em",
                 margin: 0,
@@ -242,7 +241,7 @@ function LoginForm() {
                       style={{
                         width: 20,
                         height: 20,
-                        color: token.colorPrimary,
+                        color: BRAND_PANEL_FG,
                       }}
                     />
                     <span style={{ fontWeight: 500 }}>{feature}</span>
@@ -287,7 +286,7 @@ function LoginForm() {
                     level={2}
                     style={{
                       fontSize: 24,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       letterSpacing: "-0.025em",
                       margin: 0,
                     }}
@@ -324,9 +323,8 @@ function LoginForm() {
                   style={{
                     width: "100%",
                     height: 48,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     fontSize: 16,
-                    boxShadow: token.boxShadowSecondary,
                   }}
                   onClick={() => {
                     window.location.href = "/api/auth/authorize";
@@ -388,7 +386,7 @@ function LoginForm() {
                   className="payu-focus-ring"
                   data-testid="register-link"
                   style={{
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: token.colorText,
                     textDecoration: "underline",
                     textUnderlineOffset: 3,

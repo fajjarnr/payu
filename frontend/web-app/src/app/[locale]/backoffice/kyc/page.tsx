@@ -12,7 +12,7 @@ import type { TableColumnsType } from 'antd';
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--ant-color-text-secondary)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',

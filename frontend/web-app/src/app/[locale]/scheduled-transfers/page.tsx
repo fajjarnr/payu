@@ -164,14 +164,14 @@ export default function ScheduledTransfersPage() {
               value: transfers?.length || 0,
               icon: ArrowRightLeft,
               color: 'var(--ant-color-primary-bg)',
-              iconColor: 'var(--ant-color-primary)',
+              iconColor: 'var(--ant-color-primary-text)',
             },
             {
               label: t('statActive'),
               value: transfers?.filter((t) => t.status === 'ACTIVE').length || 0,
               icon: CheckCircle2,
               color: 'var(--ant-color-primary-bg)',
-              iconColor: 'var(--ant-color-primary)',
+              iconColor: 'var(--ant-color-primary-text)',
             },
             {
               label: t('statPaused'),
@@ -195,7 +195,7 @@ export default function ScheduledTransfersPage() {
                     <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{stat.label}</Text>
                     <Title level={2} style={{ margin: '4px 0 0' }}>{stat.value}</Title>
                   </div>
-                  <div style={{ width: 48, height: 48, backgroundColor: stat.color, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 48, height: 48, backgroundColor: stat.color, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <stat.icon style={{ width: 24, height: 24, color: stat.iconColor }} />
                   </div>
                 </Row>
@@ -210,7 +210,7 @@ export default function ScheduledTransfersPage() {
 
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
-              <Loader2 style={{ width: 32, height: 32, animation: 'spin 1s linear infinite', color: 'var(--ant-color-primary)' }} />
+              <Loader2 style={{ width: 32, height: 32, animation: 'spin 1s linear infinite', color: 'var(--ant-color-primary-text)' }} />
             </div>
           ) : !transfers || transfers.length === 0 ? (
             <Empty
@@ -289,8 +289,8 @@ export default function ScheduledTransfersPage() {
                 >
                   <List.Item.Meta
                     avatar={
-                      <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Repeat style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
+                      <div style={{ width: 48, height: 48, backgroundColor: 'var(--ant-color-primary-bg)', borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Repeat style={{ width: 24, height: 24, color: 'var(--ant-color-primary-text)' }} />
                       </div>
                     }
                     title={

@@ -270,12 +270,13 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                           gap: 12,
                           borderRadius: token.borderRadiusLG,
                           borderWidth: 2,
-                          borderColor: selected ? token.colorPrimary : token.colorBorderSecondary,
-                          fontWeight: 700,
+                          borderColor: selected ? token.colorPrimaryText : token.colorBorderSecondary,
+                          fontWeight: 600,
+                          fontSize: 16,
                         }}
                         icon={cat.icon}
                       >
-                        <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                        <span style={{ fontSize: 16, fontWeight: 600 }}>
                           {selected ? `✓ ${cat.label}` : cat.label}
                         </span>
                       </Button>
@@ -342,7 +343,7 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
                 block
                 loading={isSubmitting}
                 disabled={isSubmitting || !subject.trim() || !message.trim()}
-                style={{ height: 56, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12 }}
+                style={{ height: 56, fontWeight: 600, fontSize: 16, borderRadius: 24 }}
               >
                 {isSubmitting ? t('submitting') : t('submit')}
               </Button>

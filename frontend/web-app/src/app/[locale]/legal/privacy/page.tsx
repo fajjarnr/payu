@@ -2,33 +2,39 @@
 
 import React from 'react';
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, Space, Typography } from 'antd';
+import { Card, Space, Typography, theme } from 'antd';
 import { Shield, Eye, Database, Lock, RefreshCw, CheckCircle2 } from '@/components/icons';
 import { SkipLink } from "@/lib/a11y";
+import { ON_PRIMARY } from '@/theme/tokens';
 
 const { Title, Text, Paragraph } = Typography;
 
+const SECTION_ICON_STYLE = { width: 24, height: 24 } as const;
+const SECTION_TITLE_STYLE = { margin: 0, fontWeight: 600 } as const;
+
 export default function PrivacyPage() {
+  const { token } = theme.useToken();
+  const iconColor = token.colorPrimaryText;
   return (
     <DashboardLayout>
       <SkipLink />
       <Space orientation="vertical" size={24} style={{ width: '100%' }}>
         <Space size={16}>
-          <div style={{ width: 56, height: 56, backgroundColor: 'var(--ant-color-primary)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Shield style={{ width: 28, height: 28, color: 'var(--ant-color-text-light-solid)' }} />
+          <div style={{ width: 56, height: 56, background: token.colorPrimary, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield style={{ width: 28, height: 28, color: ON_PRIMARY }} />
           </div>
           <div>
-            <Title level={1} style={{ margin: 0 }}>Kebijakan Privasi</Title>
+            <Title level={1} style={{ margin: 0, fontWeight: 600 }}>Kebijakan Privasi</Title>
             <Text type="secondary">Versi 1.0 - Terakhir diperbarui: Januari 2026</Text>
           </div>
         </Space>
 
-        <Card>
+        <Card style={{ borderRadius: 24 }}>
           <Space orientation="vertical" size={24} style={{ width: '100%' }}>
             <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
-                <Eye style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={2} style={{ margin: 0 }}>1. Pengumpulan Informasi</Title>
+                <Eye style={{ ...SECTION_ICON_STYLE, color: iconColor }} />
+                <Title level={2} style={SECTION_TITLE_STYLE}>1. Pengumpulan Informasi</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kami mengumpulkan informasi yang Anda berikan secara langsung, termasuk data pribadi, informasi keuangan,
@@ -38,8 +44,8 @@ export default function PrivacyPage() {
 
             <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
-                <Database style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={2} style={{ margin: 0 }}>2. Penggunaan Informasi</Title>
+                <Database style={{ ...SECTION_ICON_STYLE, color: iconColor }} />
+                <Title level={2} style={SECTION_TITLE_STYLE}>2. Penggunaan Informasi</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Informasi yang dikumpulkan digunakan untuk menyediakan, meningkatkan, dan mengamankan layanan kami.
@@ -49,8 +55,8 @@ export default function PrivacyPage() {
 
             <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
-                <Lock style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={2} style={{ margin: 0 }}>3. Keamanan Data</Title>
+                <Lock style={{ ...SECTION_ICON_STYLE, color: iconColor }} />
+                <Title level={2} style={SECTION_TITLE_STYLE}>3. Keamanan Data</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kami menerapkan standar keamanan industri yang ketat untuk melindungi data Anda. Semua data dienkripsi
@@ -60,8 +66,8 @@ export default function PrivacyPage() {
 
             <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
-                <Shield style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={2} style={{ margin: 0 }}>4. Berbagi Informasi</Title>
+                <Shield style={{ ...SECTION_ICON_STYLE, color: iconColor }} />
+                <Title level={2} style={SECTION_TITLE_STYLE}>4. Berbagi Informasi</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kami tidak menjual data Anda kepada pihak ketiga. Informasi hanya dibagikan dengan pihak ketiga yang
@@ -71,8 +77,8 @@ export default function PrivacyPage() {
 
             <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
-                <RefreshCw style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={2} style={{ margin: 0 }}>5. Hak Pengguna</Title>
+                <RefreshCw style={{ ...SECTION_ICON_STYLE, color: iconColor }} />
+                <Title level={2} style={SECTION_TITLE_STYLE}>5. Hak Pengguna</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Anda berhak mengakses, memperbaiki, menghapus, atau membatasi pemrosesan data pribadi Anda.
@@ -82,8 +88,8 @@ export default function PrivacyPage() {
 
             <Space orientation="vertical" size={12} style={{ width: '100%' }}>
               <Space size={12}>
-                <CheckCircle2 style={{ width: 24, height: 24, color: 'var(--ant-color-primary)' }} />
-                <Title level={2} style={{ margin: 0 }}>6. Kepatuhan Regulasi</Title>
+                <CheckCircle2 style={{ ...SECTION_ICON_STYLE, color: iconColor }} />
+                <Title level={2} style={SECTION_TITLE_STYLE}>6. Kepatuhan Regulasi</Title>
               </Space>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Kebijakan privasi ini dirancang untuk mematuhi regulasi perlindungan data yang berlaku, termasuk
@@ -91,7 +97,7 @@ export default function PrivacyPage() {
               </Paragraph>
             </Space>
 
-            <div style={{ paddingTop: 32, borderTop: '1px solid var(--ant-color-border)' }}>
+            <div style={{ paddingTop: 32, borderTop: `1px solid ${token.colorBorderSecondary}` }}>
               <Text type="secondary" style={{ textAlign: 'center', display: 'block' }}>
                 Untuk pertanyaan atau permintaan terkait privasi, hubungi privacy@payu.fajjjar.my.id
               </Text>

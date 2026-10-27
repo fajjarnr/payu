@@ -3,12 +3,10 @@
  *
  * Canvas cannot resolve CSS var() at draw time, so the palette is explicit.
  *
- * PRODUCT DECISION 2026-10-14: these are the pre-existing PayU chart colors,
- * restored verbatim (vivid emerald #00D09C family and the original amber /
- * violet / rose / slate). A previous revision darkened them for the 3:1
- * non-text threshold; the product owner restored the original look. The
- * known gap: on white, #00D09C (2.00:1), #34D399, #F59E0B, and the #9CA3AF
- * secondary sit below 3:1; see the header of src/theme/tokens.ts.
+ * Wise re-skin 2026-10-27: series marks come from the Wise semantic family
+ * (wise/DESIGN.md). Every mark clears the 3:1 non-text threshold on its
+ * theme surface; axis labels clear 4.5:1 as text. The lime primary itself
+ * (1.47:1 on white) never appears as a light-mode mark.
  */
 
 export interface ChartPalette {
@@ -22,13 +20,20 @@ export interface ChartPalette {
   stroke: string;
 }
 
-const RESTORED: ChartPalette = {
-  series: ['#00D09C', '#34D399', '#F59E0B', '#8B5CF6', '#F43F5E', '#64748B'],
-  secondary: '#9CA3AF',
-  axisLabel: '#6B7280',
+const LIGHT: ChartPalette = {
+  series: ['#163300', '#054d28', '#d03238', '#b86700', '#454745', '#0e0f0c'],
+  secondary: '#454745',
+  axisLabel: '#454745',
   stroke: '#FFFFFF',
 };
 
-export function chartPalette(_isDark: boolean): ChartPalette {
-  return RESTORED;
+const DARK: ChartPalette = {
+  series: ['#9fe870', '#cdffad', '#ffd11a', '#38c8ff', '#ff9a9a', '#e8ebe6'],
+  secondary: '#A6A6A6',
+  axisLabel: '#e8ebe6',
+  stroke: '#0e0f0c',
+};
+
+export function chartPalette(isDark: boolean): ChartPalette {
+  return isDark ? DARK : LIGHT;
 }

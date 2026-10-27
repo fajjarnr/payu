@@ -36,9 +36,10 @@ export default function RouteError({ error, reset }: RouteErrorProps) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: token.paddingLG,
+        background: token.colorBgLayout,
       }}
     >
-      <Card style={{ maxWidth: 448, width: '100%' }}>
+      <Card style={{ maxWidth: 448, width: '100%' }} styles={{ body: { padding: token.paddingXL } }}>
         <Space orientation="vertical" size={token.margin} style={{ textAlign: 'center', width: '100%' }}>
           <Typography.Title level={2} style={{ margin: 0 }}>
             {t('error')}

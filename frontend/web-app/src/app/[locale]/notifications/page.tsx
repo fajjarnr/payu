@@ -98,7 +98,7 @@ export default function NotificationsPage() {
       case "PROMO":
         return (
           <Gift
-            style={{ width: 20, height: 20, color: token.colorPrimary }}
+            style={{ width: 20, height: 20, color: token.colorPrimaryText }}
           />
         );
       case "ALERT":
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
       default:
         return (
           <MessageSquare
-            style={{ width: 20, height: 20, color: token.colorPrimary }}
+            style={{ width: 20, height: 20, color: token.colorPrimaryText }}
           />
         );
     }
@@ -134,7 +134,7 @@ export default function NotificationsPage() {
                 <Title
                   level={1}
                   style={{
-                    fontWeight: 700,
+                    fontWeight: 600,
                     letterSpacing: "-0.025em",
                     margin: 0,
                   }}
@@ -156,7 +156,7 @@ export default function NotificationsPage() {
                   onClick={handleMarkAllRead}
                   style={{
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                   }}
@@ -169,7 +169,7 @@ export default function NotificationsPage() {
                   onClick={handleClearAll}
                   style={{
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                   }}
@@ -181,7 +181,7 @@ export default function NotificationsPage() {
           </Row>
 
         {/* Toolbar */}
-        <Card>
+        <Card style={{ borderRadius: 24 }}>
           <Row gutter={[16, 16]} align="middle">
             <Col flex="auto">
               <Input
@@ -197,8 +197,8 @@ export default function NotificationsPage() {
                   />
                 }
                 style={{
-                  height: 48,
-                  fontWeight: 700,
+                  height: 48, borderRadius: 12,
+                  fontWeight: 600,
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                 }}
@@ -223,7 +223,7 @@ export default function NotificationsPage() {
 
         {/* Notifications List */}
         {filteredNotifs.length === 0 ? (
-          <Card>
+          <Card style={{ borderRadius: 24 }}>
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
@@ -231,7 +231,7 @@ export default function NotificationsPage() {
                   type="secondary"
                   style={{
                     fontSize: 14,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                   }}
@@ -254,7 +254,7 @@ export default function NotificationsPage() {
                   cursor: "pointer",
                   background: token.colorBgContainer,
                   border: `1px solid ${token.colorBorderSecondary}`,
-                  borderRadius: 12,
+                  borderRadius: 24,
                   padding: 24,
                   marginBottom: 16,
                   borderLeft: !n.read
@@ -272,7 +272,7 @@ export default function NotificationsPage() {
                     }}
                     style={{
                       fontSize: 12,
-                      fontWeight: 700,
+                      fontWeight: 600,
                       color: token.colorPrimaryText,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
@@ -317,7 +317,7 @@ export default function NotificationsPage() {
                         color="green"
                         style={{
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                           padding: "0 8px",
@@ -331,7 +331,7 @@ export default function NotificationsPage() {
                         type="secondary"
                         style={{
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                         }}

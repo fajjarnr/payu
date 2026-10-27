@@ -6,7 +6,7 @@ import { useUserSegment } from '@/hooks/useUserSegment';
 import { useAuthStore } from '@/stores';
 import clsx from 'clsx';
 import { useTranslations } from 'next-intl';
-import { BRAND_PANEL_FG, INK_ON_EMERALD } from '@/theme/tokens';
+import { BRAND_PANEL_FG, ON_PRIMARY } from '@/theme/tokens';
 interface PersonalizedGreetingProps {
   showTimeBased?: boolean;
   showSegment?: boolean;
@@ -57,7 +57,7 @@ export default function PersonalizedGreeting({
         {showTimeBased && (
           <>
             <TimeIcon className="h-4 w-4" style={{ color: token.colorTextSecondary }} aria-hidden="true" />
-            <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               {timeGreeting.text}
             </Typography.Text>
           </>
@@ -68,7 +68,7 @@ export default function PersonalizedGreeting({
         className="flex items-center gap-3 flex-wrap"
       >
         <div
-          className="text-2xl font-bold tracking-tight"
+          className="text-2xl font-semibold tracking-tight"
           style={{ color: token.colorText }}
           role="text"
           aria-label={`${user?.fullName?.split(' ')[0] || 'User'}!`}
@@ -78,11 +78,11 @@ export default function PersonalizedGreeting({
 
         {showSegment && isVIP && (
           <span
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full shadow-lg"
-            style={{ background: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`, color: INK_ON_EMERALD }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full"
+            style={{ background: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`, color: BRAND_PANEL_FG }}
           >
             <Crown className="h-3.5 w-3.5" aria-hidden="true" />
-            <span className="text-xs font-bold tracking-[0.1em] uppercase">
+            <span className="text-xs font-semibold tracking-[0.1em] uppercase">
               {segmentGreeting}
             </span>
           </span>
@@ -109,7 +109,7 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         title: t('welcomeBack', { name: firstName || t('tier_vip') }),
         subtitle: t('welcomeVipSubtitle'),
         gradient: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})`,
-        // White on amber/red passes AA; the emerald branch needs ink (F-06).
+        // White on amber/red passes AA; the lime branch needs ink (F-06).
         onColor: BRAND_PANEL_FG,
       };
     }
@@ -127,7 +127,7 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         ? t('welcomeProgress', { percent: progressToNext.toFixed(0), tier: nextTier })
         : t('welcomeOffers'),
       gradient: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
-      onColor: INK_ON_EMERALD,
+      onColor: ON_PRIMARY,
     };
   };
 
@@ -135,20 +135,20 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
 
   return (
     <div
-      className={clsx('rounded-2xl p-6 relative overflow-hidden', className)}
+      className={clsx('rounded-3xl p-6 relative overflow-hidden', className)}
       style={{ background: welcome.gradient, color: welcome.onColor }}
     >
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4" />
-          <Typography.Text style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: welcome.onColor }}>
+          <Typography.Text style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', color: welcome.onColor }}>
             {t('personalizedExperience')}
           </Typography.Text>
         </div>
 
         <Typography.Title
           level={2}
-          className="text-xl sm:text-2xl font-bold"
+          className="text-xl sm:text-2xl font-semibold"
           style={{ margin: '0 0 8px', color: welcome.onColor }}
         >
           {welcome.title}
@@ -163,10 +163,10 @@ export function PersonalizedWelcomeBanner({ className }: PersonalizedWelcomeBann
         {progressToNext && nextTier && !isVIP && (
           <div className="max-w-md">
             <div className="flex items-center justify-between mb-2">
-              <Typography.Text style={{ fontSize: 12, fontWeight: 700, color: welcome.onColor }}>
+              <Typography.Text style={{ fontSize: 12, fontWeight: 600, color: welcome.onColor }}>
                 {t('progressTo', { tier: nextTier })}
               </Typography.Text>
-              <Typography.Text style={{ fontSize: 12, fontWeight: 700, color: welcome.onColor }}>
+              <Typography.Text style={{ fontSize: 12, fontWeight: 600, color: welcome.onColor }}>
                 {progressToNext.toFixed(0)}%
               </Typography.Text>
             </div>

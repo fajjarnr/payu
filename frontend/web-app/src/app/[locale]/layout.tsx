@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { locales } from "@/i18n/config";
-import { Inter } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import "../globals.css";
 import Providers from "../providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -13,6 +13,16 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
+});
+
+// Wise display substitute (wise/DESIGN.md: Manrope 800/900 captures the
+// geometric heaviness of the proprietary Wise Sans). Landing hero only —
+// product headings stay Inter 600.
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["800"],
+  display: "swap",
+  variable: "--font-display",
 });
 
 // WEB-CSP-002: per-request CSP nonces (src/proxy.ts) require dynamic rendering
@@ -62,7 +72,7 @@ export default async function RootLayout({
   const messages = await getMessages({ locale });
 
   return (
-    <html lang={locale} className={inter.variable} suppressHydrationWarning>
+    <html lang={locale} className={`${inter.variable} ${manrope.variable}`} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>

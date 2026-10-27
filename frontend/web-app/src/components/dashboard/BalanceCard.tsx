@@ -171,9 +171,8 @@ export default function BalanceCard({
                     alignItems: "center",
                     justifyContent: "center",
                     backgroundColor: "var(--ant-color-primary-bg)",
-                    color: "var(--ant-color-primary)",
-                    border:
-                      "1px solid var(--ant-color-primary-border)",
+                    color: "var(--ant-color-primary-text)",
+                    border: "1px solid var(--ant-color-primary-border)",
                   }}
                 >
                   <ArrowUpRight style={{ width: 24, height: 24 }} />
@@ -464,7 +463,7 @@ function SummaryItem({
                 ? "var(--ant-color-success-bg)"
                 : "var(--ant-color-error-bg)",
               color: isPositive
-                ? "var(--ant-color-success)"
+                ? "var(--ant-color-success-text)"
                 : "var(--ant-color-error)",
             }}
           >

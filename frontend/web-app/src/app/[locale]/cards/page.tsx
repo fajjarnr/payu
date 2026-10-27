@@ -45,7 +45,7 @@ import {
 } from "@/hooks";
 import { useAuthStore } from "@/stores/authStore";
 import { asMoney, formatCurrency, parseCurrencyExact } from "@/lib/currency";
-import { INK_ON_EMERALD } from "@/theme/tokens";
+import { ON_PRIMARY } from "@/theme/tokens";
 import type { VirtualCard } from "@/services/WalletService";
 
 // Extended card properties that may come from backend but aren't in the base interface yet
@@ -227,11 +227,10 @@ export default function CardsPage() {
                       width: "100%",
                       maxWidth: 440,
                       aspectRatio: "1.586 / 1",
-                      borderRadius: 16,
+                      borderRadius: 24,
                       position: "relative",
                       overflow: "hidden",
                       backgroundColor: "var(--ant-color-primary)",
-                      boxShadow: token.boxShadowSecondary,
                     }}
                   >
                     <Flex
@@ -242,8 +241,8 @@ export default function CardsPage() {
                         zIndex: 1,
                         height: "100%",
                         padding: 24,
-                        // Ink on the emerald card face: white measures 2.0:1.
-                        color: INK_ON_EMERALD,
+                        // Ink on the lime card face: white measures 2.0:1.
+                        color: ON_PRIMARY,
                       }}
                     >
                       <Flex justify="space-between" align="flex-start">
@@ -254,10 +253,10 @@ export default function CardsPage() {
                             style={{
                               width: 40,
                               height: 40,
-                              borderRadius: 12,
+                              borderRadius: 24,
                               background: "rgba(255,255,255,0.2)",
                               border: "1px solid rgba(255,255,255,0.2)",
-                              fontWeight: 700,
+                              fontWeight: 600,
                               fontSize: 20,
                             }}
                           >
@@ -265,9 +264,9 @@ export default function CardsPage() {
                           </Flex>
                           <Typography.Text
                             style={{
-                              color: INK_ON_EMERALD,
+                              color: ON_PRIMARY,
                               fontSize: 20,
-                              fontWeight: 700,
+                              fontWeight: 600,
                               letterSpacing: "-0.02em",
                             }}
                           >
@@ -280,7 +279,7 @@ export default function CardsPage() {
                             width: 8,
                             height: 8,
                             borderRadius: "50%",
-                            background: INK_ON_EMERALD,
+                            background: ON_PRIMARY,
                           }}
                         />
                       </Flex>
@@ -288,7 +287,7 @@ export default function CardsPage() {
                       <Space orientation="vertical" size={16}>
                         <Typography.Text
                           style={{
-                            color: INK_ON_EMERALD,
+                            color: ON_PRIMARY,
                             fontSize: 24,
                             fontWeight: 700,
                             letterSpacing: "0.25em",
@@ -305,9 +304,9 @@ export default function CardsPage() {
                           <Space orientation="vertical" size={2}>
                             <Typography.Text
                               style={{
-                                color: INK_ON_EMERALD,
+                                color: ON_PRIMARY,
                                 fontSize: 12,
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 letterSpacing: "0.1em",
                                 textTransform: "uppercase",
                               }}
@@ -317,10 +316,10 @@ export default function CardsPage() {
                             <Typography.Text
                               ellipsis
                               style={{
-                                color: INK_ON_EMERALD,
+                                color: ON_PRIMARY,
                                 maxWidth: 150,
                                 fontSize: 12,
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 letterSpacing: "0.1em",
                                 textTransform: "uppercase",
                               }}
@@ -331,9 +330,9 @@ export default function CardsPage() {
                           <Space orientation="vertical" size={2} align="end">
                             <Typography.Text
                               style={{
-                                color: INK_ON_EMERALD,
+                                color: ON_PRIMARY,
                                 fontSize: 12,
-                                fontWeight: 700,
+                                fontWeight: 600,
                                 letterSpacing: "0.1em",
                                 textTransform: "uppercase",
                               }}
@@ -342,7 +341,7 @@ export default function CardsPage() {
                             </Typography.Text>
                             <Typography.Text
                               style={{
-                                color: INK_ON_EMERALD,
+                                color: ON_PRIMARY,
                                 fontFamily: "monospace",
                                 fontWeight: 700,
                                 fontSize: 12,
@@ -455,7 +454,7 @@ export default function CardsPage() {
                       style={{
                         display: "block",
                         fontSize: 12,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         textTransform: "uppercase",
                         marginBottom: 8,
                       }}
@@ -466,7 +465,7 @@ export default function CardsPage() {
                       strong
                       style={{
                         fontSize: 24,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
@@ -479,7 +478,7 @@ export default function CardsPage() {
                     gap={12}
                     style={{
                       padding: 16,
-                      borderRadius: 12,
+                      borderRadius: 24,
                     }}
                   >
                     <Flex
@@ -488,9 +487,9 @@ export default function CardsPage() {
                       style={{
                         width: 32,
                         height: 32,
-                        borderRadius: 8,
+                        borderRadius: 12,
                         background: token.colorPrimaryBg,
-                        // Deep brand green: the emerald on its own tint is 1.9:1.
+                        // Deep positive-green: the lime on its own tint is unreadable.
                         color: token.colorPrimaryText,
                       }}
                     >
@@ -577,7 +576,7 @@ export default function CardsPage() {
                         style={{
                           width: 40,
                           height: 40,
-                          borderRadius: 12,
+                          borderRadius: 24,
                           background: item.status
                             ? `${token.colorPrimary}1A`
                             : token.colorFillTertiary,
@@ -602,7 +601,7 @@ export default function CardsPage() {
                             ? token.colorPrimaryText
                             : token.colorTextDescription,
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           letterSpacing: "0.1em",
                           borderRadius: 9999,
                           marginInlineEnd: 0,
@@ -619,7 +618,7 @@ export default function CardsPage() {
                       <Typography.Text
                         style={{
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                         }}
@@ -647,7 +646,7 @@ export default function CardsPage() {
                       <Typography.Text
                         style={{
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                           color: token.colorPrimaryText,
@@ -682,7 +681,7 @@ export default function CardsPage() {
                   style={{
                     width: 48,
                     height: 48,
-                    borderRadius: 16,
+                    borderRadius: 24,
                     background: `${token.colorPrimary}1A`,
                     border: `1px solid ${token.colorPrimary}33`,
                     color: token.colorPrimaryText,

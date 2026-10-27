@@ -155,7 +155,7 @@ export default function SecurityPage() {
               icon={<ShieldCheck style={{ fontSize: 14 }} />}
               style={{
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 600,
                 textTransform: "uppercase",
                 letterSpacing: 2,
                 padding: "10px 20px",
@@ -168,7 +168,7 @@ export default function SecurityPage() {
 
         <Row gutter={[24, 24]}>
           <Col xs={24} md={12}>
-            <Card style={{ height: "100%" }}>
+            <Card style={{ height: "100%", borderRadius: 24 }}>
               <Space
                 orientation="vertical"
                 size="large"
@@ -180,7 +180,7 @@ export default function SecurityPage() {
                     icon={<Fingerprint style={{ fontSize: 32 }} />}
                     style={{
                       backgroundColor: "var(--ant-color-primary-bg)",
-                      color: "var(--ant-color-primary)",
+                      color: "var(--ant-color-primary-text)",
                     }}
                   />
                   <Space orientation="vertical" size={0}>
@@ -191,7 +191,7 @@ export default function SecurityPage() {
                       type="secondary"
                       style={{
                         fontSize: 12,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         textTransform: "uppercase",
                         letterSpacing: 2,
                       }}
@@ -237,7 +237,7 @@ export default function SecurityPage() {
           </Col>
 
           <Col xs={24} md={12}>
-            <Card style={{ height: "100%" }}>
+            <Card style={{ height: "100%", borderRadius: 24 }}>
               <Space
                 orientation="vertical"
                 size="large"
@@ -249,7 +249,7 @@ export default function SecurityPage() {
                     icon={<Key style={{ fontSize: 32 }} />}
                     style={{
                       backgroundColor: "var(--ant-color-primary-bg)",
-                      color: "var(--ant-color-primary)",
+                      color: "var(--ant-color-primary-text)",
                     }}
                   />
                   <Space orientation="vertical" size={0}>
@@ -260,7 +260,7 @@ export default function SecurityPage() {
                       type="secondary"
                       style={{
                         fontSize: 12,
-                        fontWeight: 700,
+                        fontWeight: 600,
                         textTransform: "uppercase",
                         letterSpacing: 2,
                       }}
@@ -288,12 +288,13 @@ export default function SecurityPage() {
         </Row>
 
         <Card
+          style={{ borderRadius: 24 }}
           title={t("authenticatedSessions")}
           extra={
             <Tag
               style={{
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 600,
                 textTransform: "uppercase",
                 letterSpacing: 2,
               }}
@@ -329,6 +330,7 @@ export default function SecurityPage() {
 
         <Card
           style={{
+            borderRadius: 24,
             // A fixed deep red: the error colour is light in dark mode, where
             // a white label would measure 3.6:1.
             backgroundColor: DANGER_PANEL_BG,
@@ -352,7 +354,7 @@ export default function SecurityPage() {
                   </Title>
                   <Paragraph
                     style={{
-                      // White on the error red is 5.6:1; a 70% mix measured 2.75:1.
+                      // White on the deep maroon is 17.96:1.
                       color: "var(--ant-color-text-light-solid)",
                       marginBottom: 0,
                     }}
@@ -370,7 +372,7 @@ export default function SecurityPage() {
                       backgroundColor: "var(--ant-color-bg-container)",
                       color: "var(--ant-color-error)",
                       borderColor: "transparent",
-                      fontWeight: 700,
+                      fontWeight: 600,
                     }}
                   >
                     {t("contactEmergencySupport")}

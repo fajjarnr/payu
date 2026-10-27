@@ -262,7 +262,7 @@ describe('EmergencyAlert', () => {
   it('should render alerts with the shared card radius', () => {
     const { container } = renderWithIntl(<EmergencyAlert />);
 
-    expect(container.querySelector('.rounded-2xl')).toBeInTheDocument();
+    expect(container.querySelector('.rounded-3xl')).toBeInTheDocument();
   });
 
   it('should format end date correctly', () => {

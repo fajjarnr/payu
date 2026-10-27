@@ -83,7 +83,7 @@ export default function BannerCarousel({
   if (isLoading) {
     return (
       <div className={cn('w-full', className)}>
-        <Skeleton title={false} paragraph={false} className={cn('block animate-pulse w-full rounded-2xl aspect-[2.1/1] sm:aspect-[2.5/1] md:aspect-[3/1]')} />
+        <Skeleton title={false} paragraph={false} className={cn('block animate-pulse w-full rounded-3xl aspect-[2.1/1] sm:aspect-[2.5/1] md:aspect-[3/1]')} />
       </div>
     );
   }
@@ -131,8 +131,8 @@ export default function BannerCarousel({
           {banners.map((banner) => (
             <div key={banner.id} className="pl-0">
               <div
-                className="cms-slide payu-focus-ring relative overflow-hidden rounded-2xl cursor-pointer group/item"
-                style={{ aspectRatio: '1.8/1', boxShadow: token.boxShadowSecondary }}
+                className="cms-slide payu-focus-ring relative overflow-hidden rounded-3xl cursor-pointer group/item"
+                style={{ aspectRatio: '1.8/1' }}
                 onClick={() => handleBannerClick(banner)}
                 role="button"
                 tabIndex={0}

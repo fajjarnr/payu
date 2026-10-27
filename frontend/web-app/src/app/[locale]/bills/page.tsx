@@ -40,7 +40,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { idempotencyKeyFor } from "@/lib/utils";
 import { notify as toast } from "@/lib/notify";
 import { formatCurrency, parseCurrencyExact } from "@/lib/currency";
-import { INK_ON_EMERALD } from "@/theme/tokens";
+import { ON_PRIMARY } from "@/theme/tokens";
 
 type BillerIcon = React.ComponentType<{ style?: React.CSSProperties }>;
 
@@ -102,37 +102,37 @@ export default function BillsPage() {
     {
       name: t("billerTypes.internet"),
       icon: Wifi,
-      bg: token.geekblue6,
-      fg: token.colorTextLightSolid,
+      bg: token.colorPrimaryBg,
+      fg: token.colorPrimaryTextHover,
       code: "INTERNET",
     },
     {
       name: t("billerTypes.cards"),
       icon: CreditCard,
-      bg: token.orange6,
-      fg: token.colorTextLightSolid,
+      bg: token.colorWarningBg,
+      fg: token.colorWarningText,
       code: "CARDS",
     },
     {
       name: t("billerTypes.bpjs"),
       icon: Heart,
       bg: token.colorSuccess,
-      // Emerald fill: the icon needs the dark ink, white on emerald is 1.99:1.
-      fg: INK_ON_EMERALD,
+      // Lime fill: the icon needs the dark ink (white is unreadable on lime).
+      fg: ON_PRIMARY,
       code: "BPJS",
     },
     {
       name: t("billerTypes.tv"),
       icon: Tv,
-      bg: token.magenta6,
-      fg: token.colorTextLightSolid,
+      bg: token.colorErrorBg,
+      fg: token.colorErrorText,
       code: "TV",
     },
     {
       name: t("billerTypes.voucher"),
       icon: Gamepad2,
-      bg: token.purple6,
-      fg: token.colorTextLightSolid,
+      bg: token.colorPrimaryBg,
+      fg: token.colorPrimaryTextActive,
       code: "VOUCHER",
     },
   ];
@@ -237,7 +237,7 @@ export default function BillsPage() {
                   marginBottom: 32,
                   borderRadius: "50%",
                   background: token.colorPrimaryBg,
-                  // Deep brand green: the emerald on its own tint is 1.9:1.
+                  // Deep positive-green: the lime on its own tint is unreadable.
                   color: token.colorPrimaryText,
                 }}
               >
@@ -266,7 +266,6 @@ export default function BillsPage() {
                       borderRadius: 12,
                       background: successData.billerBg,
                       color: successData.billerFg,
-                      boxShadow: token.boxShadowTertiary,
                     }}
                   >
                     <SuccessIcon style={{ fontSize: 24 }} />
@@ -430,10 +429,9 @@ export default function BillsPage() {
                   style={{
                     width: 80,
                     height: 80,
-                    borderRadius: 12,
+                    borderRadius: 24,
                     background: selectedBiller.bg,
                     color: selectedBiller.fg,
-                    boxShadow: token.boxShadowSecondary,
                   }}
                 >
                   <selectedBiller.icon style={{ fontSize: 36 }} />
@@ -479,8 +477,8 @@ export default function BillsPage() {
                     htmlFor="bills-customer-id"
                     style={{
                       fontSize: 12,
-                      fontWeight: 700,
-                      letterSpacing: "0.2em",
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
                       textTransform: "uppercase",
                       color: token.colorTextSecondary,
                     }}
@@ -502,8 +500,8 @@ export default function BillsPage() {
                     htmlFor="bills-amount"
                     style={{
                       fontSize: 12,
-                      fontWeight: 700,
-                      letterSpacing: "0.2em",
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
                       textTransform: "uppercase",
                       color: token.colorTextSecondary,
                     }}
@@ -520,7 +518,7 @@ export default function BillsPage() {
                       <span
                         style={{
                           fontSize: 24,
-                          fontWeight: 700,
+                          fontWeight: 600,
                           color: token.colorTextDescription,
                         }}
                       >
@@ -537,9 +535,9 @@ export default function BillsPage() {
               <Button
                 type="primary"
                 block
+                size="large"
                 onClick={handlePay}
                 disabled={paymentMutation.isPending}
-                style={{ height: 64 }}
               >
                 {paymentMutation.isPending
                   ? t("processingShort")
@@ -589,12 +587,10 @@ export default function BillsPage() {
                 color="success"
                 style={{
                   margin: 0,
-                  padding: "12px 24px",
+                  padding: "4px 12px",
                   borderRadius: 9999,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
+                  fontSize: 14,
+                  fontWeight: 600,
                 }}
               >
                 {t("realtimeSettlement")}
@@ -651,10 +647,9 @@ export default function BillsPage() {
                         style={{
                           width: 72,
                           height: 72,
-                          borderRadius: 16,
+                          borderRadius: 24,
                           background: item.bg,
                           color: item.fg,
-                          boxShadow: token.boxShadowTertiary,
                         }}
                       >
                         <item.icon style={{ fontSize: 32 }} />
@@ -695,7 +690,7 @@ export default function BillsPage() {
                               height: 48,
                               borderRadius: 12,
                               background: token.colorPrimaryBg,
-                              // Deep brand green: the emerald on its own tint is 1.9:1.
+                              // Deep positive-green: the lime on its own tint is unreadable.
                               color: token.colorPrimaryText,
                             }}
                           >
@@ -749,7 +744,7 @@ export default function BillsPage() {
                               fontSize: 12,
                               letterSpacing: "0.2em",
                               textTransform: "uppercase",
-                              // Deep brand green: the emerald on white is 1.99:1.
+                              // Deep positive-green: the lime on white is 1.47:1.
                               color: token.colorPrimaryText,
                             }}
                           >

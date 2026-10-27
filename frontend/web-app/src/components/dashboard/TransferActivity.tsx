@@ -23,7 +23,7 @@ const { Title, Text } = Typography;
 import { useTransactions, useCancelTransaction } from "@/hooks";
 import { useAuthStore } from "@/stores";
 import { notify as toast } from "@/lib/notify";
-import { INK_ON_EMERALD } from "@/theme/tokens";
+import { ON_PRIMARY } from "@/theme/tokens";
 import { formatCurrency } from "@/lib/currency";
 import type { Transaction } from "@/services/TransactionService";
 
@@ -201,7 +201,7 @@ export default function TransferActivity({
               style={{
                 width: 24,
                 height: 24,
-                color: "var(--ant-color-primary)",
+                color: "var(--ant-color-primary-text)",
               }}
             />
           </div>
@@ -388,20 +388,19 @@ export default function TransferActivity({
                         style={{
                           width: 56,
                           height: 56,
-                          borderRadius: 16,
+                          borderRadius: 24,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           backgroundColor: "var(--ant-color-primary-bg)",
-                          border:
-                            "1px solid var(--ant-color-primary-border)",
+                          border: "1px solid var(--ant-color-primary-border)",
                         }}
                       >
                         <item.icon
                           style={{
                             width: 24,
                             height: 24,
-                            color: "var(--ant-color-primary)",
+                            color: "var(--ant-color-primary-text)",
                           }}
                         />
                       </div>
@@ -426,16 +425,14 @@ export default function TransferActivity({
             data-testid="quick-transfer-send-button"
             style={{
               display: "block",
-              height: 56,
-              fontWeight: 700,
-              fontSize: 12,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
+              height: 48,
+              fontWeight: 600,
+              fontSize: 16,
               textAlign: "center",
-              lineHeight: "56px",
-              borderRadius: 12,
+              lineHeight: "48px",
+              borderRadius: 24,
               background: "var(--ant-color-primary)",
-              color: INK_ON_EMERALD,
+              color: ON_PRIMARY,
             }}
           >
             {t("sendNow")}
@@ -536,7 +533,7 @@ export default function TransferActivity({
                                 style={{
                                   width: 20,
                                   height: 20,
-                                  color: "var(--ant-color-primary)",
+                                  color: "var(--ant-color-primary-text)",
                                 }}
                               />
                             </div>
@@ -618,9 +615,8 @@ export default function TransferActivity({
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 8,
-                    fontWeight: 700,
-                    fontSize: 12,
-                    textTransform: "uppercase",
+                    fontWeight: 600,
+                    fontSize: 14,
                     minHeight: 44,
                   }}
                 >
@@ -634,9 +630,8 @@ export default function TransferActivity({
                   data-testid="view-full-history-button"
                   icon={<ArrowRight style={{ width: 16, height: 16 }} />}
                   style={{
-                    fontWeight: 700,
-                    fontSize: 12,
-                    textTransform: "uppercase",
+                    fontWeight: 600,
+                    fontSize: 14,
                     minHeight: 44,
                   }}
                 >

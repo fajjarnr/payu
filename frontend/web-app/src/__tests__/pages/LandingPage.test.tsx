@@ -1,23 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import type { ComponentProps } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/navigation", () => ({
-  Link: ({ children, href, ...props }: ComponentProps<"a">) => (
-    <a href={href} {...props}>{children}</a>
-  ),
-}));
+import { HeroTitle } from "@/components/landing/HeroTitle";
 
-vi.mock("next-intl", () => ({
-  useTranslations: () => Object.assign(
-    (key: string) => key,
-    { raw: () => '<img src="x" onerror="alert(1)">Safe<br />Title' },
-  ),
-}));
-
-import LandingPage from "@/app/[locale]/page";
-
-describe("LandingPage", () => {
+// The landing page is a Server Component; the H1 sanitizer is the unit under
+// test (page.tsx feeds it `t.raw("heroTitle")` verbatim).
+describe("HeroTitle", () => {
   beforeAll(() => {
     vi.stubGlobal("IntersectionObserver", class {
       observe() {}
@@ -26,7 +14,11 @@ describe("LandingPage", () => {
   });
 
   it("renders only the supported line break without interpreting other HTML", () => {
-    render(<LandingPage />);
+    render(
+      <h1>
+        <HeroTitle rawTitle='<img src="x" onerror="alert(1)">Safe<br />Title' />
+      </h1>,
+    );
 
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading.querySelector("img")).toBeNull();

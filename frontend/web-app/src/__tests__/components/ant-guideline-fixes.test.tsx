@@ -111,13 +111,13 @@ describe("ANT guideline fixes", () => {
     expect(eyebrow).not.toHaveStyle({ color: "var(--ant-color-primary)" });
   });
 
-  it("F-01: light-mode primary button label has AA contrast on emerald fill", () => {
+  it("F-01: light-mode primary button label has AA contrast on the Wise lime fill", () => {
     const buttonTokens = lightComponentTokens.Button as Record<string, string>;
     const label = toHex(buttonTokens.primaryColor ?? "#ffffff", "#ffffff");
     expect(
-      contrast(label, "#00D09C"),
-      `primary label ${label} on #00D09C`,
-    ).toBeGreaterThanOrEqual(4.5);
+      contrast(label, "#9fe870"),
+      `primary label ${label} on #9fe870`,
+    ).toBeGreaterThanOrEqual(7);
   });
 
   it("F-01: TransferActivity credit amounts use success-dark text token", () => {

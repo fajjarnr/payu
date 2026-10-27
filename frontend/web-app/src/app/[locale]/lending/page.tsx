@@ -47,7 +47,7 @@ import { asMoney, formatCurrency } from "@/lib/currency";
 import { notify as toast } from "@/lib/notify";
 import { SkipLink } from "@/lib/a11y";
 import { useTranslations } from "next-intl";
-import { BRAND_PANEL_FG, INK_ON_EMERALD } from '@/theme/tokens';
+import { BRAND_PANEL_FG, ON_PRIMARY } from '@/theme/tokens';
 
 export default function LendingPage() {
   const { token } = theme.useToken();
@@ -120,7 +120,7 @@ export default function LendingPage() {
       tenure: "6 - 36 bulan",
       processingTime: "1-2 hari kerja",
       icon: FileText,
-      color: token.colorPrimary,
+      color: token.colorPrimaryText,
       bg: token.colorPrimaryBg,
     },
     {
@@ -133,7 +133,7 @@ export default function LendingPage() {
       tenure: "12 - 60 bulan",
       processingTime: "3-5 hari kerja",
       icon: TrendingUp,
-      color: token.colorSuccess,
+      color: token.colorSuccessText,
       bg: token.colorSuccessBg,
     },
   ];
@@ -208,6 +208,7 @@ export default function LendingPage() {
                         style={{
                           background: `linear-gradient(135deg, ${token.colorText}, ${token.colorTextSecondary})`,
                           color: token.colorBgContainer,
+                          borderRadius: 24,
                         }}
                         styles={{ body: { padding: 24 } }}
                       >
@@ -275,7 +276,7 @@ export default function LendingPage() {
                             style={{
                               width: 64,
                               height: 64,
-                              borderRadius: 12,
+                              borderRadius: 24,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -286,7 +287,7 @@ export default function LendingPage() {
                               style={{
                                 width: 32,
                                 height: 32,
-                                color: token.colorSuccess,
+                                color: token.colorSuccessText,
                               }}
                             />
                           </div>
@@ -323,7 +324,7 @@ export default function LendingPage() {
                                       style={{
                                         width: 16,
                                         height: 16,
-                                        color: token.colorSuccess,
+                                        color: token.colorSuccessText,
                                       }}
                                     />
                                   </div>
@@ -348,12 +349,12 @@ export default function LendingPage() {
                       </Card>
                     </Col>
                     <Col xs={24} lg={8}>
-                      <Card style={{ height: "100%" }}>
+                      <Card style={{ height: "100%", borderRadius: 24 }}>
                         <div
                           style={{
                             width: 48,
                             height: 48,
-                            borderRadius: 12,
+                            borderRadius: 24,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -365,7 +366,7 @@ export default function LendingPage() {
                             style={{
                               width: 24,
                               height: 24,
-                              color: token.colorPrimary,
+                              color: token.colorPrimaryText,
                             }}
                           />
                         </div>
@@ -421,7 +422,7 @@ export default function LendingPage() {
                           <Card
                             data-testid={`loan-product-${i}`}
                             hoverable
-                            style={{ height: "100%" }}
+                            style={{ height: "100%", borderRadius: 24 }}
                           >
                             <Row
                               justify="space-between"
@@ -432,7 +433,7 @@ export default function LendingPage() {
                                 style={{
                                   width: 64,
                                   height: 64,
-                                  borderRadius: 12,
+                                  borderRadius: 24,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -448,7 +449,7 @@ export default function LendingPage() {
                                 style={{
                                   width: 40,
                                   height: 40,
-                                  borderRadius: 8,
+                                  borderRadius: 12,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -553,7 +554,8 @@ export default function LendingPage() {
                       <Card
                         style={{
                           background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
-                          color: INK_ON_EMERALD, // F-01: ink on emerald gradient, not white (2.00:1)
+                          color: ON_PRIMARY, // F-01: ink on lime gradient, not white (2.00:1)
+                          borderRadius: 24,
                         }}
                         styles={{ body: { padding: 24 } }}
                       >
@@ -573,7 +575,7 @@ export default function LendingPage() {
                                 style={{
                                   width: 48,
                                   height: 48,
-                                  borderRadius: 12,
+                                  borderRadius: 24,
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -592,7 +594,7 @@ export default function LendingPage() {
                                     fontSize: 12,
                                     letterSpacing: "0.1em",
                                     textTransform: "uppercase",
-                                    color: INK_ON_EMERALD,
+                                    color: ON_PRIMARY,
                                   }}
                                 >
                                   PayLater Limit
@@ -601,7 +603,7 @@ export default function LendingPage() {
                                   level={2}
                                   style={{
                                     marginBottom: 0,
-                                    color: INK_ON_EMERALD,
+                                    color: ON_PRIMARY,
                                   }}
                                 >
                                   {formatCurrency(payLaterStats.creditLimit)}
@@ -612,25 +614,25 @@ export default function LendingPage() {
                               size={16}
                               style={{
                                 fontSize: 12,
-                                color: INK_ON_EMERALD,
+                                color: ON_PRIMARY,
                               }}
                             >
                               <Typography.Text
                                 strong
-                                style={{ color: INK_ON_EMERALD }}
+                                style={{ color: ON_PRIMARY }}
                               >
                                 Terpakai:{" "}
                                 {formatCurrency(payLaterStats.usedLimit)}
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: INK_ON_EMERALD }}
+                                style={{ color: ON_PRIMARY }}
                               >
                                 •
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: INK_ON_EMERALD }}
+                                style={{ color: ON_PRIMARY }}
                               >
                                 Tersedia:{" "}
                                 {formatCurrency(payLaterStats.availableLimit)}
@@ -646,14 +648,14 @@ export default function LendingPage() {
                                   fontSize: 12,
                                   letterSpacing: "0.1em",
                                   textTransform: "uppercase",
-                                  color: INK_ON_EMERALD,
+                                  color: ON_PRIMARY,
                                 }}
                               >
                                 Penggunaan Limit
                               </Typography.Text>
                               <Typography.Text
                                 strong
-                                style={{ color: INK_ON_EMERALD }}
+                                style={{ color: ON_PRIMARY }}
                               >
                                 {creditUtilization.toFixed(0)}%
                               </Typography.Text>
@@ -661,7 +663,7 @@ export default function LendingPage() {
                             <Progress
                               percent={creditUtilization}
                               showInfo={false}
-                              strokeColor={INK_ON_EMERALD}
+                              strokeColor={ON_PRIMARY}
                               trailColor="rgba(6,40,31,0.15)"
                               aria-label={t("limitUsageProgress")}
                               style={{ marginTop: 8 }}
@@ -684,7 +686,7 @@ export default function LendingPage() {
                                 fontSize: 12,
                                 letterSpacing: "0.1em",
                                 textTransform: "uppercase",
-                                color: INK_ON_EMERALD,
+                                color: ON_PRIMARY,
                               }}
                             >
                               Pembayaran Minimum
@@ -693,7 +695,7 @@ export default function LendingPage() {
                               level={3}
                               style={{
                                 marginBottom: 0,
-                                color: INK_ON_EMERALD,
+                                color: ON_PRIMARY,
                               }}
                             >
                               {formatCurrency(payLaterStats.minimumPayment)}
@@ -705,7 +707,7 @@ export default function LendingPage() {
                             disabled={payLaterPayment.isPending}
                             data-testid="pay-bill-button"
                             style={{
-                              background: INK_ON_EMERALD,
+                              background: ON_PRIMARY,
                               color: BRAND_PANEL_FG,
                             }}
                           >
@@ -717,7 +719,7 @@ export default function LendingPage() {
                       </Card>
                     </Col>
                     <Col xs={24} lg={8}>
-                      <Card style={{ height: "100%" }}>
+                      <Card style={{ height: "100%", borderRadius: 24 }}>
                         <Row
                           justify="space-between"
                           align="top"
@@ -733,7 +735,7 @@ export default function LendingPage() {
                             style={{
                               width: 32,
                               height: 32,
-                              borderRadius: 8,
+                              borderRadius: 12,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -744,7 +746,7 @@ export default function LendingPage() {
                               style={{
                                 width: 16,
                                 height: 16,
-                                color: token.colorPrimary,
+                                color: token.colorPrimaryText,
                               }}
                             />
                           </div>
@@ -830,7 +832,7 @@ export default function LendingPage() {
                     <Typography.Title level={2} style={{ marginBottom: 0 }}>
                       Riwayat Transaksi PayLater
                     </Typography.Title>
-                    <Card styles={{ body: { padding: 0 } }}>
+                    <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: 24, overflow: "hidden" }}>
                       <List
                         dataSource={payLaterStats.transactions}
                         renderItem={(txn) => (
@@ -849,7 +851,7 @@ export default function LendingPage() {
                                   style={{
                                     width: 48,
                                     height: 48,
-                                    borderRadius: 12,
+                                    borderRadius: 24,
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -859,7 +861,7 @@ export default function LendingPage() {
                                         : token.colorWarningBg,
                                     color:
                                       txn.status === "paid"
-                                        ? token.colorSuccess
+                                        ? token.colorSuccessText
                                         : token.colorWarning,
                                   }}
                                 >

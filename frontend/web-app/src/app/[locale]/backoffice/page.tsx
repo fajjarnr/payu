@@ -6,11 +6,12 @@ import { Users, AlertTriangle, Headphones, FileText, ClipboardCheck, ArrowUpRigh
 import { BackofficeService, BackofficeKycStatus, FraudCaseStatus, CustomerCaseStatus } from '@/services';
 import { Card, Col, Row, Space, Tag, Typography } from 'antd';
 import type { CSSProperties } from 'react';
+import { ON_PRIMARY } from '@/theme/tokens';
 
 const tileStyle: CSSProperties = {
   width: 48,
   height: 48,
-  borderRadius: 12,
+  borderRadius: 24,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -18,7 +19,7 @@ const tileStyle: CSSProperties = {
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--ant-color-text-secondary)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -40,9 +41,9 @@ export default function BackofficeDashboard() {
   const fraudCount = Array.isArray(fraud) ? fraud.length : 0;
   const ticketCount = Array.isArray(tickets) ? tickets.length : 0;
   const stats = [
-    { label: 'KYC Tertunda', value: String(kycCount), change: 'ANTRIAN', icon: Users, bg: 'var(--ant-color-primary-bg)', fg: 'var(--ant-color-primary)' },
+    { label: 'KYC Tertunda', value: String(kycCount), change: 'ANTRIAN', icon: Users, bg: 'var(--ant-color-primary-bg)', fg: 'var(--ant-color-primary-text)' },
     { label: 'Fraud Terbuka', value: String(fraudCount), change: 'ANTRIAN', icon: AlertTriangle, bg: 'var(--ant-color-error-bg)', fg: 'var(--ant-color-error)' },
-    { label: 'Tiket Terbuka', value: String(ticketCount), change: 'ANTRIAN', icon: Headphones, bg: 'var(--ant-color-primary-bg)', fg: 'var(--ant-color-primary)' },
+    { label: 'Tiket Terbuka', value: String(ticketCount), change: 'ANTRIAN', icon: Headphones, bg: 'var(--ant-color-primary-bg)', fg: 'var(--ant-color-primary-text)' },
   ];
 
   const quickLinks = [
@@ -88,7 +89,7 @@ export default function BackofficeDashboard() {
               <Card hoverable style={{ height: '100%' }}>
                 <Space orientation="vertical" size={24} style={{ width: '100%' }}>
                   <Space align="start" style={{ width: '100%', justifyContent: 'space-between' }}>
-                    <div style={{ ...tileStyle, width: 56, height: 56, background: 'var(--ant-color-primary)', color: 'var(--ant-color-text-light-solid)' }}>
+                    <div style={{ ...tileStyle, width: 56, height: 56, background: 'var(--ant-color-primary)', color: ON_PRIMARY }}>
                       <link.icon style={{ fontSize: 28 }} />
                     </div>
                     <div style={{ ...tileStyle, width: 40, height: 40, background: 'var(--ant-color-fill-tertiary)', color: 'var(--ant-color-text-secondary)' }}>

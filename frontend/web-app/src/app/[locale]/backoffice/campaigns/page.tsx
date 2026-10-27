@@ -42,7 +42,7 @@ import PageHeader from "@/components/PageHeader";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: "var(--ant-color-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",
@@ -128,7 +128,7 @@ export default function CampaignsPage() {
           <Flex align="center" justify="space-between">
             <Typography.Text
               strong
-              style={{ fontSize: 12, color: "var(--ant-color-primary)" }}
+              style={{ fontSize: 12, color: "var(--ant-color-primary-text)" }}
             >
               {cmp.value}
             </Typography.Text>
@@ -208,7 +208,7 @@ export default function CampaignsPage() {
         ]}
       />
 
-      <Card>
+      <Card style={{ borderRadius: 24 }}>
         <Flex gap={16} wrap align="center" justify="space-between">
           <Input
             aria-label="Cari kampanye"
@@ -237,7 +237,7 @@ export default function CampaignsPage() {
         </Flex>
       </Card>
 
-      <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
+      <Card style={{ borderRadius: 24 }} styles={{ body: { padding: 0, overflow: "hidden" } }}>
         {error ? (
           <Alert
             type="error"
@@ -274,7 +274,7 @@ export default function CampaignsPage() {
             style={{
               margin: 0,
               fontSize: 12,
-              fontWeight: 700,
+              fontWeight: 600,
               color: "var(--ant-color-text-secondary)",
               textTransform: "uppercase",
               letterSpacing: "0.1em",
@@ -384,14 +384,14 @@ function campaignTypeIcon(type: string) {
     case "CASHBACK":
       return (
         <BadgePercent
-          style={{ fontSize: 16, color: "var(--ant-color-primary)" }}
+          style={{ fontSize: 16, color: "var(--ant-color-primary-text)" }}
         />
       );
     case "SIGNUP_BONUS":
       return <Gift style={{ fontSize: 16 }} />;
     case "REFERRAL":
       return (
-        <Users style={{ fontSize: 16, color: "var(--ant-color-primary)" }} />
+        <Users style={{ fontSize: 16, color: "var(--ant-color-primary-text)" }} />
       );
     default:
       return (

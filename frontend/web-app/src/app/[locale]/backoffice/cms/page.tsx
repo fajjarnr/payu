@@ -46,7 +46,7 @@ import StatCards from "../_components/StatCards";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: "var(--ant-color-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",
@@ -417,7 +417,7 @@ export default function CMSPage() {
             style={{
               width: 64,
               height: 64,
-              borderRadius: 8,
+              borderRadius: 12,
               background: "var(--ant-color-fill-tertiary)",
               overflow: "hidden",
               position: "relative",
@@ -514,7 +514,7 @@ export default function CMSPage() {
             label: (
               <Space>
                 <CheckCircle2
-                  style={{ fontSize: 16, color: "var(--ant-color-primary)" }}
+                  style={{ fontSize: 16, color: "var(--ant-color-primary-text)" }}
                 />
                 <Typography.Text strong style={labelStyle}>
                   Activate
@@ -629,7 +629,7 @@ export default function CMSPage() {
         ]}
       />
 
-      <Card>
+      <Card style={{ borderRadius: 24 }}>
         <Flex gap={16} wrap align="center" justify="space-between">
           <Select
             aria-label="Pilih tab konten"
@@ -667,7 +667,7 @@ export default function CMSPage() {
         </Flex>
       </Card>
 
-      <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
+      <Card style={{ borderRadius: 24 }} styles={{ body: { padding: 0, overflow: "hidden" } }}>
         <Table<Content>
           scroll={{ x: "max-content" }}
           columns={columns}
@@ -728,12 +728,12 @@ function contentTypeIcon(type: string) {
     case "BANNER":
       return (
         <ImageIcon
-          style={{ fontSize: 16, color: "var(--ant-color-primary)" }}
+          style={{ fontSize: 16, color: "var(--ant-color-primary-text)" }}
         />
       );
     case "PROMO":
       return (
-        <Gift style={{ fontSize: 16, color: "var(--ant-color-primary)" }} />
+        <Gift style={{ fontSize: 16, color: "var(--ant-color-primary-text)" }} />
       );
     case "ALERT":
       return (

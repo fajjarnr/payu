@@ -214,7 +214,7 @@ function QuickActionItem({
           alignItems: "center",
           textAlign: "center",
           padding: 24,
-          borderRadius: 16,
+          borderRadius: 24,
           border: isEditMode
             ? "2px dashed var(--ant-color-primary-border)"
             : "1px solid var(--ant-color-border-secondary)",
@@ -241,7 +241,7 @@ function QuickActionItem({
             justifyContent: "center",
             marginBottom: 20,
             backgroundColor: "var(--ant-color-primary-bg)",
-            color: "var(--ant-color-primary)",
+            color: "var(--ant-color-primary-text)",
           }}
         >
           <Icon style={{ width: 32, height: 32 }} aria-hidden="true" />

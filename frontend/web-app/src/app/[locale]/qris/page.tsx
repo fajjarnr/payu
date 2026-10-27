@@ -16,6 +16,7 @@ import { notify as toast } from "@/lib/notify";
 import { useAuthStore } from "@/stores/authStore";
 import { useProcessQrisPayment, useTransactions } from "@/hooks";
 import { addCurrency, asMoney, formatCurrency } from "@/lib/currency";
+import { INK_SURFACE, INK_SURFACE_SOFT, LIME_ACCENT, SAGE_ON_INK } from "@/theme/tokens";
 import {
   Button,
   Card,
@@ -166,7 +167,7 @@ export default function QRISPage() {
                     },
                   }}
                 >
-                  {/* Premium Background Effects */}
+                  {/* Sage background effects (surface contrast, not glow) */}
                   <div
                     style={{
                       position: "absolute",
@@ -175,8 +176,7 @@ export default function QRISPage() {
                       width: 400,
                       maxWidth: "100%",
                       height: 400,
-                      backgroundColor: token.colorPrimary,
-                      opacity: 0.05,
+                      backgroundColor: token.colorBgLayout,
                       borderRadius: "50%",
                       filter: "blur(100px)",
                     }}
@@ -189,8 +189,7 @@ export default function QRISPage() {
                       width: 256,
                       maxWidth: "100%",
                       height: 256,
-                      backgroundColor: token.colorPrimary,
-                      opacity: 0.05,
+                      backgroundColor: token.colorBgLayout,
                       borderRadius: "50%",
                       filter: "blur(80px)",
                     }}
@@ -219,11 +218,9 @@ export default function QRISPage() {
                           position: "absolute",
                           inset: 0,
                           borderRadius: 12,
-                          border: `2px dashed ${isScanning ? token.colorPrimary : token.colorBorder}`,
+                          border: `2px dashed ${isScanning ? token.colorPrimaryText : token.colorBorder}`,
                           transition: "all 0.7s",
-                          backgroundColor: isScanning
-                            ? `${token.colorPrimary}1a`
-                            : `${token.colorFillQuaternary}33`,
+                          backgroundColor: isScanning ? token.colorPrimaryBg : token.colorFillQuaternary,
                         }}
                       />
                       <div
@@ -231,7 +228,7 @@ export default function QRISPage() {
                         style={{
                           position: "absolute",
                           inset: 32,
-                          border: `2px solid ${token.colorPrimary}33`,
+                          border: `2px solid ${token.colorPrimaryBorder}`,
                           borderRadius: 12,
                         }}
                       />
@@ -251,14 +248,13 @@ export default function QRISPage() {
                           style={{
                             width: 88,
                             height: 88,
-                            backgroundColor: token.colorBgContainer,
-                            borderRadius: 12,
+                            backgroundColor: token.colorPrimaryBg,
+                            borderRadius: 24,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             marginBottom: 20,
-                            boxShadow: token.boxShadowSecondary,
-                            border: `1px solid ${token.colorBorder}`,
+                            border: `1px solid ${token.colorPrimaryBorder}`,
                             transition: "transform 0.5s",
                             transform: isScanning ? "scale(1.1)" : undefined,
                           }}
@@ -267,7 +263,7 @@ export default function QRISPage() {
                             style={{
                               width: 36,
                               height: 36,
-                              color: token.colorPrimary,
+                              color: token.colorPrimaryText,
                             }}
                           />
                         </div>
@@ -275,8 +271,8 @@ export default function QRISPage() {
                           type="secondary"
                           style={{
                             fontSize: 12,
-                            fontWeight: 700,
-                            letterSpacing: "0.3em",
+                            fontWeight: 600,
+                            letterSpacing: "0.2em",
                             textTransform: "uppercase",
                             color: token.colorTextDescription,
                           }}
@@ -295,8 +291,8 @@ export default function QRISPage() {
                           left: 0,
                           width: 40,
                           height: 40,
-                          borderTop: `4px solid ${token.colorPrimary}`,
-                          borderLeft: `4px solid ${token.colorPrimary}`,
+                          borderTop: `4px solid ${token.colorPrimaryText}`,
+                          borderLeft: `4px solid ${token.colorPrimaryText}`,
                           borderRadius: "12px 0 0 0",
                         }}
                       />
@@ -307,8 +303,8 @@ export default function QRISPage() {
                           right: 0,
                           width: 40,
                           height: 40,
-                          borderTop: `4px solid ${token.colorPrimary}`,
-                          borderRight: `4px solid ${token.colorPrimary}`,
+                          borderTop: `4px solid ${token.colorPrimaryText}`,
+                          borderRight: `4px solid ${token.colorPrimaryText}`,
                           borderRadius: "0 12px 0 0",
                         }}
                       />
@@ -319,8 +315,8 @@ export default function QRISPage() {
                           left: 0,
                           width: 40,
                           height: 40,
-                          borderBottom: `4px solid ${token.colorPrimary}`,
-                          borderLeft: `4px solid ${token.colorPrimary}`,
+                          borderBottom: `4px solid ${token.colorPrimaryText}`,
+                          borderLeft: `4px solid ${token.colorPrimaryText}`,
                           borderRadius: "0 0 0 12px",
                         }}
                       />
@@ -331,8 +327,8 @@ export default function QRISPage() {
                           right: 0,
                           width: 40,
                           height: 40,
-                          borderBottom: `4px solid ${token.colorPrimary}`,
-                          borderRight: `4px solid ${token.colorPrimary}`,
+                          borderBottom: `4px solid ${token.colorPrimaryText}`,
+                          borderRight: `4px solid ${token.colorPrimaryText}`,
                           borderRadius: "0 0 12px 0",
                         }}
                       />
@@ -348,14 +344,7 @@ export default function QRISPage() {
                         onClick={handleToggleCamera}
                         data-testid="qris-camera-button"
                         block
-                        style={{
-                          height: 56,
-                          borderRadius: 12,
-                          fontWeight: 700,
-                          fontSize: 12,
-                          letterSpacing: "0.2em",
-                          textTransform: "uppercase",
-                        }}
+                        size="large"
                       >
                         <Camera style={{ width: 16, height: 16 }} />{" "}
                         {isScanning ? t("closeCamera") : t("openCamera")}
@@ -364,14 +353,9 @@ export default function QRISPage() {
                         onClick={handleUploadClick}
                         data-testid="qris-upload-button"
                         block
+                        size="large"
                         style={{
-                          height: 56,
-                          borderRadius: 12,
-                          fontWeight: 700,
-                          fontSize: 12,
-                          letterSpacing: "0.2em",
-                          textTransform: "uppercase",
-                          backgroundColor: `${token.colorFillQuaternary}66`,
+                          backgroundColor: token.colorBgLayout,
                           borderColor: token.colorBorder,
                         }}
                       >
@@ -379,7 +363,7 @@ export default function QRISPage() {
                           style={{
                             width: 16,
                             height: 16,
-                            color: token.colorPrimary,
+                            color: token.colorPrimaryText,
                           }}
                         />{" "}
                         {t("uploadPhoto")}
@@ -405,10 +389,10 @@ export default function QRISPage() {
                         style={{
                           width: 20,
                           height: 20,
-                          color: token.colorPrimary,
+                          color: token.colorPrimaryText,
                         }}
                       />
-                      <Typography.Title level={2} style={{ marginBottom: 0 }}>
+                      <Typography.Title level={3} style={{ marginBottom: 0 }}>
                         {t("recentActivity")}
                       </Typography.Title>
                     </div>
@@ -416,11 +400,9 @@ export default function QRISPage() {
                       type="link"
                       onClick={() => toast.info(t("showingAllTransactions"))}
                       style={{
-                        fontSize: 12,
-                        fontWeight: 700,
+                        fontSize: 14,
+                        fontWeight: 600,
                         color: token.colorPrimaryText,
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase",
                       }}
                     >
                       {t("viewAll")}
@@ -467,7 +449,7 @@ export default function QRISPage() {
                           type="secondary"
                           style={{
                             fontSize: 12,
-                            fontWeight: 700,
+                            fontWeight: 600,
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
                             color: token.colorTextDescription,
@@ -517,8 +499,8 @@ export default function QRISPage() {
                     type="secondary"
                     style={{
                       fontSize: 12,
-                      fontWeight: 700,
-                      letterSpacing: "0.2em",
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
                       textTransform: "uppercase",
                       color: token.colorTextDescription,
                       display: "block",
@@ -533,20 +515,20 @@ export default function QRISPage() {
                         style={{
                           width: 40,
                           height: 40,
-                          backgroundColor: `${token.colorPrimary}1a`,
+                          backgroundColor: token.colorPrimaryBg,
                           borderRadius: 12,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
-                          border: `1px solid ${token.colorPrimary}1a`,
+                          border: `1px solid ${token.colorPrimaryBorder}`,
                         }}
                       >
                         <ShieldCheck
                           style={{
                             width: 20,
                             height: 20,
-                            color: token.colorPrimary,
+                            color: token.colorPrimaryText,
                           }}
                         />
                       </div>
@@ -572,20 +554,20 @@ export default function QRISPage() {
                         style={{
                           width: 40,
                           height: 40,
-                          backgroundColor: `${token.colorPrimary}1a`,
+                          backgroundColor: token.colorPrimaryBg,
                           borderRadius: 12,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
-                          border: `1px solid ${token.colorPrimary}1a`,
+                          border: `1px solid ${token.colorPrimaryBorder}`,
                         }}
                       >
                         <Info
                           style={{
                             width: 20,
                             height: 20,
-                            color: token.colorPrimary,
+                            color: token.colorPrimaryText,
                           }}
                         />
                       </div>
@@ -609,11 +591,11 @@ export default function QRISPage() {
                   </Space>
                 </Card>
 
-                {/* My QR Card */}
+                {/* My QR Card: Wise card-feature-dark — ink fill, lime text. */}
                 <Card
                   style={{
-                    backgroundColor: token.colorBgSpotlight,
-                    color: token.colorTextLightSolid,
+                    backgroundColor: INK_SURFACE,
+                    color: LIME_ACCENT,
                     position: "relative",
                     overflow: "hidden",
                   }}
@@ -632,7 +614,7 @@ export default function QRISPage() {
                           level={2}
                           style={{
                             marginBottom: 0,
-                            color: token.colorTextLightSolid,
+                            color: LIME_ACCENT,
                           }}
                         >
                           {t("personalQris")}
@@ -641,7 +623,7 @@ export default function QRISPage() {
                           strong
                           style={{
                             fontSize: 12,
-                            color: token.colorTextLightSolid,
+                            color: SAGE_ON_INK,
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
                           }}
@@ -653,20 +635,19 @@ export default function QRISPage() {
                         style={{
                           width: 28,
                           height: 28,
-                          color: `${token.colorPrimary}66`,
+                          color: LIME_ACCENT,
                         }}
                       />
                     </div>
 
                     <div
                       style={{
-                        backgroundColor: `${token.colorTextLightSolid}0d`,
-                        borderRadius: 12,
+                        backgroundColor: INK_SURFACE_SOFT,
+                        borderRadius: 16,
                         padding: 24,
                         marginBottom: 24,
                         display: "flex",
                         justifyContent: "center",
-                        border: `1px solid ${token.colorTextLightSolid}0d`,
                         position: "relative",
                       }}
                     >
@@ -675,9 +656,8 @@ export default function QRISPage() {
                           width: 128,
                           height: 128,
                           transition: "all 0.3s",
-                          color: showMyQr
-                            ? token.colorPrimary
-                            : `${token.colorTextLightSolid}33`,
+                          color: showMyQr ? LIME_ACCENT : SAGE_ON_INK,
+                          opacity: showMyQr ? 1 : 0.25,
                           transform: showMyQr ? "scale(1.05)" : undefined,
                         }}
                       />
@@ -695,7 +675,7 @@ export default function QRISPage() {
                             strong
                             style={{
                               fontSize: 12,
-                              color: token.colorTextLightSolid,
+                              color: SAGE_ON_INK,
                               letterSpacing: "0.2em",
                               textTransform: "uppercase",
                               transform: "rotate(-12deg)",
@@ -712,34 +692,11 @@ export default function QRISPage() {
                       onClick={() => setShowMyQr(!showMyQr)}
                       data-testid="qris-show-personal-button"
                       block
-                      style={{
-                        height: 48,
-                        backgroundColor: `${token.colorPrimary}33`,
-                        color: token.colorTextLightSolid,
-                        borderRadius: 12,
-                        fontWeight: 700,
-                        fontSize: 12,
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase",
-                        border: `1px solid ${token.colorPrimary}4d`,
-                      }}
+                      size="large"
                     >
                       {showMyQr ? t("hideCode") : t("showMyCode")}
                     </Button>
                   </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: -30,
-                      left: -30,
-                      width: 160,
-                      maxWidth: "100%",
-                      height: 160,
-                      backgroundColor: `${token.colorPrimary}1a`,
-                      borderRadius: "50%",
-                      filter: "blur(80px)",
-                    }}
-                  />
                 </Card>
 
                 {/* Daily Limit Card */}
@@ -758,8 +715,8 @@ export default function QRISPage() {
                       type="secondary"
                       style={{
                         fontSize: 12,
-                        fontWeight: 700,
-                        letterSpacing: "0.2em",
+                        fontWeight: 600,
+                        letterSpacing: "0.1em",
                         textTransform: "uppercase",
                         color: token.colorTextDescription,
                       }}

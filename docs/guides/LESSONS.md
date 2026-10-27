@@ -7704,3 +7704,27 @@ ACCOUNT-006's `verify` gate kept failing even after gate-facing coverage hit 80.
 **Fix**: Tambah `chaosengines/finalizers` + `chaosresults/finalizers` (`get/patch/update`) di git + `rollout restart` agent (cache RBAC) → runner Running → ChaosResult **Pass** (probe gateway 200, 100%).
 
 **Pelajaran**: (1) **ownerReference + blockOwnerDeletion = butuh finalizer rights** pada parent — error ini selalu RBAC, bukan CRD; (2) operator cache authorization — restart deployment setelah ubah Role/ClusterRole; (3) verdict baca di `.status.experimentStatus.verdict` (bukan `.status.phase` engine).
+
+## L-501: antd `Card`/`Typography`/`@ant-design/icons` 500 di React Server Component (2026-10-27)
+
+**Context**: Landing di-split server-first (web-app 1.6.0): build gagal `createContext is not a function` saat collect, lalu runtime `/en` 500 `Element type is invalid: got undefined`. Biseksi 7 import tunggal semua OK, kombinasi pun OK — hingga SATU referensi ikon di array data server terbukti pemicu (`one-icon FAIL` vs `t-no-icons OK`).
+
+**Fix**: `@ant-design/icons` memanggil `createContext` di top-level modul (`lib/components/Context.js:8`) — tak bisa diimpor RSC, bahkan sebagai referensi tak ter-render. Probe runtime tambahan: antd `Card` dan `Typography` juga 500 di server, sementara `Button`/`Tag`/`Row`/`Col`/`Divider`/`Flex` aman. Solusi: server oper NAMA ikon serializable → leaf `"use client"` `LandingIcon` me-resolve; `Card`/`Typography` diganti div + HTML semantik (`h2`/`h3`/`p`/`strong`) dengan role Wise yang sama. `/en` 200 + screenshot 360/1440.
+
+**Pelajaran**: (1) **biseksi RSC 500 = stub minimal + tambah import/render bertahap**, bukan tebak — import-tunggal-OK ≠ kombinasi-OK; (2) `createContext`-at-import adalah signature client-only: `grep -rn createContext node_modules/<pkg>/lib` memastikan dalam 1 perintah; (3) pola aman RSC+antd: server = data + HTML semantik + antd server-safe, SEMUA ikon/kartu/tipografi kaya di leaf client.
+
+## L-502: Edit `PUT` menimpa baris tetangga bila range meleset 1 baris (2026-10-27)
+
+**Context**: Tiga insiden dalam satu sesi: import `BRAND_PANEL_MUTED` menimpa baris `useTranslations`, import `ON_PRIMARY` menghapus `import type CSSProperties` dan `SkipLink`, import rewards merusak blok `import type`. Semua terdeteksi via `tsc` segera setelah edit.
+
+**Fix**: Re-read blok exact + `PUT` ulang dengan range presisi, atau `CUT` 1 baris untuk penghapusan murni (lebih aman dari `PUT` range untuk delete).
+
+**Pelajaran**: (1) **jalankan `tsc --noEmit` setelah SETIAP batch edit import** — 3 detik menangkap corrupt sebelum menumpuk; (2) untuk tambah 1 baris import, targetkan TEPAT 1 baris yang diganti (bukan range blok), karena tool auto-repair boundary bisa menelan baris tetangga; (3) `CUT N.=N` untuk delete 1 baris, jangan `PUT` dengan body kosong.
+
+## L-503: Verifikasi baseline via `git stash` sebelum klaim regresi (2026-10-27)
+
+**Context**: Tiga temuan selama re-skin Wise yang tampak seperti regresi: (a) `lint` 3 errors — ternyata baseline juga 3 errors + 37 warnings (stash → sama); (b) redirect loop `/`→`/` di dev — baseline juga 307 loop; (c) e2e `dashboard-landing-flow` 11 failed `ERR_TOO_MANY_REDIRECTS` — akarnya loop (b), bukan konten landing (landing langsung di `/en` 200 + e2e 2/2).
+
+**Fix**: Pola `git stash push -m … && <check> ; git stash pop` untuk tiap temuan — 3/3 terbukti pre-existing dalam hitungan menit, tanpa debug buta.
+
+**Pelajaran**: (1) **setiap failure pertama = curigai baseline dulu**, buktikan dengan stash, baru investigasi kode sendiri; (2) catat hasil stash-check di CHANGELOG/docs agar reviewer tak mengulang; (3) e2e yang gagal di infrastruktur (redirect, browser missing, backend mati) ≠ gagal konten — verifikasi konten via jalur langsung (`/en`, curl, screenshot) sebagai bukti pengganti.

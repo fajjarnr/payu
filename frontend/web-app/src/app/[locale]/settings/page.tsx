@@ -29,7 +29,7 @@ import { notify as toast } from "@/lib/notify";
 import BeneficiaryManager from "@/components/account/BeneficiaryManager";
 import StatementDownloader from "@/components/settings/statement-downloader";
 import { SkipLink } from "@/lib/a11y";
-import { INK_ON_EMERALD } from '@/theme/tokens';
+import { ON_PRIMARY } from '@/theme/tokens';
 
 const { Title, Text } = Typography;
 
@@ -147,10 +147,10 @@ export default function SettingsPage() {
                       shape="square"
                       style={{
                         backgroundColor: "var(--ant-color-primary)",
-                        color: INK_ON_EMERALD,
+                        color: ON_PRIMARY,
                         fontSize: 36,
-                        fontWeight: 700,
-                        borderRadius: 16,
+                        fontWeight: 600,
+                        borderRadius: 24,
                       }}
                     >
                       {formData.fullName
@@ -179,7 +179,7 @@ export default function SettingsPage() {
                         <Text type="secondary" strong>
                           {t("status")}
                         </Text>
-                        <Text strong type="success">
+                        <Text strong style={{ color: "var(--ant-color-success-text)" }}>
                           {t("ekycVerified")}
                         </Text>
                       </Row>
@@ -197,24 +197,23 @@ export default function SettingsPage() {
                       key={i}
                       onClick={item.onClick}
                       block
-                      style={
+                    style={
                         item.active
                           ? {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "space-between",
                               padding: "16px 20px",
-                              borderRadius: 12,
+                              borderRadius: 24,
                               backgroundColor: "var(--ant-color-primary)",
-                              color: INK_ON_EMERALD,
-                              boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                              color: ON_PRIMARY,
                             }
                           : {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "space-between",
                               padding: "16px 20px",
-                              borderRadius: 12,
+                              borderRadius: 24,
                               color: "var(--ant-color-text-secondary)",
                             }
                       }
@@ -230,7 +229,7 @@ export default function SettingsPage() {
                         <span
                           style={{
                             fontSize: 12,
-                            fontWeight: 700,
+                            fontWeight: 600,
                             textTransform: "uppercase",
                             letterSpacing: "0.1em",
                           }}
@@ -263,12 +262,12 @@ export default function SettingsPage() {
                           style={{
                             width: 16,
                             height: 16,
-                            color: "var(--ant-color-success)",
+                            color: "var(--ant-color-success-text)",
                           }}
                         />
                       }
                       description={
-                        <Text type="success">{t("profileUpdateSuccess")}</Text>
+                        <Text style={{ color: "var(--ant-color-success-text)" }}>{t("profileUpdateSuccess")}</Text>
                       }
                     />
                   )}
@@ -306,7 +305,7 @@ export default function SettingsPage() {
                           style={{
                             width: 24,
                             height: 24,
-                            color: "var(--ant-color-primary)",
+                            color: "var(--ant-color-primary-text)",
                           }}
                         />
                       </div>
@@ -326,8 +325,7 @@ export default function SettingsPage() {
                             htmlFor="settings-fullname"
                             style={{
                               fontSize: 12,
-                              fontWeight: 700,
-                              color: "var(--ant-color-text-secondary)",
+                              fontWeight: 600,
                               textTransform: "uppercase",
                               letterSpacing: "0.1em",
                               marginLeft: 4,
@@ -357,8 +355,7 @@ export default function SettingsPage() {
                             htmlFor="settings-email"
                             style={{
                               fontSize: 12,
-                              fontWeight: 700,
-                              color: "var(--ant-color-text-secondary)",
+                              fontWeight: 600,
                               textTransform: "uppercase",
                               letterSpacing: "0.1em",
                               marginLeft: 4,
@@ -388,8 +385,7 @@ export default function SettingsPage() {
                             htmlFor="settings-phone"
                             style={{
                               fontSize: 12,
-                              fontWeight: 700,
-                              color: "var(--ant-color-text-secondary)",
+                              fontWeight: 600,
                               textTransform: "uppercase",
                               letterSpacing: "0.1em",
                               marginLeft: 4,

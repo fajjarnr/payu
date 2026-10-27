@@ -5,6 +5,7 @@ import { Badge, Typography, theme } from 'antd';
 import { Crown, Shield, Sparkles, type IconType } from '@/components/icons';
 import { useVIPStatus } from '@/hooks/useVIPStatus';
 import clsx from 'clsx';
+import { ON_PRIMARY } from '@/theme/tokens';
 
 interface VIPBadgeProps {
   size?: 'sm' | 'md' | 'lg';
@@ -42,7 +43,7 @@ export default function VIPBadge({
   if (variant === 'card') {
     return (
       <div
-        className={clsx('rounded-xl p-4 border', className)}
+        className={clsx('rounded-3xl p-4 border', className)}
         style={{
           background: `linear-gradient(135deg, ${token.colorWarningBg}, ${token.colorErrorBg})`,
           borderColor: token.colorWarningBorder,
@@ -54,7 +55,7 @@ export default function VIPBadge({
               className="h-10 w-10 rounded-full flex items-center justify-center"
               style={{ background: `linear-gradient(135deg, ${token.colorWarning}, ${token.colorError})` }}
             >
-              <Icon className="h-5 w-5" style={{ color: token.colorWhite }} aria-hidden="true" />
+              <Icon className="h-5 w-5" style={{ color: ON_PRIMARY }} aria-hidden="true" />
             </div>
             <div
               className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 animate-pulse"
@@ -63,10 +64,10 @@ export default function VIPBadge({
           </div>
 
           <div>
-            <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em' }}>
+            <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em' }}>
               STATUS MEMBER
             </Typography.Text>
-            <p className="text-sm font-bold" style={{ color: token.colorText }}>
+            <p className="text-sm font-semibold" style={{ color: token.colorText }}>
               {tierLabel}
             </p>
           </div>
@@ -79,7 +80,7 @@ export default function VIPBadge({
     return (
       <span
         className={clsx(
-          'inline-flex items-center gap-1.5 font-bold',
+          'inline-flex items-center gap-1.5 font-semibold',
           className
         )}
         style={{ color: tierColor }}
@@ -99,11 +100,11 @@ export default function VIPBadge({
   return (
     <Badge
       className={clsx(
-        'border-none shadow-lg font-bold tracking-widest uppercase py-1',
+        'border-none rounded-full font-semibold tracking-widest uppercase py-1',
         size === 'sm' ? 'px-2 h-6 text-xs' : size === 'md' ? 'px-3 h-8 text-xs' : 'px-4 h-10 text-xs',
         className
       )}
-      style={{ background: `linear-gradient(90deg, ${token.colorWarning}, ${token.colorError})`, color: token.colorWhite }}
+      style={{ background: `linear-gradient(90deg, ${token.colorWarning}, ${token.colorError})`, color: ON_PRIMARY }}
     >
       <div className="flex items-center gap-2">
         {showIcon && <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} aria-hidden="true" />}
@@ -136,7 +137,7 @@ export function VIPStatusIndicator({ showTier = true, showBenefits = false, clas
 
       {showBenefits && benefits.length > 0 && (
         <div className="space-y-2">
-          <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.05em' }}>
+          <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.05em' }}>
             BENEFIT EKSKLUSIF
           </Typography.Text>
           <ul className="space-y-1.5">

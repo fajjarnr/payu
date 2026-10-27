@@ -35,7 +35,7 @@ import PageHeader from "@/components/PageHeader";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: "var(--ant-color-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",

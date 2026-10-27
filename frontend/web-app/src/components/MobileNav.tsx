@@ -47,11 +47,12 @@ export default function MobileNav() {
     <nav
       data-testid="mobile-nav"
       aria-label={t("mobileNavigation")}
-      className="payu-mobile-nav fixed bottom-0 left-0 right-0 z-50 border-t px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] rounded-t-2xl sm:px-4 lg:hidden"
+      className="payu-mobile-nav fixed bottom-0 left-0 right-0 z-50 border-t px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-4 lg:hidden"
       style={{
         backgroundColor: token.colorBgContainer,
         borderTopColor: token.colorBorderSecondary,
-        boxShadow: "0 -8px 30px rgba(0,0,0,0.12)",
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
       }}
     >
       <ul
@@ -78,8 +79,8 @@ export default function MobileNav() {
                       position: "absolute",
                       top: 2,
                       width: 24,
-                      height: 3,
-                      borderRadius: 2,
+                      height: 4,
+                      borderRadius: 9999,
                       backgroundColor: "var(--ant-color-primary)",
                     }}
                   />

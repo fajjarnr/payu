@@ -46,16 +46,16 @@ import {
   type Money,
 } from "@/lib/currency";
 import { useAuthStore } from "@/stores/authStore";
+import { ON_PRIMARY, SAGE_ON_INK } from "@/theme/tokens";
 import type {
   LoyaltyBalanceResponse,
   Cashback,
   ReferralSummaryResponse,
   Promotion,
 } from "@/services/PromotionService";
-
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: "var(--ant-color-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",
@@ -66,13 +66,19 @@ const lightLabelStyle: CSSProperties = {
   color: "rgba(255, 255, 255, 0.6)",
 };
 
+// Labels on the lime gradient cards: white is 1.47:1 there, ink is 13.05:1.
+const onLimeLabelStyle: CSSProperties = {
+  ...labelStyle,
+  color: ON_PRIMARY,
+};
+
 const iconBoxStyle = (
   size: number,
   backgroundColor: string,
 ): CSSProperties => ({
   width: size,
   height: size,
-  borderRadius: 12,
+  borderRadius: 24,
   backgroundColor,
   display: "flex",
   alignItems: "center",
@@ -209,7 +215,7 @@ export default function RewardsPage() {
   }> = [
     {
       Icon: CheckCircle,
-      iconColor: "var(--ant-color-primary)",
+      iconColor: "var(--ant-color-primary-text)",
       iconBg: "var(--ant-color-primary-bg)",
       title: t("joinedSuccessfully"),
       description: t("joinedDescription", {
@@ -218,7 +224,7 @@ export default function RewardsPage() {
     },
     {
       Icon: Clock,
-      iconColor: "var(--ant-color-warning)",
+      iconColor: "var(--ant-color-warning-text)",
       iconBg: "var(--ant-color-warning-bg)",
       title: t("pendingTitle"),
       description: t("pendingDescription", {
@@ -227,7 +233,7 @@ export default function RewardsPage() {
     },
     {
       Icon: Trophy,
-      iconColor: "var(--ant-color-success)",
+      iconColor: "var(--ant-color-success-text)",
       iconBg: "var(--ant-color-success-bg)",
       title: t("earningsTitle"),
       description: t("earningsDescription", {
@@ -282,21 +288,21 @@ export default function RewardsPage() {
                             <div
                               style={iconBoxStyle(
                                 48,
-                                "rgba(255, 255, 255, 0.2)",
+                                "rgba(14, 15, 12, 0.08)",
                               )}
                             >
                               <Coins
                                 style={{
                                   width: 24,
                                   height: 24,
-                                  color: "var(--ant-color-text-light-solid)",
+                                  color: ON_PRIMARY,
                                 }}
                               />
                             </div>
                             <Space orientation="vertical" size={0}>
                               <Typography.Text
                                 strong
-                                style={{ ...lightLabelStyle, display: "block" }}
+                                style={{ ...onLimeLabelStyle, display: "block" }}
                               >
                                 {t("pointsBalance")}
                               </Typography.Text>
@@ -304,7 +310,7 @@ export default function RewardsPage() {
                                 level={2}
                                 style={{
                                   margin: 0,
-                                  color: "var(--ant-color-text-light-solid)",
+                                  color: ON_PRIMARY,
                                 }}
                               >
                                 {loyaltyStats.currentBalance.toLocaleString()}
@@ -313,7 +319,7 @@ export default function RewardsPage() {
                           </Space>
                           <Typography.Text
                             style={{
-                              color: "rgba(255, 255, 255, 0.8)",
+                              color: ON_PRIMARY,
                               fontSize: 14,
                             }}
                           >
@@ -324,7 +330,7 @@ export default function RewardsPage() {
                               <Typography.Text
                                 strong
                                 style={{
-                                  ...lightLabelStyle,
+                                  ...onLimeLabelStyle,
                                   display: "block",
                                   marginBottom: 4,
                                 }}
@@ -335,7 +341,7 @@ export default function RewardsPage() {
                                 level={2}
                                 style={{
                                   margin: 0,
-                                  color: "var(--ant-color-text-light-solid)",
+                                  color: ON_PRIMARY,
                                 }}
                               >
                                 {loyaltyStats.totalEarned.toLocaleString()}
@@ -345,7 +351,7 @@ export default function RewardsPage() {
                               <Typography.Text
                                 strong
                                 style={{
-                                  ...lightLabelStyle,
+                                  ...onLimeLabelStyle,
                                   display: "block",
                                   marginBottom: 4,
                                 }}
@@ -356,7 +362,7 @@ export default function RewardsPage() {
                                 level={2}
                                 style={{
                                   margin: 0,
-                                  color: "var(--ant-color-text-light-solid)",
+                                  color: ON_PRIMARY,
                                 }}
                               >
                                 {loyaltyStats.totalRedeemed.toLocaleString()}
@@ -367,8 +373,8 @@ export default function RewardsPage() {
                             <Card
                               size="small"
                               style={{
-                                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                borderColor: "rgba(255, 255, 255, 0.15)",
+                                backgroundColor: "rgba(14, 15, 12, 0.06)",
+                                borderColor: "rgba(14, 15, 12, 0.12)",
                               }}
                               styles={{ body: { padding: 16 } }}
                             >
@@ -377,14 +383,14 @@ export default function RewardsPage() {
                                   style={{
                                     width: 20,
                                     height: 20,
-                                    color: "var(--ant-color-warning)",
+                                    color: ON_PRIMARY,
                                   }}
                                 />
                                 <Space orientation="vertical" size={0}>
                                   <Typography.Text
                                     strong
                                     style={{
-                                      ...lightLabelStyle,
+                                      ...onLimeLabelStyle,
                                       display: "block",
                                     }}
                                   >
@@ -393,8 +399,7 @@ export default function RewardsPage() {
                                   <Typography.Text
                                     strong
                                     style={{
-                                      color:
-                                        "var(--ant-color-text-light-solid)",
+                                      color: ON_PRIMARY,
                                     }}
                                   >
                                     {t("pointsExpiringValue", {
@@ -417,7 +422,7 @@ export default function RewardsPage() {
                             height: 192,
                             opacity: 0.08,
                             transform: "rotate(-12deg)",
-                            color: "var(--ant-color-text-light-solid)",
+                            color: ON_PRIMARY,
                           }}
                         />
                       </Card>
@@ -448,7 +453,7 @@ export default function RewardsPage() {
                                   style={{
                                     width: 20,
                                     height: 20,
-                                    color: "var(--ant-color-primary)",
+                                    color: "var(--ant-color-primary-text)",
                                   }}
                                 />
                               </div>
@@ -502,7 +507,8 @@ export default function RewardsPage() {
                                       style={{
                                         width: 24,
                                         height: 24,
-                                        color: "var(--ant-color-success)",
+                                        color:
+                                          "var(--ant-color-success-text)",
                                       }}
                                     />
                                   ) : (
@@ -510,7 +516,8 @@ export default function RewardsPage() {
                                       style={{
                                         width: 24,
                                         height: 24,
-                                        color: "var(--ant-color-warning)",
+                                        color:
+                                          "var(--ant-color-warning-text)",
                                       }}
                                     />
                                   )}
@@ -526,12 +533,13 @@ export default function RewardsPage() {
                               </Space>
                               <Typography.Text
                                 strong
-                                type={
-                                  point.type === "EARNED"
-                                    ? "success"
-                                    : "warning"
-                                }
-                                style={{ fontSize: 18 }}
+                                style={{
+                                  fontSize: 18,
+                                  color:
+                                    point.type === "EARNED"
+                                      ? "var(--ant-color-success-text)"
+                                      : "var(--ant-color-warning-text)",
+                                }}
                               >
                                 {point.type === "EARNED" ? "+" : ""}
                                 {point.points}
@@ -570,14 +578,14 @@ export default function RewardsPage() {
                             <div
                               style={iconBoxStyle(
                                 56,
-                                "rgba(255, 255, 255, 0.1)",
+                                "rgba(232, 235, 230, 0.12)",
                               )}
                             >
                               <DollarSign
                                 style={{
                                   width: 28,
                                   height: 28,
-                                  color: "var(--ant-color-text-light-solid)",
+                                  color: SAGE_ON_INK,
                                 }}
                               />
                             </div>
@@ -592,7 +600,7 @@ export default function RewardsPage() {
                                 level={2}
                                 style={{
                                   margin: 0,
-                                  color: "var(--ant-color-text-light-solid)",
+                                  color: SAGE_ON_INK,
                                 }}
                               >
                                 {formatCurrency(cashbackTotal)}
@@ -609,19 +617,24 @@ export default function RewardsPage() {
                               align="middle"
                               style={{
                                 padding: "12px 0",
-                                borderBottom:
-                                  "1px solid rgba(255, 255, 255, 0.1)",
+                                borderBottom: "1px solid rgba(232, 235, 230, 0.14)",
                               }}
                             >
                               <Typography.Text
                                 style={{
                                   fontSize: 14,
-                                  color: "rgba(255, 255, 255, 0.65)",
+                                  color: SAGE_ON_INK,
+                                  opacity: 0.72,
                                 }}
                               >
                                 {t("credited")}
                               </Typography.Text>
-                              <Typography.Text strong type="success">
+                              <Typography.Text
+                                strong
+                                style={{
+                                  color: SAGE_ON_INK,
+                                }}
+                              >
                                 {formatCurrency(cashbackCredited)}
                               </Typography.Text>
                             </Row>
@@ -630,19 +643,24 @@ export default function RewardsPage() {
                               align="middle"
                               style={{
                                 padding: "12px 0",
-                                borderBottom:
-                                  "1px solid rgba(255, 255, 255, 0.1)",
+                                borderBottom: "1px solid rgba(232, 235, 230, 0.14)",
                               }}
                             >
                               <Typography.Text
                                 style={{
                                   fontSize: 14,
-                                  color: "rgba(255, 255, 255, 0.65)",
+                                  color: SAGE_ON_INK,
+                                  opacity: 0.72,
                                 }}
                               >
                                 {t("pending")}
                               </Typography.Text>
-                              <Typography.Text strong type="warning">
+                              <Typography.Text
+                                strong
+                                style={{
+                                  color: SAGE_ON_INK,
+                                }}
+                              >
                                 {formatCurrency(cashbackPending)}
                               </Typography.Text>
                             </Row>
@@ -654,12 +672,18 @@ export default function RewardsPage() {
                               <Typography.Text
                                 style={{
                                   fontSize: 14,
-                                  color: "rgba(255, 255, 255, 0.65)",
+                                  color: SAGE_ON_INK,
+                                  opacity: 0.72,
                                 }}
                               >
                                 {t("expired")}
                               </Typography.Text>
-                              <Typography.Text strong type="danger">
+                              <Typography.Text
+                                strong
+                                style={{
+                                  color: SAGE_ON_INK,
+                                }}
+                              >
                                 {formatCurrency(asMoney("0"))}
                               </Typography.Text>
                             </Row>
@@ -699,7 +723,8 @@ export default function RewardsPage() {
                                       style={{
                                         width: 24,
                                         height: 24,
-                                        color: "var(--ant-color-primary)",
+                                        color:
+                                          "var(--ant-color-primary-text)",
                                       }}
                                     />
                                   </div>
@@ -724,7 +749,7 @@ export default function RewardsPage() {
                                     strong
                                     style={{
                                       fontSize: 18,
-                                      color: "var(--ant-color-primary)",
+                                      color: "var(--ant-color-primary-text)",
                                     }}
                                   >
                                     {promo.value}
@@ -776,7 +801,8 @@ export default function RewardsPage() {
                                       style={{
                                         width: 24,
                                         height: 24,
-                                        color: "var(--ant-color-success)",
+                                        color:
+                                          "var(--ant-color-success-text)",
                                       }}
                                     />
                                   ) : (
@@ -784,7 +810,8 @@ export default function RewardsPage() {
                                       style={{
                                         width: 24,
                                         height: 24,
-                                        color: "var(--ant-color-warning)",
+                                        color:
+                                          "var(--ant-color-warning-text)",
                                       }}
                                     />
                                   )}
@@ -862,19 +889,19 @@ export default function RewardsPage() {
                           level={2}
                           style={{
                             margin: 0,
-                            color: "var(--ant-color-text-light-solid)",
+                            color: ON_PRIMARY,
                           }}
                         >
                           {t("yourReferralCode")}
                         </Typography.Title>
                         <div
-                          style={iconBoxStyle(48, "rgba(255, 255, 255, 0.1)")}
+                          style={iconBoxStyle(48, "rgba(14, 15, 12, 0.08)")}
                         >
                           <Gift
                             style={{
                               width: 24,
                               height: 24,
-                              color: "var(--ant-color-text-light-solid)",
+                              color: ON_PRIMARY,
                             }}
                           />
                         </div>
@@ -883,8 +910,8 @@ export default function RewardsPage() {
                       <Card
                         size="small"
                         style={{
-                          backgroundColor: "rgba(255, 255, 255, 0.1)",
-                          borderColor: "rgba(255, 255, 255, 0.1)",
+                          backgroundColor: "rgba(14, 15, 12, 0.06)",
+                          borderColor: "rgba(14, 15, 12, 0.12)",
                         }}
                         styles={{ body: { padding: 24 } }}
                       >
@@ -894,7 +921,7 @@ export default function RewardsPage() {
                             style={{
                               margin: 0,
                               letterSpacing: "0.15em",
-                              color: "var(--ant-color-text-light-solid)",
+                              color: ON_PRIMARY,
                             }}
                           >
                             {referralStats.code}
@@ -906,7 +933,7 @@ export default function RewardsPage() {
                             style={{
                               width: 48,
                               height: 48,
-                              color: "var(--ant-color-text-light-solid)",
+                              color: ON_PRIMARY,
                             }}
                             aria-label={t("copyCode")}
                             icon={<Copy style={{ width: 24, height: 24 }} />}
@@ -917,7 +944,7 @@ export default function RewardsPage() {
                             display: "block",
                             marginTop: 16,
                             fontSize: 14,
-                            color: "rgba(255, 255, 255, 0.8)",
+                            color: ON_PRIMARY,
                           }}
                         >
                           {t("shareCodeHint", {
@@ -931,7 +958,7 @@ export default function RewardsPage() {
                           <Typography.Text
                             strong
                             style={{
-                              ...lightLabelStyle,
+                              ...onLimeLabelStyle,
                               display: "block",
                               marginBottom: 4,
                             }}
@@ -942,7 +969,7 @@ export default function RewardsPage() {
                             level={2}
                             style={{
                               margin: 0,
-                              color: "var(--ant-color-text-light-solid)",
+                              color: ON_PRIMARY,
                             }}
                           >
                             {referralStats.totalReferrals}
@@ -952,7 +979,7 @@ export default function RewardsPage() {
                           <Typography.Text
                             strong
                             style={{
-                              ...lightLabelStyle,
+                              ...onLimeLabelStyle,
                               display: "block",
                               marginBottom: 4,
                             }}
@@ -961,8 +988,10 @@ export default function RewardsPage() {
                           </Typography.Text>
                           <Typography.Text
                             strong
-                            type="success"
-                            style={{ fontSize: 24 }}
+                            style={{
+                              fontSize: 24,
+                              color: ON_PRIMARY,
+                            }}
                           >
                             {referralStats.completedReferrals}
                           </Typography.Text>
@@ -978,7 +1007,7 @@ export default function RewardsPage() {
                         height: 192,
                         opacity: 0.08,
                         transform: "rotate(-12deg)",
-                        color: "var(--ant-color-text-light-solid)",
+                        color: ON_PRIMARY,
                       }}
                     />
                   </Card>

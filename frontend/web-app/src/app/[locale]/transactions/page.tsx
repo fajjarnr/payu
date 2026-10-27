@@ -147,7 +147,7 @@ export default function TransactionsPage() {
                 : { backgroundColor: token.colorFillTertiary, borderColor: token.colorBorderSecondary }
               )
             }}>
-              <TypeIcon style={{ width: 20, height: 20, color: credit ? token.colorPrimary : token.colorTextTertiary }} />
+              <TypeIcon style={{ width: 20, height: 20, color: credit ? token.colorPrimaryText : token.colorTextTertiary }} />
             </div>
             <Typography.Text strong>{t(type.labelKey)}</Typography.Text>
           </Space>
@@ -171,7 +171,7 @@ export default function TransactionsPage() {
         const status = statusConfig[transaction.status];
         const StatusIcon = status.icon;
         return (
-          <Tag variant="filled" color={status.color} className="font-bold text-xs">
+          <Tag variant="filled" color={status.color} className="font-semibold text-xs">
             <StatusIcon style={{ width: 12, height: 12, marginRight: 4 }} />
             {t(status.labelKey)}
           </Tag>
@@ -234,7 +234,7 @@ export default function TransactionsPage() {
                   type="text"
                   size="small"
                   onClick={() => setFilters({})}
-                  className="text-xs font-bold"
+                  className="text-xs font-semibold"
                 >
                   {t('clearFilters')}
                 </Button>
@@ -303,7 +303,7 @@ export default function TransactionsPage() {
                   justifyContent: 'center',
                   border: `1px solid ${token.colorPrimaryBorder}`
                 }}>
-                  <ArrowDownLeft style={{ width: 24, height: 24, color: token.colorPrimary }} />
+                  <ArrowDownLeft style={{ width: 24, height: 24, color: token.colorPrimaryText }} />
                 </div>
                 <div>
                   <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">{t('totalIn')}</Typography.Text>
@@ -349,7 +349,7 @@ export default function TransactionsPage() {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <Clock style={{ width: 24, height: 24, color: token.colorPrimary }} />
+                  <Clock style={{ width: 24, height: 24, color: token.colorPrimaryText }} />
                 </div>
                 <div>
                   <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">{t('statusPending')}</Typography.Text>
@@ -372,7 +372,7 @@ export default function TransactionsPage() {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <CheckCircle2 style={{ width: 24, height: 24, color: token.colorInfo }} />
+                  <CheckCircle2 style={{ width: 24, height: 24, color: token.colorPrimaryText }} />
                 </div>
                 <div>
                   <Typography.Text strong type="secondary" className="text-xs tracking-widest uppercase">{t('statusCompleted')}</Typography.Text>
@@ -448,7 +448,7 @@ export default function TransactionsPage() {
                                 </div>
                               </div>
                             </Space>
-                            <Tag variant="filled" color={status.color} className="font-bold text-xs">
+                            <Tag variant="filled" color={status.color} className="font-semibold text-xs">
                               <StatusIcon style={{ width: 12, height: 12, marginRight: 4 }} />
                               {t(status.labelKey)}
                             </Tag>

@@ -76,7 +76,7 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
       data-testid="beneficiary-manager"
       title={
         <Space size={8}>
-          <Building2 style={{ fontSize: 20, color: 'var(--ant-color-primary)' }} aria-hidden="true" />
+          <Building2 style={{ fontSize: 20, color: 'var(--ant-color-primary-text)' }} aria-hidden="true" />
           <Typography.Text strong>{t('title')}</Typography.Text>
         </Space>
       }
@@ -136,8 +136,8 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
               >
                 <List.Item.Meta
                   avatar={
-                    <span style={{ width: 40, height: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ant-color-primary-bg)', border: '1px solid var(--ant-color-border)' }}>
-                      <CreditCard style={{ fontSize: 20, color: 'var(--ant-color-primary)' }} aria-hidden="true" />
+                    <span style={{ width: 40, height: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ant-color-primary-bg)', border: '1px solid var(--ant-color-border)', borderRadius: 12 }}>
+                      <CreditCard style={{ fontSize: 20, color: 'var(--ant-color-primary-text)' }} aria-hidden="true" />
                     </span>
                   }
                   title={
@@ -179,7 +179,7 @@ export default function BeneficiaryManager({ accountId, onSelect }: BeneficiaryM
             <Input id="beneficiary-nickname" data-testid="beneficiary-nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="My BCA" maxLength={100} status={errors.nickname ? 'error' : undefined} />
             {errors.nickname && <Typography.Text type="danger" role="alert">{errors.nickname}</Typography.Text>}
           </Space>
-          <Button type="primary" size="large" onClick={handleCreate} loading={createMut.isPending} icon={<Plus style={{ fontSize: 16 }} />} data-testid="beneficiary-create">
+          <Button type="primary" size="large" onClick={handleCreate} loading={createMut.isPending} icon={<Plus style={{ fontSize: 16 }} />} data-testid="beneficiary-create" style={{ fontWeight: 600, fontSize: 16, borderRadius: 24 }}>
             {t('add')}
           </Button>
         </Space>

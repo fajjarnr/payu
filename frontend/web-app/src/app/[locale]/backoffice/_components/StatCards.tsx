@@ -11,7 +11,7 @@ export interface StatItem {
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--ant-color-text-secondary)',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
@@ -28,12 +28,12 @@ export default function StatCards({ stats }: { stats: StatItem[] }) {
                 style={{
                   width: 48,
                   height: 48,
-                  borderRadius: 12,
+                  borderRadius: 24,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   background: 'var(--ant-color-primary-bg)',
-                  color: 'var(--ant-color-primary)',
+                  color: 'var(--ant-color-primary-text)',
                 }}
               >
                 <stat.icon style={{ fontSize: 24 }} />

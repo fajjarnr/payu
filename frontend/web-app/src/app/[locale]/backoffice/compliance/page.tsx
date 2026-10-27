@@ -35,7 +35,7 @@ import PageHeader from "@/components/PageHeader";
 
 const labelStyle: CSSProperties = {
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 600,
   color: "var(--ant-color-text-secondary)",
   textTransform: "uppercase",
   letterSpacing: "0.1em",
@@ -228,7 +228,7 @@ export default function CompliancePage() {
         ]}
       />
 
-      <Card>
+      <Card style={{ borderRadius: 24 }}>
         <Flex gap={16} wrap align="center" justify="space-between">
           <Flex gap={16} wrap style={{ flex: 1 }}>
             <Input.Search
@@ -259,7 +259,7 @@ export default function CompliancePage() {
         </Flex>
       </Card>
 
-      <Card styles={{ body: { padding: 0, overflow: "hidden" } }}>
+      <Card style={{ borderRadius: 24 }} styles={{ body: { padding: 0, overflow: "hidden" } }}>
         <Table<ComplianceAuditRow>
           scroll={{ x: "max-content" }}
           columns={columns}
@@ -325,7 +325,7 @@ function riskBadge(risk: string) {
 
 function eventIcon(event: string) {
   if (event.includes("ACCESS"))
-    return <Lock style={{ fontSize: 16, color: "var(--ant-color-primary)" }} />;
+    return <Lock style={{ fontSize: 16, color: "var(--ant-color-primary-text)" }} />;
   if (event.includes("PII"))
     return (
       <UserCheck style={{ fontSize: 16, color: "var(--ant-color-error)" }} />
@@ -335,6 +335,6 @@ function eventIcon(event: string) {
       <Settings style={{ fontSize: 16, color: "var(--ant-color-warning)" }} />
     );
   return (
-    <FileText style={{ fontSize: 16, color: "var(--ant-color-primary)" }} />
+    <FileText style={{ fontSize: 16, color: "var(--ant-color-primary-text)" }} />
   );
 }
